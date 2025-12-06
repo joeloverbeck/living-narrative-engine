@@ -57,7 +57,9 @@ describe('ConfigurationLoader Integration - Real Schema Validator', () => {
 
     // Verify normalized names in pipeline config (hyphenated format)
     expect(result.pipelineConfig.validators).toBeDefined();
-    expect(result.pipelineConfig.validators['component-existence']).toBeDefined();
+    expect(
+      result.pipelineConfig.validators['component-existence']
+    ).toBeDefined();
     expect(result.pipelineConfig.validators['pattern-matching']).toBeDefined();
     expect(result.pipelineConfig.validators['body-descriptors']).toBeDefined();
     expect(result.pipelineConfig.guards.enabled).toBe(true);
@@ -103,7 +105,9 @@ describe('ConfigurationLoader Integration - Real Schema Validator', () => {
 
     // Verify the override was applied (normalized to hyphenated)
     expect(result.pipelineConfig.validators['pattern-matching']).toBeDefined();
-    expect(result.pipelineConfig.validators['pattern-matching'].enabled).toBe(false);
+    expect(result.pipelineConfig.validators['pattern-matching'].enabled).toBe(
+      false
+    );
   });
 
   it('should have consistent normalized names in both rawConfig and pipelineConfig', async () => {

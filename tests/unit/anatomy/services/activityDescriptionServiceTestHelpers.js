@@ -28,18 +28,26 @@ import { jest, expect } from '@jest/globals';
 export async function createTestService(options = {}) {
   const mockLogger = options.logger || createMockLogger();
   const mockEntityManager = options.entityManager || createMockEntityManager();
-  const mockAnatomyFormattingService = options.anatomyFormattingService || createMockAnatomyFormattingService();
-  const mockJsonLogicEvaluationService = options.jsonLogicEvaluationService || createMockJsonLogic();
+  const mockAnatomyFormattingService =
+    options.anatomyFormattingService || createMockAnatomyFormattingService();
+  const mockJsonLogicEvaluationService =
+    options.jsonLogicEvaluationService || createMockJsonLogic();
   const mockCacheManager = options.cacheManager || createMockCacheManager();
   const mockIndexManager = options.indexManager || createMockIndexManager();
   const mockActivityIndex = options.activityIndex || null;
-  const mockMetadataCollectionSystem = options.metadataCollectionSystem || createMockMetadataCollectionSystem(mockActivityIndex, mockEntityManager);
-  const mockGroupingSystem = options.groupingSystem || createMockGroupingSystem();
-  const mockNLGSystem = options.nlgSystem || createMockNLGSystem(mockEntityManager);
+  const mockMetadataCollectionSystem =
+    options.metadataCollectionSystem ||
+    createMockMetadataCollectionSystem(mockActivityIndex, mockEntityManager);
+  const mockGroupingSystem =
+    options.groupingSystem || createMockGroupingSystem();
+  const mockNLGSystem =
+    options.nlgSystem || createMockNLGSystem(mockEntityManager);
   const mockEventBus = options.eventBus || createMockEventBus();
 
   // Lazy load ActivityDescriptionService to avoid import-time dependencies
-  const { default: ActivityDescriptionService } = await import('../../../../src/anatomy/services/activityDescriptionService.js');
+  const { default: ActivityDescriptionService } = await import(
+    '../../../../src/anatomy/services/activityDescriptionService.js'
+  );
 
   const service = new ActivityDescriptionService({
     logger: mockLogger,
@@ -129,10 +137,13 @@ export function createEntityWithInlineMetadata(config) {
   } = config;
 
   const additionalComponents = new Map([
-    [componentId, {
-      activityMetadata,
-      entityId: 'target1', // Default target
-    }],
+    [
+      componentId,
+      {
+        activityMetadata,
+        entityId: 'target1', // Default target
+      },
+    ],
   ]);
 
   return createStandardEntity({
@@ -164,16 +175,22 @@ export function createEntityWithDedicatedMetadata(config) {
   } = config;
 
   const additionalComponents = new Map([
-    ['activity:description_metadata', {
+    [
+      'activity:description_metadata',
+      {
+        sourceComponent,
+        verb,
+        template,
+        priority,
+        targetRole,
+      },
+    ],
+    [
       sourceComponent,
-      verb,
-      template,
-      priority,
-      targetRole,
-    }],
-    [sourceComponent, {
-      entityId: 'target1', // Default target
-    }],
+      {
+        entityId: 'target1', // Default target
+      },
+    ],
   ]);
 
   return createStandardEntity({
@@ -273,7 +290,7 @@ export function createMockEventBus() {
     }),
     dispatch: jest.fn((event) => {
       const handlers = subscriptions.get(event.type) || [];
-      handlers.forEach(handler => handler(event));
+      handlers.forEach((handler) => handler(event));
     }),
     unsubscribe: jest.fn(),
   };
@@ -346,7 +363,7 @@ export function loadFixture(filename) {
  * @returns {Array<object>} Test activity objects
  */
 export function createTestActivities(configs) {
-  return configs.map(config => ({
+  return configs.map((config) => ({
     type: config.type || 'inline',
     sourceComponent: config.sourceComponent || 'test:component',
     targetEntityId: config.targetEntityId || null,
@@ -370,10 +387,13 @@ export function createTestActivities(configs) {
  * @param {Array<object>} relatedActivities - Related activities with conjunctions
  * @returns {object} Activity group
  */
-export function createTestActivityGroup(primaryActivity, relatedActivities = []) {
+export function createTestActivityGroup(
+  primaryActivity,
+  relatedActivities = []
+) {
   return {
     primaryActivity,
-    relatedActivities: relatedActivities.map(related => ({
+    relatedActivities: relatedActivities.map((related) => ({
       activity: related.activity,
       conjunction: related.conjunction || 'and',
     })),
@@ -436,9 +456,10 @@ export function createTestScenario(config = {}) {
     actor,
     target,
     entities: entityMap,
-    activities: activities.length > 0 ? activities : createTestActivities([
-      { targetEntityId: targetId, priority: 50 },
-    ]),
+    activities:
+      activities.length > 0
+        ? activities
+        : createTestActivities([{ targetEntityId: targetId, priority: 50 }]),
   };
 }
 
@@ -489,7 +510,9 @@ export function createMockCacheManager() {
 export function createMockIndexManager() {
   return {
     buildIndex: jest.fn((activities, _cacheKey) => ({
-      byPriority: [...activities].sort((a, b) => (b.priority || 0) - (a.priority || 0)),
+      byPriority: [...activities].sort(
+        (a, b) => (b.priority || 0) - (a.priority || 0)
+      ),
       byTarget: new Map(),
       byGroupKey: new Map(),
       all: activities,
@@ -504,12 +527,18 @@ export function createMockIndexManager() {
  * @param {object} [entityManager] - Optional entity manager for real collection
  * @returns {object} Mock metadata collection system
  */
-export function createMockMetadataCollectionSystem(activityIndex = null, entityManager = null) {
+export function createMockMetadataCollectionSystem(
+  activityIndex = null,
+  entityManager = null
+) {
   const collectActivitiesFromEntity = (entityId, entity) => {
     const activities = [];
 
     // If activityIndex is provided, use it first
-    if (activityIndex && typeof activityIndex.findActivitiesForEntity === 'function') {
+    if (
+      activityIndex &&
+      typeof activityIndex.findActivitiesForEntity === 'function'
+    ) {
       try {
         const indexResult = activityIndex.findActivitiesForEntity(entityId);
         // Validate result is an array
@@ -534,8 +563,10 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
             activities.push({
               type: 'inline',
               sourceComponent: componentId,
-              targetEntityId: componentData.targetId || componentData.entityId || null,
-              targetId: componentData.targetId || componentData.entityId || null,
+              targetEntityId:
+                componentData.targetId || componentData.entityId || null,
+              targetId:
+                componentData.targetId || componentData.entityId || null,
               priority: metadata.priority || 50,
               template: metadata.template || '',
               verb: metadata.verb || '',
@@ -552,13 +583,16 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
 
       // Check for dedicated metadata components
       if (components.has('activity:description_metadata')) {
-        const dedicatedMetadata = components.get('activity:description_metadata');
+        const dedicatedMetadata = components.get(
+          'activity:description_metadata'
+        );
         if (dedicatedMetadata && dedicatedMetadata.sourceComponent) {
           const sourceData = components.get(dedicatedMetadata.sourceComponent);
           activities.push({
             type: 'dedicated',
             sourceComponent: dedicatedMetadata.sourceComponent,
-            targetEntityId: sourceData?.targetId || sourceData?.entityId || null,
+            targetEntityId:
+              sourceData?.targetId || sourceData?.entityId || null,
             targetId: sourceData?.targetId || sourceData?.entityId || null,
             priority: dedicatedMetadata.priority || 50,
             template: dedicatedMetadata.template || '',
@@ -592,7 +626,11 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
         const metadata = componentData.activityMetadata;
 
         // Validate metadata is an object
-        if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
+        if (
+          typeof metadata !== 'object' ||
+          metadata === null ||
+          Array.isArray(metadata)
+        ) {
           continue; // Skip malformed metadata
         }
 
@@ -600,7 +638,11 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
         if (metadata.shouldDescribeInActivity === false) continue;
 
         // Validate required template field
-        if (!metadata.template || typeof metadata.template !== 'string' || metadata.template.trim() === '') {
+        if (
+          !metadata.template ||
+          typeof metadata.template !== 'string' ||
+          metadata.template.trim() === ''
+        ) {
           continue; // Skip metadata without valid template
         }
 
@@ -613,8 +655,12 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
         activities.push({
           type: 'inline',
           sourceComponent: componentId,
-          targetEntityId: normalizeTarget(componentData.targetId || componentData.entityId),
-          targetId: normalizeTarget(componentData.targetId || componentData.entityId),
+          targetEntityId: normalizeTarget(
+            componentData.targetId || componentData.entityId
+          ),
+          targetId: normalizeTarget(
+            componentData.targetId || componentData.entityId
+          ),
           priority: metadata.priority || 50,
           template: metadata.template,
           verb: metadata.verb || '',
@@ -675,11 +721,15 @@ export function createMockMetadataCollectionSystem(activityIndex = null, entityM
     }),
     collectActivities: jest.fn(() => []),
     deduplicateActivitiesBySignature: jest.fn((activities) => activities),
-    buildActivityDeduplicationKey: jest.fn((activity) => JSON.stringify(activity)),
+    buildActivityDeduplicationKey: jest.fn((activity) =>
+      JSON.stringify(activity)
+    ),
     getTestHooks: jest.fn(() => ({
       collectActivities: jest.fn(() => []),
       deduplicateActivitiesBySignature: jest.fn((activities) => activities),
-      buildActivityDeduplicationKey: jest.fn((activity) => JSON.stringify(activity)),
+      buildActivityDeduplicationKey: jest.fn((activity) =>
+        JSON.stringify(activity)
+      ),
       parseInlineMetadata: jest.fn(() => ({})),
       parseDedicatedMetadata: jest.fn(() => ({})),
     })),
@@ -722,7 +772,9 @@ export function createMockGroupingSystem() {
       }
 
       // Sort by priority (highest first)
-      const prioritized = [...activities].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      const prioritized = [...activities].sort(
+        (a, b) => (b.priority || 0) - (a.priority || 0)
+      );
       const groups = [];
       const visited = new Set();
 
@@ -760,7 +812,9 @@ export function createMockGroupingSystem() {
       return groups;
     }),
     sortByPriority: jest.fn((activities, _cacheKey) => {
-      return [...activities].sort((a, b) => (b.priority || 0) - (a.priority || 0));
+      return [...activities].sort(
+        (a, b) => (b.priority || 0) - (a.priority || 0)
+      );
     }),
     getTestHooks: jest.fn(() => ({
       groupActivities: jest.fn((_activities, _cacheKey) => []),
@@ -769,9 +823,15 @@ export function createMockGroupingSystem() {
         primaryActivity: activity,
         relatedActivities: [],
       })),
-      shouldGroupActivities: jest.fn((first, second) => shouldGroupActivities(first, second)),
-      determineConjunction: jest.fn((first, second) => determineConjunction(first, second)),
-      activitiesOccurSimultaneously: jest.fn((p1, p2) => Math.abs(p1 - p2) <= SIMULTANEOUS_PRIORITY_THRESHOLD),
+      shouldGroupActivities: jest.fn((first, second) =>
+        shouldGroupActivities(first, second)
+      ),
+      determineConjunction: jest.fn((first, second) =>
+        determineConjunction(first, second)
+      ),
+      activitiesOccurSimultaneously: jest.fn(
+        (p1, p2) => Math.abs(p1 - p2) <= SIMULTANEOUS_PRIORITY_THRESHOLD
+      ),
     })),
   };
 }
@@ -785,10 +845,30 @@ export function createMockGroupingSystem() {
 export function createMockNLGSystem(entityManager = null) {
   // Pronoun sets matching real NLGSystem behavior
   const pronounSets = {
-    male: { subject: 'he', object: 'him', possessive: 'his', possessivePronoun: 'his' },
-    female: { subject: 'she', object: 'her', possessive: 'her', possessivePronoun: 'hers' },
-    neutral: { subject: 'they', object: 'them', possessive: 'their', possessivePronoun: 'theirs' },
-    futa: { subject: 'she', object: 'her', possessive: 'her', possessivePronoun: 'hers' },
+    male: {
+      subject: 'he',
+      object: 'him',
+      possessive: 'his',
+      possessivePronoun: 'his',
+    },
+    female: {
+      subject: 'she',
+      object: 'her',
+      possessive: 'her',
+      possessivePronoun: 'hers',
+    },
+    neutral: {
+      subject: 'they',
+      object: 'them',
+      possessive: 'their',
+      possessivePronoun: 'theirs',
+    },
+    futa: {
+      subject: 'she',
+      object: 'her',
+      possessive: 'her',
+      possessivePronoun: 'hers',
+    },
   };
 
   // Gender detection matching real NLGSystem behavior
@@ -822,10 +902,14 @@ export function createMockNLGSystem(entityManager = null) {
   };
 
   return {
-    formatActivityDescription: jest.fn((_groups, _config, _entity) => 'formatted description'),
+    formatActivityDescription: jest.fn(
+      (_groups, _config, _entity) => 'formatted description'
+    ),
     mergeAdverb: jest.fn((currentAdverb, injected) => {
-      const normalizedInjected = typeof injected === 'string' ? injected.trim() : '';
-      const normalizedCurrent = typeof currentAdverb === 'string' ? currentAdverb.trim() : '';
+      const normalizedInjected =
+        typeof injected === 'string' ? injected.trim() : '';
+      const normalizedCurrent =
+        typeof currentAdverb === 'string' ? currentAdverb.trim() : '';
 
       if (!normalizedInjected) {
         return normalizedCurrent;
@@ -873,15 +957,18 @@ export function createMockNLGSystem(entityManager = null) {
       return template.replace('{target}', `${trimmedDescriptor} {target}`);
     }),
     sanitizeVerbPhrase: jest.fn((phrase) => phrase),
-    buildRelatedActivityFragment: jest.fn((conjunction, components, _context) =>
-      `${conjunction} ${components.verbPhrase}`
+    buildRelatedActivityFragment: jest.fn(
+      (conjunction, components, _context) =>
+        `${conjunction} ${components.verbPhrase}`
     ),
     truncateDescription: jest.fn((description, _maxLength) => description),
     sanitizeEntityName: jest.fn((name) => name),
     resolveEntityName: jest.fn((entityId) => resolveName(entityId)),
     shouldUsePronounForTarget: jest.fn((_targetId) => false),
     detectEntityGender: jest.fn((entityId) => detectGender(entityId)),
-    getPronounSet: jest.fn((gender) => pronounSets[gender] || pronounSets.neutral),
+    getPronounSet: jest.fn(
+      (gender) => pronounSets[gender] || pronounSets.neutral
+    ),
     getReflexivePronoun: jest.fn((pronouns) => {
       const subject = pronouns?.subject?.toLowerCase?.() ?? '';
 
@@ -902,36 +989,38 @@ export function createMockNLGSystem(entityManager = null) {
           return 'themselves';
       }
     }),
-    generateActivityPhrase: jest.fn((actorRef, activity, _usePronounsForTarget = false, _options = {}) => {
-      // Process templates to match real NLGSystem behavior
-      if (!activity) return '';
+    generateActivityPhrase: jest.fn(
+      (actorRef, activity, _usePronounsForTarget = false, _options = {}) => {
+        // Process templates to match real NLGSystem behavior
+        if (!activity) return '';
 
-      const targetEntityId = activity.targetEntityId || activity.targetId;
-      let targetRef = '';
-      if (targetEntityId && entityManager) {
-        targetRef = resolveName(targetEntityId);
+        const targetEntityId = activity.targetEntityId || activity.targetId;
+        let targetRef = '';
+        if (targetEntityId && entityManager) {
+          targetRef = resolveName(targetEntityId);
+        }
+
+        // Check if template property exists (even if empty string)
+        if ('template' in activity) {
+          return (activity.template || '')
+            .replace(/\{actor\}/g, actorRef)
+            .replace(/\{target\}/g, targetRef);
+        }
+
+        if (activity.description) {
+          return targetRef
+            ? `${actorRef} ${activity.description} ${targetRef}`
+            : `${actorRef} ${activity.description}`;
+        }
+
+        if (activity.verb) {
+          return targetRef
+            ? `${actorRef} ${activity.verb} ${targetRef}`
+            : `${actorRef} ${activity.verb}`;
+        }
+
+        return 'activity phrase';
       }
-
-      // Check if template property exists (even if empty string)
-      if ('template' in activity) {
-        return (activity.template || '')
-          .replace(/\{actor\}/g, actorRef)
-          .replace(/\{target\}/g, targetRef);
-      }
-
-      if (activity.description) {
-        return targetRef
-          ? `${actorRef} ${activity.description} ${targetRef}`
-          : `${actorRef} ${activity.description}`;
-      }
-
-      if (activity.verb) {
-        return targetRef
-          ? `${actorRef} ${activity.verb} ${targetRef}`
-          : `${actorRef} ${activity.verb}`;
-      }
-
-      return 'activity phrase';
-    }),
+    ),
   };
 }

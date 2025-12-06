@@ -95,11 +95,15 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:visible': { isVisible: true },
     'core:weaknesses': { text: 'I tend to be impatient' },
     'core:weight': { weight: 5.5 },
-    "movement:exits": [],
+    'movement:exits': [],
     'anatomy:part': { subType: 'leg' },
     'anatomy:sockets': {
       sockets: [
-        { id: 'front_left_ankle', orientation: 'left_front', allowedTypes: ['foot'] },
+        {
+          id: 'front_left_ankle',
+          orientation: 'left_front',
+          allowedTypes: ['foot'],
+        },
       ],
     },
     'anatomy:joint': { parentId: 'entity-123', socketId: 'ankle' },
@@ -133,12 +137,16 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:poisoned': { remainingTurns: 3, tickDamage: 5 },
     'anatomy:stunned': { remainingTurns: 2 },
     'anatomy:vital_organ': { organType: 'heart' },
-    'anatomy:dying': { turnsRemaining: 3, causeOfDying: 'overall_health_critical' },
-    'anatomy:dead': { causeOfDeath: 'vital_organ_destroyed', deathTimestamp: 1733143200 },
+    'anatomy:dying': {
+      turnsRemaining: 3,
+      causeOfDying: 'overall_health_critical',
+    },
+    'anatomy:dead': {
+      causeOfDeath: 'vital_organ_destroyed',
+      deathTimestamp: 1733143200,
+    },
     'anatomy:damage_propagation': {
-      rules: [
-        { childSocketId: 'heart_socket', baseProbability: 0.3 },
-      ],
+      rules: [{ childSocketId: 'heart_socket', baseProbability: 0.3 }],
     },
     'anatomy:embedded': {},
   };
@@ -176,7 +184,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'core:visible': {},
     'core:weaknesses': {},
     'core:weight': { weight: -1 }, // Invalid: negative weight not allowed
-    "movement:exits": {},
+    'movement:exits': {},
     'anatomy:part': {},
     'anatomy:sockets': {},
     'anatomy:joint': {},

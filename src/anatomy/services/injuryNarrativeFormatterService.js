@@ -108,10 +108,7 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     // Check if healthy
-    if (
-      !summary.injuredParts ||
-      summary.injuredParts.length === 0
-    ) {
+    if (!summary.injuredParts || summary.injuredParts.length === 0) {
       return 'I feel fine.';
     }
 
@@ -148,7 +145,10 @@ class InjuryNarrativeFormatterService extends BaseService {
     }
 
     // 3. Add other effect descriptions (bleeding, burning, etc. - dismemberment already handled above)
-    const effectDescriptions = this.#formatEffectsFirstPerson(summary, dismemberedPartIds);
+    const effectDescriptions = this.#formatEffectsFirstPerson(
+      summary,
+      dismemberedPartIds
+    );
     if (effectDescriptions) {
       narrativeParts.push(effectDescriptions);
     }
@@ -165,7 +165,9 @@ class InjuryNarrativeFormatterService extends BaseService {
    */
   formatThirdPersonVisible(summary) {
     if (!summary) {
-      this.#logger.warn('formatThirdPersonVisible called with null/undefined summary');
+      this.#logger.warn(
+        'formatThirdPersonVisible called with null/undefined summary'
+      );
       return 'Perfect health.';
     }
 
@@ -198,9 +200,10 @@ class InjuryNarrativeFormatterService extends BaseService {
     for (const state of states) {
       if (state === 'healthy') continue;
 
-      const partsForState = state === 'destroyed'
-        ? summary.destroyedParts || []
-        : (summary.injuredParts || []).filter((p) => p.state === state);
+      const partsForState =
+        state === 'destroyed'
+          ? summary.destroyedParts || []
+          : (summary.injuredParts || []).filter((p) => p.state === state);
 
       const visibleParts = partsForState.filter(
         (p) => !p.isVitalOrgan && !dismemberedPartIds.has(p.partEntityId)
@@ -292,9 +295,15 @@ class InjuryNarrativeFormatterService extends BaseService {
     // Propagated damage - narrative chain
     if (propagatedDamage && propagatedDamage.length > 0) {
       propagatedDamage.forEach((prop, index) => {
-        const propPartName = this.#formatPartName(prop.childPartType, prop.orientation);
-        const connector = index === 0 ? 'The damage propagates to' : 'The damage also propagates to';
-        
+        const propPartName = this.#formatPartName(
+          prop.childPartType,
+          prop.orientation
+        );
+        const connector =
+          index === 0
+            ? 'The damage propagates to'
+            : 'The damage also propagates to';
+
         let propDamage = `${connector} ${resolvedEntityName}'s ${propPartName}, that suffers ${resolvedDamageType} damage`;
 
         // Add effects for propagated damage
@@ -366,7 +375,8 @@ class InjuryNarrativeFormatterService extends BaseService {
     const bleedingParts = (summary.bleedingParts || []).filter(
       (p) => !dismemberedPartIds.has(p.partEntityId)
     );
-    const bleedingNarrative = this.#formatBleedingEffectsFirstPerson(bleedingParts);
+    const bleedingNarrative =
+      this.#formatBleedingEffectsFirstPerson(bleedingParts);
     if (bleedingNarrative) {
       effectParts.push(bleedingNarrative);
     }
@@ -486,9 +496,8 @@ class InjuryNarrativeFormatterService extends BaseService {
     const bleedingParts = (summary.bleedingParts || []).filter(
       (p) => !dismemberedPartIds.has(p.partEntityId) && !p.isVitalOrgan
     );
-    const bleedingNarrative = this.#formatBleedingEffectsThirdPerson(
-      bleedingParts
-    );
+    const bleedingNarrative =
+      this.#formatBleedingEffectsThirdPerson(bleedingParts);
     if (bleedingNarrative) {
       effectParts.push(bleedingNarrative);
     }
@@ -633,9 +642,7 @@ class InjuryNarrativeFormatterService extends BaseService {
    * @private
    */
   #buildDismemberedPartIdSet(summary) {
-    return new Set(
-      (summary.dismemberedParts || []).map((p) => p.partEntityId)
-    );
+    return new Set((summary.dismemberedParts || []).map((p) => p.partEntityId));
   }
 
   /**
@@ -646,7 +653,8 @@ class InjuryNarrativeFormatterService extends BaseService {
    * @private
    */
   #formatDyingMessage(turnsRemaining) {
-    const turnsText = turnsRemaining === 1 ? 'moment' : `${turnsRemaining} moments`;
+    const turnsText =
+      turnsRemaining === 1 ? 'moment' : `${turnsRemaining} moments`;
     return `I am dying. Without help, I have only ${turnsText} left...`;
   }
 
@@ -667,7 +675,10 @@ class InjuryNarrativeFormatterService extends BaseService {
       this.#formatPartName(part.partType, part.orientation)
     );
 
-    const formattedList = this.#formatListWithLeadingPossessive(partNames, 'My');
+    const formattedList = this.#formatListWithLeadingPossessive(
+      partNames,
+      'My'
+    );
     const verb = dismemberedParts.length === 1 ? 'is' : 'are';
 
     return [`${formattedList} ${verb} missing.`];
@@ -707,7 +718,10 @@ class InjuryNarrativeFormatterService extends BaseService {
    * @private
    */
   #formatPartName(partType, orientation) {
-    const normalizedType = (partType?.toLowerCase() || 'body part').replace(/_/g, ' ');
+    const normalizedType = (partType?.toLowerCase() || 'body part').replace(
+      /_/g,
+      ' '
+    );
 
     if (orientation) {
       return `${orientation} ${normalizedType}`;

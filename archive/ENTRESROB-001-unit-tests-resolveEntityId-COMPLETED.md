@@ -74,10 +74,10 @@ const mockRegistry = {
     {
       id: 'anatomy:humanoid_head',
       components: {
-        'anatomy:part': { subType: 'head' }
-      }
-    }
-  ])
+        'anatomy:part': { subType: 'head' },
+      },
+    },
+  ]),
 };
 ```
 
@@ -99,6 +99,7 @@ npm run test:unit -- --testPathPattern="socketExtractor" --coverage
 - [x] All mocks are cleaned up properly in afterEach
 
 ## Outcome
+
 - Updated ticket assumptions: `resolveEntityId` needed to be exported for proper unit testing as indirect testing was insufficient for edge cases.
 - Modified `src/anatomy/validation/socketExtractor.js` to export `resolveEntityId` with `@internal` tag.
 - Added 11 unit tests to `tests/unit/anatomy/validation/socketExtractor.test.js` covering all specified cases + extra robustness checks (registry without methods, registry returning null).

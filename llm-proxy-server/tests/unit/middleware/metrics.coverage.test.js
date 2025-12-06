@@ -526,8 +526,7 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
         // observe non-error values to exercise their fallback logic.
         sequence: [450, 399, 399, 399, 399, 399],
         [Symbol.toPrimitive](hint) {
-          const value =
-            this.sequence.length > 0 ? this.sequence.shift() : 399;
+          const value = this.sequence.length > 0 ? this.sequence.shift() : 399;
           this.conversions.push({ hint, value });
           return value;
         },
@@ -715,7 +714,9 @@ describe('Metrics Middleware - Additional Coverage Tests', () => {
         );
 
         middleware(mockRequest, mockResponse, mockNext);
-        mockResponse.json({ usage: { prompt_tokens: 10, completion_tokens: 5 } });
+        mockResponse.json({
+          usage: { prompt_tokens: 10, completion_tokens: 5 },
+        });
 
         expect(mockMetricsService.recordLlmRequest).toHaveBeenCalledWith(
           expect.objectContaining({

@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import path from 'node:path';
@@ -82,13 +76,14 @@ describe('traceRoutes supplemental integration coverage', () => {
       .post('/api/traces/write-batch')
       .send({
         outputDirectory: outsideDirectory,
-        traces: [
-          { traceData: { attempt: 'escape' }, fileName: 'escape.json' },
-        ],
+        traces: [{ traceData: { attempt: 'escape' }, fileName: 'escape.json' }],
       });
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ success: false, error: 'Invalid output path' });
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Invalid output path',
+    });
     await expect(access(outsideDirectory)).rejects.toThrow();
   });
 
@@ -125,7 +120,9 @@ describe('traceRoutes supplemental integration coverage', () => {
     const stringContent = await readFile(normalizedStringPath, 'utf8');
     expect(stringContent).toBe(stringPayload);
 
-    const parsedObject = JSON.parse(await readFile(normalizedObjectPath, 'utf8'));
+    const parsedObject = JSON.parse(
+      await readFile(normalizedObjectPath, 'utf8')
+    );
     expect(parsedObject).toEqual({ instrumented: true });
 
     const listing = await request(app).get('/api/traces/list');

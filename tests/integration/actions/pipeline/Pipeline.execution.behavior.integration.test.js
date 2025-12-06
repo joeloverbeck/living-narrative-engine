@@ -176,9 +176,11 @@ describe('Pipeline integration behavior', () => {
 
       const succeedingStage = {
         name: 'RecoveryStage',
-        execute: jest.fn().mockResolvedValue(
-          PipelineResult.success({ data: { recovered: true } })
-        ),
+        execute: jest
+          .fn()
+          .mockResolvedValue(
+            PipelineResult.success({ data: { recovered: true } })
+          ),
       };
 
       const pipeline = new Pipeline([failingStage, succeedingStage], logger);
@@ -213,9 +215,11 @@ describe('Pipeline integration behavior', () => {
 
       const firstStage = {
         name: 'SafeStage',
-        execute: jest.fn().mockResolvedValue(
-          PipelineResult.success({ actions: [{ id: 'good' }] })
-        ),
+        execute: jest
+          .fn()
+          .mockResolvedValue(
+            PipelineResult.success({ actions: [{ id: 'good' }] })
+          ),
       };
 
       const explodingStage = {

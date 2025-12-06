@@ -9,10 +9,7 @@
     "condition": {
       "{{OPERATOR}}": [
         {
-          "has_component": [
-            { "var": "{{ENTITY_PATH}}" },
-            "{{COMPONENT_ID}}"
-          ]
+          "has_component": [{ "var": "{{ENTITY_PATH}}" }, "{{COMPONENT_ID}}"]
         }
       ]
     }
@@ -32,7 +29,7 @@
       "description": "{{VALIDATION_DESCRIPTION: Check if first step succeeded}}",
       "stepType": "conditional",
       "condition": {
-        "==": [{"var": "refinement.localState.{{STATE_KEY_1}}.success"}, true]
+        "==": [{ "var": "refinement.localState.{{STATE_KEY_1}}.success" }, true]
       },
       "thenSteps": [
         {
@@ -52,7 +49,10 @@
             "{{TARGET_3_NAME}}": "refinement.localState.{{STATE_KEY_2}}.data.{{PROPERTY_NAME}}"
           },
           "condition": {
-            "==": [{"var": "refinement.localState.{{STATE_KEY_2}}.success"}, true]
+            "==": [
+              { "var": "refinement.localState.{{STATE_KEY_2}}.success" },
+              true
+            ]
           }
         }
       ],

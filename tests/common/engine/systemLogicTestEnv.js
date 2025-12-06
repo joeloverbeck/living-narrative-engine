@@ -96,7 +96,7 @@ export function createBaseRuleEnvironment({
   // Create a debug logger that silences debug output for performance tests
   const debugLogger = {
     debug: jest.fn(),
-    info: jest.fn(),
+    info: console.info, // Enable info logs for debugging
     warn: jest.fn(),
     error: jest.fn(),
   };
@@ -281,7 +281,10 @@ export function createBaseRuleEnvironment({
   function initializeEnv(entityList) {
     // Create entity manager with adapter by default for production API compatibility
     entityManager = useAdapterEntityManager
-      ? createEntityManagerAdapter({ logger: testLogger, initialEntities: entityList })
+      ? createEntityManagerAdapter({
+          logger: testLogger,
+          initialEntities: entityList,
+        })
       : new SimpleEntityManager(entityList); // Legacy fallback - takes array of entities
     operationRegistry = new OperationRegistry({ logger: testLogger });
     operationInterpreter = new OperationInterpreter({
@@ -428,7 +431,10 @@ export function createBaseRuleEnvironment({
           const descendantIds = getDescendantPartIds(rootId);
 
           for (const partId of descendantIds) {
-            const component = entityManager.getComponentData(partId, componentId);
+            const component = entityManager.getComponentData(
+              partId,
+              componentId
+            );
 
             if (!component) {
               continue;
@@ -556,7 +562,10 @@ export function createBaseRuleEnvironment({
 
         // Handle the positioning:furniture_im_sitting_on and personal-space:furniture_actor_sitting_on scopes
         // These are equivalent - both find the furniture the actor is sitting on
-        if (scopeName === 'positioning:furniture_im_sitting_on' || scopeName === 'personal-space:furniture_actor_sitting_on') {
+        if (
+          scopeName === 'positioning:furniture_im_sitting_on' ||
+          scopeName === 'personal-space:furniture_actor_sitting_on'
+        ) {
           // This scope should find furniture that the actor is currently sitting on
           // The scope definition is: entities(positioning:allows_sitting)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:sitting_on.furniture_id"}]}]
 
@@ -601,14 +610,16 @@ export function createBaseRuleEnvironment({
 
           // Find all entities with positioning:allows_bending_over in the same location
           const allEntities = Array.from(entityManager.entities);
-          const availableSurfaces = allEntities.filter(entity => {
-            const hasBendingComponent = entity.components?.['positioning:allows_bending_over'];
+          const availableSurfaces = allEntities.filter((entity) => {
+            const hasBendingComponent =
+              entity.components?.['positioning:allows_bending_over'];
             const entityPosition = entity.components?.['core:position'];
-            const sameLocation = entityPosition?.locationId === actorPosition.locationId;
+            const sameLocation =
+              entityPosition?.locationId === actorPosition.locationId;
             return hasBendingComponent && sameLocation;
           });
 
-          const surfaceIds = availableSurfaces.map(surface => surface.id);
+          const surfaceIds = availableSurfaces.map((surface) => surface.id);
           return { success: true, value: new Set(surfaceIds) };
         }
 
@@ -707,7 +718,10 @@ export function createBaseRuleEnvironment({
         }
 
         // Handle the core:actors_in_location scope (same as positioning:close_actors)
-        if (scopeName === 'core:actors_in_location' || scopeName === 'positioning:close_actors') {
+        if (
+          scopeName === 'core:actors_in_location' ||
+          scopeName === 'positioning:close_actors'
+        ) {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -785,12 +799,22 @@ export function createBaseRuleEnvironment({
         // Handle the items:examinable_items scope (union of inventory + location items)
         if (scopeName === 'items:examinable_items') {
           // Get items from inventory
-          const inventoryResult = simpleScopeResolver.resolveSync('items:actor_inventory_items', context);
-          const inventoryItems = inventoryResult.success ? inventoryResult.value : new Set();
+          const inventoryResult = simpleScopeResolver.resolveSync(
+            'items:actor_inventory_items',
+            context
+          );
+          const inventoryItems = inventoryResult.success
+            ? inventoryResult.value
+            : new Set();
 
           // Get items at location
-          const locationResult = simpleScopeResolver.resolveSync('items:items_at_location', context);
-          const locationItems = locationResult.success ? locationResult.value : new Set();
+          const locationResult = simpleScopeResolver.resolveSync(
+            'items:items_at_location',
+            context
+          );
+          const locationItems = locationResult.success
+            ? locationResult.value
+            : new Set();
 
           // Union both sets
           const allItems = new Set([...inventoryItems, ...locationItems]);
@@ -852,7 +876,8 @@ export function createBaseRuleEnvironment({
           });
 
           const containersAtLocation = allEntities.filter((entity) => {
-            const hasContainerComponent = entity.components?.['items:container'];
+            const hasContainerComponent =
+              entity.components?.['items:container'];
             const entityPosition = entity.components?.['core:position'];
 
             if (!hasContainerComponent || !entityPosition) {
@@ -868,7 +893,9 @@ export function createBaseRuleEnvironment({
             return hasContainerComponent.isOpen === false;
           });
 
-          const containerIds = containersAtLocation.map((container) => container.id);
+          const containerIds = containersAtLocation.map(
+            (container) => container.id
+          );
           return { success: true, value: new Set(containerIds) };
         }
 
@@ -885,7 +912,10 @@ export function createBaseRuleEnvironment({
           const container = entityManager.getEntityInstance(containerId);
           const containerComponent = container?.components?.['items:container'];
 
-          if (!containerComponent || !Array.isArray(containerComponent.contents)) {
+          if (
+            !containerComponent ||
+            !Array.isArray(containerComponent.contents)
+          ) {
             return { success: true, value: new Set() };
           }
 
@@ -906,7 +936,8 @@ export function createBaseRuleEnvironment({
 
           // Get furniture entity and its sitting component
           const furniture = entityManager.getEntityInstance(furnitureId);
-          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          const allowsSitting =
+            furniture?.components?.['positioning:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }
@@ -933,8 +964,13 @@ export function createBaseRuleEnvironment({
               const occupantId = spots[i];
               // Verify the occupant exists and has correct component data
               const occupant = entityManager.getEntityInstance(occupantId);
-              const occupantSitting = occupant?.components?.['positioning:sitting_on'];
-              if (occupantSitting && occupantSitting.furniture_id === furnitureId && occupantSitting.spot_index === i) {
+              const occupantSitting =
+                occupant?.components?.['positioning:sitting_on'];
+              if (
+                occupantSitting &&
+                occupantSitting.furniture_id === furnitureId &&
+                occupantSitting.spot_index === i
+              ) {
                 return { success: true, value: new Set([occupantId]) };
               }
             }
@@ -953,7 +989,8 @@ export function createBaseRuleEnvironment({
           }
 
           const furniture = entityManager.getEntityInstance(furnitureId);
-          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          const allowsSitting =
+            furniture?.components?.['positioning:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }
@@ -979,7 +1016,8 @@ export function createBaseRuleEnvironment({
             if (spots[i] !== null) {
               const occupantId = spots[i];
               const occupant = entityManager.getEntityInstance(occupantId);
-              const occupantSitting = occupant?.components?.['positioning:sitting_on'];
+              const occupantSitting =
+                occupant?.components?.['positioning:sitting_on'];
               if (
                 occupantSitting &&
                 occupantSitting.furniture_id === furnitureId &&
@@ -1002,7 +1040,8 @@ export function createBaseRuleEnvironment({
 
           // Get furniture entity and its sitting component
           const furniture = entityManager.getEntityInstance(targetId);
-          const allowsSitting = furniture?.components?.['positioning:allows_sitting'];
+          const allowsSitting =
+            furniture?.components?.['positioning:allows_sitting'];
           if (!allowsSitting || !Array.isArray(allowsSitting.spots)) {
             return { success: true, value: new Set() };
           }
@@ -1025,9 +1064,8 @@ export function createBaseRuleEnvironment({
           }
 
           // Find the rightmost occupied index
-          const rightmostOccupiedIndex = occupiedIndices.length > 0
-            ? Math.max(...occupiedIndices)
-            : -1;
+          const rightmostOccupiedIndex =
+            occupiedIndices.length > 0 ? Math.max(...occupiedIndices) : -1;
 
           // Filter for actors sitting on this furniture who meet all criteria
           const validActors = allEntities.filter((entity) => {
@@ -1055,7 +1093,10 @@ export function createBaseRuleEnvironment({
             }
 
             // Both spots to the right must be empty
-            if (spots[spotIndex + 1] !== null || spots[spotIndex + 2] !== null) {
+            if (
+              spots[spotIndex + 1] !== null ||
+              spots[spotIndex + 2] !== null
+            ) {
               return false;
             }
 
@@ -1090,10 +1131,7 @@ export function createBaseRuleEnvironment({
           const instrument = entityManager.getEntityInstance(
             playingMusic.playing_on
           );
-          if (
-            !instrument ||
-            !instrument.components?.['music:is_instrument']
-          ) {
+          if (!instrument || !instrument.components?.['music:is_instrument']) {
             return { success: true, value: new Set() };
           }
 
@@ -1112,7 +1150,9 @@ export function createBaseRuleEnvironment({
           }
 
           // Get location entity
-          const location = entityManager.getEntityInstance(actorPosition.locationId);
+          const location = entityManager.getEntityInstance(
+            actorPosition.locationId
+          );
           const exits = location?.components?.['movement:exits'];
 
           if (!Array.isArray(exits)) {
@@ -1127,10 +1167,15 @@ export function createBaseRuleEnvironment({
               }
 
               const blocker = entityManager.getEntityInstance(exit.blocker);
-              return blocker?.components?.['movement:is_dimensional_portal'] !== undefined;
+              return (
+                blocker?.components?.['movement:is_dimensional_portal'] !==
+                undefined
+              );
             })
             .map((exit) => exit.target)
-            .filter((target) => typeof target === 'string' && target.length > 0);
+            .filter(
+              (target) => typeof target === 'string' && target.length > 0
+            );
 
           return { success: true, value: new Set(dimensionalPortals) };
         }
@@ -1170,10 +1215,15 @@ export function createBaseRuleEnvironment({
 
             return {
               success: true,
-              value: result instanceof Set ? result : new Set(Array.isArray(result) ? result : [result])
+              value:
+                result instanceof Set
+                  ? result
+                  : new Set(Array.isArray(result) ? result : [result]),
             };
           } catch (error) {
-            testLogger.warn(`Failed to evaluate scope ${scopeName}: ${error.message}`);
+            testLogger.warn(
+              `Failed to evaluate scope ${scopeName}: ${error.message}`
+            );
             return { success: true, value: new Set() };
           }
         }
@@ -1481,7 +1531,11 @@ export function createRuleTestEnvironment(options) {
           // Check if contextFrom exists before accessing - only secondary/tertiary targets have it
           const dependency = 'contextFrom' in def ? def.contextFrom : undefined;
 
-          if (!dependency || orderedKeys.includes(dependency) || !remainingKeys.has(dependency)) {
+          if (
+            !dependency ||
+            orderedKeys.includes(dependency) ||
+            !remainingKeys.has(dependency)
+          ) {
             orderedKeys.push(key);
             remainingKeys.delete(key);
             progress = true;
@@ -1526,11 +1580,13 @@ export function createRuleTestEnvironment(options) {
     const buildContextForTarget = (resolvedTargets, targetKey, targetDef) => {
       const context = {
         actor: actorContext,
-        actorEntity: actorContext,  // Add actorEntity for ScopeEngine compatibility
+        actorEntity: actorContext, // Add actorEntity for ScopeEngine compatibility
         targets: {},
       };
 
-      for (const [resolvedKey, resolvedValue] of Object.entries(resolvedTargets)) {
+      for (const [resolvedKey, resolvedValue] of Object.entries(
+        resolvedTargets
+      )) {
         if (!resolvedValue) {
           continue;
         }
@@ -1566,12 +1622,15 @@ export function createRuleTestEnvironment(options) {
     const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
       // For actions with no targets (targets: "none"), we still need to create
       // a context override with the actor for prerequisite evaluation
-      const hasTargets = resolvedTargets && Object.keys(resolvedTargets).length > 0;
+      const hasTargets =
+        resolvedTargets && Object.keys(resolvedTargets).length > 0;
 
       const override = { targets: {} };
 
       if (hasTargets) {
-        for (const [targetKey, resolvedTarget] of Object.entries(resolvedTargets)) {
+        for (const [targetKey, resolvedTarget] of Object.entries(
+          resolvedTargets
+        )) {
           if (!resolvedTarget || !resolvedTarget.id) {
             continue;
           }
@@ -1668,11 +1727,18 @@ export function createRuleTestEnvironment(options) {
       const nextAssignments = [];
 
       for (const { resolvedTargets } of pendingAssignments) {
-        const resolutionContext = buildContextForTarget(resolvedTargets, key, definition);
+        const resolutionContext = buildContextForTarget(
+          resolvedTargets,
+          key,
+          definition
+        );
 
         let result;
         try {
-          result = env.unifiedScopeResolver.resolveSync(scopeName, resolutionContext);
+          result = env.unifiedScopeResolver.resolveSync(
+            scopeName,
+            resolutionContext
+          );
         } catch (error) {
           env.logger.debug(
             `Failed to resolve ${key} scope ${scopeName} for action ${actionId}: ${error.message}`
@@ -1720,7 +1786,10 @@ export function createRuleTestEnvironment(options) {
 
           if (action.required_components) {
             const requiredComponents = action.required_components[targetKey];
-            if (Array.isArray(requiredComponents) && requiredComponents.length > 0) {
+            if (
+              Array.isArray(requiredComponents) &&
+              requiredComponents.length > 0
+            ) {
               const missingComponent = requiredComponents.find(
                 (componentId) => !targetComponents[componentId]
               );
@@ -1736,7 +1805,10 @@ export function createRuleTestEnvironment(options) {
 
           if (action.forbidden_components) {
             const forbiddenComponents = action.forbidden_components[targetKey];
-            if (Array.isArray(forbiddenComponents) && forbiddenComponents.length > 0) {
+            if (
+              Array.isArray(forbiddenComponents) &&
+              forbiddenComponents.length > 0
+            ) {
               const violatingComponent = forbiddenComponents.find(
                 (componentId) => targetComponents[componentId]
               );
@@ -1758,7 +1830,8 @@ export function createRuleTestEnvironment(options) {
     };
 
     // Validate required and forbidden components for all resolved targets
-    const filteredAssignments = filterAssignmentsByComponentRules(pendingAssignments);
+    const filteredAssignments =
+      filterAssignmentsByComponentRules(pendingAssignments);
     if (!filteredAssignments || filteredAssignments.length === 0) {
       return false;
     }
@@ -1843,7 +1916,9 @@ export function createRuleTestEnvironment(options) {
     const candidates = env.actionIndex.getCandidateActions(actorEntity);
 
     // Filter candidates by scope validation
-    return candidates.filter((action) => env.validateAction(actorId, action.id));
+    return candidates.filter((action) =>
+      env.validateAction(actorId, action.id)
+    );
   };
 
   return env;

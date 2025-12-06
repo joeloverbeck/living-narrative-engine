@@ -5,7 +5,6 @@
  * @description AST walker/query engine that resolves Scope-DSL expressions to sets of entity IDs
  */
 
-
 import ScopeDepthError from '../errors/scopeDepthError.js';
 import ScopeCycleError from '../errors/scopeCycleError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
@@ -238,7 +237,10 @@ class ScopeEngine extends IScopeEngine {
     };
 
     const getRegistryComponents = (definitionKey) => {
-      if (!componentRegistry || typeof componentRegistry.getDefinition !== 'function') {
+      if (
+        !componentRegistry ||
+        typeof componentRegistry.getDefinition !== 'function'
+      ) {
         return null;
       }
 
@@ -402,16 +404,20 @@ class ScopeEngine extends IScopeEngine {
    * @param {object} deps.runtimeCtx - Runtime context for service resolution.
    * @returns {Array<object>} Array of resolver objects including clothing resolvers.
    */
-  _createResolvers({ locationProvider, entitiesGateway, logicEval, runtimeCtx }) {
+  _createResolvers({
+    locationProvider,
+    entitiesGateway,
+    logicEval,
+    runtimeCtx,
+  }) {
     // Get ClothingAccessibilityService from runtime context if available
-    const clothingAccessibilityService = runtimeCtx?.container?.resolve?.(
-      tokens.ClothingAccessibilityService
-    ) || null;
+    const clothingAccessibilityService =
+      runtimeCtx?.container?.resolve?.(tokens.ClothingAccessibilityService) ||
+      null;
 
     // Get BodyGraphService from runtime context if available
-    const bodyGraphService = runtimeCtx?.container?.resolve?.(
-      tokens.BodyGraphService
-    ) || null;
+    const bodyGraphService =
+      runtimeCtx?.container?.resolve?.(tokens.BodyGraphService) || null;
 
     // Create clothing resolvers
     const clothingStepResolver = createClothingStepResolver({
@@ -507,7 +513,10 @@ class ScopeEngine extends IScopeEngine {
     // Validate parameters - Fail fast with clear errors BEFORE any other code
     ParameterValidator.validateAST(ast, 'ScopeEngine.resolve');
     ParameterValidator.validateActorEntity(actorEntity, 'ScopeEngine.resolve');
-    ParameterValidator.validateRuntimeContext(runtimeCtx, 'ScopeEngine.resolve');
+    ParameterValidator.validateRuntimeContext(
+      runtimeCtx,
+      'ScopeEngine.resolve'
+    );
 
     const source = 'ScopeEngine';
 
@@ -637,13 +646,7 @@ class ScopeEngine extends IScopeEngine {
 
         // Log step to tracer after resolution
         const operation = this._buildOperationDescription(node);
-        tracer.logStep(
-          resolverName,
-          operation,
-          input,
-          result,
-          { node }
-        );
+        tracer.logStep(resolverName, operation, input, result, { node });
 
         return result;
       }
@@ -670,8 +673,13 @@ class ScopeEngine extends IScopeEngine {
         return 'SourceResolver';
       case 'Step':
         // Check if it's a clothing-specific step
-        if (node.field === 'items_in_slot' || node.field === 'slot_accessibility') {
-          return node.field === 'items_in_slot' ? 'SlotAccessResolver' : 'ClothingStepResolver';
+        if (
+          node.field === 'items_in_slot' ||
+          node.field === 'slot_accessibility'
+        ) {
+          return node.field === 'items_in_slot'
+            ? 'SlotAccessResolver'
+            : 'ClothingStepResolver';
         }
         return 'StepResolver';
       case 'Filter':

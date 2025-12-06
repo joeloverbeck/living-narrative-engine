@@ -6,14 +6,14 @@ Add a prerequisite to the `items:put_in_container` action requiring the actor to
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                                   | Change                                                |
+| ------------------------------------------------------ | ----------------------------------------------------- |
 | `data/mods/items/actions/put_in_container.action.json` | Add `prerequisites` array after `required_components` |
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                                  | Purpose                                       |
+| --------------------------------------------------------------------- | --------------------------------------------- |
 | `tests/integration/mods/items/put_in_container_prerequisites.test.js` | Integration tests for prerequisite evaluation |
 
 ## Implementation Details
@@ -21,6 +21,7 @@ Add a prerequisite to the `items:put_in_container` action requiring the actor to
 ### put_in_container.action.json
 
 **Current State (lines 7-10)**:
+
 ```json
   "required_components": {
     "actor": ["items:inventory"]
@@ -29,6 +30,7 @@ Add a prerequisite to the `items:put_in_container` action requiring the actor to
 ```
 
 **New State**:
+
 ```json
   "required_components": {
     "actor": ["items:inventory"]
@@ -87,25 +89,30 @@ npx eslint data/mods/items/actions/put_in_container.action.json tests/integratio
 ### Required Test Suites
 
 #### 1. Action Definition Structure
+
 - `should have prerequisites array defined`
 - `should reference anatomy:actor-has-free-grabbing-appendage condition`
 - `should have failure_message for user feedback`
 - `should preserve other action properties` (id, generateCombinations, targets, required_components, visual)
 
 #### 2. Prerequisite Evaluation - Pass Cases
+
 - `should pass when actor has exactly one free grabbing appendage`
 - `should pass when actor has multiple free grabbing appendages`
 - `should pass for actor with two hands both free`
 
 #### 3. Prerequisite Evaluation - Fail Cases
+
 - `should fail when actor has zero free grabbing appendages`
 - `should fail when all appendages are locked (holding items)`
 
 #### 4. Edge Cases
+
 - `should handle missing actor gracefully`
 - `should handle actor with no grabbing appendages`
 
 #### 5. Condition Definition Validation
+
 - `should use hasFreeGrabbingAppendages operator with parameter 1`
 - `condition ID should match what the action references`
 
@@ -129,11 +136,11 @@ npx eslint data/mods/items/actions/put_in_container.action.json tests/integratio
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern template |
+| File                                                                            | Purpose                |
+| ------------------------------------------------------------------------------- | ---------------------- |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`      | Test pattern template  |
 | `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition to reference |
-| `specs/grabbing-prerequisites-expansion.md` | Full specification |
+| `specs/grabbing-prerequisites-expansion.md`                                     | Full specification     |
 
 ## Additional Test Assertions for This Ticket
 
@@ -141,9 +148,15 @@ npx eslint data/mods/items/actions/put_in_container.action.json tests/integratio
 test('should preserve other action properties', () => {
   expect(putInContainerAction.id).toBe('items:put_in_container');
   expect(putInContainerAction.generateCombinations).toBe(true);
-  expect(putInContainerAction.targets.primary.scope).toBe('items:open_containers_at_location');
-  expect(putInContainerAction.targets.secondary.scope).toBe('items:actor_inventory_items');
-  expect(putInContainerAction.required_components.actor).toContain('items:inventory');
+  expect(putInContainerAction.targets.primary.scope).toBe(
+    'items:open_containers_at_location'
+  );
+  expect(putInContainerAction.targets.secondary.scope).toBe(
+    'items:actor_inventory_items'
+  );
+  expect(putInContainerAction.required_components.actor).toContain(
+    'items:inventory'
+  );
 });
 ```
 

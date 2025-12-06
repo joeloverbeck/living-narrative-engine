@@ -19,7 +19,7 @@ Multi-action planning is needed when:
 
 ### How Does it Work?
 
-The GOAP planner uses A* search to find the optimal sequence of tasks that:
+The GOAP planner uses A\* search to find the optimal sequence of tasks that:
 
 1. **Start from current state**: Actor's current world state
 2. **Apply task effects sequentially**: Simulate state changes via `planning_effects`
@@ -36,9 +36,8 @@ The GOAP system uses a two-level architecture:
   - Defined in `data/mods/*/tasks/` directories
   - Have `planning_preconditions` and `planning_effects`
   - Work at the conceptual level ("consume food")
-  
 - **Executable Actions**: Concrete operations executed by the engine (e.g., `items:consume_item`)
-  - Defined in `data/mods/*/actions/` directories  
+  - Defined in `data/mods/*/actions/` directories
   - Have `prerequisites`, `forbidden_components`, `required_components`
   - Work at the physical level ("eat this specific apple")
 
@@ -65,7 +64,6 @@ Tasks can be reused multiple times in a single plan:
   - Default: 10 (prevents infinite loops)
   - Can be overridden per task
   - Example: Mining task limited to 5 uses per plan
-  
 - **Structural Gates**: Filter task library per actor before planning
   - Coarse "is this relevant in principle?" check
   - Different from execution-time prerequisites
@@ -79,14 +77,12 @@ The planner uses heuristics to guide the search efficiently:
   - Simple mode: Count boolean conditions + sum numeric gaps
   - Enhanced mode: Estimates task count via most effective task analysis
   - Time complexity: O(n) for n conditions, O(t) for enhanced with t tasks
-  
 - **RPG Heuristic**: Relaxed planning graph analysis
   - Advanced heuristic with better accuracy
   - Analyzes abstract plan structure
   - More expensive but finds better plans
-  
 - **Admissibility**: All heuristics maintain admissibility (never overestimate cost)
-  - Guarantees A* optimality
+  - Guarantees A\* optimality
   - Critical for finding lowest-cost plans
 
 **Performance Benefit**: Good heuristics dramatically reduce search space and planning time.
@@ -111,9 +107,11 @@ The planner stops when:
 ```javascript
 const goal = {
   id: 'gather_gold',
-  goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
-  maxCost: 50,        // Reasonable cost limit
-  maxActions: 10      // Prevent excessive plans
+  goalState: {
+    '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+  },
+  maxCost: 50, // Reasonable cost limit
+  maxActions: 10, // Prevent excessive plans
 };
 
 // Initial state: gold = 0
@@ -125,6 +123,7 @@ const goal = {
 ```
 
 **Key Points**:
+
 - Inequality goal (≥) allows overshoot
 - Task reused 4 times (within maxReuse limit)
 - Each task reduces distance: 100 → 75 → 50 → 25 → 0
@@ -136,7 +135,9 @@ const goal = {
 ```javascript
 const goal = {
   id: 'reduce_hunger',
-  goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] }
+  goalState: {
+    '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+  },
 };
 
 // Initial state: hunger = 100
@@ -148,6 +149,7 @@ const goal = {
 ```
 
 **Key Points**:
+
 - Inequality goal (≤) allows overshoot to 0
 - Values clamped at 0 (standard behavior)
 - Second eat brings hunger from 40 to 0 (overshoots target of 10)
@@ -161,9 +163,9 @@ const goal = {
   goalState: {
     and: [
       { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
-      { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] }
-    ]
-  }
+      { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+    ],
+  },
 };
 
 // Initial state: hunger = 100, health = 50
@@ -178,6 +180,7 @@ const goal = {
 ```
 
 **Key Points**:
+
 - Combined goals require coordinated task selection
 - Planner finds optimal mix based on costs
 - Task order may vary depending on heuristic guidance
@@ -211,8 +214,9 @@ const goal = {
 ```
 
 **Field Descriptions**:
+
 - `id`: Unique task identifier (modId:taskName)
-- `cost`: Task cost for A* search (lower = preferred)
+- `cost`: Task cost for A\* search (lower = preferred)
 - `maxReuse`: Maximum times task can appear in one plan
 - `structural_gates`: Coarse "is this task ever applicable?"
 - `planning_preconditions`: Fine "is this task applicable in this state?"
@@ -234,6 +238,7 @@ const goal = {
 ```
 
 **Field Descriptions**:
+
 - `id`: Unique goal identifier
 - `goalState`: JSON Logic expression defining success
 - `maxCost`: Planning stops if estimated cost exceeds this
@@ -249,6 +254,7 @@ const goal = {
 The planner handles overshoot differently based on goal type:
 
 **Inequality Goals (≤, ≥)**: Overshoot allowed
+
 ```javascript
 // Goal: hunger ≤ 10
 // Task: -60 hunger
@@ -256,6 +262,7 @@ The planner handles overshoot differently based on goal type:
 ```
 
 **Equality Goals (=)**: Overshoot NOT allowed
+
 ```javascript
 // Goal: hunger = 10
 // Task: -60 hunger
@@ -278,6 +285,7 @@ The planner handles overshoot differently based on goal type:
 The planner detects impossibility in several ways:
 
 **Wrong Direction Tasks**: Task increases when decrease needed
+
 ```javascript
 // Goal: hunger ≤ 10 (need decrease)
 // Only task available: +20 hunger (increases)
@@ -285,6 +293,7 @@ The planner detects impossibility in several ways:
 ```
 
 **Insufficient Effect**: Task effect too small, would exceed cost/action limits
+
 ```javascript
 // Goal: hunger ≤ 0
 // Task: -5 hunger, cost = 10
@@ -294,6 +303,7 @@ The planner detects impossibility in several ways:
 ```
 
 **No Applicable Tasks**: Structural gates or preconditions exclude all tasks
+
 ```javascript
 // Goal: reduce_hunger
 // Actor: no biology:can_eat component
@@ -303,16 +313,19 @@ The planner detects impossibility in several ways:
 ### Performance Considerations
 
 **Large Action Counts (20+ actions)**:
+
 - Use performance profiling tools
 - Consider increasing task effect magnitude
 - Verify heuristic accuracy
 
 **Complex Goals**:
+
 - Monitor node expansion count
 - Use RPG heuristic for better guidance
 - Set reasonable cost/action limits
 
 **Heuristic Accuracy**:
+
 - Verify admissibility (never overestimate)
 - Test with known-solvable scenarios
 - Compare estimated vs actual plan costs
@@ -328,14 +341,28 @@ The planner detects impossibility in several ways:
 **Solution**:
 
 1. **Check task reduces distance**:
+
    ```javascript
-   const initialDistance = heuristicRegistry.calculate('goal-distance', initialState, goal);
-   const successorState = effectsSimulator.simulateEffects(initialState, task.planningEffects, context);
-   const newDistance = heuristicRegistry.calculate('goal-distance', successorState, goal);
+   const initialDistance = heuristicRegistry.calculate(
+     'goal-distance',
+     initialState,
+     goal
+   );
+   const successorState = effectsSimulator.simulateEffects(
+     initialState,
+     task.planningEffects,
+     context
+   );
+   const newDistance = heuristicRegistry.calculate(
+     'goal-distance',
+     successorState,
+     goal
+   );
    console.log('Reduces Distance:', newDistance < initialDistance);
    ```
 
 2. **Verify reuse limit not exceeded**:
+
    ```javascript
    const taskDef = dataRegistry.get('tasks', 'test:eat');
    const maxReuse = taskDef.maxReuse || 10;
@@ -357,21 +384,24 @@ The planner detects impossibility in several ways:
 **Solution**:
 
 1. **Lower action limit**:
+
    ```javascript
-   goal.maxActions = 5;  // Reduce from default 20
+   goal.maxActions = 5; // Reduce from default 20
    ```
 
 2. **Increase task effect magnitude**:
+
    ```javascript
    // Change: -10 hunger → -60 hunger
    // Reduces tasks needed: 10 → 2
    ```
 
 3. **Use more effective tasks**:
-  ```javascript
-  // Add new task with stronger effect
-  // Planner will prefer it if cost is reasonable
-  ```
+
+```javascript
+// Add new task with stronger effect
+// Planner will prefer it if cost is reasonable
+```
 
 #### Issue 3: Numeric guard not triggering for mixed goals
 
@@ -380,6 +410,7 @@ The planner detects impossibility in several ways:
 **Solution**:
 
 1. **Keep numeric comparator at root**:
+
    ```javascript
    // ✅ Heuristic active
    goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 20] }
@@ -392,6 +423,7 @@ The planner detects impossibility in several ways:
      ],
    }
    ```
+
 2. **Split structural gating**: Move component checks into structural gates or a separate goal so the numeric comparator can sit at the root.
 3. **Verify with tooling**: Use `goapDebugger.inspectPlan()` or `inspectPlanJSON()` to confirm the `Numeric Heuristic` line shows `ACTIVE`. See `docs/goap/debugging-tools.md` for full workflow.
 
@@ -402,6 +434,7 @@ The planner detects impossibility in several ways:
 **Solution**:
 
 1. **Verify structural gates**:
+
    ```javascript
    // Check task.structural_gates evaluate correctly
    const gates = task.structural_gates;
@@ -410,9 +443,13 @@ The planner detects impossibility in several ways:
    ```
 
 2. **Check task costs**:
+
    ```javascript
    // Planner prefers cheaper tasks
-   console.log('Task Costs:', tasks.map(t => ({ id: t.id, cost: t.cost })));
+   console.log(
+     'Task Costs:',
+     tasks.map((t) => ({ id: t.id, cost: t.cost }))
+   );
    ```
 
 3. **Review heuristic accuracy**:
@@ -426,18 +463,21 @@ The planner detects impossibility in several ways:
 ### Optimize Planning Speed
 
 **Use Enhanced Heuristic**: RPG heuristic provides better guidance
+
 ```javascript
 // In heuristic registry, ensure RPG heuristic is registered
 const heuristic = heuristicRegistry.get('rpg');
 ```
 
 **Set Reasonable Limits**: Prevent excessive search
+
 ```javascript
-goal.maxCost = 100;    // Reasonable for scenario
-goal.maxActions = 10;  // Prevent runaway plans
+goal.maxCost = 100; // Reasonable for scenario
+goal.maxActions = 10; // Prevent runaway plans
 ```
 
 **Profile Performance**: Measure and optimize hotspots
+
 ```javascript
 const startTime = performance.now();
 const plan = await planner.plan(actorId, goal, tasks, initialState);
@@ -448,11 +488,13 @@ console.log('Planning Time:', endTime - startTime, 'ms');
 ### Reduce Memory Usage
 
 **Limit Plan Length**: Smaller plans = less memory
+
 ```javascript
-goal.maxActions = 10;  // Down from 20
+goal.maxActions = 10; // Down from 20
 ```
 
 **Clean Up Closed States**: Periodic cleanup during long searches
+
 ```javascript
 // Implement in planner (advanced)
 if (closed.size > 10000) {
@@ -461,6 +503,7 @@ if (closed.size > 10000) {
 ```
 
 **Efficient State Hashing**: Use msgpack for compact state representation
+
 ```javascript
 // Already implemented in GOAP system
 ```

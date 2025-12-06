@@ -215,13 +215,10 @@ describe('burn/poison extended e2e', () => {
   let safeDispatcher;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -240,7 +237,11 @@ describe('burn/poison extended e2e', () => {
       partScopePoisonDefinition
     );
     const attacker = createAttacker({ weaponId: 'poison-part-blade' });
-    const { actor: target, part } = createTarget({ id: 'poison-target', health: 18, maxHealth: 18 });
+    const { actor: target, part } = createTarget({
+      id: 'poison-target',
+      health: 18,
+      maxHealth: 18,
+    });
     const room = new ModEntityBuilder(ROOM_ID)
       .withName('Room')
       .withComponent('core:position', { locationId: ROOM_ID })
@@ -284,8 +285,9 @@ describe('burn/poison extended e2e', () => {
       safeEventDispatcher: safeDispatcher,
       validatedEventDispatcher: testEnv.eventBus,
     });
-    const originalGetter =
-      testEnv.entityManager.getEntitiesWithComponent.bind(testEnv.entityManager);
+    const originalGetter = testEnv.entityManager.getEntitiesWithComponent.bind(
+      testEnv.entityManager
+    );
     testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
       componentId === 'anatomy:poisoned'
         ? [part.id]
@@ -317,10 +319,21 @@ describe('burn/poison extended e2e', () => {
   });
 
   it('stacks burn independently across multiple targets', async () => {
-    const weaponBuilder = buildWeaponFromDefinition('burn-blade', burnBladeDefinition);
+    const weaponBuilder = buildWeaponFromDefinition(
+      'burn-blade',
+      burnBladeDefinition
+    );
     const attacker = createAttacker({ weaponId: 'burn-blade' });
-    const { actor: targetA, part: partA } = createTarget({ id: 'target-a', health: 40, maxHealth: 40 });
-    const { actor: targetB, part: partB } = createTarget({ id: 'target-b', health: 40, maxHealth: 40 });
+    const { actor: targetA, part: partA } = createTarget({
+      id: 'target-a',
+      health: 40,
+      maxHealth: 40,
+    });
+    const { actor: targetB, part: partB } = createTarget({
+      id: 'target-b',
+      health: 40,
+      maxHealth: 40,
+    });
     const room = new ModEntityBuilder(ROOM_ID)
       .withName('Room')
       .withComponent('core:position', { locationId: ROOM_ID })
@@ -385,10 +398,18 @@ describe('burn/poison extended e2e', () => {
     );
 
     expect(burnA).toEqual(
-      expect.objectContaining({ stackedCount: 2, tickDamage: 4, remainingTurns: 3 })
+      expect.objectContaining({
+        stackedCount: 2,
+        tickDamage: 4,
+        remainingTurns: 3,
+      })
     );
     expect(burnB).toEqual(
-      expect.objectContaining({ stackedCount: 2, tickDamage: 4, remainingTurns: 3 })
+      expect.objectContaining({
+        stackedCount: 2,
+        tickDamage: 4,
+        remainingTurns: 3,
+      })
     );
 
     const burningSystem = new BurningTickSystem({
@@ -397,8 +418,9 @@ describe('burn/poison extended e2e', () => {
       safeEventDispatcher: safeDispatcher,
       validatedEventDispatcher: testEnv.eventBus,
     });
-    const originalGetter =
-      testEnv.entityManager.getEntitiesWithComponent.bind(testEnv.entityManager);
+    const originalGetter = testEnv.entityManager.getEntitiesWithComponent.bind(
+      testEnv.entityManager
+    );
     testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
       componentId === 'anatomy:burning'
         ? [partA.id, partB.id]

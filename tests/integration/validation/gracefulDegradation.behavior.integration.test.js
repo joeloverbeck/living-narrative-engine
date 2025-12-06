@@ -31,21 +31,24 @@ class MemoryLogger {
   }
 }
 
-const originalRegisterStrategy = GracefulDegradationClass.prototype.registerStrategy;
+const originalRegisterStrategy =
+  GracefulDegradationClass.prototype.registerStrategy;
 
 /**
  *
  * @param dependencies
  */
 function createBareInstance(dependencies) {
-  GracefulDegradationClass.prototype.registerStrategy = function registerStrategyStub() {
-    return undefined;
-  };
+  GracefulDegradationClass.prototype.registerStrategy =
+    function registerStrategyStub() {
+      return undefined;
+    };
 
   try {
     return new GracefulDegradationClass(dependencies);
   } finally {
-    GracefulDegradationClass.prototype.registerStrategy = originalRegisterStrategy;
+    GracefulDegradationClass.prototype.registerStrategy =
+      originalRegisterStrategy;
   }
 }
 
@@ -59,7 +62,11 @@ describe('GracefulDegradation behavioural coverage', () => {
   it('generates deterministic defaults for unconfigured contexts', () => {
     const defaults = {
       'mod.alpha': { id: 'alpha', sentinel: true },
-      'component.actor:core': { id: 'actor:core', data: { slots: [] }, partial: true },
+      'component.actor:core': {
+        id: 'actor:core',
+        data: { slots: [] },
+        partial: true,
+      },
     };
 
     const degradation = new GracefulDegradation({
@@ -71,7 +78,9 @@ describe('GracefulDegradation behavioural coverage', () => {
     const explicitDefault = degradation.getDefaultValue('mod', { id: 'alpha' });
     expect(explicitDefault).toBe(defaults['mod.alpha']);
 
-    const generatedModDefault = degradation.getDefaultValue('mod', { modId: 'omega' });
+    const generatedModDefault = degradation.getDefaultValue('mod', {
+      modId: 'omega',
+    });
     expect(generatedModDefault).toMatchObject({
       id: 'omega',
       errors: [],
@@ -120,21 +129,31 @@ describe('GracefulDegradation behavioural coverage', () => {
     expect(skipResult.strategy).toBe(DegradationStrategy.SKIP_FILE);
     expect(skipResult.skipped).toBe(true);
 
-    const cacheResult = degradation.applyDegradation(new Error('ENOENT: cached file not found'), {
-      filePath: '/mods/cached.json',
-      cacheKey: '/mods/cached.json',
-      hasCache: true,
-    });
+    const cacheResult = degradation.applyDegradation(
+      new Error('ENOENT: cached file not found'),
+      {
+        filePath: '/mods/cached.json',
+        cacheKey: '/mods/cached.json',
+        hasCache: true,
+      }
+    );
     expect(cacheResult.strategy).toBe(DegradationStrategy.USE_CACHED);
     expect(cacheResult.fromCache).toBe(true);
     expect(cacheResult.data).toEqual({ id: 'cached', cached: true });
-    expect(logger.records.debug.find(entry => entry.message.includes('Cache hit'))).toBeDefined();
+    expect(
+      logger.records.debug.find((entry) => entry.message.includes('Cache hit'))
+    ).toBeDefined();
 
-    const corruptionResult = degradation.applyDegradation(new Error('malformed data encountered'), {
-      filePath: '/mods/glitched.json',
-      partialData: { id: 'glitched', partial: true },
-    });
-    expect(corruptionResult.strategy).toBe(DegradationStrategy.PARTIAL_EXTRACTION);
+    const corruptionResult = degradation.applyDegradation(
+      new Error('malformed data encountered'),
+      {
+        filePath: '/mods/glitched.json',
+        partialData: { id: 'glitched', partial: true },
+      }
+    );
+    expect(corruptionResult.strategy).toBe(
+      DegradationStrategy.PARTIAL_EXTRACTION
+    );
     expect(corruptionResult.partial).toBe(true);
 
     const timeoutResult = degradation.applyDegradation(
@@ -154,10 +173,13 @@ describe('GracefulDegradation behavioural coverage', () => {
       },
     });
 
-    const defaultFallback = degradation.applyDegradation(new Error('unexpected validator failure'), {
-      type: 'validation',
-      modId: 'omega',
-    });
+    const defaultFallback = degradation.applyDegradation(
+      new Error('unexpected validator failure'),
+      {
+        type: 'validation',
+        modId: 'omega',
+      }
+    );
     expect(defaultFallback.strategy).toBe(DegradationStrategy.USE_DEFAULT);
     expect(defaultFallback.isDefault).toBe(true);
     expect(defaultFallback.data).toMatchObject({
@@ -172,7 +194,11 @@ describe('GracefulDegradation behavioural coverage', () => {
       ['story-cache', { id: 'story:cached', cached: true }],
     ]);
     const defaults = {
-      'validation.story': { valid: false, errors: ['Story degraded'], partial: true },
+      'validation.story': {
+        valid: false,
+        errors: ['Story degraded'],
+        partial: true,
+      },
     };
     const degradation = new GracefulDegradation({
       logger,
@@ -203,7 +229,9 @@ describe('GracefulDegradation behavioural coverage', () => {
     expect(cacheResult.success).toBe(true);
     expect(cacheResult.data).toEqual({ id: 'story:cached', cached: true });
 
-    const securityError = new Error('security violation detected while parsing');
+    const securityError = new Error(
+      'security violation detected while parsing'
+    );
     const securityResult = degradation.applyDegradation(securityError, {
       filePath: '/mods/story.json',
     });

@@ -47,7 +47,11 @@ class ParameterResolutionService {
    * @throws {ParameterResolutionError} If resolution fails
    */
   resolve(reference, context, options = {}) {
-    const { validateEntity = true, contextType = 'unknown', stepIndex } = options;
+    const {
+      validateEntity = true,
+      contextType = 'unknown',
+      stepIndex,
+    } = options;
 
     if (typeof reference !== 'string' || reference.trim() === '') {
       throw new ParameterResolutionError({
@@ -65,7 +69,10 @@ class ParameterResolutionService {
       return this.#cache.get(cacheKey);
     }
 
-    this.#logger.debug(`Resolving parameter: ${reference}`, { contextType, stepIndex });
+    this.#logger.debug(`Resolving parameter: ${reference}`, {
+      contextType,
+      stepIndex,
+    });
 
     // Parse reference into path segments
     const segments = this.#parseReference(reference);
@@ -127,10 +134,13 @@ class ParameterResolutionService {
       // Check if value looks like an entity ID (contains underscore or colon)
       if (currentValue.includes('_') || currentValue.includes(':')) {
         if (!this.#entityManager.hasEntity(currentValue)) {
-          this.#logger.warn(`Resolved entity ID does not exist: ${currentValue}`, {
-            reference,
-            partialPath,
-          });
+          this.#logger.warn(
+            `Resolved entity ID does not exist: ${currentValue}`,
+            {
+              reference,
+              partialPath,
+            }
+          );
           throw new ParameterResolutionError({
             reference,
             partialPath,
@@ -192,7 +202,9 @@ class ParameterResolutionService {
         const value = this.resolve(reference, context, options);
         results.set(reference, value);
       } catch (err) {
-        this.#logger.warn(`Failed to resolve reference: ${reference}`, { error: err.message });
+        this.#logger.warn(`Failed to resolve reference: ${reference}`, {
+          error: err.message,
+        });
         // Continue resolving other references, don't throw
       }
     }

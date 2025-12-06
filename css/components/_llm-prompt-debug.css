@@ -2,97 +2,97 @@
 
 /* Widget Styles */
 #llm-prompt-debug-widget {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    /* Standard widget spacing is usually handled by .widget or adjacent selectors,
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  /* Standard widget spacing is usually handled by .widget or adjacent selectors,
        but adding bottom margin ensures separation if it's not automatic. */
 }
 
 #llm-prompt-debug-button {
-    width: 100%;
-    margin: 0;
+  width: 100%;
+  margin: 0;
 }
 
 /* Modal Styles */
 /* #llm-prompt-debug-modal inherits .modal-overlay and .modal-content styles */
 
 #llm-prompt-debug-modal .modal-content {
-    max-width: 960px;
-    width: min(960px, 92vw);
+  max-width: 960px;
+  width: min(960px, 92vw);
 }
 
 #llm-prompt-debug-content-container {
-    flex-grow: 1;
-    overflow: hidden;
-    margin-bottom: var(--spacing-md);
-    border: var(--border-width) solid var(--border-color-subtle);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--secondary-bg-color);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    /* Ensure it has a height, though flex-grow in modal-content should handle it if parent is flex column */
-    min-height: 200px; 
+  flex-grow: 1;
+  overflow: hidden;
+  margin-bottom: var(--spacing-md);
+  border: var(--border-width) solid var(--border-color-subtle);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--secondary-bg-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  /* Ensure it has a height, though flex-grow in modal-content should handle it if parent is flex column */
+  min-height: 200px;
 }
 
 #llm-prompt-debug-content {
-    font-family: 'Roboto Mono', monospace;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    padding: var(--spacing-md);
-    margin: 0;
-    overflow-y: auto;
-    color: var(--primary-text-color);
-    font-size: 0.9rem;
-    line-height: 1.4;
-    height: 100%;
-    width: 100%;
-    box-sizing: border-box;
+  font-family: 'Roboto Mono', monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  padding: var(--spacing-md);
+  margin: 0;
+  overflow-y: auto;
+  color: var(--primary-text-color);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  height: 100%;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 #llm-prompt-debug-content:focus-visible {
-    outline: 2px solid var(--accent-color-primary);
-    outline-offset: -2px;
+  outline: 2px solid var(--accent-color-primary);
+  outline-offset: -2px;
 }
 
 .prompt-metadata {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md);
-    background-color: var(--secondary-bg-color);
-    border: var(--border-width) solid var(--border-color-subtle);
-    font-size: 0.85rem;
-    color: var(--secondary-text-color);
-    margin-bottom: var(--spacing-sm);
-    border-radius: var(--border-radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--secondary-bg-color);
+  border: var(--border-width) solid var(--border-color-subtle);
+  font-size: 0.85rem;
+  color: var(--secondary-text-color);
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
 }
 
 .prompt-meta-item {
-    display: flex;
-    align-items: baseline;
-    gap: var(--spacing-xs);
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-xs);
 }
 
 .prompt-meta-label {
-    font-weight: 600;
-    color: var(--secondary-text-color);
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+  font-weight: 600;
+  color: var(--secondary-text-color);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .prompt-meta-value {
-    font-weight: 700;
-    color: var(--primary-text-color);
+  font-weight: 700;
+  color: var(--primary-text-color);
 }
 
 /* Copy Button Specifics */
 #llm-prompt-copy-button {
-    min-width: 160px;
+  min-width: 160px;
 }
 
 /* Loading State Styles */
 #llm-prompt-debug-content.loading {
-    opacity: 0.6;
+  opacity: 0.6;
 }

@@ -117,7 +117,11 @@ export async function withRunningGameEngineBed(engineBedOptions = {}, testFn) {
  * @param {{ expectNoDispatches?: boolean }} [options] - Additional options.
  * @returns {Array<[string, () => Promise<void>]>} Generated test cases.
  */
-export function runUnavailableServiceTest(cases, invokeFn, { expectNoDispatches = true } = {}) {
+export function runUnavailableServiceTest(
+  cases,
+  invokeFn,
+  { expectNoDispatches = true } = {}
+) {
   return cases.map(([token, expectedMessage, opts = {}]) => [
     token,
     async () => {
@@ -173,7 +177,9 @@ export function generateServiceUnavailableTests(
   invokeFn,
   { extraAssertions = 0, expectNoDispatches = true } = {}
 ) {
-  const eachFn = it.each(runUnavailableServiceTest(cases, invokeFn, { expectNoDispatches }));
+  const eachFn = it.each(
+    runUnavailableServiceTest(cases, invokeFn, { expectNoDispatches })
+  );
   return (title) =>
     eachFn(title, async (_token, fn) => {
       const baseAssertions = expectNoDispatches ? 2 : 1;

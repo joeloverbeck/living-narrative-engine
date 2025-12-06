@@ -12,9 +12,21 @@
         { "id": "entity_5", "name": "Dave" }
       ],
       "callPattern": [
-        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5",
-        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5",
-        "entity_1", "entity_2", "entity_3", "entity_4", "entity_5"
+        "entity_1",
+        "entity_2",
+        "entity_3",
+        "entity_4",
+        "entity_5",
+        "entity_1",
+        "entity_2",
+        "entity_3",
+        "entity_4",
+        "entity_5",
+        "entity_1",
+        "entity_2",
+        "entity_3",
+        "entity_4",
+        "entity_5"
       ],
       "expectedCacheHitRate": 0.67,
       "expectedMaxLatency": 1

@@ -135,7 +135,9 @@ describe('Multi-Action Planning Performance', () => {
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+        goalState: {
+          '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -150,7 +152,9 @@ describe('Multi-Action Planning Performance', () => {
 
       // Verify plan was created (check events, not active plan)
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.planLength).toBe(20);
@@ -214,7 +218,9 @@ describe('Multi-Action Planning Performance', () => {
       const goal = createTestGoal({
         id: 'test:reduce_hunger',
         priority: 10,
-        goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -230,7 +236,9 @@ describe('Multi-Action Planning Performance', () => {
       const planningTime = endTime - startTime;
 
       const events = setup.eventBus.getEvents();
-      const planCreated = events.find((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+      const planCreated = events.find(
+        (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      );
 
       expect(planCreated).toBeDefined();
       expect(planCreated.payload.tasks.length).toBeGreaterThan(0);
@@ -298,7 +306,12 @@ describe('Multi-Action Planning Performance', () => {
         const goal = createTestGoal({
           id: `test:gold_${targetGold}`,
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, targetGold] },
+          goalState: {
+            '>=': [
+              { var: 'state.actor.components.core_resources.gold' },
+              targetGold,
+            ],
+          },
         });
 
         setup.dataRegistry.register('goals', goal.id, goal);

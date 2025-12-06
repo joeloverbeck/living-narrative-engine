@@ -11,16 +11,19 @@ The current narrative output has three formatting issues:
 ### Issue 1: Dismemberment Sentences Not Grouped
 
 **Current behavior:**
+
 ```
 My left ass cheek is missing. My right leg is missing. My right arm is missing. My right ear is missing. My vagina is missing. My left breast is missing.
 ```
 
 **Required behavior:**
+
 ```
 My left ass cheek, right leg, right arm, right ear, vagina, and left breast are missing.
 ```
 
 **Requirements:**
+
 - Multiple dismembered parts must be grouped into a single sentence
 - Use "is missing" for singular, "are missing" for plural
 - Only the first part receives the "My" prefix
@@ -29,16 +32,19 @@ My left ass cheek, right leg, right arm, right ear, vagina, and left breast are 
 ### Issue 2: Redundant "my" in Bleeding Sentences
 
 **Current behavior:**
+
 ```
 Blood flows steadily from my torso, my left leg, and my upper head.
 ```
 
 **Required behavior:**
+
 ```
 Blood flows steadily from my torso, left leg, and upper head.
 ```
 
 **Requirements:**
+
 - Only the first body part in the list receives the "my" prefix
 - Subsequent parts are listed without possessive prefix
 - Maintains Oxford comma formatting for 3+ items
@@ -46,10 +52,12 @@ Blood flows steadily from my torso, left leg, and upper head.
 ### Issue 3: Head Has Incorrect "upper" Orientation
 
 **Current behavior:**
+
 - Head displays as "upper head" in narrative text
 - Caused by `"orientation": "upper"` on neck socket in torso entity definitions
 
 **Required behavior:**
+
 - Head displays as just "head" (no orientation)
 - Remove orientation from neck socket definitions
 
@@ -105,6 +113,7 @@ The neck socket in torso entities specifies `"orientation": "upper"` which propa
 #### Modified `#formatBleedingEffectsFirstPerson()`
 
 Change the part name mapping from:
+
 ```javascript
 const partNames = parts.map(
   (p) => `my ${this.#formatPartName(p.partType, p.orientation)}`
@@ -113,6 +122,7 @@ const combined = this.#formatListWithOxfordComma(partNames);
 ```
 
 To:
+
 ```javascript
 const partNames = parts.map((p) =>
   this.#formatPartName(p.partType, p.orientation)
@@ -139,21 +149,25 @@ Remove `"orientation": "upper"` from neck socket in:
 ### Unit Tests
 
 Add tests for grouped dismemberment formatting:
+
 - Single dismembered part uses "is missing"
 - Two dismembered parts use "are missing" with "and"
 - Three+ dismembered parts use Oxford comma and "are missing"
 - Only first part receives "My" prefix
 
 Update bleeding tests:
+
 - Verify only first part has "my" prefix
 - Update expected outputs from `my torso and my head` to `my torso and head`
 
 ### Integration Tests
 
 Update expected narrative outputs in:
+
 - `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js`
 
 Add comprehensive test scenario:
+
 - Multiple dismembered parts with various orientations
 - Verify single grouped sentence output
 - Verify correct grammar (is/are)
@@ -186,6 +200,7 @@ npm run typecheck
 ## Backward Compatibility
 
 These changes are NOT backward compatible for:
+
 - Tests expecting multiple individual "is missing" sentences
 - Tests expecting redundant "my" in bleeding lists
 - Tests expecting "upper head" in narrative output

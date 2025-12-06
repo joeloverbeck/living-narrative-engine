@@ -38,7 +38,9 @@ describe('ActivityNLGSystem', () => {
               return null;
             },
             hasComponent: (componentId) => {
-              return componentId === 'core:actor' || componentId === 'core:gender';
+              return (
+                componentId === 'core:actor' || componentId === 'core:gender'
+              );
             },
           };
         }
@@ -146,12 +148,16 @@ describe('ActivityNLGSystem', () => {
 
     it('should collapse whitespace', () => {
       const nameWithExtraSpaces = 'John  \t\n  Doe';
-      expect(nlgSystem.sanitizeEntityName(nameWithExtraSpaces)).toBe('John Doe');
+      expect(nlgSystem.sanitizeEntityName(nameWithExtraSpaces)).toBe(
+        'John Doe'
+      );
     });
 
     it('should return "Unknown entity" for empty string after sanitization', () => {
       expect(nlgSystem.sanitizeEntityName('   ')).toBe('Unknown entity');
-      expect(nlgSystem.sanitizeEntityName('\u200B\u200B')).toBe('Unknown entity');
+      expect(nlgSystem.sanitizeEntityName('\u200B\u200B')).toBe(
+        'Unknown entity'
+      );
     });
 
     it('should handle normal names correctly', () => {
@@ -189,7 +195,11 @@ describe('ActivityNLGSystem', () => {
       let setCalled = false;
       mockCacheManager.get = () => undefined;
       mockCacheManager.set = (cacheName, key, value) => {
-        if (cacheName === 'entityName' && key === 'test-actor-1' && value === 'John Doe') {
+        if (
+          cacheName === 'entityName' &&
+          key === 'test-actor-1' &&
+          value === 'John Doe'
+        ) {
           setCalled = true;
         }
       };
@@ -401,7 +411,11 @@ describe('ActivityNLGSystem', () => {
       let setCalled = false;
       mockCacheManager.get = () => undefined;
       mockCacheManager.set = (cacheName, key, value) => {
-        if (cacheName === 'gender' && key === 'test-actor-1' && value === 'male') {
+        if (
+          cacheName === 'gender' &&
+          key === 'test-actor-1' &&
+          value === 'male'
+        ) {
           setCalled = true;
         }
       };
@@ -554,7 +568,12 @@ describe('ActivityNLGSystem', () => {
       const usePronounsForTarget = false;
       const options = { actorId: 'actor-1', actorName: 'John' };
 
-      const result = nlgSystem.generateActivityPhrase(actorRef, activity, usePronounsForTarget, options);
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        usePronounsForTarget,
+        options
+      );
       expect(typeof result).toBe('string');
     });
 
@@ -564,11 +583,16 @@ describe('ActivityNLGSystem', () => {
         type: 'dedicated',
         verb: 'kisses',
         adverb: 'passionately',
-        targetEntityId: 'test-actor-1'
+        targetEntityId: 'test-actor-1',
       };
       const options = { actorId: 'actor-1', actorName: 'John' };
 
-      const result = nlgSystem.generateActivityPhrase(actorRef, activity, false, options);
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        false,
+        options
+      );
       expect(result).toContain('kisses');
       expect(result).toContain('passionately');
     });
@@ -581,10 +605,15 @@ describe('ActivityNLGSystem', () => {
         actorId: 'test-actor-1',
         actorName: 'John',
         actorPronouns: { subject: 'he', object: 'him' },
-        forceReflexivePronoun: true
+        forceReflexivePronoun: true,
       };
 
-      const result = nlgSystem.generateActivityPhrase(actorRef, activity, usePronounsForTarget, options);
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        usePronounsForTarget,
+        options
+      );
       expect(result).toContain('himself');
     });
 
@@ -595,9 +624,14 @@ describe('ActivityNLGSystem', () => {
         description: 'is observing the horizon',
       };
 
-      const result = nlgSystem.generateActivityPhrase(actorRef, activity, false, {
-        omitActor: true,
-      });
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        false,
+        {
+          omitActor: true,
+        }
+      );
 
       expect(result).toEqual({
         fullPhrase: 'John (Hero) is observing the horizon',
@@ -686,9 +720,14 @@ describe('ActivityNLGSystem', () => {
         targetEntityId: 'listener-1',
       };
 
-      const result = nlgSystem.generateActivityPhrase(actorRef, activity, true, {
-        actorId: 'test-actor-1',
-      });
+      const result = nlgSystem.generateActivityPhrase(
+        actorRef,
+        activity,
+        true,
+        {
+          actorId: 'test-actor-1',
+        }
+      );
 
       expect(result).toBe('John thanks her');
     });
@@ -761,12 +800,9 @@ describe('ActivityNLGSystem', () => {
 
     it('should skip actor token removal when actor reference absent', () => {
       const activity = { verb: 'meditates' };
-      const result = nlgSystem.generateActivityPhrase(
-        '   ',
-        activity,
-        false,
-        { omitActor: true }
-      );
+      const result = nlgSystem.generateActivityPhrase('   ', activity, false, {
+        omitActor: true,
+      });
 
       expect(result).toEqual({
         fullPhrase: 'meditates',
@@ -877,9 +913,21 @@ describe('ActivityNLGSystem', () => {
       multiTargetEntityManager = {
         getEntityInstance: (entityId) => {
           const entities = {
-            'sword-1': { id: 'sword-1', getComponentData: (cid) => cid === 'core:name' ? { text: 'sword' } : null },
-            'dagger-2': { id: 'dagger-2', getComponentData: (cid) => cid === 'core:name' ? { text: 'dagger' } : null },
-            'staff-3': { id: 'staff-3', getComponentData: (cid) => cid === 'core:name' ? { text: 'staff' } : null },
+            'sword-1': {
+              id: 'sword-1',
+              getComponentData: (cid) =>
+                cid === 'core:name' ? { text: 'sword' } : null,
+            },
+            'dagger-2': {
+              id: 'dagger-2',
+              getComponentData: (cid) =>
+                cid === 'core:name' ? { text: 'dagger' } : null,
+            },
+            'staff-3': {
+              id: 'staff-3',
+              getComponentData: (cid) =>
+                cid === 'core:name' ? { text: 'staff' } : null,
+            },
           };
           return entities[entityId] || null;
         },
@@ -923,7 +971,9 @@ describe('ActivityNLGSystem', () => {
       };
 
       const result = nlgSystem.generateActivityPhrase('Alice', activity);
-      expect(result).toBe('Alice is wielding sword, dagger, and staff threateningly');
+      expect(result).toBe(
+        'Alice is wielding sword, dagger, and staff threateningly'
+      );
     });
 
     it('should handle empty targetEntityIds array gracefully', () => {
@@ -996,29 +1046,43 @@ describe('ActivityNLGSystem', () => {
   describe('buildRelatedActivityFragment', () => {
     it('should build fragment with conjunction "while"', () => {
       const conjunction = 'while';
-      const phraseComponents = { verbPhrase: 'smiling', fullPhrase: 'is smiling' };
+      const phraseComponents = {
+        verbPhrase: 'smiling',
+        fullPhrase: 'is smiling',
+      };
       const context = {
         actorName: 'John',
         actorReference: 'John',
         actorPronouns: { subject: 'he' },
-        pronounsEnabled: false
+        pronounsEnabled: false,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment(conjunction, phraseComponents, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        conjunction,
+        phraseComponents,
+        context
+      );
       expect(result).toContain('while');
     });
 
     it('should handle "and" conjunction', () => {
       const conjunction = 'and';
-      const phraseComponents = { verbPhrase: 'laughing', fullPhrase: 'laughing' };
+      const phraseComponents = {
+        verbPhrase: 'laughing',
+        fullPhrase: 'laughing',
+      };
       const context = {
         actorName: 'John',
         actorReference: 'John',
         actorPronouns: { subject: 'he' },
-        pronounsEnabled: false
+        pronounsEnabled: false,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment(conjunction, phraseComponents, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        conjunction,
+        phraseComponents,
+        context
+      );
       expect(result).toContain('and');
     });
 
@@ -1030,7 +1094,11 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: true,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('and', null, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'and',
+        null,
+        context
+      );
       expect(result).toBe('');
     });
 
@@ -1042,10 +1110,14 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: false,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('and', {
-        verbPhrase: '   ',
-        fullPhrase: '   ',
-      }, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'and',
+        {
+          verbPhrase: '   ',
+          fullPhrase: '   ',
+        },
+        context
+      );
 
       expect(result).toBe('');
     });
@@ -1058,10 +1130,14 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: false,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('while', {
-        verbPhrase: 'is running',
-        fullPhrase: 'is running',
-      }, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'while',
+        {
+          verbPhrase: 'is running',
+          fullPhrase: 'is running',
+        },
+        context
+      );
 
       expect(result).toBe('while running');
     });
@@ -1074,10 +1150,14 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: true,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('while', {
-        verbPhrase: 'running quickly',
-        fullPhrase: 'running quickly',
-      }, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'while',
+        {
+          verbPhrase: 'running quickly',
+          fullPhrase: 'running quickly',
+        },
+        context
+      );
 
       expect(result).toBe('while he running quickly');
     });
@@ -1090,10 +1170,14 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: false,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('while', {
-        verbPhrase: 'running',
-        fullPhrase: 'running',
-      }, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'while',
+        {
+          verbPhrase: 'running',
+          fullPhrase: 'running',
+        },
+        context
+      );
 
       expect(result).toBe('while running');
     });
@@ -1106,10 +1190,14 @@ describe('ActivityNLGSystem', () => {
         pronounsEnabled: true,
       };
 
-      const result = nlgSystem.buildRelatedActivityFragment('while', {
-        verbPhrase: '   ',
-        fullPhrase: 'is smiling brightly',
-      }, context);
+      const result = nlgSystem.buildRelatedActivityFragment(
+        'while',
+        {
+          verbPhrase: '   ',
+          fullPhrase: 'is smiling brightly',
+        },
+        context
+      );
 
       expect(result).toBe('while is smiling brightly');
     });
@@ -1221,13 +1309,14 @@ describe('ActivityNLGSystem', () => {
     it('should return trimmed text when maxLength is invalid', () => {
       const text = 'Short description.';
       expect(nlgSystem.truncateDescription(text, 0)).toBe('Short description.');
-      expect(nlgSystem.truncateDescription(text, Number.POSITIVE_INFINITY)).toBe(
-        'Short description.'
-      );
+      expect(
+        nlgSystem.truncateDescription(text, Number.POSITIVE_INFINITY)
+      ).toBe('Short description.');
     });
 
     it('should prefer full sentences when truncating', () => {
-      const text = 'Sentence one. Sentence two is longer and should be removed.';
+      const text =
+        'Sentence one. Sentence two is longer and should be removed.';
       const result = nlgSystem.truncateDescription(text, 25);
 
       expect(result).toBe('Sentence one.');

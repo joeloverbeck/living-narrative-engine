@@ -5,6 +5,7 @@
 ### Data Location: `/data/mods/anatomy/`
 
 **Subdirectories:**
+
 - `components/` - Component definitions (14 files)
 - `events/` - Event definitions (10 files)
 - `entities/definitions/` - Body part entity definitions (240+ humanoid/creature parts)
@@ -25,6 +26,7 @@
 ## 2. COMPONENT FILES (data/mods/anatomy/components/)
 
 ### Files (14 total):
+
 1. `body.component.json` - Main body component with recipe reference and generated anatomy
 2. `part.component.json` - Marks entity as body part with subType, orientation, damage propagation
 3. `part_health.component.json` - Health tracking for body parts
@@ -41,16 +43,20 @@
 14. `visibility_rules.component.json` - Visibility rules
 
 ### Component Schema Pattern:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "anatomy:componentName",
   "description": "...",
-  "dataSchema": { /* JSON Schema */ }
+  "dataSchema": {
+    /* JSON Schema */
+  }
 }
 ```
 
 ### Key Example - body.component.json:
+
 - **recipeId**: Namespaced ID of anatomy recipe
 - **body**: Generated anatomy structure
   - **root**: Entity instance ID of root body part
@@ -62,6 +68,7 @@
 ## 3. EVENT FILES (data/mods/anatomy/events/)
 
 ### Files (10 total):
+
 1. `anatomy_generated.event.json` - Dispatched after anatomy generation completes
 2. `part_health_changed.event.json` - Part health modified
 3. `part_state_changed.event.json` - Part state changed (health, damage effects)
@@ -74,16 +81,20 @@
 10. `visualizer_state_changed.event.json` - UI visualizer state changed
 
 ### Event Schema Pattern:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
   "id": "anatomy:eventName",
   "description": "...",
-  "payloadSchema": { /* JSON Schema */ }
+  "payloadSchema": {
+    /* JSON Schema */
+  }
 }
 ```
 
 ### Key Example - anatomy_generated.event.json:
+
 - **entityId**: Entity ID for which anatomy was generated
 - **blueprintId**: Blueprint ID used
 - **sockets**: Available sockets array
@@ -101,6 +112,7 @@
 ### Naming Convention: `{bodyPartDescriptor}.entity.json`
 
 ### Examples:
+
 - **Human parts**: human_hand.entity.json, human_leg.entity.json, human_male_torso.entity.json
 - **Human anatomy variants**: human_breast_d_cup.entity.json, human_penis_thick_large.entity.json
 - **Humanoid variants**: humanoid_arm_muscular_hairy.entity.json, humanoid_head_beautiful.entity.json
@@ -108,6 +120,7 @@
 - **Special**: blueprint_slot.entity.json, equipment_mount.entity.json
 
 ### Entity Definition Pattern:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -123,6 +136,7 @@
 ```
 
 ### Component Composition Pattern:
+
 - **anatomy:part** - Subtype + orientation (identifies part type)
 - **anatomy:part_health** - Health management (currentHealth, maxHealth, state)
 - **anatomy:can_grab** - Optional, only for grabbing appendages (gripStrength, heldItemId, locked)
@@ -130,11 +144,20 @@
 - **Additional components** - As needed (joints, sockets, etc.)
 
 ### Real Example - human_hand.entity.json:
+
 ```json
 {
-  "anatomy:can_grab": { "gripStrength": 1.0, "heldItemId": null, "locked": false },
+  "anatomy:can_grab": {
+    "gripStrength": 1.0,
+    "heldItemId": null,
+    "locked": false
+  },
   "anatomy:part": { "subType": "hand" },
-  "anatomy:part_health": { "currentHealth": 15, "maxHealth": 15, "state": "healthy" },
+  "anatomy:part_health": {
+    "currentHealth": 15,
+    "maxHealth": 15,
+    "state": "healthy"
+  },
   "core:name": { "text": "hand" }
 }
 ```
@@ -144,6 +167,7 @@
 ## 5. SERVICE ARCHITECTURE (src/anatomy/services/)
 
 ### Directory Structure:
+
 ```
 src/anatomy/services/
 ├── context/
@@ -170,12 +194,14 @@ src/anatomy/services/
 ```
 
 ### Service Naming Pattern:
+
 - **Files**: camelCase (`bleedingTickSystem.js`)
 - **Classes**: PascalCase (`BleedingTickSystem`)
 
 ### Service Structure Template:
 
 #### Constructor Pattern (BleedingTickSystem Example):
+
 ```javascript
 /**
  * @param {object} deps
@@ -211,6 +237,7 @@ constructor({ logger, entityManager, safeEventDispatcher, validatedEventDispatch
 ```
 
 #### Key Characteristics:
+
 1. **Extends BaseService** - `extends BaseService`
 2. **Private fields** - Uses `#` prefix for all private class fields
 3. **Validation** - Uses `_init()` to validate dependencies
@@ -220,6 +247,7 @@ constructor({ logger, entityManager, safeEventDispatcher, validatedEventDispatch
 ### ActivityDescriptionFacade Pattern (Complex Service):
 
 **Orchestrates 7 specialized services:**
+
 1. ActivityCacheManager - Caching with TTL and invalidation
 2. ActivityIndexManager - Index building
 3. ActivityMetadataCollectionSystem - Metadata collection
@@ -229,6 +257,7 @@ constructor({ logger, entityManager, safeEventDispatcher, validatedEventDispatch
 7. ActivityFilteringSystem - Condition filtering
 
 **Dependency Injection Pattern:**
+
 ```javascript
 constructor({
   logger,
@@ -248,7 +277,7 @@ constructor({
   validateDependency(service, 'ServiceName', logger, {
     requiredMethods: ['method1', 'method2']
   });
-  
+
   // Assign and use
 }
 ```
@@ -260,6 +289,7 @@ constructor({
 ### DI Token Location: `src/dependencyInjection/tokens/tokens-core.js`
 
 ### Anatomy-Related Tokens (examples):
+
 ```javascript
 // Loaders
 AnatomyRecipeLoader: 'AnatomyRecipeLoader',
@@ -298,6 +328,7 @@ IBlueprintProcessorService: 'IBlueprintProcessorService',
 ```
 
 ### Token Naming Convention:
+
 - **Services**: PascalCase (no prefix) - `BleedingTickSystem`
 - **Interfaces**: I-prefixed PascalCase - `IAnatomySocketIndex`
 - **Loaders**: PascalCase + 'Loader' - `AnatomyRecipeLoader`
@@ -306,6 +337,7 @@ IBlueprintProcessorService: 'IBlueprintProcessorService',
 ### Registration Location: `src/dependencyInjection/registrations/orchestrationRegistrations.js`
 
 ### Example Service Registration Pattern (from code review):
+
 ```javascript
 const anatomyFormattingService = c.resolve(tokens.AnatomyFormattingService);
 ```
@@ -317,7 +349,9 @@ const anatomyFormattingService = c.resolve(tokens.AnatomyFormattingService);
 ### Location: `src/anatomy/registries/bodyDescriptorRegistry.js`
 
 ### Purpose:
+
 Single source of truth for body descriptor metadata with 9 properties per descriptor:
+
 - `schemaProperty` - Property name in JSON schema (camelCase)
 - `displayLabel` - Human-readable label
 - `displayKey` - Key in formatting config (snake_case)
@@ -329,6 +363,7 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 - `required` - Whether descriptor is required
 
 ### Current Descriptors (6):
+
 - height (10)
 - skinColor (20)
 - build (30)
@@ -343,25 +378,32 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 ## 8. FILE NAMING CONVENTIONS
 
 ### Components: `{name}.component.json`
+
 - Examples: `body.component.json`, `part_health.component.json`
 
 ### Events: `{name}.event.json`
+
 - Examples: `anatomy_generated.event.json`, `part_health_changed.event.json`
 
 ### Entities: `{descriptor}.entity.json`
+
 - Examples: `human_hand.entity.json`, `dragon_wing.entity.json`
 
 ### Blueprints: `{name}.blueprint.json`
+
 - Examples: `human_female.blueprint.json`, `red_dragon.blueprint.json`
 
 ### Recipes: `{name}.recipe.json`
+
 - Examples: `human_female.recipe.json`, `giant_forest_spider.recipe.json`
 
 ### Services: `{serviceName}.js`
+
 - camelCase with PascalCase class name
 - Examples: `bleedingTickSystem.js` (class: BleedingTickSystem)
 
 ### Registries: `{name}Registry.js`
+
 - PascalCase: `bodyDescriptorRegistry.js` (class: BodyDescriptorRegistry)
 
 ---
@@ -371,6 +413,7 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 ### Format: `{modId}:{identifier}`
 
 ### Anatomy Module Examples:
+
 - `anatomy:body` - Component ID
 - `anatomy:part` - Component ID
 - `anatomy:part_health` - Component ID
@@ -381,6 +424,7 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 - `anatomy:bleeding_stopped` - Event ID
 
 ### Pattern Rules:
+
 - Namespace is always lowercase (modId)
 - Identifier is always lowercase with underscores
 - Format: `modId:identifier`
@@ -390,6 +434,7 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 ## 10. TOP-LEVEL ANATOMY SERVICES (src/anatomy/)
 
 ### Main Services (non-subdirectory):
+
 - `anatomyCacheManager.js` (16 KB) - Cache management
 - `anatomyDescriptionService.js` (8.6 KB) - Description generation
 - `anatomyGenerationService.js` (7.4 KB) - Core generation logic
@@ -411,6 +456,7 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 - `socketManager.js` (7.6 KB) - Socket management
 
 ### Subdirectories (specialized services):
+
 - `bodyBlueprintFactory/` - Blueprint factory
 - `cache/` - Caching services
 - `configuration/` - Configuration
@@ -435,10 +481,12 @@ Single source of truth for body descriptor metadata with 9 properties per descri
 ### Location: `src/anatomy/constants/`
 
 ### Files:
+
 - `anatomyConstants.js` - Core anatomy constants
 - `bodyDescriptorConstants.js` - Body descriptor constants
 
 ### Pattern:
+
 ```javascript
 // Constants for IDs, enums, defaults
 export const COMPONENT_ID = 'anatomy:componentName';
@@ -453,6 +501,7 @@ export const SEVERITY_MAP = { minor: 1, moderate: 3, severe: 5 };
 ### Examples: BleedingTickSystem, BurningTickSystem, PoisonTickSystem
 
 ### Characteristics:
+
 1. **Extends BaseService** - All inherit from BaseService
 2. **Event subscription** - Subscribe to TURN_ENDED event
 3. **Component processing** - Processes entities with specific components
@@ -461,6 +510,7 @@ export const SEVERITY_MAP = { minor: 1, moderate: 3, severe: 5 };
 6. **Cleanup** - Removes component when duration expires or part destroyed
 
 ### Key Methods:
+
 - `processTick()` - Main processing method called on turn end
 - `destroy()` - Cleanup subscriptions
 - `#processBleedingPart()` - Individual entity processing (private)
@@ -470,31 +520,37 @@ export const SEVERITY_MAP = { minor: 1, moderate: 3, severe: 5 };
 ## 13. KEY ARCHITECTURAL PATTERNS OBSERVED
 
 ### 1. **Modular Service Organization**
+
 - Facade pattern for complex subsystems (ActivityDescriptionFacade)
 - Delegation to specialized services
 - Clean separation of concerns
 
 ### 2. **Dependency Injection**
+
 - Constructor-based injection with validation
 - Token-based service resolution
 - Interface-based contracts (I-prefixed)
 
 ### 3. **Component-Based Architecture**
+
 - ECS pattern (Entity-Component-System)
 - Components are JSON data attached to entities
 - Systems process entities based on component presence
 
 ### 4. **Event-Driven Communication**
+
 - Event bus for inter-service communication
 - Subscription-based event handling
 - Component changes trigger events
 
 ### 5. **Data-First (Modding-First) Philosophy**
+
 - All game content is data (JSON files in mods)
 - Minimal code, maximum configuration
 - Services interpret data according to schemas
 
 ### 6. **Validation-Heavy Approach**
+
 - Schema validation for all data
 - Runtime validation of dependencies
 - Clear error messages and suggestions
@@ -503,17 +559,17 @@ export const SEVERITY_MAP = { minor: 1, moderate: 3, severe: 5 };
 
 ## 14. SUMMARY OF PATTERNS
 
-| Pattern | Location | Example |
-|---------|----------|---------|
-| Component Definition | `data/mods/anatomy/components/` | body.component.json |
-| Entity Definition | `data/mods/anatomy/entities/definitions/` | human_hand.entity.json |
-| Event Definition | `data/mods/anatomy/events/` | anatomy_generated.event.json |
-| Service Class | `src/anatomy/services/` | BleedingTickSystem |
-| DI Token | `src/dependencyInjection/tokens/tokens-core.js` | BleedingTickSystem: 'BleedingTickSystem' |
-| DI Registration | `src/dependencyInjection/registrations/` | Factory in orchestrationRegistrations.js |
-| Registry | `src/anatomy/registries/` | bodyDescriptorRegistry.js |
-| Facade | `src/anatomy/services/` | ActivityDescriptionFacade.js |
-| Tick System | `src/anatomy/services/` | bleedingTickSystem.js |
+| Pattern              | Location                                        | Example                                  |
+| -------------------- | ----------------------------------------------- | ---------------------------------------- |
+| Component Definition | `data/mods/anatomy/components/`                 | body.component.json                      |
+| Entity Definition    | `data/mods/anatomy/entities/definitions/`       | human_hand.entity.json                   |
+| Event Definition     | `data/mods/anatomy/events/`                     | anatomy_generated.event.json             |
+| Service Class        | `src/anatomy/services/`                         | BleedingTickSystem                       |
+| DI Token             | `src/dependencyInjection/tokens/tokens-core.js` | BleedingTickSystem: 'BleedingTickSystem' |
+| DI Registration      | `src/dependencyInjection/registrations/`        | Factory in orchestrationRegistrations.js |
+| Registry             | `src/anatomy/registries/`                       | bodyDescriptorRegistry.js                |
+| Facade               | `src/anatomy/services/`                         | ActivityDescriptionFacade.js             |
+| Tick System          | `src/anatomy/services/`                         | bleedingTickSystem.js                    |
 
 ---
 
@@ -522,6 +578,7 @@ export const SEVERITY_MAP = { minor: 1, moderate: 3, severe: 5 };
 When adding new anatomy services, follow these patterns:
 
 ### Component & Entity Files (Mod Data):
+
 ```json
 // Component: data/mods/anatomy/components/[name].component.json
 {
@@ -549,6 +606,7 @@ When adding new anatomy services, follow these patterns:
 ```
 
 ### Service Class (Code):
+
 ```javascript
 // src/anatomy/services/[serviceName].js
 import { BaseService } from '../../utils/serviceBase.js';
@@ -560,7 +618,7 @@ class ServiceName extends BaseService {
 
   constructor({ logger, entityManager, safeEventDispatcher }) {
     super();
-    
+
     this.#logger = this._init('ServiceName', logger, {
       entityManager: {
         value: entityManager,
@@ -589,6 +647,7 @@ export default ServiceName;
 ```
 
 ### DI Registration:
+
 1. Add token in `src/dependencyInjection/tokens/tokens-core.js`
 2. Register factory in `src/dependencyInjection/registrations/orchestrationRegistrations.js`
 3. Use via DI container: `const service = c.resolve(tokens.ServiceName)`

@@ -115,7 +115,7 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
       });
 
     expect(createInitializationService).toThrow(SystemInitializationError);
-    expect(logger.errorMessages.map(entry => entry.message)).toContain(
+    expect(logger.errorMessages.map((entry) => entry.message)).toContain(
       "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'."
     );
   });
@@ -146,8 +146,8 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
 
     await initializer.initializeAll();
     expect(
-      logger.debugMessages.some(entry =>
-        entry.message.includes("SystemInitializer: Starting initialization")
+      logger.debugMessages.some((entry) =>
+        entry.message.includes('SystemInitializer: Starting initialization')
       )
     ).toBe(true);
   });
@@ -156,13 +156,21 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
     const logger = new TestLogger();
     const manager = new TargetManager({ logger });
 
-    expect(() => manager.setTargets(null)).toThrow('Targets object is required');
+    expect(() => manager.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
     expect(logger.errorMessages[0]).toMatchObject({
       message: 'Targets object is required',
     });
 
-    expect(() => manager.addTarget('   ', 'entity-123')).toThrow(InvalidArgumentError);
-    expect(logger.errorMessages.some(entry => entry.message.includes('TargetManager.addTarget'))).toBe(true);
+    expect(() => manager.addTarget('   ', 'entity-123')).toThrow(
+      InvalidArgumentError
+    );
+    expect(
+      logger.errorMessages.some((entry) =>
+        entry.message.includes('TargetManager.addTarget')
+      )
+    ).toBe(true);
 
     manager.setTargets({ primary: 'entity-123' });
     manager.addTarget('secondary', 'entity-456');
@@ -205,8 +213,10 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
         })
     ).toThrow(InvalidArgumentError);
     expect(
-      logger.errorMessages.some(entry =>
-        entry.message.includes("Invalid or missing method 'resolve' on dependency 'IContainer'.")
+      logger.errorMessages.some((entry) =>
+        entry.message.includes(
+          "Invalid or missing method 'resolve' on dependency 'IContainer'."
+        )
       )
     ).toBe(true);
 
@@ -218,11 +228,9 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
     container.register('IUnifiedCache', () => new SimpleUnifiedCache(), {
       lifecycle: 'singletonFactory',
     });
-    container.register(
-      'TestFacade',
-      () => ExampleFacade,
-      { lifecycle: 'singletonFactory' }
-    );
+    container.register('TestFacade', () => ExampleFacade, {
+      lifecycle: 'singletonFactory',
+    });
 
     const factory = new FacadeFactory({ logger, container });
     const registry = new FacadeRegistry({
@@ -233,9 +241,10 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
 
     expect(() => factory.createFacade('')).toThrow(InvalidArgumentError);
     expect(
-      logger.errorMessages.some(entry =>
-        entry.message.includes('createFacade: Invalid Facade name') ||
-        entry.message.includes('Failed to create facade: ')
+      logger.errorMessages.some(
+        (entry) =>
+          entry.message.includes('createFacade: Invalid Facade name') ||
+          entry.message.includes('Failed to create facade: ')
       )
     ).toBe(true);
 
@@ -275,7 +284,7 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
           this.args = args;
         }
       },
-      args => [
+      (args) => [
         {
           dependency: args.logger,
           name: 'Logger',
@@ -314,19 +323,16 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
     });
     expect(validatedInstance.args.worker()).toBe('done');
 
-    const MissingDependencyComponent = withValidatedDeps(
-      class {},
-      args => [
-        { dependency: args.service, name: 'CriticalService', methods: ['run'] },
-      ]
-    );
+    const MissingDependencyComponent = withValidatedDeps(class {}, (args) => [
+      { dependency: args.service, name: 'CriticalService', methods: ['run'] },
+    ]);
 
-    expect(() => new MissingDependencyComponent({ logger, service: null })).toThrow(
-      InvalidArgumentError
-    );
     expect(
-      logger.errorMessages.some(entry =>
-        entry.message.includes("Missing required dependency: CriticalService.")
+      () => new MissingDependencyComponent({ logger, service: null })
+    ).toThrow(InvalidArgumentError);
+    expect(
+      logger.errorMessages.some((entry) =>
+        entry.message.includes('Missing required dependency: CriticalService.')
       )
     ).toBe(true);
 
@@ -356,7 +362,7 @@ describe('dependencyUtils integration coverage across collaborating modules', ()
           this.args = args;
         }
       },
-      args => [
+      (args) => [
         {
           dependency: args.service,
           name: 'Service',

@@ -30,9 +30,16 @@ describe('ActionResult additional branch coverage', () => {
       stack: 'trace',
       toString: () => 'fallback description',
     };
-    const explicitError = { message: 'explicit error', stack: 'trace-2', name: 'NamedError' };
+    const explicitError = {
+      message: 'explicit error',
+      stack: 'trace-2',
+      name: 'NamedError',
+    };
 
-    const result = new ActionResult(false, null, [fallbackError, explicitError]);
+    const result = new ActionResult(false, null, [
+      fallbackError,
+      explicitError,
+    ]);
     const json = result.toJSON();
 
     expect(json.errors[0]).toEqual({

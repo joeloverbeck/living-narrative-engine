@@ -220,12 +220,16 @@ describe('RecipePatternResolver integration coverage', () => {
   it('adds default matcher hint when explicit matches array is empty', () => {
     registerArmTemplate();
 
-    testBed.registry.store('anatomyBlueprints', 'test:empty_matches_blueprint', {
-      id: 'test:empty_matches_blueprint',
-      root: 'anatomy:torso',
-      schemaVersion: '2.0',
-      structureTemplate: 'test:arm_template',
-    });
+    testBed.registry.store(
+      'anatomyBlueprints',
+      'test:empty_matches_blueprint',
+      {
+        id: 'test:empty_matches_blueprint',
+        root: 'anatomy:torso',
+        schemaVersion: '2.0',
+        structureTemplate: 'test:arm_template',
+      }
+    );
 
     const blueprint = loadBlueprint('test:empty_matches_blueprint', {
       dataRegistry: testBed.registry,

@@ -91,18 +91,24 @@ describe('ActionCommandFormatter integration', () => {
     };
     const targetContext = ActionTargetContext.forEntity('relic');
 
-    const result = formatter.format(
-      definition,
-      targetContext,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher, debug: true }
-    );
+    const result = formatter.format(definition, targetContext, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+      debug: true,
+    });
 
-    expect(result).toEqual({ ok: true, value: 'Inspect Ancient Relic carefully' });
+    expect(result).toEqual({
+      ok: true,
+      value: 'Inspect Ancient Relic carefully',
+    });
     expect(dispatcher.events).toHaveLength(0);
-    expect(logger.debugLogs.some(({ message }) =>
-      message.includes('Final formatted command: "Inspect Ancient Relic carefully"')
-    )).toBe(true);
+    expect(
+      logger.debugLogs.some(({ message }) =>
+        message.includes(
+          'Final formatted command: "Inspect Ancient Relic carefully"'
+        )
+      )
+    ).toBe(true);
   });
 
   it('normalizes raw string results from custom formatter implementations', () => {
@@ -130,26 +136,28 @@ describe('ActionCommandFormatter integration', () => {
     const definition = { id: 'quest:broken_action' }; // missing template
     const targetContext = ActionTargetContext.noTarget();
 
-    const result = formatter.format(
-      definition,
-      targetContext,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher }
-    );
+    const result = formatter.format(definition, targetContext, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     expect(result.ok).toBe(false);
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.events[0]).toEqual({
       eventId: SYSTEM_ERROR_OCCURRED_ID,
       payload: {
-        message: 'formatActionCommand: Invalid or missing actionDefinition or template.',
+        message:
+          'formatActionCommand: Invalid or missing actionDefinition or template.',
         details: {},
       },
     });
   });
 
   it('reports placeholder substitution failures through the dispatcher', () => {
-    const definition = { id: 'quest:volatile_format', template: 'Focus on {target}' };
+    const definition = {
+      id: 'quest:volatile_format',
+      template: 'Focus on {target}',
+    };
     const targetContext = ActionTargetContext.forEntity('hero');
     const explodingFormatter = () => {
       throw new Error('formatter boom');
@@ -183,21 +191,26 @@ describe('ActionCommandFormatter integration', () => {
     const definition = { id: 'quest:wait', template: 'Wait for {target}' };
     const targetContext = ActionTargetContext.noTarget();
 
-    const result = formatter.format(
-      definition,
-      targetContext,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher }
-    );
+    const result = formatter.format(definition, targetContext, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     expect(result).toEqual({ ok: true, value: 'Wait for {target}' });
-    expect(logger.warnLogs.some(({ message }) =>
-      message.includes("target_domain 'none' but template \"Wait for {target}\"")
-    )).toBe(true);
+    expect(
+      logger.warnLogs.some(({ message }) =>
+        message.includes(
+          'target_domain \'none\' but template "Wait for {target}"'
+        )
+      )
+    ).toBe(true);
   });
 
   it('returns informative errors when entity target context lacks an entity id', () => {
-    const definition = { id: 'quest:incomplete', template: 'Investigate {target}' };
+    const definition = {
+      id: 'quest:incomplete',
+      template: 'Investigate {target}',
+    };
     const malformedContext = { type: 'entity', placeholder: 'target' };
 
     const result = formatter.format(
@@ -208,23 +221,26 @@ describe('ActionCommandFormatter integration', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain("entityId is missing");
+    expect(result.error).toContain('entityId is missing');
   });
 
   it('falls back to returning the template when the target type is unknown', () => {
-    const definition = { id: 'quest:custom_target', template: 'Handle {target}' };
+    const definition = {
+      id: 'quest:custom_target',
+      template: 'Handle {target}',
+    };
     const unknownContext = { type: 'custom', placeholder: 'target' };
 
-    const result = formatter.format(
-      definition,
-      unknownContext,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher }
-    );
+    const result = formatter.format(definition, unknownContext, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     expect(result).toEqual({ ok: true, value: 'Handle {target}' });
-    expect(logger.warnLogs.some(({ message }) =>
-      message.includes('Unknown targetContext type: custom')
-    )).toBe(true);
+    expect(
+      logger.warnLogs.some(({ message }) =>
+        message.includes('Unknown targetContext type: custom')
+      )
+    ).toBe(true);
   });
 });

@@ -16,9 +16,11 @@ Create the anatomy recipe file that defines Threadscar Melissa's physical body s
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 
 ### Modified Files
+
 None
 
 ---
@@ -26,6 +28,7 @@ None
 ## Out of Scope
 
 **Must NOT change:**
+
 - Character definition file (separate ticket THRMELCHASPE-003)
 - Any anatomy part entities
 - Schema files
@@ -35,6 +38,7 @@ None
 - Any existing recipe files
 
 **Must NOT create:**
+
 - Instance files
 - Test files (separate ticket)
 - Portrait images (separate ticket)
@@ -216,6 +220,7 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 ### Critical References
 
 **All referenced entities MUST exist:**
+
 - `anatomy:human_female` (blueprint)
 - `anatomy:human_female_torso_muscular_scarred` (created in THRMELCHASPE-001) ✓
 - `anatomy:humanoid_head_scarred` ✓
@@ -234,6 +239,7 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] Recipe validates against `anatomy.recipe.schema.json`
 - [ ] Recipe ID field name is `recipeId` (NOT `id`)
 - [ ] Recipe ID follows format: `fantasy:threadscar_melissa_recipe`
@@ -242,6 +248,7 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 - [ ] Schema reference uses `schema://` URI format
 
 ### Body Descriptors Validation
+
 - [ ] All 6 required body descriptors present:
   - `height: "tall"` (valid enum)
   - `skinColor: "weathered tan"` (free-form)
@@ -253,6 +260,7 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 - [ ] All enum values match body descriptor registry
 
 ### Slots Validation
+
 - [ ] All 9 slots defined: torso, head, hair, nose, left_breast, right_breast, left_ass, right_ass, vagina
 - [ ] Each slot has correct `partType`
 - [ ] All `preferId` references point to existing entities
@@ -261,6 +269,7 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 - [ ] Property overrides use valid component schemas
 
 ### Patterns Validation
+
 - [ ] 5 patterns defined: arms, legs, hands, feet, eyes
 - [ ] Each pattern has valid `matches` array
 - [ ] `matches` arrays reference valid blueprint slots
@@ -268,12 +277,14 @@ Create file: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 - [ ] Property overrides are valid
 
 ### Clothing Validation
+
 - [ ] 7 clothing entities referenced
 - [ ] All clothing entity IDs exist in clothing mod
 - [ ] All items have `equip: true`
 - [ ] Clothing layering is logical (underwear → base → outer → accessories)
 
 ### Cross-Reference Validation
+
 ```bash
 # Verify all anatomy parts exist
 grep -r "anatomy:humanoid_arm_scarred" data/mods/anatomy/entities/definitions/
@@ -287,6 +298,7 @@ grep -r "clothing:graphite_wool_briefs" data/mods/clothing/entities/definitions/
 ```
 
 ### Validation Commands
+
 ```bash
 # Schema validation
 npm run validate
@@ -299,12 +311,14 @@ npm run typecheck
 ```
 
 ### Expected Results
+
 - [ ] `npm run validate` passes without errors
 - [ ] No "entity not found" errors
 - [ ] No schema validation failures
 - [ ] Recipe structure is valid JSON
 
 ### Invariants That Must Remain True
+
 - [ ] No anatomy part entities are modified
 - [ ] No clothing entities are modified
 - [ ] No schema files are changed
@@ -319,6 +333,7 @@ npm run typecheck
 **Note**: Full integration testing in THRMELCHASPE-004
 
 Manual verification for this ticket:
+
 1. All referenced entities exist
 2. Recipe schema validates
 3. No duplicate slot/pattern definitions
@@ -329,6 +344,7 @@ Manual verification for this ticket:
 ## Pre-Implementation Checklist
 
 Before starting implementation:
+
 - [ ] THRMELCHASPE-001 is complete (anatomy part exists)
 - [ ] Verify all clothing entities exist in clothing mod
 - [ ] Verify all anatomy parts exist in anatomy mod
@@ -369,15 +385,18 @@ Before starting implementation:
 ### Changes Made vs Originally Planned
 
 **Corrected Assumptions:**
+
 1. **Schema Field Names**: Fixed `id` → `recipeId` and `blueprint` → `blueprintId` to match actual schema
 2. **Anatomy Part References**:
    - Changed `anatomy:human_breast_b_cup_firm` → `anatomy:human_breast_c_cup_firm` (b_cup_firm doesn't exist)
    - Changed `anatomy:human_ass_cheek_firm_athletic` → `anatomy:human_ass_cheek_firm` (firm_athletic doesn't exist)
 
 **Files Created:**
+
 - `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` ✓
 
 **Validation Results:**
+
 - ✅ Schema validation passed (`npm run validate`)
 - ✅ All referenced anatomy parts exist and verified
 - ✅ All 7 clothing entities exist and verified
@@ -385,6 +404,7 @@ Before starting implementation:
 - ✅ No modifications to any other files
 
 **Implementation Notes:**
+
 - Recipe follows exact schema structure from `anatomy.recipe.schema.json`
 - All entity references validated against existing entities in anatomy and clothing mods
 - Body descriptors use correct enum values and free-form strings as appropriate

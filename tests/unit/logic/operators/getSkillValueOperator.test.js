@@ -2,7 +2,14 @@
  * @file Unit tests for GetSkillValueOperator
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { GetSkillValueOperator } from '../../../../src/logic/operators/getSkillValueOperator.js';
 
@@ -59,7 +66,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: 75 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 0], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 0],
+        context
+      );
 
       expect(result).toBe(75);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
@@ -72,7 +82,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 10], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 10],
+        context
+      );
 
       expect(result).toBe(10);
     });
@@ -82,7 +95,10 @@ describe('GetSkillValueOperator', () => {
       mockEntityManager.getComponentData.mockReturnValue({ value: 50 });
 
       // actor path doesn't exist in context
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 25], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 25],
+        context
+      );
 
       expect(result).toBe(25);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -113,7 +129,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: 42 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill'], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill'],
+        context
+      );
 
       expect(result).toBe(42);
     });
@@ -122,7 +141,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value'], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value'],
+        context
+      );
 
       expect(result).toBe(0);
     });
@@ -131,7 +153,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue(null);
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 50], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 50],
+        context
+      );
 
       expect(result).toBe(50);
     });
@@ -175,7 +200,10 @@ describe('GetSkillValueOperator', () => {
       const context = { self: 'actor_1' };
       mockEntityManager.getComponentData.mockReturnValue({ value: 55 });
 
-      const result = operator.evaluate(['self', 'skills:melee_skill', 'value', 0], context);
+      const result = operator.evaluate(
+        ['self', 'skills:melee_skill', 'value', 0],
+        context
+      );
 
       expect(result).toBe(55);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
@@ -189,7 +217,10 @@ describe('GetSkillValueOperator', () => {
       const context = { entity };
       mockEntityManager.getComponentData.mockReturnValue({ value: 70 });
 
-      const result = operator.evaluate([entity, 'skills:melee_skill', 'value', 0], context);
+      const result = operator.evaluate(
+        [entity, 'skills:melee_skill', 'value', 0],
+        context
+      );
 
       expect(result).toBe(70);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
@@ -296,7 +327,10 @@ describe('GetSkillValueOperator', () => {
     it('should return default for invalid entity path type (number)', () => {
       const context = {};
 
-      const result = operator.evaluate([123, 'skills:melee_skill', 'value', 20], context);
+      const result = operator.evaluate(
+        [123, 'skills:melee_skill', 'value', 20],
+        context
+      );
 
       expect(result).toBe(20);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -307,7 +341,10 @@ describe('GetSkillValueOperator', () => {
     it('should return default for invalid entity path type (boolean)', () => {
       const context = {};
 
-      const result = operator.evaluate([true, 'skills:melee_skill', 'value', 30], context);
+      const result = operator.evaluate(
+        [true, 'skills:melee_skill', 'value', 30],
+        context
+      );
 
       expect(result).toBe(30);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -318,7 +355,10 @@ describe('GetSkillValueOperator', () => {
     it('should return default when entity resolution produces null', () => {
       const context = { actor: null };
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 40], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 40],
+        context
+      );
 
       expect(result).toBe(40);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -329,7 +369,10 @@ describe('GetSkillValueOperator', () => {
     it('should return default when entity resolution produces empty string', () => {
       const context = { actor: { id: '' } };
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 35], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 35],
+        context
+      );
 
       expect(result).toBe(35);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -343,7 +386,10 @@ describe('GetSkillValueOperator', () => {
         throw new Error('Component access error');
       });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 50], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 50],
+        context
+      );
 
       expect(result).toBe(0);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -358,7 +404,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: 0 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 50], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 50],
+        context
+      );
 
       expect(result).toBe(0);
     });
@@ -367,7 +416,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: 999999 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 0], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 0],
+        context
+      );
 
       expect(result).toBe(999999);
     });
@@ -376,7 +428,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: -10 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 0], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 0],
+        context
+      );
 
       expect(result).toBe(-10);
     });
@@ -385,7 +440,10 @@ describe('GetSkillValueOperator', () => {
       const context = { actor: { id: 'actor_1' } };
       mockEntityManager.getComponentData.mockReturnValue({ value: 100 });
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', '', 25], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', '', 25],
+        context
+      );
 
       expect(result).toBe(25);
     });
@@ -393,7 +451,10 @@ describe('GetSkillValueOperator', () => {
     it('should handle whitespace-only entityId', () => {
       const context = { actor: { id: '   ' } };
 
-      const result = operator.evaluate(['actor', 'skills:melee_skill', 'value', 55], context);
+      const result = operator.evaluate(
+        ['actor', 'skills:melee_skill', 'value', 55],
+        context
+      );
 
       expect(result).toBe(55);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -428,7 +489,9 @@ describe('GetSkillValueOperator', () => {
       operator.evaluate(['actor', 'skills:melee_skill', 'value', 0], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Entity actor_1, component skills:melee_skill, path value = 75')
+        expect.stringContaining(
+          'Entity actor_1, component skills:melee_skill, path value = 75'
+        )
       );
     });
 
@@ -439,7 +502,9 @@ describe('GetSkillValueOperator', () => {
       operator.evaluate(['actor', 'skills:melee_skill', 'value', 20], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Component skills:melee_skill not found on entity actor_1, returning default 20')
+        expect.stringContaining(
+          'Component skills:melee_skill not found on entity actor_1, returning default 20'
+        )
       );
     });
 

@@ -58,7 +58,8 @@ describe('affection:brush_hair_behind_ear - giving_blowjob forbidden component',
       scopeResolver.__brushHairOriginalResolve = originalResolve;
       scopeResolver.resolveSync = (scopeName, context) => {
         if (
-          scopeName === 'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
+          scopeName ===
+          'affection:close_actors_with_hair_or_entity_kneeling_before_actor'
         ) {
           const actorId = context?.actor?.id;
           if (!actorId) {

@@ -42,9 +42,7 @@ function buildScenario({
   const torsoId = `${actorId}_torso`;
   const leftBreastId = `${actorId}_left_breast`;
   const rightBreastId = `${actorId}_right_breast`;
-  const targetId = actorSuffix
-    ? `${TARGET_ID}_${actorSuffix}`
-    : TARGET_ID;
+  const targetId = actorSuffix ? `${TARGET_ID}_${actorSuffix}` : TARGET_ID;
 
   const actorBuilder = new ModEntityBuilder(actorId)
     .withName(actorName)
@@ -100,7 +98,9 @@ function buildScenario({
   const entities = [room, actor, torso, leftBreast, rightBreast];
 
   if (coverBreasts) {
-    entities.push(new ModEntityBuilder(COVERING_ITEM_ID).withName('Stage Shawl').build());
+    entities.push(
+      new ModEntityBuilder(COVERING_ITEM_ID).withName('Stage Shawl').build()
+    );
   }
 
   if (includeHugging) {
@@ -185,12 +185,14 @@ describe('Seduction Mod: squeeze_breasts_draw_attention rule', () => {
       });
       testFixture.reset(entities);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance(actorId);
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        squeezeBreastsDrawAttentionAction.prerequisites,
-        squeezeBreastsDrawAttentionAction,
-        actorInstance
-      );
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance(actorId);
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          squeezeBreastsDrawAttentionAction.prerequisites,
+          squeezeBreastsDrawAttentionAction,
+          actorInstance
+        );
 
       expect(prerequisitesPassed).toBe(false);
     });

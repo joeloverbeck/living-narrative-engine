@@ -25,48 +25,48 @@ jest.mock('../../../src/actions/pipeline/Pipeline.js', () => ({
   },
 }));
 
-jest.mock('../../../src/actions/pipeline/stages/ComponentFilteringStage.js', () => ({
-  __esModule: true,
-  ComponentFilteringStage: (
-    (globalThis.__mockStageDoubles ||= {}).componentFiltering =
-      mockCreateClassDouble()
-  ).factory,
-}));
+jest.mock(
+  '../../../src/actions/pipeline/stages/ComponentFilteringStage.js',
+  () => ({
+    __esModule: true,
+    ComponentFilteringStage: ((globalThis.__mockStageDoubles ||=
+      {}).componentFiltering = mockCreateClassDouble()).factory,
+  })
+);
 
-jest.mock('../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js', () => ({
-  __esModule: true,
-  PrerequisiteEvaluationStage: (
-    (globalThis.__mockStageDoubles ||= {}).prerequisite = mockCreateClassDouble()
-  ).factory,
-}));
+jest.mock(
+  '../../../src/actions/pipeline/stages/PrerequisiteEvaluationStage.js',
+  () => ({
+    __esModule: true,
+    PrerequisiteEvaluationStage: ((globalThis.__mockStageDoubles ||=
+      {}).prerequisite = mockCreateClassDouble()).factory,
+  })
+);
 
 jest.mock(
   '../../../src/actions/pipeline/stages/TargetComponentValidationStage.js',
   () => ({
     __esModule: true,
-    TargetComponentValidationStage: (
-      (globalThis.__mockStageDoubles ||= {}).targetValidation =
-        mockCreateClassDouble()
-    ).factory,
+    TargetComponentValidationStage: ((globalThis.__mockStageDoubles ||=
+      {}).targetValidation = mockCreateClassDouble()).factory,
   })
 );
 
-jest.mock('../../../src/actions/pipeline/stages/ActionFormattingStage.js', () => ({
-  __esModule: true,
-  ActionFormattingStage: (
-    (globalThis.__mockStageDoubles ||= {}).actionFormatting =
-      mockCreateClassDouble()
-  ).factory,
-}));
+jest.mock(
+  '../../../src/actions/pipeline/stages/ActionFormattingStage.js',
+  () => ({
+    __esModule: true,
+    ActionFormattingStage: ((globalThis.__mockStageDoubles ||=
+      {}).actionFormatting = mockCreateClassDouble()).factory,
+  })
+);
 
 jest.mock(
   '../../../src/actions/pipeline/services/implementations/TargetCandidatePruner.js',
   () => ({
     __esModule: true,
-    default: (
-      (globalThis.__mockHelperDoubles ||= {}).targetCandidatePruner =
-        mockCreateClassDouble()
-    ).factory,
+    default: ((globalThis.__mockHelperDoubles ||= {}).targetCandidatePruner =
+      mockCreateClassDouble()).factory,
   })
 );
 
@@ -74,10 +74,8 @@ jest.mock(
   '../../../src/actions/pipeline/stages/TargetValidationConfigProvider.js',
   () => ({
     __esModule: true,
-    default: (
-      (globalThis.__mockHelperDoubles ||= {}).validationConfigProvider =
-        mockCreateClassDouble()
-    ).factory,
+    default: ((globalThis.__mockHelperDoubles ||= {}).validationConfigProvider =
+      mockCreateClassDouble()).factory,
   })
 );
 
@@ -85,10 +83,8 @@ jest.mock(
   '../../../src/actions/pipeline/stages/TargetValidationReporter.js',
   () => ({
     __esModule: true,
-    default: (
-      (globalThis.__mockHelperDoubles ||= {}).validationReporter =
-        mockCreateClassDouble()
-    ).factory,
+    default: ((globalThis.__mockHelperDoubles ||= {}).validationReporter =
+      mockCreateClassDouble()).factory,
   })
 );
 
@@ -96,10 +92,8 @@ jest.mock(
   '../../../src/actions/pipeline/services/implementations/ContextUpdateEmitter.js',
   () => ({
     __esModule: true,
-    default: (
-      (globalThis.__mockHelperDoubles ||= {}).contextUpdateEmitter =
-        mockCreateClassDouble()
-    ).factory,
+    default: ((globalThis.__mockHelperDoubles ||= {}).contextUpdateEmitter =
+      mockCreateClassDouble()).factory,
   })
 );
 
@@ -156,9 +150,15 @@ describe('ActionPipelineOrchestrator', () => {
     const pipelineResult = { actions: [{ id: 'a1' }], errors: [{ id: 'e1' }] };
     mockPipelineExecute.mockResolvedValue(pipelineResult);
 
-    const result = await orchestrator.discoverActions(actor, context, { trace });
+    const result = await orchestrator.discoverActions(actor, context, {
+      trace,
+    });
 
-    expect(result).toEqual({ actions: pipelineResult.actions, errors: pipelineResult.errors, trace });
+    expect(result).toEqual({
+      actions: pipelineResult.actions,
+      errors: pipelineResult.errors,
+      trace,
+    });
 
     expect(mockStageDoubles.componentFiltering.factory).toHaveBeenCalledWith(
       dependencies.actionIndex,
@@ -174,7 +174,8 @@ describe('ActionPipelineOrchestrator', () => {
     expect(mockStageDoubles.targetValidation.factory).toHaveBeenCalledWith(
       expect.objectContaining({
         targetComponentValidator: dependencies.targetComponentValidator,
-        targetRequiredComponentsValidator: dependencies.targetRequiredComponentsValidator,
+        targetRequiredComponentsValidator:
+          dependencies.targetRequiredComponentsValidator,
         logger: dependencies.logger,
         actionErrorContextBuilder: dependencies.errorBuilder,
         targetCandidatePruner: dependencies.targetCandidatePruner,
@@ -202,7 +203,10 @@ describe('ActionPipelineOrchestrator', () => {
       mockStageDoubles.targetValidation.factory.mock.instances[0],
       mockStageDoubles.actionFormatting.factory.mock.instances[0],
     ]);
-    expect(mockPipelineConstructor).toHaveBeenCalledWith(pipelineStages, dependencies.logger);
+    expect(mockPipelineConstructor).toHaveBeenCalledWith(
+      pipelineStages,
+      dependencies.logger
+    );
 
     expect(mockPipelineExecute).toHaveBeenCalledWith({
       actor,
@@ -220,10 +224,16 @@ describe('ActionPipelineOrchestrator', () => {
       'Action discovery pipeline completed for actor actor-123. Found 1 actions, 1 errors.'
     );
 
-    expect(mockHelperDoubles.targetCandidatePruner.factory).not.toHaveBeenCalled();
-    expect(mockHelperDoubles.validationConfigProvider.factory).not.toHaveBeenCalled();
+    expect(
+      mockHelperDoubles.targetCandidatePruner.factory
+    ).not.toHaveBeenCalled();
+    expect(
+      mockHelperDoubles.validationConfigProvider.factory
+    ).not.toHaveBeenCalled();
     expect(mockHelperDoubles.validationReporter.factory).not.toHaveBeenCalled();
-    expect(mockHelperDoubles.contextUpdateEmitter.factory).not.toHaveBeenCalled();
+    expect(
+      mockHelperDoubles.contextUpdateEmitter.factory
+    ).not.toHaveBeenCalled();
   });
 
   it('creates default pipeline helpers when optional dependencies are omitted', async () => {
@@ -236,14 +246,20 @@ describe('ActionPipelineOrchestrator', () => {
 
     await orchestrator.discoverActions(actor, context);
 
-    expect(mockHelperDoubles.targetCandidatePruner.factory).toHaveBeenCalledWith({
+    expect(
+      mockHelperDoubles.targetCandidatePruner.factory
+    ).toHaveBeenCalledWith({
       logger: dependencies.logger,
     });
-    expect(mockHelperDoubles.validationConfigProvider.factory).toHaveBeenCalledTimes(1);
+    expect(
+      mockHelperDoubles.validationConfigProvider.factory
+    ).toHaveBeenCalledTimes(1);
     expect(mockHelperDoubles.validationReporter.factory).toHaveBeenCalledWith({
       logger: dependencies.logger,
     });
-    expect(mockHelperDoubles.contextUpdateEmitter.factory).toHaveBeenCalledTimes(1);
+    expect(
+      mockHelperDoubles.contextUpdateEmitter.factory
+    ).toHaveBeenCalledTimes(1);
 
     const stageConfig = mockStageDoubles.targetValidation.ctor.mock.calls[0][0];
     expect(stageConfig.targetCandidatePruner).toBe(
@@ -259,7 +275,9 @@ describe('ActionPipelineOrchestrator', () => {
       mockHelperDoubles.contextUpdateEmitter.factory.mock.instances[0]
     );
 
-    expect(mockStageDoubles.componentFiltering.factory).toHaveBeenCalledTimes(1);
+    expect(mockStageDoubles.componentFiltering.factory).toHaveBeenCalledTimes(
+      1
+    );
     expect(mockStageDoubles.prerequisite.factory).toHaveBeenCalledTimes(1);
     expect(mockStageDoubles.actionFormatting.factory).toHaveBeenCalledTimes(1);
   });

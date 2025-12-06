@@ -8,17 +8,12 @@
       "equipmentSlots": {
         "primary": "hands"
       },
-      "allowedLayers": [
-        "base",
-        "armor"
-      ]
+      "allowedLayers": ["base", "armor"]
     },
     "core:material": {
       "material": "steel",
       "durability": 80,
-      "properties": [
-        "rigid"
-      ]
+      "properties": ["rigid"]
     },
     "core:name": {
       "text": "gauntlets"
@@ -30,9 +25,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "hands"
-      ],
+      "covers": ["hands"],
       "coveragePriority": "armor"
     },
     "items:item": {},

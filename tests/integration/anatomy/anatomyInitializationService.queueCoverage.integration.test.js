@@ -86,7 +86,11 @@ class FakeAnatomyGenerationService {
       if (behavior) {
         behavior.generated = true;
       } else {
-        this.behavior.set(entityId, { delay: 0, shouldFailOnce: false, generated: true });
+        this.behavior.set(entityId, {
+          delay: 0,
+          shouldFailOnce: false,
+          generated: true,
+        });
       }
       return true;
     }
@@ -97,7 +101,8 @@ class FakeAnatomyGenerationService {
 
 const waitForLog = async (records, substring, timeout = 200) => {
   const start = Date.now();
-  const hasMatch = () => records.some(({ message }) => message?.includes(substring));
+  const hasMatch = () =>
+    records.some(({ message }) => message?.includes(substring));
   if (hasMatch()) {
     return;
   }
@@ -128,41 +133,64 @@ describe('AnatomyInitializationService integration queue coverage', () => {
   });
 
   it('validates required dependencies before initialization', () => {
-    expect(() => new AnatomyInitializationService({ logger, anatomyGenerationService: generationService })).toThrow(
-      InvalidArgumentError
-    );
-    expect(() => new AnatomyInitializationService({ eventDispatcher, anatomyGenerationService: generationService })).toThrow(
-      InvalidArgumentError
-    );
-    expect(() => new AnatomyInitializationService({ eventDispatcher, logger })).toThrow(InvalidArgumentError);
+    expect(
+      () =>
+        new AnatomyInitializationService({
+          logger,
+          anatomyGenerationService: generationService,
+        })
+    ).toThrow(InvalidArgumentError);
+    expect(
+      () =>
+        new AnatomyInitializationService({
+          eventDispatcher,
+          anatomyGenerationService: generationService,
+        })
+    ).toThrow(InvalidArgumentError);
+    expect(
+      () => new AnatomyInitializationService({ eventDispatcher, logger })
+    ).toThrow(InvalidArgumentError);
   });
 
-  it(
-    'processes entity creation queue, resolves waits, and supports manual orchestration',
-    async () => {
-      service.initialize();
+  it('processes entity creation queue, resolves waits, and supports manual orchestration', async () => {
+    service.initialize();
     service.initialize();
     expect(
-      logger.warnRecords.some(({ message }) => message.includes('Already initialized'))
+      logger.warnRecords.some(({ message }) =>
+        message.includes('Already initialized')
+      )
     ).toBe(true);
 
     await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: undefined });
     expect(
-      logger.warnRecords.some(({ message }) => message.includes('missing instanceId'))
+      logger.warnRecords.some(({ message }) =>
+        message.includes('missing instanceId')
+      )
     ).toBe(true);
 
-    await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'reconstructed', wasReconstructed: true });
+    await eventDispatcher.emit(ENTITY_CREATED_ID, {
+      instanceId: 'reconstructed',
+      wasReconstructed: true,
+    });
 
     generationService.configure('entity-1', { delay: 20 });
     generationService.configure('entity-2', { delay: 10 });
-    generationService.configure('entity-error', { delay: 30, shouldFail: true });
+    generationService.configure('entity-error', {
+      delay: 30,
+      shouldFail: true,
+    });
 
     await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'entity-1' });
-    await waitForLog(logger.debugRecords, "Processing anatomy generation for entity 'entity-1'");
+    await waitForLog(
+      logger.debugRecords,
+      "Processing anatomy generation for entity 'entity-1'"
+    );
     const waitEntityOne = service.waitForEntityGeneration('entity-1', 500);
 
     await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'entity-2' });
-    await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'entity-error' });
+    await eventDispatcher.emit(ENTITY_CREATED_ID, {
+      instanceId: 'entity-error',
+    });
 
     const immediateFalse = await service.waitForEntityGeneration('no-pending');
     expect(immediateFalse).toBe(false);
@@ -170,32 +198,59 @@ describe('AnatomyInitializationService integration queue coverage', () => {
     const firstGenerated = await waitEntityOne;
     expect(firstGenerated).toBe(true);
 
-    await waitForLog(logger.debugRecords, "Processing anatomy generation for entity 'entity-2'");
+    await waitForLog(
+      logger.debugRecords,
+      "Processing anatomy generation for entity 'entity-2'"
+    );
     const waitEntityTwo = service.waitForEntityGeneration('entity-2', 500);
     const secondGenerated = await waitEntityTwo;
     expect(secondGenerated).toBe(true);
 
-    await waitForLog(logger.debugRecords, "Processing anatomy generation for entity 'entity-error'");
-    await expect(service.waitForEntityGeneration('entity-error', 500)).rejects.toThrow('generation failed');
+    await waitForLog(
+      logger.debugRecords,
+      "Processing anatomy generation for entity 'entity-error'"
+    );
+    await expect(
+      service.waitForEntityGeneration('entity-error', 500)
+    ).rejects.toThrow('generation failed');
 
-    await expect(service.waitForAllGenerationsToComplete(1000)).resolves.toBeUndefined();
+    await expect(
+      service.waitForAllGenerationsToComplete(1000)
+    ).resolves.toBeUndefined();
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
 
-    const manualFirst = await service.generateAnatomy('entity-manual', 'humanoid');
+    const manualFirst = await service.generateAnatomy(
+      'entity-manual',
+      'humanoid'
+    );
     expect(manualFirst).toBe(true);
-    const manualSecond = await service.generateAnatomy('entity-manual', 'humanoid');
+    const manualSecond = await service.generateAnatomy(
+      'entity-manual',
+      'humanoid'
+    );
     expect(manualSecond).toBe(false);
 
     generationService.configure('entity-failure', { shouldFail: true });
-    await expect(service.generateAnatomy('entity-failure', 'humanoid')).rejects.toThrow('generation failed');
+    await expect(
+      service.generateAnatomy('entity-failure', 'humanoid')
+    ).rejects.toThrow('generation failed');
 
     generationService.configure('manual-queue', { delay: 0 });
-    service.__TEST_ONLY__setInternalState({ queue: ['manual-queue'], pending: [] });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['manual-queue'],
+      pending: [],
+    });
     await service.__TEST_ONLY__processQueue({ ensureProcessingFlag: true });
 
-    service.__TEST_ONLY__setInternalState({ queue: ['stuck'], pending: ['stuck'], processing: true });
-    await expect(service.waitForAllGenerationsToComplete(10)).rejects.toThrow('Timeout waiting for anatomy generation');
+    service.__TEST_ONLY__setInternalState({
+      queue: ['stuck'],
+      pending: ['stuck'],
+      processing: true,
+    });
+    await expect(service.waitForAllGenerationsToComplete(10)).rejects.toThrow(
+      'Timeout waiting for anatomy generation'
+    );
     service.__TEST_ONLY__setInternalState({ queue: [], pending: [] });
 
     const originalNow = Date.now;
@@ -207,11 +262,21 @@ describe('AnatomyInitializationService integration queue coverage', () => {
         if (callIndex === 2) return 10_000; // now equals deadline so remaining becomes zero
         return 10_001;
       };
-      service.__TEST_ONLY__setInternalState({ queue: ['deadline-zero'], pending: [], processing: true });
-      await expect(service.waitForAllGenerationsToComplete(0)).rejects.toThrow('Timeout waiting for anatomy generation');
+      service.__TEST_ONLY__setInternalState({
+        queue: ['deadline-zero'],
+        pending: [],
+        processing: true,
+      });
+      await expect(service.waitForAllGenerationsToComplete(0)).rejects.toThrow(
+        'Timeout waiting for anatomy generation'
+      );
     } finally {
       Date.now = originalNow;
-      service.__TEST_ONLY__setInternalState({ queue: [], pending: [], processing: false });
+      service.__TEST_ONLY__setInternalState({
+        queue: [],
+        pending: [],
+        processing: false,
+      });
     }
 
     const realNow = Date.now;
@@ -224,15 +289,27 @@ describe('AnatomyInitializationService integration queue coverage', () => {
         if (callCount === 3) return 20_000; // before delay completes
         return 20_002; // after sleep, exceed deadline
       };
-      service.__TEST_ONLY__setInternalState({ queue: ['post-sleep'], pending: [], processing: true });
-      await expect(service.waitForAllGenerationsToComplete(1)).rejects.toThrow('Timeout waiting for anatomy generation');
+      service.__TEST_ONLY__setInternalState({
+        queue: ['post-sleep'],
+        pending: [],
+        processing: true,
+      });
+      await expect(service.waitForAllGenerationsToComplete(1)).rejects.toThrow(
+        'Timeout waiting for anatomy generation'
+      );
     } finally {
       Date.now = realNow;
-      service.__TEST_ONLY__setInternalState({ queue: [], pending: [], processing: false });
+      service.__TEST_ONLY__setInternalState({
+        queue: [],
+        pending: [],
+        processing: false,
+      });
     }
 
     service.__TEST_ONLY__setInternalState({ pending: ['stalling'] });
-    await expect(service.waitForEntityGeneration('stalling', 10)).rejects.toThrow('Timeout waiting for anatomy generation');
+    await expect(
+      service.waitForEntityGeneration('stalling', 10)
+    ).rejects.toThrow('Timeout waiting for anatomy generation');
     service.__TEST_ONLY__setInternalState({ pending: [] });
 
     const recordedCalls = generationService.callSequence.join(',');
@@ -244,18 +321,20 @@ describe('AnatomyInitializationService integration queue coverage', () => {
     expect(recordedCalls).toContain('manual-queue');
 
     const warnMessages = logger.warnRecords.map(({ message }) => message);
-    expect(warnMessages.some((message) => message.includes('missing instanceId'))).toBe(true);
+    expect(
+      warnMessages.some((message) => message.includes('missing instanceId'))
+    ).toBe(true);
 
     service.destroy();
     expect(
       logger.infoRecords.some(({ message }) => message.includes('Destroyed'))
     ).toBe(true);
 
-      const callCountBefore = generationService.callSequence.length;
-      await eventDispatcher.emit(ENTITY_CREATED_ID, { instanceId: 'post-destroy' });
-      await new Promise((resolve) => setTimeout(resolve, 20));
-      expect(generationService.callSequence.length).toBe(callCountBefore);
-    },
-    30000
-  );
+    const callCountBefore = generationService.callSequence.length;
+    await eventDispatcher.emit(ENTITY_CREATED_ID, {
+      instanceId: 'post-destroy',
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(generationService.callSequence.length).toBe(callCountBefore);
+  }, 30000);
 });

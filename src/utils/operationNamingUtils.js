@@ -18,9 +18,17 @@
  * @returns {string} Expected schema file name
  */
 export function toSchemaFileName(operationType) {
-  return operationType.toLowerCase().split('_').map((word, idx) =>
-    idx === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-  ).join('') + '.schema.json';
+  return (
+    operationType
+      .toLowerCase()
+      .split('_')
+      .map((word, idx) =>
+        idx === 0
+          ? word
+          : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join('') + '.schema.json'
+  );
 }
 
 /**
@@ -41,9 +49,12 @@ export function toSchemaFileName(operationType) {
  */
 export function toTokenName(operationType) {
   // NO "I" prefix for operation handlers (see tokens-core.js convention)
-  return operationType.split('_').map(word =>
-    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-  ).join('') + 'Handler';
+  return (
+    operationType
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join('') + 'Handler'
+  );
 }
 
 /**

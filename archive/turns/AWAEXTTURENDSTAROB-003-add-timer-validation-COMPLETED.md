@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-003: Add Timer Function Validation
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-003
 - **Phase:** 1 - Minimal Change
 - **Priority:** High
@@ -14,6 +15,7 @@ Add validation to ensure `setTimeoutFn` and `clearTimeoutFn` are callable functi
 ## Files to Modify
 
 ### Production Code
+
 - `src/turns/states/awaitingExternalTurnEndState.js`
   - Constructor (add validation after timeout validation)
 
@@ -22,6 +24,7 @@ Add validation to ensure `setTimeoutFn` and `clearTimeoutFn` are callable functi
 ### 1. Add Timer Function Validation in Constructor
 
 **CORRECTED Constructor Signature** (actual implementation):
+
 ```javascript
 // Constructor is at lines 58-78 in awaitingExternalTurnEndState.js
 // NOTE: First parameter is 'handler' (positional), NOT part of destructured object
@@ -67,6 +70,7 @@ constructor(
 ## Out of Scope
 
 ### Must NOT Change
+
 - Functional validation (verify they actually work as timers)
 - Default assignment logic (already using `??` operators correctly)
 - Timer function implementation or wrapping
@@ -75,6 +79,7 @@ constructor(
 - Environment provider validation (Phase 2)
 
 ### Must NOT Add
+
 - Validation of timer function signatures (arity, parameter types)
 - Validation that timers actually fire correctly
 - Warnings for non-standard timer functions
@@ -83,6 +88,7 @@ constructor(
 ## Acceptance Criteria
 
 ### AC1: Reject Non-Function setTimeoutFn
+
 ```javascript
 // GIVEN: Constructor called with { setTimeoutFn: "not-a-function" }
 // WHEN: State instantiated
@@ -104,6 +110,7 @@ constructor(
 ```
 
 ### AC2: Reject Non-Function clearTimeoutFn
+
 ```javascript
 // GIVEN: Constructor called with { clearTimeoutFn: null }
 // WHEN: State instantiated
@@ -124,6 +131,7 @@ constructor(
 ```
 
 ### AC3: Accept Valid Function References
+
 ```javascript
 // GIVEN: Constructor called with { setTimeoutFn: setTimeout, clearTimeoutFn: clearTimeout }
 // WHEN: State instantiated
@@ -142,6 +150,7 @@ const mockClearTimeout = (id) => {};
 ```
 
 ### AC4: Accept Arrow Functions and Bound Functions
+
 ```javascript
 // GIVEN: Constructor called with arrow functions:
 // { setTimeoutFn: (fn, ms) => {}, clearTimeoutFn: (id) => {} }
@@ -158,6 +167,7 @@ const mockClearTimeout = (id) => {};
 ```
 
 ### AC5: Default Values Work Correctly
+
 ```javascript
 // GIVEN: Constructor called without setTimeoutFn or clearTimeoutFn
 // WHEN: State instantiated with defaults
@@ -169,6 +179,7 @@ const mockClearTimeout = (id) => {};
 ```
 
 ### AC6: Validation Happens Before State Setup
+
 ```javascript
 // GIVEN: Constructor called with invalid timer function
 // WHEN: Validation fails
@@ -180,6 +191,7 @@ const mockClearTimeout = (id) => {};
 ```
 
 ### AC7: Both Validations Can Fail Independently
+
 ```javascript
 // GIVEN: Constructor called with { setTimeoutFn: null, clearTimeoutFn: clearTimeout }
 // WHEN: State instantiated
@@ -194,6 +206,7 @@ const mockClearTimeout = (id) => {};
 ```
 
 ### AC8: Existing Tests Still Pass
+
 ```javascript
 // GIVEN: All existing unit and integration tests
 // WHEN: npm run test:unit && npm run test:integration
@@ -206,17 +219,20 @@ const mockClearTimeout = (id) => {};
 ## Invariants
 
 ### Configuration Guarantees (Must Enforce)
+
 1. **Timer Functions Always Callable**: Both timer functions are functions (enforced)
 2. **Fail Fast**: Invalid timer functions throw at construction
 3. **Clear Messages**: Error messages specify which timer function is invalid
 4. **Type Safety**: typeof check ensures callability
 
 ### State Lifecycle Invariants (Must Maintain)
+
 1. **No Partial Construction**: Invalid config prevents state creation
 2. **Resource Safety**: No resources allocated if validation fails
 3. **Immediate Feedback**: Errors thrown synchronously from constructor
 
 ### API Contract Preservation (Must Maintain)
+
 1. **Constructor Signature**: Unchanged (validation is internal)
 2. **Error Types**: Uses project-standard `InvalidArgumentError`
 3. **Default Behavior**: Default timer functions still work
@@ -225,6 +241,7 @@ const mockClearTimeout = (id) => {};
 ## Testing Commands
 
 ### After Implementation
+
 ```bash
 # Lint modified file
 npx eslint src/turns/states/awaitingExternalTurnEndState.js
@@ -243,6 +260,7 @@ npm run test:ci
 ```
 
 ### Manual Verification
+
 ```bash
 # In Node.js REPL or test file:
 # const state = new AwaitingExternalTurnEndState({
@@ -255,6 +273,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### Error Message Format
+
 - **Pattern**: `${paramName} must be a function, got: ${typeof value}`
 - **Examples**:
   - `setTimeoutFn must be a function, got: string`
@@ -262,12 +281,14 @@ npm run test:ci
   - `clearTimeoutFn must be a function, got: number`
 
 ### Validation Order
+
 1. Timeout value validation (Ticket 002)
 2. setTimeoutFn validation (this ticket)
 3. clearTimeoutFn validation (this ticket)
 4. Rest of constructor logic
 
 ### Type Check Only
+
 - Only validates `typeof fn === 'function'`
 - Does NOT validate:
   - Function signature (parameters, return type)
@@ -299,24 +320,28 @@ npm run test:ci
 ### Changes Made vs. Original Plan
 
 **Ticket Corrections**:
+
 - Fixed constructor signature example to match actual implementation (handler as first positional parameter)
 - Updated line number references (line 74 → after line 74, before line 76)
 - Removed "Must NOT Change test files" constraint (contradicted AC requirements)
 - Added explicit note about constructor parameter order
 
 **Production Code**:
+
 - Added 10 lines of validation code in `src/turns/states/awaitingExternalTurnEndState.js`
 - Inserted exactly where specified: after timeout validation (line 74), before timer function storage (line 76)
 - Used exact error message format specified in ticket
 - Preserved all existing APIs and behavior
 
 **Test Code**:
+
 - Added comprehensive test suite (328 lines) in `tests/unit/turns/states/awaitingExternalTurnEndState.test.js`
 - Full coverage of all 8 acceptance criteria (AC1-AC8)
 - 23 new test cases organized into 8 describe blocks
 - All tests pass (58 total tests in file)
 
 **Validation Results**:
+
 - ✅ All unit tests pass (58/58)
 - ✅ All timer-specific tests pass (1/1)
 - ✅ ESLint passes (warnings are pre-existing, not from changes)

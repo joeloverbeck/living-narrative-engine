@@ -130,7 +130,12 @@ describe('CacheService integration coverage', () => {
 
   it('manages TTL, eviction, manual cleanup, and stats while collaborating with ApiKeyService and NodeFileSystemReader', async () => {
     const fileNames = ['alpha.key', 'beta.key', 'gamma.key', 'delta.key'];
-    const contents = ['value-alpha', 'value-beta', 'value-gamma', 'x'.repeat(320)];
+    const contents = [
+      'value-alpha',
+      'value-beta',
+      'value-gamma',
+      'x'.repeat(320),
+    ];
 
     fileNames.forEach((name, index) => {
       writeFileSync(path.join(tempDir, name), contents[index], 'utf8');
@@ -142,9 +147,13 @@ describe('CacheService integration coverage', () => {
       apiKeyFileName: fileName,
     });
 
-    const cacheKey = (fileName) => `api_key:file:${path.join(tempDir, fileName)}`;
+    const cacheKey = (fileName) =>
+      `api_key:file:${path.join(tempDir, fileName)}`;
 
-    const alpha = await apiKeyService.getApiKey(buildConfig(fileNames[0]), 'llm-alpha');
+    const alpha = await apiKeyService.getApiKey(
+      buildConfig(fileNames[0]),
+      'llm-alpha'
+    );
     expect(alpha.apiKey).toBe('value-alpha');
 
     let stats = cacheService.getStats();
@@ -235,11 +244,7 @@ describe('CacheService integration coverage', () => {
 
     resetAppConfigServiceInstance();
     const appConfig = getAppConfigService(logger);
-    const llmConfigService = new LlmConfigService(
-      fsReader,
-      logger,
-      appConfig
-    );
+    const llmConfigService = new LlmConfigService(fsReader, logger, appConfig);
     await llmConfigService.initialize();
 
     cacheService.set('readiness-probe', { ok: true }, 200);

@@ -25,8 +25,7 @@ describe('validationErrorContext', () => {
     });
 
     it('should find line number for nested array path', () => {
-      const json =
-        '{\n  "items": [\n    { "id": 1 },\n    { "id": 2 }\n  ]\n}';
+      const json = '{\n  "items": [\n    { "id": 1 },\n    { "id": 2 }\n  ]\n}';
       expect(extractLineNumber(json, '/items/1/id')).toBe(4);
     });
 
@@ -215,11 +214,7 @@ describe('validationErrorContext', () => {
 
     it('should handle errors without instancePath', () => {
       const errors = [{ message: 'Schema validation failed' }];
-      const result = formatValidationErrors(
-        errors,
-        '/path/to/file.json',
-        '{}'
-      );
+      const result = formatValidationErrors(errors, '/path/to/file.json', '{}');
 
       expect(result).toContain('Schema validation failed');
       expect(result).toContain('Path: ');

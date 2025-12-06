@@ -64,7 +64,10 @@ describe('Mod Manifest Schema - Lookups Support', () => {
     // Assert
     expect(result.isValid).toBe(true);
     if (!result.isValid) {
-      console.error('Validation errors:', JSON.stringify(result.errors, null, 2));
+      console.error(
+        'Validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
   });
 
@@ -74,7 +77,8 @@ describe('Mod Manifest Schema - Lookups Support', () => {
       id: 'music',
       version: '1.0.0',
       name: 'Music Performance System',
-      description: 'Musical performance capabilities with instruments and emotional moods',
+      description:
+        'Musical performance capabilities with instruments and emotional moods',
       dependencies: [
         { id: 'positioning', version: '^1.0.0' },
         { id: 'core', version: '^1.0.0' },
@@ -103,7 +107,10 @@ describe('Mod Manifest Schema - Lookups Support', () => {
     // Assert
     expect(result.isValid).toBe(true);
     if (!result.isValid) {
-      console.error('Validation errors:', JSON.stringify(result.errors, null, 2));
+      console.error(
+        'Validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
   });
 

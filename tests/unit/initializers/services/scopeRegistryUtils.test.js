@@ -12,12 +12,14 @@ describe('loadAndInitScopes', () => {
   });
 
   it('initializes the registry using scope arrays returned from the data source', async () => {
-    const dataSource = jest.fn().mockResolvedValue([
-      { id: 'scope-1', name: 'Scope One' },
-      null,
-      { id: 'scope-2', name: 'Scope Two' },
-      { name: 'missing-id' },
-    ]);
+    const dataSource = jest
+      .fn()
+      .mockResolvedValue([
+        { id: 'scope-1', name: 'Scope One' },
+        null,
+        { id: 'scope-2', name: 'Scope Two' },
+        { name: 'missing-id' },
+      ]);
 
     await loadAndInitScopes({ dataSource, scopeRegistry, logger });
 
@@ -26,7 +28,10 @@ describe('loadAndInitScopes', () => {
       'scope-1': { id: 'scope-1', name: 'Scope One' },
       'scope-2': { id: 'scope-2', name: 'Scope Two' },
     });
-    expect(logger.debug).toHaveBeenNthCalledWith(1, 'Initializing ScopeRegistry...');
+    expect(logger.debug).toHaveBeenNthCalledWith(
+      1,
+      'Initializing ScopeRegistry...'
+    );
     expect(logger.debug).toHaveBeenNthCalledWith(
       2,
       'ScopeRegistry initialized with 2 scopes.'
@@ -53,7 +58,10 @@ describe('loadAndInitScopes', () => {
     await loadAndInitScopes({ scopeRegistry, logger });
 
     expect(scopeRegistry.initialize).toHaveBeenCalledWith({});
-    expect(logger.debug).toHaveBeenNthCalledWith(2, 'ScopeRegistry initialized with 0 scopes.');
+    expect(logger.debug).toHaveBeenNthCalledWith(
+      2,
+      'ScopeRegistry initialized with 0 scopes.'
+    );
   });
 
   it('logs an error when data source throws', async () => {
@@ -64,7 +72,10 @@ describe('loadAndInitScopes', () => {
 
     await loadAndInitScopes({ dataSource, scopeRegistry, logger });
 
-    expect(logger.error).toHaveBeenCalledWith('Failed to initialize ScopeRegistry:', error);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to initialize ScopeRegistry:',
+      error
+    );
     expect(scopeRegistry.initialize).not.toHaveBeenCalled();
   });
 

@@ -38,7 +38,10 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
   });
 
   const buildMessage = (actorName, targetName) =>
-    EXPECTED_MESSAGE.replaceAll('{actor}', actorName).replace('{target}', targetName);
+    EXPECTED_MESSAGE.replaceAll('{actor}', actorName).replace(
+      '{target}',
+      targetName
+    );
 
   describe('Action Execution', () => {
     it('performs force to knees action successfully', async () => {
@@ -46,9 +49,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      testFixture.assertActionSuccess(
-        buildMessage('Alice', 'Beth')
-      );
+      testFixture.assertActionSuccess(buildMessage('Alice', 'Beth'));
     });
 
     it('does not fire rule for different action', async () => {
@@ -87,10 +88,7 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
       );
 
       await expect(async () => {
-        await testFixture.executeAction(
-          scenario.actor.id,
-          scenario.target.id
-        );
+        await testFixture.executeAction(scenario.actor.id, scenario.target.id);
       }).rejects.toThrow(/forbidden component.*positioning:straddling_waist/i);
     });
   });
@@ -132,7 +130,9 @@ describe('Physical Control Mod: Force to Knees Action Integration', () => {
         scenario.actor.id
       );
 
-      expect(actorAfter.components['positioning:kneeling_before']).toBeUndefined();
+      expect(
+        actorAfter.components['positioning:kneeling_before']
+      ).toBeUndefined();
       expect(actorAfter.components['positioning:closeness'].partners).toEqual([
         scenario.target.id,
       ]);

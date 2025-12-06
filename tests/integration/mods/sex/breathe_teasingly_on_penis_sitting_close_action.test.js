@@ -24,7 +24,9 @@ const EXPECTED_MESSAGE =
  * @param {ModTestFixture} fixture - Active test fixture instance.
  */
 function configureActionDiscovery(fixture) {
-  fixture.testEnv.actionIndex.buildIndex([breatheTeasinglyOnPenisSittingCloseAction]);
+  fixture.testEnv.actionIndex.buildIndex([
+    breatheTeasinglyOnPenisSittingCloseAction,
+  ]);
 }
 
 describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action integration', () => {
@@ -32,8 +34,12 @@ describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action integr
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -57,10 +63,14 @@ describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action integr
       additionalPayload: { primaryId: PRIMARY_ID },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,

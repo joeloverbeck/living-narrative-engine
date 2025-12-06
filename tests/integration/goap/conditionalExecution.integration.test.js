@@ -43,12 +43,15 @@ describe('Conditional Execution - Integration', () => {
     });
 
     // Mock primitive action executor
-    mockPrimitiveActionExecutor = testBed.createMock('IPrimitiveActionStepExecutor', [
-      'execute',
-    ]);
+    mockPrimitiveActionExecutor = testBed.createMock(
+      'IPrimitiveActionStepExecutor',
+      ['execute']
+    );
 
     // Create mock self-reference initially (will be replaced with real executor)
-    const mockSelfRef = testBed.createMock('IConditionalStepExecutor', ['execute']);
+    const mockSelfRef = testBed.createMock('IConditionalStepExecutor', [
+      'execute',
+    ]);
 
     // Create executor with real services
     executor = new ConditionalStepExecutor({
@@ -60,7 +63,9 @@ describe('Conditional Execution - Integration', () => {
     });
 
     // Replace mock self-reference with real executor for actual recursive calls
-    mockSelfRef.execute.mockImplementation((...args) => executor.execute(...args));
+    mockSelfRef.execute.mockImplementation((...args) =>
+      executor.execute(...args)
+    );
   });
 
   describe('Real Context Assembly and Condition Evaluation', () => {
@@ -207,8 +212,18 @@ describe('Conditional Execution - Integration', () => {
         description: 'Check if actor is in location AND has key',
         condition: {
           and: [
-            { '==': [{ var: 'actor.components.core:location.currentLocation' }, 'house'] },
-            { in: ['key_item', { var: 'actor.components.core:inventory.items' }] },
+            {
+              '==': [
+                { var: 'actor.components.core:location.currentLocation' },
+                'house',
+              ],
+            },
+            {
+              in: [
+                'key_item',
+                { var: 'actor.components.core:inventory.items' },
+              ],
+            },
           ],
         },
         thenSteps: [
@@ -265,12 +280,16 @@ describe('Conditional Execution - Integration', () => {
       const step = {
         stepType: 'conditional',
         description: 'Level 1: Check inventory',
-        condition: { '>': [{ var: 'actor.components.core:inventory.items.length' }, 0] },
+        condition: {
+          '>': [{ var: 'actor.components.core:inventory.items.length' }, 0],
+        },
         thenSteps: [
           {
             stepType: 'conditional',
             description: 'Level 2: Check if has weapon',
-            condition: { in: ['weapon', { var: 'actor.components.core:inventory.items' }] },
+            condition: {
+              in: ['weapon', { var: 'actor.components.core:inventory.items' }],
+            },
             thenSteps: [
               {
                 stepType: 'primitive_action',

@@ -235,7 +235,10 @@ describe('AnatomyBlueprintRepository', () => {
 
     it('should return null if blueprint not found', async () => {
       mockDataRegistry.get.mockImplementation((category, lookupId) => {
-        if (category === 'anatomyRecipes' && lookupId === 'test:humanoid_recipe') {
+        if (
+          category === 'anatomyRecipes' &&
+          lookupId === 'test:humanoid_recipe'
+        ) {
           return testRecipe;
         }
         return null; // Blueprint not found

@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "head_gear"
       },
-      "allowedLayers": [
-        "accessories"
-      ]
+      "allowedLayers": ["accessories"]
     },
     "core:material": {
       "material": "twine"

@@ -300,10 +300,7 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
 
       mockDataRegistry.getAll.mockReturnValue([goal]);
       mockGoapPlanner.plan.mockReturnValue({
-        tasks: [
-          { taskId: 'task_one' },
-          { taskId: 'task_two' },
-        ],
+        tasks: [{ taskId: 'task_one' }, { taskId: 'task_two' }],
       });
 
       mockRefinementEngine.refine.mockImplementation((_, actorId) => {
@@ -532,7 +529,9 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
         })
       );
       // Should not call refine more than 11 times (initial + 10 recursive)
-      expect(mockRefinementEngine.refine.mock.calls.length).toBeLessThanOrEqual(11);
+      expect(mockRefinementEngine.refine.mock.calls.length).toBeLessThanOrEqual(
+        11
+      );
     });
 
     it('should return null when continue reaches end of plan', async () => {
@@ -661,7 +660,8 @@ describe('GoapController - Failure Handling (GOAPIMPL-021-05)', () => {
       // Should NOT track failures with idle strategy
       const trackedCalls = mockLogger.warn.mock.calls.filter(
         (call) =>
-          call[0] === 'Goal failure tracked' || call[0] === 'Task failure tracked'
+          call[0] === 'Goal failure tracked' ||
+          call[0] === 'Task failure tracked'
       );
       expect(trackedCalls.length).toBe(0);
     });

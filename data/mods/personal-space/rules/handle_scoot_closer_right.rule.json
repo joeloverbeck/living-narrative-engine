@@ -68,7 +68,12 @@
             "parameters": {
               "condition": {
                 "and": [
-                  { "<": [{ "var": "context.newIndex" }, { "var": "context.furnitureData.spots.length" }] },
+                  {
+                    "<": [
+                      { "var": "context.newIndex" },
+                      { "var": "context.furnitureData.spots.length" }
+                    ]
+                  },
                   { "===": [{ "var": "context.targetSpotOccupant" }, null] }
                 ]
               },

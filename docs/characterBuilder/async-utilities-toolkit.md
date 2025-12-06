@@ -13,10 +13,10 @@ The `AsyncUtilitiesToolkit` centralizes debounce/throttle helpers plus timer lif
 
 The constructor accepts the following options:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `logger` | `ILogger` | — | Required logger used for instrumentation and error reporting. |
-| `defaultWait` | `number` | `100` | Default wait when helpers are invoked without an explicit delay. |
+| Option                           | Type      | Default | Description                                                                          |
+| -------------------------------- | --------- | ------- | ------------------------------------------------------------------------------------ |
+| `logger`                         | `ILogger` | —       | Required logger used for instrumentation and error reporting.                        |
+| `defaultWait`                    | `number`  | `100`   | Default wait when helpers are invoked without an explicit delay.                     |
 | `instrumentation.logTimerEvents` | `boolean` | `false` | When true, emits debug logs for every timer schedule/clear event to aid diagnostics. |
 
 ### Debounce/Throttle Options

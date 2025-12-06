@@ -4,7 +4,7 @@ import { ModSecurityError } from '../../../src/errors/modSecurityError.js';
 
 describe('InputSanitizer', () => {
   const createLogger = () => ({
-    error: jest.fn()
+    error: jest.fn(),
   });
 
   const createSanitizer = (config = {}, logger = createLogger()) =>
@@ -26,37 +26,47 @@ describe('InputSanitizer', () => {
       const logger = createLogger();
       const sanitizer = createSanitizer({}, logger);
 
-      expect(() => sanitizer.sanitizeFilePath('mods/../secrets.json')).toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeFilePath('mods/../secrets.json')).toThrow(
+        ModSecurityError
+      );
       expect(logger.error).toHaveBeenCalled();
     });
 
     it('blocks access to configured directories', () => {
       const sanitizer = createSanitizer({ blockedPaths: ['secrets'] });
 
-      expect(() => sanitizer.sanitizeFilePath('data/mods/demo/secrets/file.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeFilePath('data/mods/demo/secrets/file.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('rejects disallowed file extensions', () => {
       const sanitizer = createSanitizer({ allowedExtensions: ['.json'] });
 
-      expect(() => sanitizer.sanitizeFilePath('data/mods/demo/config.exe')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeFilePath('data/mods/demo/config.exe')
+      ).toThrow(ModSecurityError);
     });
 
     it('detects attempts to escape the mod directory', () => {
       const sanitizer = createSanitizer({
         blockedPaths: [],
         allowedExtensions: ['.json'],
-        pathTraversalPatterns: []
+        pathTraversalPatterns: [],
       });
 
-      expect(() => sanitizer.sanitizeFilePath('data/mods/demo/../outside.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeFilePath('data/mods/demo/../outside.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('allows temporary files in test environments', () => {
       const sanitizer = createSanitizer();
       const tempPath = '/tmp/mod-work/config.scope';
 
-      expect(sanitizer.sanitizeFilePath(tempPath)).toBe(path.normalize(tempPath));
+      expect(sanitizer.sanitizeFilePath(tempPath)).toBe(
+        path.normalize(tempPath)
+      );
     });
   });
 
@@ -77,42 +87,54 @@ describe('InputSanitizer', () => {
       const sanitizer = createSanitizer({ maxDepth: 1 });
       const payload = { level1: { level2: {} } };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'deep.json')).toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeJsonContent(payload, 'deep.json')).toThrow(
+        ModSecurityError
+      );
     });
 
     it('throws when object has too many keys', () => {
       const sanitizer = createSanitizer({ maxKeys: 1 });
       const payload = { first: 'value', second: 'value' };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'keys.json')).toThrow(ModSecurityError);
+      expect(() => sanitizer.sanitizeJsonContent(payload, 'keys.json')).toThrow(
+        ModSecurityError
+      );
     });
 
     it('throws when array exceeds allowed length', () => {
       const sanitizer = createSanitizer({ maxArrayLength: 1 });
       const payload = { array: [1, 2] };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'array.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeJsonContent(payload, 'array.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('throws when string exceeds allowed length', () => {
       const sanitizer = createSanitizer({ maxStringLength: 2 });
       const payload = { long: 'toolong' };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'string.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeJsonContent(payload, 'string.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('detects dangerous keys even inside nested structures', () => {
       const sanitizer = createSanitizer();
       const payload = { wrapper: [{ constructor: {} }] };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'danger.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeJsonContent(payload, 'danger.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('honors custom dangerous key configuration', () => {
       const sanitizer = createSanitizer({ dangerousKeys: ['evil'] });
       const payload = { evil: true };
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'config.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeJsonContent(payload, 'config.json')
+      ).toThrow(ModSecurityError);
     });
 
     it('wraps unexpected analysis errors in security errors', () => {
@@ -123,10 +145,12 @@ describe('InputSanitizer', () => {
         enumerable: true,
         get() {
           throw new Error('unexpected access');
-        }
+        },
       });
 
-      expect(() => sanitizer.sanitizeJsonContent(payload, 'failure.json')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeJsonContent(payload, 'failure.json')
+      ).toThrow(ModSecurityError);
     });
   });
 
@@ -148,25 +172,36 @@ describe('InputSanitizer', () => {
     it('rejects overly long expressions', () => {
       const sanitizer = createSanitizer({ maxExpressionLength: 5 });
 
-      expect(() => sanitizer.sanitizeScopeDslContent('abcdef', 'long.scope')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeScopeDslContent('abcdef', 'long.scope')
+      ).toThrow(ModSecurityError);
     });
 
     it('detects dangerous regex patterns', () => {
       const sanitizer = createSanitizer({ dangerousRegexPatterns: ['(.*)*'] });
 
-      expect(() => sanitizer.sanitizeScopeDslContent('pattern (.*)*', 'pattern.scope')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeScopeDslContent('pattern (.*)*', 'pattern.scope')
+      ).toThrow(ModSecurityError);
     });
 
     it('enforces maximum nesting depth', () => {
       const sanitizer = createSanitizer({ maxNestingLevel: 1 });
 
-      expect(() => sanitizer.sanitizeScopeDslContent('((actor:hero))', 'depth.scope')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeScopeDslContent('((actor:hero))', 'depth.scope')
+      ).toThrow(ModSecurityError);
     });
 
     it('limits reference counts', () => {
       const sanitizer = createSanitizer({ maxReferences: 1 });
 
-      expect(() => sanitizer.sanitizeScopeDslContent('actor:hero target:villain', 'refs.scope')).toThrow(ModSecurityError);
+      expect(() =>
+        sanitizer.sanitizeScopeDslContent(
+          'actor:hero target:villain',
+          'refs.scope'
+        )
+      ).toThrow(ModSecurityError);
     });
   });
 
@@ -180,7 +215,9 @@ describe('InputSanitizer', () => {
     it('rejects files larger than allowed', () => {
       const sanitizer = createSanitizer({ maxFileSize: 100 });
 
-      expect(() => sanitizer.validateFileSize(101, 'file.json')).toThrow(ModSecurityError);
+      expect(() => sanitizer.validateFileSize(101, 'file.json')).toThrow(
+        ModSecurityError
+      );
     });
   });
 });

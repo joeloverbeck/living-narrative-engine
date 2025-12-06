@@ -16,10 +16,14 @@ const createCapturingLogger = () => {
   return {
     entries,
     logger: {
-      info: (message, context) => entries.push({ level: 'info', message, context }),
-      warn: (message, context) => entries.push({ level: 'warn', message, context }),
-      error: (message, context) => entries.push({ level: 'error', message, context }),
-      debug: (message, context) => entries.push({ level: 'debug', message, context }),
+      info: (message, context) =>
+        entries.push({ level: 'info', message, context }),
+      warn: (message, context) =>
+        entries.push({ level: 'warn', message, context }),
+      error: (message, context) =>
+        entries.push({ level: 'error', message, context }),
+      debug: (message, context) =>
+        entries.push({ level: 'debug', message, context }),
       isDebugEnabled: true,
     },
   };
@@ -116,7 +120,9 @@ describe('HttpAgentService integration edge coverage', () => {
 
       const enhancedStats = service.getEnhancedStats();
       expect(enhancedStats.estimatedMemoryUsageMB).toBeGreaterThanOrEqual(0);
-      expect(enhancedStats.agentDetails[0].activeSockets).toBeGreaterThanOrEqual(1);
+      expect(
+        enhancedStats.agentDetails[0].activeSockets
+      ).toBeGreaterThanOrEqual(1);
 
       const basePreview = service.getNextCleanupIntervalPreview({
         overrideAdaptiveCleanupEnabled: false,

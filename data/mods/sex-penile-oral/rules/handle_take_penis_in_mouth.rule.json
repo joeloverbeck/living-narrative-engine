@@ -3,7 +3,9 @@
   "rule_id": "handle_take_penis_in_mouth",
   "comment": "Handles the 'sex-penile-oral:take_penis_in_mouth' action. Cleans up existing blowjob state, adds reciprocal giving/receiving components, dispatches descriptive text, and ends the turn.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "sex-penile-oral:event-is-action-take-penis-in-mouth" },
+  "condition": {
+    "condition_ref": "sex-penile-oral:event-is-action-take-penis-in-mouth"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -11,7 +13,10 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "primaryName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "primaryName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -71,7 +76,9 @@
     {
       "type": "IF",
       "parameters": {
-        "condition": { "var": "context.actorExistingReceivingBlowjobComponent" },
+        "condition": {
+          "var": "context.actorExistingReceivingBlowjobComponent"
+        },
         "then_actions": [
           {
             "type": "REMOVE_COMPONENT",
@@ -101,7 +108,9 @@
     {
       "type": "IF",
       "parameters": {
-        "condition": { "var": "context.primaryExistingReceivingBlowjobComponent" },
+        "condition": {
+          "var": "context.primaryExistingReceivingBlowjobComponent"
+        },
         "then_actions": [
           {
             "type": "REMOVE_COMPONENT",

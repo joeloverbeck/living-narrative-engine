@@ -53,5 +53,7 @@ export function isKnownComponent(result) {
  * @returns {result is PlanningStateComponentUnknownResult}
  */
 export function isUnknownComponent(result) {
-  return !!result && result.status === PLANNING_STATE_COMPONENT_STATUSES.UNKNOWN;
+  return (
+    !!result && result.status === PLANNING_STATE_COMPONENT_STATUSES.UNKNOWN
+  );
 }

@@ -12,7 +12,10 @@ import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestio
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
 import { CommandDispatcher } from '../../../../src/turns/states/helpers/services/commandDispatcher.js';
 import { TraceContext } from '../../../../src/actions/tracing/traceContext.js';
-import { FIX_TYPES, ERROR_PHASES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  FIX_TYPES,
+  ERROR_PHASES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 import { TestDataFactory } from '../../../common/actions/testDataFactory.js';
 
@@ -124,9 +127,12 @@ describe('UnifiedErrorHandler real service integration', () => {
   });
 
   it('builds actionable error context when command dispatching fails', async () => {
-    const { handler, actionErrorContextBuilder, entityManager, logger } = harness;
+    const { handler, actionErrorContextBuilder, entityManager, logger } =
+      harness;
 
-    const dispatchError = new Error("Missing component 'core:position' on actor hero-1");
+    const dispatchError = new Error(
+      "Missing component 'core:position' on actor hero-1"
+    );
     dispatchError.name = 'ComponentNotFoundError';
 
     class ThrowingCommandProcessor {
@@ -214,45 +220,59 @@ describe('UnifiedErrorHandler real service integration', () => {
       component: 'core:position',
     });
 
-    const discoveryContext = handler.handleDiscoveryError(new Error('discovery failed'), {
-      actorId: 'hero-1',
-      actionDef,
-      trace,
-      additionalContext: { route: 'north wing' },
-    });
+    const discoveryContext = handler.handleDiscoveryError(
+      new Error('discovery failed'),
+      {
+        actorId: 'hero-1',
+        actionDef,
+        trace,
+        additionalContext: { route: 'north wing' },
+      }
+    );
     expect(discoveryContext.phase).toBe(ERROR_PHASES.DISCOVERY);
     expect(discoveryContext.additionalContext.stage).toBe('discovery');
     expect(discoveryContext.environmentContext).toEqual(
       expect.objectContaining({ route: 'north wing' })
     );
 
-    const executionContext = handler.handleExecutionError(new Error('execution hiccup'), {
-      actorId: 'hero-1',
-      actionDef,
-      targetId: 'friend-1',
-      additionalContext: { attempt: 1 },
-    });
+    const executionContext = handler.handleExecutionError(
+      new Error('execution hiccup'),
+      {
+        actorId: 'hero-1',
+        actionDef,
+        targetId: 'friend-1',
+        additionalContext: { attempt: 1 },
+      }
+    );
     expect(executionContext.phase).toBe(ERROR_PHASES.EXECUTION);
     expect(executionContext.targetId).toBe('friend-1');
     expect(executionContext.additionalContext.stage).toBe('execution');
 
-    const validationContext = handler.handleValidationError(new Error('validation failed'), {
-      actorId: 'hero-1',
-      actionDef,
-      trace,
-      additionalContext: { check: 'prerequisites' },
-    });
+    const validationContext = handler.handleValidationError(
+      new Error('validation failed'),
+      {
+        actorId: 'hero-1',
+        actionDef,
+        trace,
+        additionalContext: { check: 'prerequisites' },
+      }
+    );
     expect(validationContext.phase).toBe(ERROR_PHASES.VALIDATION);
     expect(validationContext.additionalContext.stage).toBe('validation');
     expect(validationContext.evaluationTrace.steps.length).toBeGreaterThan(0);
-    expect(validationContext.evaluationTrace.failurePoint).toContain('Missing component');
+    expect(validationContext.evaluationTrace.failurePoint).toContain(
+      'Missing component'
+    );
 
-    const processingContext = handler.handleProcessingError(new Error('processing broke'), {
-      actorId: 'hero-1',
-      stage: 'interpretation',
-      actionDef,
-      additionalContext: { retry: false },
-    });
+    const processingContext = handler.handleProcessingError(
+      new Error('processing broke'),
+      {
+        actorId: 'hero-1',
+        stage: 'interpretation',
+        actionDef,
+        additionalContext: { retry: false },
+      }
+    );
     expect(processingContext.additionalContext.stage).toBe(
       'command_processing_interpretation'
     );
@@ -269,7 +289,9 @@ describe('UnifiedErrorHandler real service integration', () => {
       name: 'Unknown Action',
     });
 
-    handler.logError('Manual diagnostics', new Error('log failure'), { severity: 'high' });
+    handler.logError('Manual diagnostics', new Error('log failure'), {
+      severity: 'high',
+    });
     expect(logger.error).toHaveBeenLastCalledWith('Manual diagnostics', {
       error: 'log failure',
       stack: expect.any(String),

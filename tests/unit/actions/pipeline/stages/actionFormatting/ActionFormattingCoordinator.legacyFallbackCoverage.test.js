@@ -16,9 +16,14 @@ const createErrorFactory = () => ({
 describe('ActionFormattingCoordinator legacy fallback coverage', () => {
   it('falls back to safe defaults when accumulator factory or validators are missing', () => {
     const dependencies = {
-      context: { actor: { id: 'actor-1', name: 'Hero' }, actionsWithTargets: [] },
+      context: {
+        actor: { id: 'actor-1', name: 'Hero' },
+        actionsWithTargets: [],
+      },
       instrumentation: null,
-      decider: { decide: jest.fn(() => ({ strategy: null, validationFailures: [] })) },
+      decider: {
+        decide: jest.fn(() => ({ strategy: null, validationFailures: [] })),
+      },
       accumulatorFactory: null,
       errorFactory: createErrorFactory(),
       fallbackFormatter: { formatWithFallback: jest.fn() },
@@ -61,7 +66,9 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
       errorFactory: createErrorFactory(),
       fallbackFormatter: { formatWithFallback: jest.fn() },
       targetNormalizationService: { normalize: jest.fn() },
-      commandFormatter: { format: jest.fn(() => ({ ok: true, value: 'noop' })) },
+      commandFormatter: {
+        format: jest.fn(() => ({ ok: true, value: 'noop' })),
+      },
       entityManager: {},
       safeEventDispatcher: {},
       getEntityDisplayNameFn: jest.fn(),
@@ -98,7 +105,10 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     const context = {
       actor: { id: 'actor-1', name: 'Hero' },
       actionsWithTargets: [
-        { actionDef: { id: 'action-1', name: 'Action One' }, metadata: { source: 'legacy' } },
+        {
+          actionDef: { id: 'action-1', name: 'Action One' },
+          metadata: { source: 'legacy' },
+        },
       ],
       resolvedTargets: undefined,
       targetDefinitions: undefined,
@@ -123,7 +133,9 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
       errorFactory,
       fallbackFormatter: { formatWithFallback: jest.fn() },
       targetNormalizationService: { normalize: jest.fn() },
-      commandFormatter: { format: jest.fn(() => ({ ok: true, value: 'noop' })) },
+      commandFormatter: {
+        format: jest.fn(() => ({ ok: true, value: 'noop' })),
+      },
       entityManager: {},
       safeEventDispatcher: {},
       getEntityDisplayNameFn: jest.fn(),
@@ -149,7 +161,10 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
           error: expect.objectContaining({
             message: 'No target contexts available for action formatting',
           }),
-          details: { code: 'legacy_missing_target_contexts', metadataSource: 'legacy' },
+          details: {
+            code: 'legacy_missing_target_contexts',
+            metadataSource: 'legacy',
+          },
         }),
         actorId: 'actor-1',
         trace: undefined,
@@ -159,7 +174,10 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     expect(instrumentation.actionFailed).toHaveBeenCalledWith(
       expect.objectContaining({
         actionDef: expect.objectContaining({ id: 'action-1' }),
-        payload: expect.objectContaining({ reason: 'missing-target-contexts', metadataSource: 'legacy' }),
+        payload: expect.objectContaining({
+          reason: 'missing-target-contexts',
+          metadataSource: 'legacy',
+        }),
       })
     );
 
@@ -175,7 +193,14 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     const context = {
       actor: { id: 'actor-1', name: 'Hero' },
       actionsWithTargets: [
-        { actionDef: { id: 'action-1', name: 'Action One', description: 'Desc' }, metadata: { source: 'legacy' } },
+        {
+          actionDef: {
+            id: 'action-1',
+            name: 'Action One',
+            description: 'Desc',
+          },
+          metadata: { source: 'legacy' },
+        },
       ],
     };
 
@@ -197,7 +222,9 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     const coordinator = new ActionFormattingCoordinator({
       context,
       instrumentation,
-      decider: { decide: jest.fn(() => ({ strategy: null, validationFailures: [] })) },
+      decider: {
+        decide: jest.fn(() => ({ strategy: null, validationFailures: [] })),
+      },
       accumulatorFactory: () => new FormattingAccumulator(),
       errorFactory,
       fallbackFormatter: { formatWithFallback: jest.fn() },
@@ -273,7 +300,14 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     const context = {
       actor: { id: 'actor-1', name: 'Hero' },
       actionsWithTargets: [
-        { actionDef: { id: 'action-1', name: 'Action One', description: 'Desc' }, metadata: { source: 'legacy' } },
+        {
+          actionDef: {
+            id: 'action-1',
+            name: 'Action One',
+            description: 'Desc',
+          },
+          metadata: { source: 'legacy' },
+        },
       ],
     };
 
@@ -293,7 +327,9 @@ describe('ActionFormattingCoordinator legacy fallback coverage', () => {
     const coordinator = new ActionFormattingCoordinator({
       context,
       instrumentation,
-      decider: { decide: jest.fn(() => ({ strategy: null, validationFailures: [] })) },
+      decider: {
+        decide: jest.fn(() => ({ strategy: null, validationFailures: [] })),
+      },
       accumulatorFactory: () => new FormattingAccumulator(),
       errorFactory,
       fallbackFormatter: { formatWithFallback: jest.fn() },

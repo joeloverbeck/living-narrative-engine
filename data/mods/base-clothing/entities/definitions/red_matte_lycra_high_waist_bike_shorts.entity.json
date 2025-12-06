@@ -8,17 +8,11 @@
       "equipmentSlots": {
         "primary": "legs"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "lycra",
-      "properties": [
-        "flexible",
-        "breathable"
-      ]
+      "properties": ["flexible", "breathable"]
     },
     "core:name": {
       "text": "bike shorts"
@@ -33,9 +27,7 @@
       "texture": "matte"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_lower"
-      ],
+      "covers": ["torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

@@ -1,17 +1,9 @@
-import {
-  describe,
-  it,
-  beforeAll,
-  afterEach,
-  expect,
-} from '@jest/globals';
+import { describe, it, beforeAll, afterEach, expect } from '@jest/globals';
 import {
   StorageRotationManager,
   RotationPolicy,
 } from '../../../../src/actions/tracing/storageRotationManager.js';
-import {
-  IndexedDBStorageAdapter,
-} from '../../../../src/storage/indexedDBStorageAdapter.js';
+import { IndexedDBStorageAdapter } from '../../../../src/storage/indexedDBStorageAdapter.js';
 
 class RecordingLogger {
   constructor() {
@@ -90,7 +82,6 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
 
   beforeAll(() => {
     if (typeof window !== 'undefined' && !window.pako) {
-       
       window.pako = require('pako');
     }
   });
@@ -108,7 +99,7 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
 
     while (databases.length) {
       const name = databases.pop();
-       
+
       await deleteDatabase(name);
     }
   });
@@ -227,7 +218,11 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
     });
 
     const originalStringify = JSON.stringify;
-    JSON.stringify = function jsonStringifyWithForcedError(value, replacer, space) {
+    JSON.stringify = function jsonStringifyWithForcedError(
+      value,
+      replacer,
+      space
+    ) {
       if (value && typeof value === 'object' && value.forceSizeError) {
         throw new Error('forced stringify failure');
       }
@@ -274,9 +269,14 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
       compressed: true,
       data: [120, 3, 255],
     };
-    const errorResult = await rotationManager.decompressTrace(invalidCompressed);
+    const errorResult =
+      await rotationManager.decompressTrace(invalidCompressed);
     expect(errorResult).toBe(invalidCompressed);
-    expect(logger.errorLogs.some(([message]) => message.includes('Failed to decompress trace'))).toBe(true);
+    expect(
+      logger.errorLogs.some(([message]) =>
+        message.includes('Failed to decompress trace')
+      )
+    ).toBe(true);
 
     const stats = await rotationManager.getStatistics();
     expect(stats.currentCount).toBe(4);
@@ -302,15 +302,17 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
       rotationInterval: 250,
     });
     expect(timerService.lastTimer?.delay).toBe(250);
-    expect(logger.infoLogs.some(([message]) =>
-      message.includes('StorageRotationManager: Configuration updated')
-    )).toBe(true);
+    expect(
+      logger.infoLogs.some(([message]) =>
+        message.includes('StorageRotationManager: Configuration updated')
+      )
+    ).toBe(true);
 
     const forcedResults = await rotationManager.forceRotation();
     expect(forcedResults.deleted).toBe(0);
-    expect(logger.warnLogs.some(([message]) =>
-      message.includes('Unknown policy')
-    )).toBe(true);
+    expect(
+      logger.warnLogs.some(([message]) => message.includes('Unknown policy'))
+    ).toBe(true);
   });
 
   it('captures storage errors when persistence fails during rotation', async () => {
@@ -344,8 +346,10 @@ describe('StorageRotationManager with IndexedDBStorageAdapter', () => {
 
     const results = await rotationManager.rotateTraces();
     expect(results.errors).toBe(1);
-    expect(logger.errorLogs.some(([message]) =>
-      message.includes('StorageRotationManager: Rotation error')
-    )).toBe(true);
+    expect(
+      logger.errorLogs.some(([message]) =>
+        message.includes('StorageRotationManager: Rotation error')
+      )
+    ).toBe(true);
   });
 });

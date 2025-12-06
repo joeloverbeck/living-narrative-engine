@@ -19,12 +19,16 @@ describe('PlanningStateView source resolution edge cases', () => {
 
   it('returns null primary source when components register without origins', () => {
     const view = createPlanningStateView(
-      { actor: { id: 'actor-null-source', components: { 'core:known': true } } },
+      {
+        actor: { id: 'actor-null-source', components: { 'core:known': true } },
+      },
       { metadata: { sourceOptions: { forceSourceless: true } } }
     );
 
     const result = view.hasComponent('actor-null-source', 'core:missing');
-    expect(result.reason).toBe(PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING);
+    expect(result.reason).toBe(
+      PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING
+    );
     expect(result.source).toBeNull();
   });
 
@@ -43,7 +47,11 @@ describe('PlanningStateView source resolution edge cases', () => {
 
     const result = view.hasComponent('actor-mutable', 'core:missing');
     expect(result.source).toBe('legacy-source');
-    expect(result.reason).toBe(PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING);
-    expect(Object.values(PLANNING_STATE_COMPONENT_SOURCES)).not.toContain(result.source);
+    expect(result.reason).toBe(
+      PLANNING_STATE_COMPONENT_REASONS.COMPONENT_MISSING
+    );
+    expect(Object.values(PLANNING_STATE_COMPONENT_SOURCES)).not.toContain(
+      result.source
+    );
   });
 });

@@ -401,7 +401,13 @@ describe('JSON-Schema – Anatomy Blueprint with Composition', () => {
         clothingSlotMappings: {
           complex_gear: {
             blueprintSlots: ['slot1', 'slot2'],
-            allowedLayers: ['underwear', 'base', 'outer', 'armor', 'accessories'],
+            allowedLayers: [
+              'underwear',
+              'base',
+              'outer',
+              'armor',
+              'accessories',
+            ],
           },
         },
       };

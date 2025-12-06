@@ -8,7 +8,9 @@ import { PromptDataFormatter } from '../../../src/prompting/promptDataFormatter.
 
 const makeNotesGuidance = (name = 'your character', hasExistingNotes = false) =>
   `NOTES WRITING GUIDANCE: The notes must be concise, but written in ${name}'s own voice. Focus each note on critical facts while preserving ${name}'s perspective. Avoid generic or neutral phrasing.${
-    hasExistingNotes ? ' Keep any new notes distinct from the existing entries listed below.' : ''
+    hasExistingNotes
+      ? ' Keep any new notes distinct from the existing entries listed below.'
+      : ''
   }`;
 
 const THOUGHTS_GUIDANCE_TEXT = `INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.
@@ -50,7 +52,9 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
     });
 
     test('returns empty thoughts wrapper when thoughts array is null/undefined', () => {
-      expect(formatter.formatThoughtsSection(null)).toBe(buildThoughtsSection());
+      expect(formatter.formatThoughtsSection(null)).toBe(
+        buildThoughtsSection()
+      );
       expect(formatter.formatThoughtsSection(undefined)).toBe(
         buildThoughtsSection()
       );
@@ -147,7 +151,9 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       expect(result).toContain(
         'EPISTEMIC RULE (CRITICAL): You do NOT yet know the result of your action'
       );
-      expect(result).toContain('STYLE RULE: Use intent- and possibility-language');
+      expect(result).toContain(
+        'STYLE RULE: Use intent- and possibility-language'
+      );
       expect(result).toContain('- Test thought');
     });
 
@@ -388,9 +394,7 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
       const formatter = new PromptDataFormatter({ logger: mockLogger });
 
       // Thoughts section should still render wrapper when empty
-      expect(formatter.formatThoughtsSection([])).toBe(
-        buildThoughtsSection()
-      );
+      expect(formatter.formatThoughtsSection([])).toBe(buildThoughtsSection());
       // Other sections remain suppressed when empty
       expect(formatter.formatNotesSection([])).toBe('');
       expect(formatter.formatGoalsSection([])).toBe('');
@@ -431,48 +435,86 @@ describe('PromptDataFormatter - Conditional Section Rendering', () => {
   describe('wrapWithProcessingHint', () => {
     test('should prepend critical marker with hint text', () => {
       const content = 'Format your output as JSON';
-      const result = formatter.wrapWithProcessingHint(content, 'critical', 'These rules are mandatory');
+      const result = formatter.wrapWithProcessingHint(
+        content,
+        'critical',
+        'These rules are mandatory'
+      );
 
-      expect(result).toBe('<!-- *** CRITICAL: These rules are mandatory -->\nFormat your output as JSON');
+      expect(result).toBe(
+        '<!-- *** CRITICAL: These rules are mandatory -->\nFormat your output as JSON'
+      );
     });
 
     test('should prepend reference marker with hint text', () => {
       const content = 'Environmental context data';
-      const result = formatter.wrapWithProcessingHint(content, 'reference', 'Context for decisions');
+      const result = formatter.wrapWithProcessingHint(
+        content,
+        'reference',
+        'Context for decisions'
+      );
 
-      expect(result).toBe('<!-- REFERENCE: Context for decisions -->\nEnvironmental context data');
+      expect(result).toBe(
+        '<!-- REFERENCE: Context for decisions -->\nEnvironmental context data'
+      );
     });
 
     test('should prepend system marker with hint text', () => {
       const content = 'Content permissions';
-      const result = formatter.wrapWithProcessingHint(content, 'system', 'Session permissions');
+      const result = formatter.wrapWithProcessingHint(
+        content,
+        'system',
+        'Session permissions'
+      );
 
-      expect(result).toBe('<!-- SYSTEM: Session permissions -->\nContent permissions');
+      expect(result).toBe(
+        '<!-- SYSTEM: Session permissions -->\nContent permissions'
+      );
     });
 
     test('should handle empty content by returning empty string', () => {
-      expect(formatter.wrapWithProcessingHint('', 'critical', 'Test hint')).toBe('');
-      expect(formatter.wrapWithProcessingHint(null, 'critical', 'Test hint')).toBe('');
-      expect(formatter.wrapWithProcessingHint(undefined, 'critical', 'Test hint')).toBe('');
+      expect(
+        formatter.wrapWithProcessingHint('', 'critical', 'Test hint')
+      ).toBe('');
+      expect(
+        formatter.wrapWithProcessingHint(null, 'critical', 'Test hint')
+      ).toBe('');
+      expect(
+        formatter.wrapWithProcessingHint(undefined, 'critical', 'Test hint')
+      ).toBe('');
     });
 
     test('should handle whitespace-only content by returning original content', () => {
-      expect(formatter.wrapWithProcessingHint('   ', 'critical', 'Test hint')).toBe('   ');
-      expect(formatter.wrapWithProcessingHint('\n\t', 'critical', 'Test hint')).toBe('\n\t');
+      expect(
+        formatter.wrapWithProcessingHint('   ', 'critical', 'Test hint')
+      ).toBe('   ');
+      expect(
+        formatter.wrapWithProcessingHint('\n\t', 'critical', 'Test hint')
+      ).toBe('\n\t');
     });
 
     test('should handle unknown hint type by uppercasing it', () => {
       const content = 'Some content';
-      const result = formatter.wrapWithProcessingHint(content, 'custom', 'Custom hint');
+      const result = formatter.wrapWithProcessingHint(
+        content,
+        'custom',
+        'Custom hint'
+      );
 
       expect(result).toBe('<!-- CUSTOM: Custom hint -->\nSome content');
     });
 
     test('should preserve multiline content after hint', () => {
       const content = 'Line 1\nLine 2\nLine 3';
-      const result = formatter.wrapWithProcessingHint(content, 'reference', 'Multi-line data');
+      const result = formatter.wrapWithProcessingHint(
+        content,
+        'reference',
+        'Multi-line data'
+      );
 
-      expect(result).toBe('<!-- REFERENCE: Multi-line data -->\nLine 1\nLine 2\nLine 3');
+      expect(result).toBe(
+        '<!-- REFERENCE: Multi-line data -->\nLine 1\nLine 2\nLine 3'
+      );
     });
   });
 

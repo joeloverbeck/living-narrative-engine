@@ -20,31 +20,31 @@ Migrate 125 clothing entities from the monolithic `clothing` mod into 4 layer-sp
 
 ## New Mods
 
-| Mod ID | Layer | Entity Count | Entity ID Pattern |
-|--------|-------|--------------|-------------------|
-| `accessories` | accessories | 14 | `accessories:item_name` |
-| `outer-clothing` | outer | 10 | `outer-clothing:item_name` |
-| `underwear` | underwear | 33 | `underwear:item_name` |
-| `base-clothing` | base | 68 | `base-clothing:item_name` |
+| Mod ID           | Layer       | Entity Count | Entity ID Pattern          |
+| ---------------- | ----------- | ------------ | -------------------------- |
+| `accessories`    | accessories | 14           | `accessories:item_name`    |
+| `outer-clothing` | outer       | 10           | `outer-clothing:item_name` |
+| `underwear`      | underwear   | 33           | `underwear:item_name`      |
+| `base-clothing`  | base        | 68           | `base-clothing:item_name`  |
 
 ## Ticket Index
 
-| Ticket | Phase | Description | Dependencies |
-|--------|-------|-------------|--------------|
-| CLOLAYMIG-001 | 0 | Infrastructure setup - create mod directories and game.json | None |
-| CLOLAYMIG-002 | 1a | Accessories - create entities in new mod | CLOLAYMIG-001 |
-| CLOLAYMIG-003 | 1b | Accessories - update recipe references | CLOLAYMIG-002 |
-| CLOLAYMIG-004 | 1c | Accessories - remove from clothing mod | CLOLAYMIG-003 |
-| CLOLAYMIG-005 | 2a | Outer-clothing - create entities in new mod | CLOLAYMIG-001 |
-| CLOLAYMIG-006 | 2b | Outer-clothing - update recipe references | CLOLAYMIG-005 |
-| CLOLAYMIG-007 | 2c | Outer-clothing - remove from clothing mod | CLOLAYMIG-006 |
-| CLOLAYMIG-008 | 3a | Underwear - create entities in new mod | CLOLAYMIG-001 |
-| CLOLAYMIG-009 | 3b | Underwear - update recipe references | CLOLAYMIG-008 |
-| CLOLAYMIG-010 | 3c | Underwear - remove from clothing mod | CLOLAYMIG-009 |
-| CLOLAYMIG-011 | 4a | Base-clothing - create entities in new mod | CLOLAYMIG-001 |
-| CLOLAYMIG-012 | 4b | Base-clothing - update recipe references | CLOLAYMIG-011 |
-| CLOLAYMIG-013 | 4c | Base-clothing - remove from clothing mod | CLOLAYMIG-012 |
-| CLOLAYMIG-014 | 5 | Final verification and documentation | CLOLAYMIG-004, 007, 010, 013 |
+| Ticket        | Phase | Description                                                 | Dependencies                 |
+| ------------- | ----- | ----------------------------------------------------------- | ---------------------------- |
+| CLOLAYMIG-001 | 0     | Infrastructure setup - create mod directories and game.json | None                         |
+| CLOLAYMIG-002 | 1a    | Accessories - create entities in new mod                    | CLOLAYMIG-001                |
+| CLOLAYMIG-003 | 1b    | Accessories - update recipe references                      | CLOLAYMIG-002                |
+| CLOLAYMIG-004 | 1c    | Accessories - remove from clothing mod                      | CLOLAYMIG-003                |
+| CLOLAYMIG-005 | 2a    | Outer-clothing - create entities in new mod                 | CLOLAYMIG-001                |
+| CLOLAYMIG-006 | 2b    | Outer-clothing - update recipe references                   | CLOLAYMIG-005                |
+| CLOLAYMIG-007 | 2c    | Outer-clothing - remove from clothing mod                   | CLOLAYMIG-006                |
+| CLOLAYMIG-008 | 3a    | Underwear - create entities in new mod                      | CLOLAYMIG-001                |
+| CLOLAYMIG-009 | 3b    | Underwear - update recipe references                        | CLOLAYMIG-008                |
+| CLOLAYMIG-010 | 3c    | Underwear - remove from clothing mod                        | CLOLAYMIG-009                |
+| CLOLAYMIG-011 | 4a    | Base-clothing - create entities in new mod                  | CLOLAYMIG-001                |
+| CLOLAYMIG-012 | 4b    | Base-clothing - update recipe references                    | CLOLAYMIG-011                |
+| CLOLAYMIG-013 | 4c    | Base-clothing - remove from clothing mod                    | CLOLAYMIG-012                |
+| CLOLAYMIG-014 | 5     | Final verification and documentation                        | CLOLAYMIG-004, 007, 010, 013 |
 
 ## Execution Order
 
@@ -74,6 +74,7 @@ npm run test:integration   # Integration tests specifically
 ## Rollback Strategy
 
 Each phase can be rolled back independently:
+
 1. **Entity creation phase**: Delete new mod entity files, revert manifest
 2. **Reference update phase**: Git revert the recipe/manifest changes
 3. **Entity removal phase**: Restore deleted files from git history

@@ -40,7 +40,9 @@ const createDetailedCharacter = () => ({
     'core:goals': ['Uncover the truth behind the town legend.'],
     'core:fears': ['Losing the archive to neglect.'],
     'core:conflicts': ['The mayor wants to sell the archive to developers.'],
-    'core:secrets': ['She secretly translated the letters to protect a friend.'],
+    'core:secrets': [
+      'She secretly translated the letters to protect a friend.',
+    ],
     'core:likes': ['Rainy afternoons spent cataloging.'],
     'core:dislikes': ['Careless handling of delicate documents.'],
     'core:strengths': ['Persistent and resourceful.'],
@@ -240,9 +242,9 @@ describe('CharacterDefinitionValidator comprehensive behavior', () => {
       expect.any(Error)
     );
     expect(result.quality.breakdown['test:failing-metric'].level).toBe('error');
-    expect(
-      result.quality.breakdown['test:failing-metric'].details.error
-    ).toBe('Metric failure');
+    expect(result.quality.breakdown['test:failing-metric'].details.error).toBe(
+      'Metric failure'
+    );
   });
 
   it('detects contradictory personality traits', async () => {
@@ -324,4 +326,3 @@ describe('CharacterDefinitionValidator comprehensive behavior', () => {
     ).toThrow('Quality metric must include a numeric weight');
   });
 });
-

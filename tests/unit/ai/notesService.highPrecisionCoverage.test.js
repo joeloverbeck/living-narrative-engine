@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import { DEFAULT_SUBJECT_TYPE } from '../../../src/constants/subjectTypes.js';
 
 /**
@@ -30,7 +32,9 @@ describe('NotesService normalization and mutation edge cases', () => {
         subject: 'Battle Plan',
       });
 
-      expect(normalized).toBe(`${DEFAULT_SUBJECT_TYPE}:battle plan: strategic overview`);
+      expect(normalized).toBe(
+        `${DEFAULT_SUBJECT_TYPE}:battle plan: strategic overview`
+      );
     });
 
     it('returns an empty string when subject metadata is missing and text is blank', () => {
@@ -144,8 +148,12 @@ describe('NotesService normalization and mutation edge cases', () => {
       );
       expect(normalizedSet.size).toBe(3);
       expect(normalizedSet).toContain('concept:lore:existing fact');
-      expect(normalizedSet).toContain('relationship:alliance:fresh perspective');
-      expect(normalizedSet).toContain(`${DEFAULT_SUBJECT_TYPE}:alliance:new observation about allies`);
+      expect(normalizedSet).toContain(
+        'relationship:alliance:fresh perspective'
+      );
+      expect(normalizedSet).toContain(
+        `${DEFAULT_SUBJECT_TYPE}:alliance:new observation about allies`
+      );
     });
   });
 });

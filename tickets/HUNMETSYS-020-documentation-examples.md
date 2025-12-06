@@ -33,17 +33,20 @@ From **specs/hunger-metabolism-system.md § Documentation Requirements**:
 ### Documentation Files to Create
 
 **User-Facing Documentation** (`docs/modding/`):
+
 - `docs/modding/hunger-metabolism-guide.md` - Comprehensive modder guide
 - `docs/modding/food-item-creation.md` - Creating consumable items
 - `docs/modding/metabolic-entity-setup.md` - Setting up actors with metabolism
 
 **Developer Documentation** (`docs/development/`):
+
 - `docs/development/metabolism-system-architecture.md` - System architecture overview
 - `docs/development/metabolism-operation-handlers.md` - Operation handler reference
 - `docs/development/metabolism-json-logic-operators.md` - JSON Logic operator reference
 - `docs/development/extending-metabolism-system.md` - Adding new features
 
 **Examples** (`examples/metabolism/`):
+
 - `examples/metabolism/basic-food-items.json` - Simple food entity examples
 - `examples/metabolism/complex-meals.json` - Multi-component meals
 - `examples/metabolism/survival-scenario.json` - Complete survival game setup
@@ -79,10 +82,11 @@ The Hunger and Metabolism System simulates energy consumption, digestion, and hu
 ## Core Concepts
 
 ### Energy Flow
+```
 
-```
 Food Item → Consume → Buffer Storage → Digest → Current Energy → Burn → Activities
-```
+
+````
 
 1. **Consumption**: Entity consumes food item, adding energy to buffer storage
 2. **Digestion**: Buffer energy transfers to current energy over time (per turn)
@@ -102,7 +106,7 @@ Defines what an entity can consume and how efficiently they convert fuel to ener
     "efficiency": 0.8
   }
 }
-```
+````
 
 - **fuel_types**: Array of fuel types this entity can consume (e.g., "solid", "liquid", "gaseous")
 - **efficiency**: Percentage of buffer energy converted to current energy per turn (0.0-1.0)
@@ -159,14 +163,14 @@ Tracks the entity's current hunger level (automatically updated by the system).
 
 ### Hunger State Thresholds
 
-| State | Energy Range | Description |
-|-------|-------------|-------------|
-| **gluttonous** | >100% | Energy exceeds maximum (temporary after overeating) |
-| **satiated** | 75-100% | Well-fed, no hunger |
-| **neutral** | 30-75% | Normal state, not hungry yet |
-| **hungry** | 10-30% | Needs food soon |
-| **starving** | 0.1-10% | Critical hunger, body deteriorating |
-| **critical** | 0-0.1% | Near death from starvation |
+| State          | Energy Range | Description                                         |
+| -------------- | ------------ | --------------------------------------------------- |
+| **gluttonous** | >100%        | Energy exceeds maximum (temporary after overeating) |
+| **satiated**   | 75-100%      | Well-fed, no hunger                                 |
+| **neutral**    | 30-75%       | Normal state, not hungry yet                        |
+| **hungry**     | 10-30%       | Needs food soon                                     |
+| **starving**   | 0.1-10%      | Critical hunger, body deteriorating                 |
+| **critical**   | 0-0.1%       | Near death from starvation                          |
 
 ## Creating Food Items
 
@@ -189,6 +193,7 @@ Tracks the entity's current hunger level (automatically updated by the system).
 ```
 
 **Key Points**:
+
 - All food items need `metabolism:fuel_source` component
 - `fuel_type` must match consumer's `fuel_types` array
 - `energy_value` determines how filling the item is
@@ -212,6 +217,7 @@ Tracks the entity's current hunger level (automatically updated by the system).
 ```
 
 **Key Points**:
+
 - Use `"fuel_type": "liquid"` for drinks
 - Typically lower energy values than solid food
 - Consumers need `"liquid"` in their `fuel_types` array
@@ -235,6 +241,7 @@ Tracks the entity's current hunger level (automatically updated by the system).
 ```
 
 **Key Points**:
+
 - Higher `energy_value` for more filling foods
 - Consider item weight and value for game balance
 
@@ -267,6 +274,7 @@ Tracks the entity's current hunger level (automatically updated by the system).
 ```
 
 **Required Components**:
+
 1. `metabolism:fuel_converter` - What the actor can eat and efficiency
 2. `metabolism:metabolic_store` - Energy tracking
 3. `metabolism:hunger_state` - Hunger level (system updates automatically)
@@ -302,6 +310,7 @@ If your actor has the anatomy system, hunger affects their appearance:
 ```
 
 **Body Composition Changes**:
+
 - **20+ turns in critical state** → composition becomes "desiccated"
 - **30+ turns in starving state** → composition becomes "wasted"
 - **50+ turns in gluttonous state** → composition becomes "overweight"
@@ -355,14 +364,17 @@ The system includes a GOAP goal that makes AI actors autonomously seek food when
 ### Goal: Satisfy Hunger (metabolism:satisfy_hunger)
 
 **Activation Conditions**:
+
 - Actor's `is_hungry` operator returns true (states: hungry, starving, critical)
 - OR predicted energy (current + buffer × efficiency) < 500
 
 **Desired State**:
+
 - Actor is not hungry
 - AND predicted energy > 700
 
 **What the AI Does**:
+
 1. Detects hunger
 2. Finds nearby food using scopes (in inventory, in room, in containers)
 3. Plans action sequence: navigate → pick up → eat
@@ -380,14 +392,14 @@ You can create custom goals that use metabolism:
   "conditions": {
     "activate_when": {
       "and": [
-        {"is_hungry": ["{self}"]},
-        {"has_component": ["{self}", "skills:cooking"]}
+        { "is_hungry": ["{self}"] },
+        { "has_component": ["{self}", "skills:cooking"] }
       ]
     },
     "desired_state": {
       "and": [
-        {"not": {"is_hungry": ["{self}"]}},
-        {"has_component": ["{self}", "game:prepared_meal"]}
+        { "not": { "is_hungry": ["{self}"] } },
+        { "has_component": ["{self}", "game:prepared_meal"] }
       ]
     }
   }
@@ -400,24 +412,24 @@ You can create custom goals that use metabolism:
 
 Recommended energy values for different food types:
 
-| Food Type | Energy Value | Real-World Equivalent |
-|-----------|-------------|----------------------|
-| **Snack** | 100-300 | Apple, crackers |
-| **Light Meal** | 400-600 | Sandwich, salad |
-| **Full Meal** | 700-1000 | Steak dinner, large pasta dish |
-| **Feast** | 1200+ | Multi-course meal |
+| Food Type      | Energy Value | Real-World Equivalent          |
+| -------------- | ------------ | ------------------------------ |
+| **Snack**      | 100-300      | Apple, crackers                |
+| **Light Meal** | 400-600      | Sandwich, salad                |
+| **Full Meal**  | 700-1000     | Steak dinner, large pasta dish |
+| **Feast**      | 1200+        | Multi-course meal              |
 
 ### Activity Multipliers
 
 Standard energy burn for activities (from spec):
 
-| Activity | Multiplier | Energy/Turn (base 50) |
-|----------|-----------|----------------------|
-| **Idle** | 1.0x | 50 |
-| **Walking** | 1.2x | 60 |
-| **Running** | 2.0x | 100 |
-| **Combat** | 2.5x | 125 |
-| **Ballet/Gymnastics** | 3.0x | 150 |
+| Activity              | Multiplier | Energy/Turn (base 50) |
+| --------------------- | ---------- | --------------------- |
+| **Idle**              | 1.0x       | 50                    |
+| **Walking**           | 1.2x       | 60                    |
+| **Running**           | 2.0x       | 100                   |
+| **Combat**            | 2.5x       | 125                   |
+| **Ballet/Gymnastics** | 3.0x       | 150                   |
 
 ### Efficiency Recommendations
 
@@ -440,6 +452,7 @@ Typical max_energy values:
 ### "Actor won't eat food"
 
 **Check**:
+
 1. Does food item have `metabolism:fuel_source` component?
 2. Does actor have `metabolism:fuel_converter` component?
 3. Does actor's `fuel_types` array include the food's `fuel_type`?
@@ -448,6 +461,7 @@ Typical max_energy values:
 ### "Hunger state not updating"
 
 **Check**:
+
 1. Are turn-based rules firing? (metabolism:process_turn_hunger_update)
 2. Does entity have `metabolism:hunger_state` component?
 3. Is `metabolism:metabolic_store` component properly configured?
@@ -455,6 +469,7 @@ Typical max_energy values:
 ### "Energy not increasing after eating"
 
 **Check**:
+
 1. Energy goes to **buffer storage** first, not current energy
 2. Digestion happens per turn (check `core:turn_ended` event firing)
 3. Verify `fuel_converter.efficiency` is > 0
@@ -462,6 +477,7 @@ Typical max_energy values:
 ### "Body composition not changing"
 
 **Check**:
+
 1. Does entity have `anatomy:body` component? (required for visual changes)
 2. Has entity been in extreme state long enough? (20+ turns for critical, 30+ for starving, 50+ for gluttonous)
 3. Are turn-based rules processing? (metabolism:process_turn_body_composition)
@@ -472,7 +488,8 @@ Typical max_energy values:
 - **Operation Handlers**: `docs/development/metabolism-operation-handlers.md`
 - **JSON Logic Operators**: `docs/development/metabolism-json-logic-operators.md`
 - **Examples**: `examples/metabolism/`
-```
+
+````
 
 ### Step 2: Developer Documentation
 
@@ -518,104 +535,116 @@ The Hunger and Metabolism System is a turn-based energy management system integr
 
 ### Consumption Flow
 
-```
+````
+
 User Action: "Eat bread"
-  ↓
+↓
 Event: core:attempt_action { actionId: "metabolism:eat", actorId, targetId }
-  ↓
+↓
 Rule: metabolism:handle_eat (event_type: core:attempt_action)
-  ↓
+↓
 Operation: CONSUME_ITEM { consumer_ref, item_ref }
-  ↓
+↓
 Handler: ConsumeItemHandler.execute()
-  ↓
-  1. Validate consumer has fuel_converter
-  2. Validate item has fuel_source
-  3. Check fuel_type compatibility
-  4. Add fuel_source.energy_value to metabolic_store.buffer_storage
-  5. Destroy item entity
-  6. Dispatch: metabolism:item_consumed event
-  ↓
-Event: core:action_completed { success: true }
+↓
+
+1. Validate consumer has fuel_converter
+2. Validate item has fuel_source
+3. Check fuel_type compatibility
+4. Add fuel_source.energy_value to metabolic_store.buffer_storage
+5. Destroy item entity
+6. Dispatch: metabolism:item_consumed event
+   ↓
+   Event: core:action_completed { success: true }
+
 ```
 
 ### Turn-Based Processing Flow
 
 ```
-Event: core:turn_ended
-  ↓
-Rule: metabolism:process_turn_digestion
-  ↓
-Operation: DIGEST_FOOD (for all entities with metabolic_store)
-  ↓
-Handler: DigestFoodHandler.execute()
-  ↓
-  1. Calculate transfer: buffer_storage × fuel_converter.efficiency
-  2. Add to current_energy (clamped at max_energy)
-  3. Reduce buffer_storage by transferred amount
-  4. Dispatch: metabolism:digestion_processed event
 
-  ↓ (parallel)
+Event: core:turn_ended
+↓
+Rule: metabolism:process_turn_digestion
+↓
+Operation: DIGEST_FOOD (for all entities with metabolic_store)
+↓
+Handler: DigestFoodHandler.execute()
+↓
+
+1. Calculate transfer: buffer_storage × fuel_converter.efficiency
+2. Add to current_energy (clamped at max_energy)
+3. Reduce buffer_storage by transferred amount
+4. Dispatch: metabolism:digestion_processed event
+
+↓ (parallel)
 
 Rule: metabolism:process_turn_burn
-  ↓
+↓
 Operation: BURN_ENERGY (for all entities with metabolic_store)
-  ↓
+↓
 Handler: BurnEnergyHandler.execute()
-  ↓
-  1. Calculate burn: base_burn (50) × activity_multiplier
-  2. Reduce current_energy by burn amount (clamped at 0)
-  3. Dispatch: metabolism:energy_burned event
+↓
 
-  ↓ (after burn and digestion)
+1. Calculate burn: base_burn (50) × activity_multiplier
+2. Reduce current_energy by burn amount (clamped at 0)
+3. Dispatch: metabolism:energy_burned event
+
+↓ (after burn and digestion)
 
 Rule: metabolism:process_turn_hunger_update
-  ↓
+↓
 Operation: UPDATE_HUNGER_STATE (for all entities)
-  ↓
+↓
 Handler: UpdateHungerStateHandler.execute()
-  ↓
-  1. Calculate energy_percentage: current_energy / max_energy
-  2. Map to hunger state (see thresholds below)
-  3. Update hunger_state.state
-  4. Increment or reset turns_in_state
-  5. Dispatch: metabolism:hunger_state_changed event
+↓
 
-  ↓ (after hunger update, if needed)
+1. Calculate energy_percentage: current_energy / max_energy
+2. Map to hunger state (see thresholds below)
+3. Update hunger_state.state
+4. Increment or reset turns_in_state
+5. Dispatch: metabolism:hunger_state_changed event
+
+↓ (after hunger update, if needed)
 
 Rule: metabolism:process_turn_body_composition
-  ↓
+↓
 Operation: UPDATE_BODY_COMPOSITION (for entities with anatomy:body)
-  ↓
+↓
 Handler: UpdateBodyCompositionHandler.execute()
-  ↓
-  1. Check hunger_state.state and turns_in_state
-  2. If threshold met, update anatomy:body.composition
-  3. Dispatch: metabolism:body_composition_changed event
+↓
+
+1. Check hunger_state.state and turns_in_state
+2. If threshold met, update anatomy:body.composition
+3. Dispatch: metabolism:body_composition_changed event
+
 ```
 
 ### GOAP Integration Flow
 
 ```
+
 AI Planner: Evaluate goals
-  ↓
+↓
 Goal: metabolism:satisfy_hunger
-  ↓
+↓
 Activation Check: is_hungry OR predicted_energy < 500
-  ↓
+↓
 Scope Query: metabolism:available_food (inventory + room + containers)
-  ↓
+↓
 Action Discovery: metabolism:eat (available for each food item)
-  ↓
+↓
 Planner: Generate action sequence
-  1. navigate_to (if food not in inventory)
-  2. pick_up_item (if food not in inventory)
-  3. eat (consume food)
-  ↓
-Execute Plan
-  ↓
-Goal Satisfied: NOT is_hungry AND predicted_energy > 700
-```
+
+1. navigate_to (if food not in inventory)
+2. pick_up_item (if food not in inventory)
+3. eat (consume food)
+   ↓
+   Execute Plan
+   ↓
+   Goal Satisfied: NOT is_hungry AND predicted_energy > 700
+
+````
 
 ## Hunger State Thresholds (Implementation)
 
@@ -630,7 +659,7 @@ function calculateHungerState(energyPercentage) {
   if (energyPercentage > 0.001) return 'starving';
   return 'critical';
 }
-```
+````
 
 ## Body Composition Thresholds (Implementation)
 
@@ -640,7 +669,7 @@ function calculateHungerState(energyPercentage) {
 const BODY_COMPOSITION_THRESHOLDS = {
   critical: { turns: 20, composition: 'desiccated' },
   starving: { turns: 30, composition: 'wasted' },
-  gluttonous: { turns: 50, composition: 'overweight' }
+  gluttonous: { turns: 50, composition: 'overweight' },
 };
 
 function shouldUpdateBodyComposition(hungerState) {
@@ -653,14 +682,14 @@ function shouldUpdateBodyComposition(hungerState) {
 
 ### Dispatched Events
 
-| Event Type | Payload | Purpose |
-|-----------|---------|---------|
-| `metabolism:item_consumed` | `{ actorId, itemId, energyGained }` | Item was eaten/drunk |
-| `metabolism:digestion_processed` | `{ entityId, energyTransferred }` | Buffer → current transfer |
-| `metabolism:energy_burned` | `{ entityId, amountBurned }` | Energy consumed by activity |
-| `metabolism:hunger_state_changed` | `{ entityId, oldState, newState }` | Hunger level changed |
-| `metabolism:body_composition_changed` | `{ entityId, composition }` | Body appearance changed |
-| `metabolism:energy_depleted` | `{ entityId }` | Energy reached zero |
+| Event Type                            | Payload                             | Purpose                     |
+| ------------------------------------- | ----------------------------------- | --------------------------- |
+| `metabolism:item_consumed`            | `{ actorId, itemId, energyGained }` | Item was eaten/drunk        |
+| `metabolism:digestion_processed`      | `{ entityId, energyTransferred }`   | Buffer → current transfer   |
+| `metabolism:energy_burned`            | `{ entityId, amountBurned }`        | Energy consumed by activity |
+| `metabolism:hunger_state_changed`     | `{ entityId, oldState, newState }`  | Hunger level changed        |
+| `metabolism:body_composition_changed` | `{ entityId, composition }`         | Body appearance changed     |
+| `metabolism:energy_depleted`          | `{ entityId }`                      | Energy reached zero         |
 
 ## Dependency Injection
 
@@ -678,7 +707,7 @@ export const tokens = {
   UpdateBodyCompositionHandler: 'UpdateBodyCompositionHandler',
   IsHungryOperator: 'IsHungryOperator',
   PredictedEnergyOperator: 'PredictedEnergyOperator',
-  CanConsumeOperator: 'CanConsumeOperator'
+  CanConsumeOperator: 'CanConsumeOperator',
 };
 ```
 
@@ -693,11 +722,11 @@ export function registerOperationHandlers(container) {
     {
       token: tokens.BurnEnergyHandler,
       factory: ({ logger, entityManager, eventBus }) =>
-        new BurnEnergyHandler({ logger, entityManager, eventBus })
+        new BurnEnergyHandler({ logger, entityManager, eventBus }),
     },
     // ... (similar for other handlers)
   ];
-  
+
   handlerFactories.forEach(({ token, factory }) => {
     container.register(token, factory);
   });
@@ -736,6 +765,7 @@ Example: Adding "magical" fuel type
 ### Adding New Hunger States
 
 1. Update `UpdateHungerStateHandler.js`:
+
    ```javascript
    function calculateHungerState(energyPercentage) {
      if (energyPercentage > 1.2) return 'overfed'; // New state
@@ -750,7 +780,15 @@ Example: Adding "magical" fuel type
      "properties": {
        "state": {
          "type": "string",
-         "enum": ["overfed", "gluttonous", "satiated", "neutral", "hungry", "starving", "critical"]
+         "enum": [
+           "overfed",
+           "gluttonous",
+           "satiated",
+           "neutral",
+           "hungry",
+           "starving",
+           "critical"
+         ]
        }
      }
    }
@@ -835,7 +873,8 @@ Energy costs are configured in action rules using the `activity_multiplier` para
 - Line coverage: ≥90%
 
 See `docs/testing/` for detailed testing guides.
-```
+
+````
 
 ### Step 3: Practical Examples
 
@@ -918,7 +957,7 @@ See `docs/testing/` for detailed testing guides.
     }
   ]
 }
-```
+````
 
 **Survival Scenario** (`examples/metabolism/survival-scenario.json`):
 
@@ -1010,7 +1049,14 @@ See `docs/testing/` for detailed testing guides.
       "success_condition": {
         "and": [
           { ">=": ["{scenario_state.turns_survived}", 168] },
-          { "not": { "==": ["{entity:scenario:survivor.metabolism:hunger_state.state}", "critical"] } }
+          {
+            "not": {
+              "==": [
+                "{entity:scenario:survivor.metabolism:hunger_state.state}",
+                "critical"
+              ]
+            }
+          }
         ]
       }
     },
@@ -1097,6 +1143,7 @@ See [Hunger Metabolism Guide](docs/modding/hunger-metabolism-guide.md) for detai
 ### Documentation Testing
 
 **Validation**:
+
 ```bash
 # Validate all JSON examples
 npm run validate:examples
@@ -1109,6 +1156,7 @@ npm run check:links
 ```
 
 **Example Testing**:
+
 - Load each example entity definition
 - Verify schemas validate
 - Test example scenarios end-to-end

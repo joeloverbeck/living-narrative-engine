@@ -4,7 +4,10 @@ import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js'
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 
 class TestLogger {
   constructor() {

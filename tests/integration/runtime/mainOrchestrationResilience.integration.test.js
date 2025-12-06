@@ -48,7 +48,9 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => {
 
   const configureContainer = jest.fn(async (container) => {
     if (mockContainerConfigControl.shouldThrow) {
-      throw mockContainerConfigControl.error ?? new Error('Simulated DI failure');
+      throw (
+        mockContainerConfigControl.error ?? new Error('Simulated DI failure')
+      );
     }
 
     const logger = {
@@ -93,7 +95,9 @@ jest.mock('../../../src/dependencyInjection/appContainer.js', () => {
     resolve(token) {
       const entry = this.#registry.get(token);
       if (!entry) {
-        throw new Error(`Service for token ${String(token)} was not registered`);
+        throw new Error(
+          `Service for token ${String(token)} was not registered`
+        );
       }
       if (entry.type === 'factory') {
         return entry.value();
@@ -170,7 +174,9 @@ jest.mock('../../../src/bootstrapper/stages/auxiliary/index.js', () => {
 });
 
 jest.mock('../../../src/bootstrapper/UIBootstrapper.js', () => {
-  const actual = jest.requireActual('../../../src/bootstrapper/UIBootstrapper.js');
+  const actual = jest.requireActual(
+    '../../../src/bootstrapper/UIBootstrapper.js'
+  );
 
   class ControlledUIBootstrapper extends actual.UIBootstrapper {
     gatherEssentialElements(doc) {
@@ -363,7 +369,9 @@ describe('main.js bootstrap resilience integration', () => {
     const fallbackElements = document.querySelectorAll('#temp-startup-error');
     expect(fallbackElements.length).toBeGreaterThan(0);
     const latestFallback = fallbackElements[fallbackElements.length - 1];
-    expect(latestFallback.textContent).toContain('Failed to start new game with world');
+    expect(latestFallback.textContent).toContain(
+      'Failed to start new game with world'
+    );
     expect(latestFallback.textContent).toContain('Simulated start failure');
 
     expect(global.alert).not.toHaveBeenCalled();
@@ -460,4 +468,3 @@ describe('main.js bootstrap resilience integration', () => {
     );
   });
 });
-

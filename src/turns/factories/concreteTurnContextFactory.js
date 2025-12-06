@@ -35,7 +35,7 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
   #logger;
   /** @type {IWorldContext} */
   #gameWorldAccess;
- /** @type {ITurnEndPort} */
+  /** @type {ITurnEndPort} */
   #turnEndPort;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;

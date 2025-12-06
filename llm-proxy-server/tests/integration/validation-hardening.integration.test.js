@@ -30,7 +30,8 @@ const buildApp = () => {
       const { targetUrl } = targetPayload;
       res.status(200).json({
         sanitizedHeaders: targetHeaders,
-        urlSafety: typeof targetUrl === 'undefined' ? undefined : isUrlSafe(targetUrl),
+        urlSafety:
+          typeof targetUrl === 'undefined' ? undefined : isUrlSafe(targetUrl),
       });
     }
   );
@@ -84,7 +85,9 @@ describe('Validation middleware hardening integration', () => {
     expect(response.body.sanitizedHeaders).toEqual(
       expect.objectContaining({ 'X-Safe-Header': 'value' })
     );
-    expect(Object.keys(response.body.sanitizedHeaders)).not.toContain('Constructor');
+    expect(Object.keys(response.body.sanitizedHeaders)).not.toContain(
+      'Constructor'
+    );
   });
 
   it('rejects empty target payloads with a specific validation message', async () => {
@@ -207,26 +210,24 @@ describe('Validation middleware hardening integration', () => {
       .send({ urls });
 
     expect(response.status).toBe(200);
-    expect(response.body.results).toEqual(
-      [
-        { value: null, safe: false },
-        { value: 'notaurl', safe: false },
-        { value: 'ftp://example.com/resource', safe: false },
-        { value: 'https://localhost/diagnostics', safe: false },
-        { value: 'https://[::1]/loopback', safe: false },
-        { value: 'https://[fd00::1]/internal', safe: false },
-        { value: 'https://[2001:4860:4860::8888]/public', safe: true },
-        { value: 'https://999.0.0.1', safe: false },
-        { value: 'https://10.0.0.1', safe: false },
-        { value: 'https://172.20.5.6', safe: false },
-        { value: 'https://192.168.1.1', safe: false },
-        { value: 'https://169.254.1.1', safe: false },
-        { value: 'https://127.0.0.1', safe: false },
-        { value: 'https://0.0.0.0', safe: false },
-        { value: 'https://225.0.0.1', safe: false },
-        { value: 'https://245.0.0.1', safe: false },
-        { value: 'https://example.com/api', safe: true },
-      ]
-    );
+    expect(response.body.results).toEqual([
+      { value: null, safe: false },
+      { value: 'notaurl', safe: false },
+      { value: 'ftp://example.com/resource', safe: false },
+      { value: 'https://localhost/diagnostics', safe: false },
+      { value: 'https://[::1]/loopback', safe: false },
+      { value: 'https://[fd00::1]/internal', safe: false },
+      { value: 'https://[2001:4860:4860::8888]/public', safe: true },
+      { value: 'https://999.0.0.1', safe: false },
+      { value: 'https://10.0.0.1', safe: false },
+      { value: 'https://172.20.5.6', safe: false },
+      { value: 'https://192.168.1.1', safe: false },
+      { value: 'https://169.254.1.1', safe: false },
+      { value: 'https://127.0.0.1', safe: false },
+      { value: 'https://0.0.0.0', safe: false },
+      { value: 'https://225.0.0.1', safe: false },
+      { value: 'https://245.0.0.1', safe: false },
+      { value: 'https://example.com/api', safe: true },
+    ]);
   });
 });

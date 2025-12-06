@@ -44,7 +44,11 @@ describe('StateConsistencyValidator integration', () => {
   let furnitureDefinition;
 
   const registerDefinition = (definition) => {
-    testBed.mocks.registry.store('entityDefinitions', definition.id, definition);
+    testBed.mocks.registry.store(
+      'entityDefinitions',
+      definition.id,
+      definition
+    );
   };
 
   const createActor = async (instanceId) => {
@@ -176,9 +180,13 @@ describe('StateConsistencyValidator integration', () => {
     const furniture = await createFurniture('bench-two', 2);
     const occupant = await createActor('seated-actor');
 
-    await entityManager.addComponent(furniture.id, 'positioning:allows_sitting', {
-      spots: [occupant.id, null],
-    });
+    await entityManager.addComponent(
+      furniture.id,
+      'positioning:allows_sitting',
+      {
+        spots: [occupant.id, null],
+      }
+    );
 
     const missingIssues = validator.validateFurnitureOccupancy();
 
@@ -229,16 +237,30 @@ describe('StateConsistencyValidator integration', () => {
     const furniture = await createFurniture('bench-three');
     const furnitureOccupant = await createActor('actor-six');
 
-    await entityManager.addComponent(closenessSource.id, 'positioning:closeness', {
-      partners: [closenessTarget.id],
+    await entityManager.addComponent(
+      closenessSource.id,
+      'positioning:closeness',
+      {
+        partners: [closenessTarget.id],
+      }
+    );
+    await entityManager.addComponent(
+      closenessTarget.id,
+      'positioning:closeness',
+      {
+        partners: [],
+      }
+    );
+    await entityManager.addComponent(movementActor.id, 'core:movement', {
+      locked: true,
     });
-    await entityManager.addComponent(closenessTarget.id, 'positioning:closeness', {
-      partners: [],
-    });
-    await entityManager.addComponent(movementActor.id, 'core:movement', { locked: true });
-    await entityManager.addComponent(furniture.id, 'positioning:allows_sitting', {
-      spots: [furnitureOccupant.id],
-    });
+    await entityManager.addComponent(
+      furniture.id,
+      'positioning:allows_sitting',
+      {
+        spots: [furnitureOccupant.id],
+      }
+    );
 
     const report = validator.performFullValidation();
 
@@ -250,16 +272,24 @@ describe('StateConsistencyValidator integration', () => {
 
     logger.reset();
 
-    await entityManager.addComponent(closenessTarget.id, 'positioning:closeness', {
-      partners: [closenessSource.id],
-    });
+    await entityManager.addComponent(
+      closenessTarget.id,
+      'positioning:closeness',
+      {
+        partners: [closenessSource.id],
+      }
+    );
     await entityManager.addComponent(movementActor.id, 'core:movement', {
       locked: false,
     });
-    await entityManager.addComponent(furnitureOccupant.id, 'positioning:sitting_on', {
-      furniture_id: furniture.id,
-      spot_index: 0,
-    });
+    await entityManager.addComponent(
+      furnitureOccupant.id,
+      'positioning:sitting_on',
+      {
+        furniture_id: furniture.id,
+        spot_index: 0,
+      }
+    );
 
     const cleanReport = validator.performFullValidation();
 
@@ -282,26 +312,41 @@ describe('StateConsistencyValidator integration', () => {
     const missingOccupant = await createActor('actor-eleven');
     const furniture = await createFurniture('bench-four', 2);
 
-    await entityManager.addComponent(closenessSource.id, 'positioning:closeness', {
-      partners: [closenessTarget.id],
+    await entityManager.addComponent(
+      closenessSource.id,
+      'positioning:closeness',
+      {
+        partners: [closenessTarget.id],
+      }
+    );
+    await entityManager.addComponent(
+      closenessTarget.id,
+      'positioning:closeness',
+      {
+        partners: [],
+      }
+    );
+    await entityManager.addComponent(movementActor.id, 'core:movement', {
+      locked: true,
     });
-    await entityManager.addComponent(closenessTarget.id, 'positioning:closeness', {
-      partners: [],
-    });
-    await entityManager.addComponent(movementActor.id, 'core:movement', { locked: true });
-    await entityManager.addComponent(furniture.id, 'positioning:allows_sitting', {
-      spots: [mismatchOccupant.id, missingOccupant.id],
-    });
-    await entityManager.addComponent(mismatchOccupant.id, 'positioning:sitting_on', {
-      furniture_id: 'wrong-furniture',
-      spot_index: 2,
-    });
+    await entityManager.addComponent(
+      furniture.id,
+      'positioning:allows_sitting',
+      {
+        spots: [mismatchOccupant.id, missingOccupant.id],
+      }
+    );
+    await entityManager.addComponent(
+      mismatchOccupant.id,
+      'positioning:sitting_on',
+      {
+        furniture_id: 'wrong-furniture',
+        spot_index: 2,
+      }
+    );
 
-    const {
-      closenessIssues,
-      movementLockIssues,
-      furnitureOccupancyIssues,
-    } = validator.performFullValidation();
+    const { closenessIssues, movementLockIssues, furnitureOccupancyIssues } =
+      validator.performFullValidation();
 
     const issues = [
       ...closenessIssues,

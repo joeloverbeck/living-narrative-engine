@@ -34,7 +34,9 @@ describe('Chicken Recipes', () => {
       process.cwd(),
       'data/mods/anatomy/blueprints/rooster.blueprint.json'
     );
-    roosterBlueprint = JSON.parse(fs.readFileSync(roosterBlueprintPath, 'utf8'));
+    roosterBlueprint = JSON.parse(
+      fs.readFileSync(roosterBlueprintPath, 'utf8')
+    );
 
     const henBlueprintPath = path.join(
       process.cwd(),
@@ -78,7 +80,9 @@ describe('Chicken Recipes', () => {
       it('should have wattle slot with chicken_wattle part type', () => {
         expect(roosterRecipe.slots.wattle).toBeDefined();
         expect(roosterRecipe.slots.wattle.partType).toBe('chicken_wattle');
-        expect(roosterRecipe.slots.wattle.preferId).toBe('anatomy:chicken_wattle');
+        expect(roosterRecipe.slots.wattle.preferId).toBe(
+          'anatomy:chicken_wattle'
+        );
       });
     });
 
@@ -94,13 +98,17 @@ describe('Chicken Recipes', () => {
       it('should have left_spur slot with chicken_spur part type', () => {
         expect(roosterRecipe.slots.left_spur).toBeDefined();
         expect(roosterRecipe.slots.left_spur.partType).toBe('chicken_spur');
-        expect(roosterRecipe.slots.left_spur.preferId).toBe('anatomy:chicken_spur');
+        expect(roosterRecipe.slots.left_spur.preferId).toBe(
+          'anatomy:chicken_spur'
+        );
       });
 
       it('should have right_spur slot with chicken_spur part type', () => {
         expect(roosterRecipe.slots.right_spur).toBeDefined();
         expect(roosterRecipe.slots.right_spur.partType).toBe('chicken_spur');
-        expect(roosterRecipe.slots.right_spur.preferId).toBe('anatomy:chicken_spur');
+        expect(roosterRecipe.slots.right_spur.preferId).toBe(
+          'anatomy:chicken_spur'
+        );
       });
 
       it('should map spurs to blueprint spur slots', () => {
@@ -145,7 +153,9 @@ describe('Chicken Recipes', () => {
       });
 
       it('should have eye pattern matching both eyes', () => {
-        const eyePattern = roosterRecipe.patterns.find((p) => p.partType === 'eye');
+        const eyePattern = roosterRecipe.patterns.find(
+          (p) => p.partType === 'eye'
+        );
         expect(eyePattern).toBeDefined();
         expect(eyePattern.matches).toContain('left_eye');
         expect(eyePattern.matches).toContain('right_eye');
@@ -251,8 +261,12 @@ describe('Chicken Recipes', () => {
     });
 
     it('should have same pattern structure for common body parts', () => {
-      const roosterWing = roosterRecipe.patterns.find((p) => p.partType === 'chicken_wing');
-      const henWing = henRecipe.patterns.find((p) => p.partType === 'chicken_wing');
+      const roosterWing = roosterRecipe.patterns.find(
+        (p) => p.partType === 'chicken_wing'
+      );
+      const henWing = henRecipe.patterns.find(
+        (p) => p.partType === 'chicken_wing'
+      );
 
       expect(roosterWing.preferId).toBe(henWing.preferId);
       expect(roosterWing.matches).toEqual(henWing.matches);

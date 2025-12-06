@@ -36,6 +36,7 @@ ACTUAL OUTPUT:
 **Primary Cause**: **Browser cache is serving OLD `anatomy-visualizer.js`**
 
 Evidence:
+
 1. ✅ Fix WAS applied correctly to `src/anatomy/bodyPartDescriptionBuilder.js` (lines 63-66, 113-120)
 2. ✅ All 344 anatomy tests pass with the fix
 3. ✅ Build system works (`npm run build` succeeded, regenerated `dist/anatomy-visualizer.js`)
@@ -175,6 +176,7 @@ ACTUAL OUTPUT:
 Evidence from code flow:
 
 1. **Anatomy Generation Workflow** (`src/anatomy/workflows/anatomyGenerationWorkflow.js`):
+
    ```javascript
    async generate(blueprintId, recipeId, options) {
      // Phase 1: Generate anatomy graph
@@ -207,6 +209,7 @@ Evidence from code flow:
    - Clothing SHOULD be read from `equipmentDescriptionService`
 
 3. **Equipment Description Service** (`src/clothing/services/equipmentDescriptionService.js`):
+
    ```javascript
    async generateEquipmentDescription(entityId) {
      // Line 84: Get equipped items using ClothingManagementService
@@ -231,11 +234,13 @@ Evidence from code flow:
 **Why Some Items Show**:
 
 The items that DO show (necklace, tights, slingbacks) are likely:
+
 - Instantiated in a PREVIOUS character generation session
 - Still attached to the entity from earlier
 - OR categorized as "accessories"/"footwear" which might have different timing
 
 The items that DON'T show (bra, camisole, thong, skirt) are likely:
+
 - Categorized as "underwear"/"tops"/"bottoms"
 - Require torso/genital slot coverage
 - These slots are being reported as "fully exposed" because clothing hasn't been registered yet
@@ -264,11 +269,13 @@ The items that DON'T show (bra, camisole, thong, skirt) are likely:
 Two approaches:
 
 **Option A: Await Clothing Before Rendering** (Recommended)
+
 - Modify UI code to wait for clothing instantiation to complete before rendering
 - Ensure `anatomyGenerationWorkflow.generate()` returns `clothingResult`
 - UI checks for `clothingResult.instantiated` before calling description composer
 
 **Option B: Reactive Description Updates**
+
 - Add event listener for clothing changes
 - Trigger description re-generation when clothing is added
 - More complex but allows progressive loading
@@ -289,6 +296,7 @@ Two approaches:
    - Validate clothing state before calling `bodyDescriptionComposer.composeDescription()`
 
 **No changes needed to**:
+
 - ✅ `anatomyGenerationWorkflow.js` - already returns `clothingResult`
 - ✅ `equipmentDescriptionService.js` - correctly reads `clothing:equipped`
 - ✅ `bodyDescriptionComposer.js` - correctly calls equipment service
@@ -306,6 +314,7 @@ Two approaches:
 5. Both eyes should be IDENTICAL
 
 **Success Criteria**:
+
 - ✅ No "amber" color appears for either eye
 - ✅ Both eyes show exactly: "blue, round"
 - ✅ Recipe properties correctly override base definitions
@@ -329,6 +338,7 @@ Two approaches:
    - ❌ "Genitals are fully exposed"
 
 **Success Criteria**:
+
 - ✅ All 7 items appear in description
 - ✅ Underwear/torso items correctly listed
 - ✅ Exposure messages only when truly unclothed
@@ -337,6 +347,7 @@ Two approaches:
 ## Related Files
 
 ### Source Files
+
 - `src/anatomy/bodyPartDescriptionBuilder.js` - ✅ Fixed (uses getComponentData)
 - `src/anatomy/bodyDescriptionComposer.js` - Calls equipment service
 - `src/anatomy/workflows/anatomyGenerationWorkflow.js` - Manages clothing instantiation
@@ -345,11 +356,13 @@ Two approaches:
 - `src/entities/entityInstanceData.js` - Manages component overrides
 
 ### Build Files
+
 - `dist/anatomy-visualizer.js` - Bundled output (NEEDS BROWSER CACHE CLEAR)
 - `scripts/build.js` - Build system
 - `scripts/build.config.js` - Build configuration
 
 ### Data Files
+
 - `.private/data/mods/p_erotica_grocery_store/recipes/ane_artzelai.recipe.json` - Recipe with clothing list
 - `data/mods/anatomy/entities/definitions/human_eye_amber.entity.json` - Default eye with amber color
 - `data/mods/clothing/entities/definitions/*.entity.json` - Clothing entity definitions
@@ -361,6 +374,7 @@ Two approaches:
 **Bug #2 (Missing Clothing)**: **IDENTIFIED** - Timing issue between anatomy rendering and clothing registration. Fix requires ensuring UI waits for clothing instantiation before rendering descriptions.
 
 **Next Steps**:
+
 1. User clears browser cache to verify Bug #1 fix
 2. Implement Option A (await clothing before rendering) for Bug #2
 3. Add integration test to verify clothing appears in descriptions

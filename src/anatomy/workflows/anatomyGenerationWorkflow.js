@@ -128,10 +128,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
     // Step 3.5: Build socket index explicitly before clothing instantiation
     // This prevents timing issues where multiple characters try to instantiate clothing
     // concurrently while the index is still building (lazy initialization)
-    await executeSocketIndexBuilding(
-      { ownerId },
-      this.#getDependencies()
-    );
+    await executeSocketIndexBuilding({ ownerId }, this.#getDependencies());
 
     // Step 4: Instantiate clothing (if clothing service available)
     const clothingResult = await executeClothingInstantiation(

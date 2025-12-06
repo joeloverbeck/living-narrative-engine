@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-005: Add Environment Configuration Unit Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-005
 - **Phase:** 1 - Minimal Change
 - **Priority:** High
@@ -15,13 +16,22 @@ Create comprehensive unit tests for environment-based timeout configuration, exp
 ## Files to Create
 
 ### New Test File
+
 - `tests/unit/turns/states/awaitingExternalTurnEndState.environmentConfig.test.js` (NEW)
 
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { InvalidArgumentError } from '../../../../src/errors/invalidArgumentError.js';
 
@@ -88,6 +98,7 @@ describe('AwaitingExternalTurnEndState - Environment Configuration', () => {
 ### Group 1: Environment-Based Default Timeouts
 
 #### Test 1: Production Environment Uses 30s Timeout
+
 ```javascript
 it('should use 30-second timeout in production environment', async () => {
   // Arrange
@@ -107,6 +118,7 @@ it('should use 30-second timeout in production environment', async () => {
 ```
 
 #### Test 2: Development Environment Uses 3s Timeout
+
 ```javascript
 it('should use 3-second timeout in development environment', async () => {
   // Arrange
@@ -125,6 +137,7 @@ it('should use 3-second timeout in development environment', async () => {
 ```
 
 #### Test 3: Test Environment Uses 3s Timeout (Development)
+
 ```javascript
 it('should use 3-second timeout in test environment', () => {
   // Arrange
@@ -145,6 +158,7 @@ it('should use 3-second timeout in test environment', () => {
 ```
 
 #### Test 4: Undefined NODE_ENV in Jest Environment Uses 3s Timeout
+
 ```javascript
 it('should use 3-second timeout when NODE_ENV is undefined in Jest environment', async () => {
   // Arrange
@@ -173,6 +187,7 @@ development timeout (3s).
 ### Group 2: Explicit Timeout Override
 
 #### Test 5: Explicit Timeout Overrides Production Default
+
 ```javascript
 it('should use explicit timeout over production default', () => {
   // Arrange
@@ -194,6 +209,7 @@ it('should use explicit timeout over production default', () => {
 ```
 
 #### Test 6: Explicit Timeout Overrides Development Default
+
 ```javascript
 it('should use explicit timeout over development default', () => {
   // Arrange
@@ -217,6 +233,7 @@ it('should use explicit timeout over development default', () => {
 ### Group 3: Invalid Timeout Validation
 
 #### Test 7: NaN Timeout Throws InvalidArgumentError
+
 ```javascript
 it('should throw InvalidArgumentError when timeoutMs is NaN', () => {
   // Arrange
@@ -236,6 +253,7 @@ it('should throw InvalidArgumentError when timeoutMs is NaN', () => {
 ```
 
 #### Test 8: Negative Timeout Throws InvalidArgumentError
+
 ```javascript
 it('should throw InvalidArgumentError when timeoutMs is negative', () => {
   // Arrange
@@ -255,6 +273,7 @@ it('should throw InvalidArgumentError when timeoutMs is negative', () => {
 ```
 
 #### Test 9: Infinity Timeout Throws InvalidArgumentError
+
 ```javascript
 it('should throw InvalidArgumentError when timeoutMs is Infinity', () => {
   // Arrange
@@ -274,6 +293,7 @@ it('should throw InvalidArgumentError when timeoutMs is Infinity', () => {
 ```
 
 #### Test 10: Zero Timeout Throws InvalidArgumentError
+
 ```javascript
 it('should throw InvalidArgumentError when timeoutMs is zero', () => {
   // Arrange
@@ -295,6 +315,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ## Out of Scope
 
 ### Must NOT Include
+
 - Environment provider injection tests (Phase 2, Ticket 008)
 - Property-based tests (Phase 3, Ticket 014)
 - Integration tests (covered in other tickets)
@@ -303,6 +324,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 - Resource cleanup tests (existing unit tests)
 
 ### Must NOT Change
+
 - Existing unit test files
 - Test helpers in `/tests/common/`
 - Production code (tests only)
@@ -310,6 +332,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ## Acceptance Criteria
 
 ### AC1: All 10 Test Cases Implemented
+
 ```javascript
 // GIVEN: Test file with all 10 required test cases
 // WHEN: npm run test:unit -- environmentConfig.test.js
@@ -320,6 +343,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ```
 
 ### AC2: High Code Coverage
+
 ```javascript
 // GIVEN: Test suite execution with coverage
 // WHEN: Coverage report generated
@@ -331,6 +355,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ```
 
 ### AC3: Uses TestBed Helpers
+
 ```javascript
 // GIVEN: Test file implementation
 // WHEN: Code review performed
@@ -342,6 +367,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ```
 
 ### AC4: Environment Management Correct
+
 ```javascript
 // GIVEN: All tests in suite
 // WHEN: Tests run in sequence
@@ -353,6 +379,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ```
 
 ### AC5: Clear Test Names and Structure
+
 ```javascript
 // GIVEN: Test file code
 // WHEN: Developer reads test
@@ -364,6 +391,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ```
 
 ### AC6: Fast Execution
+
 ```javascript
 // GIVEN: Test suite
 // WHEN: npm run test:unit -- environmentConfig.test.js
@@ -376,18 +404,21 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ## Invariants
 
 ### Test Quality Standards (Must Meet)
+
 1. **Isolation**: Each test independent, no shared state
 2. **Fast**: No real timers, all mocked
 3. **Clear**: Descriptive names, AAA pattern
 4. **Complete**: All configuration paths tested
 
 ### Coverage Requirements (Must Achieve)
+
 1. **Branches**: >95% for configuration logic
 2. **Functions**: 100% for timeout resolution
 3. **Lines**: >95% for validation
 4. **Edge Cases**: All invalid inputs tested
 
 ### Project Standards (Must Follow)
+
 1. **TestBed Usage**: Use project test helpers
 2. **Mock Patterns**: jest.fn() for dependencies
 3. **Import Style**: ES6 imports, .js extensions
@@ -396,6 +427,7 @@ it('should throw InvalidArgumentError when timeoutMs is zero', () => {
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run this test file only
 npm run test:unit -- environmentConfig.test.js
@@ -411,6 +443,7 @@ npm run test:unit -- awaitingExternalTurnEndState
 ```
 
 ### Validation
+
 ```bash
 # Verify coverage thresholds
 npm run test:unit -- environmentConfig.test.js --coverage --coverageThreshold='{"global":{"branches":95,"functions":100,"lines":95}}'
@@ -425,6 +458,7 @@ npm run test:unit
 ## Additional Test Ideas (Optional)
 
 ### Bonus Test Cases (Not Required, But Recommended)
+
 ```javascript
 // 11. Non-number timeout (string)
 it('should throw when timeoutMs is a string', () => {

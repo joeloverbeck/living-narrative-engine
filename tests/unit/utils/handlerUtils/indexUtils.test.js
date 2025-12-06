@@ -25,9 +25,7 @@ describe('utils/handlerUtils/indexUtils re-export wiring', () => {
     jest.resetModules();
 
     paramsUtils = await import(PARAMS_UTILS_PATH);
-    serviceInitializerUtils = await import(
-      SERVICE_INITIALIZER_UTILS_PATH,
-    );
+    serviceInitializerUtils = await import(SERVICE_INITIALIZER_UTILS_PATH);
     moduleNamespace = await import(INDEX_UTILS_PATH);
   });
 
@@ -41,16 +39,16 @@ describe('utils/handlerUtils/indexUtils re-export wiring', () => {
 
   it('re-exports helper functions from paramsUtils and serviceInitializerUtils', () => {
     expect(moduleNamespace.assertParamsObject).toBe(
-      paramsUtils.assertParamsObject,
+      paramsUtils.assertParamsObject
     );
     expect(moduleNamespace.initHandlerLogger).toBe(
-      serviceInitializerUtils.initHandlerLogger,
+      serviceInitializerUtils.initHandlerLogger
     );
     expect(moduleNamespace.validateDeps).toBe(
-      serviceInitializerUtils.validateServiceDeps,
+      serviceInitializerUtils.validateServiceDeps
     );
     expect(moduleNamespace.resolveExecutionLogger).toBe(
-      serviceInitializerUtils.resolveExecutionLogger,
+      serviceInitializerUtils.resolveExecutionLogger
     );
   });
 

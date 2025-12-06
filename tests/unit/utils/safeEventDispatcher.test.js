@@ -57,11 +57,12 @@ describe('SafeEventDispatcher', () => {
       debug: jest.fn(),
     };
 
-    expect(() =>
-      new SafeEventDispatcher({
-        validatedEventDispatcher: mockVed,
-        logger: incompleteLogger,
-      })
+    expect(
+      () =>
+        new SafeEventDispatcher({
+          validatedEventDispatcher: mockVed,
+          logger: incompleteLogger,
+        })
     ).toThrow(
       'SafeEventDispatcher: Invalid or missing logger dependency (requires error, warn, debug methods).'
     );

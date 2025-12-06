@@ -179,10 +179,12 @@ export class CoreMotivationsGeneratorControllerTestBed extends BaseTestBed {
   _buildControllerDependencies(
     contextName = 'CoreMotivationsGeneratorControllerTestBed'
   ) {
-    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
-      logger: this.logger,
-      eventBus: this.mockEventBus,
-    });
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator(
+      {
+        logger: this.logger,
+        eventBus: this.mockEventBus,
+      }
+    );
 
     const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
       logger: this.logger,

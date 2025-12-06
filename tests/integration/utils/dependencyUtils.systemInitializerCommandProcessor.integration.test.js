@@ -30,18 +30,22 @@ describe('dependencyUtils cross-module integration', () => {
           eventDispatchService: { dispatchWithLogging: jest.fn() },
           initializationTag: 'core:init',
         })
-    ).toThrow("SystemInitializer requires a valid IServiceResolver with 'resolveByTag'.");
+    ).toThrow(
+      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
+    );
   });
 
   it('SystemInitializer processes systems and surfaces failures with validated dependencies', async () => {
     const logger = createLogger();
     const failure = new Error('Initialization explosion');
     const resolver = {
-      resolveByTag: jest.fn().mockResolvedValue([
-        { initialize: jest.fn().mockResolvedValue(undefined) },
-        { initialize: jest.fn().mockRejectedValue(failure) },
-        {},
-      ]),
+      resolveByTag: jest
+        .fn()
+        .mockResolvedValue([
+          { initialize: jest.fn().mockResolvedValue(undefined) },
+          { initialize: jest.fn().mockRejectedValue(failure) },
+          {},
+        ]),
     };
     const eventDispatchService = {
       dispatchWithLogging: jest.fn().mockResolvedValue(undefined),
@@ -66,9 +70,9 @@ describe('dependencyUtils cross-module integration', () => {
 
   it('InitializationService propagates assertMethods violations for logger dependencies', () => {
     const brokenLogger = { error: jest.fn() };
-    expect(() => new InitializationService({ log: { logger: brokenLogger } })).toThrow(
-      SystemInitializationError
-    );
+    expect(
+      () => new InitializationService({ log: { logger: brokenLogger } })
+    ).toThrow(SystemInitializationError);
   });
 
   it('TargetContextBuilder requires non-blank IDs and logs failure context', () => {
@@ -89,9 +93,13 @@ describe('dependencyUtils cross-module integration', () => {
       logger,
     });
 
-    expect(() => builder.buildBaseContext('   ', 'room-7')).toThrow(InvalidArgumentError);
+    expect(() => builder.buildBaseContext('   ', 'room-7')).toThrow(
+      InvalidArgumentError
+    );
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("TargetContextBuilder.buildBaseContext: Invalid actorId"),
+      expect.stringContaining(
+        'TargetContextBuilder.buildBaseContext: Invalid actorId'
+      ),
       expect.objectContaining({ parameterName: 'actorId' })
     );
   });
@@ -99,7 +107,9 @@ describe('dependencyUtils cross-module integration', () => {
   it('TargetContextBuilder rejects missing base context via assertPresent', () => {
     const logger = createLogger();
     const entityManager = {
-      getEntityInstance: jest.fn().mockReturnValue({ id: 'actor-1', getAllComponents: () => ({}) }),
+      getEntityInstance: jest
+        .fn()
+        .mockReturnValue({ id: 'actor-1', getAllComponents: () => ({}) }),
     };
     const builder = new TargetContextBuilder({
       entityManager,
@@ -107,9 +117,9 @@ describe('dependencyUtils cross-module integration', () => {
       logger,
     });
 
-    expect(() => builder.buildDependentContext(null, {}, { id: 'target' })).toThrow(
-      'Base context is required'
-    );
+    expect(() =>
+      builder.buildDependentContext(null, {}, { id: 'target' })
+    ).toThrow('Base context is required');
   });
 
   it('CommandProcessor validates dispatcher dependencies with validateDependency', () => {
@@ -121,7 +131,9 @@ describe('dependencyUtils cross-module integration', () => {
           safeEventDispatcher: {},
           eventDispatchService: { dispatchWithErrorHandling: jest.fn() },
         })
-    ).toThrow("Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'.");
+    ).toThrow(
+      "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
+    );
   });
 
   it('CommandProcessor surfaces InvalidArgumentError when actor IDs fail assertValidId', async () => {

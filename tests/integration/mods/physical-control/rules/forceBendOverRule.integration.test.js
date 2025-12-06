@@ -47,7 +47,9 @@ let bodyDescriptionComposer;
  */
 function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
   bodyDescriptionComposer = {
-    composeDescription: jest.fn(async (entity) => `Description for ${entity.id}`),
+    composeDescription: jest.fn(
+      async (entity) => `Description for ${entity.id}`
+    ),
   };
 
   const safeDispatcher = {
@@ -185,9 +187,10 @@ describe('physical_control_handle_force_bend_over rule integration', () => {
 
     expect(bodyDescriptionComposer).toBeDefined();
     expect(bodyDescriptionComposer.composeDescription).toHaveBeenCalledTimes(2);
-    const composedIds = bodyDescriptionComposer.composeDescription.mock.calls.map(
-      ([entity]) => entity.id
-    );
+    const composedIds =
+      bodyDescriptionComposer.composeDescription.mock.calls.map(
+        ([entity]) => entity.id
+      );
     expect(composedIds).toEqual(expect.arrayContaining(['target1', 'actor1']));
 
     const perceptibleEvent = testEnv.events.find(

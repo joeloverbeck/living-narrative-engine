@@ -305,7 +305,7 @@ export class LFUStrategy {
    *
    * @returns {IterableIterator<[string, *]>} Iterator of key-value pairs
    */
-  * entries() {
+  *entries() {
     for (const [key, entry] of this.#cache.entries()) {
       if (!this.#isExpired(entry)) {
         yield [key, entry.value];
@@ -318,7 +318,7 @@ export class LFUStrategy {
    *
    * @returns {IterableIterator<string>} Iterator of keys
    */
-  * keys() {
+  *keys() {
     for (const [key, entry] of this.#cache.entries()) {
       if (!this.#isExpired(entry)) {
         yield key;
@@ -350,7 +350,7 @@ export class LFUStrategy {
       }
     }
 
-    keysToRemove.forEach(key => this.delete(key));
+    keysToRemove.forEach((key) => this.delete(key));
     return keysToRemove.length;
   }
 
@@ -373,15 +373,22 @@ export class LFUStrategy {
     const frequencyValues = Array.from(this.#frequencies.values());
     const stats = {
       minFrequency: this.#minFrequency,
-      maxFrequency: frequencyValues.length > 0
-        ? frequencyValues.reduce((max, freq) => Math.max(max, freq), -Infinity)
-        : 0,
+      maxFrequency:
+        frequencyValues.length > 0
+          ? frequencyValues.reduce(
+              (max, freq) => Math.max(max, freq),
+              -Infinity
+            )
+          : 0,
       averageFrequency: 0,
       frequencyDistribution: {},
     };
 
     if (this.#frequencies.size > 0) {
-      const totalFreq = Array.from(this.#frequencies.values()).reduce((sum, freq) => sum + freq, 0);
+      const totalFreq = Array.from(this.#frequencies.values()).reduce(
+        (sum, freq) => sum + freq,
+        0
+      );
       stats.averageFrequency = totalFreq / this.#frequencies.size;
     }
 

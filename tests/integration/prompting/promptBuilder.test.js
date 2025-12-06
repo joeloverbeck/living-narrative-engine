@@ -103,7 +103,9 @@ describe('PromptBuilder (template-based)', () => {
 
     // Check that all major sections are present (with processing hints where applicable)
     expect(prompt).toContain('<task_definition>');
-    expect(prompt).toContain('<!-- *** CRITICAL: Your core task - all output stems from this -->');
+    expect(prompt).toContain(
+      '<!-- *** CRITICAL: Your core task - all output stems from this -->'
+    );
     expect(prompt).toContain('Test task definition');
     expect(prompt).toContain('</task_definition>');
     expect(prompt).toContain(
@@ -113,15 +115,21 @@ describe('PromptBuilder (template-based)', () => {
       '<portrayal_guidelines>\nTest portrayal guidelines\n</portrayal_guidelines>'
     );
     expect(prompt).toContain('<content_policy>');
-    expect(prompt).toContain('<!-- SYSTEM: Content permissions for this session -->');
+    expect(prompt).toContain(
+      '<!-- SYSTEM: Content permissions for this session -->'
+    );
     expect(prompt).toContain('Test content policy');
     expect(prompt).toContain('</content_policy>');
     expect(prompt).toContain('<world_context>');
-    expect(prompt).toContain('<!-- REFERENCE: Environmental context for decision-making -->');
+    expect(prompt).toContain(
+      '<!-- REFERENCE: Environmental context for decision-making -->'
+    );
     expect(prompt).toContain('Test world context');
     expect(prompt).toContain('</world_context>');
     expect(prompt).toContain('<available_actions_info>');
-    expect(prompt).toContain('<!-- REFERENCE: Choose based on character state, goals, and recent events -->');
+    expect(prompt).toContain(
+      '<!-- REFERENCE: Choose based on character state, goals, and recent events -->'
+    );
     expect(prompt).toContain('Test available actions');
     expect(prompt).toContain('</available_actions_info>');
     // user_input section has been removed from AI character templates
@@ -186,9 +194,7 @@ describe('PromptBuilder (template-based)', () => {
     const prompt = await builder.build(TEST_LLM_ID, dataWithSomeEmptySections);
 
     // Should contain sections with content
-    expect(prompt).toContain(
-      buildThoughtsSection('- I have a thought')
-    );
+    expect(prompt).toContain(buildThoughtsSection('- I have a thought'));
     expect(prompt).toContain(
       "NOTES WRITING GUIDANCE: The notes must be concise, but written in Test Character's own voice. Focus each note on critical facts while preserving Test Character's perspective. Avoid generic or neutral phrasing."
     );

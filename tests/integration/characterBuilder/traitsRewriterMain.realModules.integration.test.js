@@ -1,4 +1,13 @@
-import { describe, it, beforeEach, afterEach, beforeAll, afterAll, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  expect,
+  jest,
+} from '@jest/globals';
 import path from 'path';
 import fs from 'fs/promises';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -8,7 +17,10 @@ import { CharacterBuilderBootstrap } from '../../../src/characterBuilder/Charact
 const MODULE_PATH = '../../../src/traits-rewriter-main.js';
 const DISPLAY_NAME = 'Claude Sonnet 4.5 (OpenRouter - Tool Calling)';
 const STORAGE_KEY = LLMSelectionPersistence.STORAGE_KEY;
-const ORIGINAL_READY_STATE_DESCRIPTOR = Object.getOwnPropertyDescriptor(document, 'readyState');
+const ORIGINAL_READY_STATE_DESCRIPTOR = Object.getOwnPropertyDescriptor(
+  document,
+  'readyState'
+);
 
 // jest.setTimeout(60000); // Handled by config
 
@@ -18,10 +30,10 @@ const flushMicrotasks = async (cycles = 5) => {
   }
 };
 
-const waitForCondition = async (checkFn, {
-  timeout = 30000,
-  interval = 50,
-} = {}) => {
+const waitForCondition = async (
+  checkFn,
+  { timeout = 30000, interval = 50 } = {}
+) => {
   const start = Date.now();
   while (true) {
     const result = await checkFn();
@@ -70,7 +82,10 @@ const createFileResponse = async (identifier) => {
       content = await fs.readFile(resolvedPath, 'utf8');
     } catch (error) {
       if (resolvedPath.endsWith('mod-manifest.json')) {
-        resolvedPath = resolvedPath.replace('mod-manifest.json', 'mod.manifest.json');
+        resolvedPath = resolvedPath.replace(
+          'mod-manifest.json',
+          'mod.manifest.json'
+        );
         content = await fs.readFile(resolvedPath, 'utf8');
       } else {
         throw error;
@@ -121,7 +136,11 @@ const setReadyState = (value) => {
 
 const restoreReadyState = () => {
   if (ORIGINAL_READY_STATE_DESCRIPTOR) {
-    Object.defineProperty(document, 'readyState', ORIGINAL_READY_STATE_DESCRIPTOR);
+    Object.defineProperty(
+      document,
+      'readyState',
+      ORIGINAL_READY_STATE_DESCRIPTOR
+    );
   } else {
     delete document.readyState;
   }
@@ -171,7 +190,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   let originalWindowFetch;
   let fetchMock;
   let bootstrapSpy;
-  
+
   // Module exports
   let initializeTraitsRewriter;
   let startApp;
@@ -179,7 +198,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
   beforeAll(async () => {
     // Disable auto-initialization before loading the module to prevent side effects
     globalThis.__LNE_FORCE_AUTO_INIT__ = false;
-    
+
     // Load the module once
     const mod = await import(MODULE_PATH);
     initializeTraitsRewriter = mod.initializeTraitsRewriter;
@@ -193,7 +212,7 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
 
   beforeEach(() => {
     // DO NOT reset modules here to avoid reloading everything
-    // jest.resetModules(); 
+    // jest.resetModules();
     jest.restoreAllMocks();
     localStorage.clear();
     setReadyState('complete');
@@ -204,7 +223,8 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
 
     fetchMock = createFetchStub();
     originalFetch = global.fetch;
-    originalWindowFetch = typeof window !== 'undefined' ? window.fetch : undefined;
+    originalWindowFetch =
+      typeof window !== 'undefined' ? window.fetch : undefined;
     global.fetch = fetchMock;
     if (typeof window !== 'undefined') {
       window.fetch = fetchMock;
@@ -245,17 +265,19 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBe('claude-sonnet-4.5');
 
     await waitForCondition(() =>
-      console.info.mock.calls.some(([message]) => message === 'Traits Rewriter initialized successfully')
+      console.info.mock.calls.some(
+        ([message]) => message === 'Traits Rewriter initialized successfully'
+      )
     );
   });
 
   it('defers initialization until DOMContentLoaded when the document is loading', async () => {
     setReadyState('loading');
     renderTraitsRewriterDom();
-    
+
     // Enable auto-init for this test so startApp works
     globalThis.__LNE_FORCE_AUTO_INIT__ = true;
-    
+
     // Call startApp which should attach the listener
     startApp();
 
@@ -282,12 +304,8 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
         const result = await originalBootstrap.call(this, config);
         const originalResolve = result.container.resolve.bind(result.container);
         const llmAdapter = await originalResolve(tokens.LLMAdapter);
-        jest
-          .spyOn(llmAdapter, 'getCurrentActiveLlmId')
-          .mockResolvedValue(null);
-        jest
-          .spyOn(llmAdapter, 'getAvailableLlmOptions')
-          .mockResolvedValue([]);
+        jest.spyOn(llmAdapter, 'getCurrentActiveLlmId').mockResolvedValue(null);
+        jest.spyOn(llmAdapter, 'getAvailableLlmOptions').mockResolvedValue([]);
         result.container.resolve = (token) =>
           token === tokens.LLMAdapter ? llmAdapter : originalResolve(token);
         return result;
@@ -348,7 +366,9 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     await flushMicrotasks(6);
 
     const container = document.getElementById('rewritten-traits-container');
-    expect(container?.innerHTML).toContain('Failed to initialize the application');
+    expect(container?.innerHTML).toContain(
+      'Failed to initialize the application'
+    );
     expect(container?.innerHTML).toContain('bootstrap failure');
   });
 
@@ -359,7 +379,9 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     expect(document.getElementById('active-llm-name')).toBeNull();
 
     await waitForCondition(() =>
-      console.info.mock.calls.some(([message]) => message === 'Traits Rewriter initialized successfully')
+      console.info.mock.calls.some(
+        ([message]) => message === 'Traits Rewriter initialized successfully'
+      )
     );
   });
 });

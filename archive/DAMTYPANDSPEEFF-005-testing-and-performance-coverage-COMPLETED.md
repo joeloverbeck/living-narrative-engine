@@ -24,6 +24,7 @@ Add the test coverage called out in the specification (unit, integration, proper
 **Note**: This project uses JavaScript (.js), not TypeScript (.ts).
 
 ### Already Implemented (No changes needed)
+
 - `tests/unit/anatomy/damage-types.schema.test.js` - ✅ Exists
 - `tests/unit/anatomy/services/damageTypeEffectsService.test.js` - ✅ Exists (745 lines, comprehensive)
 - `tests/unit/anatomy/services/bleedingTickSystem.test.js` - ✅ Exists (367 lines)
@@ -33,6 +34,7 @@ Add the test coverage called out in the specification (unit, integration, proper
 - `tests/integration/anatomy/damage-application.integration.test.js` - ✅ Exists (full pipeline)
 
 ### Created
+
 - `tests/property/anatomy/damage-types.property.test.js` - Property tests for invariants
 - `tests/performance/anatomy/damage-effects.performance.test.js` - Performance regression tests
 
@@ -92,6 +94,7 @@ The original ticket assumed many test files needed to be created (7 unit test fi
 ### Test results summary
 
 All 143 damage-related tests pass:
+
 - Unit tests: 99 tests (damageTypeEffectsService, bleedingTickSystem, burningTickSystem, poisonTickSystem)
 - Integration tests: 17 tests (damage-type-events, damage-application)
 - Property tests: 12 tests (damage-types.property)
@@ -99,13 +102,13 @@ All 143 damage-related tests pass:
 
 ### Performance baselines established
 
-| Test | Time | Budget |
-|------|------|--------|
-| BleedingTickSystem 100 parts | ~2ms | 200ms |
-| BurningTickSystem 100 parts | ~1ms | 200ms |
-| PoisonTickSystem 100 parts | ~1ms | 200ms |
-| All three systems on 100 parts | ~5ms | 200ms |
-| 5 ticks on 50 parts (avg) | ~0.2ms | - |
+| Test                           | Time   | Budget |
+| ------------------------------ | ------ | ------ |
+| BleedingTickSystem 100 parts   | ~2ms   | 200ms  |
+| BurningTickSystem 100 parts    | ~1ms   | 200ms  |
+| PoisonTickSystem 100 parts     | ~1ms   | 200ms  |
+| All three systems on 100 parts | ~5ms   | 200ms  |
+| 5 ticks on 50 parts (avg)      | ~0.2ms | -      |
 
 ### Corrections made to ticket
 

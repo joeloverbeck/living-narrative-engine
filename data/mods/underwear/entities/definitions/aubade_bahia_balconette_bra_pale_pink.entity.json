@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "lace"
@@ -31,9 +29,7 @@
       "size": "supportive balconette cut"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "underwear"
     },
     "items:item": {},

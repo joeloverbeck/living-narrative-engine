@@ -5,7 +5,14 @@
  * instead of showing "undefined".
  */
 
-import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import InjuryNarrativeFormatterService from '../../../../src/anatomy/services/injuryNarrativeFormatterService.js';
 import { DamageEventMessageRenderer } from '../../../../src/domUI/damageEventMessageRenderer.js';
 

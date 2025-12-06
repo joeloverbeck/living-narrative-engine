@@ -45,7 +45,12 @@
               "description": "Whether to regenerate entity descriptions after relationship change"
             }
           },
-          "required": ["actor_component_type", "target_component_type", "actor_data", "target_data"],
+          "required": [
+            "actor_component_type",
+            "target_component_type",
+            "actor_data",
+            "target_data"
+          ],
           "additionalProperties": false
         }
       },

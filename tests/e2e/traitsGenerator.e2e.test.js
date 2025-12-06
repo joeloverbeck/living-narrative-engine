@@ -63,9 +63,9 @@ describe('Traits Generator E2E Tests', () => {
         } else if (!window.performance) {
           Object.defineProperty(window, 'performance', {
             value: {
-              now: jest.fn(() => Date.now())
+              now: jest.fn(() => Date.now()),
             },
-            configurable: true
+            configurable: true,
           });
         }
 

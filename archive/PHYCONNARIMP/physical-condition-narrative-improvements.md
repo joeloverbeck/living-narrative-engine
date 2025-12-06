@@ -47,13 +47,13 @@ InjuryStatusPanel (UI) + ActorDataExtractor (LLM)
 
 ### Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Text generation logic |
-| `src/anatomy/services/injuryAggregationService.js` | Injury data collection |
-| `src/anatomy/registries/healthStateRegistry.js` | Health state definitions |
-| `src/domUI/injuryStatusPanel.js` | UI integration |
-| `src/turns/services/actorDataExtractor.js` | LLM integration |
+| File                                                      | Purpose                  |
+| --------------------------------------------------------- | ------------------------ |
+| `src/anatomy/services/injuryNarrativeFormatterService.js` | Text generation logic    |
+| `src/anatomy/services/injuryAggregationService.js`        | Injury data collection   |
+| `src/anatomy/registries/healthStateRegistry.js`           | Health state definitions |
+| `src/domUI/injuryStatusPanel.js`                          | UI integration           |
+| `src/turns/services/actorDataExtractor.js`                | LLM integration          |
 
 ---
 
@@ -62,12 +62,14 @@ InjuryStatusPanel (UI) + ActorDataExtractor (LLM)
 ### Example of Current Problematic Output
 
 Given an actor with:
+
 - Right ear dismembered
 - Torso at critical health (bleeding)
 - Upper head at wounded health (bleeding)
 - Brain at scratched health
 
 **Current Output:**
+
 ```
 My right ear and right ear is completely numb. My torso screams with agony.
 My upper head throbs painfully. My brain stings slightly. My right ear is missing.
@@ -75,6 +77,7 @@ Blood flows steadily from my torso. Blood flows steadily from my upper head.
 ```
 
 **Expected Output:**
+
 ```
 My right ear is missing. My torso screams with agony. My upper head throbs painfully.
 My brain stings slightly. Blood flows steadily from my torso and my upper head.
@@ -82,12 +85,12 @@ My brain stings slightly. Blood flows steadily from my torso and my upper head.
 
 ### Issue Summary
 
-| # | Issue | Example | Severity |
-|---|-------|---------|----------|
-| 1 | Duplicate part counting | "My right ear and right ear is completely numb" | High |
-| 2 | Dismembered parts show health state | Missing ear shows "is completely numb" | High |
-| 3 | Missing parts not prioritized | "is missing" appears after health states | Medium |
-| 4 | Bleeding parts not grouped | Separate sentences for each bleeding part | Medium |
+| #   | Issue                               | Example                                         | Severity |
+| --- | ----------------------------------- | ----------------------------------------------- | -------- |
+| 1   | Duplicate part counting             | "My right ear and right ear is completely numb" | High     |
+| 2   | Dismembered parts show health state | Missing ear shows "is completely numb"          | High     |
+| 3   | Missing parts not prioritized       | "is missing" appears after health states        | Medium   |
+| 4   | Bleeding parts not grouped          | Separate sentences for each bleeding part       | Medium   |
 
 ---
 
@@ -103,9 +106,7 @@ In `injuryNarrativeFormatterService.js` lines 129-136:
 if (state === 'destroyed') {
   parts = [...(summary.destroyedParts || [])];
   if (summary.injuredParts) {
-    parts.push(
-      ...summary.injuredParts.filter((p) => p.state === 'destroyed')
-    );
+    parts.push(...summary.injuredParts.filter((p) => p.state === 'destroyed'));
   }
 }
 ```
@@ -146,9 +147,11 @@ if (state === 'destroyed') {
   const partIdSet = new Set();
   const combined = [...(summary.destroyedParts || [])];
   if (summary.injuredParts) {
-    combined.push(...summary.injuredParts.filter((p) => p.state === 'destroyed'));
+    combined.push(
+      ...summary.injuredParts.filter((p) => p.state === 'destroyed')
+    );
   }
-  parts = combined.filter(p => {
+  parts = combined.filter((p) => {
     if (partIdSet.has(p.partEntityId)) return false;
     partIdSet.add(p.partEntityId);
     return true;
@@ -169,10 +172,12 @@ if (state === 'destroyed') {
 #### Current Behavior
 
 A dismembered part (e.g., right ear) has two relevant attributes:
+
 1. `state: 'destroyed'` - Health state at 0%
 2. `isDismembered: true` - Physical status (severed from body)
 
 The current code processes both:
+
 - Health state loop outputs: "My right ear is completely numb."
 - Effects loop outputs: "My right ear is missing."
 
@@ -185,7 +190,7 @@ When processing health states, **exclude parts that are dismembered**:
 ```javascript
 // Before processing health states, create exclusion set
 const dismemberedPartIds = new Set(
-  (summary.dismemberedParts || []).map(p => p.partEntityId)
+  (summary.dismemberedParts || []).map((p) => p.partEntityId)
 );
 
 for (const state of states) {
@@ -195,12 +200,12 @@ for (const state of states) {
   if (state === 'destroyed') {
     // Only include destroyed parts that are NOT dismembered
     parts = (summary.destroyedParts || []).filter(
-      p => !dismemberedPartIds.has(p.partEntityId)
+      (p) => !dismemberedPartIds.has(p.partEntityId)
     );
   } else {
     // Filter out dismembered parts from other states
     parts = (summary.injuredParts || []).filter(
-      p => p.state === state && !dismemberedPartIds.has(p.partEntityId)
+      (p) => p.state === state && !dismemberedPartIds.has(p.partEntityId)
     );
   }
   // ...
@@ -209,12 +214,12 @@ for (const state of states) {
 
 #### Business Rule
 
-| Part State | Has `isDismembered` | Output |
-|------------|---------------------|--------|
-| destroyed | No | "My X is completely numb." |
-| destroyed | Yes | "My X is missing." (from effects section only) |
-| other | No | Health state description |
-| other | Yes | "My X is missing." (from effects section only) |
+| Part State | Has `isDismembered` | Output                                         |
+| ---------- | ------------------- | ---------------------------------------------- |
+| destroyed  | No                  | "My X is completely numb."                     |
+| destroyed  | Yes                 | "My X is missing." (from effects section only) |
+| other      | No                  | Health state description                       |
+| other      | Yes                 | "My X is missing." (from effects section only) |
 
 #### Impact
 
@@ -229,6 +234,7 @@ for (const state of states) {
 #### Current Behavior
 
 Output order in `formatFirstPerson()`:
+
 1. Health states by severity (destroyed → critical → injured → wounded → scratched)
 2. Effects (dismembered → bleeding → burning → poisoned → fractured)
 
@@ -303,6 +309,7 @@ for (const part of bleedingParts) {
 ```
 
 Each part produces a separate sentence:
+
 - "Blood flows steadily from my torso."
 - "Blood flows steadily from my upper head."
 
@@ -359,12 +366,12 @@ Group bleeding parts by severity, then format each group as a combined sentence:
 
 #### Output Examples
 
-| Input Parts | Severity | Output |
-|-------------|----------|--------|
-| torso | moderate | "Blood flows steadily from my torso." |
-| torso, upper head | moderate | "Blood flows steadily from my torso and my upper head." |
-| torso, upper head, right leg | moderate | "Blood flows steadily from my torso, my upper head, and my right leg." |
-| torso (moderate), arm (severe) | mixed | "Blood pours freely from my arm. Blood flows steadily from my torso." |
+| Input Parts                    | Severity | Output                                                                 |
+| ------------------------------ | -------- | ---------------------------------------------------------------------- |
+| torso                          | moderate | "Blood flows steadily from my torso."                                  |
+| torso, upper head              | moderate | "Blood flows steadily from my torso and my upper head."                |
+| torso, upper head, right leg   | moderate | "Blood flows steadily from my torso, my upper head, and my right leg." |
+| torso (moderate), arm (severe) | mixed    | "Blood pours freely from my arm. Blood flows steadily from my torso."  |
 
 #### Impact
 
@@ -526,10 +533,20 @@ describe('duplicate part deduplication', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
@@ -549,12 +566,32 @@ describe('duplicate part deduplication', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' },
-        { partEntityId: 'part-2', partType: 'arm', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
+        {
+          partEntityId: 'part-2',
+          partType: 'arm',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' },
-        { partEntityId: 'part-2', partType: 'arm', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
+        {
+          partEntityId: 'part-2',
+          partType: 'arm',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
@@ -585,17 +622,32 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
       poisonedParts: [],
       fracturedParts: [],
       dismemberedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', isDismembered: true }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          isDismembered: true,
+        },
       ],
       isDying: false,
       isDead: false,
@@ -610,10 +662,20 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'torso', orientation: null, state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'torso',
+          orientation: null,
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'torso', orientation: null, state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'torso',
+          orientation: null,
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
@@ -633,19 +695,39 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          bleedingSeverity: 'severe',
+        },
       ],
       burningParts: [],
       poisonedParts: [],
       fracturedParts: [],
       dismemberedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', isDismembered: true }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          isDismembered: true,
+        },
       ],
       isDying: false,
       isDead: false,
@@ -667,18 +749,38 @@ describe('dismemberment priority', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' },
-        { partEntityId: 'part-2', partType: 'torso', orientation: null, state: 'critical' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
+        {
+          partEntityId: 'part-2',
+          partType: 'torso',
+          orientation: null,
+          state: 'critical',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
       poisonedParts: [],
       fracturedParts: [],
       dismemberedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', isDismembered: true }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          isDismembered: true,
+        },
       ],
       isDying: false,
       isDead: false,
@@ -701,7 +803,7 @@ describe('dismemberment priority', () => {
 describe('bleeding grouping', () => {
   it('should format single bleeding part correctly', () => {
     const summary = createSummaryWithBleedingParts([
-      { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' }
+      { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -711,28 +813,32 @@ describe('bleeding grouping', () => {
   it('should format two bleeding parts with same severity using "and"', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' },
-      { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' }
+      { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
-    expect(result).toMatch(/Blood flows steadily from my torso and my upper head\./);
+    expect(result).toMatch(
+      /Blood flows steadily from my torso and my upper head\./
+    );
   });
 
   it('should format three+ bleeding parts with Oxford comma', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' },
       { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
-      { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' }
+      { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
-    expect(result).toMatch(/Blood flows steadily from my torso, my upper head, and my right leg\./);
+    expect(result).toMatch(
+      /Blood flows steadily from my torso, my upper head, and my right leg\./
+    );
   });
 
   it('should create separate sentences for different severities', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' },
-      { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' }
+      { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -744,7 +850,7 @@ describe('bleeding grouping', () => {
     const summary = createSummaryWithBleedingParts([
       { partType: 'leg', orientation: 'right', bleedingSeverity: 'minor' },
       { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
-      { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' }
+      { partType: 'torso', orientation: null, bleedingSeverity: 'moderate' },
     ]);
 
     const result = service.formatFirstPerson(summary);
@@ -763,14 +869,14 @@ function createSummaryWithBleedingParts(bleedingConfigs) {
     partEntityId: `part-${index}`,
     partType: config.partType,
     orientation: config.orientation,
-    bleedingSeverity: config.bleedingSeverity
+    bleedingSeverity: config.bleedingSeverity,
   }));
 
   const injuredParts = bleedingConfigs.map((config, index) => ({
     partEntityId: `part-${index}`,
     partType: config.partType,
     orientation: config.orientation,
-    state: 'wounded'
+    state: 'wounded',
   }));
 
   return {
@@ -804,12 +910,13 @@ describe('Physical Condition Narrative Improvements', () => {
         woundedParts: [{ partType: 'head', orientation: 'upper' }],
         bleedingParts: [
           { partType: 'torso', orientation: null, severity: 'moderate' },
-          { partType: 'head', orientation: 'upper', severity: 'moderate' }
-        ]
+          { partType: 'head', orientation: 'upper', severity: 'moderate' },
+        ],
       });
 
       const summary = injuryAggregationService.aggregateInjuries(entity.id);
-      const narrative = injuryNarrativeFormatterService.formatFirstPerson(summary);
+      const narrative =
+        injuryNarrativeFormatterService.formatFirstPerson(summary);
 
       // Verify output order
       const missingPos = narrative.indexOf('is missing');
@@ -831,7 +938,9 @@ describe('Physical Condition Narrative Improvements', () => {
       expect(narrative.match(/right ear/g)?.length || 0).toBe(1);
 
       // Verify bleeding grouped
-      expect(narrative).toMatch(/Blood flows steadily from my torso and my upper head\./);
+      expect(narrative).toMatch(
+        /Blood flows steadily from my torso and my upper head\./
+      );
     });
   });
 
@@ -857,25 +966,25 @@ describe('Physical Condition Narrative Improvements', () => {
 
 ### Functional Requirements
 
-| ID | Requirement | Verification Method |
-|----|-------------|---------------------|
-| AC-001 | No body part appears more than once in output | Unit test + manual verification |
-| AC-002 | Dismembered parts show only "is missing" text | Unit test |
-| AC-003 | Non-dismembered destroyed parts show "is completely numb" | Unit test |
-| AC-004 | Dismemberment descriptions appear before health states | Unit test + integration test |
-| AC-005 | Bleeding parts with same severity are grouped | Unit test |
-| AC-006 | Grouped bleeding uses Oxford comma for 3+ items | Unit test |
-| AC-007 | Different bleeding severities produce separate sentences | Unit test |
-| AC-008 | Dismembered parts excluded from bleeding descriptions | Unit test |
+| ID     | Requirement                                               | Verification Method             |
+| ------ | --------------------------------------------------------- | ------------------------------- |
+| AC-001 | No body part appears more than once in output             | Unit test + manual verification |
+| AC-002 | Dismembered parts show only "is missing" text             | Unit test                       |
+| AC-003 | Non-dismembered destroyed parts show "is completely numb" | Unit test                       |
+| AC-004 | Dismemberment descriptions appear before health states    | Unit test + integration test    |
+| AC-005 | Bleeding parts with same severity are grouped             | Unit test                       |
+| AC-006 | Grouped bleeding uses Oxford comma for 3+ items           | Unit test                       |
+| AC-007 | Different bleeding severities produce separate sentences  | Unit test                       |
+| AC-008 | Dismembered parts excluded from bleeding descriptions     | Unit test                       |
 
 ### Non-Functional Requirements
 
-| ID | Requirement | Verification Method |
-|----|-------------|---------------------|
-| NFR-001 | All existing tests continue to pass | CI pipeline |
+| ID      | Requirement                                      | Verification Method      |
+| ------- | ------------------------------------------------ | ------------------------ |
+| NFR-001 | All existing tests continue to pass              | CI pipeline              |
 | NFR-002 | No performance regression in formatFirstPerson() | Performance test (< 1ms) |
-| NFR-003 | UI panel displays updated narrative correctly | Manual verification |
-| NFR-004 | LLM prompts receive updated narrative format | Integration test |
+| NFR-003 | UI panel displays updated narrative correctly    | Manual verification      |
+| NFR-004 | LLM prompts receive updated narrative format     | Integration test         |
 
 ---
 
@@ -904,16 +1013,21 @@ describe('Physical Condition Narrative Improvements', () => {
 ## Appendix A: Test Data Scenarios
 
 ### Scenario 1: Basic Dismemberment
+
 ```json
 {
   "dismemberedParts": [{ "partType": "ear", "orientation": "right" }],
-  "injuredParts": [{ "partType": "ear", "orientation": "right", "state": "destroyed" }],
+  "injuredParts": [
+    { "partType": "ear", "orientation": "right", "state": "destroyed" }
+  ],
   "destroyedParts": [{ "partType": "ear", "orientation": "right" }]
 }
 ```
+
 **Expected:** "My right ear is missing."
 
 ### Scenario 2: Dismemberment + Other Injuries
+
 ```json
 {
   "dismemberedParts": [{ "partType": "arm", "orientation": "left" }],
@@ -924,9 +1038,11 @@ describe('Physical Condition Narrative Improvements', () => {
   "destroyedParts": [{ "partType": "arm", "orientation": "left" }]
 }
 ```
+
 **Expected:** "My left arm is missing. My torso screams with agony."
 
 ### Scenario 3: Multiple Bleeding Same Severity
+
 ```json
 {
   "injuredParts": [
@@ -935,23 +1051,33 @@ describe('Physical Condition Narrative Improvements', () => {
   ],
   "bleedingParts": [
     { "partType": "torso", "bleedingSeverity": "moderate" },
-    { "partType": "head", "orientation": "upper", "bleedingSeverity": "moderate" }
+    {
+      "partType": "head",
+      "orientation": "upper",
+      "bleedingSeverity": "moderate"
+    }
   ]
 }
 ```
+
 **Expected:** "My torso throbs painfully. My upper head throbs painfully. Blood flows steadily from my torso and my upper head."
 
 ### Scenario 4: Dismembered Part with Bleeding (Edge Case)
+
 ```json
 {
   "dismemberedParts": [{ "partType": "arm", "orientation": "left" }],
-  "bleedingParts": [{ "partType": "arm", "orientation": "left", "bleedingSeverity": "severe" }],
+  "bleedingParts": [
+    { "partType": "arm", "orientation": "left", "bleedingSeverity": "severe" }
+  ],
   "destroyedParts": [{ "partType": "arm", "orientation": "left" }]
 }
 ```
+
 **Expected:** "My left arm is missing." (NO bleeding description for dismembered part)
 
 ### Scenario 5: Complex Realistic Scenario
+
 ```json
 {
   "dismemberedParts": [{ "partType": "ear", "orientation": "right" }],
@@ -964,8 +1090,13 @@ describe('Physical Condition Narrative Improvements', () => {
   "destroyedParts": [{ "partType": "ear", "orientation": "right" }],
   "bleedingParts": [
     { "partType": "torso", "bleedingSeverity": "moderate" },
-    { "partType": "head", "orientation": "upper", "bleedingSeverity": "moderate" }
+    {
+      "partType": "head",
+      "orientation": "upper",
+      "bleedingSeverity": "moderate"
+    }
   ]
 }
 ```
+
 **Expected:** "My right ear is missing. My torso screams with agony. My upper head throbs painfully. My brain stings slightly. Blood flows steadily from my torso and my upper head."

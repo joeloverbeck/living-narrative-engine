@@ -10,7 +10,7 @@ import { join } from 'path';
 
 describe('Items Mod - Aiming Scopes', () => {
   const scopesDir = 'data/mods/items/scopes';
-  
+
   describe('Scope file existence', () => {
     it('should have aimable_items_in_inventory.scope file', () => {
       const scopePath = join(scopesDir, 'aimable_items_in_inventory.scope');
@@ -32,14 +32,14 @@ describe('Items Mod - Aiming Scopes', () => {
     it('aimable_items_in_inventory uses correct syntax', () => {
       const scopePath = join(scopesDir, 'aimable_items_in_inventory.scope');
       const content = readFileSync(scopePath, 'utf-8');
-      
+
       // Verify scope ID format
       expect(content).toContain('items:aimable_items_in_inventory :=');
-      
+
       // Verify uses correct component existence check (!! not has)
       expect(content).toContain('{"!!":');
       expect(content).not.toContain('{"has":');
-      
+
       // Verify uses entity.components for property access
       expect(content).toContain('entity.components.items:aimable');
     });
@@ -47,14 +47,14 @@ describe('Items Mod - Aiming Scopes', () => {
     it('aimed_items_in_inventory uses correct syntax', () => {
       const scopePath = join(scopesDir, 'aimed_items_in_inventory.scope');
       const content = readFileSync(scopePath, 'utf-8');
-      
+
       // Verify scope ID format
       expect(content).toContain('items:aimed_items_in_inventory :=');
-      
+
       // Verify uses correct component existence check (!! not has)
       expect(content).toContain('{"!!":');
       expect(content).not.toContain('{"has":');
-      
+
       // Verify uses entity.components for property access
       expect(content).toContain('entity.components.items:aimed_at');
     });
@@ -62,17 +62,17 @@ describe('Items Mod - Aiming Scopes', () => {
     it('aimable_targets uses correct syntax', () => {
       const scopePath = join(scopesDir, 'aimable_targets.scope');
       const content = readFileSync(scopePath, 'utf-8');
-      
+
       // Verify scope ID format
       expect(content).toContain('items:aimable_targets :=');
-      
+
       // Verify uses entities query
       expect(content).toContain('entities(core:actor)');
-      
+
       // Verify uses entity.id and actor.id for comparison
       expect(content).toContain('entity.id');
       expect(content).toContain('actor.id');
-      
+
       // Verify location comparison
       expect(content).toContain('entity.components.core:position.locationId');
       expect(content).toContain('actor.components.core:position.locationId');
@@ -85,7 +85,7 @@ describe('Items Mod - Aiming Scopes', () => {
         '../../../../data/mods/items/actions/aim_item.action.json',
         { assert: { type: 'json' } }
       );
-      
+
       expect(aimItemAction.default.targets.secondary.scope).toBe(
         'items:aimable_items_in_inventory'
       );
@@ -96,7 +96,7 @@ describe('Items Mod - Aiming Scopes', () => {
         '../../../../data/mods/items/actions/aim_item.action.json',
         { assert: { type: 'json' } }
       );
-      
+
       expect(aimItemAction.default.targets.primary.scope).toBe(
         'items:aimable_targets'
       );

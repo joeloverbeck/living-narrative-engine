@@ -24,7 +24,7 @@ describe('Bending over scopes integration', () => {
 
     // Initialize JSON Logic Evaluation Service
     const mockGameDataRepository = {
-      getConditionDefinition: () => null
+      getConditionDefinition: () => null,
     };
 
     jsonLogicEval = new JsonLogicEvaluationService({
@@ -38,13 +38,15 @@ describe('Bending over scopes integration', () => {
     // Register test scopes
     const mockScopes = {
       'positioning:available_surfaces': {
-        definition: 'positioning:available_surfaces := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]}]',
+        definition:
+          'positioning:available_surfaces := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]}]',
         modId: 'positioning',
       },
       'positioning:surface_im_bending_over': {
-        definition: 'positioning:surface_im_bending_over := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:bending_over.surface_id"}]}]',
+        definition:
+          'positioning:surface_im_bending_over := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.id"}, {"var": "actor.components.positioning:bending_over.surface_id"}]}]',
         modId: 'positioning',
-      }
+      },
     };
 
     // Initialize scope registry with parsed ASTs
@@ -54,7 +56,7 @@ describe('Bending over scopes integration', () => {
       scopesWithAsts[id] = {
         ...scope,
         expr,
-        ast: parseDslExpression(expr)
+        ast: parseDslExpression(expr),
       };
     }
 
@@ -74,23 +76,23 @@ describe('Bending over scopes integration', () => {
         {
           id: 'test:actor',
           components: {
-            [POSITION_COMPONENT_ID]: { locationId: 'kitchen:room' }
-          }
+            [POSITION_COMPONENT_ID]: { locationId: 'kitchen:room' },
+          },
         },
         {
           id: 'kitchen:counter',
           components: {
             'positioning:allows_bending_over': {},
-            [POSITION_COMPONENT_ID]: { locationId: 'kitchen:room' }
-          }
+            [POSITION_COMPONENT_ID]: { locationId: 'kitchen:room' },
+          },
         },
         {
           id: 'dining:table',
           components: {
             'positioning:allows_bending_over': {},
-            [POSITION_COMPONENT_ID]: { locationId: 'dining:room' }
-          }
-        }
+            [POSITION_COMPONENT_ID]: { locationId: 'dining:room' },
+          },
+        },
       ]);
 
       const actor = entityManager.getEntityInstance('test:actor');
@@ -117,9 +119,9 @@ describe('Bending over scopes integration', () => {
         {
           id: 'test:actor',
           components: {
-            [POSITION_COMPONENT_ID]: { locationId: 'empty:room' }
-          }
-        }
+            [POSITION_COMPONENT_ID]: { locationId: 'empty:room' },
+          },
+        },
       ]);
 
       const actor = entityManager.getEntityInstance('test:actor');
@@ -145,15 +147,15 @@ describe('Bending over scopes integration', () => {
         {
           id: 'test:actor',
           components: {
-            'positioning:bending_over': { surface_id: 'kitchen:counter' }
-          }
+            'positioning:bending_over': { surface_id: 'kitchen:counter' },
+          },
         },
         {
           id: 'kitchen:counter',
           components: {
-            'positioning:allows_bending_over': {}
-          }
-        }
+            'positioning:allows_bending_over': {},
+          },
+        },
       ]);
 
       const actor = entityManager.getEntityInstance('test:actor');
@@ -164,7 +166,9 @@ describe('Bending over scopes integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:surface_im_bending_over');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:surface_im_bending_over'
+      );
       const result = scopeEngine.resolve(scopeDef.ast, actor, runtimeCtx);
 
       expect(result).toBeInstanceOf(Set);
@@ -176,14 +180,14 @@ describe('Bending over scopes integration', () => {
       entityManager = new SimpleEntityManager([
         {
           id: 'test:actor',
-          components: {}
+          components: {},
         },
         {
           id: 'kitchen:counter',
           components: {
-            'positioning:allows_bending_over': {}
-          }
-        }
+            'positioning:allows_bending_over': {},
+          },
+        },
       ]);
 
       const actor = entityManager.getEntityInstance('test:actor');
@@ -194,7 +198,9 @@ describe('Bending over scopes integration', () => {
         jsonLogicEval,
       };
 
-      const scopeDef = scopeRegistry.getScope('positioning:surface_im_bending_over');
+      const scopeDef = scopeRegistry.getScope(
+        'positioning:surface_im_bending_over'
+      );
       const result = scopeEngine.resolve(scopeDef.ast, actor, runtimeCtx);
 
       expect(result).toBeInstanceOf(Set);

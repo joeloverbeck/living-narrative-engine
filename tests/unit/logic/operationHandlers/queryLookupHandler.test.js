@@ -3,7 +3,14 @@
  * @jest-environment node
  */
 
-import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import QueryLookupHandler from '../../../../src/logic/operationHandlers/queryLookupHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventIds.js';
 
@@ -302,7 +309,9 @@ describe('QueryLookupHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.myResult).toBeUndefined();
+      expect(
+        executionContext.evaluationContext.context.myResult
+      ).toBeUndefined();
     });
 
     test('stores undefined when missing_value not provided and lookup not found', () => {
@@ -315,7 +324,9 @@ describe('QueryLookupHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.myResult).toBeUndefined();
+      expect(
+        executionContext.evaluationContext.context.myResult
+      ).toBeUndefined();
     });
   });
 
@@ -343,7 +354,9 @@ describe('QueryLookupHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.myResult).toBe('fallback');
+      expect(executionContext.evaluationContext.context.myResult).toBe(
+        'fallback'
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('has no entries object')
       );
@@ -370,7 +383,9 @@ describe('QueryLookupHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.myResult).toBe('error_fallback');
+      expect(executionContext.evaluationContext.context.myResult).toBe(
+        'error_fallback'
+      );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
@@ -422,7 +437,8 @@ describe('QueryLookupHandler', () => {
 
       handler.execute(params, executionContext);
 
-      const storedValue = executionContext.evaluationContext.context.complexResult;
+      const storedValue =
+        executionContext.evaluationContext.context.complexResult;
       expect(storedValue).toHaveProperty('nested.prop', 'nested1');
       expect(storedValue).toHaveProperty('value', 'data1');
     });

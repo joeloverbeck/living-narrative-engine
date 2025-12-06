@@ -16,6 +16,7 @@ This document provides corrections to the items system design proposal based on 
 ### 1. Action Discovery Pattern (CRITICAL)
 
 **INCORRECT ASSUMPTION** (from original document):
+
 ```json
 {
   "type": "SHOW_ITEM_SELECTION_UI",
@@ -33,6 +34,7 @@ The action discovery system creates **specific actions for each item** automatic
 **How It Actually Works**:
 
 1. Action definition with multi-target pattern:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
@@ -73,6 +75,7 @@ The action discovery system creates **specific actions for each item** automatic
 ### 2. Component Architecture Pattern (CRITICAL)
 
 **INCORRECT ASSUMPTION** (from original document):
+
 ```json
 {
   "id": "items:item",
@@ -172,6 +175,7 @@ The codebase uses **marker components** for capabilities, not monolithic propert
 ```
 
 **Usage in Code**:
+
 ```javascript
 // Check if stackable
 if (entityManager.hasComponent(itemId, 'items:stackable')) {
@@ -186,6 +190,7 @@ if (entityManager.hasComponent(itemId, 'items:portable')) {
 ```
 
 **Benefits**:
+
 - Matches established architectural pattern
 - More flexible composition
 - Easier to query and filter
@@ -206,10 +211,10 @@ if (entityManager.hasComponent(itemId, 'items:portable')) {
     "secondary": {
       "scope": "clothing:topmost_clothing",
       "placeholder": "item",
-      "contextFrom": "primary"  // ← Key: resolves in context of primary
+      "contextFrom": "primary" // ← Key: resolves in context of primary
     }
   },
-  "generateCombinations": true,  // ← Generates separate actions
+  "generateCombinations": true, // ← Generates separate actions
   "template": "remove {person}'s {item}"
 }
 ```
@@ -229,6 +234,7 @@ if (entityManager.hasComponent(itemId, 'items:portable')) {
    - "remove Bob's shirt"
 
 **Applied to Items**:
+
 ```json
 {
   "id": "items:give_item",
@@ -240,7 +246,7 @@ if (entityManager.hasComponent(itemId, 'items:portable')) {
     "secondary": {
       "scope": "items:actor_inventory_items",
       "placeholder": "item",
-      "contextFrom": "actor"  // Resolve items in ACTOR's inventory
+      "contextFrom": "actor" // Resolve items in ACTOR's inventory
     }
   },
   "generateCombinations": true,
@@ -255,18 +261,21 @@ Result: Individual actions per item-recipient combination.
 **Discovered Feature**: Union operators
 
 The Scope DSL supports **two union operators** that produce identical results:
+
 - `+` (addition operator)
 - `|` (pipe operator)
 
 Both create unions of entity sets. Use whichever feels more natural.
 
 **Examples**:
+
 ```
 actor.followers + actor.partners  // Union of followers and partners
 actor.followers | actor.partners  // Identical result
 ```
 
 **Full Scope DSL Syntax**:
+
 - `.` - Field access (`actor.name`)
 - `[]` - Array iteration (`actor.items[]`)
 - `[{...}]` - JSON Logic filters (`actor.items[{"==": [{"var": "type"}, "weapon"]}]`)
@@ -319,6 +328,7 @@ actor.followers | actor.partners  // Identical result
 ```
 
 **Notes**:
+
 - Weight/volume limits are **optional** (not all games need encumbrance)
 - Capacity calculation done in handlers, not stored
 - Items referenced by ID (not copied)
@@ -411,6 +421,7 @@ actor.followers | actor.partners  // Identical result
 ```
 
 **Key Changes from Original**:
+
 - ❌ Removed `SHOW_ITEM_SELECTION_UI` (doesn't exist)
 - ✅ Item ID comes from `event.payload.secondaryTargetId` (from action discovery)
 - ✅ Uses `CALL_OPERATION_HANDLER` for custom logic
@@ -420,14 +431,14 @@ actor.followers | actor.partners  // Identical result
 
 **Decision Matrix**:
 
-| Scenario | Generic Operations | Custom Handler | Rationale |
-|----------|-------------------|----------------|-----------|
-| Simple component update | ✓ `ADD_COMPONENT`, `MODIFY_COMPONENT` | ✗ | Built-in ops sufficient |
-| Multi-entity updates | ✗ | ✓ | Batch optimization, transaction safety |
-| Complex validation | ✗ | ✓ | Business logic, custom checks |
-| Invariant maintenance | ✗ | ✓ | E.g., no cycles, bidirectional consistency |
-| Resource locking | ✗ | ✓ | Exclusive access needed |
-| Capacity calculations | ✗ | ✓ | Complex math, multiple checks |
+| Scenario                | Generic Operations                    | Custom Handler | Rationale                                  |
+| ----------------------- | ------------------------------------- | -------------- | ------------------------------------------ |
+| Simple component update | ✓ `ADD_COMPONENT`, `MODIFY_COMPONENT` | ✗              | Built-in ops sufficient                    |
+| Multi-entity updates    | ✗                                     | ✓              | Batch optimization, transaction safety     |
+| Complex validation      | ✗                                     | ✓              | Business logic, custom checks              |
+| Invariant maintenance   | ✗                                     | ✓              | E.g., no cycles, bidirectional consistency |
+| Resource locking        | ✗                                     | ✓              | Exclusive access needed                    |
+| Capacity calculations   | ✗                                     | ✓              | Complex math, multiple checks              |
 
 **Items System Handlers Needed**:
 
@@ -450,6 +461,7 @@ actor.followers | actor.partners  // Identical result
    - Updates cached totals
 
 **NOT Needed**:
+
 - ❌ `showItemSelectionUIHandler` - action discovery handles this
 - ❌ `addItemToInventoryHandler` - use `transferItemHandler`
 - ❌ `removeItemFromInventoryHandler` - use `transferItemHandler`
@@ -555,6 +567,7 @@ location.entities[
 ```
 
 **Changes**:
+
 - Separate marker components instead of properties in `items:item`
 - Physical properties in dedicated component
 - Includes `core:owned_by` for ownership tracking
@@ -589,6 +602,7 @@ location.entities[
 ### Integration with `core:owned_by`
 
 **Pattern**:
+
 ```javascript
 // In transferItemHandler.js
 async #updateItemOwnership(itemId, newOwnerId) {
@@ -610,7 +624,7 @@ Items should be aware of actor position for drop/pickup:
   "comment": "Can only drop if not movement locked",
   "parameters": {
     "condition": {
-      "!": {"var": "actor.positioning:movement_locked"}
+      "!": { "var": "actor.positioning:movement_locked" }
     },
     "then_actions": [
       {
@@ -642,6 +656,7 @@ Items should be aware of actor position for drop/pickup:
 ### Integration with Perception System
 
 **Corrected Pattern**:
+
 ```json
 {
   "type": "ADD_PERCEPTION_LOG_ENTRY",
@@ -721,7 +736,7 @@ class TransferItemHandler extends BaseOperationHandler {
     const toInv = await this.#getInventory(toEntityId);
 
     // 3. Validate source has item
-    const sourceItem = fromInv.items.find(i => i.itemId === itemId);
+    const sourceItem = fromInv.items.find((i) => i.itemId === itemId);
     if (!sourceItem || sourceItem.quantity < quantity) {
       throw new Error('Insufficient quantity in source inventory');
     }
@@ -748,22 +763,25 @@ class TransferItemHandler extends BaseOperationHandler {
     );
 
     // 7. Atomic update both inventories
-    await this.#entityManager.batchAddComponentsOptimized([
-      {
-        instanceId: fromEntityId,
-        componentTypeId: 'items:inventory',
-        componentData: { items: newFromItems }
-      },
-      {
-        instanceId: toEntityId,
-        componentTypeId: 'items:inventory',
-        componentData: { items: newToItems }
-      }
-    ], true);
+    await this.#entityManager.batchAddComponentsOptimized(
+      [
+        {
+          instanceId: fromEntityId,
+          componentTypeId: 'items:inventory',
+          componentData: { items: newFromItems },
+        },
+        {
+          instanceId: toEntityId,
+          componentTypeId: 'items:inventory',
+          componentData: { items: newToItems },
+        },
+      ],
+      true
+    );
 
     // 8. Update ownership
     await this.#entityManager.addComponent(itemId, 'core:owned_by', {
-      ownerId: toEntityId
+      ownerId: toEntityId,
     });
 
     // 9. Dispatch event
@@ -771,7 +789,7 @@ class TransferItemHandler extends BaseOperationHandler {
       fromEntityId,
       toEntityId,
       itemId,
-      quantity
+      quantity,
     });
 
     return { success: true };
@@ -780,6 +798,7 @@ class TransferItemHandler extends BaseOperationHandler {
 ```
 
 **Key Patterns**:
+
 - Batch atomic updates for consistency
 - Event dispatch for observers
 - Stackable logic in handler
@@ -826,29 +845,35 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
     const hasWeightLimit = inventory.maxWeight !== undefined;
     const hasVolumeLimit = inventory.maxVolume !== undefined;
 
-    if (hasWeightLimit && currentWeight + requiredWeight > inventory.maxWeight) {
+    if (
+      hasWeightLimit &&
+      currentWeight + requiredWeight > inventory.maxWeight
+    ) {
       return {
         hasCapacity: false,
         reason: 'weight_exceeded',
         current: currentWeight,
         max: inventory.maxWeight,
-        required: requiredWeight
+        required: requiredWeight,
       };
     }
 
-    if (hasVolumeLimit && currentVolume + requiredVolume > inventory.maxVolume) {
+    if (
+      hasVolumeLimit &&
+      currentVolume + requiredVolume > inventory.maxVolume
+    ) {
       return {
         hasCapacity: false,
         reason: 'volume_exceeded',
         current: currentVolume,
         max: inventory.maxVolume,
-        required: requiredVolume
+        required: requiredVolume,
       };
     }
 
     return {
       hasCapacity: true,
-      reason: 'sufficient_capacity'
+      reason: 'sufficient_capacity',
     };
   }
 }
@@ -857,6 +882,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 ## Implementation Roadmap (Corrected)
 
 ### Phase 1: Core Infrastructure
+
 **Goal**: Support basic "give item" use case with corrected patterns
 
 1. Create mod structure
@@ -870,11 +896,13 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 5. Create test item entities
 
 **Success Criteria**:
+
 - Player can give letter to NPC
 - Actions appear as "give letter to Frank", "give gun to Frank", etc.
 - No UI selection dialogs (handled by action discovery)
 
 ### Phase 2: Inventory Management
+
 **Goal**: Full inventory with capacity (optional feature)
 
 1. Implement `validateInventoryCapacityHandler`
@@ -884,6 +912,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 5. Inventory UI display
 
 ### Phase 3: Container System
+
 **Goal**: Chests, storage furniture
 
 1. Implement `items:container` component
@@ -892,6 +921,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 4. Container UI
 
 ### Phase 4: Advanced Features
+
 **Goal**: Polish and gameplay depth
 
 1. `items:consumable` component
@@ -943,6 +973,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 ### 🎯 Architectural Alignment
 
 This corrected design:
+
 - ✅ Follows ECS principles (composition over properties)
 - ✅ Uses established action discovery patterns
 - ✅ Matches positioning system architecture
@@ -963,6 +994,7 @@ With these corrections, the items system will integrate seamlessly with the engi
 ---
 
 **Next Steps**:
+
 1. Review this corrected document with stakeholders
 2. Update original design document or replace with this version
 3. Begin Phase 1 implementation with corrected patterns

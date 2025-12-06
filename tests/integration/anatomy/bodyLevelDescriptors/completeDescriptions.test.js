@@ -118,7 +118,7 @@ describe('Complete Anatomy Descriptions Integration', () => {
               body: {
                 root: 'torso',
                 descriptors: descriptors,
-              }
+              },
             };
           }
           return null;

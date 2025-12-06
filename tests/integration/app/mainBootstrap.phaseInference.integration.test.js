@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const mockStageModules = {
   ensureCriticalDOMElementsStage: jest.fn(),
@@ -68,12 +75,22 @@ describe('main.js bootstrap phase inference coverage', () => {
     });
 
     // Stages after DI should never run, but keep predictable resolves
-    mockStageModules.resolveLoggerStage.mockResolvedValue({ success: true, payload: { logger: null } });
-    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({ success: true });
-    mockStageModules.initializeGameEngineStage.mockResolvedValue({ success: true, payload: {} });
+    mockStageModules.resolveLoggerStage.mockResolvedValue({
+      success: true,
+      payload: { logger: null },
+    });
+    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
+    mockStageModules.initializeGameEngineStage.mockResolvedValue({
+      success: true,
+      payload: {},
+    });
 
     const fetchedConfig = { startWorld: 'azure-bay' };
-    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => fetchedConfig });
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => fetchedConfig });
 
     let mainModule;
     await jest.isolateModulesAsync(async () => {
@@ -86,16 +103,18 @@ describe('main.js bootstrap phase inference coverage', () => {
     expect(mockStageModules.setupDIContainerStage).toHaveBeenCalledTimes(1);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
-      diError,
+      diError
     );
 
     expect(
       consoleErrorSpy.mock.calls.some(([message]) =>
-        message.includes('Bootstrap Orchestration - DI Container Setup'),
-      ),
+        message.includes('Bootstrap Orchestration - DI Container Setup')
+      )
     ).toBe(true);
 
-    expect(domUiElements.errorDiv?.textContent).toContain('Application failed to start due to a critical error');
+    expect(domUiElements.errorDiv?.textContent).toContain(
+      'Application failed to start due to a critical error'
+    );
     expect(domUiElements.titleElement?.textContent).toContain('Fatal Error');
     expect(domUiElements.inputElement?.disabled).toBe(true);
   });
@@ -110,9 +129,11 @@ describe('main.js bootstrap phase inference coverage', () => {
 
     const stageFailure = new Error('UI bootstrap exploded');
 
-    mockStageModules.ensureCriticalDOMElementsStage.mockImplementation(async () => {
-      throw stageFailure;
-    });
+    mockStageModules.ensureCriticalDOMElementsStage.mockImplementation(
+      async () => {
+        throw stageFailure;
+      }
+    );
 
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
@@ -130,17 +151,19 @@ describe('main.js bootstrap phase inference coverage', () => {
     expect(global.fetch).toHaveBeenCalledWith('./data/game.json');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to load startWorld from game.json:',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     expect(
       consoleErrorSpy.mock.calls.some(([message]) =>
-        message.includes('Bootstrap Orchestration - UI Element Validation'),
-      ),
+        message.includes('Bootstrap Orchestration - UI Element Validation')
+      )
     ).toBe(true);
 
     const errorOutput = document.getElementById('error-output');
-    expect(errorOutput?.textContent).toContain('Application failed to start due to a critical error');
+    expect(errorOutput?.textContent).toContain(
+      'Application failed to start due to a critical error'
+    );
 
     const input = document.getElementById('speech-input');
     expect(input).toBeInstanceOf(HTMLInputElement);
@@ -187,7 +210,9 @@ describe('main.js bootstrap phase inference coverage', () => {
       payload: { logger },
     });
 
-    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({ success: true });
+    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
 
     const engineError = new Error('engine boot failed');
     mockStageModules.initializeGameEngineStage.mockResolvedValue({
@@ -196,7 +221,9 @@ describe('main.js bootstrap phase inference coverage', () => {
     });
 
     const fetchedConfig = { startWorld: 'evergreen' };
-    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => fetchedConfig });
+    global.fetch = jest
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => fetchedConfig });
 
     let mainModule;
     await jest.isolateModulesAsync(async () => {
@@ -207,17 +234,21 @@ describe('main.js bootstrap phase inference coverage', () => {
     await bootstrapApp();
 
     await expect(beginGame()).rejects.toThrow(
-      'Critical: GameEngine not initialized before attempting Start Game stage.',
+      'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
     expect(
       logger.error.mock.calls.some(([message]) =>
-        message.includes('main.js: Critical: GameEngine not initialized before attempting Start Game stage.'),
-      ),
+        message.includes(
+          'main.js: Critical: GameEngine not initialized before attempting Start Game stage.'
+        )
+      )
     ).toBe(true);
 
     const errorOutput = document.getElementById('error-output');
-    expect(errorOutput?.textContent).toContain('Critical: GameEngine not initialized');
+    expect(errorOutput?.textContent).toContain(
+      'Critical: GameEngine not initialized'
+    );
 
     const title = document.querySelector('h1');
     expect(title?.textContent).toContain('Fatal Error');

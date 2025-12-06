@@ -88,11 +88,7 @@ function sleep(ms) {
  * @param options
  */
 async function measureStableHeapUsage(options = {}) {
-  const {
-    samples = 5,
-    delayMs = 50,
-    gcBefore = false,
-  } = options;
+  const { samples = 5, delayMs = 50, gcBefore = false } = options;
 
   if (gcBefore) {
     forceGC();
@@ -232,7 +228,10 @@ describe('Multi-Action Planning Memory Tests', () => {
       await setup.controller.decideTurn(warmupActor, setup.world);
 
       // Sample after GC to obtain a stable baseline
-      const initialSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const initialSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const initialMemory = initialSample.median;
       console.log(
         `Initial memory: ${(initialMemory / 1024 / 1024).toFixed(2)} MB (range ${(initialSample.min / 1024 / 1024).toFixed(2)}-${(initialSample.max / 1024 / 1024).toFixed(2)} MB)`
@@ -266,7 +265,10 @@ describe('Multi-Action Planning Memory Tests', () => {
         }
       }
 
-      const finalSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const finalSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const finalMemory = finalSample.median;
       console.log(
         `Final memory: ${(finalMemory / 1024 / 1024).toFixed(2)} MB (range ${(finalSample.min / 1024 / 1024).toFixed(2)}-${(finalSample.max / 1024 / 1024).toFixed(2)} MB)`
@@ -284,7 +286,10 @@ describe('Multi-Action Planning Memory Tests', () => {
     it('should clean up actor-specific data after plan invalidation', async () => {
       // Verify that invalidated plans release memory
 
-      const initialSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const initialSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const initialMemory = initialSample.median;
 
       // Create and invalidate plans repeatedly
@@ -296,7 +301,9 @@ describe('Multi-Action Planning Memory Tests', () => {
           id: `test:hunger_${i}`,
           priority: 10,
           relevance: { '==': [true, true] }, // Always relevant
-          goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
+          goalState: {
+            '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0],
+          },
         });
 
         // Clear previous goal to avoid accumulation
@@ -313,7 +320,10 @@ describe('Multi-Action Planning Memory Tests', () => {
         actor.components['core:needs'].hunger = 100;
 
         // Trigger replanning (which should clean up old plan)
-        const updatedWorld = { state: buildDualFormatState(actor), entities: {} };
+        const updatedWorld = {
+          state: buildDualFormatState(actor),
+          entities: {},
+        };
         // await setup.controller.decideTurn(actor, updatedWorld);
 
         if (i % 10 === 0) {
@@ -321,7 +331,10 @@ describe('Multi-Action Planning Memory Tests', () => {
         }
       }
 
-      const finalSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const finalSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const finalMemory = finalSample.median;
       const memoryDelta = finalMemory - initialMemory;
 
@@ -336,7 +349,10 @@ describe('Multi-Action Planning Memory Tests', () => {
     it('should handle large state objects without leaking', async () => {
       // Test with large component data to ensure proper cleanup
 
-      const initialSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const initialSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const initialMemory = initialSample.median;
 
       // Generate plans with large state objects
@@ -371,7 +387,10 @@ describe('Multi-Action Planning Memory Tests', () => {
         }
       }
 
-      const finalSample = await measureStableHeapUsage({ gcBefore: true, delayMs: 75 });
+      const finalSample = await measureStableHeapUsage({
+        gcBefore: true,
+        delayMs: 75,
+      });
       const finalMemory = finalSample.median;
       const memoryDelta = finalMemory - initialMemory;
 

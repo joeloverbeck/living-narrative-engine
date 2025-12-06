@@ -19,46 +19,63 @@ describe('Movement Components - Fixed validation', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     const ajvInstance = new Ajv({
       allErrors: true,
       verbose: true,
-      strict: false
+      strict: false,
     });
     addFormats(ajvInstance);
 
     validator = new AjvSchemaValidator({
       logger: mockLogger,
       ajvInstance: ajvInstance,
-      preloadSchemas: []
+      preloadSchemas: [],
     });
 
     // Load the actual component schema and common schema (for $ref resolution)
-    const componentSchemaPath = join(process.cwd(), 'data', 'schemas', 'component.schema.json');
+    const componentSchemaPath = join(
+      process.cwd(),
+      'data',
+      'schemas',
+      'component.schema.json'
+    );
     componentSchema = JSON.parse(readFileSync(componentSchemaPath, 'utf8'));
 
-    const commonSchemaPath = join(process.cwd(), 'data', 'schemas', 'common.schema.json');
+    const commonSchemaPath = join(
+      process.cwd(),
+      'data',
+      'schemas',
+      'common.schema.json'
+    );
     const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
 
     // Register schemas using the correct method (addSchema is called internally)
     validator.preloadSchemas([
       {
         id: commonSchema.$id,
-        schema: commonSchema
+        schema: commonSchema,
       },
       {
         id: componentSchema.$id,
-        schema: componentSchema
-      }
+        schema: componentSchema,
+      },
     ]);
   });
 
   describe('Fixed movement components', () => {
     it('should validate exits.component.json without metadata field', () => {
       // Load the actual fixed file
-      const componentPath = join(process.cwd(), 'data', 'mods', 'movement', 'components', 'exits.component.json');
+      const componentPath = join(
+        process.cwd(),
+        'data',
+        'mods',
+        'movement',
+        'components',
+        'exits.component.json'
+      );
       const componentData = JSON.parse(readFileSync(componentPath, 'utf8'));
 
       // Validate against schema
@@ -66,7 +83,10 @@ describe('Movement Components - Fixed validation', () => {
 
       // Log errors if validation fails (for debugging)
       if (!result.isValid) {
-        console.log('Validation errors for exits.component.json:', result.errors);
+        console.log(
+          'Validation errors for exits.component.json:',
+          result.errors
+        );
       }
 
       expect(result.isValid).toBe(true);
@@ -77,7 +97,14 @@ describe('Movement Components - Fixed validation', () => {
 
     it('should validate movement.component.json without metadata field', () => {
       // Load the actual fixed file
-      const componentPath = join(process.cwd(), 'data', 'mods', 'movement', 'components', 'movement.component.json');
+      const componentPath = join(
+        process.cwd(),
+        'data',
+        'mods',
+        'movement',
+        'components',
+        'movement.component.json'
+      );
       const componentData = JSON.parse(readFileSync(componentPath, 'utf8'));
 
       // Validate against schema
@@ -93,7 +120,14 @@ describe('Movement Components - Fixed validation', () => {
   describe('Fixed goals component', () => {
     it('should have correct namespace core:goals', () => {
       // Load the actual fixed file
-      const componentPath = join(process.cwd(), 'data', 'mods', 'core', 'components', 'goals.component.json');
+      const componentPath = join(
+        process.cwd(),
+        'data',
+        'mods',
+        'core',
+        'components',
+        'goals.component.json'
+      );
       const componentData = JSON.parse(readFileSync(componentPath, 'utf8'));
 
       // Validate correct namespace
@@ -109,14 +143,24 @@ describe('Movement Components - Fixed validation', () => {
   describe('Entity references to goals', () => {
     it('should reference core:goals not movement:goals in isekai sidekick', () => {
       // Load the fixed entity file
-      const entityPath = join(process.cwd(), 'data', 'mods', 'isekai', 'entities', 'definitions', 'sidekick.character.json');
+      const entityPath = join(
+        process.cwd(),
+        'data',
+        'mods',
+        'isekai',
+        'entities',
+        'definitions',
+        'sidekick.character.json'
+      );
       const entityData = JSON.parse(readFileSync(entityPath, 'utf8'));
 
       // Check that it uses core:goals, not movement:goals
       expect(entityData.components['core:goals']).toBeDefined();
       expect(entityData.components['movement:goals']).toBeUndefined();
       expect(entityData.components['core:goals'].goals).toBeDefined();
-      expect(Array.isArray(entityData.components['core:goals'].goals)).toBe(true);
+      expect(Array.isArray(entityData.components['core:goals'].goals)).toBe(
+        true
+      );
     });
   });
 });

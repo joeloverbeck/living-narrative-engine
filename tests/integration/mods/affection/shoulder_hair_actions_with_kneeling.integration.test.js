@@ -22,9 +22,7 @@ import { createMockTargetContextBuilder } from '../../../common/mocks/mockTarget
 import { createMultiTargetResolutionStage } from '../../../common/actions/multiTargetStageTestUtilities.js';
 import { ScopeContextBuilder } from '../../../../src/actions/pipeline/services/implementations/ScopeContextBuilder.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
-import {
-  createTargetResolutionServiceWithMocks,
-} from '../../../common/mocks/mockUnifiedScopeResolver.js';
+import { createTargetResolutionServiceWithMocks } from '../../../common/mocks/mockUnifiedScopeResolver.js';
 import ScopeRegistry from '../../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../../src/scopeDsl/scopeDefinitionParser.js';
@@ -158,9 +156,21 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     const dataRegistry = new InMemoryDataRegistry();
 
     // Store the action definitions in the data registry
-    dataRegistry.store('actions', placeHandsOnShouldersAction.id, placeHandsOnShouldersAction);
-    dataRegistry.store('actions', ruffleHairPlayfullyAction.id, ruffleHairPlayfullyAction);
-    dataRegistry.store('actions', massageShouldersAction.id, massageShouldersAction);
+    dataRegistry.store(
+      'actions',
+      placeHandsOnShouldersAction.id,
+      placeHandsOnShouldersAction
+    );
+    dataRegistry.store(
+      'actions',
+      ruffleHairPlayfullyAction.id,
+      ruffleHairPlayfullyAction
+    );
+    dataRegistry.store(
+      'actions',
+      massageShouldersAction.id,
+      massageShouldersAction
+    );
 
     // Load necessary condition files
     const conditionPaths = [
@@ -251,7 +261,8 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
 
     const actionCommandFormatter = new ActionCommandFormatter({ logger });
 
-    const mockTargetContextBuilder = createMockTargetContextBuilder(entityManager);
+    const mockTargetContextBuilder =
+      createMockTargetContextBuilder(entityManager);
 
     const scopeContextBuilder = new ScopeContextBuilder({
       targetContextBuilder: mockTargetContextBuilder,
@@ -265,18 +276,22 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       validateEntityComponents: jest.fn().mockReturnValue({ valid: true }),
     };
 
-    const targetRequiredComponentsValidator = createMockTargetRequiredComponentsValidator();
+    const targetRequiredComponentsValidator =
+      createMockTargetRequiredComponentsValidator();
 
     const multiTargetStage = createMultiTargetResolutionStage({
       logger,
       entityManager,
-      targetResolver: targetResolutionService,  // Fixed: use correct parameter name
+      targetResolver: targetResolutionService, // Fixed: use correct parameter name
       scopeContextBuilder,
     });
 
     // Create getEntityDisplayNameFn
     const getEntityDisplayNameFn = (entity) => {
-      const nameComponent = entityManager.getComponent(entity.id || entity, 'core:name');
+      const nameComponent = entityManager.getComponent(
+        entity.id || entity,
+        'core:name'
+      );
       return nameComponent?.name || entity.id || entity;
     };
 
@@ -331,7 +346,9 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
    */
   function createActor(entityId, actorName) {
     const actor = entityManager.createEntity(entityId);
-    entityManager.addComponent(entityId, NAME_COMPONENT_ID, { name: actorName });
+    entityManager.addComponent(entityId, NAME_COMPONENT_ID, {
+      name: actorName,
+    });
     entityManager.addComponent(entityId, POSITION_COMPONENT_ID, {
       location: location,
     });
@@ -385,8 +402,14 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     const id2 = actor2Id.id || actor2Id;
 
     // Get existing closeness components or create new ones
-    const actor1Closeness = entityManager.getComponent(id1, 'positioning:closeness');
-    const actor2Closeness = entityManager.getComponent(id2, 'positioning:closeness');
+    const actor1Closeness = entityManager.getComponent(
+      id1,
+      'positioning:closeness'
+    );
+    const actor2Closeness = entityManager.getComponent(
+      id2,
+      'positioning:closeness'
+    );
 
     // Merge partners arrays, avoiding duplicates
     const actor1Partners = actor1Closeness?.partners || [];
@@ -407,9 +430,13 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
    * @param {string|object} targetId - The target actor ID or entity
    */
   function makeActorKneelBefore(kneelerId, targetId) {
-    entityManager.addComponent(kneelerId.id || kneelerId, 'positioning:kneeling_before', {
-      entityId: targetId.id || targetId,
-    });
+    entityManager.addComponent(
+      kneelerId.id || kneelerId,
+      'positioning:kneeling_before',
+      {
+        entityId: targetId.id || targetId,
+      }
+    );
   }
 
   /**
@@ -440,10 +467,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Place hands on shoulders SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(true);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -456,10 +490,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Place hands on shoulders should NOT be available
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should BE available when neither is kneeling', async () => {
@@ -469,10 +510,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       establishCloseness(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Place hands on shoulders SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2.id || actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2.id || actor2
+        )
+      ).toBe(true);
     });
   });
 
@@ -487,10 +535,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Ruffle hair SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(true);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -503,10 +558,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Ruffle hair should NOT be available
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(false);
     });
 
     it('should BE available when neither is kneeling', async () => {
@@ -516,10 +578,17 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       establishCloseness(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Ruffle hair SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(true);
     });
   });
 
@@ -534,10 +603,13 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Massage shoulders SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(true);
     });
 
     it('should NOT be available when actor is kneeling before target', async () => {
@@ -550,10 +622,13 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Massage shoulders should NOT be available
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(false);
     });
 
     it('should BE available when neither is kneeling', async () => {
@@ -563,10 +638,13 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       establishCloseness(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Massage shoulders SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(true);
     });
   });
 
@@ -581,12 +659,27 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: All three actions SHOULD be available
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(true);
     });
 
     it('should have NO shoulder/hair actions available when actor kneels before target', async () => {
@@ -599,12 +692,27 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor1, actor2);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: All three actions should NOT be available
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(false);
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(false);
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(false);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(false);
     });
   });
 
@@ -620,18 +728,41 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
 
       // Act 1: Verify actions are unavailable while kneeling
       let actor1Actions = await actionDiscoveryService.getValidActions(actor1);
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(false);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(false);
 
       // Act 2: Actor1 stands up
-      entityManager.removeComponent(actor1.id || actor1, 'positioning:kneeling_before');
+      entityManager.removeComponent(
+        actor1.id || actor1,
+        'positioning:kneeling_before'
+      );
 
       // Act 3: Get actions again
       actor1Actions = await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Actions should be available again
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(actor1Actions, 'affection:massage_shoulders', actor2)
+      ).toBe(true);
     });
 
     it('should handle multiple actors with mixed kneeling states correctly', async () => {
@@ -648,13 +779,38 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
       makeActorKneelBefore(actor2, actor1);
 
       // Act: Get available actions for Actor1
-      const actor1Actions = await actionDiscoveryService.getValidActions(actor1);
+      const actor1Actions =
+        await actionDiscoveryService.getValidActions(actor1);
 
       // Assert: Actor1 can use shoulder/hair actions on Actor2 (kneeling) and Actor3 (standing)
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:place_hands_on_shoulders', actor3)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor2)).toBe(true);
-      expect(hasActionForTarget(actor1Actions, 'affection:ruffle_hair_playfully', actor3)).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:place_hands_on_shoulders',
+          actor3
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor2
+        )
+      ).toBe(true);
+      expect(
+        hasActionForTarget(
+          actor1Actions,
+          'affection:ruffle_hair_playfully',
+          actor3
+        )
+      ).toBe(true);
     });
   });
 });

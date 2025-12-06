@@ -198,7 +198,9 @@ export class RecipeConstraintEvaluator {
 
           // Log explanation if provided
           if (validation.explanation) {
-            this.#logger.debug(`Constraint explanation: ${validation.explanation}`);
+            this.#logger.debug(
+              `Constraint explanation: ${validation.explanation}`
+            );
           }
         }
       }
@@ -237,7 +239,9 @@ export class RecipeConstraintEvaluator {
 
           // Log explanation if provided
           if (validation.explanation) {
-            this.#logger.debug(`Constraint explanation: ${validation.explanation}`);
+            this.#logger.debug(
+              `Constraint explanation: ${validation.explanation}`
+            );
           }
         }
       }

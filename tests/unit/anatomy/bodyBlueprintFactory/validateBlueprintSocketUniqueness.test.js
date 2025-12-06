@@ -15,8 +15,16 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           body: { entityDefinition: 'torso' },
-          left_arm: { parent: 'body', socket: 'shoulder', entityDefinition: 'arm' },
-          right_arm: { parent: 'body', socket: 'shoulder', entityDefinition: 'arm' },
+          left_arm: {
+            parent: 'body',
+            socket: 'shoulder',
+            entityDefinition: 'arm',
+          },
+          right_arm: {
+            parent: 'body',
+            socket: 'shoulder',
+            entityDefinition: 'arm',
+          },
         },
       };
 
@@ -29,8 +37,16 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           body: { entityDefinition: 'torso' },
-          left_arm: { parent: 'body', socket: 'shoulder', entityDefinition: 'arm' },
-          right_arm: { parent: 'body', socket: 'shoulder', entityDefinition: 'arm' },
+          left_arm: {
+            parent: 'body',
+            socket: 'shoulder',
+            entityDefinition: 'arm',
+          },
+          right_arm: {
+            parent: 'body',
+            socket: 'shoulder',
+            entityDefinition: 'arm',
+          },
         },
       };
 
@@ -43,8 +59,16 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           torso: { entityDefinition: 'body' },
-          child1: { parent: 'torso', socket: 'attachment_point', entityDefinition: 'part' },
-          child2: { parent: 'torso', socket: 'attachment_point', entityDefinition: 'part' },
+          child1: {
+            parent: 'torso',
+            socket: 'attachment_point',
+            entityDefinition: 'part',
+          },
+          child2: {
+            parent: 'torso',
+            socket: 'attachment_point',
+            entityDefinition: 'part',
+          },
         },
       };
 
@@ -57,8 +81,16 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           parent_slot: { entityDefinition: 'body' },
-          first_child: { parent: 'parent_slot', socket: 'socket_a', entityDefinition: 'part' },
-          second_child: { parent: 'parent_slot', socket: 'socket_a', entityDefinition: 'part' },
+          first_child: {
+            parent: 'parent_slot',
+            socket: 'socket_a',
+            entityDefinition: 'part',
+          },
+          second_child: {
+            parent: 'parent_slot',
+            socket: 'socket_a',
+            entityDefinition: 'part',
+          },
         },
       };
 
@@ -80,10 +112,26 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           body: { entityDefinition: 'torso' },
-          left_leg: { parent: 'body', socket: 'hip_left', entityDefinition: 'leg' },
-          right_leg: { parent: 'body', socket: 'hip_right', entityDefinition: 'leg' },
-          left_foot: { parent: 'left_leg', socket: 'ankle', entityDefinition: 'foot' },
-          right_foot: { parent: 'right_leg', socket: 'ankle', entityDefinition: 'foot' },
+          left_leg: {
+            parent: 'body',
+            socket: 'hip_left',
+            entityDefinition: 'leg',
+          },
+          right_leg: {
+            parent: 'body',
+            socket: 'hip_right',
+            entityDefinition: 'leg',
+          },
+          left_foot: {
+            parent: 'left_leg',
+            socket: 'ankle',
+            entityDefinition: 'foot',
+          },
+          right_foot: {
+            parent: 'right_leg',
+            socket: 'ankle',
+            entityDefinition: 'foot',
+          },
         },
       };
 
@@ -96,8 +144,16 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           body: { entityDefinition: 'torso' },
-          left_arm: { parent: 'body', socket: 'left_shoulder', entityDefinition: 'arm' },
-          right_arm: { parent: 'body', socket: 'right_shoulder', entityDefinition: 'arm' },
+          left_arm: {
+            parent: 'body',
+            socket: 'left_shoulder',
+            entityDefinition: 'arm',
+          },
+          right_arm: {
+            parent: 'body',
+            socket: 'right_shoulder',
+            entityDefinition: 'arm',
+          },
           head: { parent: 'body', socket: 'neck', entityDefinition: 'head' },
         },
       };
@@ -113,7 +169,11 @@ describe('validateBlueprintSocketUniqueness', () => {
       const blueprint = {
         slots: {
           root: { entityDefinition: 'body' },
-          child1: { parent: 'root', socket: 'socket_a', entityDefinition: 'part' },
+          child1: {
+            parent: 'root',
+            socket: 'socket_a',
+            entityDefinition: 'part',
+          },
         },
       };
 

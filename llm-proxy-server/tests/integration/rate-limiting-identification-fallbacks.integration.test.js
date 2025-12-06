@@ -40,8 +40,12 @@ describe('Rate limiting identification fallbacks integration', () => {
     jest.resetModules();
     originalNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
-    ({ createApiRateLimiter } = await import('../../src/middleware/rateLimiting.js'));
-    ({ RATE_LIMIT_GENERAL_MAX_REQUESTS } = await import('../../src/config/constants.js'));
+    ({ createApiRateLimiter } = await import(
+      '../../src/middleware/rateLimiting.js'
+    ));
+    ({ RATE_LIMIT_GENERAL_MAX_REQUESTS } = await import(
+      '../../src/config/constants.js'
+    ));
   });
 
   afterAll(() => {

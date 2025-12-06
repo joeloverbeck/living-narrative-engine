@@ -72,13 +72,20 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
             const actorBehind = partnerFacingAway.includes(actorId);
 
             // Check kneeling states
-            const actorKneelingBefore = actorEntity.components?.['positioning:kneeling_before']?.entityId === partnerId;
-            const partnerKneelingBefore = partner.components?.['positioning:kneeling_before']?.entityId === actorId;
+            const actorKneelingBefore =
+              actorEntity.components?.['positioning:kneeling_before']
+                ?.entityId === partnerId;
+            const partnerKneelingBefore =
+              partner.components?.['positioning:kneeling_before']?.entityId ===
+              actorId;
 
             // Available if:
             // - (facing each other OR actor behind) AND neither kneeling incompatibly
             // - OR partner is kneeling before actor
-            const normalPosition = (facingEachOther || actorBehind) && !actorKneelingBefore && !partnerKneelingBefore;
+            const normalPosition =
+              (facingEachOther || actorBehind) &&
+              !actorKneelingBefore &&
+              !partnerKneelingBefore;
             const partnerKneeling = partnerKneelingBefore;
 
             if (normalPosition || partnerKneeling) {
@@ -106,9 +113,7 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(placeHandsOnShouldersAction).toBeDefined();
       expect(placeHandsOnShouldersAction.id).toBe(ACTION_ID);
-      expect(placeHandsOnShouldersAction.name).toBe(
-        'Place Hands on Shoulders'
-      );
+      expect(placeHandsOnShouldersAction.name).toBe('Place Hands on Shoulders');
       expect(placeHandsOnShouldersAction.template).toBe(
         "place your hands on {target}'s shoulders"
       );
@@ -121,7 +126,9 @@ describe('affection:place_hands_on_shoulders action discovery', () => {
       expect(placeHandsOnShouldersAction.required_components.actor).toEqual([
         'positioning:closeness',
       ]);
-      expect(placeHandsOnShouldersAction.forbidden_components.actor).toEqual([]);
+      expect(placeHandsOnShouldersAction.forbidden_components.actor).toEqual(
+        []
+      );
       expect(placeHandsOnShouldersAction.visual).toEqual({
         backgroundColor: '#6a1b9a',
         textColor: '#f3e5f5',

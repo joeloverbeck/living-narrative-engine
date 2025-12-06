@@ -15,11 +15,12 @@ const runningCssTests = process.argv.some(
 );
 
 // Relax coverage gates automatically for single-file/targeted runs
-const isTargetedRun = process.argv.some((arg) =>
-  arg.includes('tests/unit/') ||
-  arg.includes('tests/contracts/') ||
-  arg.endsWith('.test.js') ||
-  arg.endsWith('.spec.js')
+const isTargetedRun = process.argv.some(
+  (arg) =>
+    arg.includes('tests/unit/') ||
+    arg.includes('tests/contracts/') ||
+    arg.endsWith('.test.js') ||
+    arg.endsWith('.spec.js')
 );
 
 module.exports = {

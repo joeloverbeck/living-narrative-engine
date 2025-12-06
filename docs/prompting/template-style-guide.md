@@ -5,6 +5,7 @@ This document describes the formatting standards used in the Living Narrative En
 ## Overview
 
 The prompt system uses three main components:
+
 - `XmlElementBuilder` - XML formatting utilities (stateless)
 - `PromptDataFormatter` - Data formatting with processing hints
 - `characterPromptTemplate.js` - String template with `{placeholder}` substitution
@@ -12,49 +13,60 @@ The prompt system uses three main components:
 ## Emphasis System
 
 ### Section Headers
+
 Use markdown headers for top-level sections:
+
 ```markdown
 ## SECTION NAME
 ```
 
 ### Rules and Key Concepts
+
 Use bold for rules and important concepts:
+
 ```markdown
 **Rule**: Description of the rule
 **Important**: Critical information
 ```
 
 ### Implementation
+
 - Defined in: `data/prompts/corePromptText.json`
 - Processed by: `PromptTemplateService.processTemplate()`
 
 ## Example Formatting
 
 ### Valid/Invalid Examples
+
 Always use code blocks with consistent markers:
+
 ```markdown
 **Valid Examples:**
-  ✅ *crosses arms*
-  ✅ *narrows eyes*
+✅ _crosses arms_
+✅ _narrows eyes_
 
 **Invalid Examples:**
-  ❌ *feels anxious* (internal state)
-  ❌ *thinks deeply* (cognitive process)
+❌ _feels anxious_ (internal state)
+❌ _thinks deeply_ (cognitive process)
 ```
 
 ### Marker System
-| Marker | Usage |
-|--------|-------|
-| ✅ | Valid examples, correct patterns |
-| ❌ | Invalid examples, anti-patterns |
+
+| Marker | Usage                            |
+| ------ | -------------------------------- |
+| ✅     | Valid examples, correct patterns |
+| ❌     | Invalid examples, anti-patterns  |
 
 ### Implementation
+
 - Defined in: `data/prompts/corePromptText.json`
 
 ## Bullet Point Guidelines
 
 ### Maximum Depth
+
 Limit bullet point nesting to **3 levels maximum**:
+
 ```markdown
 - Level 1
   - Level 2
@@ -62,6 +74,7 @@ Limit bullet point nesting to **3 levels maximum**:
 ```
 
 ### Rationale
+
 - Prevents cognitive overload
 - Improves readability
 - Matches LLM processing patterns
@@ -69,7 +82,9 @@ Limit bullet point nesting to **3 levels maximum**:
 ## XML Indentation
 
 ### Standard: 2 Spaces Per Level
+
 All XML elements use 2-space indentation:
+
 ```xml
 <root>
   <child>
@@ -79,49 +94,56 @@ All XML elements use 2-space indentation:
 ```
 
 ### Implementation
+
 ```javascript
 // src/prompting/xmlElementBuilder.js:18
 static #INDENT_SPACES = 2;
 ```
 
 ### Usage
+
 ```javascript
 const builder = new XmlElementBuilder();
-builder.wrap('tag', 'content', 1);  // 2 spaces indent
-builder.wrap('tag', 'content', 2);  // 4 spaces indent
+builder.wrap('tag', 'content', 1); // 2 spaces indent
+builder.wrap('tag', 'content', 2); // 4 spaces indent
 ```
 
 ## Comment Styles
 
 ### Simple Comments
+
 Single-line XML comments:
+
 ```javascript
 builder.comment('text');
 // Output: <!-- text -->
 ```
 
 ### Decorated Comments
+
 Four visual styles for multi-line decorated comments:
 
-| Style | Character | Purpose |
-|-------|-----------|---------|
-| `primary` | `=` | Identity emphasis, major sections |
-| `secondary` | `-` | Section headers, sub-sections |
-| `critical` | `*` | Mandatory constraints, critical rules |
-| `reference` | `.` | Context/reference material |
+| Style       | Character | Purpose                               |
+| ----------- | --------- | ------------------------------------- |
+| `primary`   | `=`       | Identity emphasis, major sections     |
+| `secondary` | `-`       | Section headers, sub-sections         |
+| `critical`  | `*`       | Mandatory constraints, critical rules |
+| `reference` | `.`       | Context/reference material            |
 
 ### Implementation
+
 ```javascript
 // src/prompting/xmlElementBuilder.js:103-124
 const borderChars = {
   primary: '=',
   secondary: '-',
   critical: '*',
-  reference: '.'
+  reference: '.',
 };
 ```
 
 ### Usage
+
 ```javascript
 builder.decoratedComment(['Line 1', 'Line 2'], 'primary');
 builder.decoratedComment(['Critical Rule'], 'critical');
@@ -130,26 +152,30 @@ builder.decoratedComment(['Critical Rule'], 'critical');
 ## Processing Hints
 
 ### Purpose
+
 Guide LLM attention to specific content types during prompt processing.
 
 ### Available Hint Types
-| Type | Marker | Usage |
-|------|--------|-------|
-| `critical` | `*** CRITICAL` | Mandatory rules that must be followed |
-| `reference` | `REFERENCE` | Context information for understanding |
-| `system` | `SYSTEM` | System configuration and metadata |
+
+| Type        | Marker         | Usage                                 |
+| ----------- | -------------- | ------------------------------------- |
+| `critical`  | `*** CRITICAL` | Mandatory rules that must be followed |
+| `reference` | `REFERENCE`    | Context information for understanding |
+| `system`    | `SYSTEM`       | System configuration and metadata     |
 
 ### Implementation
+
 ```javascript
 // src/prompting/promptDataFormatter.js:476-488
 const hintMarkers = {
   critical: '*** CRITICAL',
   reference: 'REFERENCE',
-  system: 'SYSTEM'
+  system: 'SYSTEM',
 };
 ```
 
 ### Usage
+
 ```javascript
 formatter.wrapWithProcessingHint(content, 'critical');
 formatter.wrapWithProcessingHint(context, 'reference');
@@ -158,15 +184,17 @@ formatter.wrapWithProcessingHint(context, 'reference');
 ## XML Character Escaping
 
 ### Escaped Characters
+
 | Character | Escaped Form |
-|-----------|--------------|
-| `&` | `&amp;` |
-| `<` | `&lt;` |
-| `>` | `&gt;` |
-| `"` | `&quot;` |
-| `'` | `&apos;` |
+| --------- | ------------ |
+| `&`       | `&amp;`      |
+| `<`       | `&lt;`       |
+| `>`       | `&gt;`       |
+| `"`       | `&quot;`     |
+| `'`       | `&apos;`     |
 
 ### Usage
+
 ```javascript
 builder.escape('text with <special> & "chars"');
 // Output: text with &lt;special&gt; &amp; &quot;chars&quot;
@@ -175,7 +203,9 @@ builder.escape('text with <special> & "chars"');
 ## Conditional Wrapping
 
 ### Pattern
+
 Use `wrapIfPresent()` to only wrap non-empty content:
+
 ```javascript
 builder.wrapIfPresent('tag', content);
 // Returns empty string if content is null, undefined, or whitespace-only
@@ -183,6 +213,7 @@ builder.wrapIfPresent('tag', content);
 ```
 
 ### Rationale
+
 - Prevents empty XML elements in output
 - Keeps prompts clean and focused
 
@@ -191,6 +222,7 @@ builder.wrapIfPresent('tag', content);
 All formatting utilities are comprehensively tested:
 
 ### Unit Tests
+
 - `tests/unit/prompting/xmlElementBuilder.test.js` - 85+ test cases
   - `escape()` - XML character escaping
   - `wrap()` - Tag wrapping with indentation
@@ -208,6 +240,7 @@ All formatting utilities are comprehensively tested:
   - Data structure formatting
 
 ### Running Tests
+
 ```bash
 npm run test:unit -- tests/unit/prompting/
 npm run test:integration -- tests/integration/prompting/

@@ -3,7 +3,10 @@ import { ActionCandidateProcessor } from '../../../src/actions/actionCandidatePr
 import { ERROR_PHASES } from '../../../src/actions/errors/actionErrorTypes.js';
 
 const baseActor = { id: 'actor-integration', name: 'Integration Actor' };
-const baseContext = { actorId: baseActor.id, locationId: 'integration-location' };
+const baseContext = {
+  actorId: baseActor.id,
+  locationId: 'integration-location',
+};
 
 /**
  *
@@ -64,7 +67,9 @@ function createProcessorWithIncompleteErrorContext() {
       }),
     },
     safeEventDispatcher: { dispatch: jest.fn() },
-    getEntityDisplayNameFn: jest.fn((entity) => entity?.name ?? entity?.id ?? 'Unknown'),
+    getEntityDisplayNameFn: jest.fn(
+      (entity) => entity?.name ?? entity?.id ?? 'Unknown'
+    ),
     logger,
     actionErrorContextBuilder,
   });
@@ -84,8 +89,12 @@ describe('ActionCandidateProcessor prerequisite error context recovery', () => {
   });
 
   it('rebuilds missing prerequisite error metadata before returning the result', () => {
-    const { processor, logger, actionErrorContextBuilder, targetResolutionService } =
-      createProcessorWithIncompleteErrorContext();
+    const {
+      processor,
+      logger,
+      actionErrorContextBuilder,
+      targetResolutionService,
+    } = createProcessorWithIncompleteErrorContext();
 
     const actionDef = {
       id: 'integration:missing-timestamp',
@@ -102,8 +111,11 @@ describe('ActionCandidateProcessor prerequisite error context recovery', () => {
     expect(result.value.cause).toBe('prerequisite-error');
     expect(targetResolutionService.resolveTargets).not.toHaveBeenCalled();
 
-    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(2);
-    const [firstCall, secondCall] = actionErrorContextBuilder.buildErrorContext.mock.calls;
+    expect(actionErrorContextBuilder.buildErrorContext).toHaveBeenCalledTimes(
+      2
+    );
+    const [firstCall, secondCall] =
+      actionErrorContextBuilder.buildErrorContext.mock.calls;
 
     expect(firstCall[0]).toMatchObject({
       actionDef,

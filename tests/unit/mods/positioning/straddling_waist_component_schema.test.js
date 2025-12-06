@@ -70,9 +70,7 @@ describe('positioning:straddling_waist Component - Schema Validation', () => {
     );
 
     expect(result.isValid).toBe(false);
-    expect(result.errors.some((err) => err.includes('facing_away'))).toBe(
-      true
-    );
+    expect(result.errors.some((err) => err.includes('facing_away'))).toBe(true);
   });
 
   it('should fail validation when target_id has invalid format', () => {

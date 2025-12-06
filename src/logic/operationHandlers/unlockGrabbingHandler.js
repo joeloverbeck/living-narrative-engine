@@ -133,7 +133,13 @@ class UnlockGrabbingHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         `UNLOCK_GRABBING: failed to unlock appendages for entity ${actorId}`,
-        { actor_id: actorId, count, item_id: itemId, error: err.message, stack: err.stack },
+        {
+          actor_id: actorId,
+          count,
+          item_id: itemId,
+          error: err.message,
+          stack: err.stack,
+        },
         logger
       );
     }

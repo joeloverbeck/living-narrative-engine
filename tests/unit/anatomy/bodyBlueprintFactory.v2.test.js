@@ -58,7 +58,11 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
     mockSocketManager = {
       validateSocketAvailability: jest.fn().mockReturnValue({
         valid: true,
-        socket: { id: 'test_socket', orientation: 'left', allowedTypes: ['test'] },
+        socket: {
+          id: 'test_socket',
+          orientation: 'left',
+          allowedTypes: ['test'],
+        },
       }),
       occupySocket: jest.fn(),
       generatePartName: jest.fn().mockReturnValue('Test Part'),
@@ -114,7 +118,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       socketGenerator: mockSocketGenerator,
       slotGenerator: mockSlotGenerator,
       recipePatternResolver: {
-        resolveRecipePatterns: jest.fn(recipe => recipe),
+        resolveRecipePatterns: jest.fn((recipe) => recipe),
       },
       blueprintProcessorService: mockBlueprintProcessorService,
     });
@@ -184,9 +188,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const recipe = { recipeId: 'anatomy:human_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:humanoid_v1', 'anatomy:human_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:humanoid_v1',
+        'anatomy:human_standard'
+      );
 
       // Verify blueprint was loaded but not processed through v2 path
       expect(mockDataRegistry.get).toHaveBeenCalledWith(
@@ -219,9 +228,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const recipe = { recipeId: 'anatomy:human_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:humanoid_v1', 'anatomy:human_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:humanoid_v1',
+        'anatomy:human_standard'
+      );
 
       // Verify v2 processing was not triggered
       expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
@@ -243,9 +257,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const recipe = { recipeId: 'anatomy:default', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:glitched_v2', 'anatomy:default');
+      await factory.createAnatomyGraph(
+        'anatomy:glitched_v2',
+        'anatomy:default'
+      );
 
       expect(mockSocketGenerator.generateSockets).not.toHaveBeenCalled();
       expect(mockSlotGenerator.generateBlueprintSlots).not.toHaveBeenCalled();
@@ -263,8 +282,16 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       };
 
       const generatedSockets = [
-        { id: 'leg_anterior', orientation: 'anterior', allowedTypes: ['spider_leg'] },
-        { id: 'leg_anterior_right', orientation: 'anterior_right', allowedTypes: ['spider_leg'] },
+        {
+          id: 'leg_anterior',
+          orientation: 'anterior',
+          allowedTypes: ['spider_leg'],
+        },
+        {
+          id: 'leg_anterior_right',
+          orientation: 'anterior_right',
+          allowedTypes: ['spider_leg'],
+        },
       ];
 
       const generatedSlots = {
@@ -294,17 +321,26 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       });
 
       // Mock blueprintProcessorService to return processed blueprint
-      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(
+        processedBlueprint
+      );
 
       const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:spider_v2',
+        'anatomy:spider_standard'
+      );
 
       // Verify blueprintProcessorService was called with the raw blueprint
-      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
+      expect(
+        mockBlueprintProcessorService.processBlueprint
+      ).toHaveBeenCalledWith(v2Blueprint);
 
       // Verify sockets from processed blueprint were added to root entity
       expect(mockEntityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
@@ -361,20 +397,31 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       });
 
       // Mock blueprintProcessorService to return the processed blueprint with merged slots
-      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(
+        processedBlueprint
+      );
 
       const recipe = { recipeId: 'anatomy:centaur_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:centaur_v2', 'anatomy:centaur_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:centaur_v2',
+        'anatomy:centaur_standard'
+      );
 
       // Verify blueprintProcessorService was called with the raw blueprint
-      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
+      expect(
+        mockBlueprintProcessorService.processBlueprint
+      ).toHaveBeenCalledWith(v2Blueprint);
 
       // Verify that mergeSlotRequirements was called for all 3 slots (2 generated + 1 additional)
-      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledTimes(3);
+      expect(mockRecipeProcessor.mergeSlotRequirements).toHaveBeenCalledTimes(
+        3
+      );
     });
 
     it('should use additionalSlots override from blueprintProcessorService', async () => {
@@ -417,7 +464,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         return null;
       });
 
-      mockBlueprintProcessorService.processBlueprint.mockReturnValue(processedBlueprint);
+      mockBlueprintProcessorService.processBlueprint.mockReturnValue(
+        processedBlueprint
+      );
 
       const recipe = { recipeId: 'anatomy:griffin_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
@@ -444,7 +493,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       });
 
       // Verify blueprintProcessorService was called
-      expect(mockBlueprintProcessorService.processBlueprint).toHaveBeenCalledWith(v2Blueprint);
+      expect(
+        mockBlueprintProcessorService.processBlueprint
+      ).toHaveBeenCalledWith(v2Blueprint);
 
       // Verify part selection used the overridden requirements (enchanted_wing)
       expect(mockPartSelectionService.selectPart).toHaveBeenCalledWith(
@@ -494,10 +545,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         validator: mockValidator,
         socketGenerator: mockSocketGenerator,
         slotGenerator: mockSlotGenerator,
-        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        recipePatternResolver: {
+          resolveRecipePatterns: jest.fn((recipe) => recipe),
+        },
         blueprintProcessorService: {
           processBlueprint: jest.fn().mockImplementation(() => {
-            throw new ValidationError('Structure template not found: anatomy:template_dragon_missing');
+            throw new ValidationError(
+              'Structure template not found: anatomy:template_dragon_missing'
+            );
           }),
         },
       });
@@ -507,12 +562,20 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        errorFactory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
+        errorFactory.createAnatomyGraph(
+          'anatomy:dragon_v2',
+          'anatomy:dragon_standard'
+        )
       ).rejects.toThrow(ValidationError);
 
       await expect(
-        errorFactory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard')
-      ).rejects.toThrow('Structure template not found: anatomy:template_dragon_missing');
+        errorFactory.createAnatomyGraph(
+          'anatomy:dragon_v2',
+          'anatomy:dragon_standard'
+        )
+      ).rejects.toThrow(
+        'Structure template not found: anatomy:template_dragon_missing'
+      );
     });
 
     it('should handle errors from blueprintProcessorService during socket generation', async () => {
@@ -543,7 +606,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         validator: mockValidator,
         socketGenerator: mockSocketGenerator,
         slotGenerator: mockSlotGenerator,
-        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        recipePatternResolver: {
+          resolveRecipePatterns: jest.fn((recipe) => recipe),
+        },
         blueprintProcessorService: {
           processBlueprint: jest.fn().mockImplementation(() => {
             throw new Error('Invalid template structure');
@@ -556,7 +621,10 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        errorFactory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
+        errorFactory.createAnatomyGraph(
+          'anatomy:spider_v2',
+          'anatomy:spider_standard'
+        )
       ).rejects.toThrow('Invalid template structure');
     });
 
@@ -588,7 +656,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         validator: mockValidator,
         socketGenerator: mockSocketGenerator,
         slotGenerator: mockSlotGenerator,
-        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        recipePatternResolver: {
+          resolveRecipePatterns: jest.fn((recipe) => recipe),
+        },
         blueprintProcessorService: {
           processBlueprint: jest.fn().mockImplementation(() => {
             throw new Error('Invalid slot generation');
@@ -601,7 +671,10 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
-        errorFactory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard')
+        errorFactory.createAnatomyGraph(
+          'anatomy:spider_v2',
+          'anatomy:spider_standard'
+        )
       ).rejects.toThrow('Invalid slot generation');
     });
   });
@@ -642,16 +715,23 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         validator: mockValidator,
         socketGenerator: mockSocketGenerator,
         slotGenerator: mockSlotGenerator,
-        recipePatternResolver: { resolveRecipePatterns: jest.fn(recipe => recipe) },
+        recipePatternResolver: {
+          resolveRecipePatterns: jest.fn((recipe) => recipe),
+        },
         blueprintProcessorService: { processBlueprint: mockProcessBlueprint },
       });
 
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await testFactory.createAnatomyGraph('anatomy:test_v2', 'anatomy:test_standard');
+      await testFactory.createAnatomyGraph(
+        'anatomy:test_v2',
+        'anatomy:test_standard'
+      );
 
       expect(mockProcessBlueprint).toHaveBeenCalledWith(v2Blueprint);
     });
@@ -678,10 +758,15 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
       // Blueprint processor returns the blueprint unchanged (v1 path for blueprints without template)
-      await factory.createAnatomyGraph('anatomy:test_v2_no_template', 'anatomy:test_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:test_v2_no_template',
+        'anatomy:test_standard'
+      );
 
       // Factory still processes the slots from the blueprint
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalled();
@@ -710,9 +795,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:test_v1', 'anatomy:test_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:test_v1',
+        'anatomy:test_standard'
+      );
 
       // Factory processes the blueprint and creates entities
       expect(mockEntityGraphBuilder.createRootEntity).toHaveBeenCalled();

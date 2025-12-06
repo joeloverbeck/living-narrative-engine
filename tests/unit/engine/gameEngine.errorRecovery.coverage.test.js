@@ -32,7 +32,9 @@ function createContainer(resolutionMap, { isRegistered = () => false } = {}) {
   return {
     resolve: jest.fn((token) => {
       if (!Object.prototype.hasOwnProperty.call(map, token)) {
-        throw new Error(`Unexpected token resolution request: ${String(token)}`);
+        throw new Error(
+          `Unexpected token resolution request: ${String(token)}`
+        );
       }
       return map[token];
     }),
@@ -588,7 +590,9 @@ describeEngineSuite(
       try {
         await context.engine.startNewGame(DEFAULT_TEST_WORLD);
       } catch (error) {
-        thrownError = /** @type {Error & { originalResult?: unknown }} */ (error);
+        thrownError = /** @type {Error & { originalResult?: unknown }} */ (
+          error
+        );
       } finally {
         restoreCauseSetter();
       }
@@ -602,7 +606,10 @@ describeEngineSuite(
 
     it('stores the original initialization error when cause assignment fails', async () => {
       const restoreCauseSetter = installFailingCauseSetter();
-      const failureDetail = { message: 'Mods loader crashed.', code: 'INIT-77' };
+      const failureDetail = {
+        message: 'Mods loader crashed.',
+        code: 'INIT-77',
+      };
 
       context.bed
         .getInitializationService()
@@ -616,7 +623,9 @@ describeEngineSuite(
       try {
         await context.engine.startNewGame(DEFAULT_TEST_WORLD);
       } catch (error) {
-        thrownError = /** @type {Error & { originalError?: unknown }} */ (error);
+        thrownError = /** @type {Error & { originalError?: unknown }} */ (
+          error
+        );
       } finally {
         restoreCauseSetter();
       }

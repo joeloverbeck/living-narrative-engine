@@ -57,9 +57,14 @@ export class AIGameStateProvider extends IAIGameStateProvider {
         requiredMethods: ['build'],
       }
     );
-    validateDependency(perceptionLogProvider, 'perceptionLogProvider', console, {
-      requiredMethods: ['get'],
-    });
+    validateDependency(
+      perceptionLogProvider,
+      'perceptionLogProvider',
+      console,
+      {
+        requiredMethods: ['get'],
+      }
+    );
     validateDependency(safeEventDispatcher, 'safeEventDispatcher', console, {
       requiredMethods: ['dispatch'],
     });

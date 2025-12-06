@@ -16,12 +16,14 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 ## Success Metrics
 
 **Quantitative:**
+
 - Stage reduced from 1,220 → 250-300 lines (75-80% reduction)
 - All methods under 100 lines
 - Maintain 80%+ test coverage
 - No performance regression (within 5%)
 
 **Qualitative:**
+
 - Clear separation of concerns
 - Each class has single responsibility
 - Easy to understand and modify
@@ -30,9 +32,11 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 ## Refactoring Phases
 
 ### Phase 1: Tracing Extraction (Week 1)
+
 **Goal:** Remove ~200 lines of tracing logic
 
 **Tickets:**
+
 - MULTARRESSTAREF-001: Create Tracing Orchestrator Interface (0.5 days)
 - MULTARRESSTAREF-002: Implement Tracing Orchestrator (1.5 days)
 - MULTARRESSTAREF-003: Create Tracing Orchestrator Tests (1 day)
@@ -42,9 +46,11 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 **Outcome:** Stage reduced to ~1,020 lines, tracing centralized
 
 ### Phase 2: Result Assembly Extraction (Week 1-2)
+
 **Goal:** Remove ~80 lines of duplicated result assembly
 
 **Tickets:**
+
 - MULTARRESSTAREF-006: Create Result Builder Interface (0.5 days)
 - MULTARRESSTAREF-007: Implement Result Builder (1.5 days)
 - MULTARRESSTAREF-008: Create Result Builder Tests (1 day)
@@ -54,9 +60,11 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 **Outcome:** Stage reduced to ~940 lines, result assembly centralized
 
 ### Phase 3: Resolution Coordination Extraction (Week 3)
+
 **Goal:** Remove ~150 lines of coordination logic
 
 **Tickets:**
+
 - MULTARRESSTAREF-011: Create Resolution Coordinator Interface (0.5 days)
 - MULTARRESSTAREF-012: Implement Resolution Coordinator (2 days)
 - MULTARRESSTAREF-013: Create Resolution Coordinator Tests (1.5 days)
@@ -65,17 +73,21 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 **Outcome:** Service created, ready for integration
 
 ### Phase 4: Final Stage Simplification (Week 3-4)
+
 **Goal:** Reduce stage to <300 lines of pure orchestration
 
 **Tickets:**
+
 - MULTARRESSTAREF-015: Integrate Coordinator & Simplify Stage (2.5 days)
 
 **Outcome:** Stage reduced to 150-200 lines, clear orchestration flow
 
 ### Phase 5: Cleanup and Documentation (Week 4)
+
 **Goal:** Remove temporary code and document new architecture
 
 **Tickets:**
+
 - MULTARRESSTAREF-016: Remove Diagnostic Logging (0.5 days)
 - MULTARRESSTAREF-017: Update Documentation & Create Diagrams (1.5 days)
 
@@ -84,6 +96,7 @@ The `MultiTargetResolutionStage` has grown to 1,220 lines (2.4x the 500-line tar
 ## Architecture Transformation
 
 ### Before (1,220 lines)
+
 ```
 MultiTargetResolutionStage
 ├── Orchestration (288 lines)
@@ -95,6 +108,7 @@ MultiTargetResolutionStage
 ```
 
 ### After (150-200 lines)
+
 ```
 MultiTargetResolutionStage (~150-200 lines)
 ├── Pure orchestration
@@ -134,28 +148,33 @@ Phase 5 (Cleanup):
 ## Risk Assessment
 
 **High Risk:**
+
 - Tracing integration (action-aware traces must work)
 - Backward compatibility (downstream stages must work)
 - Legacy action handling (must preserve compatibility)
 
 **Mitigation:**
+
 - Incremental extraction with validation
 - Comprehensive regression testing
 - Maintain exact result structure
 - Test with real ActionAwareStructuredTrace
 
 **Low Risk:**
+
 - DI container registration (established pattern)
 - Diagnostic logging removal (temporary code)
 
 ## Testing Strategy
 
 **Per-Ticket Testing:**
+
 - Unit tests for each service (90%+ coverage)
 - Integration tests for service interactions
 - Regression tests after each integration
 
 **Final Validation:**
+
 - All existing unit tests pass
 - All existing integration tests pass
 - All e2e tests pass
@@ -166,6 +185,7 @@ Phase 5 (Cleanup):
 ## Rollback Plan
 
 Each phase is independently reversible:
+
 - **Phase 1-3:** Revert stage changes, keep services
 - **Phase 4:** Revert stage simplification
 - **Phase 5:** Revert documentation changes
@@ -204,6 +224,7 @@ Services can exist without being used, allowing safe rollback at any point.
 ---
 
 **See individual tickets for detailed implementation instructions:**
+
 - MULTARRESSTAREF-001 through MULTARRESSTAREF-017
 - Each ticket is self-contained with clear acceptance criteria
 - All tickets reference the analysis report for context

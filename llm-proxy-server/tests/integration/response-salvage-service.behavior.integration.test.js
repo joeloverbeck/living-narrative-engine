@@ -78,7 +78,10 @@ describe('ResponseSalvageService integration behaviour', () => {
       llmRequestService,
       salvageService
     );
-    const salvageController = new SalvageRequestController(logger, salvageService);
+    const salvageController = new SalvageRequestController(
+      logger,
+      salvageService
+    );
 
     const app = express();
     app.use(express.json());
@@ -112,7 +115,9 @@ describe('ResponseSalvageService integration behaviour', () => {
 
   test('salvages successful LLM responses when response guard is pre-committed', async () => {
     const logger = createLogger();
-    const salvageService = new ResponseSalvageService(logger, { defaultTtl: 250 });
+    const salvageService = new ResponseSalvageService(logger, {
+      defaultTtl: 250,
+    });
     const responsePayload = { ok: true, data: { reply: 'from-llm' } };
     const llmRequestService = createSuccessfulRequestService(responsePayload);
     const { app } = createTestApp(logger, salvageService, llmRequestService);
@@ -176,7 +181,9 @@ describe('ResponseSalvageService integration behaviour', () => {
   test('expires salvaged responses on TTL and cleanup clears timers', async () => {
     jest.setTimeout(10_000);
     const logger = createLogger();
-    const salvageService = new ResponseSalvageService(logger, { defaultTtl: 40 });
+    const salvageService = new ResponseSalvageService(logger, {
+      defaultTtl: 40,
+    });
     const responsePayload = { ok: true, data: { reply: 'ttl-test' } };
     const llmRequestService = createSuccessfulRequestService(responsePayload);
     const { app } = createTestApp(logger, salvageService, llmRequestService);
@@ -192,7 +199,9 @@ describe('ResponseSalvageService integration behaviour', () => {
     // Wait past TTL so the salvaged entry should expire
     await new Promise((resolve) => setTimeout(resolve, 60));
 
-    const expiredLookup = await request(app).get(`/api/llm-request/salvage/${requestId}`);
+    const expiredLookup = await request(app).get(
+      `/api/llm-request/salvage/${requestId}`
+    );
     expect(expiredLookup.status).toBe(404);
 
     const signatureExpired = salvageService.retrieveBySignature(

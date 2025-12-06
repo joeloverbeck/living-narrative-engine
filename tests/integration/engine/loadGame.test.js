@@ -158,16 +158,13 @@ describeEngineSuite('GameEngine', (context) => {
         // After the recent changes, handleLoadFailure is called which dispatches ENGINE_OPERATION_FAILED_UI
         const userFacingMessage = GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE;
 
-        expectDispatchSequence(
-          bed.getSafeEventDispatcher().dispatch,
-          [
-            ENGINE_OPERATION_FAILED_UI,
-            {
-              errorMessage: `Failed to load game: ${userFacingMessage}`,
-              errorTitle: 'Load Failed',
-            },
-          ]
-        );
+        expectDispatchSequence(bed.getSafeEventDispatcher().dispatch, [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: `Failed to load game: ${userFacingMessage}`,
+            errorTitle: 'Load Failed',
+          },
+        ]);
         // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
           success: false,

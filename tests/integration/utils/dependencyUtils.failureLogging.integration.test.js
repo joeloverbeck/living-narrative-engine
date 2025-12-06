@@ -179,13 +179,14 @@ describe('dependencyUtils failure logging integration', () => {
     const logger = new RecordingLogger();
     const brokenDispatcher = { subscribe: () => {} };
 
-    expect(() =>
-      new InitializationService(
-        createBaseInitializationDependencies({
-          logger,
-          validatedEventDispatcher: brokenDispatcher,
-        })
-      )
+    expect(
+      () =>
+        new InitializationService(
+          createBaseInitializationDependencies({
+            logger,
+            validatedEventDispatcher: brokenDispatcher,
+          })
+        )
     ).toThrow(SystemInitializationError);
 
     const loggedMessages = logger.errorMessages.map(({ message }) => message);

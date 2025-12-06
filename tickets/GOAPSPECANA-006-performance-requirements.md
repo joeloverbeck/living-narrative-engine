@@ -27,6 +27,7 @@ Define concrete, measurable performance requirements for all GOAP system compone
 ## Tasks
 
 ### 1. Analyze Gameplay Performance Constraints
+
 - [ ] Determine player experience requirements:
   - Is planning synchronous (blocks UI) or asynchronous?
   - What's acceptable wait time for NPC decision?
@@ -41,7 +42,9 @@ Define concrete, measurable performance requirements for all GOAP system compone
   - Concurrent planning actors (1-50?)
 
 ### 2. Define Planning Time Requirements
+
 - [ ] Specify time budgets by complexity:
+
   ```
   Planning Time Requirements:
   - For task libraries <20 tasks:
@@ -61,17 +64,20 @@ Define concrete, measurable performance requirements for all GOAP system compone
     - Planning MAY take up to 2000ms (99th percentile)
     - Consider task library filtering optimization
   ```
+
 - [ ] Define timeout behavior:
   - Max planning time: 5 seconds (absolute)
   - On timeout: Return best partial plan or fallback behavior
 - [ ] Link to user experience:
   - <100ms: Imperceptible delay
   - 100-300ms: Noticeable but acceptable
-  - >500ms: Needs loading indicator
-  - >2s: Poor user experience
+  - > 500ms: Needs loading indicator
+  - > 2s: Poor user experience
 
 ### 3. Define Memory Requirements
+
 - [ ] Specify memory overhead limits:
+
   ```
   Memory Overhead Requirements:
   - Per planning actor:
@@ -89,12 +95,14 @@ Define concrete, measurable performance requirements for all GOAP system compone
     - System SHALL support 50 concurrent planning actors
     - Total GOAP memory: <500MB
   ```
+
 - [ ] Define memory monitoring:
   - Track peak memory usage
   - Log memory warnings at 80% of limits
   - Garbage collection strategy
 
 ### 4. Define Scalability Requirements
+
 - [ ] Task library scaling:
   ```
   Task Library Scalability:
@@ -121,7 +129,9 @@ Define concrete, measurable performance requirements for all GOAP system compone
   ```
 
 ### 5. Define Success Rate Requirements
+
 - [ ] Planning success rate:
+
   ```
   Plan Success Requirements:
   - In typical scenarios (clear path to goal):
@@ -136,7 +146,9 @@ Define concrete, measurable performance requirements for all GOAP system compone
     - Planning SHALL detect impossibility within 500ms
     - System SHALL return "no plan" vs timeout
   ```
+
 - [ ] Refinement success rate:
+
   ```
   Refinement Success Requirements:
   - When valid target exists and is reachable:
@@ -148,7 +160,9 @@ Define concrete, measurable performance requirements for all GOAP system compone
   ```
 
 ### 6. Define Measurement Methodology
+
 - [ ] Specify how to measure:
+
   ```
   Performance Measurement Methodology:
 
@@ -170,6 +184,7 @@ Define concrete, measurable performance requirements for all GOAP system compone
   - Window: Rolling 100 attempts
   - Report: Percentage with confidence interval
   ```
+
 - [ ] Define performance test scenarios:
   - Scenario 1: Simple goal (1-2 tasks)
   - Scenario 2: Complex goal (5-10 tasks)
@@ -178,6 +193,7 @@ Define concrete, measurable performance requirements for all GOAP system compone
   - Scenario 5: Large world (1000+ entities)
 
 ### 7. Define Non-Functional Requirements
+
 - [ ] Specify latency requirements:
   ```
   Latency Requirements:
@@ -196,6 +212,7 @@ Define concrete, measurable performance requirements for all GOAP system compone
   ```
 
 ### 8. Create Performance Test Plan
+
 - [ ] Define test suite structure:
   - Unit tests: Individual component performance
   - Integration tests: End-to-end planning scenarios
@@ -210,6 +227,7 @@ Define concrete, measurable performance requirements for all GOAP system compone
 - [ ] Create benchmark harness specification
 
 ### 9. Document in Specification
+
 - [ ] Add complete "Performance Requirements" section
 - [ ] Include all numeric targets
 - [ ] Link to user experience impact
@@ -219,22 +237,28 @@ Define concrete, measurable performance requirements for all GOAP system compone
 ## Expected Outputs
 
 1. **Specification Update** (new section):
+
    ```markdown
    ## Performance Requirements
 
    ### Planning Time
+
    [Complete time budget specification]
 
    ### Memory Overhead
+
    [Complete memory limit specification]
 
    ### Scalability
+
    [Complete scaling requirements]
 
    ### Success Rate
+
    [Complete success metrics]
 
    ### Measurement Methodology
+
    [How to validate requirements]
    ```
 

@@ -35,7 +35,9 @@ describe('ValidationResultBuilder', () => {
       const result = builder.build();
 
       expect(result.timestamp).toBeDefined();
-      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(result.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
       expect(result.timestamp >= before).toBe(true);
       expect(result.timestamp <= after).toBe(true);
     });
@@ -599,7 +601,11 @@ describe('ValidationResultBuilder', () => {
     });
 
     it('should handle empty metadata object', () => {
-      const result = ValidationResultBuilder.success('test-recipe', undefined, {});
+      const result = ValidationResultBuilder.success(
+        'test-recipe',
+        undefined,
+        {}
+      );
       expect(result.isValid).toBe(true);
     });
   });
@@ -694,7 +700,10 @@ describe('ValidationResultBuilder', () => {
     });
 
     it('should handle mixed issue types in complex scenario', () => {
-      const builder = new ValidationResultBuilder('test-recipe', 'complex.json');
+      const builder = new ValidationResultBuilder(
+        'test-recipe',
+        'complex.json'
+      );
 
       builder
         .addError('ERR1', 'Critical error', { componentId: 'body' })

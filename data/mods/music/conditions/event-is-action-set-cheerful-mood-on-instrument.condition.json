@@ -4,7 +4,7 @@
   "description": "Cheerful mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_cheerful_mood_on_instrument"
     ]
   }

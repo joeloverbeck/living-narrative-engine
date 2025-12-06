@@ -9,8 +9,8 @@
 import BaseFacade from '../../shared/facades/BaseFacade.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { assertNonBlankString } from '../../utils/dependencyUtils.js';
-import { 
-  createSuccessResponse, 
+import {
+  createSuccessResponse,
   createErrorResponse,
   createQueryResponse,
   createModificationResponse,
@@ -53,18 +53,20 @@ class IClothingSystemFacade extends BaseFacade {
    * @param {*} deps.unifiedCache - Unified cache service
    * @param {*} [deps.circuitBreaker] - Circuit breaker service
    */
-  constructor({ 
+  constructor({
     clothingManagementService,
     equipmentOrchestrator,
     layerCompatibilityService,
     clothingSlotValidator,
-    ...baseDeps 
+    ...baseDeps
   }) {
     super(baseDeps);
-    
+
     // Prevent direct instantiation of abstract interface
     if (this.constructor === IClothingSystemFacade) {
-      throw new Error('Cannot instantiate abstract class IClothingSystemFacade');
+      throw new Error(
+        'Cannot instantiate abstract class IClothingSystemFacade'
+      );
     }
 
     this.#clothingManagementService = clothingManagementService;
@@ -87,33 +89,50 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
    */
   async getAccessibleItems(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'getAccessibleItems', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'getAccessibleItems', this);
 
-      const queryOptions = mergeOptions(createQueryOptions(), options);
-      const cacheKey = `clothing:accessible:${entityId}:${JSON.stringify(queryOptions)}`;
+        const queryOptions = mergeOptions(createQueryOptions(), options);
+        const cacheKey = `clothing:accessible:${entityId}:${JSON.stringify(queryOptions)}`;
 
-      return await this.cacheableOperation(cacheKey, async () => {
-        const items = await this.executeWithResilience(
-          'getAccessibleItems',
-          async () => await this.#clothingManagementService.getAccessibleItems(entityId, queryOptions),
-          async () => [], // Fallback to empty array
-        );
-
-        const pagination = {
-          total: items.length,
-          count: items.length,
-          offset: queryOptions.offset || 0,
-          hasMore: false,
-        };
-
-        return createQueryResponse(items, pagination, 'getAccessibleItems', {
-          requestId: queryOptions.requestId,
-          cached: false,
+        return await this.cacheableOperation(
           cacheKey,
-        });
-      }, { ttl: queryOptions.ttl });
-    }, 'getAccessibleItems', { requestId: options.requestId });
+          async () => {
+            const items = await this.executeWithResilience(
+              'getAccessibleItems',
+              async () =>
+                await this.#clothingManagementService.getAccessibleItems(
+                  entityId,
+                  queryOptions
+                ),
+              async () => [] // Fallback to empty array
+            );
+
+            const pagination = {
+              total: items.length,
+              count: items.length,
+              offset: queryOptions.offset || 0,
+              hasMore: false,
+            };
+
+            return createQueryResponse(
+              items,
+              pagination,
+              'getAccessibleItems',
+              {
+                requestId: queryOptions.requestId,
+                cached: false,
+                cacheKey,
+              }
+            );
+          },
+          { ttl: queryOptions.ttl }
+        );
+      },
+      'getAccessibleItems',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -124,33 +143,45 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').QueryResponse>}
    */
   async getEquippedItems(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'getEquippedItems', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'getEquippedItems', this);
 
-      const queryOptions = mergeOptions(createQueryOptions(), options);
-      const cacheKey = `clothing:equipped:${entityId}`;
+        const queryOptions = mergeOptions(createQueryOptions(), options);
+        const cacheKey = `clothing:equipped:${entityId}`;
 
-      return await this.cacheableOperation(cacheKey, async () => {
-        const items = await this.executeWithResilience(
-          'getEquippedItems',
-          async () => await this.#clothingManagementService.getEquippedItems(entityId, queryOptions),
-          async () => [], // Fallback to empty array
-        );
-
-        const pagination = {
-          total: items.length,
-          count: items.length,
-          offset: 0,
-          hasMore: false,
-        };
-
-        return createQueryResponse(items, pagination, 'getEquippedItems', {
-          requestId: queryOptions.requestId,
-          cached: false,
+        return await this.cacheableOperation(
           cacheKey,
-        });
-      }, { ttl: queryOptions.ttl });
-    }, 'getEquippedItems', { requestId: options.requestId });
+          async () => {
+            const items = await this.executeWithResilience(
+              'getEquippedItems',
+              async () =>
+                await this.#clothingManagementService.getEquippedItems(
+                  entityId,
+                  queryOptions
+                ),
+              async () => [] // Fallback to empty array
+            );
+
+            const pagination = {
+              total: items.length,
+              count: items.length,
+              offset: 0,
+              hasMore: false,
+            };
+
+            return createQueryResponse(items, pagination, 'getEquippedItems', {
+              requestId: queryOptions.requestId,
+              cached: false,
+              cacheKey,
+            });
+          },
+          { ttl: queryOptions.ttl }
+        );
+      },
+      'getEquippedItems',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -170,8 +201,12 @@ class IClothingSystemFacade extends BaseFacade {
       return await this.cacheableOperation(cacheKey, async () => {
         const items = await this.executeWithResilience(
           'getItemsInSlot',
-          async () => await this.#clothingManagementService.getItemsInSlot(entityId, slot),
-          async () => null, // Fallback to null
+          async () =>
+            await this.#clothingManagementService.getItemsInSlot(
+              entityId,
+              slot
+            ),
+          async () => null // Fallback to null
         );
 
         return createSuccessResponse(items, 'getItemsInSlot', {
@@ -192,7 +227,12 @@ class IClothingSystemFacade extends BaseFacade {
    */
   async checkItemCompatibility(entityId, itemId, slot) {
     return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'checkItemCompatibility', this);
+      assertNonBlankString(
+        entityId,
+        'Entity ID',
+        'checkItemCompatibility',
+        this
+      );
       assertNonBlankString(itemId, 'Item ID', 'checkItemCompatibility', this);
       assertNonBlankString(slot, 'Slot', 'checkItemCompatibility', this);
 
@@ -202,16 +242,29 @@ class IClothingSystemFacade extends BaseFacade {
         const compatibility = await this.executeWithResilience(
           'checkItemCompatibility',
           async () => {
-            const isCompatible = await this.#layerCompatibilityService.checkCompatibility(entityId, itemId, slot);
-            const conflicts = await this.#layerCompatibilityService.getConflicts(entityId, itemId, slot);
-            
+            const isCompatible =
+              await this.#layerCompatibilityService.checkCompatibility(
+                entityId,
+                itemId,
+                slot
+              );
+            const conflicts =
+              await this.#layerCompatibilityService.getConflicts(
+                entityId,
+                itemId,
+                slot
+              );
+
             return {
               compatible: isCompatible,
               conflicts: conflicts || [],
               reason: isCompatible ? null : 'Layer or slot conflicts detected',
             };
           },
-          async () => ({ compatible: false, reason: 'Compatibility check failed' }),
+          async () => ({
+            compatible: false,
+            reason: 'Compatibility check failed',
+          })
         );
 
         return createSuccessResponse(compatibility, 'checkItemCompatibility', {
@@ -236,56 +289,71 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async equipItem(entityId, itemId, slot, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'equipItem', this);
-      assertNonBlankString(itemId, 'Item ID', 'equipItem', this);
-      assertNonBlankString(slot, 'Slot', 'equipItem', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'equipItem', this);
+        assertNonBlankString(itemId, 'Item ID', 'equipItem', this);
+        assertNonBlankString(slot, 'Slot', 'equipItem', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'equipItem',
-        async () => {
-          // Validate if not forcing
-          if (!modOptions.force && modOptions.validate) {
-            const compatibility = await this.checkItemCompatibility(entityId, itemId, slot);
-            if (!compatibility.data.compatible) {
-              throw new InvalidArgumentError(`Item ${itemId} is not compatible with slot ${slot}: ${compatibility.data.reason}`);
+        const result = await this.executeWithResilience(
+          'equipItem',
+          async () => {
+            // Validate if not forcing
+            if (!modOptions.force && modOptions.validate) {
+              const compatibility = await this.checkItemCompatibility(
+                entityId,
+                itemId,
+                slot
+              );
+              if (!compatibility.data.compatible) {
+                throw new InvalidArgumentError(
+                  `Item ${itemId} is not compatible with slot ${slot}: ${compatibility.data.reason}`
+                );
+              }
             }
+
+            // Execute equipment change
+            const equipResult = await this.#equipmentOrchestrator.equipItem(
+              entityId,
+              itemId,
+              slot,
+              modOptions
+            );
+
+            // Invalidate related caches
+            await this.invalidateCache(`clothing:equipped:${entityId}`);
+            await this.invalidateCache(`clothing:slot:${entityId}:${slot}`);
+
+            return equipResult;
           }
+        );
 
-          // Execute equipment change
-          const equipResult = await this.#equipmentOrchestrator.equipItem(entityId, itemId, slot, modOptions);
+        const changes = {
+          added: [{ itemId, slot, entityId }],
+          removed: [],
+          modified: [],
+        };
 
-          // Invalidate related caches
-          await this.invalidateCache(`clothing:equipped:${entityId}`);
-          await this.invalidateCache(`clothing:slot:${entityId}:${slot}`);
+        // Dispatch equipment event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('CLOTHING_ITEM_EQUIPPED', {
+            entityId,
+            itemId,
+            slot,
+            timestamp: Date.now(),
+          });
+        }
 
-          return equipResult;
-        },
-      );
-
-      const changes = {
-        added: [{ itemId, slot, entityId }],
-        removed: [],
-        modified: [],
-      };
-
-      // Dispatch equipment event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('CLOTHING_ITEM_EQUIPPED', {
-          entityId,
-          itemId,
-          slot,
-          timestamp: Date.now(),
+        return createModificationResponse(result, changes, 'equipItem', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'equipItem', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'equipItem', { requestId: options.requestId });
+      },
+      'equipItem',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -297,45 +365,53 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async unequipItem(entityId, itemId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'unequipItem', this);
-      assertNonBlankString(itemId, 'Item ID', 'unequipItem', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'unequipItem', this);
+        assertNonBlankString(itemId, 'Item ID', 'unequipItem', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'unequipItem',
-        async () => {
-          const unequipResult = await this.#equipmentOrchestrator.unequipItem(entityId, itemId, modOptions);
+        const result = await this.executeWithResilience(
+          'unequipItem',
+          async () => {
+            const unequipResult = await this.#equipmentOrchestrator.unequipItem(
+              entityId,
+              itemId,
+              modOptions
+            );
 
-          // Invalidate related caches
-          await this.invalidateCache(`clothing:equipped:${entityId}`);
-          await this.invalidateCache(`clothing:slot:${entityId}:*`, true);
+            // Invalidate related caches
+            await this.invalidateCache(`clothing:equipped:${entityId}`);
+            await this.invalidateCache(`clothing:slot:${entityId}:*`, true);
 
-          return unequipResult;
-        },
-      );
+            return unequipResult;
+          }
+        );
 
-      const changes = {
-        added: [],
-        removed: [{ itemId, entityId }],
-        modified: [],
-      };
+        const changes = {
+          added: [],
+          removed: [{ itemId, entityId }],
+          modified: [],
+        };
 
-      // Dispatch unequipment event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('CLOTHING_ITEM_UNEQUIPPED', {
-          entityId,
-          itemId,
-          timestamp: Date.now(),
+        // Dispatch unequipment event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('CLOTHING_ITEM_UNEQUIPPED', {
+            entityId,
+            itemId,
+            timestamp: Date.now(),
+          });
+        }
+
+        return createModificationResponse(result, changes, 'unequipItem', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'unequipItem', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'unequipItem', { requestId: options.requestId });
+      },
+      'unequipItem',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -348,47 +424,56 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async swapItems(entityId, itemId1, itemId2, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'swapItems', this);
-      assertNonBlankString(itemId1, 'Item ID 1', 'swapItems', this);
-      assertNonBlankString(itemId2, 'Item ID 2', 'swapItems', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'swapItems', this);
+        assertNonBlankString(itemId1, 'Item ID 1', 'swapItems', this);
+        assertNonBlankString(itemId2, 'Item ID 2', 'swapItems', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'swapItems',
-        async () => {
-          const swapResult = await this.#equipmentOrchestrator.swapItems(entityId, itemId1, itemId2, modOptions);
+        const result = await this.executeWithResilience(
+          'swapItems',
+          async () => {
+            const swapResult = await this.#equipmentOrchestrator.swapItems(
+              entityId,
+              itemId1,
+              itemId2,
+              modOptions
+            );
 
-          // Invalidate related caches
-          await this.invalidateCache(`clothing:equipped:${entityId}`);
-          await this.invalidateCache(`clothing:slot:${entityId}:*`, true);
+            // Invalidate related caches
+            await this.invalidateCache(`clothing:equipped:${entityId}`);
+            await this.invalidateCache(`clothing:slot:${entityId}:*`, true);
 
-          return swapResult;
-        },
-      );
+            return swapResult;
+          }
+        );
 
-      const changes = {
-        added: [],
-        removed: [],
-        modified: [{ itemId1, itemId2, entityId }],
-      };
+        const changes = {
+          added: [],
+          removed: [],
+          modified: [{ itemId1, itemId2, entityId }],
+        };
 
-      // Dispatch swap event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('CLOTHING_ITEMS_SWAPPED', {
-          entityId,
-          itemId1,
-          itemId2,
-          timestamp: Date.now(),
+        // Dispatch swap event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('CLOTHING_ITEMS_SWAPPED', {
+            entityId,
+            itemId1,
+            itemId2,
+            timestamp: Date.now(),
+          });
+        }
+
+        return createModificationResponse(result, changes, 'swapItems', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'swapItems', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'swapItems', { requestId: options.requestId });
+      },
+      'swapItems',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -400,51 +485,61 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ModificationResponse>}
    */
   async clearSlot(entityId, slot, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'clearSlot', this);
-      assertNonBlankString(slot, 'Slot', 'clearSlot', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'clearSlot', this);
+        assertNonBlankString(slot, 'Slot', 'clearSlot', this);
 
-      const modOptions = mergeOptions(createModificationOptions(), options);
+        const modOptions = mergeOptions(createModificationOptions(), options);
 
-      const result = await this.executeWithResilience(
-        'clearSlot',
-        async () => {
-          // Get current items in slot
-          const currentItems = await this.getItemsInSlot(entityId, slot);
-          
-          const clearResult = await this.#equipmentOrchestrator.clearSlot(entityId, slot, modOptions);
+        const result = await this.executeWithResilience(
+          'clearSlot',
+          async () => {
+            // Get current items in slot
+            const currentItems = await this.getItemsInSlot(entityId, slot);
 
-          // Invalidate related caches
-          await this.invalidateCache(`clothing:equipped:${entityId}`);
-          await this.invalidateCache(`clothing:slot:${entityId}:${slot}`);
+            const clearResult = await this.#equipmentOrchestrator.clearSlot(
+              entityId,
+              slot,
+              modOptions
+            );
 
-          return {
-            ...clearResult,
-            previousItems: currentItems.data,
-          };
-        },
-      );
+            // Invalidate related caches
+            await this.invalidateCache(`clothing:equipped:${entityId}`);
+            await this.invalidateCache(`clothing:slot:${entityId}:${slot}`);
 
-      const changes = {
-        added: [],
-        removed: result.previousItems ? [{ slot, entityId, items: result.previousItems }] : [],
-        modified: [],
-      };
+            return {
+              ...clearResult,
+              previousItems: currentItems.data,
+            };
+          }
+        );
 
-      // Dispatch clear event
-      if (modOptions.notifyOnChange) {
-        this.dispatchEvent('CLOTHING_SLOT_CLEARED', {
-          entityId,
-          slot,
-          timestamp: Date.now(),
+        const changes = {
+          added: [],
+          removed: result.previousItems
+            ? [{ slot, entityId, items: result.previousItems }]
+            : [],
+          modified: [],
+        };
+
+        // Dispatch clear event
+        if (modOptions.notifyOnChange) {
+          this.dispatchEvent('CLOTHING_SLOT_CLEARED', {
+            entityId,
+            slot,
+            timestamp: Date.now(),
+          });
+        }
+
+        return createModificationResponse(result, changes, 'clearSlot', {
+          requestId: modOptions.requestId,
+          rollbackAvailable: true,
         });
-      }
-
-      return createModificationResponse(result, changes, 'clearSlot', {
-        requestId: modOptions.requestId,
-        rollbackAvailable: true,
-      });
-    }, 'clearSlot', { requestId: options.requestId });
+      },
+      'clearSlot',
+      { requestId: options.requestId }
+    );
   }
 
   // =============================================================================
@@ -459,23 +554,36 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').ValidationResponse>}
    */
   async validateEquipment(entityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'validateEquipment', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'validateEquipment', this);
 
-      const validationOptions = mergeOptions(createValidationOptions(), options);
+        const validationOptions = mergeOptions(
+          createValidationOptions(),
+          options
+        );
 
-      const validation = await this.executeWithResilience(
-        'validateEquipment',
-        async () => {
-          return await this.#clothingSlotValidator.validateEntityEquipment(entityId, validationOptions);
-        },
-        async () => ({ valid: false, errors: [{ message: 'Validation service unavailable' }] }),
-      );
+        const validation = await this.executeWithResilience(
+          'validateEquipment',
+          async () => {
+            return await this.#clothingSlotValidator.validateEntityEquipment(
+              entityId,
+              validationOptions
+            );
+          },
+          async () => ({
+            valid: false,
+            errors: [{ message: 'Validation service unavailable' }],
+          })
+        );
 
-      return createValidationResponse(validation, 'validateEquipment', {
-        requestId: validationOptions.requestId,
-      });
-    }, 'validateEquipment', { requestId: options.requestId });
+        return createValidationResponse(validation, 'validateEquipment', {
+          requestId: validationOptions.requestId,
+        });
+      },
+      'validateEquipment',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -493,8 +601,9 @@ class IClothingSystemFacade extends BaseFacade {
       return await this.cacheableOperation(cacheKey, async () => {
         const blockedSlots = await this.executeWithResilience(
           'getBlockedSlots',
-          async () => await this.#layerCompatibilityService.getBlockedSlots(entityId),
-          async () => [], // Fallback to empty array
+          async () =>
+            await this.#layerCompatibilityService.getBlockedSlots(entityId),
+          async () => [] // Fallback to empty array
         );
 
         return createSuccessResponse(blockedSlots, 'getBlockedSlots', {
@@ -520,8 +629,9 @@ class IClothingSystemFacade extends BaseFacade {
       return await this.cacheableOperation(cacheKey, async () => {
         const conflicts = await this.executeWithResilience(
           'getLayerConflicts',
-          async () => await this.#layerCompatibilityService.getLayerConflicts(entityId),
-          async () => [], // Fallback to empty array
+          async () =>
+            await this.#layerCompatibilityService.getLayerConflicts(entityId),
+          async () => [] // Fallback to empty array
         );
 
         return createSuccessResponse(conflicts, 'getLayerConflicts', {
@@ -545,74 +655,93 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').BulkResponse>}
    */
   async equipMultiple(entityId, items, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'equipMultiple', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'equipMultiple', this);
 
-      if (!Array.isArray(items)) {
-        throw new InvalidArgumentError('Items must be an array');
-      }
+        if (!Array.isArray(items)) {
+          throw new InvalidArgumentError('Items must be an array');
+        }
 
-      const bulkOptions = mergeOptions(createBulkOptions(), options);
-      const results = { processed: 0, successful: 0, failed: 0, results: [], errors: [] };
+        const bulkOptions = mergeOptions(createBulkOptions(), options);
+        const results = {
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          results: [],
+          errors: [],
+        };
 
-      for (let i = 0; i < items.length; i += bulkOptions.batchSize) {
-        const batch = items.slice(i, i + bulkOptions.batchSize);
-        
-        const batchPromises = batch.map(async (item) => {
-          try {
-            const result = await this.equipItem(entityId, item.itemId, item.slot, bulkOptions);
-            results.successful++;
-            if (bulkOptions.returnResults) {
-              results.results.push({ item, result, success: true });
+        for (let i = 0; i < items.length; i += bulkOptions.batchSize) {
+          const batch = items.slice(i, i + bulkOptions.batchSize);
+
+          const batchPromises = batch.map(async (item) => {
+            try {
+              const result = await this.equipItem(
+                entityId,
+                item.itemId,
+                item.slot,
+                bulkOptions
+              );
+              results.successful++;
+              if (bulkOptions.returnResults) {
+                results.results.push({ item, result, success: true });
+              }
+            } catch (error) {
+              results.failed++;
+              results.errors.push({ item, error: error.message });
+              if (bulkOptions.returnResults) {
+                results.results.push({
+                  item,
+                  error: error.message,
+                  success: false,
+                });
+              }
+
+              if (bulkOptions.stopOnError) {
+                throw error;
+              }
             }
-          } catch (error) {
-            results.failed++;
-            results.errors.push({ item, error: error.message });
-            if (bulkOptions.returnResults) {
-              results.results.push({ item, error: error.message, success: false });
-            }
-            
-            if (bulkOptions.stopOnError) {
-              throw error;
+          });
+
+          if (bulkOptions.parallel) {
+            await Promise.allSettled(batchPromises);
+          } else {
+            for (const promise of batchPromises) {
+              await promise;
             }
           }
+
+          results.processed += batch.length;
+
+          // Call progress callback if provided
+          if (bulkOptions.onProgress) {
+            bulkOptions.onProgress({
+              processed: results.processed,
+              total: items.length,
+              successful: results.successful,
+              failed: results.failed,
+            });
+          }
+        }
+
+        // Dispatch bulk event
+        this.dispatchEvent('CLOTHING_BULK_EQUIP_COMPLETED', {
+          entityId,
+          itemCount: items.length,
+          successful: results.successful,
+          failed: results.failed,
+          timestamp: Date.now(),
         });
 
-        if (bulkOptions.parallel) {
-          await Promise.allSettled(batchPromises);
-        } else {
-          for (const promise of batchPromises) {
-            await promise;
-          }
-        }
-
-        results.processed += batch.length;
-
-        // Call progress callback if provided
-        if (bulkOptions.onProgress) {
-          bulkOptions.onProgress({
-            processed: results.processed,
-            total: items.length,
-            successful: results.successful,
-            failed: results.failed,
-          });
-        }
-      }
-
-      // Dispatch bulk event
-      this.dispatchEvent('CLOTHING_BULK_EQUIP_COMPLETED', {
-        entityId,
-        itemCount: items.length,
-        successful: results.successful,
-        failed: results.failed,
-        timestamp: Date.now(),
-      });
-
-      return createBulkResponse(results, 'equipMultiple', {
-        requestId: bulkOptions.requestId,
-        partial: results.failed > 0,
-      });
-    }, 'equipMultiple', { requestId: options.requestId });
+        return createBulkResponse(results, 'equipMultiple', {
+          requestId: bulkOptions.requestId,
+          partial: results.failed > 0,
+        });
+      },
+      'equipMultiple',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -624,74 +753,92 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').BulkResponse>}
    */
   async unequipMultiple(entityId, itemIds, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(entityId, 'Entity ID', 'unequipMultiple', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(entityId, 'Entity ID', 'unequipMultiple', this);
 
-      if (!Array.isArray(itemIds)) {
-        throw new InvalidArgumentError('Item IDs must be an array');
-      }
+        if (!Array.isArray(itemIds)) {
+          throw new InvalidArgumentError('Item IDs must be an array');
+        }
 
-      const bulkOptions = mergeOptions(createBulkOptions(), options);
-      const results = { processed: 0, successful: 0, failed: 0, results: [], errors: [] };
+        const bulkOptions = mergeOptions(createBulkOptions(), options);
+        const results = {
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          results: [],
+          errors: [],
+        };
 
-      for (let i = 0; i < itemIds.length; i += bulkOptions.batchSize) {
-        const batch = itemIds.slice(i, i + bulkOptions.batchSize);
-        
-        const batchPromises = batch.map(async (itemId) => {
-          try {
-            const result = await this.unequipItem(entityId, itemId, bulkOptions);
-            results.successful++;
-            if (bulkOptions.returnResults) {
-              results.results.push({ itemId, result, success: true });
+        for (let i = 0; i < itemIds.length; i += bulkOptions.batchSize) {
+          const batch = itemIds.slice(i, i + bulkOptions.batchSize);
+
+          const batchPromises = batch.map(async (itemId) => {
+            try {
+              const result = await this.unequipItem(
+                entityId,
+                itemId,
+                bulkOptions
+              );
+              results.successful++;
+              if (bulkOptions.returnResults) {
+                results.results.push({ itemId, result, success: true });
+              }
+            } catch (error) {
+              results.failed++;
+              results.errors.push({ itemId, error: error.message });
+              if (bulkOptions.returnResults) {
+                results.results.push({
+                  itemId,
+                  error: error.message,
+                  success: false,
+                });
+              }
+
+              if (bulkOptions.stopOnError) {
+                throw error;
+              }
             }
-          } catch (error) {
-            results.failed++;
-            results.errors.push({ itemId, error: error.message });
-            if (bulkOptions.returnResults) {
-              results.results.push({ itemId, error: error.message, success: false });
-            }
-            
-            if (bulkOptions.stopOnError) {
-              throw error;
+          });
+
+          if (bulkOptions.parallel) {
+            await Promise.allSettled(batchPromises);
+          } else {
+            for (const promise of batchPromises) {
+              await promise;
             }
           }
+
+          results.processed += batch.length;
+
+          // Call progress callback if provided
+          if (bulkOptions.onProgress) {
+            bulkOptions.onProgress({
+              processed: results.processed,
+              total: itemIds.length,
+              successful: results.successful,
+              failed: results.failed,
+            });
+          }
+        }
+
+        // Dispatch bulk event
+        this.dispatchEvent('CLOTHING_BULK_UNEQUIP_COMPLETED', {
+          entityId,
+          itemCount: itemIds.length,
+          successful: results.successful,
+          failed: results.failed,
+          timestamp: Date.now(),
         });
 
-        if (bulkOptions.parallel) {
-          await Promise.allSettled(batchPromises);
-        } else {
-          for (const promise of batchPromises) {
-            await promise;
-          }
-        }
-
-        results.processed += batch.length;
-
-        // Call progress callback if provided
-        if (bulkOptions.onProgress) {
-          bulkOptions.onProgress({
-            processed: results.processed,
-            total: itemIds.length,
-            successful: results.successful,
-            failed: results.failed,
-          });
-        }
-      }
-
-      // Dispatch bulk event
-      this.dispatchEvent('CLOTHING_BULK_UNEQUIP_COMPLETED', {
-        entityId,
-        itemCount: itemIds.length,
-        successful: results.successful,
-        failed: results.failed,
-        timestamp: Date.now(),
-      });
-
-      return createBulkResponse(results, 'unequipMultiple', {
-        requestId: bulkOptions.requestId,
-        partial: results.failed > 0,
-      });
-    }, 'unequipMultiple', { requestId: options.requestId });
+        return createBulkResponse(results, 'unequipMultiple', {
+          requestId: bulkOptions.requestId,
+          partial: results.failed > 0,
+        });
+      },
+      'unequipMultiple',
+      { requestId: options.requestId }
+    );
   }
 
   /**
@@ -703,75 +850,103 @@ class IClothingSystemFacade extends BaseFacade {
    * @returns {Promise<import('../../shared/facades/types/FacadeResponses.js').TransferResponse>}
    */
   async transferEquipment(fromEntityId, toEntityId, options = {}) {
-    return await withTiming(async () => {
-      assertNonBlankString(fromEntityId, 'From Entity ID', 'transferEquipment', this);
-      assertNonBlankString(toEntityId, 'To Entity ID', 'transferEquipment', this);
+    return await withTiming(
+      async () => {
+        assertNonBlankString(
+          fromEntityId,
+          'From Entity ID',
+          'transferEquipment',
+          this
+        );
+        assertNonBlankString(
+          toEntityId,
+          'To Entity ID',
+          'transferEquipment',
+          this
+        );
 
-      const transferOptions = mergeOptions(
-        { transferMode: 'move', validateCompatibility: true, updateReferences: true },
-        options
-      );
+        const transferOptions = mergeOptions(
+          {
+            transferMode: 'move',
+            validateCompatibility: true,
+            updateReferences: true,
+          },
+          options
+        );
 
-      const result = await this.executeWithResilience(
-        'transferEquipment',
-        async () => {
-          // Get current equipment
-          const fromEquipment = await this.getEquippedItems(fromEntityId);
-          const transferred = [];
-          const failed = [];
+        const result = await this.executeWithResilience(
+          'transferEquipment',
+          async () => {
+            // Get current equipment
+            const fromEquipment = await this.getEquippedItems(fromEntityId);
+            const transferred = [];
+            const failed = [];
 
-          for (const item of fromEquipment.data) {
-            try {
-              // Check compatibility if required
-              if (transferOptions.validateCompatibility) {
-                const compatibility = await this.checkItemCompatibility(toEntityId, item.itemId, item.slot);
-                if (!compatibility.data.compatible) {
-                  failed.push({ itemId: item.itemId, reason: compatibility.data.reason });
-                  continue;
+            for (const item of fromEquipment.data) {
+              try {
+                // Check compatibility if required
+                if (transferOptions.validateCompatibility) {
+                  const compatibility = await this.checkItemCompatibility(
+                    toEntityId,
+                    item.itemId,
+                    item.slot
+                  );
+                  if (!compatibility.data.compatible) {
+                    failed.push({
+                      itemId: item.itemId,
+                      reason: compatibility.data.reason,
+                    });
+                    continue;
+                  }
                 }
+
+                // Unequip from source
+                if (transferOptions.transferMode === 'move') {
+                  await this.unequipItem(fromEntityId, item.itemId, {
+                    notifyOnChange: false,
+                  });
+                }
+
+                // Equip to target
+                await this.equipItem(toEntityId, item.itemId, item.slot, {
+                  notifyOnChange: false,
+                });
+
+                transferred.push(item);
+              } catch (error) {
+                failed.push({ itemId: item.itemId, error: error.message });
               }
-
-              // Unequip from source
-              if (transferOptions.transferMode === 'move') {
-                await this.unequipItem(fromEntityId, item.itemId, { notifyOnChange: false });
-              }
-
-              // Equip to target
-              await this.equipItem(toEntityId, item.itemId, item.slot, { notifyOnChange: false });
-              
-              transferred.push(item);
-
-            } catch (error) {
-              failed.push({ itemId: item.itemId, error: error.message });
             }
+
+            // Invalidate caches for both entities
+            await this.invalidateCache(`clothing:equipped:${fromEntityId}`);
+            await this.invalidateCache(`clothing:equipped:${toEntityId}`);
+
+            return {
+              fromEntity: fromEntityId,
+              toEntity: toEntityId,
+              transferred,
+              failed,
+            };
           }
+        );
 
-          // Invalidate caches for both entities
-          await this.invalidateCache(`clothing:equipped:${fromEntityId}`);
-          await this.invalidateCache(`clothing:equipped:${toEntityId}`);
+        // Dispatch transfer event
+        this.dispatchEvent('CLOTHING_EQUIPMENT_TRANSFERRED', {
+          fromEntityId,
+          toEntityId,
+          transferredCount: result.transferred.length,
+          failedCount: result.failed.length,
+          timestamp: Date.now(),
+        });
 
-          return {
-            fromEntity: fromEntityId,
-            toEntity: toEntityId,
-            transferred,
-            failed,
-          };
-        },
-      );
-
-      // Dispatch transfer event
-      this.dispatchEvent('CLOTHING_EQUIPMENT_TRANSFERRED', {
-        fromEntityId,
-        toEntityId,
-        transferredCount: result.transferred.length,
-        failedCount: result.failed.length,
-        timestamp: Date.now(),
-      });
-
-      return createSuccessResponse(result, 'transferEquipment', {
-        requestId: transferOptions.requestId,
-      });
-    }, 'transferEquipment', { requestId: options.requestId });
+        return createSuccessResponse(result, 'transferEquipment', {
+          requestId: transferOptions.requestId,
+        });
+      },
+      'transferEquipment',
+      { requestId: options.requestId }
+    );
   }
 }
 

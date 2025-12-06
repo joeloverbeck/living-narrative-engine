@@ -304,7 +304,9 @@ describe('TaskLoader', () => {
 
       await expect(
         taskLoader._validateTaskStructure(data, 'core', 'test.task.json')
-      ).rejects.toThrow(/Failed to load refinement method 'core:test_task.method1'/);
+      ).rejects.toThrow(
+        /Failed to load refinement method 'core:test_task.method1'/
+      );
     });
 
     it('should reject when referenced refinement method declares a mismatched id', async () => {
@@ -438,9 +440,7 @@ describe('TaskLoader', () => {
       expect(taskLoader._isValidScopeReference('no-namespace')).toBe(false);
       expect(taskLoader._isValidScopeReference('core:')).toBe(false);
       expect(taskLoader._isValidScopeReference(':scope')).toBe(false);
-      expect(taskLoader._isValidScopeReference('core:scope:extra')).toBe(
-        false
-      );
+      expect(taskLoader._isValidScopeReference('core:scope:extra')).toBe(false);
     });
   });
 
@@ -636,9 +636,7 @@ describe('TaskLoader', () => {
         'test.task.json'
       );
 
-      expect(normalized).toBe(
-        'refinement-methods/task/method.refinement.json'
-      );
+      expect(normalized).toBe('refinement-methods/task/method.refinement.json');
     });
 
     it('should reject absolute refinement method paths', () => {

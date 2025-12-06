@@ -25,9 +25,12 @@ const RECIPE_PATHS = {
 };
 
 const FIXTURE_PATHS = {
-  missingComponents: 'tests/common/anatomy/fixtures/validation/missing_components.recipe.json',
-  brokenPatterns: 'tests/common/anatomy/fixtures/validation/broken_patterns.recipe.json',
-  unusedClone: 'tests/common/anatomy/fixtures/validation/unused_human_clone.recipe.json',
+  missingComponents:
+    'tests/common/anatomy/fixtures/validation/missing_components.recipe.json',
+  brokenPatterns:
+    'tests/common/anatomy/fixtures/validation/broken_patterns.recipe.json',
+  unusedClone:
+    'tests/common/anatomy/fixtures/validation/unused_human_clone.recipe.json',
 };
 
 describe('Recipe Validation Comparison Regression Suite', () => {
@@ -90,7 +93,9 @@ describe('Recipe Validation Comparison Regression Suite', () => {
       expect(normalizedCli).toEqual(normalizedValidator);
       expect(
         normalizedCli.errors.some((issue) =>
-          String(issue?.message || '').toLowerCase().includes('component')
+          String(issue?.message || '')
+            .toLowerCase()
+            .includes('component')
         )
       ).toBeTruthy();
       expect(normalizedCli.warnings.length).toBeGreaterThan(0);
@@ -138,7 +143,8 @@ describe('Recipe Validation Comparison Regression Suite', () => {
       const syntheticFailure = {
         file: 'data/mods/anatomy/entities/broken.entity.json',
         error: {
-          message: 'Invalid components: [anatomy:part, descriptors:shape_general] at data/body',
+          message:
+            'Invalid components: [anatomy:part, descriptors:shape_general] at data/body',
         },
       };
 
@@ -147,8 +153,13 @@ describe('Recipe Validation Comparison Regression Suite', () => {
         {
           transformValidatorDeps: (deps) => ({
             ...deps,
-            loadFailures: mergeLoadFailures(deps.loadFailures, syntheticFailure),
-            entityMatcherService: createForwardingMatcher(deps.entityMatcherService),
+            loadFailures: mergeLoadFailures(
+              deps.loadFailures,
+              syntheticFailure
+            ),
+            entityMatcherService: createForwardingMatcher(
+              deps.entityMatcherService
+            ),
           }),
         }
       );
@@ -158,7 +169,9 @@ describe('Recipe Validation Comparison Regression Suite', () => {
 
       expect(normalizedCli).toEqual(normalizedValidator);
       expect(
-        normalizedCli.errors.some((issue) => issue.type === 'ENTITY_LOAD_FAILURE')
+        normalizedCli.errors.some(
+          (issue) => issue.type === 'ENTITY_LOAD_FAILURE'
+        )
       ).toBe(true);
       expect(normalizedCli).toMatchSnapshot('load failure propagation');
     });
@@ -209,13 +222,19 @@ async function performComparison(recipePath, options = {}) {
   };
 
   runtimeOverrides.createValidator = (deps) => {
-    const finalDeps = transformValidatorDeps ? transformValidatorDeps(deps) : deps;
+    const finalDeps = transformValidatorDeps
+      ? transformValidatorDeps(deps)
+      : deps;
     capturedValidator = new RecipeValidationRunner(finalDeps);
     return capturedValidator;
   };
 
   const cliOptions = options.cliOptions || {};
-  const cliResult = await executeRecipeValidation([recipePath], cliOptions, runtimeOverrides);
+  const cliResult = await executeRecipeValidation(
+    [recipePath],
+    cliOptions,
+    runtimeOverrides
+  );
 
   if (!capturedValidator) {
     throw new Error('Validator was not initialized by executeRecipeValidation');
@@ -251,10 +270,17 @@ async function loadRecipe(relativePath) {
  */
 function normalizeReport(report) {
   const payload =
-    typeof report?.toJSON === 'function' ? report.toJSON() : structuredClone(report);
+    typeof report?.toJSON === 'function'
+      ? report.toJSON()
+      : structuredClone(report);
 
   const normalizedPath = payload.recipePath
-    ? toPosix(path.relative(process.cwd(), path.resolve(process.cwd(), payload.recipePath)))
+    ? toPosix(
+        path.relative(
+          process.cwd(),
+          path.resolve(process.cwd(), payload.recipePath)
+        )
+      )
     : undefined;
 
   const sanitized = removeTimestamps(payload);

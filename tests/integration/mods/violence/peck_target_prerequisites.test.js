@@ -123,7 +123,9 @@ describe('violence:peck_target prerequisites', () => {
     test('should preserve action metadata', () => {
       expect(peckTargetAction.id).toBe('violence:peck_target');
       expect(peckTargetAction.name).toBe('Peck Target');
-      expect(peckTargetAction.description).toBe('Peck at a target with your beak');
+      expect(peckTargetAction.description).toBe(
+        'Peck at a target with your beak'
+      );
     });
 
     test('should have multi-target configuration', () => {
@@ -201,7 +203,12 @@ describe('violence:peck_target prerequisites', () => {
       // getCacheNode returns cache node with partType
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         if (partId === 'bird123_beak') {
-          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'beak',
+            parentId: 'root123',
+            children: [],
+          };
         }
         return undefined;
       });
@@ -224,7 +231,12 @@ describe('violence:peck_target prerequisites', () => {
       mockBodyGraphService.getAllParts.mockReturnValue(['chicken456_beak']);
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         if (partId === 'chicken456_beak') {
-          return { entityId: partId, partType: 'chicken_beak', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'chicken_beak',
+            parentId: 'root123',
+            children: [],
+          };
         }
         return undefined;
       });
@@ -247,7 +259,12 @@ describe('violence:peck_target prerequisites', () => {
       mockBodyGraphService.getAllParts.mockReturnValue(['tortoise789_beak']);
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         if (partId === 'tortoise789_beak') {
-          return { entityId: partId, partType: 'tortoise_beak', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'tortoise_beak',
+            parentId: 'root123',
+            children: [],
+          };
         }
         return undefined;
       });
@@ -267,13 +284,26 @@ describe('violence:peck_target prerequisites', () => {
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockBodyGraphService.getAllParts.mockReturnValue(['hydra_beak1', 'hydra_beak2']);
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'hydra_beak1',
+        'hydra_beak2',
+      ]);
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         if (partId === 'hydra_beak1') {
-          return { entityId: partId, partType: 'beak', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'beak',
+            parentId: 'root123',
+            children: [],
+          };
         }
         if (partId === 'hydra_beak2') {
-          return { entityId: partId, partType: 'chicken_beak', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'chicken_beak',
+            parentId: 'root123',
+            children: [],
+          };
         }
         return undefined;
       });
@@ -295,7 +325,11 @@ describe('violence:peck_target prerequisites', () => {
 
       mockEntityManager.getEntityInstance.mockReturnValue(actor);
       mockEntityManager.getComponentData.mockReturnValue(bodyComponent);
-      mockBodyGraphService.getAllParts.mockReturnValue(['human_head', 'human_torso', 'human_arm']);
+      mockBodyGraphService.getAllParts.mockReturnValue([
+        'human_head',
+        'human_torso',
+        'human_arm',
+      ]);
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         const partTypes = {
           human_head: 'head',
@@ -303,7 +337,12 @@ describe('violence:peck_target prerequisites', () => {
           human_arm: 'arm',
         };
         return partTypes[partId]
-          ? { entityId: partId, partType: partTypes[partId], parentId: 'root123', children: [] }
+          ? {
+              entityId: partId,
+              partType: partTypes[partId],
+              parentId: 'root123',
+              children: [],
+            }
           : undefined;
       });
 
@@ -343,7 +382,12 @@ describe('violence:peck_target prerequisites', () => {
       mockBodyGraphService.getAllParts.mockReturnValue(['dog_snout']);
       mockBodyGraphService.getCacheNode.mockImplementation((partId) => {
         if (partId === 'dog_snout') {
-          return { entityId: partId, partType: 'snout', parentId: 'root123', children: [] };
+          return {
+            entityId: partId,
+            partType: 'snout',
+            parentId: 'root123',
+            children: [],
+          };
         }
         return undefined;
       });

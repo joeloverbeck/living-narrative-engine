@@ -256,11 +256,14 @@ describe('OpenContainerHandler', () => {
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith('items:container_opened', {
-        actorEntity: 'actor-123',
-        containerEntity: 'container-456',
-        contents: ['revolver', 'letter'],
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'items:container_opened',
+        {
+          actorEntity: 'actor-123',
+          containerEntity: 'container-456',
+          contents: ['revolver', 'letter'],
+        }
+      );
     });
   });
 
@@ -304,11 +307,14 @@ describe('OpenContainerHandler', () => {
         ],
         true
       );
-      expect(dispatcher.dispatch).toHaveBeenCalledWith('items:container_opened', {
-        actorEntity: 'actor-123',
-        containerEntity: 'container-456',
-        contents: ['gold_bar', 'revolver'],
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'items:container_opened',
+        {
+          actorEntity: 'actor-123',
+          containerEntity: 'container-456',
+          contents: ['gold_bar', 'revolver'],
+        }
+      );
       expect(logger.debug).toHaveBeenCalledWith(
         'OpenContainerHandler: Container opened successfully',
         {
@@ -327,11 +333,14 @@ describe('OpenContainerHandler', () => {
       const result = await handler.execute(validParams());
 
       expect(result).toEqual({ success: true, contents: [] });
-      expect(dispatcher.dispatch).toHaveBeenCalledWith('items:container_opened', {
-        actorEntity: 'actor-123',
-        containerEntity: 'container-456',
-        contents: [],
-      });
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'items:container_opened',
+        {
+          actorEntity: 'actor-123',
+          containerEntity: 'container-456',
+          contents: [],
+        }
+      );
     });
 
     it('trims whitespace from entity IDs', async () => {
@@ -410,7 +419,10 @@ describe('OpenContainerHandler', () => {
 
       const result = await handler.execute(validParams());
 
-      expect(result).toEqual({ success: false, error: 'container_missing_component' });
+      expect(result).toEqual({
+        success: false,
+        error: 'container_missing_component',
+      });
       expect(logger.warn).toHaveBeenCalledWith(
         'OpenContainerHandler: Container has no container component',
         { containerEntity: 'container-456' }

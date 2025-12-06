@@ -15,11 +15,11 @@ Create reusable condition files that check whether an actor has free grabbing ap
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
-| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Checks if actor has at least 1 free grabbing appendage |
+| File                                                                                 | Purpose                                                 |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json`      | Checks if actor has at least 1 free grabbing appendage  |
 | `data/mods/anatomy/conditions/actor-has-two-free-grabbing-appendages.condition.json` | Checks if actor has at least 2 free grabbing appendages |
-| `tests/unit/conditions/actor-has-free-grabbing-appendage.test.js` | Unit tests for grabbing appendage conditions |
+| `tests/unit/conditions/actor-has-free-grabbing-appendage.test.js`                    | Unit tests for grabbing appendage conditions            |
 
 ## Acceptance Criteria
 
@@ -74,6 +74,7 @@ Create reusable condition files that check whether an actor has free grabbing ap
   - Edge cases (3 tests): missing actor, null actor id, typical action context
 
 **Test Results:**
+
 - All 11 condition tests pass
 - All 27 tests in `tests/unit/conditions/` pass
 - Mod validation passes

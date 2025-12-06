@@ -2,7 +2,14 @@
  * @file Unit tests for IClothingSystemFacade interface
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import IClothingSystemFacade from '../../../../src/clothing/facades/IClothingSystemFacade.js';
 
@@ -11,11 +18,20 @@ class TestClothingSystemFacade extends IClothingSystemFacade {
   constructor(options = {}) {
     const mockDependencies = {
       // Core base facade dependencies
-      logger: { info: () => {}, debug: () => {}, error: () => {}, warn: () => {} },
+      logger: {
+        info: () => {},
+        debug: () => {},
+        error: () => {},
+        warn: () => {},
+      },
       eventBus: { dispatch: () => {}, subscribe: () => {} },
-      unifiedCache: { get: () => undefined, set: () => {}, invalidate: () => {} },
+      unifiedCache: {
+        get: () => undefined,
+        set: () => {},
+        invalidate: () => {},
+      },
       circuitBreaker: null, // Optional dependency
-      
+
       // IClothingSystemFacade-specific service dependencies
       clothingManagementService: {
         getAccessibleItems: async () => [],
@@ -94,9 +110,18 @@ describe('IClothingSystemFacade', () => {
     it('should throw error when instantiated directly', () => {
       expect(() => {
         new IClothingSystemFacade({
-          logger: { info: () => {}, debug: () => {}, error: () => {}, warn: () => {} },
+          logger: {
+            info: () => {},
+            debug: () => {},
+            error: () => {},
+            warn: () => {},
+          },
           eventBus: { dispatch: () => {}, subscribe: () => {} },
-          unifiedCache: { get: () => null, set: () => {}, invalidate: () => {} }
+          unifiedCache: {
+            get: () => null,
+            set: () => {},
+            invalidate: () => {},
+          },
         });
       }).toThrow('Cannot instantiate abstract class IClothingSystemFacade');
     });
@@ -168,7 +193,7 @@ describe('IClothingSystemFacade', () => {
     describe('getAccessibleItems', () => {
       it('should return accessible items with proper response format', async () => {
         const response = await facade.getAccessibleItems('actor1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toEqual([]);
@@ -179,7 +204,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId and options parameters', async () => {
-        const response = await facade.getAccessibleItems('actor1', { includeBlocked: false });
+        const response = await facade.getAccessibleItems('actor1', {
+          includeBlocked: false,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -187,7 +214,7 @@ describe('IClothingSystemFacade', () => {
     describe('getEquippedItems', () => {
       it('should return equipped items with proper response format', async () => {
         const response = await facade.getEquippedItems('actor1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toEqual([]);
@@ -198,7 +225,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId and options parameters', async () => {
-        const response = await facade.getEquippedItems('actor1', { slot: 'weapon' });
+        const response = await facade.getEquippedItems('actor1', {
+          slot: 'weapon',
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -206,7 +235,7 @@ describe('IClothingSystemFacade', () => {
     describe('getItemsInSlot', () => {
       it('should return items in slot with proper response format', async () => {
         const response = await facade.getItemsInSlot('actor1', 'weapon');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeNull();
@@ -218,7 +247,7 @@ describe('IClothingSystemFacade', () => {
     describe('equipItem', () => {
       it('should equip an item and return proper response', async () => {
         const response = await facade.equipItem('actor1', 'sword1', 'weapon');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -229,7 +258,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, itemId, slot, and options parameters', async () => {
-        const response = await facade.equipItem('actor1', 'sword1', 'weapon', { force: false });
+        const response = await facade.equipItem('actor1', 'sword1', 'weapon', {
+          force: false,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -237,7 +268,7 @@ describe('IClothingSystemFacade', () => {
     describe('unequipItem', () => {
       it('should unequip an item and return proper response', async () => {
         const response = await facade.unequipItem('actor1', 'sword1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -248,7 +279,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, itemId, and options parameters', async () => {
-        const response = await facade.unequipItem('actor1', 'sword1', { force: false });
+        const response = await facade.unequipItem('actor1', 'sword1', {
+          force: false,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -256,7 +289,7 @@ describe('IClothingSystemFacade', () => {
     describe('swapItems', () => {
       it('should swap items and return proper response', async () => {
         const response = await facade.swapItems('actor1', 'sword1', 'sword2');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -267,7 +300,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, itemId1, itemId2, and options parameters', async () => {
-        const response = await facade.swapItems('actor1', 'sword1', 'sword2', { validateFit: true });
+        const response = await facade.swapItems('actor1', 'sword1', 'sword2', {
+          validateFit: true,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -275,7 +310,7 @@ describe('IClothingSystemFacade', () => {
     describe('clearSlot', () => {
       it('should clear slot and return proper response', async () => {
         const response = await facade.clearSlot('actor1', 'weapon');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -285,7 +320,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, slot, and options parameters', async () => {
-        const response = await facade.clearSlot('actor1', 'weapon', { force: false });
+        const response = await facade.clearSlot('actor1', 'weapon', {
+          force: false,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -293,7 +330,7 @@ describe('IClothingSystemFacade', () => {
     describe('validateEquipment', () => {
       it('should validate equipment and return proper response', async () => {
         const response = await facade.validateEquipment('actor1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -304,7 +341,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId and options parameters', async () => {
-        const response = await facade.validateEquipment('actor1', { includeWarnings: true });
+        const response = await facade.validateEquipment('actor1', {
+          includeWarnings: true,
+        });
         expect(response.success).toBe(true);
       });
     });
@@ -312,7 +351,7 @@ describe('IClothingSystemFacade', () => {
     describe('getBlockedSlots', () => {
       it('should return blocked slots with proper response format', async () => {
         const response = await facade.getBlockedSlots('actor1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toEqual([]);
@@ -324,7 +363,7 @@ describe('IClothingSystemFacade', () => {
     describe('getLayerConflicts', () => {
       it('should return layer conflicts with proper response format', async () => {
         const response = await facade.getLayerConflicts('actor1');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toEqual([]);
@@ -337,10 +376,10 @@ describe('IClothingSystemFacade', () => {
       it('should equip multiple items and return proper response', async () => {
         const items = [
           { itemId: 'sword1', slot: 'weapon' },
-          { itemId: 'armor1', slot: 'chest' }
+          { itemId: 'armor1', slot: 'chest' },
         ];
         const response = await facade.equipMultiple('actor1', items);
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -352,15 +391,22 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, items, and options parameters', async () => {
-        const response = await facade.equipMultiple('actor1', [{ itemId: 'sword1', slot: 'weapon' }], { stopOnError: false });
+        const response = await facade.equipMultiple(
+          'actor1',
+          [{ itemId: 'sword1', slot: 'weapon' }],
+          { stopOnError: false }
+        );
         expect(response.success).toBe(true);
       });
     });
 
     describe('unequipMultiple', () => {
       it('should unequip multiple items and return proper response', async () => {
-        const response = await facade.unequipMultiple('actor1', ['sword1', 'armor1']);
-        
+        const response = await facade.unequipMultiple('actor1', [
+          'sword1',
+          'armor1',
+        ]);
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -372,7 +418,11 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept entityId, items, and options parameters', async () => {
-        const response = await facade.unequipMultiple('actor1', ['sword1', 'armor1'], { force: false });
+        const response = await facade.unequipMultiple(
+          'actor1',
+          ['sword1', 'armor1'],
+          { force: false }
+        );
         expect(response.success).toBe(true);
       });
     });
@@ -380,7 +430,7 @@ describe('IClothingSystemFacade', () => {
     describe('transferEquipment', () => {
       it('should transfer equipment and return proper response', async () => {
         const response = await facade.transferEquipment('actor1', 'actor2');
-        
+
         expect(response).toBeDefined();
         expect(response.success).toBe(true);
         expect(response.data).toBeDefined();
@@ -393,9 +443,9 @@ describe('IClothingSystemFacade', () => {
       });
 
       it('should accept fromEntityId, toEntityId, and options parameters', async () => {
-        const response = await facade.transferEquipment('actor1', 'actor2', { 
+        const response = await facade.transferEquipment('actor1', 'actor2', {
           itemFilter: { slot: 'weapon' },
-          validateFit: true 
+          validateFit: true,
         });
         expect(response.success).toBe(true);
       });
@@ -406,15 +456,19 @@ describe('IClothingSystemFacade', () => {
     it('should properly instantiate as a subclass of BaseFacade', () => {
       // Verify that the facade is an instance of IClothingSystemFacade
       expect(facade).toBeInstanceOf(IClothingSystemFacade);
-      
+
       // The protected methods exist but are not directly accessible from tests
       // We verify their existence through the facade's behavior rather than direct access
-      
+
       // Test that caching works (indirectly tests cacheableOperation)
-      expect(async () => await facade.getAccessibleItems('actor1')).not.toThrow();
-      
+      expect(
+        async () => await facade.getAccessibleItems('actor1')
+      ).not.toThrow();
+
       // Test that event dispatching works (indirectly tests dispatchEvent)
-      expect(async () => await facade.equipItem('actor1', 'item1', 'slot')).not.toThrow();
+      expect(
+        async () => await facade.equipItem('actor1', 'item1', 'slot')
+      ).not.toThrow();
     });
   });
 
@@ -430,7 +484,7 @@ describe('IClothingSystemFacade', () => {
       expect(response).toBeDefined();
       expect(response.success).toBe(true);
     });
-    
+
     it('should handle empty options object', async () => {
       const response = await facade.getAccessibleItems('actor1', {});
       expect(response).toBeDefined();
@@ -443,10 +497,13 @@ describe('IClothingSystemFacade', () => {
         slot: 'weapon',
         sortBy: 'name',
         pagination: { limit: 10, offset: 0 },
-        filter: { type: 'sword', rarity: 'epic' }
+        filter: { type: 'sword', rarity: 'epic' },
       };
 
-      const response = await facade.getAccessibleItems('actor1', complexOptions);
+      const response = await facade.getAccessibleItems(
+        'actor1',
+        complexOptions
+      );
       expect(response).toBeDefined();
       expect(response.success).toBe(true);
     });
@@ -455,7 +512,7 @@ describe('IClothingSystemFacade', () => {
       const items = [
         { itemId: 'sword1', slot: 'weapon' },
         { itemId: 'armor1', slot: 'chest' },
-        { itemId: 'helmet1', slot: 'head' }
+        { itemId: 'helmet1', slot: 'head' },
       ];
       const response = await facade.equipMultiple('actor1', items);
       expect(response).toBeDefined();
@@ -484,7 +541,7 @@ describe('IClothingSystemFacade', () => {
 
     it('should return standard modification response format', async () => {
       const response = await facade.equipItem('actor1', 'sword1', 'weapon');
-      
+
       expect(response).toHaveProperty('success');
       expect(response).toHaveProperty('data');
       expect(response).toHaveProperty('changes');
@@ -496,7 +553,7 @@ describe('IClothingSystemFacade', () => {
 
     it('should return standard validation response format', async () => {
       const response = await facade.validateEquipment('actor1');
-      
+
       expect(response).toHaveProperty('success');
       expect(response).toHaveProperty('data');
       expect(response).toHaveProperty('metadata');
@@ -512,7 +569,9 @@ describe('IClothingSystemFacade', () => {
     it('should use fallback values when accessible item retrieval fails', async () => {
       const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
       const failingService = {
-        getAccessibleItems: jest.fn().mockRejectedValue(new Error('service down')),
+        getAccessibleItems: jest
+          .fn()
+          .mockRejectedValue(new Error('service down')),
         getEquippedItems: jest.fn(),
         getItemsInSlot: jest.fn(),
       };
@@ -583,7 +642,9 @@ describe('IClothingSystemFacade', () => {
     it('should provide default compatibility data when compatibility checks fail', async () => {
       const localEventBus = { dispatch: jest.fn(), subscribe: jest.fn() };
       const failingLayerService = {
-        checkCompatibility: jest.fn().mockRejectedValue(new Error('no service')),
+        checkCompatibility: jest
+          .fn()
+          .mockRejectedValue(new Error('no service')),
         getConflicts: jest.fn(),
         getBlockedSlots: jest.fn(),
         getLayerConflicts: jest.fn(),
@@ -594,9 +655,16 @@ describe('IClothingSystemFacade', () => {
         layerCompatibilityService: failingLayerService,
       });
 
-      const response = await fallbackFacade.checkItemCompatibility('actor1', 'item1', 'slot1');
+      const response = await fallbackFacade.checkItemCompatibility(
+        'actor1',
+        'item1',
+        'slot1'
+      );
 
-      expect(response.data).toEqual({ compatible: false, reason: 'Compatibility check failed' });
+      expect(response.data).toEqual({
+        compatible: false,
+        reason: 'Compatibility check failed',
+      });
       expect(localEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'FACADE_OPERATION_ERROR' })
       );
@@ -604,7 +672,9 @@ describe('IClothingSystemFacade', () => {
 
     it('should fall back to validation error when validator is unavailable', async () => {
       const validator = {
-        validateEntityEquipment: jest.fn().mockRejectedValue(new Error('offline')),
+        validateEntityEquipment: jest
+          .fn()
+          .mockRejectedValue(new Error('offline')),
       };
 
       const fallbackFacade = createFacadeInstance({
@@ -613,7 +683,10 @@ describe('IClothingSystemFacade', () => {
 
       const response = await fallbackFacade.validateEquipment('actor1');
 
-      expect(response.data).toEqual({ valid: false, errors: [{ message: 'Validation service unavailable' }] });
+      expect(response.data).toEqual({
+        valid: false,
+        errors: [{ message: 'Validation service unavailable' }],
+      });
     });
 
     it('should return empty blocked slots when compatibility service fails', async () => {
@@ -677,7 +750,9 @@ describe('IClothingSystemFacade', () => {
         type: 'InvalidArgumentError',
         code: 'INVALID_ARGUMENT_ERROR',
       });
-      expect(response.error.message).toContain('Item item1 is not compatible with slot slot1');
+      expect(response.error.message).toContain(
+        'Item item1 is not compatible with slot slot1'
+      );
       expect(response.metadata.operationType).toBe('equipItem');
     });
   });
@@ -725,10 +800,22 @@ describe('IClothingSystemFacade', () => {
       expect(progressCallback).toHaveBeenCalledWith(
         expect.objectContaining({ processed: 2, successful: 1, failed: 1 })
       );
-      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data).toMatchObject({
+        processed: 2,
+        successful: 1,
+        failed: 1,
+      });
       expect(response.data.results).toEqual([
-        { item: { itemId: 'good', slot: 'slotA' }, result: { success: true, itemId: 'good' }, success: true },
-        { item: { itemId: 'bad', slot: 'slotB' }, error: 'equip failure', success: false },
+        {
+          item: { itemId: 'good', slot: 'slotA' },
+          result: { success: true, itemId: 'good' },
+          success: true,
+        },
+        {
+          item: { itemId: 'bad', slot: 'slotB' },
+          error: 'equip failure',
+          success: false,
+        },
       ]);
       expect(localEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'CLOTHING_BULK_EQUIP_COMPLETED' })
@@ -744,7 +831,9 @@ describe('IClothingSystemFacade', () => {
           throw new Error('hard failure');
         });
 
-      const response = await bulkFacade.equipMultiple('actor1', [{ itemId: 'bad', slot: 'slotA' }]);
+      const response = await bulkFacade.equipMultiple('actor1', [
+        { itemId: 'bad', slot: 'slotA' },
+      ]);
 
       expect(response.success).toBe(false);
       expect(response.error.message).toBe('hard failure');
@@ -790,9 +879,17 @@ describe('IClothingSystemFacade', () => {
       expect(progressCallback).toHaveBeenCalledWith(
         expect.objectContaining({ processed: 2, successful: 1, failed: 1 })
       );
-      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data).toMatchObject({
+        processed: 2,
+        successful: 1,
+        failed: 1,
+      });
       expect(response.data.results).toEqual([
-        { itemId: 'good', result: { success: true, itemId: 'good' }, success: true },
+        {
+          itemId: 'good',
+          result: { success: true, itemId: 'good' },
+          success: true,
+        },
         { itemId: 'bad', error: 'unequip failure', success: false },
       ]);
       expect(localEventBus.dispatch).toHaveBeenCalledWith(
@@ -830,34 +927,51 @@ describe('IClothingSystemFacade', () => {
         ],
       });
 
-      jest.spyOn(transferFacade, 'checkItemCompatibility').mockImplementation(async (_entity, itemId) => {
-        if (itemId === 'blocked') {
-          return { data: { compatible: false, reason: 'Layer or slot conflicts detected' } };
-        }
-        return { data: { compatible: true, reason: null } };
-      });
+      jest
+        .spyOn(transferFacade, 'checkItemCompatibility')
+        .mockImplementation(async (_entity, itemId) => {
+          if (itemId === 'blocked') {
+            return {
+              data: {
+                compatible: false,
+                reason: 'Layer or slot conflicts detected',
+              },
+            };
+          }
+          return { data: { compatible: true, reason: null } };
+        });
 
       const unequipSpy = jest
         .spyOn(transferFacade, 'unequipItem')
         .mockResolvedValue({ success: true });
 
-      const equipSpy = jest.spyOn(transferFacade, 'equipItem').mockImplementation(async (_entity, itemId) => {
-        if (itemId === 'error') {
-          throw new Error('equip failed');
-        }
-        return { success: true };
-      });
+      const equipSpy = jest
+        .spyOn(transferFacade, 'equipItem')
+        .mockImplementation(async (_entity, itemId) => {
+          if (itemId === 'error') {
+            throw new Error('equip failed');
+          }
+          return { success: true };
+        });
 
       const response = await transferFacade.transferEquipment('from', 'to');
 
-      expect(unequipSpy).toHaveBeenCalledWith('from', 'error', { notifyOnChange: false });
-      expect(equipSpy).toHaveBeenCalledWith('to', 'success', 'legs', { notifyOnChange: false });
-      expect(response.data.transferred).toEqual([{ itemId: 'success', slot: 'legs' }]);
+      expect(unequipSpy).toHaveBeenCalledWith('from', 'error', {
+        notifyOnChange: false,
+      });
+      expect(equipSpy).toHaveBeenCalledWith('to', 'success', 'legs', {
+        notifyOnChange: false,
+      });
+      expect(response.data.transferred).toEqual([
+        { itemId: 'success', slot: 'legs' },
+      ]);
       expect(response.data.failed).toEqual([
         { itemId: 'blocked', reason: 'Layer or slot conflicts detected' },
         { itemId: 'error', error: 'equip failed' },
       ]);
-      expect(cacheMock.invalidate).toHaveBeenCalledWith('clothing:equipped:from');
+      expect(cacheMock.invalidate).toHaveBeenCalledWith(
+        'clothing:equipped:from'
+      );
       expect(cacheMock.invalidate).toHaveBeenCalledWith('clothing:equipped:to');
       expect(localEventBus.dispatch).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'CLOTHING_EQUIPMENT_TRANSFERRED' })

@@ -91,6 +91,7 @@ When dismemberment occurs (`anatomy:dismembered` component added, `anatomy:disme
 ### Desired State
 
 When dismemberment occurs:
+
 1. A new entity instance should be created from the original body part's entity definition.
 2. The entity should spawn at the character's location.
 3. The entity should have a descriptive name indicating ownership and orientation.
@@ -108,6 +109,7 @@ When dismemberment occurs:
 **Findings:**
 
 1. **Entity Instance Storage**: The `Entity` class (`src/entities/entity.js:36-45`) stores the definition ID:
+
    ```javascript
    get definitionId() {
      return this.#data.definition.id; // e.g., "anatomy:human_torso"
@@ -123,6 +125,7 @@ When dismemberment occurs:
 ### Recommendation
 
 **Add `definitionId` field to `anatomy:part` component** to ensure the definition ID is always available, even after serialization. This is the most robust solution as:
+
 - It survives save/load cycles.
 - It's explicitly part of the body part data model.
 - It doesn't rely on runtime entity instance structure.
@@ -179,16 +182,23 @@ When dismemberment occurs:
 **Location:** `createAndAttachPart()` method (lines 192-290)
 
 **Logic:**
+
 ```javascript
 // After creating entity instance
-const childEntity = await this.#entityManager.createEntityInstance(partDefinitionId, { componentOverrides });
+const childEntity = await this.#entityManager.createEntityInstance(
+  partDefinitionId,
+  { componentOverrides }
+);
 
 // Update anatomy:part component to include definitionId
-const existingPartData = await this.#entityManager.getComponent(childEntity.id, 'anatomy:part');
+const existingPartData = await this.#entityManager.getComponent(
+  childEntity.id,
+  'anatomy:part'
+);
 if (existingPartData) {
   await this.#entityManager.updateComponent(childEntity.id, 'anatomy:part', {
     ...existingPartData,
-    definitionId: partDefinitionId
+    definitionId: partDefinitionId,
   });
 }
 ```
@@ -200,6 +210,7 @@ if (existingPartData) {
 ### Rationale
 
 Body part weights cannot be hardcoded because:
+
 - Different body types have different part weights (human vs. chicken vs. dragon).
 - Modders need control over weight values.
 - Weights vary significantly by part type (brain ~1.4kg, leg ~10kg, finger ~0.05kg).
@@ -213,6 +224,7 @@ Body part weights cannot be hardcoded because:
 All body part entity definitions must include `items:weight` component with realistic weight values (in kilograms).
 
 **Example - Updated `human_foot.entity.json`:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -240,24 +252,25 @@ All body part entity definitions must include `items:weight` component with real
 
 ### Reference Weight Values (Human Body Parts)
 
-| Body Part | Typical Weight (kg) | Notes |
-|-----------|---------------------|-------|
-| Head | 4.5-5.0 | Including brain |
-| Brain | 1.3-1.4 | Internal organ |
-| Torso | 25-35 | Varies by build |
-| Arm (full) | 3.5-5.0 | Shoulder to fingertips |
-| Hand | 0.4-0.5 | Wrist to fingertips |
-| Finger | 0.05-0.1 | Per finger |
-| Leg (full) | 10-15 | Hip to toes |
-| Foot | 1.0-1.3 | Ankle to toes |
-| Eye | 0.007-0.008 | Per eye |
-| Ear | 0.01 | Cartilage only |
-| Breast | 0.5-1.5 | Varies significantly |
-| Heart | 0.25-0.35 | Internal organ |
+| Body Part  | Typical Weight (kg) | Notes                  |
+| ---------- | ------------------- | ---------------------- |
+| Head       | 4.5-5.0             | Including brain        |
+| Brain      | 1.3-1.4             | Internal organ         |
+| Torso      | 25-35               | Varies by build        |
+| Arm (full) | 3.5-5.0             | Shoulder to fingertips |
+| Hand       | 0.4-0.5             | Wrist to fingertips    |
+| Finger     | 0.05-0.1            | Per finger             |
+| Leg (full) | 10-15               | Hip to toes            |
+| Foot       | 1.0-1.3             | Ankle to toes          |
+| Eye        | 0.007-0.008         | Per eye                |
+| Ear        | 0.01                | Cartilage only         |
+| Breast     | 0.5-1.5             | Varies significantly   |
+| Heart      | 0.25-0.35           | Internal organ         |
 
 ### Files Requiring Weight Addition
 
 All files in `data/mods/anatomy/entities/definitions/*.entity.json` need `items:weight` component added. Based on file listing, this includes approximately 100+ entity definitions covering:
+
 - Human parts (torso variants, feet, hands, eyes, hair, ass cheeks, breasts, etc.)
 - Centaur parts (torso, legs, head)
 - Chicken parts (head, beak, wing, leg, foot, etc.)
@@ -277,16 +290,19 @@ All files in `data/mods/anatomy/entities/definitions/*.entity.json` need `items:
 **Purpose:** Listens for `anatomy:dismembered` events and spawns corresponding pickable entities.
 
 **Dependencies:**
+
 - `IEntityManager` - For entity creation and component access
 - `IEventBus` - For listening to dismemberment events
 - `ILogger` - For logging
 
 **Constructor Signature:**
+
 ```javascript
-constructor({ entityManager, eventBus, logger })
+constructor({ entityManager, eventBus, logger });
 ```
 
 **Public Methods:**
+
 ```javascript
 /**
  * Initializes the service by subscribing to dismemberment events.
@@ -308,38 +324,54 @@ async handleDismemberment(event)
 **Spawning Logic:**
 
 1. **Retrieve Definition ID:**
+
    ```javascript
-   const partComponent = await entityManager.getComponent(partId, 'anatomy:part');
+   const partComponent = await entityManager.getComponent(
+     partId,
+     'anatomy:part'
+   );
    const definitionId = partComponent.definitionId;
    if (!definitionId) {
-     logger.error('Cannot spawn body part: missing definitionId in anatomy:part component');
+     logger.error(
+       'Cannot spawn body part: missing definitionId in anatomy:part component'
+     );
      return;
    }
    ```
 
 2. **Get Character Location:**
+
    ```javascript
-   const characterPosition = await entityManager.getComponent(entityId, 'core:position');
+   const characterPosition = await entityManager.getComponent(
+     entityId,
+     'core:position'
+   );
    ```
 
 3. **Generate Display Name:**
+
    ```javascript
-   const displayName = orientation && orientation !== 'mid'
-     ? `${entityName}'s ${orientation} ${partType}`
-     : `${entityName}'s ${partType}`;
+   const displayName =
+     orientation && orientation !== 'mid'
+       ? `${entityName}'s ${orientation} ${partType}`
+       : `${entityName}'s ${partType}`;
    ```
 
 4. **Create Entity with Overrides:**
+
    ```javascript
-   const spawnedEntity = await entityManager.createEntityInstance(definitionId, {
-     componentOverrides: {
-       'core:name': { text: displayName },
-       'core:position': characterPosition,
-       'items:item': {},  // Mark as item
-       'items:portable': {}  // Mark as pickable
-       // items:weight inherited from definition
+   const spawnedEntity = await entityManager.createEntityInstance(
+     definitionId,
+     {
+       componentOverrides: {
+         'core:name': { text: displayName },
+         'core:position': characterPosition,
+         'items:item': {}, // Mark as item
+         'items:portable': {}, // Mark as pickable
+         // items:weight inherited from definition
+       },
      }
-   });
+   );
    ```
 
 5. **Dispatch Spawn Event:**
@@ -352,7 +384,7 @@ async handleDismemberment(event)
      partType: partType,
      orientation: orientation,
      definitionId: definitionId,
-     timestamp: Date.now()
+     timestamp: Date.now(),
    });
    ```
 
@@ -361,21 +393,24 @@ async handleDismemberment(event)
 **File:** `src/dependencyInjection/tokens/tokens-core.js`
 
 Add token:
+
 ```javascript
-DismemberedBodyPartSpawner: 'DismemberedBodyPartSpawner'
+DismemberedBodyPartSpawner: 'DismemberedBodyPartSpawner';
 ```
 
 **File:** `src/dependencyInjection/registrations/anatomyRegistrations.js`
 
 Register service with dependencies:
+
 ```javascript
 container.registerFactory(
   tokens.DismemberedBodyPartSpawner,
-  (container) => new DismemberedBodyPartSpawner({
-    entityManager: container.resolve(tokens.IEntityManager),
-    eventBus: container.resolve(tokens.IEventBus),
-    logger: container.resolve(tokens.ILogger)
-  }),
+  (container) =>
+    new DismemberedBodyPartSpawner({
+      entityManager: container.resolve(tokens.IEntityManager),
+      eventBus: container.resolve(tokens.IEventBus),
+      logger: container.resolve(tokens.ILogger),
+    }),
   Lifecycles.SINGLETON
 );
 ```
@@ -393,6 +428,7 @@ The `DismemberedBodyPartSpawner` service must be initialized during game startup
 **File:** `data/mods/anatomy/events/body_part_spawned.event.json` (NEW)
 
 **Schema:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/event.schema.json",
@@ -686,15 +722,15 @@ When "Sarah" loses her left leg (definition: `anatomy:human_leg`), the spawned e
 
 ### Key Source Files
 
-| File | Purpose |
-|------|---------|
-| `src/anatomy/services/damageTypeEffectsService.js` | Handles dismemberment detection and component addition |
-| `src/anatomy/entityGraphBuilder.js` | Creates body part entities during anatomy building |
-| `src/entities/entity.js` | Entity class with definitionId getter |
-| `data/mods/anatomy/components/part.component.json` | anatomy:part component schema |
-| `data/mods/anatomy/components/dismembered.component.json` | anatomy:dismembered component schema |
-| `data/mods/anatomy/events/dismembered.event.json` | anatomy:dismembered event schema |
-| `data/mods/items/components/weight.component.json` | items:weight component schema |
+| File                                                      | Purpose                                                |
+| --------------------------------------------------------- | ------------------------------------------------------ |
+| `src/anatomy/services/damageTypeEffectsService.js`        | Handles dismemberment detection and component addition |
+| `src/anatomy/entityGraphBuilder.js`                       | Creates body part entities during anatomy building     |
+| `src/entities/entity.js`                                  | Entity class with definitionId getter                  |
+| `data/mods/anatomy/components/part.component.json`        | anatomy:part component schema                          |
+| `data/mods/anatomy/components/dismembered.component.json` | anatomy:dismembered component schema                   |
+| `data/mods/anatomy/events/dismembered.event.json`         | anatomy:dismembered event schema                       |
+| `data/mods/items/components/weight.component.json`        | items:weight component schema                          |
 
 ### Body Part Definition Directory
 

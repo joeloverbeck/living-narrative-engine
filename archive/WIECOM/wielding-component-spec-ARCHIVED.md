@@ -7,6 +7,7 @@ This specification defines the implementation of a `positioning:wielding` compon
 ## Problem Statement
 
 Currently, when the `wield_threateningly` action executes:
+
 1. No component tracks that the actor is wielding an item
 2. No activity description is generated (e.g., "{actor} is wielding a sword")
 3. No mechanism exists to gate other actions based on wielding state
@@ -30,12 +31,12 @@ Currently, when the `wield_threateningly` action executes:
 
 ## Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Mod location | `positioning` | Wielding is a positional state like sitting/kneeling |
-| Schema structure | Simple array | No appendage mapping needed for current requirements |
-| Activity template | List weapon names | Requires activity system enhancement but better UX |
-| Priority | 70 | Between hugging (66) and kneeling (75) |
+| Decision          | Choice            | Rationale                                            |
+| ----------------- | ----------------- | ---------------------------------------------------- |
+| Mod location      | `positioning`     | Wielding is a positional state like sitting/kneeling |
+| Schema structure  | Simple array      | No appendage mapping needed for current requirements |
+| Activity template | List weapon names | Requires activity system enhancement but better UX   |
+| Priority          | 70                | Between hugging (66) and kneeling (75)               |
 
 ## Technical Design
 
@@ -192,7 +193,8 @@ if (isArrayTarget && Array.isArray(rawTargetValue)) {
     targetEntityIds: rawTargetValue, // New field for arrays
     isMultiTarget: true,
     priority: activityMetadata.priority ?? 50,
-    shouldDescribeInActivity: activityMetadata.shouldDescribeInActivity !== false,
+    shouldDescribeInActivity:
+      activityMetadata.shouldDescribeInActivity !== false,
     sourceComponentId: componentId,
     ownerEntityId: entityId,
   };
@@ -228,51 +230,51 @@ if (activity.isMultiTarget && activity.targetEntityIds?.length > 0) {
 
 **File**: `tests/unit/mods/positioning/components/wielding_component_schema.test.js`
 
-| Test Case | Input | Expected |
-|-----------|-------|----------|
-| Valid: Empty array | `{ wielded_item_ids: [] }` | Pass |
-| Valid: Single item | `{ wielded_item_ids: ['sword-1'] }` | Pass |
-| Valid: Multiple items | `{ wielded_item_ids: ['sword-1', 'dagger-2'] }` | Pass |
-| Valid: With activityMetadata | `{ wielded_item_ids: ['sword'], activityMetadata: { shouldDescribeInActivity: true } }` | Pass |
-| Invalid: Missing wielded_item_ids | `{}` | Fail |
-| Invalid: Items as string | `{ wielded_item_ids: 'sword' }` | Fail |
-| Invalid: Non-string in array | `{ wielded_item_ids: [123] }` | Fail |
-| Invalid: Additional properties | `{ wielded_item_ids: [], extra: 'bad' }` | Fail |
-| Valid: Namespaced IDs | `{ wielded_item_ids: ['weapons:silver_revolver'] }` | Pass |
+| Test Case                         | Input                                                                                   | Expected |
+| --------------------------------- | --------------------------------------------------------------------------------------- | -------- |
+| Valid: Empty array                | `{ wielded_item_ids: [] }`                                                              | Pass     |
+| Valid: Single item                | `{ wielded_item_ids: ['sword-1'] }`                                                     | Pass     |
+| Valid: Multiple items             | `{ wielded_item_ids: ['sword-1', 'dagger-2'] }`                                         | Pass     |
+| Valid: With activityMetadata      | `{ wielded_item_ids: ['sword'], activityMetadata: { shouldDescribeInActivity: true } }` | Pass     |
+| Invalid: Missing wielded_item_ids | `{}`                                                                                    | Fail     |
+| Invalid: Items as string          | `{ wielded_item_ids: 'sword' }`                                                         | Fail     |
+| Invalid: Non-string in array      | `{ wielded_item_ids: [123] }`                                                           | Fail     |
+| Invalid: Additional properties    | `{ wielded_item_ids: [], extra: 'bad' }`                                                | Fail     |
+| Valid: Namespaced IDs             | `{ wielded_item_ids: ['weapons:silver_revolver'] }`                                     | Pass     |
 
 ### Test Suite 2: Rule Execution
 
 **File**: `tests/integration/mods/weapons/wieldThreateninglyRuleExecution.test.js`
 
-| Test Case | Initial State | Action | Expected |
-|-----------|---------------|--------|----------|
-| First wield | No component | Wield sword | Component with `['sword']` |
-| Second wield | `['sword']` | Wield dagger | Component with `['sword', 'dagger']` |
-| Duplicate wield | `['sword']` | Wield sword | Component still `['sword']` (no duplicate) |
-| Description regenerated | No component | Wield sword | REGENERATE_DESCRIPTION called |
+| Test Case               | Initial State | Action       | Expected                                   |
+| ----------------------- | ------------- | ------------ | ------------------------------------------ |
+| First wield             | No component  | Wield sword  | Component with `['sword']`                 |
+| Second wield            | `['sword']`   | Wield dagger | Component with `['sword', 'dagger']`       |
+| Duplicate wield         | `['sword']`   | Wield sword  | Component still `['sword']` (no duplicate) |
+| Description regenerated | No component  | Wield sword  | REGENERATE_DESCRIPTION called              |
 
 ### Test Suite 3: Activity Description Integration
 
 **File**: `tests/integration/mods/positioning/wieldingActivityDescription.test.js`
 
-| Test Case | Component State | Expected Output |
-|-----------|-----------------|-----------------|
-| Single weapon | `['sword']` | "{actor} is wielding sword threateningly" |
-| Two weapons | `['sword', 'dagger']` | "{actor} is wielding sword and dagger threateningly" |
-| Three weapons | `['sword', 'dagger', 'staff']` | "{actor} is wielding sword, dagger, and staff threateningly" |
-| Disabled | `activityMetadata.shouldDescribeInActivity: false` | No wielding in description |
-| Priority ordering | `priority: 70` | Appears between priority 66 and 75 activities |
+| Test Case         | Component State                                    | Expected Output                                              |
+| ----------------- | -------------------------------------------------- | ------------------------------------------------------------ |
+| Single weapon     | `['sword']`                                        | "{actor} is wielding sword threateningly"                    |
+| Two weapons       | `['sword', 'dagger']`                              | "{actor} is wielding sword and dagger threateningly"         |
+| Three weapons     | `['sword', 'dagger', 'staff']`                     | "{actor} is wielding sword, dagger, and staff threateningly" |
+| Disabled          | `activityMetadata.shouldDescribeInActivity: false` | No wielding in description                                   |
+| Priority ordering | `priority: 70`                                     | Appears between priority 66 and 75 activities                |
 
 ### Test Suite 4: Edge Cases
 
 **File**: `tests/integration/mods/weapons/wieldingEdgeCases.test.js`
 
-| Test Case | Scenario | Expected |
-|-----------|----------|----------|
-| Empty array | Component with `[]` | Valid state, no crash |
-| Namespaced IDs | `['weapons:silver_revolver']` | Correctly handled |
-| Max items | Many items wielded | Array grows correctly |
-| Component removal | Remove component | Activity description updates |
+| Test Case         | Scenario                      | Expected                     |
+| ----------------- | ----------------------------- | ---------------------------- |
+| Empty array       | Component with `[]`           | Valid state, no crash        |
+| Namespaced IDs    | `['weapons:silver_revolver']` | Correctly handled            |
+| Max items         | Many items wielded            | Array grows correctly        |
+| Component removal | Remove component              | Activity description updates |
 
 ### Test Suite 5: Action Gating (Future)
 
@@ -280,16 +282,17 @@ if (activity.isMultiTarget && activity.targetEntityIds?.length > 0) {
 
 Document test cases for future action gating:
 
-| Action | Wielding State | Expected |
-|--------|----------------|----------|
-| approach | `['sword']` | Blocked (future) |
-| hug | `['sword']` | Blocked (future) |
-| step_back | `['sword']` | Allowed |
-| put_down_weapon | `['sword']` | Allowed |
+| Action          | Wielding State | Expected         |
+| --------------- | -------------- | ---------------- |
+| approach        | `['sword']`    | Blocked (future) |
+| hug             | `['sword']`    | Blocked (future) |
+| step_back       | `['sword']`    | Allowed          |
+| put_down_weapon | `['sword']`    | Allowed          |
 
 ## Implementation Checklist
 
 ### Phase 1: Component & Rule
+
 - [ ] Create `data/mods/positioning/components/wielding.component.json`
 - [ ] Update `data/mods/positioning/mod-manifest.json`
 - [ ] Modify `data/mods/weapons/rules/handle_wield_threateningly.rule.json`
@@ -297,11 +300,13 @@ Document test cases for future action gating:
 - [ ] Create integration test for rule execution
 
 ### Phase 2: Activity System Enhancement
+
 - [ ] Modify `src/anatomy/services/activityMetadataCollectionSystem.js`
 - [ ] Modify `src/anatomy/services/activityNLGSystem.js`
 - [ ] Create integration test for activity description
 
 ### Phase 3: Comprehensive Testing
+
 - [ ] Create edge case tests
 - [ ] Create action gating test stubs (for future implementation)
 - [ ] Run full test suite
@@ -309,18 +314,18 @@ Document test cases for future action gating:
 
 ## Files to Modify
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/positioning/components/wielding.component.json` | CREATE |
-| `data/mods/positioning/mod-manifest.json` | MODIFY (add to components) |
-| `data/mods/weapons/rules/handle_wield_threateningly.rule.json` | MODIFY (add operations) |
-| `src/anatomy/services/activityMetadataCollectionSystem.js` | MODIFY (array support) |
-| `src/anatomy/services/activityNLGSystem.js` | MODIFY ({targets} placeholder) |
-| `tests/unit/mods/positioning/components/wielding_component_schema.test.js` | CREATE |
-| `tests/integration/mods/weapons/wieldThreateninglyRuleExecution.test.js` | CREATE |
-| `tests/integration/mods/positioning/wieldingActivityDescription.test.js` | CREATE |
-| `tests/integration/mods/weapons/wieldingEdgeCases.test.js` | CREATE |
-| `tests/integration/mods/weapons/wieldingActionGating.test.js` | CREATE |
+| File                                                                       | Change Type                    |
+| -------------------------------------------------------------------------- | ------------------------------ |
+| `data/mods/positioning/components/wielding.component.json`                 | CREATE                         |
+| `data/mods/positioning/mod-manifest.json`                                  | MODIFY (add to components)     |
+| `data/mods/weapons/rules/handle_wield_threateningly.rule.json`             | MODIFY (add operations)        |
+| `src/anatomy/services/activityMetadataCollectionSystem.js`                 | MODIFY (array support)         |
+| `src/anatomy/services/activityNLGSystem.js`                                | MODIFY ({targets} placeholder) |
+| `tests/unit/mods/positioning/components/wielding_component_schema.test.js` | CREATE                         |
+| `tests/integration/mods/weapons/wieldThreateninglyRuleExecution.test.js`   | CREATE                         |
+| `tests/integration/mods/positioning/wieldingActivityDescription.test.js`   | CREATE                         |
+| `tests/integration/mods/weapons/wieldingEdgeCases.test.js`                 | CREATE                         |
+| `tests/integration/mods/weapons/wieldingActionGating.test.js`              | CREATE                         |
 
 ## Reference Files
 
@@ -336,16 +341,17 @@ These files should be studied before implementation:
 
 ## Priority Justification
 
-| Component | Priority | Rationale |
-|-----------|----------|-----------|
-| sitting_on | 62 | Common passive state |
-| lying_down | 64 | Passive positional state |
-| hugging | 66 | Active intimate embrace |
-| **wielding** | **70** | Active combat stance (proposed) |
-| kneeling_before | 75 | Prominent positional state |
-| straddling_waist | 82 | Highly intimate position |
+| Component        | Priority | Rationale                       |
+| ---------------- | -------- | ------------------------------- |
+| sitting_on       | 62       | Common passive state            |
+| lying_down       | 64       | Passive positional state        |
+| hugging          | 66       | Active intimate embrace         |
+| **wielding**     | **70**   | Active combat stance (proposed) |
+| kneeling_before  | 75       | Prominent positional state      |
+| straddling_waist | 82       | Highly intimate position        |
 
 Priority 70 was chosen because:
+
 - Wielding is more visually/tactically significant than sitting or hugging
 - Less prominent than kneeling (which has social/power dynamics)
 - Represents an active state that significantly changes character perception

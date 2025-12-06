@@ -124,7 +124,9 @@ describe('proximityUtils integration coverage', () => {
       );
       expect(capturedError.message).toContain('Logger must have info method');
       expect(capturedError.message).toContain('Logger warn must be a function');
-      expect(capturedError.message).toContain('Logger debug must be a function');
+      expect(capturedError.message).toContain(
+        'Logger debug must be a function'
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         'Proximity parameter validation failed',
@@ -239,7 +241,12 @@ describe('proximityUtils integration coverage', () => {
         validateProximityParameters(validFurnitureId, 'actor', 1, logger)
       ).toThrow('Actor ID must be in namespaced format');
       expect(() =>
-        validateProximityParameters(validFurnitureId, 'mod:npc extra', 1, logger)
+        validateProximityParameters(
+          validFurnitureId,
+          'mod:npc extra',
+          1,
+          logger
+        )
       ).toThrow('Actor ID identifier must contain only');
       expect(() =>
         validateProximityParameters(validFurnitureId, 'mod%:npc', 1, logger)
@@ -251,7 +258,12 @@ describe('proximityUtils integration coverage', () => {
         validateProximityParameters(validFurnitureId, 'mod:', 1, logger)
       ).toThrow('Actor ID must have a valid identifier');
       expect(() =>
-        validateProximityParameters(validFurnitureId, 'mod:npc:extra', 1, logger)
+        validateProximityParameters(
+          validFurnitureId,
+          'mod:npc:extra',
+          1,
+          logger
+        )
       ).toThrow('exactly one colon');
     });
 
@@ -259,15 +271,15 @@ describe('proximityUtils integration coverage', () => {
       const logger = createValidLogger();
 
       expect(() =>
-        validateProximityParameters(validFurnitureId, validActorId, null, logger)
-      ).toThrow('Spot index is required');
-      expect(() =>
         validateProximityParameters(
           validFurnitureId,
           validActorId,
-          '1',
+          null,
           logger
         )
+      ).toThrow('Spot index is required');
+      expect(() =>
+        validateProximityParameters(validFurnitureId, validActorId, '1', logger)
       ).toThrow('Spot index must be a number');
       expect(() =>
         validateProximityParameters(validFurnitureId, validActorId, 1.2, logger)

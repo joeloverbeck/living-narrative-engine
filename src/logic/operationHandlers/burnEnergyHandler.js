@@ -102,11 +102,7 @@ class BurnEnergyHandler extends BaseOperationHandler {
     }
 
     // Validate turns
-    if (
-      typeof turns !== 'number' ||
-      !Number.isInteger(turns) ||
-      turns < 1
-    ) {
+    if (typeof turns !== 'number' || !Number.isInteger(turns) || turns < 1) {
       safeDispatchError(
         this.#dispatcher,
         'BURN_ENERGY: turns must be a positive integer',

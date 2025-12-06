@@ -5,6 +5,7 @@
 This report documents the complete damage system architecture in the Living Narrative Engine, identifies 5 distinct damage workflows, maps current test coverage, and proposes priority e2e tests to ensure system robustness.
 
 **Key Findings:**
+
 - 5 distinct damage workflows identified
 - 8 e2e tests now exist (throw action + swing_at_target full flow + death mechanics + damage effects triggers + propagation flow + multi-turn bleed/dying countdown with stabilization + burn/poison extended + multi-target propagation chains)
 - 24+ integration tests provide component-level coverage but no end-to-end validation
@@ -157,6 +158,7 @@ Player selects "swing_at_target" action
 ```
 
 **Key Files:**
+
 - `data/mods/weapons/actions/swing_at_target.action.json`
 - `data/mods/weapons/rules/handle_swing_at_target.rule.json`
 - `src/logic/operationHandlers/applyDamageHandler.js`
@@ -206,13 +208,13 @@ dismembered   fractured    bleeding_   burning_   poisoned_
 
 **Effect Configuration (from damage_capabilities):**
 
-| Effect | Trigger Condition | Component Added | Event |
-|--------|-------------------|-----------------|-------|
-| Dismember | damage ≥ threshold × maxHealth | Part removed | anatomy:dismembered |
-| Fracture | damage ≥ threshold × maxHealth | anatomy:fractured | anatomy:fractured |
-| Bleed | Always (if enabled) | anatomy:bleeding | anatomy:bleeding_started |
-| Burn | Always (if enabled) | anatomy:burning | anatomy:burning_started |
-| Poison | Always (if enabled) | anatomy:poisoned | anatomy:poisoned_started |
+| Effect    | Trigger Condition              | Component Added   | Event                    |
+| --------- | ------------------------------ | ----------------- | ------------------------ |
+| Dismember | damage ≥ threshold × maxHealth | Part removed      | anatomy:dismembered      |
+| Fracture  | damage ≥ threshold × maxHealth | anatomy:fractured | anatomy:fractured        |
+| Bleed     | Always (if enabled)            | anatomy:bleeding  | anatomy:bleeding_started |
+| Burn      | Always (if enabled)            | anatomy:burning   | anatomy:burning_started  |
+| Poison    | Always (if enabled)            | anatomy:poisoned  | anatomy:poisoned_started |
 
 **Key File:** `src/anatomy/services/damageTypeEffectsService.js`
 
@@ -265,6 +267,7 @@ APPLY_DAMAGE to parent part
 ```
 
 **Propagation Rule Example:**
+
 ```
 {
   childSocketId: "heart_socket",
@@ -431,14 +434,15 @@ Time ─────────────────────────
 
 Four weapon entities analyzed with damage configurations:
 
-| Weapon | Type | Damage | Penetration | Effects |
-|--------|------|--------|-------------|---------|
-| Vespera Rapier | Slashing | 3 | 0.3 | Bleed (moderate), Dismember (0.8 threshold) |
-| Vespera Main Gauche | Piercing | 2 | 0.8 | Bleed (minor) |
-| Threadscar Melissa Longsword | Slashing | 4 | 0.3 | Bleed (moderate), Dismember (0.7 threshold) |
-| Rill Practice Stick | Blunt | 1 | — | Fracture (0.7 threshold, 0.1 stun) |
+| Weapon                       | Type     | Damage | Penetration | Effects                                     |
+| ---------------------------- | -------- | ------ | ----------- | ------------------------------------------- |
+| Vespera Rapier               | Slashing | 3      | 0.3         | Bleed (moderate), Dismember (0.8 threshold) |
+| Vespera Main Gauche          | Piercing | 2      | 0.8         | Bleed (minor)                               |
+| Threadscar Melissa Longsword | Slashing | 4      | 0.3         | Bleed (moderate), Dismember (0.7 threshold) |
+| Rill Practice Stick          | Blunt    | 1      | —           | Fracture (0.7 threshold, 0.1 stun)          |
 
 **Key Files:**
+
 - `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json`
 - `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json`
 - `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json`
@@ -450,42 +454,42 @@ Four weapon entities analyzed with damage configurations:
 
 ### E2E Tests (8 total)
 
-| File | Coverage | Notes |
-|------|----------|-------|
-| `tests/e2e/actions/realRuleExecution.e2e.test.js` | Tests throw action | Does NOT test combat damage |
-| `tests/e2e/actions/swingAtTargetFullFlow.e2e.test.js` | Full swing_at_target flow | Covers damage, bleed trigger, piercing exclusion, critical multiplier, fumble drop |
-| `tests/e2e/actions/deathMechanics.e2e.test.js` | Death & dying resolution | Vital organ destruction → death, weighted overall-health <10% → dying, 3-turn countdown → bleeding_out death, `anatomy:entity_died` payload |
-| `tests/e2e/actions/damageEffectsTriggers.e2e.test.js` | Damage effects | Bleed severity/turns, fracture + stun application, dismemberment short-circuit dispatch, burn stacking + tick duration processing, poison entity-scope attachment + tick expiration |
-| `tests/e2e/actions/damagePropagationFlow.e2e.test.js` | Internal propagation | Torso/head propagation into heart/brain with probability modifiers; recursive APPLY_DAMAGE and event payload validation |
-| `tests/e2e/actions/multiTurnCombatScenario.e2e.test.js` | Multi-turn combat | Two-hit bleed stack, per-turn bleed ticks, dying countdown → death, and success-before-damage message ordering regression guard |
-| `tests/e2e/actions/burnPoisonExtended.e2e.test.js` | Burn/poison extensions | Part-scope poison ticks to expiry and multi-target burn stacking with independent stacks/turn processing |
-| `tests/e2e/actions/damagePropagationMultiTarget.e2e.test.js` | Multi-target propagation chains | Cross-target propagation with distinct probabilities/modifiers and recursive child → grandchild propagation |
+| File                                                         | Coverage                        | Notes                                                                                                                                                                               |
+| ------------------------------------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/e2e/actions/realRuleExecution.e2e.test.js`            | Tests throw action              | Does NOT test combat damage                                                                                                                                                         |
+| `tests/e2e/actions/swingAtTargetFullFlow.e2e.test.js`        | Full swing_at_target flow       | Covers damage, bleed trigger, piercing exclusion, critical multiplier, fumble drop                                                                                                  |
+| `tests/e2e/actions/deathMechanics.e2e.test.js`               | Death & dying resolution        | Vital organ destruction → death, weighted overall-health <10% → dying, 3-turn countdown → bleeding_out death, `anatomy:entity_died` payload                                         |
+| `tests/e2e/actions/damageEffectsTriggers.e2e.test.js`        | Damage effects                  | Bleed severity/turns, fracture + stun application, dismemberment short-circuit dispatch, burn stacking + tick duration processing, poison entity-scope attachment + tick expiration |
+| `tests/e2e/actions/damagePropagationFlow.e2e.test.js`        | Internal propagation            | Torso/head propagation into heart/brain with probability modifiers; recursive APPLY_DAMAGE and event payload validation                                                             |
+| `tests/e2e/actions/multiTurnCombatScenario.e2e.test.js`      | Multi-turn combat               | Two-hit bleed stack, per-turn bleed ticks, dying countdown → death, and success-before-damage message ordering regression guard                                                     |
+| `tests/e2e/actions/burnPoisonExtended.e2e.test.js`           | Burn/poison extensions          | Part-scope poison ticks to expiry and multi-target burn stacking with independent stacks/turn processing                                                                            |
+| `tests/e2e/actions/damagePropagationMultiTarget.e2e.test.js` | Multi-target propagation chains | Cross-target propagation with distinct probabilities/modifiers and recursive child → grandchild propagation                                                                         |
 
 ### Integration Tests (24+ in weapons/)
 
-| Area | Test Count | Coverage Level |
-|------|-----------|----------------|
-| Weapon wielding | 11 | Comprehensive |
-| Entity resolution | 2+ | Good |
-| Damage application | 7+ | Good (component level) |
-| Outcome branching | 2+ | Good (rule structure) |
-| Message rendering | 1 | Partial (known bug) |
+| Area               | Test Count | Coverage Level         |
+| ------------------ | ---------- | ---------------------- |
+| Weapon wielding    | 11         | Comprehensive          |
+| Entity resolution  | 2+         | Good                   |
+| Damage application | 7+         | Good (component level) |
+| Outcome branching  | 2+         | Good (rule structure)  |
+| Message rendering  | 1          | Partial (known bug)    |
 
 ### Critical Coverage Gaps
 
-| Area | Current | Risk |
-|------|---------|------|
-| Full swing_at_target → damage → effects e2e | ✅ Covered by swingAtTargetFullFlow.e2e.test.js | MEDIUM (variants like multi-target/propagation still untested) |
-| Bleed effect triggering | Covered for slashing (minor/moderate) via damageEffectsTriggers.e2e.test.js and multiTurnCombatScenario.e2e.test.js | LOW (bleed removal paths untested) |
-| Burn effect triggering | Covered for burn attach, stacking (single + multi-target), and tick expiration | LOW (multi-target propagation untested) |
-| Poison effect triggering | Covered for entity-scope and part-scope tick expiration | LOW (edge configs untested) |
-| Fracture effect triggering | Covered for blunt with stun chance | MEDIUM (other configs untested) |
-| Dismemberment triggering | Covered for slashing threshold | LOW |
-| Damage propagation to internal parts | Covered for single-target chains; multi-target probabilities now exercised in damagePropagationMultiTarget.e2e.test.js | MEDIUM (additional organ hierarchies untested) |
-| Death via vital organ destruction | ✅ Covered by deathMechanics.e2e.test.js | LOW |
-| Multi-turn combat with dying state | ✅ Countdown + stabilization covered in deathMechanics.e2e.test.js and multiTurnCombatScenario.e2e.test.js | LOW (action-driven stabilization hooks untested) |
-| Critical success 1.5x multiplier execution | ~5% | MEDIUM |
-| Fumble weapon drop execution | ~5% | MEDIUM |
+| Area                                        | Current                                                                                                                | Risk                                                           |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Full swing_at_target → damage → effects e2e | ✅ Covered by swingAtTargetFullFlow.e2e.test.js                                                                        | MEDIUM (variants like multi-target/propagation still untested) |
+| Bleed effect triggering                     | Covered for slashing (minor/moderate) via damageEffectsTriggers.e2e.test.js and multiTurnCombatScenario.e2e.test.js    | LOW (bleed removal paths untested)                             |
+| Burn effect triggering                      | Covered for burn attach, stacking (single + multi-target), and tick expiration                                         | LOW (multi-target propagation untested)                        |
+| Poison effect triggering                    | Covered for entity-scope and part-scope tick expiration                                                                | LOW (edge configs untested)                                    |
+| Fracture effect triggering                  | Covered for blunt with stun chance                                                                                     | MEDIUM (other configs untested)                                |
+| Dismemberment triggering                    | Covered for slashing threshold                                                                                         | LOW                                                            |
+| Damage propagation to internal parts        | Covered for single-target chains; multi-target probabilities now exercised in damagePropagationMultiTarget.e2e.test.js | MEDIUM (additional organ hierarchies untested)                 |
+| Death via vital organ destruction           | ✅ Covered by deathMechanics.e2e.test.js                                                                               | LOW                                                            |
+| Multi-turn combat with dying state          | ✅ Countdown + stabilization covered in deathMechanics.e2e.test.js and multiTurnCombatScenario.e2e.test.js             | LOW (action-driven stabilization hooks untested)               |
+| Critical success 1.5x multiplier execution  | ~5%                                                                                                                    | MEDIUM                                                         |
+| Fumble weapon drop execution                | ~5%                                                                                                                    | MEDIUM                                                         |
 
 ---
 
@@ -495,7 +499,7 @@ Four weapon entities analyzed with damage configurations:
 
 **Status:** Fixed in rule ordering (damage renderer still batches via `queueMicrotask`, but success is now dispatched and displayed before damage is applied).
 
-**Fix Evidence:** In `data/mods/weapons/rules/handle_swing_at_target.rule.json`, both SUCCESS and CRITICAL_SUCCESS branches dispatch the success perceptible event and the success display event *before* entering the `FOR_EACH` damage loop. This guarantees the success message renders before deferred damage messages from `DamageEventMessageRenderer`.
+**Fix Evidence:** In `data/mods/weapons/rules/handle_swing_at_target.rule.json`, both SUCCESS and CRITICAL_SUCCESS branches dispatch the success perceptible event and the success display event _before_ entering the `FOR_EACH` damage loop. This guarantees the success message renders before deferred damage messages from `DamageEventMessageRenderer`.
 
 **Remaining Note:** The renderer still uses `queueMicrotask` for batching, but given the rule ordering, damage messages now follow success as desired. Integration doc test (`tests/integration/mods/weapons/damageMessageOrdering.integration.test.js`) still describes the old behavior and should be updated.
 
@@ -508,6 +512,7 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate complete combat flow from action to damage resolution
 
 **Scenarios:**
+
 1. Complete swing → damage → health update → message sequence
 2. Slashing damage with rapier applies bleed
 3. Piercing damage exclusion on swing (only slashing applies)
@@ -515,6 +520,7 @@ Four weapon entities analyzed with damage configurations:
 5. Fumble weapon drop mechanics
 
 **Status:** Implemented at `tests/e2e/actions/swingAtTargetFullFlow.e2e.test.js` using real APPLY_DAMAGE + DamageTypeEffectsService for bleed. Notes:
+
 - Fumble branch requires the actor to own the item in `items:inventory.items` **and** wield via `positioning:wielding.wielded_item_ids` (not `itemIds`) for UNWIELD + DROP to succeed.
 - Outcomes are forced per scenario for determinism; damage/effects stay production-accurate.
 
@@ -523,6 +529,7 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate death conditions and dying state
 
 **Scenarios:**
+
 1. Heart destruction → immediate death
 2. Brain destruction → immediate death
 3. Overall health < 10% → dying state (3 turns)
@@ -530,6 +537,7 @@ Four weapon entities analyzed with damage configurations:
 5. anatomy:entity_died event payload verification
 
 **Status:** Implemented at `tests/e2e/actions/deathMechanics.e2e.test.js`. Notes:
+
 - Dying state is triggered by **weighted overall health** < 10%; with torso weight 3 and vital organs weight 0.5, multiple parts must be heavily damaged before entering dying.
 - Vital organ destruction emits `anatomy:entity_died` with `causeOfDeath: vital_organ_destroyed`, `vitalOrganDestroyed`, `killedBy`, `entityName`, `finalMessage`, and `timestamp`.
 - Dying countdown starts at 3 turns and expires to `causeOfDeath: bleeding_out` when not stabilized.
@@ -539,6 +547,7 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate damage effect triggering from weapon configs
 
 **Scenarios:**
+
 1. Bleed effect triggered by slashing (rapier/longsword)
 2. Fracture effect triggered by blunt (practice stick)
 3. Dismemberment triggered on high damage threshold
@@ -546,6 +555,7 @@ Four weapon entities analyzed with damage configurations:
 5. Effect event dispatching
 
 **Status:** Implemented at `tests/e2e/actions/damageEffectsTriggers.e2e.test.js`. Notes:
+
 - Bleed attaches with severity and duration from weapon config (rapier slashing → minor, 2 turns).
 - Fracture applies to the damaged entity and can stun the owner when RNG < stunChance (practice stick 10%).
 - Dismemberment short-circuits further effects; no bleed component is added when the threshold is met.
@@ -557,12 +567,14 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate internal damage propagation
 
 **Scenarios:**
+
 1. Torso damage propagates to heart (swing_at_target slashing path; action excludes piercing)
 2. Head damage propagates to brain
 3. Propagation probability verification (blunt modifier)
 4. Recursive damage application (parent → child → grandchild)
 
 **Status:** Implemented at `tests/e2e/actions/damagePropagationFlow.e2e.test.js`. Notes:
+
 - Uses explicit entity IDs (avoids `target` placeholder) so propagated APPLY_DAMAGE calls resolve correctly.
 - Validates emitted `anatomy:internal_damage_propagated` events and resulting health deltas for heart/brain.
 - Confirms propagation short-circuits when probability rolls fail and that recursive propagation applies child rules.
@@ -573,6 +585,7 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate sustained combat scenarios
 
 **Scenarios:**
+
 1. Multiple attacks accumulating damage
 2. Bleeding tick damage over turns
 3. Dying countdown progression
@@ -580,6 +593,7 @@ Four weapon entities analyzed with damage configurations:
 5. Message ordering validation (regression test for known bug)
 
 **Status:** Implemented at `tests/e2e/actions/multiTurnCombatScenario.e2e.test.js`. Notes:
+
 - Uses a high-damage slashing + moderate bleed entry to force bleed across consecutive swings and drop overall health below 10%.
 - Processes bleed ticks via `BleedingTickSystem` on `core:turn_ended`, then routes through `DeathCheckService` to enter dying and expire after three turns.
 - Stabilization is simulated by updating `anatomy:dying.stabilizedBy`, pausing countdown and preventing death until stabilization is removed.
@@ -591,10 +605,12 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate part-scope poison ticking and multi-target burn stacking
 
 **Scenarios:**
+
 1. Part-scope poison attaches on slashing and ticks down via `PoisonTickSystem` until expiry (component removal + stopped event).
 2. Burn stacks independently across multiple targets with `canStack` enabled and decrements per target via `BurningTickSystem`.
 
 **Status:** Implemented at `tests/e2e/actions/burnPoisonExtended.e2e.test.js`. Notes:
+
 - Poison scope set to `part` with tick damage 2 over 3 turns; uses `getEntitiesWithComponent` override to expose poisoned part to tick system.
 - Burn stacking validated across two targets; each reaches `stackedCount: 2` and retains independent `remainingTurns` after tick processing.
 
@@ -603,10 +619,12 @@ Four weapon entities analyzed with damage configurations:
 **Purpose:** Validate multi-target propagation chains with varied probabilities/modifiers
 
 **Scenarios:**
+
 1. High-probability chain applies propagation from root to child and recursively to grandchild (slashing modifier > 1).
 2. Lower-probability chain on a second target stays below or equal to one propagation, respecting reduced modifiers.
 
 **Status:** Implemented at `tests/e2e/actions/damagePropagationMultiTarget.e2e.test.js`. Notes:
+
 - Uses direct `propagateDamage` calls to isolate probability/modifier behavior and recursive propagation (child → grandchild).
 - Distinct rule sets per target exercise probability scaling (`baseProbability * damageTypeModifiers`) and recursive fan-out.
 
@@ -616,28 +634,28 @@ Four weapon entities analyzed with damage configurations:
 
 ### Core Files
 
-| File | Purpose |
-|------|---------|
+| File                                                | Purpose                |
+| --------------------------------------------------- | ---------------------- |
 | `src/logic/operationHandlers/applyDamageHandler.js` | APPLY_DAMAGE operation |
-| `src/anatomy/services/damageTypeEffectsService.js` | Effect application |
-| `src/anatomy/services/damagePropagationService.js` | Internal damage |
-| `src/anatomy/services/deathCheckService.js` | Death conditions |
-| `src/anatomy/bodyGraphService.js` | Body part hierarchy |
+| `src/anatomy/services/damageTypeEffectsService.js`  | Effect application     |
+| `src/anatomy/services/damagePropagationService.js`  | Internal damage        |
+| `src/anatomy/services/deathCheckService.js`         | Death conditions       |
+| `src/anatomy/bodyGraphService.js`                   | Body part hierarchy    |
 
 ### Schema Files
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/applyDamage.schema.json` | Operation schema |
+| File                                               | Purpose              |
+| -------------------------------------------------- | -------------------- |
+| `data/schemas/operations/applyDamage.schema.json`  | Operation schema     |
 | `data/schemas/damage-capability-entry.schema.json` | Damage config schema |
-| `data/schemas/damage-type.schema.json` | Damage type schema |
+| `data/schemas/damage-type.schema.json`             | Damage type schema   |
 
 ### Mod Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/actions/swing_at_target.action.json` | Combat action |
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Rule handler |
+| File                                                                   | Purpose       |
+| ---------------------------------------------------------------------- | ------------- |
+| `data/mods/weapons/actions/swing_at_target.action.json`                | Combat action |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`             | Rule handler  |
 | `data/mods/damage-types/components/damage_capabilities.component.json` | Damage config |
 
 ---
@@ -650,5 +668,5 @@ Four weapon entities analyzed with damage configurations:
 
 ---
 
-*Report generated: 2025-12-03*
-*Analysis scope: Damage system architecture from swing_at_target action to death resolution*
+_Report generated: 2025-12-03_
+_Analysis scope: Damage system architecture from swing_at_target action to death resolution_

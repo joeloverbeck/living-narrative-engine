@@ -306,9 +306,7 @@ export class BaseCharacterBuilderController {
     });
     this.#performanceMonitor = performanceMonitor;
 
-    memoryManager.setContextName?.(
-      `${this.constructor.name}:MemoryManager`
-    );
+    memoryManager.setContextName?.(`${this.constructor.name}:MemoryManager`);
     this.#memoryManager = memoryManager;
 
     errorHandlingStrategy.configureContext?.({
@@ -1799,7 +1797,6 @@ export class BaseCharacterBuilderController {
   // Error Handling Framework (Added in ticket #7)
   // ─────────────────────────────────────────────────────────────────────────
 
-
   /**
    * Default recovery handlers wrapping controller callbacks.
    *
@@ -1838,7 +1835,6 @@ export class BaseCharacterBuilderController {
       },
     };
   }
-
 
   /**
    * Handle errors with consistent logging and user feedback
@@ -2055,10 +2051,7 @@ export class BaseCharacterBuilderController {
    * @private
    */
   _determineRecoverability(error, context) {
-    return this.#errorHandlingStrategy.determineRecoverability(
-      error,
-      context
-    );
+    return this.#errorHandlingStrategy.determineRecoverability(error, context);
   }
 
   /**
@@ -2101,11 +2094,7 @@ export class BaseCharacterBuilderController {
    * @returns {Error} Standardized error
    */
   _createError(message, category, metadata) {
-    return this.#errorHandlingStrategy.createError(
-      message,
-      category,
-      metadata
-    );
+    return this.#errorHandlingStrategy.createError(message, category, metadata);
   }
 
   /**

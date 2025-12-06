@@ -61,7 +61,9 @@ const createValidator = ({
 
   const dataRegistry = {
     get: jest.fn((collection, id) => registryLookup?.(collection, id)),
-    getEntityDefinition: jest.fn((id) => registryLookup?.('entityDefinitions', id)),
+    getEntityDefinition: jest.fn((id) =>
+      registryLookup?.('entityDefinitions', id)
+    ),
   };
 
   const validator = new PreferredPartSocketValidator({
@@ -79,7 +81,9 @@ describe('PreferredPartSocketValidator', () => {
     it('passes when preferred part exposes all required sockets for its children', async () => {
       const { validator } = createValidator({
         registryLookup: (_collection, id) =>
-          id === 'anatomy:variant_head' ? { id, ...createSocketComponent(['brain_socket']) } : undefined,
+          id === 'anatomy:variant_head'
+            ? { id, ...createSocketComponent(['brain_socket']) }
+            : undefined,
       });
 
       const result = await validator.validate(recipeWithPreferredHead);
@@ -167,20 +171,27 @@ describe('PreferredPartSocketValidator', () => {
   });
 
   describe('__testables__', () => {
-    const { addPreferredId, buildParentSocketRequirements, collectPreferredIds, getEntityDefinition } =
-      __testables__;
+    const {
+      addPreferredId,
+      buildParentSocketRequirements,
+      collectPreferredIds,
+      getEntityDefinition,
+    } = __testables__;
 
     it('collects preferred ids from slots and patterns', () => {
       const recipe = {
         slots: {
           head: { preferId: 'head:id' },
         },
-        patterns: [
-          { matches: ['tail'], preferId: 'tail:id' },
-        ],
+        patterns: [{ matches: ['tail'], preferId: 'tail:id' }],
       };
 
-      const preferred = collectPreferredIds(recipe, baseBlueprint, {}, slotGenerator);
+      const preferred = collectPreferredIds(
+        recipe,
+        baseBlueprint,
+        {},
+        slotGenerator
+      );
       expect(preferred.get('head')).toEqual(new Set(['head:id']));
       expect(preferred.get('tail')).toEqual(new Set(['tail:id']));
     });

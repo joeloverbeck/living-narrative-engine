@@ -10,7 +10,8 @@ describe('AlertRouter error-handling coverage', () => {
   let consoleErrorMock;
   let consoleWarnMock;
 
-  const createRouter = () => new AlertRouter({ safeEventDispatcher: dispatcher });
+  const createRouter = () =>
+    new AlertRouter({ safeEventDispatcher: dispatcher });
 
   beforeEach(() => {
     subscribedHandlers = {};
@@ -55,7 +56,10 @@ describe('AlertRouter error-handling coverage', () => {
     const router = createRouter();
 
     router.queue = [
-      { name: SYSTEM_WARNING_OCCURRED_ID, payload: { message: 'warn-message' } },
+      {
+        name: SYSTEM_WARNING_OCCURRED_ID,
+        payload: { message: 'warn-message' },
+      },
       { name: SYSTEM_ERROR_OCCURRED_ID, payload: { message: 'error-message' } },
     ];
 

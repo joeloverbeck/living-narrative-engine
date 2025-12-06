@@ -113,7 +113,7 @@ describe('ScopeEngine - Tracer Integration', () => {
       const trace = tracer.getTrace();
       expect(trace.steps.length).toBeGreaterThan(0);
 
-      const resolverStep = trace.steps.find(s => s.type === 'RESOLVER_STEP');
+      const resolverStep = trace.steps.find((s) => s.type === 'RESOLVER_STEP');
       expect(resolverStep).toBeDefined();
       expect(resolverStep.resolver).toBe('SourceResolver');
       expect(resolverStep.operation).toContain("resolve(kind='actor')");
@@ -136,7 +136,7 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const resolverStep = trace.steps.find(s => s.type === 'RESOLVER_STEP');
+      const resolverStep = trace.steps.find((s) => s.type === 'RESOLVER_STEP');
 
       expect(resolverStep).toBeDefined();
       expect(resolverStep.resolver).toBe('SourceResolver');
@@ -149,7 +149,7 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const resolverStep = trace.steps.find(s => s.type === 'RESOLVER_STEP');
+      const resolverStep = trace.steps.find((s) => s.type === 'RESOLVER_STEP');
 
       expect(resolverStep).toBeDefined();
       expect(resolverStep.input).toBeDefined();
@@ -165,7 +165,7 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const resolverStep = trace.steps.find(s => s.type === 'RESOLVER_STEP');
+      const resolverStep = trace.steps.find((s) => s.type === 'RESOLVER_STEP');
 
       expect(resolverStep).toBeDefined();
       expect(resolverStep.details).toBeDefined();
@@ -179,7 +179,7 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const resolverStep = trace.steps.find(s => s.type === 'RESOLVER_STEP');
+      const resolverStep = trace.steps.find((s) => s.type === 'RESOLVER_STEP');
 
       expect(resolverStep).toBeDefined();
       expect(resolverStep.operation).toBe("resolve(kind='actor')");
@@ -205,7 +205,9 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const stepResolverStep = trace.steps.find(s => s.resolver === 'StepResolver');
+      const stepResolverStep = trace.steps.find(
+        (s) => s.resolver === 'StepResolver'
+      );
 
       expect(stepResolverStep).toBeDefined();
       expect(stepResolverStep.operation).toBe("resolve(field='name')");
@@ -218,7 +220,10 @@ describe('ScopeEngine - Tracer Integration', () => {
         components: new Map(),
       };
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue([actorEntity, targetEntity]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        actorEntity,
+        targetEntity,
+      ]);
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === 'actor-123') return actorEntity;
         if (id === 'target-456') return targetEntity;
@@ -240,7 +245,9 @@ describe('ScopeEngine - Tracer Integration', () => {
       engine.resolve(ast, actorEntity, mockRuntimeCtx);
 
       const trace = tracer.getTrace();
-      const filterResolverStep = trace.steps.find(s => s.resolver === 'FilterResolver');
+      const filterResolverStep = trace.steps.find(
+        (s) => s.resolver === 'FilterResolver'
+      );
 
       expect(filterResolverStep).toBeDefined();
       expect(filterResolverStep.operation).toBe('resolve(filter)');
@@ -321,9 +328,15 @@ describe('ScopeEngine - Tracer Integration', () => {
       const unionNode = { type: 'Union', left: {}, right: {} };
       const arrayIterNode = { type: 'ArrayIterationStep' };
 
-      expect(engine._buildOperationDescription(filterNode)).toBe('resolve(filter)');
-      expect(engine._buildOperationDescription(unionNode)).toBe('resolve(union)');
-      expect(engine._buildOperationDescription(arrayIterNode)).toBe('resolve(array iteration)');
+      expect(engine._buildOperationDescription(filterNode)).toBe(
+        'resolve(filter)'
+      );
+      expect(engine._buildOperationDescription(unionNode)).toBe(
+        'resolve(union)'
+      );
+      expect(engine._buildOperationDescription(arrayIterNode)).toBe(
+        'resolve(array iteration)'
+      );
     });
 
     it('should format ScopeReference nodes with scopeId', () => {

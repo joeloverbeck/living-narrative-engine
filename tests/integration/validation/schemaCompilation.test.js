@@ -218,7 +218,9 @@ describe('Schema Compilation', () => {
         console.error('\n⚠️  CRITICAL DIFFERENCE:');
         console.error('  - queryComponent (uses $ref) compiles successfully');
         console.error('  - drinkFrom (inline validation) fails to compile');
-        console.error('  - This confirms the structural difference is the root cause');
+        console.error(
+          '  - This confirms the structural difference is the root cause'
+        );
       } else if (drinkFromValidator && queryComponentValidator) {
         console.log('\n✅ Both schemas compile successfully');
         console.log('  - The issue is NOT related to schema compilation');

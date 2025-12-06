@@ -8,8 +8,8 @@ Create a new service `DismemberedBodyPartSpawner` that listens to the `anatomy:d
 
 ## Files to Touch
 
-| File | Change Type | Description |
-|------|-------------|-------------|
+| File                                                 | Change Type  | Description          |
+| ---------------------------------------------------- | ------------ | -------------------- |
 | `src/anatomy/services/dismemberedBodyPartSpawner.js` | Create (NEW) | Main spawner service |
 
 ---
@@ -69,7 +69,10 @@ class DismemberedBodyPartSpawner extends BaseService {
   }
 
   initialize() {
-    this.#unsubscribe = this.#eventBus.subscribe('anatomy:dismembered', this.#handleDismemberment.bind(this));
+    this.#unsubscribe = this.#eventBus.subscribe(
+      'anatomy:dismembered',
+      this.#handleDismemberment.bind(this)
+    );
     this.#logger.info('DismemberedBodyPartSpawner initialized');
   }
 
@@ -106,6 +109,7 @@ export default DismemberedBodyPartSpawner;
 ### Event Handling
 
 **Input Event (`anatomy:dismembered`):**
+
 ```json
 {
   "type": "anatomy:dismembered",
@@ -119,6 +123,7 @@ export default DismemberedBodyPartSpawner;
 ```
 
 **Output Event (`anatomy:body_part_spawned`):**
+
 ```json
 {
   "type": "anatomy:body_part_spawned",
@@ -149,6 +154,7 @@ export default DismemberedBodyPartSpawner;
 ```
 
 Examples:
+
 - "Sarah's left leg"
 - "Marcus's right arm"
 - "Elena's head" (no orientation for head)
@@ -162,7 +168,9 @@ Examples:
 ```javascript
 const weight = definitionComponents['items:weight']?.weight ?? 1.0;
 if (!definitionComponents['items:weight']) {
-  this.#logger.warn(`Missing items:weight for ${definitionId}, using default 1.0 kg`);
+  this.#logger.warn(
+    `Missing items:weight for ${definitionId}, using default 1.0 kg`
+  );
 }
 ```
 
@@ -229,9 +237,9 @@ grep -l "DismemberedBodyPartSpawner" src/anatomy/services/
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/anatomy/services/dismemberedBodyPartSpawner.js` | Main spawner service implementation |
+| File                                                             | Description                              |
+| ---------------------------------------------------------------- | ---------------------------------------- |
+| `src/anatomy/services/dismemberedBodyPartSpawner.js`             | Main spawner service implementation      |
 | `tests/unit/anatomy/services/dismemberedBodyPartSpawner.test.js` | Comprehensive unit test suite (38 tests) |
 
 ### Implementation Notes

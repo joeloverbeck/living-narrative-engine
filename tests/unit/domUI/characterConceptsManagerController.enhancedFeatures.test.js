@@ -46,7 +46,9 @@ describe('CharacterConceptsManagerController enhanced features', () => {
       expect(fallbackSpy).toHaveBeenCalledTimes(1);
       expect(controller._testExports.searchFilter).toBe('fallback term');
       expect(controller._testExports.searchStateRestored).toBe(true);
-      expect(controller._getElement('conceptSearch').value).toBe('fallback term');
+      expect(controller._getElement('conceptSearch').value).toBe(
+        'fallback term'
+      );
     });
 
     it('restores the simple search state when present', () => {
@@ -56,7 +58,9 @@ describe('CharacterConceptsManagerController enhanced features', () => {
 
       expect(controller._testExports.searchFilter).toBe('arcane focus');
       expect(controller._testExports.searchStateRestored).toBe(true);
-      expect(controller._getElement('conceptSearch').value).toBe('arcane focus');
+      expect(controller._getElement('conceptSearch').value).toBe(
+        'arcane focus'
+      );
     });
   });
 
@@ -96,7 +100,9 @@ describe('CharacterConceptsManagerController enhanced features', () => {
 
       controller._trackEnhancedSearchAnalytics('focused', [1, 2]);
 
-      expect(controller._testExports.searchAnalytics.searches).toHaveLength(100);
+      expect(controller._testExports.searchAnalytics.searches).toHaveLength(
+        100
+      );
     });
 
     it('routes the legacy analytics wrapper through the enhanced tracker', () => {
@@ -140,13 +146,11 @@ describe('CharacterConceptsManagerController enhanced features', () => {
 
   describe('milestone detection', () => {
     it('announces the first created concept milestone', () => {
-      jest
-        .spyOn(controller, '_calculateStatistics')
-        .mockReturnValue({
-          totalConcepts: 1,
-          completionRate: 0,
-          conceptsWithDirections: 0,
-        });
+      jest.spyOn(controller, '_calculateStatistics').mockReturnValue({
+        totalConcepts: 1,
+        completionRate: 0,
+        conceptsWithDirections: 0,
+      });
       const milestoneSpy = jest
         .spyOn(controller, '_showMilestone')
         .mockImplementation(() => {});
@@ -157,30 +161,28 @@ describe('CharacterConceptsManagerController enhanced features', () => {
     });
 
     it('celebrates complete direction coverage', () => {
-      jest
-        .spyOn(controller, '_calculateStatistics')
-        .mockReturnValue({
-          totalConcepts: 5,
-          completionRate: 100,
-          conceptsWithDirections: 5,
-        });
+      jest.spyOn(controller, '_calculateStatistics').mockReturnValue({
+        totalConcepts: 5,
+        completionRate: 100,
+        conceptsWithDirections: 5,
+      });
       const milestoneSpy = jest
         .spyOn(controller, '_showMilestone')
         .mockImplementation(() => {});
 
       controller._checkMilestones('directions-added');
 
-      expect(milestoneSpy).toHaveBeenCalledWith('⭐ All Concepts Have Directions!');
+      expect(milestoneSpy).toHaveBeenCalledWith(
+        '⭐ All Concepts Have Directions!'
+      );
     });
 
     it('recognizes the first completed concept', () => {
-      jest
-        .spyOn(controller, '_calculateStatistics')
-        .mockReturnValue({
-          totalConcepts: 3,
-          completionRate: 40,
-          conceptsWithDirections: 1,
-        });
+      jest.spyOn(controller, '_calculateStatistics').mockReturnValue({
+        totalConcepts: 3,
+        completionRate: 40,
+        conceptsWithDirections: 1,
+      });
       const milestoneSpy = jest
         .spyOn(controller, '_showMilestone')
         .mockImplementation(() => {});
@@ -226,7 +228,9 @@ describe('CharacterConceptsManagerController enhanced features', () => {
       const createFirstButton = document.getElementById('create-first-btn');
 
       createButton.dispatchEvent(new window.Event('click', { bubbles: true }));
-      createFirstButton.dispatchEvent(new window.Event('click', { bubbles: true }));
+      createFirstButton.dispatchEvent(
+        new window.Event('click', { bubbles: true })
+      );
 
       expect(showModalSpy).toHaveBeenCalledTimes(2);
     });
@@ -483,7 +487,10 @@ describe('CharacterConceptsManagerController enhanced features', () => {
 
   describe('enhanced search state restoration', () => {
     it('restores enhanced state, scroll position, and analytics when valid', () => {
-      controller._testExports.searchAnalytics = { searches: [], noResultSearches: [] };
+      controller._testExports.searchAnalytics = {
+        searches: [],
+        noResultSearches: [],
+      };
       const state = {
         filter: 'psionic',
         resultCount: 2,
@@ -498,7 +505,9 @@ describe('CharacterConceptsManagerController enhanced features', () => {
       if (!window.scrollTo) {
         window.scrollTo = () => {};
       }
-      const scrollToMock = jest.spyOn(window, 'scrollTo').mockImplementation(() => {});
+      const scrollToMock = jest
+        .spyOn(window, 'scrollTo')
+        .mockImplementation(() => {});
       const rafMock = jest
         .spyOn(window, 'requestAnimationFrame')
         .mockImplementation((cb) => {

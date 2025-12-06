@@ -18,13 +18,10 @@ async function waitForReadiness(url, { timeoutMs, intervalMs = 100 }) {
   /** @type {Error | null} */
   let lastError = null;
 
-   
   while (true) {
     if (Date.now() >= deadline) {
       const message =
-        lastError && lastError.message
-          ? `: ${lastError.message}`
-          : '';
+        lastError && lastError.message ? `: ${lastError.message}` : '';
       throw new Error(`Timed out waiting for readiness${message}`);
     }
 
@@ -73,13 +70,10 @@ describe('LLM Proxy Server Startup and Availability - Integration', () => {
     });
 
     await proxyController.start();
-    await waitForReadiness(
-      `http://127.0.0.1:${SERVER_PORT}/health/ready`,
-      {
-        timeoutMs: SERVER_STARTUP_TIMEOUT,
-        intervalMs: 100,
-      }
-    );
+    await waitForReadiness(`http://127.0.0.1:${SERVER_PORT}/health/ready`, {
+      timeoutMs: SERVER_STARTUP_TIMEOUT,
+      intervalMs: 100,
+    });
   }, SERVER_STARTUP_TIMEOUT + 5000);
 
   afterAll(async () => {

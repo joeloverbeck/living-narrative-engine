@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -50,7 +57,12 @@ class UnstableApiKeyService extends ApiKeyService {
       return null;
     }
 
-    return super._createErrorDetails(message, stage, detailsContext, originalError);
+    return super._createErrorDetails(
+      message,
+      stage,
+      detailsContext,
+      originalError
+    );
   }
 }
 
@@ -86,11 +98,7 @@ function createTempDir() {
  * @param {{ cacheEnabled?: boolean; projectRoot?: string | null; nullStages?: string[] }} [options]
  */
 function buildService(options = {}) {
-  const {
-    cacheEnabled = false,
-    projectRoot = null,
-    nullStages = [],
-  } = options;
+  const { cacheEnabled = false, projectRoot = null, nullStages = [] } = options;
 
   resetAppConfigServiceInstance();
 

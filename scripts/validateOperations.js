@@ -74,7 +74,7 @@ console.log('📊 Validation Results\n');
 
 if (warnings.length > 0) {
   console.log('⚠️  Warnings:');
-  warnings.forEach(w => console.log(`  ${w}`));
+  warnings.forEach((w) => console.log(`  ${w}`));
   console.log();
 }
 
@@ -109,11 +109,16 @@ if (errors.length > 0) {
  * Scan operation schema files and extract operation types
  */
 function scanOperationSchemas() {
-  const schemaPattern = path.join(projectRoot, 'data/schemas/operations/*.schema.json');
-  const schemaFiles = glob.sync(schemaPattern)
-    .filter(f =>
-      !f.endsWith('base-operation.schema.json') &&
-      !f.endsWith('nested-operation.schema.json')
+  const schemaPattern = path.join(
+    projectRoot,
+    'data/schemas/operations/*.schema.json'
+  );
+  const schemaFiles = glob
+    .sync(schemaPattern)
+    .filter(
+      (f) =>
+        !f.endsWith('base-operation.schema.json') &&
+        !f.endsWith('nested-operation.schema.json')
     );
 
   const operations = [];
@@ -131,10 +136,14 @@ function scanOperationSchemas() {
           schemaPath: schemaFile,
         });
       } else {
-        warnings.push(`⚠️  Schema ${path.basename(schemaFile)} does not define operation type constant`);
+        warnings.push(
+          `⚠️  Schema ${path.basename(schemaFile)} does not define operation type constant`
+        );
       }
     } catch (error) {
-      errors.push(`❌ Failed to parse schema ${path.basename(schemaFile)}: ${error.message}`);
+      errors.push(
+        `❌ Failed to parse schema ${path.basename(schemaFile)}: ${error.message}`
+      );
     }
   }
 
@@ -148,13 +157,19 @@ function scanOperationSchemas() {
  */
 function checkSchemaReferences(operations) {
   try {
-    const operationSchemaPath = path.join(projectRoot, 'data/schemas/operation.schema.json');
-    const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
+    const operationSchemaPath = path.join(
+      projectRoot,
+      'data/schemas/operation.schema.json'
+    );
+    const operationSchema = JSON.parse(
+      fs.readFileSync(operationSchemaPath, 'utf8')
+    );
 
     // Schema uses anyOf within $defs.Operation
-    const referencedSchemas = operationSchema.$defs?.Operation?.anyOf?.map(ref =>
-      path.basename(ref.$ref)
-    ) || [];
+    const referencedSchemas =
+      operationSchema.$defs?.Operation?.anyOf?.map((ref) =>
+        path.basename(ref.$ref)
+      ) || [];
 
     console.log(`  ${referencedSchemas.length} schemas referenced`);
 
@@ -163,8 +178,8 @@ function checkSchemaReferences(operations) {
       if (!referencedSchemas.includes(op.schemaFile)) {
         errors.push(
           `❌ Schema ${op.schemaFile} not referenced in operation.schema.json\n` +
-          `   Fix: Add { "$ref": "./operations/${op.schemaFile}" } to anyOf array in $defs.Operation\n` +
-          `   File: data/schemas/operation.schema.json`
+            `   Fix: Add { "$ref": "./operations/${op.schemaFile}" } to anyOf array in $defs.Operation\n` +
+            `   File: data/schemas/operation.schema.json`
         );
         missingRefs++;
       }
@@ -187,10 +202,15 @@ function checkSchemaReferences(operations) {
  */
 function checkPreValidationWhitelist(operations) {
   try {
-    const preValidationPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+    const preValidationPath = path.join(
+      projectRoot,
+      'src/utils/preValidationUtils.js'
+    );
     const preValidationContent = fs.readFileSync(preValidationPath, 'utf8');
 
-    const whitelistMatch = preValidationContent.match(/const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+    const whitelistMatch = preValidationContent.match(
+      /const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
+    );
     const knownTypes = [];
 
     if (whitelistMatch) {
@@ -208,8 +228,8 @@ function checkPreValidationWhitelist(operations) {
       if (!knownTypes.includes(op.type)) {
         errors.push(
           `❌ Operation type ${op.type} not in KNOWN_OPERATION_TYPES (preValidationUtils.js)\n` +
-          `   Fix: Add '${op.type}' to KNOWN_OPERATION_TYPES array\n` +
-          `   File: src/utils/preValidationUtils.js`
+            `   Fix: Add '${op.type}' to KNOWN_OPERATION_TYPES array\n` +
+            `   File: src/utils/preValidationUtils.js`
         );
         missingTypes++;
       }
@@ -218,10 +238,14 @@ function checkPreValidationWhitelist(operations) {
     if (missingTypes === 0) {
       console.log('  ✓ All operation types in whitelist');
     } else {
-      console.log(`  ⚠️  ${missingTypes} operation type(s) missing from whitelist`);
+      console.log(
+        `  ⚠️  ${missingTypes} operation type(s) missing from whitelist`
+      );
     }
   } catch (error) {
-    errors.push(`❌ Failed to check pre-validation whitelist: ${error.message}`);
+    errors.push(
+      `❌ Failed to check pre-validation whitelist: ${error.message}`
+    );
   }
 }
 
@@ -232,12 +256,17 @@ function checkPreValidationWhitelist(operations) {
  */
 function checkDITokens(operations) {
   try {
-    const tokensPath = path.join(projectRoot, 'src/dependencyInjection/tokens/tokens-core.js');
+    const tokensPath = path.join(
+      projectRoot,
+      'src/dependencyInjection/tokens/tokens-core.js'
+    );
     const tokensContent = fs.readFileSync(tokensPath, 'utf8');
 
     // Extract tokens from coreTokens object
     // Look for pattern: TokenName: 'TokenName'
-    const tokenMatches = tokensContent.matchAll(/(\w+Handler):\s*['"](\w+Handler)['"]/g);
+    const tokenMatches = tokensContent.matchAll(
+      /(\w+Handler):\s*['"](\w+Handler)['"]/g
+    );
     const definedTokens = new Set();
 
     for (const match of tokenMatches) {
@@ -253,8 +282,8 @@ function checkDITokens(operations) {
       if (!definedTokens.has(expectedToken)) {
         errors.push(
           `❌ Token ${expectedToken} not defined for operation ${op.type}\n` +
-          `   Fix: Add ${expectedToken}: '${expectedToken}' to coreTokens object (NO "I" prefix)\n` +
-          `   File: src/dependencyInjection/tokens/tokens-core.js`
+            `   Fix: Add ${expectedToken}: '${expectedToken}' to coreTokens object (NO "I" prefix)\n` +
+            `   File: src/dependencyInjection/tokens/tokens-core.js`
         );
         missingTokens++;
       }
@@ -303,9 +332,9 @@ function checkHandlerRegistrations(operations) {
       if (!registeredTokens.has(expectedToken)) {
         errors.push(
           `❌ Handler ${expectedToken} not registered in operationHandlerRegistrations.js\n` +
-          `   Fix: Add entry to handlerFactories array:\n` +
-          `   [tokens.${expectedToken}, ${expectedToken}, (c, Handler) => new Handler({ ... })]\n` +
-          `   File: src/dependencyInjection/registrations/operationHandlerRegistrations.js`
+            `   Fix: Add entry to handlerFactories array:\n` +
+            `   [tokens.${expectedToken}, ${expectedToken}, (c, Handler) => new Handler({ ... })]\n` +
+            `   File: src/dependencyInjection/registrations/operationHandlerRegistrations.js`
         );
         missingRegistrations++;
       }
@@ -355,15 +384,15 @@ function checkOperationMappings(operations) {
       if (!mappedOperations.has(op.type)) {
         errors.push(
           `❌ Operation ${op.type} not mapped in interpreterRegistrations.js\n` +
-          `   Fix: Add registry.register('${op.type}', bind(tokens.${expectedToken}))\n` +
-          `   File: src/dependencyInjection/registrations/interpreterRegistrations.js`
+            `   Fix: Add registry.register('${op.type}', bind(tokens.${expectedToken}))\n` +
+            `   File: src/dependencyInjection/registrations/interpreterRegistrations.js`
         );
         missingMappings++;
       } else if (mappedOperations.get(op.type) !== expectedToken) {
         errors.push(
           `❌ Operation ${op.type} mapped to wrong token: ${mappedOperations.get(op.type)}\n` +
-          `   Expected: ${expectedToken}\n` +
-          `   File: src/dependencyInjection/registrations/interpreterRegistrations.js`
+            `   Expected: ${expectedToken}\n` +
+            `   File: src/dependencyInjection/registrations/interpreterRegistrations.js`
         );
         missingMappings++;
       }
@@ -389,13 +418,17 @@ function checkHandlerFiles(operations) {
 
   for (const op of operations) {
     const expectedFileName = toHandlerFileName(op.type);
-    const handlerPath = path.join(projectRoot, 'src/logic/operationHandlers', expectedFileName);
+    const handlerPath = path.join(
+      projectRoot,
+      'src/logic/operationHandlers',
+      expectedFileName
+    );
 
     if (!fs.existsSync(handlerPath)) {
       errors.push(
         `❌ Handler file ${expectedFileName} not found for operation ${op.type}\n` +
-        `   Expected: src/logic/operationHandlers/${expectedFileName}\n` +
-        `   Action: Create handler file or check file name`
+          `   Expected: src/logic/operationHandlers/${expectedFileName}\n` +
+          `   Action: Create handler file or check file name`
       );
       missingFiles++;
     }
@@ -427,8 +460,8 @@ function checkNamingConsistency(operations) {
     if (op.schemaFile !== expectedSchemaFile) {
       errors.push(
         `❌ Schema file naming inconsistent for ${op.type}\n` +
-        `   Expected: ${expectedSchemaFile}\n` +
-        `   Actual: ${op.schemaFile}`
+          `   Expected: ${expectedSchemaFile}\n` +
+          `   Actual: ${op.schemaFile}`
       );
       inconsistencies++;
     }
@@ -439,9 +472,9 @@ function checkNamingConsistency(operations) {
     if (/^I[A-Z]/.test(expectedToken)) {
       errors.push(
         `❌ Token ${expectedToken} should NOT have "I" prefix\n` +
-        `   Operation handler tokens do not use "I" prefix (unlike service interfaces)\n` +
-        `   Expected format: [OperationName]Handler (e.g., DrinkFromHandler)\n` +
-        `   Current: ${expectedToken} → Suggested: ${expectedToken.substring(1)}`
+          `   Operation handler tokens do not use "I" prefix (unlike service interfaces)\n` +
+          `   Expected format: [OperationName]Handler (e.g., DrinkFromHandler)\n` +
+          `   Current: ${expectedToken} → Suggested: ${expectedToken.substring(1)}`
       );
       inconsistencies++;
     }
@@ -469,7 +502,9 @@ function checkResolveOutcomeTargetRole() {
     try {
       rule = JSON.parse(fs.readFileSync(ruleFile, 'utf8'));
     } catch (error) {
-      warnings.push(`⚠️  Could not parse rule ${path.relative(projectRoot, ruleFile)}: ${error.message}`);
+      warnings.push(
+        `⚠️  Could not parse rule ${path.relative(projectRoot, ruleFile)}: ${error.message}`
+      );
       continue;
     }
 
@@ -489,9 +524,13 @@ function checkResolveOutcomeTargetRole() {
   }
 
   if (missingCount === 0) {
-    console.log('  ✓ All RESOLVE_OUTCOME operations specify target_role for opposed checks');
+    console.log(
+      '  ✓ All RESOLVE_OUTCOME operations specify target_role for opposed checks'
+    );
   } else {
-    console.log(`  ⚠️  Found ${missingCount} RESOLVE_OUTCOME operation(s) missing target_role`);
+    console.log(
+      `  ⚠️  Found ${missingCount} RESOLVE_OUTCOME operation(s) missing target_role`
+    );
   }
 }
 
@@ -507,10 +546,12 @@ function checkResolveOutcomeTargetRole() {
  * @example 'DRINK_FROM' -> 'DrinkFromHandler'
  */
 function toTokenName(operationType) {
-  return operationType
-    .split('_')
-    .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-    .join('') + 'Handler';
+  return (
+    operationType
+      .split('_')
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+      .join('') + 'Handler'
+  );
 }
 
 /**
@@ -521,9 +562,15 @@ function toTokenName(operationType) {
  */
 function toHandlerFileName(operationType) {
   const parts = operationType.split('_');
-  return parts
-    .map((word, idx) => idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase())
-    .join('') + 'Handler.js';
+  return (
+    parts
+      .map((word, idx) =>
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
+      )
+      .join('') + 'Handler.js'
+  );
 }
 
 /**
@@ -534,7 +581,13 @@ function toHandlerFileName(operationType) {
  */
 function toSchemaFileName(operationType) {
   const parts = operationType.split('_');
-  return parts
-    .map((word, idx) => idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase())
-    .join('') + '.schema.json';
+  return (
+    parts
+      .map((word, idx) =>
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
+      )
+      .join('') + '.schema.json'
+  );
 }

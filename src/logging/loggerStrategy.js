@@ -132,9 +132,8 @@ class LoggerStrategy {
     this.#currentLevel = 'INFO'; // Default log level
 
     // Merge config with defaults (but don't use mode from DEFAULT_CONFIG)
-    const { mode: _defaultMode, ...defaultConfigWithoutMode } = deepClone(
-      DEFAULT_CONFIG
-    );
+    const { mode: _defaultMode, ...defaultConfigWithoutMode } =
+      deepClone(DEFAULT_CONFIG);
 
     let config = rawConfig;
     if (config === undefined) {
@@ -208,7 +207,6 @@ class LoggerStrategy {
     // then fall back to globalThis.process
     let processRef;
     try {
-       
       if (typeof process !== 'undefined') {
         // eslint-disable-next-line no-undef
         processRef = process;
@@ -781,7 +779,9 @@ class LoggerStrategy {
     if (typeof this.#logger.enableDebugNamespace === 'function') {
       this.#logger.enableDebugNamespace(namespace);
       if (this.#logger && typeof this.#logger.info === 'function') {
-        this.#logger.info(`[LoggerStrategy] Debug namespace enabled: ${namespace}`);
+        this.#logger.info(
+          `[LoggerStrategy] Debug namespace enabled: ${namespace}`
+        );
       }
     }
   }
@@ -795,7 +795,9 @@ class LoggerStrategy {
     if (typeof this.#logger.disableDebugNamespace === 'function') {
       this.#logger.disableDebugNamespace(namespace);
       if (this.#logger && typeof this.#logger.info === 'function') {
-        this.#logger.info(`[LoggerStrategy] Debug namespace disabled: ${namespace}`);
+        this.#logger.info(
+          `[LoggerStrategy] Debug namespace disabled: ${namespace}`
+        );
       }
     }
   }

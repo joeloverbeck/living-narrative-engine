@@ -36,21 +36,33 @@ describe('PlanningStateView contract: component lookup union', () => {
     expect(arrayPayload.value).toBe(true);
 
     const proxiedPayload = view.hasComponent('actor-1', 'core:proxied_payload');
-    expect(proxiedPayload.status).toBe(PLANNING_STATE_COMPONENT_STATUSES.PRESENT);
+    expect(proxiedPayload.status).toBe(
+      PLANNING_STATE_COMPONENT_STATUSES.PRESENT
+    );
     expect(proxiedPayload.value).toBe(true);
 
-    const primitivePayload = view.hasComponent('actor-1', 'core:primitive_payload');
-    expect(primitivePayload.status).toBe(PLANNING_STATE_COMPONENT_STATUSES.PRESENT);
+    const primitivePayload = view.hasComponent(
+      'actor-1',
+      'core:primitive_payload'
+    );
+    expect(primitivePayload.status).toBe(
+      PLANNING_STATE_COMPONENT_STATUSES.PRESENT
+    );
     expect(primitivePayload.value).toBe(false);
 
     const nullishPayload = view.hasComponent('actor-1', 'core:nullish_payload');
-    expect(nullishPayload.status).toBe(PLANNING_STATE_COMPONENT_STATUSES.PRESENT);
+    expect(nullishPayload.status).toBe(
+      PLANNING_STATE_COMPONENT_STATUSES.PRESENT
+    );
     expect(nullishPayload.value).toBe(false);
   });
 
   it('tracks lookup sources across flattened keys, nested state, and actor snapshots', () => {
     const state = {
-      actor: { id: 'actor-1', components: { 'core:actor_component': { morale: 50 } } },
+      actor: {
+        id: 'actor-1',
+        components: { 'core:actor_component': { morale: 50 } },
+      },
       'entity-3:core:flat_component': { armed: true },
       state: {
         'entity-4': {
@@ -123,7 +135,10 @@ describe('PlanningStateView contract: component lookup union', () => {
     };
 
     const actorView = createPlanningStateView(actorState);
-    const absentFromActor = actorView.hasComponent('actor-priority', 'core:missing_component');
+    const absentFromActor = actorView.hasComponent(
+      'actor-priority',
+      'core:missing_component'
+    );
     expect(absentFromActor).toEqual({
       status: PLANNING_STATE_COMPONENT_STATUSES.ABSENT,
       value: false,
@@ -143,7 +158,10 @@ describe('PlanningStateView contract: component lookup union', () => {
       'entity-state:core:from_flat': { armed: true },
     };
     const stateView = createPlanningStateView(stateOnly);
-    const absentFromState = stateView.hasComponent('entity-state', 'core:missing_component');
+    const absentFromState = stateView.hasComponent(
+      'entity-state',
+      'core:missing_component'
+    );
     expect(absentFromState.source).toBe(PLANNING_STATE_COMPONENT_SOURCES.STATE);
 
     const flatOnly = {
@@ -151,7 +169,10 @@ describe('PlanningStateView contract: component lookup union', () => {
       'entity-flat:core:from_flat': { armed: true },
     };
     const flatView = createPlanningStateView(flatOnly);
-    const absentFromFlat = flatView.hasComponent('entity-flat', 'core:missing_component');
+    const absentFromFlat = flatView.hasComponent(
+      'entity-flat',
+      'core:missing_component'
+    );
     expect(absentFromFlat.source).toBe(PLANNING_STATE_COMPONENT_SOURCES.FLAT);
   });
 });

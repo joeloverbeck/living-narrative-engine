@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals';
+import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import express from 'express';
 import http from 'http';
 
@@ -152,7 +146,7 @@ describe('LlmRequestService header fallback integration coverage', () => {
       expect(received.headers['content-type']).toBe('application/json');
 
       const previewCall = logger.debug.mock.calls.find(([message]) =>
-        message.includes("Sanitized Target Payload Preview")
+        message.includes('Sanitized Target Payload Preview')
       );
       expect(previewCall).toBeDefined();
       const sanitizedPayload = previewCall?.[1]?.payload;

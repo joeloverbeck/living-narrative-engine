@@ -21,7 +21,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the movement mod manifest
       const manifestPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json'
       );
       const manifestContent = fs.readFileSync(manifestPath, 'utf8');
       const manifest = JSON.parse(manifestContent);
@@ -32,7 +32,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the action file
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       expect(fs.existsSync(actionPath)).toBe(true);
 
@@ -48,7 +48,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the condition file
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
 
@@ -64,7 +64,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the scope file
       const scopePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/scopes/clear_directions.scope',
+        'data/mods/movement/scopes/clear_directions.scope'
       );
       expect(fs.existsSync(scopePath)).toBe(true);
 
@@ -81,7 +81,7 @@ describe('Movement Action Loading Integration', () => {
       // Load the go action
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -91,20 +91,20 @@ describe('Movement Action Loading Integration', () => {
       // Check prerequisites array
       expect(Array.isArray(action.prerequisites)).toBe(true);
       expect(action.prerequisites[0].logic.condition_ref).toBe(
-        'movement:actor-can-move',
+        'movement:actor-can-move'
       );
 
       // Verify the referenced scope exists
       const scopePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/scopes/clear_directions.scope',
+        'data/mods/movement/scopes/clear_directions.scope'
       );
       expect(fs.existsSync(scopePath)).toBe(true);
 
       // Verify the referenced condition exists
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
     });
@@ -113,10 +113,10 @@ describe('Movement Action Loading Integration', () => {
       // Load both actions to compare (if core version still exists)
       const movementActionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const movementAction = JSON.parse(
-        fs.readFileSync(movementActionPath, 'utf8'),
+        fs.readFileSync(movementActionPath, 'utf8')
       );
 
       // Verify all functional core: references have been updated to movement:
@@ -124,14 +124,14 @@ describe('Movement Action Loading Integration', () => {
       expect(movementAction.id).not.toContain('core:');
       expect(movementAction.targets.primary.scope).not.toContain('core:');
       expect(movementAction.prerequisites[0].logic.condition_ref).not.toContain(
-        'core:',
+        'core:'
       );
 
       // Verify movement namespace is used consistently
       expect(movementAction.id).toMatch(/^movement:/);
       expect(movementAction.targets.primary.scope).toMatch(/^movement:/);
       expect(movementAction.prerequisites[0].logic.condition_ref).toMatch(
-        /^movement:/,
+        /^movement:/
       );
     });
   });
@@ -140,7 +140,7 @@ describe('Movement Action Loading Integration', () => {
     it('should have all migrated content listed in movement mod manifest', () => {
       const manifestPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json'
       );
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
@@ -151,7 +151,7 @@ describe('Movement Action Loading Integration', () => {
       // Verify conditions are listed
       expect(manifest.content.conditions).toBeDefined();
       expect(manifest.content.conditions).toContain(
-        'actor-can-move.condition.json',
+        'actor-can-move.condition.json'
       );
 
       // Verify scopes are listed
@@ -162,7 +162,7 @@ describe('Movement Action Loading Integration', () => {
     it('should maintain dependency on core mod', () => {
       const manifestPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json'
       );
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
@@ -173,7 +173,7 @@ describe('Movement Action Loading Integration', () => {
             id: 'core',
             version: expect.any(String),
           }),
-        ]),
+        ])
       );
     });
   });
@@ -182,13 +182,13 @@ describe('Movement Action Loading Integration', () => {
     it('should validate go action against action schema', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
       // Check required fields
       expect(action.$schema).toBe(
-        'schema://living-narrative-engine/action.schema.json',
+        'schema://living-narrative-engine/action.schema.json'
       );
       expect(action.id).toBeDefined();
       expect(action.name).toBeDefined();
@@ -219,13 +219,13 @@ describe('Movement Action Loading Integration', () => {
     it('should validate condition against condition schema', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       const condition = JSON.parse(fs.readFileSync(conditionPath, 'utf8'));
 
       // Check required fields
       expect(condition.$schema).toBe(
-        'schema://living-narrative-engine/condition.schema.json',
+        'schema://living-narrative-engine/condition.schema.json'
       );
       expect(condition.id).toBeDefined();
       expect(condition.description).toBeDefined();

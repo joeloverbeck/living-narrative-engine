@@ -7,22 +7,13 @@
       "layer": "outer",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": [
-          "left_arm_clothing",
-          "right_arm_clothing"
-        ]
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "flexible"
-      ]
+      "properties": ["flexible"]
     },
     "core:name": {
       "text": "battle-scarred jacket"
@@ -37,9 +28,7 @@
       "texture": "scarred"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "outer"
     },
     "items:item": {},

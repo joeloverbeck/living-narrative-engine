@@ -64,14 +64,14 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should validate action visual properties', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
       // Validate normal state
       const normalResult = validateColorContrast(
         action.visual.backgroundColor,
-        action.visual.textColor,
+        action.visual.textColor
       );
 
       expect(normalResult.meetsWCAG_AA).toBe(true);
@@ -81,7 +81,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
       // Validate hover state
       const hoverResult = validateColorContrast(
         action.visual.hoverBackgroundColor,
-        action.visual.hoverTextColor,
+        action.visual.hoverTextColor
       );
 
       expect(hoverResult.meetsWCAG_AA).toBe(true);
@@ -93,7 +93,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should have consistent Explorer Cyan colors in go action', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -127,7 +127,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
 
         expect(result.contrastRatio).toBeGreaterThanOrEqual(
           state.requiredRatio,
-          `${state.name} state should meet WCAG ${state.requiredLevel} (${state.requiredRatio}:1)`,
+          `${state.name} state should meet WCAG ${state.requiredLevel} (${state.requiredRatio}:1)`
         );
 
         expect(result.meetsWCAG_AA).toBe(true);
@@ -165,7 +165,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should have all required visual properties', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -179,7 +179,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should use valid hex color codes', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -196,7 +196,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should use web-safe color values', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -219,7 +219,7 @@ describe('Explorer Cyan Theme WCAG Compliance', () => {
     it('should have migrated from core mod with correct theme', () => {
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 

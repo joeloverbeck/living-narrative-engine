@@ -1,10 +1,4 @@
-import {
-  describe,
-  expect,
-  jest,
-  beforeEach,
-  test
-} from '@jest/globals';
+import { describe, expect, jest, beforeEach, test } from '@jest/globals';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
 import { BaseTurnHandler } from '../../../../src/turns/handlers/baseTurnHandler.js';
@@ -89,7 +83,7 @@ const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 });
 
 const createActor = (id = 'actor-1') => ({ id });
@@ -112,7 +106,7 @@ const createContext = (
     }),
     requestProcessingCommandStateTransition: jest.fn(() => Promise.resolve()),
     endTurn: jest.fn(() => Promise.resolve()),
-    getStrategy: jest.fn(() => ({ decideAction: jest.fn() }))
+    getStrategy: jest.fn(() => ({ decideAction: jest.fn() })),
   };
 };
 
@@ -144,11 +138,15 @@ describe('TurnIdleState integration', () => {
 
     await handler.startTurn(actor);
 
-    expect(context.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(1);
+    expect(context.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(
+      1
+    );
     expect(handler._enteredAwaiting).toBe(1);
     expect(handler.getCurrentState()).toBeInstanceOf(TestAwaitingState);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Successfully transitioned to AwaitingActorDecisionState')
+      expect.stringContaining(
+        'Successfully transitioned to AwaitingActorDecisionState'
+      )
     );
   });
 
@@ -183,7 +181,7 @@ describe('TurnIdleState integration', () => {
     const actor = createActor('actor-a');
     const mismatch = createActor('actor-b');
     const context = createContext(handler, actor, logger, {
-      mismatchActor: mismatch
+      mismatchActor: mismatch,
     });
     handler._setCurrentTurnContextInternal(context);
 
@@ -199,15 +197,19 @@ describe('TurnIdleState integration', () => {
   test('startTurn recovers to idle when awaiting input transition fails', async () => {
     const actor = createActor('actor-c');
     const context = createContext(handler, actor, logger, {
-      failAwaitingTransition: true
+      failAwaitingTransition: true,
     });
     handler._setCurrentTurnContextInternal(context);
 
-    await expect(handler.startTurn(actor)).rejects.toThrow('transition failure');
+    await expect(handler.startTurn(actor)).rejects.toThrow(
+      'transition failure'
+    );
 
     expect(handler._resetCalls).toContain('transition-fail-TurnIdleState');
     expect(handler.getCurrentState()).toBeInstanceOf(TurnIdleState);
-    expect(context.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(1);
+    expect(context.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   test('idle passthrough methods log standardized warnings', async () => {
@@ -218,20 +220,15 @@ describe('TurnIdleState integration', () => {
     await expect(
       idleState.handleSubmittedCommand(handler, 'look', actor)
     ).rejects.toThrow(
-      "Method 'handleSubmittedCommand(command: \"look\", entity: actor-d, contextActor: actor-d)' must be implemented by concrete state TurnIdleState."
+      'Method \'handleSubmittedCommand(command: "look", entity: actor-d, contextActor: actor-d)\' must be implemented by concrete state TurnIdleState.'
     );
 
     await idleState.handleTurnEndedEvent(handler, { entityId: actor.id });
 
     await expect(
-      idleState.processCommandResult(
-        handler,
-        actor,
-        { outcome: 'ok' },
-        'look'
-      )
+      idleState.processCommandResult(handler, actor, { outcome: 'ok' }, 'look')
     ).rejects.toThrow(
-      "Method 'processCommandResult(actorId: actor-d, command: \"look\")' must be implemented by concrete state TurnIdleState."
+      'Method \'processCommandResult(actorId: actor-d, command: "look")\' must be implemented by concrete state TurnIdleState.'
     );
 
     await expect(
@@ -262,7 +259,9 @@ describe('TurnIdleState integration', () => {
     await idleState.destroy(handler);
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('BaseTurnHandler is being destroyed while in idle state.')
+      expect.stringContaining(
+        'BaseTurnHandler is being destroyed while in idle state.'
+      )
     );
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Destroy handling complete')

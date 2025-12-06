@@ -161,7 +161,9 @@ describe('ErrorRecovery additional coverage', () => {
     );
 
     expect(fallback.success).toBe(false);
-    expect(fallback.userMessage).toContain('Could not render anatomy visualization');
+    expect(fallback.userMessage).toContain(
+      'Could not render anatomy visualization'
+    );
   });
 
   it('handles layout calculation fallback branch', () => {

@@ -7,6 +7,7 @@ This report documents the resolution of 5 failing tests related to anatomy-based
 ## Test Failures
 
 ### Affected Tests (5 total)
+
 1. `grab_crotch_draw_attention_action_discovery.test.js` - 1 test
 2. `grab_crotch_draw_attention_receiving_blowjob_forbidden.test.js` - 1 test
 3. `stroke_penis_to_draw_attention_action_discovery.test.js` - 1 test
@@ -81,7 +82,7 @@ const buildPrerequisiteContextOverride = (resolvedTargets, actorId) => {
 const ALLOWED_OPERATIONS = new Set([
   // ... other operators ...
   // Location/actor operators
-  'hasOtherActorsAtLocation',  // ✅ Added
+  'hasOtherActorsAtLocation', // ✅ Added
   // ... rest of operators ...
 ]);
 ```
@@ -115,11 +116,13 @@ const allEntities = this.#entityManager.getEntities(); // ✅ Correct method
 **Problem**: The incompatibility between `SimpleEntityManager` and `EntityManager` APIs caused runtime errors that were difficult to debug.
 
 **Recommendation**:
+
 - Document the minimal IEntityManager interface that operators should rely on
 - Add TypeScript interfaces or JSDoc `@interface` definitions
 - Run interface compliance checks during test setup
 
 **Example Interface**:
+
 ```javascript
 /**
  * @interface IEntityManager
@@ -129,7 +132,7 @@ export const IEntityManager = {
   getEntities: () => [], // Returns all entities as array
   getComponentData: (entityId, componentType) => null,
   hasComponent: (entityId, componentType) => false,
-  getEntityInstance: (entityId) => null
+  getEntityInstance: (entityId) => null,
 };
 ```
 
@@ -138,20 +141,20 @@ export const IEntityManager = {
 **Problem**: The test environment didn't properly validate that targetless actions can still evaluate actor-based prerequisites.
 
 **Recommendation**:
+
 - Add explicit test cases for targetless actions with prerequisites
 - Document the expected behavior in test utilities
 - Add assertions in `buildPrerequisiteContextOverride` to validate actor context creation
 
 **Example Test Pattern**:
+
 ```javascript
 describe('Targetless actions with prerequisites', () => {
   it('should evaluate actor-based prerequisites for actions with targets: "none"', () => {
     const action = {
       id: 'test:targetless_action',
       targets: 'none',
-      prerequisites: [
-        { logic: { hasPartOfType: ['actor', 'hand'] } }
-      ]
+      prerequisites: [{ logic: { hasPartOfType: ['actor', 'hand'] } }],
     };
 
     // Test should pass when actor has hand
@@ -166,11 +169,13 @@ describe('Targetless actions with prerequisites', () => {
 **Problem**: The `hasOtherActorsAtLocation` operator was fully implemented and registered in `jsonLogicCustomOperators.js` but was missing from the validation whitelist, causing silent failures.
 
 **Recommendation**:
+
 - Automate whitelist generation from registered operators
 - Add validation during operator registration to check whitelist presence
 - Create a test that verifies all registered operators are in the whitelist
 
 **Example Check**:
+
 ```javascript
 // In JsonLogicCustomOperators.registerOperators()
 const registeredOperators = [
@@ -185,7 +190,7 @@ for (const op of registeredOperators) {
   if (!jsonLogicEvaluationService.isOperatorAllowed(op)) {
     throw new Error(
       `Operator '${op}' is registered but not in ALLOWED_OPERATIONS whitelist. ` +
-      `Add it to JsonLogicEvaluationService.#validateJsonLogic()`
+        `Add it to JsonLogicEvaluationService.#validateJsonLogic()`
     );
   }
 }
@@ -196,6 +201,7 @@ for (const op of registeredOperators) {
 **Problem**: When prerequisite evaluation failed, the error messages didn't clearly indicate which prerequisite failed or why.
 
 **Recommendation**:
+
 - Enhance prerequisite evaluation error messages to include:
   - Which prerequisite failed (by index or logic)
   - The actual values being evaluated
@@ -203,6 +209,7 @@ for (const op of registeredOperators) {
 - Add debug mode flag for verbose prerequisite evaluation logging
 
 **Example Enhanced Error**:
+
 ```javascript
 // Current (vague)
 "Action not discovered"
@@ -221,11 +228,13 @@ for (const op of registeredOperators) {
 **Problem**: Tests use `SimpleEntityManager` which has a different API than production `EntityManager`, requiring operators to handle both.
 
 **Recommendation**:
+
 - Create a `TestEntityManager` wrapper that provides the production API surface
 - Use adapter pattern to bridge `SimpleEntityManager` to production API
 - Document which methods are required vs optional
 
 **Example Adapter**:
+
 ```javascript
 class TestEntityManagerAdapter {
   constructor(simpleEntityManager) {
@@ -239,7 +248,7 @@ class TestEntityManagerAdapter {
 
   // Add any missing production methods
   getEntitiesWithComponent(componentType) {
-    return this.getEntities().filter(e =>
+    return this.getEntities().filter((e) =>
       this.#simple.hasComponent(e.id, componentType)
     );
   }
@@ -290,11 +299,13 @@ The lack of interface documentation allowed the API drift between test and produ
 ## Conclusion
 
 The fixes implemented resolve all 5 failing tests by addressing three root causes:
+
 1. Targetless action prerequisite context handling
 2. Missing operator validation whitelist entry
 3. Entity manager API incompatibility
 
 The suggested improvements aim to prevent similar issues in the future by:
+
 - Enforcing interface contracts
 - Improving error messages
 - Automating validation checks

@@ -40,9 +40,9 @@ controller refactor exits the planning stage documented in
 ## Event Listener Patterns
 
 - Register listeners with `this.eventRegistry.addEventListener(element,
-  eventName, handler)` after retrieving the element with `_getElement()`.
+eventName, handler)` after retrieving the element with `_getElement()`.
 - For concise wiring, `_addEventListener(elementName, eventName,
-  handler)` remains acceptable. The wrapper routes through the event
+handler)` remains acceptable. The wrapper routes through the event
   registry and keeps listener cleanup connected to controller teardown.
 - Prefer bound methods over inline lambdas when listeners need to be
   removed individually.
@@ -50,7 +50,7 @@ controller refactor exits the planning stage documented in
 ## Error Handling
 
 - Surface recoverable service failures via `_handleServiceError(error,
-  operationName, userMessage)` to keep UI messaging and telemetry
+operationName, userMessage)` to keep UI messaging and telemetry
   aligned with the ErrorHandlingStrategy service.
 - When adding new service calls, log the `operationName` consistently
   (e.g., `loadThematicDirections`, `fetchSpeechPatterns`) to simplify

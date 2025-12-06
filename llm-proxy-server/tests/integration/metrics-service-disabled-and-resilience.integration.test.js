@@ -3,7 +3,14 @@
  * @description Integration tests covering MetricsService disabled mode and failure recovery paths.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { register } from 'prom-client';
@@ -96,7 +103,9 @@ describe('MetricsService disabled instrumentation', () => {
     await request(app).get('/ping').expect(204);
 
     expect(metricsService.isEnabled()).toBe(false);
-    await expect(metricsService.getMetrics()).resolves.toBe('# Metrics collection is disabled\n');
+    await expect(metricsService.getMetrics()).resolves.toBe(
+      '# Metrics collection is disabled\n'
+    );
     expect(metricsService.getStats()).toEqual({ enabled: false });
 
     // Ensure lifecycle helpers are safe when disabled
@@ -165,7 +174,10 @@ describe('MetricsService failure resilience', () => {
       result: 'miss',
       cacheType: 'api-key',
     });
-    metricsService.recordCacheOperation({ operation: 'delete', result: 'success' });
+    metricsService.recordCacheOperation({
+      operation: 'delete',
+      result: 'success',
+    });
     metricsService.recordRateLimiting({
       limitType: undefined,
       clientType: undefined,
@@ -341,11 +353,9 @@ describe('MetricsService failure resilience', () => {
     expect(() => metricsService.reset()).not.toThrow();
     resetSpy.mockRestore();
 
-    const clearSpy = jest
-      .spyOn(register, 'clear')
-      .mockImplementation(() => {
-        throw new Error('clear failure');
-      });
+    const clearSpy = jest.spyOn(register, 'clear').mockImplementation(() => {
+      throw new Error('clear failure');
+    });
     expect(() => metricsService.clear()).not.toThrow();
     clearSpy.mockRestore();
 
@@ -354,7 +364,9 @@ describe('MetricsService failure resilience', () => {
       .mockImplementation(() => {
         throw new Error('metrics failure');
       });
-    await expect(metricsService.getMetrics()).rejects.toThrow('metrics failure');
+    await expect(metricsService.getMetrics()).rejects.toThrow(
+      'metrics failure'
+    );
     metricsSpy.mockRestore();
 
     const statsSpy = jest
@@ -362,7 +374,10 @@ describe('MetricsService failure resilience', () => {
       .mockImplementation(() => {
         throw new Error('stats failure');
       });
-    expect(metricsService.getStats()).toEqual({ enabled: true, error: 'stats failure' });
+    expect(metricsService.getStats()).toEqual({
+      enabled: true,
+      error: 'stats failure',
+    });
     statsSpy.mockRestore();
   });
 });

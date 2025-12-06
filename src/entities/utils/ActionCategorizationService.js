@@ -264,7 +264,6 @@ class ActionCategorizationService {
   shouldShowCounts() {
     return this.#config.showCounts;
   }
-
 }
 
 export default ActionCategorizationService;

@@ -37,7 +37,10 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit creates debounced handlers respecting leading/trailing options', () => {
     const fn = jest.fn();
-    const debounced = toolkit.debounce(fn, 50, { leading: true, trailing: true });
+    const debounced = toolkit.debounce(fn, 50, {
+      leading: true,
+      trailing: true,
+    });
 
     debounced('one');
     debounced('two');
@@ -51,7 +54,10 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit creates throttled handlers and prevents rapid firing', () => {
     const fn = jest.fn();
-    const throttled = toolkit.throttle(fn, 100, { leading: true, trailing: true });
+    const throttled = toolkit.throttle(fn, 100, {
+      leading: true,
+      trailing: true,
+    });
 
     throttled('first');
     throttled('second');
@@ -64,7 +70,10 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit trailing-only throttle waits full delay on first call', () => {
     const fn = jest.fn();
-    const throttled = toolkit.throttle(fn, 100, { leading: false, trailing: true });
+    const throttled = toolkit.throttle(fn, 100, {
+      leading: false,
+      trailing: true,
+    });
 
     throttled('first');
     expect(fn).not.toHaveBeenCalled();
@@ -117,8 +126,12 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit throws helpful errors when invalid handlers supplied', () => {
     expect(() => toolkit.debounce(null, 20)).toThrow('expects a function');
-    expect(() => toolkit.getThrottledHandler('key', null, 20)).toThrow('expects a function');
-    expect(() => toolkit.getDebouncedHandler('', () => {}, 20)).toThrow('requires a key');
+    expect(() => toolkit.getThrottledHandler('key', null, 20)).toThrow(
+      'expects a function'
+    );
+    expect(() => toolkit.getDebouncedHandler('', () => {}, 20)).toThrow(
+      'requires a key'
+    );
   });
 
   it('asyncUtilitiesToolkit clears handler wrappers when clearAllTimers() invoked', () => {
@@ -135,7 +148,10 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit throttle helpers expose flush logic for pending and idle states', () => {
     const fn = jest.fn().mockReturnValue('executed');
-    const throttled = toolkit.throttle(fn, 100, { leading: false, trailing: true });
+    const throttled = toolkit.throttle(fn, 100, {
+      leading: false,
+      trailing: true,
+    });
 
     // When no invocation is pending, flush should just return the latest result (undefined)
     expect(throttled.flush()).toBeUndefined();
@@ -151,11 +167,17 @@ describe('asyncUtilitiesToolkit', () => {
 
   it('asyncUtilitiesToolkit validates required function arguments across helpers', () => {
     expect(() => toolkit.throttle(null, 50)).toThrow('expects a function');
-    expect(() => toolkit.getDebouncedHandler('search', null, 25)).toThrow('expects a function');
-    expect(() => toolkit.getThrottledHandler('', () => {}, 25)).toThrow('requires a key');
+    expect(() => toolkit.getDebouncedHandler('search', null, 25)).toThrow(
+      'expects a function'
+    );
+    expect(() => toolkit.getThrottledHandler('', () => {}, 25)).toThrow(
+      'requires a key'
+    );
     expect(() => toolkit.setTimeout(null, 10)).toThrow('expects a function');
     expect(() => toolkit.setInterval(null, 10)).toThrow('expects a function');
-    expect(() => toolkit.requestAnimationFrame(null)).toThrow('expects a function');
+    expect(() => toolkit.requestAnimationFrame(null)).toThrow(
+      'expects a function'
+    );
   });
 
   it('asyncUtilitiesToolkit instrumentation emits timer logs when enabled', () => {

@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 
 describe('normalizeNoteText', () => {
   it('includes subject metadata and normalizes punctuation and spacing', () => {

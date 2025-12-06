@@ -93,7 +93,9 @@ describe('vampirism:bite_neck_carefully - Rule Execution', () => {
       );
 
       expect(actorInstance).toHaveComponent('positioning:biting_neck');
-      expect(targetInstance).toHaveComponent('positioning:being_bitten_in_neck');
+      expect(targetInstance).toHaveComponent(
+        'positioning:being_bitten_in_neck'
+      );
     });
 
     it('rejects the action when actor is not a vampire', async () => {

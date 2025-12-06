@@ -97,7 +97,8 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const givingBlowjob = actor?.components?.['positioning:giving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       // IMPORTANT: No kneeling filter here
       if (!givingBlowjob || !Array.isArray(closenessPartners)) {
@@ -109,12 +110,14 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
         return { success: true, value: new Set() };
       }
 
-      const receivingEntity = fixture.entityManager.getEntityInstance(receivingEntityId);
+      const receivingEntity =
+        fixture.entityManager.getEntityInstance(receivingEntityId);
       if (!receivingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const receivingBlowjob = receivingEntity.components?.['positioning:receiving_blowjob'];
+      const receivingBlowjob =
+        receivingEntity.components?.['positioning:receiving_blowjob'];
       if (!receivingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -152,7 +155,8 @@ describe('sex-penile-oral:pull_penis_out_of_mouth_revulsion action discovery', (
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installReceivingBlowjobFromActorScopeOverride(testFixture);
+    restoreScopeResolver =
+      installReceivingBlowjobFromActorScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -177,7 +181,9 @@ describe('sex-penile-oral:pull_penis_out_of_mouth_revulsion action discovery', (
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull {primary}'s penis out of your mouth in revulsion");
+    expect(discovered.template).toBe(
+      "pull {primary}'s penis out of your mouth in revulsion"
+    );
   });
 
   it('does not appear when actor lacks giving_blowjob component', async () => {
@@ -273,6 +279,8 @@ describe('sex-penile-oral:pull_penis_out_of_mouth_revulsion action discovery', (
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull {primary}'s penis out of your mouth in revulsion");
+    expect(discovered.template).toBe(
+      "pull {primary}'s penis out of your mouth in revulsion"
+    );
   });
 });

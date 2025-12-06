@@ -90,28 +90,32 @@ describe('main.js fallback coverage', () => {
     const stageError = new Error('UI validation failed');
     mockEnsure.mockResolvedValue({ success: false, error: stageError });
 
-    mockDisplayFatal.mockImplementation((elements, details, loggerArg, domOps) => {
-      expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
-      expect(details.phase).toBe('Bootstrap Orchestration - UI Element Validation');
-      expect(loggerArg).toBeNull();
+    mockDisplayFatal.mockImplementation(
+      (elements, details, loggerArg, domOps) => {
+        expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
+        expect(details.phase).toBe(
+          'Bootstrap Orchestration - UI Element Validation'
+        );
+        expect(loggerArg).toBeNull();
 
-      const placeholder = document.getElementById('after-target');
-      const contentHolder = document.createElement('div');
-      domOps.setTextContent(contentHolder, 'critical');
-      expect(contentHolder.textContent).toBe('critical');
+        const placeholder = document.getElementById('after-target');
+        const contentHolder = document.createElement('div');
+        domOps.setTextContent(contentHolder, 'critical');
+        expect(contentHolder.textContent).toBe('critical');
 
-      domOps.setStyle(contentHolder, 'color', 'red');
-      expect(contentHolder.style.color).toBe('red');
+        domOps.setStyle(contentHolder, 'color', 'red');
+        expect(contentHolder.style.color).toBe('red');
 
-      const injected = domOps.createElement('span');
-      expect(injected.tagName).toBe('SPAN');
+        const injected = domOps.createElement('span');
+        expect(injected.tagName).toBe('SPAN');
 
-      placeholder.parentElement.insertBefore(contentHolder, placeholder);
-      domOps.insertAfter(contentHolder, injected);
-      expect(contentHolder.nextSibling).toBe(injected);
+        placeholder.parentElement.insertBefore(contentHolder, placeholder);
+        domOps.insertAfter(contentHolder, injected);
+        expect(contentHolder.nextSibling).toBe(injected);
 
-      domOps.alert('notify');
-    });
+        domOps.alert('notify');
+      }
+    );
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -134,11 +138,20 @@ describe('main.js fallback coverage', () => {
       json: () => Promise.resolve({ startWorld: 'nebula' }),
     });
 
-    mockEnsure.mockResolvedValue({ success: true, payload: createUiElements() });
-    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+    mockEnsure.mockResolvedValue({
+      success: true,
+      payload: createUiElements(),
+    });
+    mockSetupDI.mockResolvedValue({
+      success: true,
+      payload: createMainBootstrapContainerMock(),
+    });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
-    mockInitEngine.mockResolvedValue({ success: true, payload: engineInstance });
+    mockInitEngine.mockResolvedValue({
+      success: true,
+      payload: engineInstance,
+    });
     const auxError = new Error('aux fail');
     auxError.phase = 'Auxiliary Services Initialization';
     auxError.failures = [{ service: 'Telemetry', error: new Error('boom') }];
@@ -174,11 +187,20 @@ describe('main.js fallback coverage', () => {
     const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
     const engineInstance = {};
 
-    mockEnsure.mockResolvedValue({ success: true, payload: createUiElements() });
-    mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+    mockEnsure.mockResolvedValue({
+      success: true,
+      payload: createUiElements(),
+    });
+    mockSetupDI.mockResolvedValue({
+      success: true,
+      payload: createMainBootstrapContainerMock(),
+    });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
-    mockInitEngine.mockResolvedValue({ success: true, payload: engineInstance });
+    mockInitEngine.mockResolvedValue({
+      success: true,
+      payload: engineInstance,
+    });
     mockInitAux.mockResolvedValue({ success: true });
     mockMenu.mockResolvedValue({ success: true });
     mockGlobal.mockResolvedValue({ success: true });
@@ -200,33 +222,39 @@ describe('main.js fallback coverage', () => {
 
     await main.beginGame();
 
-    expect(mockStartGame).toHaveBeenCalledWith(engineInstance, 'default', logger);
+    expect(mockStartGame).toHaveBeenCalledWith(
+      engineInstance,
+      'default',
+      logger
+    );
   });
 
   it('provides DOM helpers when beginGame is invoked without initialization', async () => {
-    mockDisplayFatal.mockImplementation((elements, details, loggerArg, domOps) => {
-      // beginGame now provides fallback UI elements when uiElements is undefined
-      expect(elements).toMatchObject({
-        outputDiv: expect.anything(),
-        errorDiv: expect.anything(),
-        inputElement: expect.anything(),
-        document: expect.anything(),
-      });
-      expect(details.phase).toBe('Start Game');
-      expect(loggerArg).toBeNull();
+    mockDisplayFatal.mockImplementation(
+      (elements, details, loggerArg, domOps) => {
+        // beginGame now provides fallback UI elements when uiElements is undefined
+        expect(elements).toMatchObject({
+          outputDiv: expect.anything(),
+          errorDiv: expect.anything(),
+          inputElement: expect.anything(),
+          document: expect.anything(),
+        });
+        expect(details.phase).toBe('Start Game');
+        expect(loggerArg).toBeNull();
 
-      const base = document.getElementById('after-target');
-      const helper = document.createElement('div');
-      domOps.setTextContent(helper, 'fatal');
-      domOps.setStyle(helper, 'backgroundColor', 'black');
-      const created = domOps.createElement('section');
-      base.parentElement.insertBefore(helper, base);
-      domOps.insertAfter(helper, created);
-      domOps.alert('begin-failed');
+        const base = document.getElementById('after-target');
+        const helper = document.createElement('div');
+        domOps.setTextContent(helper, 'fatal');
+        domOps.setStyle(helper, 'backgroundColor', 'black');
+        const created = domOps.createElement('section');
+        base.parentElement.insertBefore(helper, base);
+        domOps.insertAfter(helper, created);
+        domOps.alert('begin-failed');
 
-      expect(helper.nextSibling).toBe(created);
-      expect(helper.style.backgroundColor).toBe('black');
-    });
+        expect(helper.nextSibling).toBe(created);
+        expect(helper.style.backgroundColor).toBe('black');
+      }
+    );
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -239,7 +267,7 @@ describe('main.js fallback coverage', () => {
 
     expect(global.alert).toHaveBeenCalledWith('begin-failed');
     expect(console.error).toHaveBeenCalledWith(
-      expect.stringContaining('Critical: GameEngine not initialized'),
+      expect.stringContaining('Critical: GameEngine not initialized')
     );
   });
 });

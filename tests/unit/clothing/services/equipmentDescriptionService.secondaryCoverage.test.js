@@ -303,7 +303,9 @@ describe('EquipmentDescriptionService - Secondary Coverage', () => {
       };
 
       mockEntityManager.getEntityInstance.mockResolvedValue(trousersEntity);
-      mockDescriptorFormatter.formatDescriptors.mockReturnValue('black, leather');
+      mockDescriptorFormatter.formatDescriptors.mockReturnValue(
+        'black, leather'
+      );
 
       mockEntityManager.getComponentData.mockImplementation(
         (requestedEntityId, componentId) => {

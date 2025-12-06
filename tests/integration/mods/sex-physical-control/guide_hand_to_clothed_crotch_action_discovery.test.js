@@ -127,7 +127,8 @@ function installCloseActorsFacingOrBehindOverride(fixture) {
         }
 
         const partnerFacingAway =
-          partner.components?.['positioning:facing_away']?.facing_away_from || [];
+          partner.components?.['positioning:facing_away']?.facing_away_from ||
+          [];
 
         const facingEachOther =
           !actorFacingAway.includes(partnerId) &&
@@ -163,7 +164,8 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch discovery', () => {
     );
 
     ScopeResolverHelpers.registerPositioningScopes(testFixture.testEnv);
-    restoreScopeResolver = installCloseActorsFacingOrBehindOverride(testFixture);
+    restoreScopeResolver =
+      installCloseActorsFacingOrBehindOverride(testFixture);
   });
 
   afterEach(() => {

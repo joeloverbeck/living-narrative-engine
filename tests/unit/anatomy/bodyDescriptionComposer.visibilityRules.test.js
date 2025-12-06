@@ -186,9 +186,11 @@ describe('BodyDescriptionComposer visibility rules', () => {
     partEntity = {
       ...partEntity,
       hasComponent: jest.fn((componentId) =>
-        ['anatomy:part', 'anatomy:visibility_rules', 'core:description'].includes(
-          componentId
-        )
+        [
+          'anatomy:part',
+          'anatomy:visibility_rules',
+          'core:description',
+        ].includes(componentId)
       ),
       getComponentData: jest.fn((componentId) => {
         switch (componentId) {
@@ -218,7 +220,9 @@ describe('BodyDescriptionComposer visibility rules', () => {
     partEntity = {
       ...partEntity,
       hasComponent: jest.fn((componentId) =>
-        ['anatomy:part', 'anatomy:joint', 'core:description'].includes(componentId)
+        ['anatomy:part', 'anatomy:joint', 'core:description'].includes(
+          componentId
+        )
       ),
       getComponentData: jest.fn((componentId) => {
         switch (componentId) {

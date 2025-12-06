@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-001: Replace Module-Level Environment Detection
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-001
 - **Status:** ✅ COMPLETED
 - **Phase:** 1 - Minimal Change
@@ -16,6 +17,7 @@ Replace module-level constants (`IS_DEV`, `TIMEOUT_MS`) with instance-level time
 ## Files to Modify
 
 ### Production Code
+
 - `src/turns/states/awaitingExternalTurnEndState.js`
   - Lines 30-33 (remove module-level constants)
   - Add import for `getEnvironmentMode` (after line 17)
@@ -29,6 +31,7 @@ Replace module-level constants (`IS_DEV`, `TIMEOUT_MS`) with instance-level time
 ## Changes Required
 
 ### 1. Remove Module-Level Constants
+
 ```javascript
 // REMOVE these lines (30-33):
 const IS_DEV =
@@ -38,6 +41,7 @@ const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 ```
 
 ### 2. Add Static Constants
+
 ```javascript
 // ADD after imports, before class definition (~line 22):
 /**
@@ -52,16 +56,20 @@ export const DEFAULT_TIMEOUT_PRODUCTION = 30_000;
  */
 export const DEFAULT_TIMEOUT_DEVELOPMENT = 3_000;
 ```
+
 Note: These are exported constants, not static class properties, for easier testing.
 
 ### 3. Add Import for Environment Detection
+
 ```javascript
 // ADD to imports (after line 17):
 import { getEnvironmentMode } from '../../utils/environmentUtils.js';
 ```
+
 Note: File is at `src/turns/states/`, so needs `../../` to reach `src/utils/`.
 
 ### 4. Add Instance Field
+
 ```javascript
 // ADD to class fields (~line 60):
 /**
@@ -73,6 +81,7 @@ Note: File is at `src/turns/states/`, so needs `../../` to reach `src/utils/`.
 ```
 
 ### 5. Add Instance Method for Timeout Resolution
+
 ```javascript
 // ADD as private method (after constructor):
 /**
@@ -95,9 +104,11 @@ Note: File is at `src/turns/states/`, so needs `../../` to reach `src/utils/`.
   }
 }
 ```
+
 Note: `getEnvironmentMode()` returns a string ('production' | 'development' | 'test'), not an object.
 
 ### 6. Update Constructor
+
 ```javascript
 // UPDATE constructor to initialize timeout (lines 56-68):
 constructor(
@@ -117,9 +128,11 @@ constructor(
   this.#clearTimeoutFn = clearTimeoutFn;
 }
 ```
+
 Note: Actual constructor signature differs from initial ticket assumption. It accepts `handler` as first parameter, then options object.
 
 ### 7. Update enterState Method
+
 ```javascript
 // UPDATE enterState to use instance timeout (line 98):
 // CHANGE:
@@ -134,6 +147,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### 8. Update #onTimeout Method
+
 ```javascript
 // UPDATE #onTimeout error logging (line 194):
 // CHANGE:
@@ -146,6 +160,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ## Out of Scope
 
 ### Must NOT Change
+
 - Constructor signature (only ADD optional parameter, never remove/reorder)
 - `IEnvironmentProvider` injection (Phase 2)
 - Configuration class extraction (Phase 3)
@@ -157,6 +172,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 - Documentation files (per project instructions)
 
 ### Must NOT Add
+
 - Validation logic (Ticket 002)
 - Timer function validation (Ticket 003)
 - New test files (Tickets 005-006)
@@ -165,6 +181,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ## Acceptance Criteria
 
 ### AC1: Instance-Level Timeout Resolution (Production)
+
 ```javascript
 // GIVEN: Constructor called without timeoutMs option
 // WHEN: getEnvironmentMode() returns 'production'
@@ -175,6 +192,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### AC2: Instance-Level Timeout Resolution (Development)
+
 ```javascript
 // GIVEN: Constructor called without timeoutMs option
 // WHEN: getEnvironmentMode() returns 'development'
@@ -184,6 +202,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### AC3: Explicit Timeout Override
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: 5_000 }
 // WHEN: Any environment mode (production or development)
@@ -194,6 +213,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### AC4: Environment Detection Failure Graceful Degradation
+
 ```javascript
 // GIVEN: getEnvironmentMode() throws error
 // WHEN: Constructor called without timeoutMs
@@ -205,6 +225,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### AC5: Browser Environment (No process global)
+
 ```javascript
 // GIVEN: typeof process === 'undefined' (browser environment)
 // WHEN: Constructor called without timeoutMs
@@ -215,6 +236,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ```
 
 ### AC6: Existing Tests Still Pass
+
 ```javascript
 // GIVEN: All existing unit and integration tests
 // WHEN: npm run test:unit && npm run test:integration
@@ -226,6 +248,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ## Invariants
 
 ### State Lifecycle Invariants (Must Maintain)
+
 1. **Single Timeout**: At most one timeout scheduled at any time
 2. **Single Subscription**: At most one event subscription active
 3. **Flag Consistency**: `awaitingExternalEvent` flag cleared on exit/destroy
@@ -235,16 +258,19 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 7. **No Double-End**: Turn ends only once per state instance
 
 ### Timeout Guarantees (Must Maintain)
+
 1. **Bounded Wait**: Turn ends within timeout period
 2. **Cleanup After Fire**: Timeout callback clears its own ID
 3. **No Orphan Timers**: Timer cleared in all exit paths
 
 ### Configuration Guarantees (Must Establish)
+
 1. **Safe Default**: Missing/invalid environment → production timeout (30s)
 2. **Override Precedence**: Explicit `timeoutMs` > environment default
 3. **Evaluated at Construction**: Timeout resolved during instantiation, not module load
 
 ### API Contract Preservation (Must Maintain)
+
 1. **Constructor Signature**: Optional parameters only, backward compatible
 2. **Lifecycle Methods**: Signatures unchanged
 3. **Event Handling**: Event structures unchanged
@@ -253,6 +279,7 @@ this.#timeoutId = this.#setTimeoutFn(async () => {
 ## Testing Commands
 
 ### After Implementation
+
 ```bash
 # Lint modified file
 npx eslint src/turns/states/awaitingExternalTurnEndState.js
@@ -294,6 +321,7 @@ npm run test:ci
 ### What Was Actually Changed
 
 **Production Code Changes:**
+
 - ✅ Removed module-level constants `IS_DEV` and `TIMEOUT_MS` (lines 30-33)
 - ✅ Added import for `getEnvironmentMode` from `../../utils/environmentUtils.js`
 - ✅ Added exported constants `DEFAULT_TIMEOUT_PRODUCTION` and `DEFAULT_TIMEOUT_DEVELOPMENT`
@@ -304,6 +332,7 @@ npm run test:ci
 - ✅ Updated `#onTimeout()` to use `this.#configuredTimeout` (line 213)
 
 **Test Changes:**
+
 - ✅ Added comprehensive test suite: "environment-based timeout resolution"
 - ✅ 6 new tests covering:
   1. Development timeout (3s) when NODE_ENV=development
@@ -314,6 +343,7 @@ npm run test:ci
   6. Backward compatibility with explicit timeoutMs
 
 **Ticket Corrections:**
+
 - ✅ Fixed incorrect file paths in ticket
 - ✅ Corrected `getEnvironmentMode()` usage (returns string, not object)
 - ✅ Corrected import path (`../../` instead of `../`)
@@ -353,6 +383,7 @@ npm run test:ci
 ### Next Steps
 
 This ticket completes Phase 1 - Minimal Change. Ready for:
+
 - Phase 2: Tickets 002-004 (validation, timer validation, production tests)
 - Phase 3: Tickets 005-006 (test updates for new patterns)
 - Future: IEnvironmentProvider injection pattern (if needed)

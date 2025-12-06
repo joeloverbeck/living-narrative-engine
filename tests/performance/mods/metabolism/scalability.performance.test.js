@@ -4,7 +4,14 @@
  * increasing entity counts and complex scenarios.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { TURN_STARTED_ID } from '../../../../src/constants/eventIds.js';
 import { createPerformanceTestBed } from '../../../common/performanceTestBed.js';
@@ -243,8 +250,12 @@ describe('metabolism scalability performance', () => {
       const scalingFactor = perEntity50 / perEntity10;
 
       console.log(`\n=== Linear Scaling Analysis ===`);
-      console.log(`10 entities: ${time10.toFixed(2)}ms (${perEntity10.toFixed(2)}ms/entity)`);
-      console.log(`50 entities: ${time50.toFixed(2)}ms (${perEntity50.toFixed(2)}ms/entity)`);
+      console.log(
+        `10 entities: ${time10.toFixed(2)}ms (${perEntity10.toFixed(2)}ms/entity)`
+      );
+      console.log(
+        `50 entities: ${time50.toFixed(2)}ms (${perEntity50.toFixed(2)}ms/entity)`
+      );
       console.log(`Scaling factor: ${scalingFactor.toFixed(2)}x`);
 
       // Linear scaling means factor should be close to 1.0
@@ -275,7 +286,9 @@ describe('metabolism scalability performance', () => {
 
       console.log(`\n=== Batch Consistency Analysis ===`);
       console.log(`Average batch time: ${avgTime.toFixed(2)}ms`);
-      console.log(`Min batch: ${minTime.toFixed(2)}ms, Max batch: ${maxTime.toFixed(2)}ms`);
+      console.log(
+        `Min batch: ${minTime.toFixed(2)}ms, Max batch: ${maxTime.toFixed(2)}ms`
+      );
       console.log(`Variance: ${variance.toFixed(2)}ms`);
 
       // Variance should be reasonable (not exponentially growing)
@@ -317,7 +330,9 @@ describe('metabolism scalability performance', () => {
       const perEntity = processingTime / entityCount;
 
       console.log(`\n=== Heavy Buffer Processing ===`);
-      console.log(`${entityCount} entities with max buffer: ${processingTime.toFixed(2)}ms`);
+      console.log(
+        `${entityCount} entities with max buffer: ${processingTime.toFixed(2)}ms`
+      );
       console.log(`Per entity: ${perEntity.toFixed(2)}ms`);
 
       // Should complete in reasonable time even with complex buffers
@@ -412,8 +427,12 @@ describe('metabolism scalability performance', () => {
       const growthRatio = growth50 / growth25;
 
       console.log(`\n=== Memory Scaling Analysis ===`);
-      console.log(`25 entities memory growth: ${(growth25 / 1024).toFixed(2)}KB`);
-      console.log(`50 entities memory growth: ${(growth50 / 1024).toFixed(2)}KB`);
+      console.log(
+        `25 entities memory growth: ${(growth25 / 1024).toFixed(2)}KB`
+      );
+      console.log(
+        `50 entities memory growth: ${(growth50 / 1024).toFixed(2)}KB`
+      );
       console.log(`Growth ratio (2x entities): ${growthRatio.toFixed(2)}x`);
 
       // Memory growth should be roughly linear (not quadratic)
@@ -479,7 +498,9 @@ describe('metabolism scalability performance', () => {
       console.log(`\n=== Throughput Target Assessment ===`);
       console.log(`Processing time: ${processingTime.toFixed(2)}ms`);
       console.log(`Entities per second: ${entitiesPerSecond.toFixed(0)}`);
-      console.log(`Target (100/sec): ${entitiesPerSecond >= 100 ? 'MET' : 'NOT MET'}`);
+      console.log(
+        `Target (100/sec): ${entitiesPerSecond >= 100 ? 'MET' : 'NOT MET'}`
+      );
 
       // Target: at least 100 entities per second
       // This means 100 entities should complete in under 1000ms

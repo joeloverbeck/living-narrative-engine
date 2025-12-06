@@ -38,7 +38,7 @@ function setupStraddleFacingAwayScenario(
 
   target.components['positioning:sitting_on'] = {
     furniture_id: 'test:chair1',
-    spot_index: 0
+    spot_index: 0,
   };
 
   return { room, actor, chair, target };
@@ -68,8 +68,12 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:straddling_waist']).toBeDefined();
-    expect(actor.components['positioning:straddling_waist'].target_id).toBe('test:target1');
-    expect(actor.components['positioning:straddling_waist'].facing_away).toBe(true);
+    expect(actor.components['positioning:straddling_waist'].target_id).toBe(
+      'test:target1'
+    );
+    expect(actor.components['positioning:straddling_waist'].facing_away).toBe(
+      true
+    );
   });
 
   it('should add facing_away component with target in array', async () => {
@@ -80,7 +84,9 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:facing_away']).toBeDefined();
-    expect(actor.components['positioning:facing_away'].facing_away_from).toContain('test:target1');
+    expect(
+      actor.components['positioning:facing_away'].facing_away_from
+    ).toContain('test:target1');
   });
 
   it('should dispatch positioning:actor_turned_back event', async () => {
@@ -93,7 +99,7 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     // console.log('All events:', testFixture.events.map(e => e.eventType));
 
     const turnedBackEvent = testFixture.events.find(
-      e => e.eventType === 'positioning:actor_turned_back'
+      (e) => e.eventType === 'positioning:actor_turned_back'
     );
 
     expect(turnedBackEvent).toBeDefined();
@@ -108,11 +114,13 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     await testFixture.executeAction('test:actor1', 'test:target1');
 
     const successEvent = testFixture.events.find(
-      e => e.eventType === 'core:display_successful_action_result'
+      (e) => e.eventType === 'core:display_successful_action_result'
     );
 
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (facing away).');
+    expect(successEvent.payload.message).toBe(
+      "Alice sits on Bob's lap (facing away)."
+    );
   });
 
   it('should keep both actors in closeness circle', async () => {
@@ -125,9 +133,13 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     const target = testFixture.entityManager.getEntityInstance('test:target1');
 
     expect(actor.components['positioning:closeness']).toBeDefined();
-    expect(actor.components['positioning:closeness'].partners).toContain('test:target1');
+    expect(actor.components['positioning:closeness'].partners).toContain(
+      'test:target1'
+    );
     expect(target.components['positioning:closeness']).toBeDefined();
-    expect(target.components['positioning:closeness'].partners).toContain('test:actor1');
+    expect(target.components['positioning:closeness'].partners).toContain(
+      'test:actor1'
+    );
   });
 
   it('should keep target sitting after straddling', async () => {
@@ -138,7 +150,9 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
 
     const target = testFixture.entityManager.getEntityInstance('test:target1');
     expect(target.components['positioning:sitting_on']).toBeDefined();
-    expect(target.components['positioning:sitting_on'].furniture_id).toBe('test:chair1');
+    expect(target.components['positioning:sitting_on'].furniture_id).toBe(
+      'test:chair1'
+    );
   });
 
   it('should dispatch perceptible event', async () => {
@@ -148,12 +162,12 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     await testFixture.executeAction('test:actor1', 'test:target1');
 
     const perceptibleEvent = testFixture.events.find(
-      e => e.eventType === 'core:perceptible_event'
+      (e) => e.eventType === 'core:perceptible_event'
     );
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice sits on Bob\'s lap (facing away).'
+      "Alice sits on Bob's lap (facing away)."
     );
     expect(perceptibleEvent.payload.locationId).toBe('bedroom');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
@@ -169,7 +183,8 @@ describe('Straddle Waist Facing Away - Action Execution', () => {
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
 
     // Both components should be present
-    const straddlingComponent = actor.components['positioning:straddling_waist'];
+    const straddlingComponent =
+      actor.components['positioning:straddling_waist'];
     const facingAwayComponent = actor.components['positioning:facing_away'];
 
     expect(straddlingComponent).toBeDefined();

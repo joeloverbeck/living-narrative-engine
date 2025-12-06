@@ -57,13 +57,16 @@ describe('GameStateSerializer integration', () => {
 
   test('compressPreparedState integrates with checksum service and round-trips payloads', async () => {
     const initialState = buildGameState();
-    const preparedResult = cloneAndPrepareState('ManualSlot', initialState, logger);
+    const preparedResult = cloneAndPrepareState(
+      'ManualSlot',
+      initialState,
+      logger
+    );
     expect(preparedResult.success).toBe(true);
     const preparedState = preparedResult.data;
 
-    const { compressedData, finalSaveObject } = await serializer.compressPreparedState(
-      preparedState
-    );
+    const { compressedData, finalSaveObject } =
+      await serializer.compressPreparedState(preparedState);
 
     expect(finalSaveObject).toBe(preparedState);
     expect(finalSaveObject.metadata.saveName).toBe('ManualSlot');
@@ -107,17 +110,25 @@ describe('GameStateSerializer integration', () => {
       integrityChecks: {},
     };
 
-    await expect(serializer.serializeAndCompress(invalidState)).rejects.toMatchObject({
+    await expect(
+      serializer.serializeAndCompress(invalidState)
+    ).rejects.toMatchObject({
       code: PersistenceErrorCodes.INVALID_GAME_STATE,
     });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid or missing gameState property in save object.')
+      expect.stringContaining(
+        'Invalid or missing gameState property in save object.'
+      )
     );
   });
 
   test('decompressAndDeserialize reports deserialization failures when payload is tampered', async () => {
     const baseState = buildGameState();
-    const preparedResult = cloneAndPrepareState('TamperedSlot', baseState, logger);
+    const preparedResult = cloneAndPrepareState(
+      'TamperedSlot',
+      baseState,
+      logger
+    );
     expect(preparedResult.success).toBe(true);
     const { compressedData } = await serializer.compressPreparedState(
       preparedResult.data
@@ -139,7 +150,9 @@ describe('GameStateSerializer integration', () => {
   });
 
   test('decompressAndDeserialize returns decompression errors for invalid gzip input', () => {
-    const result = serializer.decompressAndDeserialize(new Uint8Array([1, 2, 3, 4]));
+    const result = serializer.decompressAndDeserialize(
+      new Uint8Array([1, 2, 3, 4])
+    );
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
     expect(logger.error).toHaveBeenCalledWith(

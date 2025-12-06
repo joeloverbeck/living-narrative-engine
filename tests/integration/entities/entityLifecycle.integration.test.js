@@ -71,8 +71,12 @@ describe('Entity integration with EntityInstanceData', () => {
     });
     expect(entity.components).toEqual(entity.getAllComponents());
 
-    expect(entity.addComponent('core:affinity', { element: 'fire' })).toBe(true);
-    expect(entity.getComponentData('core:affinity')).toEqual({ element: 'fire' });
+    expect(entity.addComponent('core:affinity', { element: 'fire' })).toBe(
+      true
+    );
+    expect(entity.getComponentData('core:affinity')).toEqual({
+      element: 'fire',
+    });
 
     expect(
       entity.modifyComponent('core:inventory', {

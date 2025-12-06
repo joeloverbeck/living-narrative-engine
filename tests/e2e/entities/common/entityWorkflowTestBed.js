@@ -287,7 +287,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     // Batch registration using existing AjvSchemaValidator.addSchemas()
     await this.validator.addSchemas(schemas);
 
-    this.logger.debug(`Registered ${schemas.length} test component schemas in batch`);
+    this.logger.debug(
+      `Registered ${schemas.length} test component schemas in batch`
+    );
   }
 
   /**
@@ -334,7 +336,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         });
         this.eventSubscriptions.push(subscription);
       });
-      this.logger?.debug(`Event monitoring: Specific events [${specificEvents.join(', ')}]`);
+      this.logger?.debug(
+        `Event monitoring: Specific events [${specificEvents.join(', ')}]`
+      );
     }
 
     // Option 3: No general event monitoring (fastest)
@@ -347,8 +351,13 @@ export class EntityWorkflowTestBed extends BaseTestBed {
 
     const endTime = performance.now();
     if (this.eventMonitoringOptions.enablePerformanceTracking) {
-      this.recordPerformanceMetric('event_monitoring_setup', endTime - startTime);
-      this.logger?.debug(`Event monitoring setup took ${(endTime - startTime).toFixed(2)}ms`);
+      this.recordPerformanceMetric(
+        'event_monitoring_setup',
+        endTime - startTime
+      );
+      this.logger?.debug(
+        `Event monitoring setup took ${(endTime - startTime).toFixed(2)}ms`
+      );
     }
   }
 
@@ -604,7 +613,11 @@ export class EntityWorkflowTestBed extends BaseTestBed {
         );
 
         if (!registryDefinition) {
-          this.registry.store('entityDefinitions', definitionId, cachedDefinition);
+          this.registry.store(
+            'entityDefinitions',
+            definitionId,
+            cachedDefinition
+          );
         }
 
         return;
@@ -757,7 +770,11 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     }
 
     // Auto-skip only applies when quickCheck is NOT requested
-    if (!forceFullValidation && skipIfSimple && entityCount <= simpleThreshold) {
+    if (
+      !forceFullValidation &&
+      skipIfSimple &&
+      entityCount <= simpleThreshold
+    ) {
       results.skipped = true;
       results.skipReason = `Entity count (${entityCount}) below threshold (${simpleThreshold})`;
       results.validationType = 'skipped';
@@ -1501,7 +1518,10 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     // Without this, high-volume tests (100+ entities) can exhaust the
     // recursion depth limit (100) and block subsequent tests.
     try {
-      if (this.eventBus && typeof this.eventBus.resetRecursionCounters === 'function') {
+      if (
+        this.eventBus &&
+        typeof this.eventBus.resetRecursionCounters === 'function'
+      ) {
         this.eventBus.resetRecursionCounters();
       }
     } catch (error) {
@@ -1529,7 +1549,9 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     // Check for leftover entities
     const entityIds = this.entityManager.getEntityIds();
     if (entityIds.length > 0) {
-      issues.push(`${entityIds.length} entities still exist: ${entityIds.join(', ')}`);
+      issues.push(
+        `${entityIds.length} entities still exist: ${entityIds.join(', ')}`
+      );
     }
 
     // Check for leftover event tracking
@@ -1542,16 +1564,22 @@ export class EntityWorkflowTestBed extends BaseTestBed {
     }
 
     if (this.componentEvents.length > 0) {
-      issues.push(`${this.componentEvents.length} component events still tracked`);
+      issues.push(
+        `${this.componentEvents.length} component events still tracked`
+      );
     }
 
     // Check for leftover entity tracking
     if (this.createdEntities.size > 0) {
-      issues.push(`${this.createdEntities.size} entities in createdEntities set`);
+      issues.push(
+        `${this.createdEntities.size} entities in createdEntities set`
+      );
     }
 
     if (issues.length > 0) {
-      throw new Error(`Test bed is not in clean state:\n  - ${issues.join('\n  - ')}`);
+      throw new Error(
+        `Test bed is not in clean state:\n  - ${issues.join('\n  - ')}`
+      );
     }
   }
 

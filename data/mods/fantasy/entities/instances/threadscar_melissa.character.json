@@ -1,19 +1,17 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:threadscar_melissa_instance",
-    "definitionId": "fantasy:threadscar_melissa",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        "items:inventory": {
-            "items": [
-                "fantasy:threadscar_melissa_longsword_instance"
-            ],
-            "capacity": {
-                "maxWeight": 50.0,
-                "maxItems": 20
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:threadscar_melissa_instance",
+  "definitionId": "fantasy:threadscar_melissa",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    "items:inventory": {
+      "items": ["fantasy:threadscar_melissa_longsword_instance"],
+      "capacity": {
+        "maxWeight": 50.0,
+        "maxItems": 20
+      }
     }
+  }
 }

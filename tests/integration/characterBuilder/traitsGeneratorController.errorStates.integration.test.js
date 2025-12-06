@@ -41,9 +41,15 @@ async function selectDirectionAndProvideInputs() {
   document.getElementById('central-question-input').value =
     'How can communities heal without repeating painful histories?';
 
-  document.getElementById('core-motivation-input').dispatchEvent(new Event('input'));
-  document.getElementById('internal-contradiction-input').dispatchEvent(new Event('input'));
-  document.getElementById('central-question-input').dispatchEvent(new Event('input'));
+  document
+    .getElementById('core-motivation-input')
+    .dispatchEvent(new Event('input'));
+  document
+    .getElementById('internal-contradiction-input')
+    .dispatchEvent(new Event('input'));
+  document
+    .getElementById('central-question-input')
+    .dispatchEvent(new Event('input'));
 }
 
 /**
@@ -96,9 +102,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
 
     await flushAsyncOperations();
 
-    expect(document.getElementById('core-motivations-list').innerHTML).toContain(
-      'No core motivations available'
-    );
+    expect(
+      document.getElementById('core-motivations-list').innerHTML
+    ).toContain('No core motivations available');
 
     await controller.destroy();
   });
@@ -109,7 +115,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
 
     service.getCoreMotivationsByDirectionId = jest
       .fn()
-      .mockRejectedValue(new Error('network failure while loading motivations'));
+      .mockRejectedValue(
+        new Error('network failure while loading motivations')
+      );
 
     const selector = document.getElementById('direction-selector');
     selector.value = defaultDirectionItem.direction.id;
@@ -121,9 +129,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
       'Failed to load core motivations:',
       expect.any(Error)
     );
-    expect(document.getElementById('core-motivations-list').textContent).toContain(
-      'Failed to load core motivations'
-    );
+    expect(
+      document.getElementById('core-motivations-list').textContent
+    ).toContain('Failed to load core motivations');
 
     await controller.destroy();
   });
@@ -143,12 +151,14 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
     document.getElementById('central-question-input').value =
       'How can communities heal without repeating painful histories?';
 
-    document.getElementById('core-motivation-input').dispatchEvent(new Event('blur'));
+    document
+      .getElementById('core-motivation-input')
+      .dispatchEvent(new Event('blur'));
     await flushMicrotasksOnly();
 
-    expect(document.getElementById('input-validation-error').textContent).toContain(
-      'Core motivation must be at least 10 characters'
-    );
+    expect(
+      document.getElementById('input-validation-error').textContent
+    ).toContain('Core motivation must be at least 10 characters');
 
     await controller.destroy();
   });
@@ -189,9 +199,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
     document.getElementById('export-btn').click();
 
     expect(logger.warn).toHaveBeenCalledWith('No traits available for export');
-    expect(document.getElementById('screen-reader-announcement').textContent).toBe(
-      'No traits available to export'
-    );
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('No traits available to export');
 
     jest.runOnlyPendingTimers();
     await flushMicrotasksOnly();
@@ -217,10 +227,13 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
 
     document.getElementById('export-btn').click();
 
-    expect(logger.error).toHaveBeenCalledWith('Export failed:', expect.any(Error));
-    expect(document.getElementById('screen-reader-announcement').textContent).toBe(
-      'Export failed. Please try again.'
+    expect(logger.error).toHaveBeenCalledWith(
+      'Export failed:',
+      expect.any(Error)
     );
+    expect(
+      document.getElementById('screen-reader-announcement').textContent
+    ).toBe('Export failed. Please try again.');
 
     jest.runOnlyPendingTimers();
     await flushMicrotasksOnly();
@@ -273,7 +286,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
       (event) => event.name === 'core:traits_generation_failed'
     );
     expect(failureEvent).toBeDefined();
-    expect(failureEvent.payload.directionId).toBe(defaultDirectionItem.direction.id);
+    expect(failureEvent.payload.directionId).toBe(
+      defaultDirectionItem.direction.id
+    );
     expect(failureEvent.payload.error).toContain('network offline');
     expect(announcementBeforeCleanup).toBe(
       'Generation failed: Network error occurred. Please check your connection and try again.'
@@ -310,7 +325,9 @@ describe('TraitsGeneratorController Integration - Error States and Edge Cases', 
       (event) => event.name === 'core:traits_generation_failed'
     );
     expect(failureEvent).toBeDefined();
-    expect(failureEvent.payload.directionId).toBe(defaultDirectionItem.direction.id);
+    expect(failureEvent.payload.directionId).toBe(
+      defaultDirectionItem.direction.id
+    );
     expect(failureEvent.payload.error).toContain('validation error');
 
     await controller.destroy();

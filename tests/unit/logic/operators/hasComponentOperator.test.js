@@ -61,10 +61,16 @@ describe('HasComponentOperator', () => {
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(true);
-      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('entity-1', 'movement:is_dimensional_portal');
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'entity-1',
+        'movement:is_dimensional_portal'
+      );
     });
 
     it('should return false when entity does not have the specified component', () => {
@@ -73,10 +79,16 @@ describe('HasComponentOperator', () => {
 
       mockEntityManager.hasComponent.mockReturnValue(false);
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
-      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('entity-1', 'movement:is_dimensional_portal');
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'entity-1',
+        'movement:is_dimensional_portal'
+      );
     });
 
     it('should resolve nested entity paths like entity.blocker', () => {
@@ -86,16 +98,25 @@ describe('HasComponentOperator', () => {
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
-      const result = operator.evaluate(['entity.blocker', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity.blocker', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(true);
-      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('blocker-1', 'movement:is_dimensional_portal');
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'blocker-1',
+        'movement:is_dimensional_portal'
+      );
     });
 
     it('should return false when entity path resolves to null', () => {
       const context = { entity: null };
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -104,7 +125,10 @@ describe('HasComponentOperator', () => {
     it('should return false when entity path resolves to undefined', () => {
       const context = {};
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalled();
@@ -115,7 +139,10 @@ describe('HasComponentOperator', () => {
       const context = { entity };
       mockEntityManager.hasComponent.mockReturnValue(false);
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalled();
@@ -126,10 +153,16 @@ describe('HasComponentOperator', () => {
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
-      const result = operator.evaluate(['entityId', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entityId', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(true);
-      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('entity-1', 'movement:is_dimensional_portal');
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'entity-1',
+        'movement:is_dimensional_portal'
+      );
     });
 
     it('should return false with invalid parameters', () => {
@@ -161,7 +194,10 @@ describe('HasComponentOperator', () => {
         throw new Error('Test error');
       });
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalled();
@@ -174,10 +210,16 @@ describe('HasComponentOperator', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       // Pass a JSON Logic expression as the first parameter
-      const result = operator.evaluate([{ var: 'entity.blocker' }, 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        [{ var: 'entity.blocker' }, 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(true);
-      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith('blocker-1', 'movement:is_dimensional_portal');
+      expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
+        'blocker-1',
+        'movement:is_dimensional_portal'
+      );
     });
 
     it('should accept entity objects directly without additional resolution', () => {
@@ -185,7 +227,10 @@ describe('HasComponentOperator', () => {
 
       mockEntityManager.hasComponent.mockReturnValue(true);
 
-      const result = operator.evaluate([directEntity, 'movement:is_dimensional_portal'], {});
+      const result = operator.evaluate(
+        [directEntity, 'movement:is_dimensional_portal'],
+        {}
+      );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
@@ -200,7 +245,10 @@ describe('HasComponentOperator', () => {
     it('should treat unresolved strings as entity IDs when they are not context paths', () => {
       mockEntityManager.hasComponent.mockReturnValue(true);
 
-      const result = operator.evaluate(['orphan-entity-id', 'movement:is_dimensional_portal'], {});
+      const result = operator.evaluate(
+        ['orphan-entity-id', 'movement:is_dimensional_portal'],
+        {}
+      );
 
       expect(result).toBe(true);
       expect(mockEntityManager.hasComponent).toHaveBeenCalledWith(
@@ -213,7 +261,10 @@ describe('HasComponentOperator', () => {
     });
 
     it('should return false and warn when entityPath is of an invalid type', () => {
-      const result = operator.evaluate([123, 'movement:is_dimensional_portal'], {});
+      const result = operator.evaluate(
+        [123, 'movement:is_dimensional_portal'],
+        {}
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -225,7 +276,10 @@ describe('HasComponentOperator', () => {
     it('warns when resolved entity is a non-id, non-primitive value', () => {
       const context = { entity: true };
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -249,7 +303,10 @@ describe('HasComponentOperator', () => {
     it('should warn and return false when resolved entity ID is invalid', () => {
       const context = { entity: { id: '   ' } };
 
-      const result = operator.evaluate(['entity', 'movement:is_dimensional_portal'], context);
+      const result = operator.evaluate(
+        ['entity', 'movement:is_dimensional_portal'],
+        context
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -302,7 +359,9 @@ describe('HasComponentOperator', () => {
           },
         };
 
-        expect(operator.evaluate(['entity-telemetry', 'core:armed'], context)).toBe(false);
+        expect(
+          operator.evaluate(['entity-telemetry', 'core:armed'], context)
+        ).toBe(false);
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           'has_component.planning_state_unknown',

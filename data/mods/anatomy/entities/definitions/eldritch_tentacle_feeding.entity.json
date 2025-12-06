@@ -21,9 +21,7 @@
     "anatomy:sockets": {
       "sockets": [
         {
-          "allowedTypes": [
-            "eldritch_lamprey_mouth"
-          ],
+          "allowedTypes": ["eldritch_lamprey_mouth"],
           "id": "tip_mouth",
           "nameTpl": "tip mouth"
         }

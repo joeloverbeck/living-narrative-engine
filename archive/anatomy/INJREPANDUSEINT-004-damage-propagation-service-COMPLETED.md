@@ -9,6 +9,7 @@ Extract damage propagation logic from `ApplyDamageHandler` into a standalone `Da
 **Original Assumption**: DamagePropagationService needs to be created from scratch.
 
 **Actual State (discovered during implementation)**:
+
 - Damage propagation was already implemented in `DAMAPPMEC-004` as the private method `#propagateDamage` in `ApplyDamageHandler` (lines 172-208)
 - Existing tests cover propagation at `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` (lines 122-295, 658-702, 768-784)
 - The `anatomy:internal_damage_propagated` event schema already exists at `data/mods/anatomy/events/internal_damage_propagated.event.json`
@@ -17,13 +18,13 @@ Extract damage propagation logic from `ApplyDamageHandler` into a standalone `Da
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/anatomy/services/damagePropagationService.js` | CREATE (extract from ApplyDamageHandler) |
-| `src/dependencyInjection/tokens/tokens-core.js` | MODIFY - add token alphabetically |
-| `src/dependencyInjection/registrations/orchestrationRegistrations.js` | MODIFY - add registration |
-| `src/logic/operationHandlers/applyDamageHandler.js` | MODIFY - inject and use service |
-| `tests/unit/anatomy/services/damagePropagationService.test.js` | CREATE |
+| File                                                                  | Action                                   |
+| --------------------------------------------------------------------- | ---------------------------------------- |
+| `src/anatomy/services/damagePropagationService.js`                    | CREATE (extract from ApplyDamageHandler) |
+| `src/dependencyInjection/tokens/tokens-core.js`                       | MODIFY - add token alphabetically        |
+| `src/dependencyInjection/registrations/orchestrationRegistrations.js` | MODIFY - add registration                |
+| `src/logic/operationHandlers/applyDamageHandler.js`                   | MODIFY - inject and use service          |
+| `tests/unit/anatomy/services/damagePropagationService.test.js`        | CREATE                                   |
 
 ## Out of Scope
 
@@ -48,7 +49,7 @@ Extract damage propagation logic from `ApplyDamageHandler` into a standalone `Da
     - Checks damage type filter
     - Rolls against probability
     - Verifies child via joint parent check
-    - Calculates propagated amount = damageAmount * damageFraction
+    - Calculates propagated amount = damageAmount \* damageFraction
   - Dispatches `anatomy:internal_damage_propagated` event for each propagation
 - Returns `PropagationResult[]` with:
   - `childPartId` (string)
@@ -77,15 +78,15 @@ Successfully extracted damage propagation logic from `ApplyDamageHandler` into a
 
 ### Files Modified/Created
 
-| File | Action | Lines |
-|------|--------|-------|
-| `src/anatomy/services/damagePropagationService.js` | CREATED | 287 lines |
-| `src/dependencyInjection/tokens/tokens-core.js` | MODIFIED | Added token |
-| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | MODIFIED | Added registration |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | MODIFIED | Added dependency |
-| `src/logic/operationHandlers/applyDamageHandler.js` | MODIFIED | Injected service, removed private method |
-| `tests/unit/anatomy/services/damagePropagationService.test.js` | CREATED | 36 tests |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | MODIFIED | Added mock, fixed tests |
+| File                                                                     | Action   | Lines                                    |
+| ------------------------------------------------------------------------ | -------- | ---------------------------------------- |
+| `src/anatomy/services/damagePropagationService.js`                       | CREATED  | 287 lines                                |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | MODIFIED | Added token                              |
+| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js`   | MODIFIED | Added registration                       |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | MODIFIED | Added dependency                         |
+| `src/logic/operationHandlers/applyDamageHandler.js`                      | MODIFIED | Injected service, removed private method |
+| `tests/unit/anatomy/services/damagePropagationService.test.js`           | CREATED  | 36 tests                                 |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js`          | MODIFIED | Added mock, fixed tests                  |
 
 ### Test Results
 

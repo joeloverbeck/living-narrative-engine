@@ -52,7 +52,13 @@ describe('safeResolvePath', () => {
       },
     });
 
-    const result = safeResolvePath(obj, 'foo.bar', logger, undefined, dispatcher);
+    const result = safeResolvePath(
+      obj,
+      'foo.bar',
+      logger,
+      undefined,
+      dispatcher
+    );
 
     expect(result).toEqual({ value: undefined, error: thrownError });
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);

@@ -1,6 +1,13 @@
 // tests/integration/events/eventBusRecursion.integration.test.js
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 
 describe('EventBus - Recursion During Turn Transitions', () => {
@@ -43,7 +50,7 @@ describe('EventBus - Recursion During Turn Transitions', () => {
       await eventBus.dispatch('core:component_added', {
         entity: payload.entityId,
         componentTypeId: 'core:current_actor',
-        componentData: {}
+        componentData: {},
       });
     });
 
@@ -55,24 +62,24 @@ describe('EventBus - Recursion During Turn Transitions', () => {
     await eventBus.dispatch('core:turn_started', {
       entityId: 'actor1',
       entityType: 'actor',
-      entity: { id: 'actor1', name: 'Test Actor 1' }
+      entity: { id: 'actor1', name: 'Test Actor 1' },
     });
 
     await eventBus.dispatch('core:turn_ended', {
       entityId: 'actor1',
       entityType: 'actor',
-      entity: { id: 'actor1', name: 'Test Actor 1' }
+      entity: { id: 'actor1', name: 'Test Actor 1' },
     });
 
     await eventBus.dispatch('core:turn_started', {
       entityId: 'actor2',
       entityType: 'actor',
-      entity: { id: 'actor2', name: 'Test Actor 2' }
+      entity: { id: 'actor2', name: 'Test Actor 2' },
     });
 
     // Check that recursion error was not triggered
-    const recursionErrors = consoleErrorSpy.mock.calls.filter(call =>
-      call[0] && call[0].includes('Maximum recursion depth')
+    const recursionErrors = consoleErrorSpy.mock.calls.filter(
+      (call) => call[0] && call[0].includes('Maximum recursion depth')
     );
 
     expect(recursionErrors.length).toBe(0);
@@ -89,13 +96,16 @@ describe('EventBus - Recursion During Turn Transitions', () => {
       await eventBus.dispatch('core:component_added', {
         entity: 'test-entity',
         componentTypeId: compType,
-        componentData: { value: 'test' }
+        componentData: { value: 'test' },
       });
     }
 
     // Check for recursion warnings
-    const recursionWarnings = consoleErrorSpy.mock.calls.filter(call =>
-      call[0] && (call[0].includes('recursion depth warning') || call[0].includes('Maximum recursion depth'))
+    const recursionWarnings = consoleErrorSpy.mock.calls.filter(
+      (call) =>
+        call[0] &&
+        (call[0].includes('recursion depth warning') ||
+          call[0].includes('Maximum recursion depth'))
     );
 
     expect(recursionWarnings.length).toBe(0);
@@ -107,12 +117,13 @@ describe('EventBus - Recursion During Turn Transitions', () => {
 
     const recursiveListener = async (payload) => {
       recursionCount++;
-      if (recursionCount < 200) { // Try to create infinite loop
+      if (recursionCount < 200) {
+        // Try to create infinite loop
         // This simulates a rule that adds a component in response to component_added
         await eventBus.dispatch('core:component_added', {
           entity: payload.entity,
           componentTypeId: `test:recursive_${recursionCount}`,
-          componentData: { count: recursionCount }
+          componentData: { count: recursionCount },
         });
       }
     };
@@ -123,15 +134,15 @@ describe('EventBus - Recursion During Turn Transitions', () => {
     await eventBus.dispatch('core:component_added', {
       entity: 'test-entity',
       componentTypeId: 'test:trigger',
-      componentData: { value: 'start' }
+      componentData: { value: 'start' },
     });
 
     // EventBus should have blocked the recursion
     expect(recursionCount).toBeLessThan(150); // Should be stopped by recursion limit (100)
 
     // Should have logged an error about recursion
-    const recursionErrors = consoleErrorSpy.mock.calls.filter(call =>
-      call[0] && call[0].includes('Maximum recursion depth')
+    const recursionErrors = consoleErrorSpy.mock.calls.filter(
+      (call) => call[0] && call[0].includes('Maximum recursion depth')
     );
 
     expect(recursionErrors.length).toBeGreaterThan(0);

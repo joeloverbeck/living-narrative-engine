@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const createEssentialElements = () => {
   const outputDiv = document.createElement('div');
@@ -58,7 +65,9 @@ describe('main.js bootstrap orchestration', () => {
     const containerInstance = {
       id: 'container',
       resolve: jest.fn().mockReturnValue({
-        validateHandlerRegistryCompleteness: jest.fn().mockReturnValue({ isComplete: true }),
+        validateHandlerRegistryCompleteness: jest
+          .fn()
+          .mockReturnValue({ isComplete: true }),
       }),
     };
 
@@ -72,31 +81,37 @@ describe('main.js bootstrap orchestration', () => {
           payload: essentialUI,
         };
       }),
-      setupDIContainerStage: jest.fn(async (_uiElements, configureFn, options, loggerLike) => {
-        if (typeof configureFn === 'function') {
-          configureFn();
+      setupDIContainerStage: jest.fn(
+        async (_uiElements, configureFn, options, loggerLike) => {
+          if (typeof configureFn === 'function') {
+            configureFn();
+          }
+          if (options && typeof options.createAppContainer === 'function') {
+            options.createAppContainer();
+          }
+          if (loggerLike && typeof loggerLike.log === 'function') {
+            loggerLike.log('DI container configured');
+          }
+          return {
+            success: true,
+            payload: containerInstance,
+          };
         }
-        if (options && typeof options.createAppContainer === 'function') {
-          options.createAppContainer();
-        }
-        if (loggerLike && typeof loggerLike.log === 'function') {
-          loggerLike.log('DI container configured');
-        }
-        return {
-          success: true,
-          payload: containerInstance,
-        };
-      }),
+      ),
       resolveLoggerStage: jest.fn(async () => ({
         success: true,
         payload: { logger },
       })),
       initializeGlobalConfigStage: jest.fn(async () => ({ success: true })),
-      initializeGameEngineStage: jest.fn(async (_container, _logger, { createGameEngine }) => {
-        createGameEngine({ bootstrap: true });
-        return { success: true, payload: gameEngineInstance };
-      }),
-      initializeAuxiliaryServicesStage: jest.fn(async () => ({ success: true })),
+      initializeGameEngineStage: jest.fn(
+        async (_container, _logger, { createGameEngine }) => {
+          createGameEngine({ bootstrap: true });
+          return { success: true, payload: gameEngineInstance };
+        }
+      ),
+      initializeAuxiliaryServicesStage: jest.fn(async () => ({
+        success: true,
+      })),
       setupMenuButtonListenersStage: jest.fn(async () => ({ success: true })),
       setupGlobalEventListenersStage: jest.fn(async () => ({ success: true })),
       startGameStage: jest.fn(async () => ({ success: true })),
@@ -126,9 +141,13 @@ describe('main.js bootstrap orchestration', () => {
       jest.doMock('../../src/dependencyInjection/containerConfig.js', () => ({
         configureContainer: jest.fn(),
       }));
-      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+      jest.doMock('../../src/dependencyInjection/tokens.js', () => ({
+        tokens,
+      }));
       const UIBootstrapper = jest.fn();
-      jest.doMock('../../src/bootstrapper/UIBootstrapper.js', () => ({ UIBootstrapper }));
+      jest.doMock('../../src/bootstrapper/UIBootstrapper.js', () => ({
+        UIBootstrapper,
+      }));
       const AppContainer = jest.fn();
       jest.doMock('../../src/dependencyInjection/appContainer.js', () => ({
         __esModule: true,
@@ -179,8 +198,15 @@ describe('main.js bootstrap orchestration', () => {
       statusText: 'OK',
     };
 
-    const { module, stageMocks, displayFatalStartupError, logger, gameEngineInstance } =
-      await loadMain({ fetchImpl: jest.fn().mockResolvedValue(fetchResponse) });
+    const {
+      module,
+      stageMocks,
+      displayFatalStartupError,
+      logger,
+      gameEngineInstance,
+    } = await loadMain({
+      fetchImpl: jest.fn().mockResolvedValue(fetchResponse),
+    });
 
     await module.bootstrapApp();
 
@@ -189,14 +215,20 @@ describe('main.js bootstrap orchestration', () => {
       expect.objectContaining({ outputDiv: expect.any(HTMLElement) }),
       expect.any(Function),
       expect.objectContaining({ createAppContainer: expect.any(Function) }),
-      console,
+      console
     );
 
     await module.beginGame(true);
 
-    expect(stageMocks.startGameStage).toHaveBeenCalledWith(gameEngineInstance, 'custom-world', logger);
+    expect(stageMocks.startGameStage).toHaveBeenCalledWith(
+      gameEngineInstance,
+      'custom-world',
+      logger
+    );
     expect(gameEngineInstance.showLoadGameUI).toHaveBeenCalledTimes(1);
-    expect(logger.debug).toHaveBeenCalledWith('Starting game with world: custom-world');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Starting game with world: custom-world'
+    );
     expect(displayFatalStartupError).not.toHaveBeenCalled();
   });
 
@@ -219,14 +251,19 @@ describe('main.js bootstrap orchestration', () => {
       displayFatalStartupError,
       logger,
       essentialUI,
-    } = await loadMain({ stageImplementations: { initializeAuxiliaryServicesStage } });
+    } = await loadMain({
+      stageImplementations: { initializeAuxiliaryServicesStage },
+    });
 
     await module.bootstrapApp();
 
-    expect(stageMocks.initializeAuxiliaryServicesStage).toHaveBeenCalledTimes(1);
+    expect(stageMocks.initializeAuxiliaryServicesStage).toHaveBeenCalledTimes(
+      1
+    );
     expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
 
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
     expect(uiElementsArg).toBe(essentialUI);
     expect(errorDetails.phase).toBe('Auxiliary Services Initialization');
     expect(errorDetails.errorObject).toBe(stageError);
@@ -238,28 +275,33 @@ describe('main.js bootstrap orchestration', () => {
         setTextContent: expect.any(Function),
         setStyle: expect.any(Function),
         alert: expect.any(Function),
-      }),
+      })
     );
 
     exerciseHelperUtilities(helpers, 'span');
 
     expect(logger.error).toHaveBeenCalledWith(
       'main.js: Bootstrap error caught in main orchestrator. Error Phase: "Auxiliary Services Initialization"',
-      stageError,
+      stageError
     );
-    expect(logger.error).toHaveBeenCalledWith('main.js: Failed to init CacheWarmup', stageError.failures[0].error);
+    expect(logger.error).toHaveBeenCalledWith(
+      'main.js: Failed to init CacheWarmup',
+      stageError.failures[0].error
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'main.js: Failed to init MetricsCollector',
-      stageError.failures[1].error,
+      stageError.failures[1].error
     );
   });
 
   it('reports fatal error when beginGame is invoked before bootstrapApp', async () => {
     const { module, displayFatalStartupError } = await loadMain();
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await expect(module.beginGame()).rejects.toThrow(
-      'Critical: GameEngine not initialized before attempting Start Game stage.',
+      'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
     expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
@@ -282,31 +324,40 @@ describe('main.js bootstrap orchestration', () => {
         setTextContent: expect.any(Function),
         setStyle: expect.any(Function),
         alert: expect.any(Function),
-      }),
+      })
     );
     exerciseHelperUtilities(helpers, 'section');
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      'main.js: Critical: GameEngine not initialized before attempting Start Game stage.',
+      'main.js: Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
     consoleErrorSpy.mockRestore();
   });
 
   it('uses default world when configuration fetch fails and surfaces start errors', async () => {
-    const fetchFailure = jest
-      .fn()
-      .mockResolvedValue({
-        ok: false,
-        status: 503,
-        statusText: 'Service Unavailable',
-      });
+    const fetchFailure = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      statusText: 'Service Unavailable',
+    });
     const startFailure = new Error('start failed');
     startFailure.phase = 'Start Game';
 
-    const startGameStage = jest.fn(async () => ({ success: false, error: startFailure }));
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const startGameStage = jest.fn(async () => ({
+      success: false,
+      error: startFailure,
+    }));
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
-    const { module, stageMocks, displayFatalStartupError, logger, gameEngineInstance } = await loadMain({
+    const {
+      module,
+      stageMocks,
+      displayFatalStartupError,
+      logger,
+      gameEngineInstance,
+    } = await loadMain({
       fetchImpl: fetchFailure,
       stageImplementations: { startGameStage },
     });
@@ -315,21 +366,28 @@ describe('main.js bootstrap orchestration', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to load startWorld from game.json:',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     await expect(module.beginGame()).rejects.toThrow(startFailure);
-    expect(stageMocks.startGameStage).toHaveBeenCalledWith(gameEngineInstance, 'default', logger);
-    expect(logger.debug).toHaveBeenCalledWith('Starting game with world: default');
+    expect(stageMocks.startGameStage).toHaveBeenCalledWith(
+      gameEngineInstance,
+      'default',
+      logger
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Starting game with world: default'
+    );
     expect(gameEngineInstance.showLoadGameUI).not.toHaveBeenCalled();
 
     expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helperFns] = displayFatalStartupError.mock.calls[0];
+    const [uiElementsArg, errorDetails, loggerArg, helperFns] =
+      displayFatalStartupError.mock.calls[0];
     expect(uiElementsArg).toEqual(
       expect.objectContaining({
         outputDiv: expect.any(HTMLElement),
         errorDiv: expect.any(HTMLElement),
-      }),
+      })
     );
     expect(loggerArg).toBe(logger);
     expect(errorDetails.phase).toBe('Start Game');
@@ -358,10 +416,15 @@ describe('main.js bootstrap orchestration', () => {
     await module.bootstrapApp();
 
     expect(stageMocks.resolveLoggerStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    expect(uiElementsArg).toEqual(expect.objectContaining({ outputDiv: expect.any(HTMLElement) }));
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
+    );
     expect(loggerArg).toBeNull();
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - Core Services Resolution');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - Core Services Resolution'
+    );
     exerciseHelperUtilities(helpers, 'core');
   });
 
@@ -372,40 +435,54 @@ describe('main.js bootstrap orchestration', () => {
       error: configError,
     }));
 
-    const { module, displayFatalStartupError, stageMocks, logger } = await loadMain({
-      stageImplementations: { initializeGlobalConfigStage },
-    });
+    const { module, displayFatalStartupError, stageMocks, logger } =
+      await loadMain({
+        stageImplementations: { initializeGlobalConfigStage },
+      });
 
     await module.bootstrapApp();
 
     expect(stageMocks.initializeGlobalConfigStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    expect(uiElementsArg).toEqual(expect.objectContaining({ outputDiv: expect.any(HTMLElement) }));
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
+    );
     expect(loggerArg).toBe(logger);
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - Global Configuration Initialization');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - Global Configuration Initialization'
+    );
     exerciseHelperUtilities(helpers, 'config');
   });
 
   it('captures game engine initialization failures', async () => {
     const engineError = new Error('engine instantiation failed');
-    const initializeGameEngineStage = jest.fn(async (_container, _logger, { createGameEngine }) => {
-      if (typeof createGameEngine === 'function') {
-        createGameEngine({ cause: 'failure path' });
+    const initializeGameEngineStage = jest.fn(
+      async (_container, _logger, { createGameEngine }) => {
+        if (typeof createGameEngine === 'function') {
+          createGameEngine({ cause: 'failure path' });
+        }
+        return { success: false, error: engineError };
       }
-      return { success: false, error: engineError };
-    });
+    );
 
-    const { module, displayFatalStartupError, stageMocks, logger } = await loadMain({
-      stageImplementations: { initializeGameEngineStage },
-    });
+    const { module, displayFatalStartupError, stageMocks, logger } =
+      await loadMain({
+        stageImplementations: { initializeGameEngineStage },
+      });
 
     await module.bootstrapApp();
 
     expect(stageMocks.initializeGameEngineStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    expect(uiElementsArg).toEqual(expect.objectContaining({ outputDiv: expect.any(HTMLElement) }));
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
+    );
     expect(loggerArg).toBe(logger);
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - Game Engine Initialization');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - Game Engine Initialization'
+    );
     exerciseHelperUtilities(helpers, 'engine');
   });
 
@@ -416,17 +493,23 @@ describe('main.js bootstrap orchestration', () => {
       error: menuError,
     }));
 
-    const { module, displayFatalStartupError, stageMocks, logger } = await loadMain({
-      stageImplementations: { setupMenuButtonListenersStage },
-    });
+    const { module, displayFatalStartupError, stageMocks, logger } =
+      await loadMain({
+        stageImplementations: { setupMenuButtonListenersStage },
+      });
 
     await module.bootstrapApp();
 
     expect(stageMocks.setupMenuButtonListenersStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    expect(uiElementsArg).toEqual(expect.objectContaining({ outputDiv: expect.any(HTMLElement) }));
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
+    );
     expect(loggerArg).toBe(logger);
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - Menu Button Listeners Setup');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - Menu Button Listeners Setup'
+    );
     exerciseHelperUtilities(helpers, 'menu');
   });
 
@@ -440,19 +523,25 @@ describe('main.js bootstrap orchestration', () => {
       return { success: false, error: globalError };
     });
 
-    const { module, displayFatalStartupError, stageMocks, logger } = await loadMain({
-      stageImplementations: { setupGlobalEventListenersStage },
-    });
+    const { module, displayFatalStartupError, stageMocks, logger } =
+      await loadMain({
+        stageImplementations: { setupGlobalEventListenersStage },
+      });
 
     setPhase = module.__TEST_ONLY__setCurrentPhaseForError;
 
     await module.bootstrapApp();
 
     expect(stageMocks.setupGlobalEventListenersStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helpers] = displayFatalStartupError.mock.calls[0];
-    expect(uiElementsArg).toEqual(expect.objectContaining({ outputDiv: expect.any(HTMLElement) }));
+    const [uiElementsArg, errorDetails, loggerArg, helpers] =
+      displayFatalStartupError.mock.calls[0];
+    expect(uiElementsArg).toEqual(
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
+    );
     expect(loggerArg).toBe(logger);
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - Application Logic/Runtime');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - Application Logic/Runtime'
+    );
     exerciseHelperUtilities(helpers, 'global');
   });
 
@@ -474,7 +563,11 @@ describe('main.js bootstrap orchestration', () => {
     await module.bootstrapApp();
     await module.beginGame(true);
 
-    expect(stageMocks.startGameStage).toHaveBeenCalledWith(gameEngineInstance, 'scenario-world', logger);
+    expect(stageMocks.startGameStage).toHaveBeenCalledWith(
+      gameEngineInstance,
+      'scenario-world',
+      logger
+    );
   });
 
   it('defaults to the fallback world when configuration omits startWorld', async () => {
@@ -492,7 +585,11 @@ describe('main.js bootstrap orchestration', () => {
     await module.bootstrapApp();
     await module.beginGame();
 
-    expect(stageMocks.startGameStage).toHaveBeenCalledWith(gameEngineInstance, 'default', logger);
+    expect(stageMocks.startGameStage).toHaveBeenCalledWith(
+      gameEngineInstance,
+      'default',
+      logger
+    );
   });
 
   it('derives detected phase when DI container setup fails without explicit metadata', async () => {
@@ -515,12 +612,15 @@ describe('main.js bootstrap orchestration', () => {
     await module.bootstrapApp();
 
     expect(stageMocks.setupDIContainerStage).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helperFns] = displayFatalStartupError.mock.calls[0];
+    const [uiElementsArg, errorDetails, loggerArg, helperFns] =
+      displayFatalStartupError.mock.calls[0];
     expect(uiElementsArg).toEqual(
-      expect.objectContaining({ outputDiv: expect.any(HTMLElement) }),
+      expect.objectContaining({ outputDiv: expect.any(HTMLElement) })
     );
     expect(loggerArg).toBeNull();
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - DI Container Setup');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - DI Container Setup'
+    );
     exerciseHelperUtilities(helperFns, 'p');
   });
 
@@ -543,12 +643,13 @@ describe('main.js bootstrap orchestration', () => {
     await module.bootstrapApp();
 
     expect(displayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiElementsArg, errorDetails, loggerArg, helperFns] = displayFatalStartupError.mock.calls[0];
+    const [uiElementsArg, errorDetails, loggerArg, helperFns] =
+      displayFatalStartupError.mock.calls[0];
     expect(uiElementsArg).toEqual(
       expect.objectContaining({
         outputDiv: document.getElementById('outputDiv'),
         errorDiv: document.getElementById('error-output'),
-      }),
+      })
     );
     expect(errorDetails.errorObject).toBe(uiError);
     expect(loggerArg).toBeNull();

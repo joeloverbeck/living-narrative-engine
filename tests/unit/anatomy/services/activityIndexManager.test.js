@@ -89,9 +89,7 @@ describe('ActivityIndexManager', () => {
     });
 
     it('should index single activity by target', () => {
-      const activities = [
-        { targetId: 'actor1', priority: 10, type: 'combat' },
-      ];
+      const activities = [{ targetId: 'actor1', priority: 10, type: 'combat' }];
 
       const result = indexManager.buildActivityIndex(activities);
 
@@ -294,7 +292,9 @@ describe('ActivityIndexManager', () => {
 
       const signature = indexManager.buildActivitySignature(activities);
 
-      expect(signature).toBe('combat:core:attack:enemy:10|social:core:talk:friend:5');
+      expect(signature).toBe(
+        'combat:core:attack:enemy:10|social:core:talk:friend:5'
+      );
     });
 
     it('should use descriptionType when sourceComponent is missing', () => {
@@ -315,9 +315,7 @@ describe('ActivityIndexManager', () => {
     });
 
     it('should default to "unknown" when both sourceComponent and descriptionType are missing', () => {
-      const activities = [
-        { type: 'combat', targetId: 'enemy', priority: 10 },
-      ];
+      const activities = [{ type: 'combat', targetId: 'enemy', priority: 10 }];
 
       const signature = indexManager.buildActivitySignature(activities);
 
@@ -545,7 +543,10 @@ describe('ActivityIndexManager', () => {
       const result = indexManager.getActivityIndex(activities, cacheKey);
 
       expect(result).toBe(cachedIndex);
-      expect(mockCacheManager.get).toHaveBeenCalledWith('activityIndex', cacheKey);
+      expect(mockCacheManager.get).toHaveBeenCalledWith(
+        'activityIndex',
+        cacheKey
+      );
     });
 
     it('should rebuild index when cached signature does not match', () => {
@@ -554,7 +555,12 @@ describe('ActivityIndexManager', () => {
 
       mockCacheManager.get = jest.fn(() => ({
         signature: 'old-signature',
-        index: { byTarget: new Map(), byPriority: [], byGroupKey: new Map(), all: [] },
+        index: {
+          byTarget: new Map(),
+          byPriority: [],
+          byGroupKey: new Map(),
+          all: [],
+        },
       }));
       const setCacheSpy = jest.spyOn(mockCacheManager, 'set');
 

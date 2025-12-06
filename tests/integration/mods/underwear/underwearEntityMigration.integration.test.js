@@ -13,8 +13,14 @@ import path from 'path';
 describe('CLOLAYMIG-008 & CLOLAYMIG-010: Underwear Entity Migration', () => {
   const underwearModPath = path.resolve('./data/mods/underwear');
   const clothingModPath = path.resolve('./data/mods/clothing');
-  const underwearEntitiesPath = path.join(underwearModPath, 'entities/definitions');
-  const clothingEntitiesPath = path.join(clothingModPath, 'entities/definitions');
+  const underwearEntitiesPath = path.join(
+    underwearModPath,
+    'entities/definitions'
+  );
+  const clothingEntitiesPath = path.join(
+    clothingModPath,
+    'entities/definitions'
+  );
 
   // Full list of 33 underwear entities per CLOLAYMIG-008
   const underwearEntityFiles = [
@@ -174,7 +180,9 @@ describe('CLOLAYMIG-008 & CLOLAYMIG-010: Underwear Entity Migration', () => {
       expect(manifest.id).toBe('underwear');
       // At least the original 33 entities from migration should be present
       // (count will grow as more underwear items are added)
-      expect(manifest.content.entities.definitions.length).toBeGreaterThanOrEqual(33);
+      expect(
+        manifest.content.entities.definitions.length
+      ).toBeGreaterThanOrEqual(33);
     });
 
     it('should reference all entity files in manifest', async () => {

@@ -1,6 +1,7 @@
 # Furniture Addition Specification: Mudbrook Municipal Aid Registry
 
 ## Document Metadata
+
 - **Created**: 2025-11-23
 - **Target Mod**: `fantasy`
 - **Implementation Mod**: `furniture`
@@ -17,6 +18,7 @@ This specification defines the addition of three rustic civic furniture entities
 **File**: `data/mods/fantasy/entities/definitions/mudbrook_municipal_aid_registry.location.json`
 
 **Setting & Theme**:
+
 - Converted grain warehouse serving as civic office and public waiting area
 - Architecture: Timber-built with thick vertical posts, wide plank flooring
 - Function: Public service office with bulletin board, service counter, communal gathering space
@@ -25,6 +27,7 @@ This specification defines the addition of three rustic civic furniture entities
 - Mood: Permanent yet improvised, worn and lived-in
 
 **Thematic Requirements**:
+
 - Rustic, utilitarian aesthetic
 - Working-class construction quality
 - Worn from years of public use
@@ -36,6 +39,7 @@ This specification defines the addition of three rustic civic furniture entities
 ### Existing Furniture Mod Patterns
 
 **Entity Structure** (based on analysis of existing furniture):
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -57,6 +61,7 @@ This specification defines the addition of three rustic civic furniture entities
 ```
 
 **Key Components**:
+
 - `core:name`: Display name for UI
 - `core:description`: Narrative description text
 - `core:portrait`: Placeholder only (system doesn't support item portraits yet)
@@ -64,6 +69,7 @@ This specification defines the addition of three rustic civic furniture entities
 - `items:item`: Optional component marking furniture as an item entity (affects portability)
 
 **Existing Furniture Inventory**:
+
 - **Seating**: throne (1), swivel_chair (1), luxury_armchair (1), bar_stools (3), park_bench (2), night_park_stone_bench (3), various sofas
 - **Beds**: single_bed, four_poster_bed, upholstered_king_bed, working_class_king_bed, metal_framed_patient_bed
 - **Tables**: **NONE FOUND** ← Critical gap
@@ -71,6 +77,7 @@ This specification defines the addition of three rustic civic furniture entities
 ### Furniture-Location Integration
 
 **Current System Behavior**:
+
 - Location definitions contain only descriptive text and exits
 - Location instances are simple pointers to definitions
 - **Integration method unclear** from current codebase analysis
@@ -88,6 +95,7 @@ This specification defines the addition of three rustic civic furniture entities
 **Chosen**: Implement in `furniture` mod
 
 **Rationale**:
+
 - ✅ Maintains existing architectural pattern (all current furniture is in furniture mod)
 - ✅ Enables reuse across different fantasy scenarios
 - ✅ Follows separation of concerns principle
@@ -95,6 +103,7 @@ This specification defines the addition of three rustic civic furniture entities
 - ✅ Avoids mod dependency complexity
 
 **Alternative Considered**: Fantasy mod
+
 - ❌ Less reusable
 - ❌ Breaks from existing furniture organization pattern
 - ⚠️ Would create mod dependency complexity
@@ -108,6 +117,7 @@ This specification defines the addition of three rustic civic furniture entities
 3. **Rough Wooden Bench** - Communal seating (3 spots)
 
 **Rationale**:
+
 - Matches location's described furniture ("rough tables and stools", "benches")
 - Fills critical gap (no tables in existing furniture mod)
 - Existing park_bench unsuitable (outdoor/decorative aesthetic)
@@ -122,6 +132,7 @@ This specification defines the addition of three rustic civic furniture entities
 ### Decision 4: Items Component
 
 **Tentative**:
+
 - **Table**: Include `items:item` (TBD based on portability requirements)
 - **Stool**: Include `items:item` (likely portable)
 - **Bench**: Include `items:item` (TBD - less likely portable due to size)
@@ -137,6 +148,7 @@ This specification defines the addition of three rustic civic furniture entities
 **Purpose**: Large communal table for municipal office and public spaces
 
 **JSON Structure**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -159,6 +171,7 @@ This specification defines the addition of three rustic civic furniture entities
 ```
 
 **Design Notes**:
+
 - No `positioning:allows_sitting` component (tables don't provide seating)
 - Description emphasizes functionality, wear, civic use
 - `items:item` included (TBD if needed)
@@ -170,6 +183,7 @@ This specification defines the addition of three rustic civic furniture entities
 **Purpose**: Simple seating around tables and throughout public spaces
 
 **JSON Structure**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -195,6 +209,7 @@ This specification defines the addition of three rustic civic furniture entities
 ```
 
 **Design Notes**:
+
 - `positioning:allows_sitting` with 1 spot (individual seating)
 - Description emphasizes simplicity, wear, utility
 - `items:item` included (likely portable due to size)
@@ -206,6 +221,7 @@ This specification defines the addition of three rustic civic furniture entities
 **Purpose**: Communal seating for waiting areas and public gathering spaces
 
 **JSON Structure**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -231,6 +247,7 @@ This specification defines the addition of three rustic civic furniture entities
 ```
 
 **Design Notes**:
+
 - `positioning:allows_sitting` with 3 spots (communal seating)
 - Description emphasizes warehouse origin, public use, durability
 - `items:item` included (TBD - may not be portable due to size)
@@ -238,23 +255,27 @@ This specification defines the addition of three rustic civic furniture entities
 ## Implementation Checklist
 
 ### Phase 1: Entity Definition Creation
+
 - [ ] Create `data/mods/furniture/entities/definitions/rustic_wooden_table.entity.json`
 - [ ] Create `data/mods/furniture/entities/definitions/plain_wooden_stool.entity.json`
 - [ ] Create `data/mods/furniture/entities/definitions/rough_wooden_bench.entity.json`
 
 ### Phase 2: Validation
+
 - [ ] Validate all entity definitions against `entity-definition.schema.json`
 - [ ] Run `npm run validate` to ensure schema compliance
 - [ ] Verify furniture IDs follow `furniture:[name]` pattern
 - [ ] Confirm all required components present
 
 ### Phase 3: Integration (TBD)
+
 - [ ] Clarify furniture-location association mechanism
 - [ ] Create entity instances (if required by system)
 - [ ] Add furniture to mudbrook_municipal_aid_registry location (method TBD)
 - [ ] Update world file if necessary
 
 ### Phase 4: Testing
+
 - [ ] Load fantasy mod with new furniture entities
 - [ ] Verify entities load without errors
 - [ ] Test seating mechanics on stool and bench
@@ -264,16 +285,20 @@ This specification defines the addition of three rustic civic furniture entities
 ## Validation Requirements
 
 ### Schema Validation
+
 All entities must validate against:
+
 - `schema://living-narrative-engine/entity-definition.schema.json`
 - Component schemas for `core:name`, `core:description`, `core:portrait`, `positioning:allows_sitting`, `items:item`
 
 ### Naming Conventions
+
 - Entity IDs: `furniture:[lowercase_with_underscores]`
 - File names: `[entity_name].entity.json`
 - Display names: lowercase (e.g., "rustic wooden table")
 
 ### Component Requirements
+
 - **Required**: `core:name`, `core:description`, `core:portrait`
 - **Conditional**: `positioning:allows_sitting` (only for seating furniture)
 - **Optional**: `items:item` (affects item/entity behavior)
@@ -281,29 +306,35 @@ All entities must validate against:
 ## Open Questions
 
 ### 1. Furniture-Location Association
+
 **Question**: How should furniture instances be associated with locations?
 **Impact**: Affects implementation approach for adding furniture to mudbrook_municipal_aid_registry
 **Investigation Needed**:
+
 - Check world initialization code
 - Review location loading system
 - Examine existing location-entity relationships
-**Possible Answers**:
+  **Possible Answers**:
 - Runtime spawning via rules/actions
 - World file entity instance listings
 - Future inventory/container system for locations
 
 ### 2. Items Component Behavior
+
 **Question**: What is the behavioral difference when furniture has vs doesn't have `items:item` component?
 **Impact**: Affects whether to include component on table and bench
 **Investigation Needed**:
+
 - Review items system documentation
 - Compare existing furniture with/without component
 - Test portability mechanics
 
 ### 3. Portrait Paths
+
 **Question**: Should portrait paths be included even though system doesn't support them?
 **Answer**: Yes, include as placeholders following existing pattern
 **Rationale**:
+
 - Maintains consistency with existing furniture entities
 - Prepares for future feature support
 - No harm in including placeholder paths
@@ -321,12 +352,14 @@ All entities must validate against:
 ## References
 
 ### Key Files
+
 - `data/mods/fantasy/entities/definitions/mudbrook_municipal_aid_registry.location.json` - Target location
 - `data/mods/furniture/entities/definitions/*.entity.json` - Existing furniture patterns
 - `data/schemas/entity-definition.schema.json` - Entity validation schema
 - `data/schemas/components/*.component.json` - Component schemas
 
 ### Related Documentation
+
 - Project architecture: `CLAUDE.md`
 - Entity Component System: Section in `CLAUDE.md`
 - Mod system: `data/mods/` structure
@@ -334,10 +367,12 @@ All entities must validate against:
 ## Appendix: Existing Furniture Analysis
 
 ### Suitable Existing Furniture
+
 - **bar_stools.entity.json**: Could work for service counter but new stool is more generic
 - None of the existing seating matches the rustic civic aesthetic
 
 ### Unsuitable Existing Furniture
+
 - **park_bench**: Too outdoorsy/decorative (mentions canopy, wrought-iron, rust)
 - **throne**: Too regal for municipal office
 - **luxury_armchair**: Too fancy for working-class setting
@@ -345,6 +380,7 @@ All entities must validate against:
 - **Beds**: Wrong furniture type entirely
 
 ### Critical Gaps Filled
+
 - **Tables**: No existing tables in furniture mod (critical gap addressed by this spec)
 - **Rustic benches**: park_bench exists but wrong aesthetic
 - **Simple stools**: bar_stools exist but counter-height implied

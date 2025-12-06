@@ -18,18 +18,11 @@
   },
   "template": "clutch pleadingly onto {primary}'s {secondary}",
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:hugging",
-      "positioning:restraining"
-    ],
-    "primary": [
-      "positioning:giving_blowjob"
-    ],
+    "actor": ["positioning:hugging", "positioning:restraining"],
+    "primary": ["positioning:giving_blowjob"],
     "secondary": []
   },
   "prerequisites": [

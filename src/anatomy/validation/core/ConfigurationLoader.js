@@ -25,7 +25,11 @@ export class ConfigurationLoader {
    * @param {ILogger} params.logger - Logger implementation.
    * @param {string} [params.defaultConfigPath] - Path to the default config file.
    */
-  constructor({ schemaValidator, logger, defaultConfigPath = DEFAULT_CONFIG_PATH }) {
+  constructor({
+    schemaValidator,
+    logger,
+    defaultConfigPath = DEFAULT_CONFIG_PATH,
+  }) {
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
@@ -323,18 +327,24 @@ export class ConfigurationLoader {
     }
 
     if (typeof overrideFeatures.validationPipelineGuards === 'boolean') {
-      merged.validationPipelineGuards = overrideFeatures.validationPipelineGuards;
+      merged.validationPipelineGuards =
+        overrideFeatures.validationPipelineGuards;
     }
 
     return merged;
   }
 
   #shouldEnableGuardrails(config) {
-    if (config?.features && typeof config.features.validationPipelineGuards === 'boolean') {
+    if (
+      config?.features &&
+      typeof config.features.validationPipelineGuards === 'boolean'
+    ) {
       return config.features.validationPipelineGuards;
     }
 
-    const envFlag = this.#parseEnvGuardFlag(process?.env?.VALIDATION_PIPELINE_GUARDS);
+    const envFlag = this.#parseEnvGuardFlag(
+      process?.env?.VALIDATION_PIPELINE_GUARDS
+    );
     if (envFlag !== null) {
       return envFlag;
     }

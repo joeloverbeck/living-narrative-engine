@@ -53,22 +53,22 @@ describe('LFUStrategy', () => {
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.set('key2', 'value2');
       lfuStrategy.set('key3', 'value3');
-      
+
       // Access key1 multiple times to increase its frequency
       lfuStrategy.get('key1');
       lfuStrategy.get('key1');
       lfuStrategy.get('key1');
-      
+
       // Access key2 once
       lfuStrategy.get('key2');
-      
+
       // key3 has only been set (frequency 1)
       // key2 has frequency 2 (set + 1 get)
       // key1 has frequency 4 (set + 3 gets)
-      
+
       // Add key4, should evict key3 (lowest frequency)
       lfuStrategy.set('key4', 'value4');
-      
+
       expect(lfuStrategy.size).toBe(3);
       expect(lfuStrategy.has('key1')).toBe(true);
       expect(lfuStrategy.has('key2')).toBe(true);
@@ -78,11 +78,11 @@ describe('LFUStrategy', () => {
 
     it('should track access frequency correctly', () => {
       lfuStrategy.set('key1', 'value1');
-      
+
       // Get the key multiple times
       lfuStrategy.get('key1');
       lfuStrategy.get('key1');
-      
+
       const stats = lfuStrategy.getFrequencyStats();
       expect(stats.minFrequency).toBe(3); // set + 2 gets
       expect(stats.maxFrequency).toBe(3);
@@ -94,7 +94,7 @@ describe('LFUStrategy', () => {
       lfuStrategy.set('key1', 'value1'); // frequency 1
       lfuStrategy.get('key1'); // frequency 2
       lfuStrategy.set('key2', 'value2'); // frequency 1
-      
+
       const stats = lfuStrategy.getFrequencyStats();
       expect(stats.minFrequency).toBe(1);
       expect(stats.maxFrequency).toBe(2);
@@ -106,7 +106,7 @@ describe('LFUStrategy', () => {
       lfuStrategy.get('key1'); // frequency 2
       lfuStrategy.set('key2', 'value2'); // frequency 1
       lfuStrategy.set('key3', 'value3'); // frequency 1
-      
+
       const stats = lfuStrategy.getFrequencyStats();
       expect(stats.frequencyDistribution[1]).toBe(2); // key2, key3
       expect(stats.frequencyDistribution[2]).toBe(1); // key1
@@ -132,7 +132,7 @@ describe('LFUStrategy', () => {
     it('should support per-entry TTL override', (done) => {
       lfuStrategy.set('key1', 'value1', { ttl: 50 });
       lfuStrategy.set('key2', 'value2'); // Uses default TTL
-      
+
       setTimeout(() => {
         expect(lfuStrategy.get('key1')).toBeUndefined();
         expect(lfuStrategy.get('key2')).toBe('value2');
@@ -250,7 +250,7 @@ describe('LFUStrategy', () => {
     it('should provide entries iterator', () => {
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.set('key2', 'value2');
-      
+
       const entries = Array.from(lfuStrategy.entries());
       expect(entries).toHaveLength(2);
       expect(entries).toContainEqual(['key1', 'value1']);
@@ -260,7 +260,7 @@ describe('LFUStrategy', () => {
     it('should provide keys iterator', () => {
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.set('key2', 'value2');
-      
+
       const keys = Array.from(lfuStrategy.keys());
       expect(keys).toHaveLength(2);
       expect(keys).toContain('key1');
@@ -275,7 +275,7 @@ describe('LFUStrategy', () => {
 
       shortTtlStrategy.set('key1', 'value1');
       shortTtlStrategy.set('key2', 'value2');
-      
+
       setTimeout(() => {
         const keys = Array.from(shortTtlStrategy.keys());
         expect(keys).toHaveLength(0);
@@ -293,7 +293,7 @@ describe('LFUStrategy', () => {
 
       shortTtlStrategy.set('key1', 'value1');
       shortTtlStrategy.set('key2', 'value2');
-      
+
       setTimeout(() => {
         const pruned = shortTtlStrategy.prune();
         expect(pruned).toBe(2);
@@ -305,10 +305,10 @@ describe('LFUStrategy', () => {
     it('should support aggressive pruning', () => {
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.set('key2', 'value2');
-      
+
       const sizeBefore = lfuStrategy.size;
       const pruned = lfuStrategy.prune(true);
-      
+
       expect(pruned).toBe(sizeBefore);
       expect(lfuStrategy.size).toBe(0);
     });
@@ -347,10 +347,10 @@ describe('LFUStrategy', () => {
           lfuStrategy.get(`key${i}`);
         }
       }
-      
+
       // Should only keep the most recent 3 due to maxSize
       expect(lfuStrategy.size).toBe(3);
-      
+
       // More frequently accessed keys should be retained
       expect(lfuStrategy.has('key90')).toBe(true);
     });
@@ -359,22 +359,22 @@ describe('LFUStrategy', () => {
       lfuStrategy.set('key1', 'value1');
       lfuStrategy.get('key1'); // frequency 2
       lfuStrategy.set('key1', 'value2'); // Should maintain frequency
-      
+
       expect(lfuStrategy.size).toBe(1);
       expect(lfuStrategy.get('key1')).toBe('value2');
-      
+
       const stats = lfuStrategy.getFrequencyStats();
       expect(stats.maxFrequency).toBeGreaterThan(1); // Should maintain frequency tracking
     });
 
     it('should handle frequency overflow gracefully', () => {
       lfuStrategy.set('key1', 'value1');
-      
+
       // Access key many times
       for (let i = 0; i < 1000; i++) {
         lfuStrategy.get('key1');
       }
-      
+
       const stats = lfuStrategy.getFrequencyStats();
       expect(stats.maxFrequency).toBe(1001); // set + 1000 gets
       expect(lfuStrategy.get('key1')).toBe('value1');

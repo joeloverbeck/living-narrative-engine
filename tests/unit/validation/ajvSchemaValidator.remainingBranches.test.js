@@ -264,7 +264,9 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       ]);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringMatching(/Runtime error during validation.*\[object Object\]/),
+        expect.stringMatching(
+          /Runtime error during validation.*\[object Object\]/
+        ),
         expect.objectContaining({
           schemaId: 'schema://test/runtime-error.json',
         })
@@ -281,7 +283,10 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       const mockAjvInstance = {
         addSchema: jest.fn(),
         getSchema: jest.fn().mockImplementation(() => {
-          throw { errorType: 'COMPILATION_ERROR', description: 'Cannot compile' };
+          throw {
+            errorType: 'COMPILATION_ERROR',
+            description: 'Cannot compile',
+          };
         }),
         removeSchema: jest.fn(),
         schemas: {
@@ -339,7 +344,9 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
 
       const validator = new AjvSchemaValidator({ logger: mockLogger });
 
-      const isValid = validator.validateSchemaRefs('schema://test/bad-refs.json');
+      const isValid = validator.validateSchemaRefs(
+        'schema://test/bad-refs.json'
+      );
 
       expect(isValid).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -389,7 +396,9 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       );
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Could not resolve schema reference './missing.json'")
+        expect.stringContaining(
+          "Could not resolve schema reference './missing.json'"
+        )
       );
     });
 
@@ -478,7 +487,9 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       // Should return the schema content
       expect(result).toEqual(targetSchema);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Found existing schema for 'schema://test/absolute.json'")
+        expect.stringContaining(
+          "Found existing schema for 'schema://test/absolute.json'"
+        )
       );
     });
   });
@@ -516,9 +527,9 @@ describe('AjvSchemaValidator - Remaining Branch Coverage', () => {
       new AjvSchemaValidator({ logger: mockLogger });
 
       // Try to load with fragment which will trigger the error and debug log
-      await expect(
-        capturedLoader('./test.json#fragment')
-      ).rejects.toThrow('Cannot resolve schema reference');
+      await expect(capturedLoader('./test.json#fragment')).rejects.toThrow(
+        'Cannot resolve schema reference'
+      );
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(

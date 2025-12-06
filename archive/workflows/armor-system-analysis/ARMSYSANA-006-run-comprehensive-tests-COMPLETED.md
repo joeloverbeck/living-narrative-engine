@@ -9,6 +9,7 @@
 ## Context
 
 After completing all Phase 2 updates (slot access resolver and related coverage logic), it's essential to run a comprehensive test suite to verify that:
+
 1. All armor priority logic works correctly
 2. No regressions were introduced
 3. Integration between components is correct
@@ -23,6 +24,7 @@ Run the complete test suite with emphasis on clothing, coverage, and scope resol
 ## Prerequisites
 
 The following Phase 2 tickets must be completed first:
+
 - ✅ ARMSYSANA-004: Update Slot Access Resolver
 - ✅ ARMSYSANA-005: Update Related Coverage Logic
 
@@ -39,6 +41,7 @@ npm run test:integration -- tests/integration/scopeDsl/
 **Expected Result**: All tests pass
 
 **What This Tests**:
+
 - Scope DSL resolution with armor (via `clothingCoverageResolution.integration.test.js`)
 - Clothing priority resolution (via `slotAccessResolver.*.integration.test.js`)
 - Slot access with armor layer
@@ -47,6 +50,7 @@ npm run test:integration -- tests/integration/scopeDsl/
 **Note**: Tests are directly in `tests/integration/scopeDsl/`, not in a `clothing-resolution` subfolder.
 
 **If Tests Fail**:
+
 - Review SlotAccessResolver changes (ARMSYSANA-004)
 - Check priority constant values
 - Verify armor priority logic
@@ -60,12 +64,14 @@ npm run test:integration -- tests/integration/clothing/
 **Expected Result**: All tests pass
 
 **What This Tests**:
+
 - Clothing system integration
 - Equipment and unequipment with armor
 - Layer stacking with armor
 - Coverage conflict resolution
 
 **If Tests Fail**:
+
 - Review coverage logic changes (ARMSYSANA-005)
 - Check component integration
 - Verify layer validation
@@ -79,12 +85,14 @@ npm run test:unit -- tests/unit/scopeDsl/
 **Expected Result**: All tests pass
 
 **What This Tests**:
+
 - SlotAccessResolver unit tests
 - Priority calculation logic
 - Coverage priority resolution
 - Edge cases in armor handling
 
 **If Tests Fail**:
+
 - Review unit test expectations
 - Check for hardcoded layer lists
 - Update tests to include armor
@@ -98,12 +106,14 @@ npm run test:unit -- tests/unit/clothing/
 **Expected Result**: All tests pass
 
 **What This Tests**:
+
 - Clothing component logic
 - Wearable component handling
 - Coverage mapping logic
 - Layer validation
 
 **If Tests Fail**:
+
 - Review component changes
 - Check for missed armor references
 - Update component tests
@@ -117,12 +127,14 @@ npm run test:ci
 **Expected Result**: All tests pass
 
 **What This Tests**:
+
 - Complete integration
 - Unit + Integration + E2E tests
 - Full system validation
 - No regressions anywhere
 
 **If Tests Fail**:
+
 - Identify failing test categories
 - Review related changes
 - Fix issues before proceeding
@@ -136,6 +148,7 @@ npm run typecheck
 **Expected Result**: No type errors
 
 **What This Tests**:
+
 - TypeScript type consistency
 - No type mismatches
 - Proper type definitions
@@ -149,6 +162,7 @@ npx eslint src/scopeDsl/ src/clothing/ src/anatomy/
 **Expected Result**: No linting errors
 
 **What This Tests**:
+
 - Code style consistency
 - No syntax errors
 - Best practices followed
@@ -160,14 +174,17 @@ Create manual test scenarios to verify armor behavior:
 ### Scenario 1: Armor Visibility (Outer Over Armor)
 
 **Setup**:
+
 - Character wearing: shirt (base), chainmail (armor), cloak (outer)
 
 **Expected**:
+
 - Cloak should be visible (priority 100)
 - Chainmail should be hidden by cloak
 - Action text should mention cloak, not chainmail
 
 **Verification**:
+
 ```javascript
 // In integration test
 const visibleLayer = resolveVisibleLayer(allLayers);
@@ -177,14 +194,17 @@ expect(visibleLayer.layer).toBe('outer'); // Cloak
 ### Scenario 2: Armor Visibility (No Outer Layer)
 
 **Setup**:
+
 - Character wearing: shirt (base), chainmail (armor)
 
 **Expected**:
+
 - Chainmail should be visible (priority 150)
 - Shirt should be hidden by chainmail
 - Action text should mention chainmail
 
 **Verification**:
+
 ```javascript
 const visibleLayer = resolveVisibleLayer(allLayers);
 expect(visibleLayer.layer).toBe('armor'); // Chainmail
@@ -193,14 +213,17 @@ expect(visibleLayer.layer).toBe('armor'); // Chainmail
 ### Scenario 3: Armor Over Base
 
 **Setup**:
+
 - Character wearing: pants (base), leg armor (armor)
 
 **Expected**:
+
 - Leg armor should be visible (priority 150)
 - Pants should be hidden by armor
 - Coverage resolution should favor armor
 
 **Verification**:
+
 ```javascript
 const legsCoverage = getCoverageForSlot('legs');
 expect(legsCoverage.layer).toBe('armor');
@@ -209,14 +232,17 @@ expect(legsCoverage.layer).toBe('armor');
 ### Scenario 4: Multiple Armor Pieces
 
 **Setup**:
+
 - Character wearing: cuirass (armor/torso), bracers (armor/arms)
 
 **Expected**:
+
 - Both armor pieces should be visible
 - No conflicts between armor pieces on different slots
 - Coverage resolution should work per-slot
 
 **Verification**:
+
 ```javascript
 const torsoCoverage = getCoverageForSlot('torso_upper');
 const armsCoverage = getCoverageForSlot('left_arm_clothing');
@@ -268,6 +294,7 @@ Check for these indicators:
 **Cause**: Priority constants incorrect or coverage logic flawed
 
 **Fix**:
+
 - Verify priority values (outer: 100, armor: 150, base: 200)
 - Check coverage resolution logic in SlotAccessResolver
 - Review ARMSYSANA-004 implementation
@@ -279,6 +306,7 @@ Check for these indicators:
 **Cause**: Tests may have hardcoded layer expectations
 
 **Fix**:
+
 - Update test expectations to include armor
 - Review test fixtures for hardcoded layers
 - Modify tests to be armor-aware
@@ -290,6 +318,7 @@ Check for these indicators:
 **Cause**: Missed component in ARMSYSANA-005
 
 **Fix**:
+
 - Review component discovery process
 - Identify missed components
 - Update and test
@@ -301,6 +330,7 @@ Check for these indicators:
 **Cause**: Type definitions not updated
 
 **Fix**:
+
 - Update type definitions to include armor
 - Add armor to layer type unions
 - Re-run type checking
@@ -310,16 +340,19 @@ Check for these indicators:
 ### If Tests Fail
 
 1. **Get detailed test output**
+
    ```bash
    npm run test:integration -- tests/integration/scopeDsl/ --verbose
    ```
 
 2. **Run specific failing test**
+
    ```bash
    npm run test:unit -- tests/unit/scopeDsl/nodes/slotAccessResolver.test.js -t "armor priority"
    ```
 
 3. **Check test coverage**
+
    ```bash
    npm run test:unit -- --coverage
    ```
@@ -379,6 +412,7 @@ This is a **Phase 2 checkpoint ticket** - it validates that all priority system 
 If all tests pass, Phase 2 is complete and the armor layer is fully functional in the system. You can proceed to Phase 3 (Documentation and Examples).
 
 If tests fail:
+
 1. Stop and investigate failures
 2. Fix issues in related tickets
 3. Re-run this validation
@@ -389,6 +423,7 @@ Phase 2 is considered **medium risk** because it involves behavior changes to co
 ## Reference
 
 Test commands from CLAUDE.md:
+
 - `npm run test:unit` - Run unit tests with coverage
 - `npm run test:integration` - Run integration tests with coverage
 - `npm run test:ci` - Full CI test suite
@@ -405,38 +440,39 @@ Test commands from CLAUDE.md:
 
 The original ticket assumed test directories that don't exist:
 
-| Original Assumption | Actual Finding |
-|---------------------|----------------|
-| `tests/integration/scopeDsl/clothing-resolution` | Directory does not exist - tests are directly in `tests/integration/scopeDsl/` |
-| Separate clothing resolution folder | Integration tests like `clothingCoverageResolution.integration.test.js` are flat in the scopeDsl directory |
+| Original Assumption                              | Actual Finding                                                                                             |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `tests/integration/scopeDsl/clothing-resolution` | Directory does not exist - tests are directly in `tests/integration/scopeDsl/`                             |
+| Separate clothing resolution folder              | Integration tests like `clothingCoverageResolution.integration.test.js` are flat in the scopeDsl directory |
 
 **Ticket Updated**: Test command corrected from `tests/integration/scopeDsl/clothing-resolution` to `tests/integration/scopeDsl/`
 
 ### Test Results Summary
 
-| Test Suite | Suites | Tests | Status |
-|------------|--------|-------|--------|
-| scopeDsl integration | 37 | 467 | ✅ All pass |
-| clothing integration | 30 | 277 | ✅ All pass |
-| scopeDsl unit | 73 | 1,660 | ✅ All pass |
-| clothing unit | 28 | 703 | ✅ All pass |
-| scopeDsl performance | 22 | 134 | ✅ All pass |
-| clothing performance | 3 | 20 | ✅ All pass |
+| Test Suite           | Suites | Tests | Status      |
+| -------------------- | ------ | ----- | ----------- |
+| scopeDsl integration | 37     | 467   | ✅ All pass |
+| clothing integration | 30     | 277   | ✅ All pass |
+| scopeDsl unit        | 73     | 1,660 | ✅ All pass |
+| clothing unit        | 28     | 703   | ✅ All pass |
+| scopeDsl performance | 22     | 134   | ✅ All pass |
+| clothing performance | 3      | 20    | ✅ All pass |
 
 **Total**: 193 suites, 3,261 tests - **All passing**
 
 ### Armor-Specific Tests
 
-| Test File | Armor Tests | Status |
-|-----------|-------------|--------|
-| `layerCompatibilityService.test.js` | 5 | ✅ Pass |
-| `priorityConstants.test.js` | 7 | ✅ Pass |
+| Test File                           | Armor Tests | Status  |
+| ----------------------------------- | ----------- | ------- |
+| `layerCompatibilityService.test.js` | 5           | ✅ Pass |
+| `priorityConstants.test.js`         | 7           | ✅ Pass |
 
 ### Pre-Existing Issues (Not Armor-Related)
 
 **Type Checking**: 25 pre-existing errors in `src/validation/` (unrelated to armor changes)
 
 **Linting**: Pre-existing issues:
+
 - Unused private class members in anatomy/clothing services
 - `process` is not defined (Node.js runtime checks - intentional)
 - Console statements (debugging code)
@@ -446,10 +482,12 @@ None of these issues were introduced by the armor system changes.
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned**:
+
 - Run comprehensive test suite
 - Document results
 
 **What Was Actually Done**:
+
 1. Corrected ticket assumption about non-existent test directory
 2. Ran all specified test suites - all pass
 3. Ran performance tests - no degradation
@@ -459,6 +497,7 @@ None of these issues were introduced by the armor system changes.
 ### Conclusion
 
 **Phase 2 is COMPLETE**. The armor layer is fully functional with:
+
 - All 3,261 tests passing
 - Dedicated armor tests validating priority (150) between outer (100) and base (200)
 - No performance degradation

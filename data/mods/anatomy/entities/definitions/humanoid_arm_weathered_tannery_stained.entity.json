@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "wrist",
-          "allowedTypes": [
-            "hand"
-          ],
+          "allowedTypes": ["hand"],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]
@@ -38,16 +36,10 @@
     },
     "descriptors:professional_markers": {
       "profession": "leatherworker",
-      "markers": [
-        "tannery-staining",
-        "chemical-staining"
-      ]
+      "markers": ["tannery-staining", "chemical-staining"]
     },
     "descriptors:skin_condition": {
-      "conditions": [
-        "weathered",
-        "chemically-stained"
-      ]
+      "conditions": ["weathered", "chemically-stained"]
     },
     "descriptors:texture": {
       "texture": "rough"

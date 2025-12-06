@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import BaseError from '../../../src/errors/baseError.js';
@@ -15,15 +22,19 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
-    mockMonitoringCoordinator = testBed.createMock('MockMonitoringCoordinator', [
-      'executeMonitored', 'getStats', 'getPerformanceMonitor'
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
     ]);
+    mockMonitoringCoordinator = testBed.createMock(
+      'MockMonitoringCoordinator',
+      ['executeMonitored', 'getStats', 'getPerformanceMonitor']
+    );
 
     centralErrorHandler = new CentralErrorHandler({
       logger: mockLogger,
       eventBus: mockEventBus,
-      monitoringCoordinator: mockMonitoringCoordinator
+      monitoringCoordinator: mockMonitoringCoordinator,
     });
   });
 
@@ -42,7 +53,7 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         new CentralErrorHandler({
           logger: null,
           eventBus: mockEventBus,
-          monitoringCoordinator: mockMonitoringCoordinator
+          monitoringCoordinator: mockMonitoringCoordinator,
         });
       }).toThrow();
     });
@@ -52,7 +63,7 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         new CentralErrorHandler({
           logger: mockLogger,
           eventBus: null,
-          monitoringCoordinator: mockMonitoringCoordinator
+          monitoringCoordinator: mockMonitoringCoordinator,
         });
       }).toThrow();
     });
@@ -62,27 +73,39 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         new CentralErrorHandler({
           logger: mockLogger,
           eventBus: mockEventBus,
-          monitoringCoordinator: null
+          monitoringCoordinator: null,
         });
       }).toThrow();
     });
 
     it('should register event listeners on initialization', () => {
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith('CLOTHING_ERROR_OCCURRED', expect.any(Function));
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith('ANATOMY_ERROR_OCCURRED', expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'CLOTHING_ERROR_OCCURRED',
+        expect.any(Function)
+      );
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        'ANATOMY_ERROR_OCCURRED',
+        expect.any(Function)
+      );
     });
   });
 
   describe('Error Classification', () => {
     it('should classify BaseError instances correctly', async () => {
-      const baseError = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC, { field: 'test' });
+      const baseError = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        { field: 'test' }
+      );
       baseError.addContext('additional', 'context');
 
       try {
         await centralErrorHandler.handle(baseError, { operation: 'test' });
       } catch (enhancedError) {
         expect(enhancedError).toBeInstanceOf(BaseError);
-        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledBy')).toBe(
+          'CentralErrorHandler'
+        );
         expect(enhancedError.getContext('handledAt')).toBeDefined();
         expect(enhancedError.getContext('recoveryAttempted')).toBe(false);
       }
@@ -101,7 +124,11 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     });
 
     it('should preserve error context during classification', async () => {
-      const baseError = new BaseError('Test message', ErrorCodes.INVALID_DATA_GENERIC, { original: 'context' });
+      const baseError = new BaseError(
+        'Test message',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        { original: 'context' }
+      );
       const additionalContext = { operation: 'test', component: 'testing' };
 
       try {
@@ -109,7 +136,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       } catch (enhancedError) {
         // The additional context is stored in the error classification, not directly in the BaseError context
         expect(enhancedError).toBeInstanceOf(BaseError);
-        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledBy')).toBe(
+          'CentralErrorHandler'
+        );
         expect(enhancedError.getContext('handledAt')).toBeDefined();
       }
     });
@@ -120,8 +149,12 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const error1 = new Error('Error 1');
       const error2 = new BaseError('Error 2', ErrorCodes.INVALID_DATA_GENERIC);
 
-      try { await centralErrorHandler.handle(error1); } catch {}
-      try { await centralErrorHandler.handle(error2); } catch {}
+      try {
+        await centralErrorHandler.handle(error1);
+      } catch {}
+      try {
+        await centralErrorHandler.handle(error2);
+      } catch {}
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.totalErrors).toBe(2);
@@ -129,10 +162,17 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
     it('should track errors by type', async () => {
       const genericError = new Error('Generic error');
-      const baseError = new BaseError('Base error', ErrorCodes.INVALID_DATA_GENERIC);
+      const baseError = new BaseError(
+        'Base error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
-      try { await centralErrorHandler.handle(genericError); } catch {}
-      try { await centralErrorHandler.handle(baseError); } catch {}
+      try {
+        await centralErrorHandler.handle(genericError);
+      } catch {}
+      try {
+        await centralErrorHandler.handle(baseError);
+      } catch {}
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.errorsByType.Error).toBe(1);
@@ -141,7 +181,10 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
     it('should calculate recovery rate correctly', async () => {
       // Register a recovery strategy
-      centralErrorHandler.registerRecoveryStrategy('TestError', async () => 'recovered');
+      centralErrorHandler.registerRecoveryStrategy(
+        'TestError',
+        async () => 'recovered'
+      );
 
       class TestError extends BaseError {
         constructor(message) {
@@ -149,18 +192,26 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           this.name = 'TestError';
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const testError = new TestError('Recoverable error');
-      const baseError = new BaseError('Non-recoverable', ErrorCodes.INVALID_DATA_GENERIC, {});
+      const baseError = new BaseError(
+        'Non-recoverable',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {}
+      );
 
       // This should recover
       const result = await centralErrorHandler.handle(testError);
       expect(result).toBe('recovered');
 
       // This should not recover
-      try { await centralErrorHandler.handle(baseError); } catch {}
+      try {
+        await centralErrorHandler.handle(baseError);
+      } catch {}
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.totalErrors).toBe(2);
@@ -185,50 +236,80 @@ describe('CentralErrorHandler - Core Error Processing', () => {
   describe('Error Logging', () => {
     it('should log errors based on severity level', async () => {
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        getSeverity() {
+          return 'critical';
+        }
       }
 
       class WarningError extends BaseError {
-        getSeverity() { return 'warning'; }
+        getSeverity() {
+          return 'warning';
+        }
       }
 
-      const criticalError = new CriticalError('Critical error', ErrorCodes.INVALID_DATA_GENERIC);
-      const warningError = new WarningError('Warning error', ErrorCodes.INVALID_DATA_GENERIC);
+      const criticalError = new CriticalError(
+        'Critical error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
+      const warningError = new WarningError(
+        'Warning error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
-      try { await centralErrorHandler.handle(criticalError); } catch {}
-      try { await centralErrorHandler.handle(warningError); } catch {}
+      try {
+        await centralErrorHandler.handle(criticalError);
+      } catch {}
+      try {
+        await centralErrorHandler.handle(warningError);
+      } catch {}
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Critical error occurred', expect.any(Object));
-      expect(mockLogger.warn).toHaveBeenCalledWith('Warning occurred', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Critical error occurred',
+        expect.any(Object)
+      );
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Warning occurred',
+        expect.any(Object)
+      );
     });
 
     it('should include comprehensive error context in logs', async () => {
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC, { field: 'test' });
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        { field: 'test' }
+      );
       const context = { operation: 'testing', userId: 'user123' };
 
       try {
         await centralErrorHandler.handle(error, context);
       } catch {}
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Error occurred', expect.objectContaining({
-        errorId: expect.any(String),
-        type: 'BaseError',
-        code: ErrorCodes.INVALID_DATA_GENERIC,
-        severity: 'error',
-        recoverable: false,
-        message: 'Test error',
-        context: expect.objectContaining({
-          field: 'test',
-          operation: 'testing',
-          userId: 'user123'
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error occurred',
+        expect.objectContaining({
+          errorId: expect.any(String),
+          type: 'BaseError',
+          code: ErrorCodes.INVALID_DATA_GENERIC,
+          severity: 'error',
+          recoverable: false,
+          message: 'Test error',
+          context: expect.objectContaining({
+            field: 'test',
+            operation: 'testing',
+            userId: 'user123',
+          }),
         })
-      }));
+      );
     });
   });
 
   describe('Event Dispatching', () => {
     it('should dispatch ERROR_OCCURRED events', async () => {
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       try {
         await centralErrorHandler.handle(error);
@@ -242,23 +323,35 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           severity: 'error',
           recoverable: false,
           message: 'Test error',
-          timestamp: expect.any(Number)
-        })
+          timestamp: expect.any(Number),
+        }),
       });
     });
 
     it('should handle domain-specific error events', async () => {
-      const clothingError = { payload: { error: new Error('Clothing error'), context: { domain: 'clothing' } } };
+      const clothingError = {
+        payload: {
+          error: new Error('Clothing error'),
+          context: { domain: 'clothing' },
+        },
+      };
 
       // Simulate event bus callback
-      const clothingCallback = mockEventBus.subscribe.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
+      const clothingCallback = mockEventBus.subscribe.mock.calls.find(
+        (call) => call[0] === 'CLOTHING_ERROR_OCCURRED'
+      )[1];
 
       // Mock the handle method to avoid actual processing during event handling
-      const handleSpy = jest.spyOn(centralErrorHandler, 'handle').mockResolvedValue(null);
+      const handleSpy = jest
+        .spyOn(centralErrorHandler, 'handle')
+        .mockResolvedValue(null);
 
       await clothingCallback(clothingError);
 
-      expect(handleSpy).toHaveBeenCalledWith(clothingError.payload.error, clothingError.payload.context);
+      expect(handleSpy).toHaveBeenCalledWith(
+        clothingError.payload.error,
+        clothingError.payload.context
+      );
 
       handleSpy.mockRestore();
     });
@@ -275,11 +368,15 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           this.name = 'TestError';
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const error = new TestError('Recoverable error');
-      const result = await centralErrorHandler.handle(error, { context: 'test' });
+      const result = await centralErrorHandler.handle(error, {
+        context: 'test',
+      });
 
       expect(result).toBe('recovery result');
       expect(mockStrategy).toHaveBeenCalled();
@@ -289,8 +386,13 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     });
 
     it('should handle recovery strategy failures', async () => {
-      const failingStrategy = jest.fn().mockRejectedValue(new Error('Recovery failed'));
-      centralErrorHandler.registerRecoveryStrategy('TestError', failingStrategy);
+      const failingStrategy = jest
+        .fn()
+        .mockRejectedValue(new Error('Recovery failed'));
+      centralErrorHandler.registerRecoveryStrategy(
+        'TestError',
+        failingStrategy
+      );
 
       class TestError extends BaseError {
         constructor(message) {
@@ -298,7 +400,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           this.name = 'TestError';
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const error = new TestError('Recoverable error');
@@ -310,7 +414,10 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         expect(thrownError).toBeInstanceOf(BaseError);
       }
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Recovery failed', expect.any(Object));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Recovery failed',
+        expect.any(Object)
+      );
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.failedRecoveries).toBe(1);
@@ -320,7 +427,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const transform = jest.fn();
       centralErrorHandler.registerErrorTransform('TestError', transform);
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Registered error transform for TestError');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Registered error transform for TestError'
+      );
     });
   });
 
@@ -352,7 +461,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           this.name = 'TestError';
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const error = new TestError('Sync recoverable error');
@@ -370,7 +481,10 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
       centralErrorHandler.registerErrorTransform('BaseError', transform);
 
-      const error = new BaseError('Sync error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Sync error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       expect(() => centralErrorHandler.handleSync(error)).toThrow(BaseError);
       expect(transform).toHaveBeenCalledWith(error);
@@ -380,14 +494,19 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const syncStrategy = jest.fn();
       syncStrategy.sync = true;
 
-      centralErrorHandler.registerRecoveryStrategy('SyncRecoverableError', syncStrategy);
+      centralErrorHandler.registerRecoveryStrategy(
+        'SyncRecoverableError',
+        syncStrategy
+      );
 
       class SyncRecoverableError extends BaseError {
         constructor(message) {
           super(message, 'SYNC_RECOVERABLE_ERROR');
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const error = new SyncRecoverableError('Needs fallback');
@@ -399,12 +518,24 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
   describe('Fallback Values', () => {
     it('should provide appropriate fallback values for operations', () => {
-      expect(centralErrorHandler.getFallbackValue('fetch', 'NetworkError')).toBeNull();
-      expect(centralErrorHandler.getFallbackValue('parse', 'ParseError')).toBeNull();
-      expect(centralErrorHandler.getFallbackValue('validate', 'ValidationError')).toBe(false);
-      expect(centralErrorHandler.getFallbackValue('generate', 'GenerationError')).toEqual({});
-      expect(centralErrorHandler.getFallbackValue('calculate', 'MathError')).toBe(0);
-      expect(centralErrorHandler.getFallbackValue('unknown', 'UnknownError')).toBeNull();
+      expect(
+        centralErrorHandler.getFallbackValue('fetch', 'NetworkError')
+      ).toBeNull();
+      expect(
+        centralErrorHandler.getFallbackValue('parse', 'ParseError')
+      ).toBeNull();
+      expect(
+        centralErrorHandler.getFallbackValue('validate', 'ValidationError')
+      ).toBe(false);
+      expect(
+        centralErrorHandler.getFallbackValue('generate', 'GenerationError')
+      ).toEqual({});
+      expect(
+        centralErrorHandler.getFallbackValue('calculate', 'MathError')
+      ).toBe(0);
+      expect(
+        centralErrorHandler.getFallbackValue('unknown', 'UnknownError')
+      ).toBeNull();
     });
   });
 
@@ -424,7 +555,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
     });
 
     it('should clear metrics and registry', async () => {
-      try { await centralErrorHandler.handle(new Error('Test error')); } catch {}
+      try {
+        await centralErrorHandler.handle(new Error('Test error'));
+      } catch {}
 
       let metrics = centralErrorHandler.getMetrics();
       expect(metrics.totalErrors).toBe(1);
@@ -444,12 +577,16 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       mockTime.mockReturnValue(1000000);
       Date.now = mockTime;
 
-      try { await centralErrorHandler.handle(new Error('Old error')); } catch {}
+      try {
+        await centralErrorHandler.handle(new Error('Old error'));
+      } catch {}
 
       // Advance time by 1 hour
       mockTime.mockReturnValue(1000000 + 3600001);
 
-      try { await centralErrorHandler.handle(new Error('New error')); } catch {}
+      try {
+        await centralErrorHandler.handle(new Error('New error'));
+      } catch {}
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.registrySize).toBeGreaterThan(0);
@@ -467,7 +604,10 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
       centralErrorHandler.registerErrorTransform('BaseError', transform);
 
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       try {
         await centralErrorHandler.handle(error);
@@ -484,13 +624,19 @@ describe('CentralErrorHandler - Core Error Processing', () => {
 
       centralErrorHandler.registerErrorTransform('BaseError', faultyTransform);
 
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       try {
         await centralErrorHandler.handle(error);
       } catch (enhancedError) {
         expect(enhancedError).toBeInstanceOf(BaseError);
-        expect(mockLogger.error).toHaveBeenCalledWith('Error transform failed', expect.any(Object));
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          'Error transform failed',
+          expect.any(Object)
+        );
       }
     });
 
@@ -501,18 +647,25 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       centralErrorHandler.registerRecoveryStrategy('TestError', strategy1);
       centralErrorHandler.registerRecoveryStrategy('TestError', strategy2);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('Overwriting existing recovery strategy for TestError');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Overwriting existing recovery strategy for TestError'
+      );
     });
   });
 
   describe('Context Enhancement', () => {
     it('should enhance error with tracking context', async () => {
-      const error = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       try {
         await centralErrorHandler.handle(error, { source: 'test' });
       } catch (enhancedError) {
-        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledBy')).toBe(
+          'CentralErrorHandler'
+        );
         expect(enhancedError.getContext('handledAt')).toBeDefined();
         expect(enhancedError.getContext('recoveryAttempted')).toBeDefined();
         expect(enhancedError.getContext('errorId')).toBeDefined();
@@ -526,7 +679,9 @@ describe('CentralErrorHandler - Core Error Processing', () => {
           this.name = 'RecoverableError';
         }
 
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const recoverableError = new RecoverableError('Needs recovery');
@@ -544,7 +699,10 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.recoveredErrors).toBe(0);
       expect(metrics.failedRecoveries).toBe(0);
-      expect(mockLogger.error).not.toHaveBeenCalledWith('Recovery failed', expect.any(Object));
+      expect(mockLogger.error).not.toHaveBeenCalledWith(
+        'Recovery failed',
+        expect.any(Object)
+      );
     });
 
     it('should handle non-BaseError correctly', async () => {
@@ -552,18 +710,24 @@ describe('CentralErrorHandler - Core Error Processing', () => {
       const typeError = new TypeError('Type error');
       const rangeError = new RangeError('Range error');
 
-      try { await centralErrorHandler.handle(plainError); } catch (e) {
+      try {
+        await centralErrorHandler.handle(plainError);
+      } catch (e) {
         expect(e).toBeInstanceOf(BaseError);
         expect(e.code).toBe('WRAPPED_ERROR');
         expect(e.cause).toBe(plainError);
       }
 
-      try { await centralErrorHandler.handle(typeError); } catch (e) {
+      try {
+        await centralErrorHandler.handle(typeError);
+      } catch (e) {
         expect(e).toBeInstanceOf(BaseError);
         expect(e.cause).toBe(typeError);
       }
 
-      try { await centralErrorHandler.handle(rangeError); } catch (e) {
+      try {
+        await centralErrorHandler.handle(rangeError);
+      } catch (e) {
         expect(e).toBeInstanceOf(BaseError);
         expect(e.cause).toBe(rangeError);
       }
@@ -573,20 +737,36 @@ describe('CentralErrorHandler - Core Error Processing', () => {
   describe('Error Severity Classification', () => {
     it('should classify errors by severity', async () => {
       class CriticalError extends BaseError {
-        getSeverity() { return 'critical'; }
+        getSeverity() {
+          return 'critical';
+        }
       }
 
       class WarningError extends BaseError {
-        getSeverity() { return 'warning'; }
+        getSeverity() {
+          return 'warning';
+        }
       }
 
-      const critical = new CriticalError('Critical', ErrorCodes.INVALID_DATA_GENERIC);
-      const warning = new WarningError('Warning', ErrorCodes.INVALID_DATA_GENERIC);
+      const critical = new CriticalError(
+        'Critical',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
+      const warning = new WarningError(
+        'Warning',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
       const error = new BaseError('Error', ErrorCodes.INVALID_DATA_GENERIC);
 
-      try { await centralErrorHandler.handle(critical); } catch {}
-      try { await centralErrorHandler.handle(warning); } catch {}
-      try { await centralErrorHandler.handle(error); } catch {}
+      try {
+        await centralErrorHandler.handle(critical);
+      } catch {}
+      try {
+        await centralErrorHandler.handle(warning);
+      } catch {}
+      try {
+        await centralErrorHandler.handle(error);
+      } catch {}
 
       const metrics = centralErrorHandler.getMetrics();
       expect(metrics.errorsBySeverity.critical).toBe(1);
@@ -598,9 +778,13 @@ describe('CentralErrorHandler - Core Error Processing', () => {
   describe('Context Truncation and Domain Listeners', () => {
     it('should truncate oversized context payloads during classification', async () => {
       const largePayload = 'x'.repeat(1500);
-      const error = new BaseError('Oversized context', ErrorCodes.INVALID_DATA_GENERIC, {
-        payload: largePayload
-      });
+      const error = new BaseError(
+        'Oversized context',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {
+          payload: largePayload,
+        }
+      );
 
       mockLogger.error.mockClear();
 
@@ -608,19 +792,28 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         await centralErrorHandler.handle(error, { extra: largePayload });
       } catch {}
 
-      const errorLogCall = mockLogger.error.mock.calls.find(([message]) => message === 'Error occurred');
+      const errorLogCall = mockLogger.error.mock.calls.find(
+        ([message]) => message === 'Error occurred'
+      );
       expect(errorLogCall).toBeDefined();
       const [, logData] = errorLogCall;
       expect(logData.context._truncated).toBe(true);
-      expect(logData.context._originalSize).toBeGreaterThan(centralErrorHandler.getMetrics().totalErrors);
+      expect(logData.context._originalSize).toBeGreaterThan(
+        centralErrorHandler.getMetrics().totalErrors
+      );
     });
 
     it('should log informational severity with info logger', async () => {
       class InfoError extends BaseError {
-        getSeverity() { return 'info'; }
+        getSeverity() {
+          return 'info';
+        }
       }
 
-      const infoError = new InfoError('Informational', ErrorCodes.INVALID_DATA_GENERIC);
+      const infoError = new InfoError(
+        'Informational',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       mockLogger.info.mockClear();
 
@@ -628,25 +821,35 @@ describe('CentralErrorHandler - Core Error Processing', () => {
         await centralErrorHandler.handle(infoError);
       } catch {}
 
-      expect(mockLogger.info).toHaveBeenCalledWith('Error handled', expect.objectContaining({
-        severity: 'info'
-      }));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Error handled',
+        expect.objectContaining({
+          severity: 'info',
+        })
+      );
     });
 
     it('should handle anatomy domain events through the event bus listener', async () => {
       const anatomyEvent = {
         payload: {
           error: new Error('Anatomy failure'),
-          context: { domain: 'anatomy' }
-        }
+          context: { domain: 'anatomy' },
+        },
       };
 
-      const anatomyCallback = mockEventBus.subscribe.mock.calls.find(([event]) => event === 'ANATOMY_ERROR_OCCURRED')[1];
-      const handleSpy = jest.spyOn(centralErrorHandler, 'handle').mockResolvedValue(null);
+      const anatomyCallback = mockEventBus.subscribe.mock.calls.find(
+        ([event]) => event === 'ANATOMY_ERROR_OCCURRED'
+      )[1];
+      const handleSpy = jest
+        .spyOn(centralErrorHandler, 'handle')
+        .mockResolvedValue(null);
 
       await anatomyCallback(anatomyEvent);
 
-      expect(handleSpy).toHaveBeenCalledWith(anatomyEvent.payload.error, anatomyEvent.payload.context);
+      expect(handleSpy).toHaveBeenCalledWith(
+        anatomyEvent.payload.error,
+        anatomyEvent.payload.context
+      );
 
       handleSpy.mockRestore();
     });

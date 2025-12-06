@@ -498,7 +498,11 @@ export function registerMinimalAIForCharacterBuilder(container, logger) {
     const service = new LlmJsonService();
     // Add a mock generateContent method for testing
     /* eslint-disable no-undef */
-    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV === 'test') {
+    if (
+      typeof process !== 'undefined' &&
+      process.env &&
+      process.env.NODE_ENV === 'test'
+    ) {
       /* eslint-enable no-undef */
       service.generateContent = async () => ({
         thematic_directions: [

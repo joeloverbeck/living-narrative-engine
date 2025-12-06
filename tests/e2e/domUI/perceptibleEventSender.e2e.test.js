@@ -217,7 +217,10 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
     it('should use entity ID as fallback when location has no name component', async () => {
       // Arrange: Create location without name component
       // Use the testBed but override to create location with only exits (no name)
-      await testBed.createLocation('test_location_no_name', 'test_location_no_name');
+      await testBed.createLocation(
+        'test_location_no_name',
+        'test_location_no_name'
+      );
       // Remove the name component to test fallback behavior
       await entityManager.removeComponent('test_location_no_name', 'core:name');
 

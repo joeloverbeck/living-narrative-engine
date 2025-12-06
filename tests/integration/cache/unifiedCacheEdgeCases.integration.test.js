@@ -1,5 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { UnifiedCache, EvictionPolicy } from '../../../src/cache/UnifiedCache.js';
+import {
+  UnifiedCache,
+  EvictionPolicy,
+} from '../../../src/cache/UnifiedCache.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { CacheError } from '../../../src/errors/cacheError.js';
 import LRUStrategy from '../../../src/cache/strategies/LRUStrategy.js';
@@ -40,12 +43,15 @@ describe('UnifiedCache integration coverage for edge cases', () => {
 
   it('enforces key validation, supports generator flows, and resets metrics correctly', async () => {
     const logger = new RecordingLogger();
-    const cache = new UnifiedCache({ logger }, {
-      evictionPolicy: EvictionPolicy.LRU,
-      enableMetrics: true,
-      maxSize: 50,
-      ttl: 200,
-    });
+    const cache = new UnifiedCache(
+      { logger },
+      {
+        evictionPolicy: EvictionPolicy.LRU,
+        enableMetrics: true,
+        maxSize: 50,
+        ttl: 200,
+      }
+    );
 
     expect(() => cache.get('', () => 'value')).toThrow(InvalidArgumentError);
     expect(() => cache.set('', 'value')).toThrow(InvalidArgumentError);
@@ -53,28 +59,42 @@ describe('UnifiedCache integration coverage for edge cases', () => {
     expect(cache.delete('')).toBe(false);
     expect(() => cache.invalidate()).toThrow(InvalidArgumentError);
 
-    const asyncValue = await cache.get('async:item', () => Promise.resolve({ id: 'async' }));
+    const asyncValue = await cache.get('async:item', () =>
+      Promise.resolve({ id: 'async' })
+    );
     expect(asyncValue).toEqual({ id: 'async' });
     expect(cache.get('async:item')).toEqual({ id: 'async' });
 
     const syncValue = cache.get('sync:item', () => 'sync-result');
     expect(syncValue).toBe('sync-result');
 
-    expect(() => cache.get('error:item', () => {
-      throw new Error('generator failure');
-    })).toThrow(CacheError);
-    expect(logger.errors.some((entry) => entry.includes('Generator function failed'))).toBe(true);
+    expect(() =>
+      cache.get('error:item', () => {
+        throw new Error('generator failure');
+      })
+    ).toThrow(CacheError);
+    expect(
+      logger.errors.some((entry) => entry.includes('Generator function failed'))
+    ).toBe(true);
 
     cache.set('invalidate:one', { order: 1 });
     cache.set('invalidate:two', { order: 2 });
 
     cache.set('warn:item', undefined);
-    expect(logger.warnings.some((entry) => entry.includes('Attempting to cache undefined value'))).toBe(true);
+    expect(
+      logger.warnings.some((entry) =>
+        entry.includes('Attempting to cache undefined value')
+      )
+    ).toBe(true);
     expect(cache.get('warn:item')).toBeUndefined();
 
     const invalidated = cache.invalidate(/^invalidate:/);
     expect(invalidated).toBe(2);
-    expect(logger.infos.some((entry) => entry.includes('Cache invalidated 2 entries'))).toBe(true);
+    expect(
+      logger.infos.some((entry) =>
+        entry.includes('Cache invalidated 2 entries')
+      )
+    ).toBe(true);
 
     cache.set('metrics:hit', 'hit');
     expect(cache.get('metrics:hit')).toBe('hit');
@@ -105,20 +125,31 @@ describe('UnifiedCache integration coverage for edge cases', () => {
       evictions: 0,
       prunings: 0,
     });
-    expect(logger.infos.some((entry) => entry.includes('Cache statistics reset'))).toBe(true);
+    expect(
+      logger.infos.some((entry) => entry.includes('Cache statistics reset'))
+    ).toBe(true);
   });
 
   it('wraps strategy errors in CacheError during set operations', () => {
     const logger = new RecordingLogger();
-    const cache = new UnifiedCache({ logger }, { evictionPolicy: EvictionPolicy.LRU });
+    const cache = new UnifiedCache(
+      { logger },
+      { evictionPolicy: EvictionPolicy.LRU }
+    );
 
-    const setSpy = jest.spyOn(LRUStrategy.prototype, 'set').mockImplementation(() => {
-      throw new Error('underlying strategy failure');
-    });
+    const setSpy = jest
+      .spyOn(LRUStrategy.prototype, 'set')
+      .mockImplementation(() => {
+        throw new Error('underlying strategy failure');
+      });
 
     try {
       expect(() => cache.set('failing:item', 'value')).toThrow(CacheError);
-      expect(logger.errors.some((entry) => entry.includes('Failed to set cache value for key'))).toBe(true);
+      expect(
+        logger.errors.some((entry) =>
+          entry.includes('Failed to set cache value for key')
+        )
+      ).toBe(true);
     } finally {
       setSpy.mockRestore();
     }

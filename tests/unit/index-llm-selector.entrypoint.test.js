@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -27,7 +34,11 @@ describe('index-llm-selector entrypoint', () => {
     consoleErrorSpy.mockRestore();
 
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     } else {
       delete document.readyState;
     }
@@ -139,10 +150,11 @@ describe('index-llm-selector entrypoint', () => {
       register: jest.fn((token, factory, options) => {
         registrations.set(token, { factory, options });
       }),
-      isRegistered: jest.fn((token) =>
-        registrations.has(token) ||
-        singletonInstances.has(token) ||
-        resolvedTokens.has(token)
+      isRegistered: jest.fn(
+        (token) =>
+          registrations.has(token) ||
+          singletonInstances.has(token) ||
+          resolvedTokens.has(token)
       ),
     };
 
@@ -154,9 +166,14 @@ describe('index-llm-selector entrypoint', () => {
       return { controller, container, options: rest };
     });
 
-    jest.doMock('../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: bootstrapMock })),
-    }));
+    jest.doMock(
+      '../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => ({
+          bootstrap: bootstrapMock,
+        })),
+      })
+    );
     jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
     jest.doMock('../../src/domUI/documentContext.js', () => ({
       __esModule: true,
@@ -217,19 +234,13 @@ describe('index-llm-selector entrypoint', () => {
     });
 
     modalElement.style.display = 'block';
-    observer.callback([
-      { type: 'attributes', attributeName: 'class' },
-    ]);
+    observer.callback([{ type: 'attributes', attributeName: 'class' }]);
 
     modalElement.style.display = 'block';
-    observer.callback([
-      { type: 'attributes', attributeName: 'style' },
-    ]);
+    observer.callback([{ type: 'attributes', attributeName: 'style' }]);
 
     modalElement.style.display = 'none';
-    observer.callback([
-      { type: 'attributes', attributeName: 'style' },
-    ]);
+    observer.callback([{ type: 'attributes', attributeName: 'style' }]);
     await flushPromises();
     expect(llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(2);
 
@@ -345,9 +356,14 @@ describe('index-llm-selector entrypoint', () => {
       return { controller, container };
     });
 
-    jest.doMock('../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: bootstrapMock })),
-    }));
+    jest.doMock(
+      '../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => ({
+          bootstrap: bootstrapMock,
+        })),
+      })
+    );
     jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
     jest.doMock('../../src/domUI/llmSelectionModal.js', () => ({
       __esModule: true,
@@ -410,11 +426,14 @@ describe('index-llm-selector entrypoint', () => {
 
     const bootstrapError = new Error('bootstrap failed');
 
-    jest.doMock('../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => ({
-        bootstrap: jest.fn().mockRejectedValue(bootstrapError),
-      })),
-    }));
+    jest.doMock(
+      '../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => ({
+          bootstrap: jest.fn().mockRejectedValue(bootstrapError),
+        })),
+      })
+    );
     jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
     jest.doMock('../../src/domUI/llmSelectionModal.js', () => ({
       __esModule: true,

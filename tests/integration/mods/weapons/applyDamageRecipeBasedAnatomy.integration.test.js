@@ -94,12 +94,24 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
       fixture.reset([actor, target, targetTorso, weapon]);
 
       // Debug: Check the target's anatomy:body component before action
-      const targetBody = fixture.entityManager.getComponentData('target', 'anatomy:body');
-      console.log('DEBUG: Target anatomy:body component:', JSON.stringify(targetBody, null, 2));
+      const targetBody = fixture.entityManager.getComponentData(
+        'target',
+        'anatomy:body'
+      );
+      console.log(
+        'DEBUG: Target anatomy:body component:',
+        JSON.stringify(targetBody, null, 2)
+      );
 
       // Check if the torso entity has anatomy:part component
-      const torsoPartComponent = fixture.entityManager.getComponentData('target-torso', 'anatomy:part');
-      console.log('DEBUG: Torso anatomy:part component:', JSON.stringify(torsoPartComponent, null, 2));
+      const torsoPartComponent = fixture.entityManager.getComponentData(
+        'target-torso',
+        'anatomy:part'
+      );
+      console.log(
+        'DEBUG: Torso anatomy:part component:',
+        JSON.stringify(torsoPartComponent, null, 2)
+      );
 
       // Execute the swing action (primary=weapon, secondary=target being attacked)
       await fixture.executeAction('attacker', 'sword', {
@@ -194,10 +206,13 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
       });
 
       // Debug: log all events
-      console.log('DEBUG (test 125): All events captured:', fixture.events.map(e => ({
-        type: e.eventType,
-        payload: JSON.stringify(e.payload || {}).slice(0, 300)
-      })));
+      console.log(
+        'DEBUG (test 125): All events captured:',
+        fixture.events.map((e) => ({
+          type: e.eventType,
+          payload: JSON.stringify(e.payload || {}).slice(0, 300),
+        }))
+      );
 
       // Should complete without target resolution errors
       const turnEndedEvent = fixture.events.find(
@@ -263,10 +278,13 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
       });
 
       // Debug: log all events to understand what happened
-      console.log('DEBUG: All events captured:', fixture.events.map(e => ({
-        type: e.eventType,
-        payload: JSON.stringify(e.payload || {}).slice(0, 200)
-      })));
+      console.log(
+        'DEBUG: All events captured:',
+        fixture.events.map((e) => ({
+          type: e.eventType,
+          payload: JSON.stringify(e.payload || {}).slice(0, 200),
+        }))
+      );
 
       // When all parts have 0 weight, we expect the "Could not resolve target part" error
       // This is the correct behavior - no valid targets exist
@@ -276,11 +294,13 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
           event.eventType === 'core:system_error'
       );
 
-      console.log('DEBUG: Error events:', errorEvents.map(e => e.payload?.message));
+      console.log(
+        'DEBUG: Error events:',
+        errorEvents.map((e) => e.payload?.message)
+      );
 
-      const targetPartErrors = errorEvents.filter(
-        (err) =>
-          err.payload?.message?.includes('Could not resolve target part')
+      const targetPartErrors = errorEvents.filter((err) =>
+        err.payload?.message?.includes('Could not resolve target part')
       );
 
       expect(targetPartErrors.length).toBeGreaterThanOrEqual(1);
@@ -343,13 +363,16 @@ describe('APPLY_DAMAGE with anatomy lacking explicit hit_probability_weight', ()
       });
 
       // Wait longer for async operations to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Debug: log all events
-      console.log('DEBUG (test 285 backward compat): All events captured:', fixture.events.map(e => ({
-        type: e.eventType,
-        payload: JSON.stringify(e.payload || {}).slice(0, 300)
-      })));
+      console.log(
+        'DEBUG (test 285 backward compat): All events captured:',
+        fixture.events.map((e) => ({
+          type: e.eventType,
+          payload: JSON.stringify(e.payload || {}).slice(0, 300),
+        }))
+      );
 
       // Should complete without errors
       const turnEndedEvent = fixture.events.find(

@@ -3,9 +3,6 @@
   "id": "weapons:event-is-action-strike-target",
   "description": "Checks if the event is a strike_target action attempt",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "weapons:strike_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "weapons:strike_target"]
   }
 }

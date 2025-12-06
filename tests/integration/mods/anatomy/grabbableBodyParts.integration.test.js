@@ -52,7 +52,10 @@ describe('Grabbable Body Parts Integration', () => {
         expectedGripStrength: 1.0,
       },
       { file: 'humanoid_hand_scarred.entity.json', expectedGripStrength: 1.0 },
-      { file: 'eldritch_malformed_hand.entity.json', expectedGripStrength: 0.7 },
+      {
+        file: 'eldritch_malformed_hand.entity.json',
+        expectedGripStrength: 0.7,
+      },
       { file: 'tortoise_hand.entity.json', expectedGripStrength: 0.8 },
     ];
 
@@ -159,9 +162,9 @@ describe('Grabbable Body Parts Integration', () => {
       'should have gripStrength >= 0 in %s',
       (file) => {
         const entity = loadEntityFile(file);
-        expect(entity.components['anatomy:can_grab'].gripStrength).toBeGreaterThanOrEqual(
-          0
-        );
+        expect(
+          entity.components['anatomy:can_grab'].gripStrength
+        ).toBeGreaterThanOrEqual(0);
       }
     );
 
@@ -184,9 +187,9 @@ describe('Grabbable Body Parts Integration', () => {
 
     it('should have kraken_tentacle with highest grip strength (> 1.0)', () => {
       const entity = loadEntityFile('kraken_tentacle.entity.json');
-      expect(entity.components['anatomy:can_grab'].gripStrength).toBeGreaterThan(
-        1.0
-      );
+      expect(
+        entity.components['anatomy:can_grab'].gripStrength
+      ).toBeGreaterThan(1.0);
     });
 
     it('should have eldritch_tentacle_sensory with lowest grip strength (< 0.5)', () => {
@@ -198,7 +201,9 @@ describe('Grabbable Body Parts Integration', () => {
 
     it('should have eldritch_malformed_hand with reduced grip strength', () => {
       const humanHand = loadEntityFile('human_hand.entity.json');
-      const eldritchHand = loadEntityFile('eldritch_malformed_hand.entity.json');
+      const eldritchHand = loadEntityFile(
+        'eldritch_malformed_hand.entity.json'
+      );
       expect(
         eldritchHand.components['anatomy:can_grab'].gripStrength
       ).toBeLessThan(humanHand.components['anatomy:can_grab'].gripStrength);

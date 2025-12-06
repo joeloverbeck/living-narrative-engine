@@ -12,6 +12,8 @@ describe('validation/types module', () => {
   });
 
   it('should load cleanly via dynamic import', async () => {
-    await expect(import('../../../cli/validation/types.js')).resolves.toBe(validationTypes);
+    await expect(import('../../../cli/validation/types.js')).resolves.toBe(
+      validationTypes
+    );
   });
 });

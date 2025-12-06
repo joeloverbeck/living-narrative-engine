@@ -2,7 +2,14 @@
  * @file Interaction tests for buildSpeechMeta clipboard handlers.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { buildSpeechMeta } from '../../../../src/domUI/helpers/buildSpeechMeta.js';
 
 jest.mock('../../../../src/domUI/icons.js', () => ({
@@ -104,7 +111,10 @@ describe('buildSpeechMeta clipboard interactions', () => {
 
     expect(event.preventDefault).toHaveBeenCalled();
     expect(event.stopPropagation).toHaveBeenCalled();
-    expect(formatThoughtsForClipboard).toHaveBeenCalledWith(thoughts, undefined);
+    expect(formatThoughtsForClipboard).toHaveBeenCalledWith(
+      thoughts,
+      undefined
+    );
     expect(copyToClipboard).toHaveBeenCalledWith('formatted thoughts');
     expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copied!');
   });
@@ -126,7 +136,10 @@ describe('buildSpeechMeta clipboard interactions', () => {
 
     await handler.call(button, event);
 
-    expect(formatThoughtsForClipboard).toHaveBeenCalledWith(thoughts, undefined);
+    expect(formatThoughtsForClipboard).toHaveBeenCalledWith(
+      thoughts,
+      undefined
+    );
     expect(copyToClipboard).toHaveBeenCalledWith('formatted secret');
     expect(showCopyFeedback).toHaveBeenCalledWith(button, 'Copy failed', 1500);
   });

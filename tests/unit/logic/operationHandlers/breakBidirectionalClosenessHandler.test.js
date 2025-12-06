@@ -109,7 +109,7 @@ describe('BreakBidirectionalClosenessHandler', () => {
 
     it('should log error when removal fails (catch block)', async () => {
       entityManager.getComponentData.mockImplementation(() => {
-          throw new Error('Read error');
+        throw new Error('Read error');
       });
 
       await handler.execute(
@@ -119,7 +119,7 @@ describe('BreakBidirectionalClosenessHandler', () => {
         },
         executionContext
       );
-      
+
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('not found on')
       );
@@ -162,9 +162,9 @@ describe('BreakBidirectionalClosenessHandler', () => {
 
       expect(regenerator.execute).not.toHaveBeenCalled();
     });
-    
+
     it('should handle missing regenerateDescriptionHandler gracefully', async () => {
-       const handlerNoRegen = new BreakBidirectionalClosenessHandler({
+      const handlerNoRegen = new BreakBidirectionalClosenessHandler({
         entityManager,
         safeEventDispatcher: dispatcher,
         logger, // regenerateDescriptionHandler omitted
@@ -181,7 +181,9 @@ describe('BreakBidirectionalClosenessHandler', () => {
       );
 
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('regenerate_descriptions requested but handler not available'),
+        expect.stringContaining(
+          'regenerate_descriptions requested but handler not available'
+        ),
         expect.any(Object)
       );
     });
@@ -205,9 +207,9 @@ describe('BreakBidirectionalClosenessHandler', () => {
 
     it('should handle invalid params object', async () => {
       await handler.execute(null, executionContext);
-       expect(entityManager.removeComponent).not.toHaveBeenCalled();
+      expect(entityManager.removeComponent).not.toHaveBeenCalled();
     });
-    
+
     it('should handle missing actorId or targetId', async () => {
       const badContext = {
         evaluationContext: { event: { payload: {} } }, // No ids

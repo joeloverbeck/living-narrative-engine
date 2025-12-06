@@ -16,9 +16,11 @@ Create the JSON schema for the `BREAK_BIDIRECTIONAL_CLOSENESS` operation, which 
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/breakBidirectionalCloseness.schema.json`
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry)
 - `src/configuration/staticConfiguration.js` (add to `OPERATION_SCHEMA_FILES` list)
 
@@ -27,6 +29,7 @@ Create the JSON schema for the `BREAK_BIDIRECTIONAL_CLOSENESS` operation, which 
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handler schemas
 - Any operation handler implementation files
 - Any rule files (migrations are separate tickets)
@@ -127,7 +130,7 @@ Add to the `anyOf` array in alphabetical order:
 
 1. All existing operation schemas remain unchanged
 2. All existing rules continue to validate successfully
-3. `npm run test:ci` passes (no regressions) *Note: validate:operations will fail until handler is implemented*
+3. `npm run test:ci` passes (no regressions) _Note: validate:operations will fail until handler is implemented_
 
 ---
 

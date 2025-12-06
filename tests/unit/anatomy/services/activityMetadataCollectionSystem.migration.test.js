@@ -86,9 +86,7 @@ describe('ActivityMetadataCollectionSystem - Direct Usage Validation (Batch 5)',
       expect(Array.isArray(metadata)).toBe(true);
       expect(metadata.length).toBeGreaterThan(0);
       expect(metadata[0].type).toBe('inline');
-      expect(metadata[0].template).toBe(
-        '{actor} is kneeling before {target}'
-      );
+      expect(metadata[0].template).toBe('{actor} is kneeling before {target}');
     });
 
     it('should collect inline metadata correctly via DI-resolved service', () => {

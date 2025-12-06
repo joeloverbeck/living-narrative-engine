@@ -28,7 +28,9 @@ export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
           requestId,
           path: req.path,
           method: req.method,
-          responseCommitted: res.isResponseCommitted ? res.isResponseCommitted() : false,
+          responseCommitted: res.isResponseCommitted
+            ? res.isResponseCommitted()
+            : false,
           headersSent: res.headersSent,
         });
       }
@@ -40,7 +42,9 @@ export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
             `Request ${requestId}: Timeout cannot commit response - already committed to '${res.getCommitmentSource()}'`,
             {
               requestId,
-              existingCommitment: res.getCommitmentSource ? res.getCommitmentSource() : 'unknown',
+              existingCommitment: res.getCommitmentSource
+                ? res.getCommitmentSource()
+                : 'unknown',
             }
           );
         }
@@ -50,9 +54,12 @@ export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
       // If grace period is configured, delay the actual timeout response
       if (gracePeriod > 0) {
         if (logger) {
-          logger.debug(`Request ${requestId}: Entering grace period of ${gracePeriod}ms`, {
-            requestId,
-          });
+          logger.debug(
+            `Request ${requestId}: Entering grace period of ${gracePeriod}ms`,
+            {
+              requestId,
+            }
+          );
         }
 
         gracePeriodTimer = setTimeout(() => {
@@ -83,7 +90,9 @@ export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
         });
 
         if (logger) {
-          logger.warn(`Request ${requestId}: Timeout response sent`, { requestId });
+          logger.warn(`Request ${requestId}: Timeout response sent`, {
+            requestId,
+          });
         }
       } else {
         if (logger) {
@@ -141,7 +150,9 @@ export const createTimeoutMiddleware = (ms = 30000, options = {}) => {
       }
 
       if (timeoutFired && logger) {
-        logger.debug(`Request ${requestId}: Connection closed after timeout`, { requestId });
+        logger.debug(`Request ${requestId}: Connection closed after timeout`, {
+          requestId,
+        });
       }
     });
 

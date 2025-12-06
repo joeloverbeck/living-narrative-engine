@@ -143,16 +143,19 @@ describe('main bootstrap additional coverage', () => {
       }
     );
 
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
     mockStages.startGameStage.mockResolvedValue({ success: true });
 
-    const {
-      bootstrapApp,
-      beginGame,
-      __TEST_ONLY__setCurrentPhaseForError,
-    } = await import('../../../src/main.js');
+    const { bootstrapApp, beginGame, __TEST_ONLY__setCurrentPhaseForError } =
+      await import('../../../src/main.js');
 
     __TEST_ONLY__setCurrentPhaseForError('Custom Phase Before Bootstrap');
 
@@ -202,7 +205,9 @@ describe('main bootstrap additional coverage', () => {
 
     const fallbackElement = document.getElementById('temp-startup-error');
     expect(fallbackElement).not.toBeNull();
-    expect(fallbackElement?.textContent).toContain('Application failed to start');
+    expect(fallbackElement?.textContent).toContain(
+      'Application failed to start'
+    );
     expect(fallbackElement?.style.border).toContain('1px solid red');
 
     consoleErrorSpy.mockRestore();
@@ -247,10 +252,7 @@ describe('main bootstrap additional coverage', () => {
       error: new Error('engine initialization failed'),
     });
 
-    const {
-      bootstrapApp,
-      beginGame,
-    } = await import('../../../src/main.js');
+    const { bootstrapApp, beginGame } = await import('../../../src/main.js');
 
     await bootstrapApp();
 
@@ -262,7 +264,9 @@ describe('main bootstrap additional coverage', () => {
 
     const fallbackElement = document.getElementById('temp-startup-error');
     expect(fallbackElement).not.toBeNull();
-    expect(fallbackElement?.textContent).toContain('Critical: GameEngine not initialized');
+    expect(fallbackElement?.textContent).toContain(
+      'Critical: GameEngine not initialized'
+    );
     expect(fallbackElement?.style.border).toContain('1px solid red');
   });
 
@@ -305,9 +309,15 @@ describe('main bootstrap additional coverage', () => {
       }
     );
 
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
 
     mockStages.startGameStage.mockResolvedValue({
       success: false,
@@ -322,7 +332,9 @@ describe('main bootstrap additional coverage', () => {
 
     const fallbackElement = document.getElementById('temp-startup-error');
     expect(fallbackElement).not.toBeNull();
-    expect(fallbackElement?.textContent).toContain('Application failed to start');
+    expect(fallbackElement?.textContent).toContain(
+      'Application failed to start'
+    );
     expect(fallbackElement?.style.border).toContain('1px solid red');
   });
 });

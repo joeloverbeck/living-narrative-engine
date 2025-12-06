@@ -95,7 +95,9 @@ describe('ApiKeyService combined failure handling for bare Error payloads', () =
             llmId: 'llm-bare-error',
             attemptedEnvVar: 'ERROR_ENV_KEY',
             attemptedFile: 'unstable.key',
-            reason: expect.stringContaining('Disk meltdown while loading API key'),
+            reason: expect.stringContaining(
+              'Disk meltdown while loading API key'
+            ),
           }),
         }),
       })
@@ -169,7 +171,9 @@ describe('ApiKeyService combined failure handling for bare Error payloads', () =
             llmId: 'llm-bare-error-resilient',
             attemptedEnvVar: 'ERROR_ENV_KEY',
             attemptedFile: 'unstable.key',
-            reason: expect.stringContaining('Disk meltdown while loading API key'),
+            reason: expect.stringContaining(
+              'Disk meltdown while loading API key'
+            ),
           }),
         }),
       })

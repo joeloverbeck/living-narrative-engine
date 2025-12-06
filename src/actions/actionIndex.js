@@ -92,9 +92,9 @@ export class ActionIndex {
         continue;
       }
 
-       if (typeof actionDef.id === 'string' && actionDef.id.trim()) {
-         this.#byActionId.set(actionDef.id, actionDef);
-       }
+      if (typeof actionDef.id === 'string' && actionDef.id.trim()) {
+        this.#byActionId.set(actionDef.id, actionDef);
+      }
 
       const requiredActorComponents = actionDef.required_components?.actor;
 

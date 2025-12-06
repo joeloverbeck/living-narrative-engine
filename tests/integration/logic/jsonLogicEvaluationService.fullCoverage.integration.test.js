@@ -1,4 +1,11 @@
-import { jest, describe, beforeEach, afterEach, it, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+} from '@jest/globals';
 import jsonLogic from 'json-logic-js';
 import JsonLogicEvaluationService, {
   evaluateConditionWithLogging,
@@ -105,12 +112,12 @@ describe('JsonLogicEvaluationService real module integration', () => {
 
     const result = service.evaluate(
       { condition_ref: 'library:isInDanger' },
-      context,
+      context
     );
 
     expect(result).toBe(true);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Evaluating rule:'),
+      expect.stringContaining('Evaluating rule:')
     );
   });
 
@@ -123,12 +130,12 @@ describe('JsonLogicEvaluationService real module integration', () => {
       {
         '==': [{ var: 'actor.components["status"]' }, 'danger'],
       },
-      context,
+      context
     );
 
     expect(result).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid var path'),
+      expect.stringContaining('Invalid var path')
     );
   });
 
@@ -142,8 +149,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
         ([message, error]) =>
           typeof message === 'string' &&
           message.includes('JSON Logic validation failed:') &&
-          error?.message.includes('Disallowed property'),
-      ),
+          error?.message.includes('Disallowed property')
+      )
     ).toBe(true);
   });
 
@@ -157,8 +164,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
         ([message, error]) =>
           typeof message === 'string' &&
           message.includes('JSON Logic validation failed:') &&
-          error?.message.includes('Disallowed operation'),
-      ),
+          error?.message.includes('Disallowed operation')
+      )
     ).toBe(true);
   });
 
@@ -175,8 +182,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
         ([message, error]) =>
           typeof message === 'string' &&
           message.includes('JSON Logic validation failed:') &&
-          error?.message.includes('Circular reference detected'),
-      ),
+          error?.message.includes('Circular reference detected')
+      )
     ).toBe(true);
   });
 
@@ -193,8 +200,10 @@ describe('JsonLogicEvaluationService real module integration', () => {
       fallbackLogger.warn.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('No gameDataRepository provided; condition_ref resolution disabled.'),
-      ),
+          message.includes(
+            'No gameDataRepository provided; condition_ref resolution disabled.'
+          )
+      )
     ).toBe(true);
   });
 
@@ -220,11 +229,7 @@ describe('JsonLogicEvaluationService real module integration', () => {
     };
 
     const rule = {
-      and: [
-        { '==': [1, 1] },
-        { '==': [1, 0] },
-        { throw_error_operator: [] },
-      ],
+      and: [{ '==': [1, 1] }, { '==': [1, 0] }, { throw_error_operator: [] }],
     };
 
     const result = service.evaluate(rule, context);
@@ -232,21 +237,21 @@ describe('JsonLogicEvaluationService real module integration', () => {
     expect(result).toBe(false);
     expect(throwIfCalled).not.toHaveBeenCalled();
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('AND operation short-circuited'),
+      expect.stringContaining('AND operation short-circuited')
     );
     expect(
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Error retrieving entity position'),
-      ),
+          message.includes('Error retrieving entity position')
+      )
     ).toBe(true);
     expect(
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Actor: undefined (missing from context)'),
-      ),
+          message.includes('Actor: undefined (missing from context)')
+      )
     ).toBe(true);
 
     envSpy.mockRestore();
@@ -269,11 +274,7 @@ describe('JsonLogicEvaluationService real module integration', () => {
     };
 
     const rule = {
-      or: [
-        { '==': [0, 1] },
-        { '==': [1, 1] },
-        { throw_error_operator: [] },
-      ],
+      or: [{ '==': [0, 1] }, { '==': [1, 1] }, { throw_error_operator: [] }],
     };
 
     const result = service.evaluate(rule, context);
@@ -284,15 +285,15 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Error retrieving actor position'),
-      ),
+          message.includes('Error retrieving actor position')
+      )
     ).toBe(true);
     expect(
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Actor exists but actor.id is undefined!'),
-      ),
+          message.includes('Actor exists but actor.id is undefined!')
+      )
     ).toBe(true);
 
     envSpy.mockRestore();
@@ -322,10 +323,7 @@ describe('JsonLogicEvaluationService real module integration', () => {
     };
 
     const rule = {
-      or: [
-        { '==': [1, 1] },
-        { throw_error_operator: [] },
-      ],
+      or: [{ '==': [1, 1] }, { throw_error_operator: [] }],
     };
 
     const result = service.evaluate(rule, context);
@@ -335,28 +333,29 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('OR operation short-circuited'),
-      ),
+          message.includes('OR operation short-circuited')
+      )
     ).toBe(true);
     expect(
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Entity: entity:guide, Location: location:garden'),
-      ),
+          message.includes('Entity: entity:guide, Location: location:garden')
+      )
     ).toBe(true);
     expect(
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Actor: npc:hero, Location: location:garden'),
-      ),
+          message.includes('Actor: npc:hero, Location: location:garden')
+      )
     ).toBe(true);
     expect(
       logger.debug.mock.calls.some(
         ([message]) =>
-          typeof message === 'string' && message.endsWith('Location: location:garden'),
-      ),
+          typeof message === 'string' &&
+          message.endsWith('Location: location:garden')
+      )
     ).toBe(true);
 
     envSpy.mockRestore();
@@ -369,8 +368,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Special-case {and: []} ⇒ true'),
-      ),
+          message.includes('Special-case {and: []} ⇒ true')
+      )
     ).toBe(true);
 
     logger.debug.mockClear();
@@ -380,8 +379,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.debug.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Special-case {or: []} ⇒ false'),
-      ),
+          message.includes('Special-case {or: []} ⇒ false')
+      )
     ).toBe(true);
   });
 
@@ -397,8 +396,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Circular condition_ref detected'),
-      ),
+          message.includes('Circular condition_ref detected')
+      )
     ).toBe(true);
   });
 
@@ -411,8 +410,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Could not resolve condition_ref'),
-      ),
+          message.includes('Could not resolve condition_ref')
+      )
     ).toBe(true);
   });
 
@@ -435,8 +434,8 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Failed to add custom JSON Logic operation "broken"'),
-      ),
+          message.includes('Failed to add custom JSON Logic operation "broken"')
+      )
     ).toBe(true);
 
     addSpy.mockRestore();
@@ -455,8 +454,10 @@ describe('JsonLogicEvaluationService real module integration', () => {
       logger.error.mock.calls.some(
         ([message]) =>
           typeof message === 'string' &&
-          message.includes('Failed to remove custom JSON Logic operation "ghost"'),
-      ),
+          message.includes(
+            'Failed to remove custom JSON Logic operation "ghost"'
+          )
+      )
     ).toBe(true);
 
     removeSpy.mockRestore();
@@ -474,7 +475,7 @@ describe('JsonLogicEvaluationService real module integration', () => {
 
     expect(outcome).toEqual({ result: true, errored: false, error: undefined });
     expect(logger.debug).toHaveBeenCalledWith(
-      '[Check] Condition evaluation final boolean result: true',
+      '[Check] Condition evaluation final boolean result: true'
     );
   });
 
@@ -499,7 +500,7 @@ describe('JsonLogicEvaluationService real module integration', () => {
     expect(outcome.error).toBeInstanceOf(Error);
     expect(errorLogger.error).toHaveBeenCalledWith(
       '[Check] Error during condition evaluation. Treating condition as FALSE.',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 });

@@ -400,10 +400,7 @@ describe('SystemLogicInterpreter - Core Functionality', () => {
       const consoleErrorSpy = jest
         .spyOn(console, 'error')
         .mockImplementation(() => {});
-      const buildRuleCacheSpy = jest.spyOn(
-        ruleCacheUtils,
-        'buildRuleCache'
-      );
+      const buildRuleCacheSpy = jest.spyOn(ruleCacheUtils, 'buildRuleCache');
 
       try {
         const failingRule = {

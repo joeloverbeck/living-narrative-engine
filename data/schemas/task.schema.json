@@ -108,7 +108,13 @@
       "maximum": 100
     }
   },
-  "required": ["id", "description", "planningScope", "planningEffects", "refinementMethods"],
+  "required": [
+    "id",
+    "description",
+    "planningScope",
+    "planningEffects",
+    "refinementMethods"
+  ],
   "additionalProperties": false,
   "$comment": "Schema Version 1.0.0 - Initial task schema for GOAP system. Planning tasks represent abstract goals that decompose into primitive actions via refinement methods. Tasks are used during planning search to build goal-directed plans. The planner evaluates preconditions, simulates effects, and selects refinement methods for execution. Future extensions may add: task decomposition hierarchies (subtasks), dynamic cost calculation, priority rules based on context, additional gate types (motivation gates, resource gates). Extension points: Add new gate types alongside structuralGates, extend effect types with custom operation handlers, add metadata fields for UI/debugging."
 }

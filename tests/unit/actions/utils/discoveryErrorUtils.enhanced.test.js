@@ -166,7 +166,10 @@ describe('Enhanced discoveryErrorUtils', () => {
       const errorWithEmptyStringTarget = { targetId: '' };
       expect(extractTargetId(errorWithEmptyStringTarget)).toBe('');
 
-      const errorWithNullTarget = { targetId: null, target: { entityId: 'fallback' } };
+      const errorWithNullTarget = {
+        targetId: null,
+        target: { entityId: 'fallback' },
+      };
       expect(extractTargetId(errorWithNullTarget)).toBeNull();
     });
   });

@@ -38,11 +38,7 @@
             },
             "blockType": {
               "type": "string",
-              "enum": [
-                "must_remove_first",
-                "must_loosen_first",
-                "full_block"
-              ],
+              "enum": ["must_remove_first", "must_loosen_first", "full_block"],
               "description": "Type of blocking: must_remove_first (this item must be removed), must_loosen_first (this item must be loosened), full_block (complete inaccessibility)"
             },
             "reason": {

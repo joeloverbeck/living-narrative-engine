@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { CircuitBreaker, CircuitBreakerState } from '../../../src/clothing/monitoring/circuitBreaker.js';
+import {
+  CircuitBreaker,
+  CircuitBreakerState,
+} from '../../../src/clothing/monitoring/circuitBreaker.js';
 import { ClothingServiceError } from '../../../src/clothing/errors/clothingErrors.js';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -11,10 +14,14 @@ function createRecordingLogger() {
   const entries = [];
   return {
     logger: {
-      debug: (message, context) => entries.push({ level: 'debug', message, context }),
-      info: (message, context) => entries.push({ level: 'info', message, context }),
-      warn: (message, context) => entries.push({ level: 'warn', message, context }),
-      error: (message, context) => entries.push({ level: 'error', message, context }),
+      debug: (message, context) =>
+        entries.push({ level: 'debug', message, context }),
+      info: (message, context) =>
+        entries.push({ level: 'info', message, context }),
+      warn: (message, context) =>
+        entries.push({ level: 'warn', message, context }),
+      error: (message, context) =>
+        entries.push({ level: 'error', message, context }),
     },
     entries,
   };
@@ -60,7 +67,9 @@ describe('Clothing CircuitBreaker integration', () => {
 
     expect(fallbackValue).toBe('cached-response');
     expect(breaker.isOpen()).toBe(true);
-    expect(entries.find((event) => event.message.includes('using fallback'))).toBeDefined();
+    expect(
+      entries.find((event) => event.message.includes('using fallback'))
+    ).toBeDefined();
   });
 
   it('throws ClothingServiceError when circuit is open without fallback', async () => {
@@ -100,8 +109,12 @@ describe('Clothing CircuitBreaker integration', () => {
     expect(secondSuccess).toBe('full-recovery');
     expect(breaker.isClosed()).toBe(true);
 
-    expect(entries.find((event) => event.message.includes('HALF_OPEN'))).toBeDefined();
-    expect(entries.find((event) => event.message.includes('CLOSED'))).toBeDefined();
+    expect(
+      entries.find((event) => event.message.includes('HALF_OPEN'))
+    ).toBeDefined();
+    expect(
+      entries.find((event) => event.message.includes('CLOSED'))
+    ).toBeDefined();
   });
 
   it('reopens when a half-open attempt fails and supports manual state controls', async () => {

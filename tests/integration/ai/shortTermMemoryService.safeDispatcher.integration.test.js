@@ -90,7 +90,11 @@ describe('ShortTermMemoryService safe dispatcher failure integration', () => {
     });
 
     expect(() =>
-      service.emitThoughtAdded(mem.entityId, result.entry.text, result.entry.timestamp)
+      service.emitThoughtAdded(
+        mem.entityId,
+        result.entry.text,
+        result.entry.timestamp
+      )
     ).not.toThrow();
 
     await waitForAsync();
@@ -106,10 +110,14 @@ describe('ShortTermMemoryService safe dispatcher failure integration', () => {
     });
 
     expect(logger.errorLogs.length).toBeGreaterThan(0);
-    const combinedErrors = logger.errorLogs.flat().map((entry) => String(entry));
+    const combinedErrors = logger.errorLogs
+      .flat()
+      .map((entry) => String(entry));
     expect(
       combinedErrors.some((message) =>
-        message.includes("SafeEventDispatcher: Exception caught while dispatching event 'ThoughtAdded'")
+        message.includes(
+          "SafeEventDispatcher: Exception caught while dispatching event 'ThoughtAdded'"
+        )
       )
     ).toBe(true);
   });

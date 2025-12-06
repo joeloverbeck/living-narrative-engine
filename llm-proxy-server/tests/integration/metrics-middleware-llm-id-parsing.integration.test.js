@@ -128,14 +128,12 @@ describe('Metrics middleware LLM identifier parsing integration', () => {
     ];
 
     for (const scenario of scenarios) {
-      const response = await request(app)
-        .post('/llm/metrics-parsing')
-        .send({
-          llmId: scenario.llmId,
-          correlationId: scenario.correlationId,
-          statusCode: scenario.statusCode,
-          responsePayload: scenario.responsePayload,
-        });
+      const response = await request(app).post('/llm/metrics-parsing').send({
+        llmId: scenario.llmId,
+        correlationId: scenario.correlationId,
+        statusCode: scenario.statusCode,
+        responsePayload: scenario.responsePayload,
+      });
 
       expect(response.status).toBe(scenario.statusCode);
     }

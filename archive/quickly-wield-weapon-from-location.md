@@ -70,6 +70,7 @@ Tests:       435 passed, 435 total (all weapons mod tests)
 ### Files Created/Modified
 
 **Created**:
+
 - `data/mods/weapons/scopes/grabbable_weapons_at_location.scope`
 - `data/mods/weapons/actions/quickly_wield_weapon.action.json`
 - `data/mods/weapons/conditions/event-is-action-quickly-wield-weapon.condition.json`
@@ -78,6 +79,7 @@ Tests:       435 passed, 435 total (all weapons mod tests)
 - `tests/integration/mods/weapons/quickly_wield_weapon_action.test.js`
 
 **Modified**:
+
 - `data/mods/weapons/mod-manifest.json` (added 4 entries)
 
 ### Notes on Implementation
@@ -114,6 +116,7 @@ A weapon lies on the ground or in the actor's current location. The actor needs 
 **Purpose**: Resolves to weapons located at the actor's current location that can be grabbed.
 
 **Content**:
+
 ```
 weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
   {"!!": {"var": "entity.components.weapons:weapon"}},
@@ -128,6 +131,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 ```
 
 **Pattern Derivation**:
+
 - Base pattern from `items:items_at_location` scope (location matching)
 - Filter additions from `weapons:grabbable_weapons_in_inventory` scope (`canActorGrabItem`, `isItemBeingGrabbed` checks)
 - Filters for `weapons:weapon` component instead of `items:item`
@@ -140,6 +144,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 **Path**: `data/mods/weapons/actions/quickly_wield_weapon.action.json`
 
 **Content**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
@@ -148,9 +153,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
   "description": "Quickly grab a weapon from the ground and wield it",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "forbidden_components": {
     "actor": [
@@ -186,6 +189,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 ```
 
 **Configuration Notes**:
+
 - `required_components.actor`: `["items:inventory"]` - Actor must have inventory capability
 - `forbidden_components.actor`: Identical to `wield_threateningly.action.json`
 - `prerequisites`: Identical to `wield_threateningly.action.json` - requires free grabbing appendage
@@ -201,16 +205,14 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 **Path**: `data/mods/weapons/conditions/event-is-action-quickly-wield-weapon.condition.json`
 
 **Content**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "weapons:event-is-action-quickly-wield-weapon",
   "description": "Checks if the current event is a quickly_wield_weapon action",
   "logic": {
-    "==": [
-      {"var": "event.payload.actionId"},
-      "weapons:quickly_wield_weapon"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "weapons:quickly_wield_weapon"]
   }
 }
 ```
@@ -224,6 +226,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 **Path**: `data/mods/weapons/rules/handle_quickly_wield_weapon.rule.json`
 
 **Content**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
@@ -367,6 +370,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 ```
 
 **Key Differences from `handle_wield_threateningly.rule.json`**:
+
 1. **Log message**: Changed to `"{context.actorName} quickly grabs {context.targetName} from the location and wields it."`
 2. **REMOVE_COMPONENT operation**: Added to remove the weapon's `core:position` component since the weapon is being picked up from the location (unlike wielding from inventory where the weapon is already "held")
 3. **Condition reference**: Points to `weapons:event-is-action-quickly-wield-weapon`
@@ -378,6 +382,7 @@ weapons:grabbable_weapons_at_location := entities(core:position)[][{"and": [
 **Path**: `data/mods/weapons/mod-manifest.json`
 
 **Required Additions**:
+
 - Add `"quickly_wield_weapon.action.json"` to the `actions` array
 - Add `"handle_quickly_wield_weapon.rule.json"` to the `rules` array
 - Add `"event-is-action-quickly-wield-weapon.condition.json"` to the `conditions` array
@@ -403,6 +408,7 @@ Following project conventions from `docs/testing/mod-testing-guide.md`:
 **Test Cases**:
 
 #### 1. Action Structure Validation
+
 ```javascript
 describe('weapons:quickly_wield_weapon action definition', () => {
   it('should have correct action ID', () => {
@@ -418,27 +424,39 @@ describe('weapons:quickly_wield_weapon action definition', () => {
   });
 
   it('should forbid positioning:closeness on actor', () => {
-    expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+    expect(actionJson.forbidden_components.actor).toContain(
+      'positioning:closeness'
+    );
   });
 
   it('should forbid positioning:fallen on actor', () => {
-    expect(actionJson.forbidden_components.actor).toContain('positioning:fallen');
+    expect(actionJson.forbidden_components.actor).toContain(
+      'positioning:fallen'
+    );
   });
 
   it('should forbid positioning:being_restrained on actor', () => {
-    expect(actionJson.forbidden_components.actor).toContain('positioning:being_restrained');
+    expect(actionJson.forbidden_components.actor).toContain(
+      'positioning:being_restrained'
+    );
   });
 
   it('should forbid positioning:restraining on actor', () => {
-    expect(actionJson.forbidden_components.actor).toContain('positioning:restraining');
+    expect(actionJson.forbidden_components.actor).toContain(
+      'positioning:restraining'
+    );
   });
 
   it('should have free grabbing appendage prerequisite', () => {
-    expect(actionJson.prerequisites[0].logic.condition_ref).toBe('anatomy:actor-has-free-grabbing-appendage');
+    expect(actionJson.prerequisites[0].logic.condition_ref).toBe(
+      'anatomy:actor-has-free-grabbing-appendage'
+    );
   });
 
   it('should use weapons:grabbable_weapons_at_location scope', () => {
-    expect(actionJson.targets.primary.scope).toBe('weapons:grabbable_weapons_at_location');
+    expect(actionJson.targets.primary.scope).toBe(
+      'weapons:grabbable_weapons_at_location'
+    );
   });
 
   it('should have correct template', () => {
@@ -452,6 +470,7 @@ describe('weapons:quickly_wield_weapon action definition', () => {
 ```
 
 #### 2. Action Discoverability Tests
+
 ```javascript
 describe('weapons:quickly_wield_weapon discoverability', () => {
   let testFixture;
@@ -565,6 +584,7 @@ describe('weapons:quickly_wield_weapon discoverability', () => {
 **Test Cases**:
 
 #### 1. Successful Execution
+
 ```javascript
 describe('weapons:quickly_wield_weapon rule execution', () => {
   let testFixture;
@@ -591,9 +611,13 @@ describe('weapons:quickly_wield_weapon rule execution', () => {
     await testFixture.executeAction(scenario.actor.id, scenario.weapon.id);
 
     // Assert
-    const actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
+    const actor = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
     expect(actor).toHaveComponent('positioning:wielding');
-    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain(scenario.weapon.id);
+    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain(
+      scenario.weapon.id
+    );
   });
 
   it('should remove weapon position component after wielding', async () => {
@@ -605,20 +629,27 @@ describe('weapons:quickly_wield_weapon rule execution', () => {
     await testFixture.executeAction(scenario.actor.id, scenario.weapon.id);
 
     // Assert
-    const weapon = testFixture.entityManager.getEntityInstance(scenario.weapon.id);
+    const weapon = testFixture.entityManager.getEntityInstance(
+      scenario.weapon.id
+    );
     expect(weapon).not.toHaveComponent('core:position');
   });
 
   it('should dispatch correct log message', async () => {
     // Arrange
-    const scenario = createWeaponAtLocationScenario({ actorName: 'Alice', weaponName: 'Iron Sword' });
+    const scenario = createWeaponAtLocationScenario({
+      actorName: 'Alice',
+      weaponName: 'Iron Sword',
+    });
     testFixture.reset(scenario.entities);
 
     // Act
     await testFixture.executeAction(scenario.actor.id, scenario.weapon.id);
 
     // Assert
-    expect(testFixture.events).toHaveActionSuccess('Alice quickly grabs Iron Sword from the location and wields it.');
+    expect(testFixture.events).toHaveActionSuccess(
+      'Alice quickly grabs Iron Sword from the location and wields it.'
+    );
   });
 
   it('should lock grabbing appendages for the weapon', async () => {
@@ -635,16 +666,24 @@ describe('weapons:quickly_wield_weapon rule execution', () => {
 
   it('should append to existing wielded items array', async () => {
     // Arrange: Actor already wielding one weapon
-    const scenario = createWeaponAtLocationScenario({ alreadyWielding: 'existing-weapon-id' });
+    const scenario = createWeaponAtLocationScenario({
+      alreadyWielding: 'existing-weapon-id',
+    });
     testFixture.reset(scenario.entities);
 
     // Act
     await testFixture.executeAction(scenario.actor.id, scenario.weapon.id);
 
     // Assert
-    const actor = testFixture.entityManager.getEntityInstance(scenario.actor.id);
-    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain('existing-weapon-id');
-    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain(scenario.weapon.id);
+    const actor = testFixture.entityManager.getEntityInstance(
+      scenario.actor.id
+    );
+    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain(
+      'existing-weapon-id'
+    );
+    expect(actor.components['positioning:wielding'].wielded_item_ids).toContain(
+      scenario.weapon.id
+    );
   });
 
   it('should regenerate actor description after wielding', async () => {
@@ -689,7 +728,7 @@ function createWeaponAtLocationScenario(options = {}) {
     actorInCloseness = false,
     handsOccupied = false,
     handsRequired = 1,
-    alreadyWielding = null
+    alreadyWielding = null,
   } = options;
 
   const location = new ModEntityBuilder()
@@ -701,12 +740,19 @@ function createWeaponAtLocationScenario(options = {}) {
     .withId('test:actor1')
     .withComponent('core:name', { name: actorName })
     .withComponent('core:position', { locationId })
-    .withComponent('items:inventory', { items: [], capacity: { maxWeight: 50, maxItems: 10 } })
+    .withComponent('items:inventory', {
+      items: [],
+      capacity: { maxWeight: 50, maxItems: 10 },
+    })
     .withComponent('anatomy:grabbing_appendages', {
       appendages: [
-        { id: 'left-hand', locked: handsOccupied, lockedBy: handsOccupied ? 'something' : null },
-        { id: 'right-hand', locked: false, lockedBy: null }
-      ]
+        {
+          id: 'left-hand',
+          locked: handsOccupied,
+          lockedBy: handsOccupied ? 'something' : null,
+        },
+        { id: 'right-hand', locked: false, lockedBy: null },
+      ],
     });
 
   if (actorFallen) {
@@ -714,11 +760,15 @@ function createWeaponAtLocationScenario(options = {}) {
   }
 
   if (actorInCloseness) {
-    actorBuilder.withComponent('positioning:closeness', { partnerId: 'someone' });
+    actorBuilder.withComponent('positioning:closeness', {
+      partnerId: 'someone',
+    });
   }
 
   if (alreadyWielding) {
-    actorBuilder.withComponent('positioning:wielding', { wielded_item_ids: [alreadyWielding] });
+    actorBuilder.withComponent('positioning:wielding', {
+      wielded_item_ids: [alreadyWielding],
+    });
   }
 
   const weapon = new ModEntityBuilder()
@@ -734,7 +784,7 @@ function createWeaponAtLocationScenario(options = {}) {
     entities: [location, actorBuilder.build(), weapon],
     actor: { id: 'test:actor1' },
     weapon: { id: 'test:weapon1' },
-    location: { id: `test:${locationId}` }
+    location: { id: `test:${locationId}` },
   };
 }
 

@@ -2,7 +2,8 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { GOAP_EVENTS } from '../events/goapEvents.js';
 
 const GLOBAL_ACTOR_ID = 'global';
-const EVENT_BUS_CONTRACT_REFERENCE = 'See specs/goap-system-specs.md and docs/goap/debugging-tools.md#Planner Contract Checklist for the GOAP event bus contract.';
+const EVENT_BUS_CONTRACT_REFERENCE =
+  'See specs/goap-system-specs.md and docs/goap/debugging-tools.md#Planner Contract Checklist for the GOAP event bus contract.';
 export const GOAP_EVENT_COMPLIANCE_CODES = {
   MISSING_PAYLOAD: 'GOAP_EVENT_PAYLOAD_MISSING',
   INVALID_SIGNATURE: 'GOAP_EVENT_INVALID_SIGNATURE',
@@ -175,14 +176,20 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     hasProbes: activeProbes.length > 0,
   };
   const complianceByActor = new Map();
-  complianceByActor.set(GLOBAL_ACTOR_ID, createComplianceEntry(GLOBAL_ACTOR_ID));
+  complianceByActor.set(
+    GLOBAL_ACTOR_ID,
+    createComplianceEntry(GLOBAL_ACTOR_ID)
+  );
   let lastProbeLogState = probeStats.hasProbes ? 'enabled' : 'disabled';
 
   if (!probeStats.hasProbes) {
-    safeLogger.info('GOAP event trace probes unavailable; dispatcher constructed without probes.', {
-      code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
-      context: context || 'GoapEventDispatcher',
-    });
+    safeLogger.info(
+      'GOAP event trace probes unavailable; dispatcher constructed without probes.',
+      {
+        code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
+        context: context || 'GoapEventDispatcher',
+      }
+    );
   }
 
   const emitToProbes = (eventType, payload, metadata = {}) => {
@@ -193,7 +200,9 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     const snapshot = {
       type: eventType,
       payload: clonePayloadForProbe(payload),
-      actorId: metadata.actorId ? normalizeActorId(metadata.actorId) : undefined,
+      actorId: metadata.actorId
+        ? normalizeActorId(metadata.actorId)
+        : undefined,
       violation: Boolean(metadata.violation),
       timestamp: metadata.timestamp || Date.now(),
     };
@@ -220,10 +229,13 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
         context: context || 'GoapEventDispatcher',
       });
     } else {
-      safeLogger.info('GOAP event trace probes unavailable; tracing disabled.', {
-        code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
-        context: context || 'GoapEventDispatcher',
-      });
+      safeLogger.info(
+        'GOAP event trace probes unavailable; tracing disabled.',
+        {
+          code: GOAP_EVENT_TRACE_LOG_CODES.DISABLED,
+          context: context || 'GoapEventDispatcher',
+        }
+      );
     }
   };
 
@@ -290,7 +302,10 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
 
   const recordPlanningOutcome = (eventType, actorId, hasActorId) => {
     const globalEntry = complianceByActor.get(GLOBAL_ACTOR_ID);
-    const field = eventType === GOAP_EVENTS.PLANNING_COMPLETED ? 'planningCompleted' : 'planningFailed';
+    const field =
+      eventType === GOAP_EVENTS.PLANNING_COMPLETED
+        ? 'planningCompleted'
+        : 'planningFailed';
     globalEntry[field] += 1;
 
     if (!hasActorId) {
@@ -302,7 +317,9 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
     }
 
     const actorEntry =
-      actorId === GLOBAL_ACTOR_ID ? complianceByActor.get(GLOBAL_ACTOR_ID) : getOrCreateEntry(actorId);
+      actorId === GLOBAL_ACTOR_ID
+        ? complianceByActor.get(GLOBAL_ACTOR_ID)
+        : getOrCreateEntry(actorId);
     if (!actorEntry || actorEntry === globalEntry) {
       return;
     }
@@ -340,7 +357,10 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
 
     try {
       safeLogger.warn('GOAP event dispatch violation detected', violation);
-      validatedEventBus.dispatch(GOAP_EVENTS.EVENT_CONTRACT_VIOLATION, violation);
+      validatedEventBus.dispatch(
+        GOAP_EVENTS.EVENT_CONTRACT_VIOLATION,
+        violation
+      );
     } catch (error) {
       safeLogger.error('Failed to dispatch GOAP event contract violation', {
         violation,
@@ -351,7 +371,8 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
 
   const validateEventType = (eventType) => {
     if (typeof eventType === 'object' && eventType !== null) {
-      const legacyType = typeof eventType.type === 'string' ? eventType.type : 'unknown';
+      const legacyType =
+        typeof eventType.type === 'string' ? eventType.type : 'unknown';
       recordViolation({
         actorId: eventType?.payload?.actorId,
         eventType: legacyType,
@@ -371,13 +392,20 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
         reason: 'GOAP event dispatch requires a non-empty string eventType.',
         code: GOAP_EVENT_COMPLIANCE_CODES.INVALID_SIGNATURE,
       });
-      throw new Error('GOAP event dispatch requires a non-empty string eventType.');
+      throw new Error(
+        'GOAP event dispatch requires a non-empty string eventType.'
+      );
     }
 
     return eventType;
   };
 
-  const normalizePayload = (eventType, payload, allowEmptyPayload, actorIdOverride) => {
+  const normalizePayload = (
+    eventType,
+    payload,
+    allowEmptyPayload,
+    actorIdOverride
+  ) => {
     if (!allowEmptyPayload) {
       if (!payload || typeof payload !== 'object') {
         recordViolation({
@@ -390,7 +418,11 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
           `GOAP event "${eventType}" requires a structured payload object. See specs/goap-system-specs.md#Planner Interface Contract.`
         );
       }
-    } else if (payload !== null && payload !== undefined && typeof payload !== 'object') {
+    } else if (
+      payload !== null &&
+      payload !== undefined &&
+      typeof payload !== 'object'
+    ) {
       recordViolation({
         actorId: actorIdOverride,
         eventType,
@@ -417,11 +449,16 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
       );
 
       const actorId = actorIdOverride ?? normalizedPayload?.actorId;
-      const hasExplicitActorId = typeof actorId === 'string' && actorId.trim().length > 0;
+      const hasExplicitActorId =
+        typeof actorId === 'string' && actorId.trim().length > 0;
       const normalizedActorId = normalizeActorId(actorId);
       recordEventDispatch(normalizedActorId);
       if (isPlanningEventType(validatedType)) {
-        recordPlanningOutcome(validatedType, normalizedActorId, hasExplicitActorId);
+        recordPlanningOutcome(
+          validatedType,
+          normalizedActorId,
+          hasExplicitActorId
+        );
       }
       emitToProbes(validatedType, normalizedPayload, {
         actorId: normalizedActorId,
@@ -435,7 +472,8 @@ export function createGoapEventDispatcher(eventBus, logger, options = {}) {
 
       if (
         typeof dispatchResult !== 'undefined' &&
-        (typeof dispatchResult !== 'object' || typeof dispatchResult.then !== 'function')
+        (typeof dispatchResult !== 'object' ||
+          typeof dispatchResult.then !== 'function')
       ) {
         const message =
           'GOAP event bus dispatch must return a Promise or void. ' +

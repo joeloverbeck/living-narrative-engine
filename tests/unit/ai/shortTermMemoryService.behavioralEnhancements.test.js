@@ -16,7 +16,9 @@ describe('ShortTermMemoryService behaviour coverage', () => {
 
     it('ignores blank input after trimming without touching the thoughts array', () => {
       const service = new ShortTermMemoryService();
-      const mem = { thoughts: [{ text: 'existing', timestamp: '2024-01-01T00:00:00.000Z' }] };
+      const mem = {
+        thoughts: [{ text: 'existing', timestamp: '2024-01-01T00:00:00.000Z' }],
+      };
 
       const result = service.addThought(mem, '    ');
 
@@ -29,7 +31,10 @@ describe('ShortTermMemoryService behaviour coverage', () => {
       const service = new ShortTermMemoryService();
       const mem = {
         thoughts: [
-          { text: ' Remember The Mission ', timestamp: '2024-01-01T00:00:00.000Z' },
+          {
+            text: ' Remember The Mission ',
+            timestamp: '2024-01-01T00:00:00.000Z',
+          },
         ],
       };
 
@@ -72,7 +77,11 @@ describe('ShortTermMemoryService behaviour coverage', () => {
         maxEntries: 2,
       };
 
-      const outcome = service.addThought(mem, 'third', new Date('2024-01-01T00:02:00.000Z'));
+      const outcome = service.addThought(
+        mem,
+        'third',
+        new Date('2024-01-01T00:02:00.000Z')
+      );
 
       expect(outcome.wasAdded).toBe(true);
       expect(mem.thoughts).toHaveLength(2);
@@ -83,9 +92,15 @@ describe('ShortTermMemoryService behaviour coverage', () => {
   describe('emitThoughtAdded', () => {
     it('dispatches the ThoughtAdded event when a functional dispatcher is available', () => {
       const dispatch = jest.fn();
-      const service = new ShortTermMemoryService({ eventDispatcher: { dispatch } });
+      const service = new ShortTermMemoryService({
+        eventDispatcher: { dispatch },
+      });
 
-      service.emitThoughtAdded('actor-1', 'A sudden idea', '2024-02-29T00:00:00.000Z');
+      service.emitThoughtAdded(
+        'actor-1',
+        'A sudden idea',
+        '2024-02-29T00:00:00.000Z'
+      );
 
       expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
         entityId: 'actor-1',
@@ -104,7 +119,11 @@ describe('ShortTermMemoryService behaviour coverage', () => {
         missingDispatcherService.emitThoughtAdded('entity', 'text', 'timestamp')
       ).not.toThrow();
       expect(() =>
-        malformedDispatcherService.emitThoughtAdded('entity', 'text', 'timestamp')
+        malformedDispatcherService.emitThoughtAdded(
+          'entity',
+          'text',
+          'timestamp'
+        )
       ).not.toThrow();
     });
   });

@@ -34,24 +34,41 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
         if (!notes) return { isValid: true, errors: [] };
 
         const validSubjectTypes = [
-          'character', 'location', 'item', 'creature', 'event', 'concept',
-          'relationship', 'organization', 'quest', 'skill', 'emotion',
-          'plan', 'timeline', 'theory', 'observation', 'knowledge_state',
-          'psychological_state', 'other'
+          'character',
+          'location',
+          'item',
+          'creature',
+          'event',
+          'concept',
+          'relationship',
+          'organization',
+          'quest',
+          'skill',
+          'emotion',
+          'plan',
+          'timeline',
+          'theory',
+          'observation',
+          'knowledge_state',
+          'psychological_state',
+          'other',
         ];
 
         for (const note of notes) {
           if (!validSubjectTypes.includes(note.subjectType)) {
             return {
               isValid: false,
-              errors: [{
-                instancePath: `/notes/${notes.indexOf(note)}/subjectType`,
-                schemaPath: '#/properties/notes/items/properties/subjectType/enum',
-                keyword: 'enum',
-                params: { allowedValues: validSubjectTypes },
-                message: 'must be equal to one of the allowed values',
-                data: note.subjectType
-              }]
+              errors: [
+                {
+                  instancePath: `/notes/${notes.indexOf(note)}/subjectType`,
+                  schemaPath:
+                    '#/properties/notes/items/properties/subjectType/enum',
+                  keyword: 'enum',
+                  params: { allowedValues: validSubjectTypes },
+                  message: 'must be equal to one of the allowed values',
+                  data: note.subjectType,
+                },
+              ],
             };
           }
         }
@@ -62,7 +79,7 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
     };
 
     safeEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(true)
+      dispatch: jest.fn().mockResolvedValue(true),
     };
 
     const llmJsonService = new LlmJsonService();
@@ -80,21 +97,22 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
     const llmResponse = JSON.stringify({
       chosenIndex: 1,
       thoughts: "Okay, he's asking me direct questions now...",
-      speech: "*shrugs one shoulder, the gesture casual but with a slight edge of defiance* Not bullied, exactly...",
+      speech:
+        '*shrugs one shoulder, the gesture casual but with a slight edge of defiance* Not bullied, exactly...',
       notes: [
         {
-          text: "Older bearded man, tall and stocky, wearing working-class but decent clothing",
-          subject: "Jon Ureña",
-          subjectType: "character",
-          context: "first encounter at park bench"
+          text: 'Older bearded man, tall and stocky, wearing working-class but decent clothing',
+          subject: 'Jon Ureña',
+          subjectType: 'character',
+          context: 'first encounter at park bench',
         },
         {
-          text: "Jon noticed my exposed position but looked away after seeing, then warned me about junkies in the park",
+          text: 'Jon noticed my exposed position but looked away after seeing, then warned me about junkies in the park',
           subject: "Jon Ureña's behavior pattern",
-          subjectType: "observation", // This was causing the validation failure
-          context: "analyzing his approach"
-        }
-      ]
+          subjectType: 'observation', // This was causing the validation failure
+          context: 'analyzing his approach',
+        },
+      ],
     });
 
     const result = await processor.processResponse(llmResponse, actorId);
@@ -107,10 +125,24 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
 
   test('should validate all 18 subject types including new ones', async () => {
     const allSubjectTypes = [
-      'character', 'location', 'item', 'creature', 'event', 'concept',
-      'relationship', 'organization', 'quest', 'skill', 'emotion',
-      'plan', 'timeline', 'theory', 'observation', 'knowledge_state',
-      'psychological_state', 'other'
+      'character',
+      'location',
+      'item',
+      'creature',
+      'event',
+      'concept',
+      'relationship',
+      'organization',
+      'quest',
+      'skill',
+      'emotion',
+      'plan',
+      'timeline',
+      'theory',
+      'observation',
+      'knowledge_state',
+      'psychological_state',
+      'other',
     ];
 
     for (const subjectType of allSubjectTypes) {
@@ -118,12 +150,14 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
         chosenIndex: 1,
         thoughts: `Test thoughts for ${subjectType}`,
         speech: `Test speech`,
-        notes: [{
-          text: `Test note for ${subjectType}`,
-          subject: `Test subject`,
-          subjectType: subjectType,
-          context: 'test context'
-        }]
+        notes: [
+          {
+            text: `Test note for ${subjectType}`,
+            subject: `Test subject`,
+            subjectType: subjectType,
+            context: 'test context',
+          },
+        ],
       });
 
       const result = await processor.processResponse(llmResponse, actorId);
@@ -136,14 +170,16 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
   test('should reject invalid subject type', async () => {
     const llmResponse = JSON.stringify({
       chosenIndex: 1,
-      thoughts: "Test thoughts",
-      speech: "Test speech",
-      notes: [{
-        text: "Test note",
-        subject: "Test subject",
-        subjectType: "invalid_type", // This should fail
-        context: 'test context'
-      }]
+      thoughts: 'Test thoughts',
+      speech: 'Test speech',
+      notes: [
+        {
+          text: 'Test note',
+          subject: 'Test subject',
+          subjectType: 'invalid_type', // This should fail
+          context: 'test context',
+        },
+      ],
     });
 
     await expect(
@@ -154,30 +190,30 @@ describe('LLMResponseProcessor - Observation SubjectType Validation', () => {
   test('should validate notes with mixed old and new subject types', async () => {
     const llmResponse = JSON.stringify({
       chosenIndex: 1,
-      thoughts: "Mixed subject types test",
-      speech: "Testing",
+      thoughts: 'Mixed subject types test',
+      speech: 'Testing',
       notes: [
         {
-          text: "Character note",
-          subject: "Jon Ureña",
-          subjectType: "character" // Old type
+          text: 'Character note',
+          subject: 'Jon Ureña',
+          subjectType: 'character', // Old type
         },
         {
-          text: "Behavioral observation",
+          text: 'Behavioral observation',
           subject: "Jon's patterns",
-          subjectType: "observation" // New type
+          subjectType: 'observation', // New type
         },
         {
-          text: "Future plan",
-          subject: "Escape plan",
-          subjectType: "plan" // New type
+          text: 'Future plan',
+          subject: 'Escape plan',
+          subjectType: 'plan', // New type
         },
         {
-          text: "Emotional state",
-          subject: "My fear",
-          subjectType: "emotion" // Old type
-        }
-      ]
+          text: 'Emotional state',
+          subject: 'My fear',
+          subjectType: 'emotion', // Old type
+        },
+      ],
     });
 
     const result = await processor.processResponse(llmResponse, actorId);

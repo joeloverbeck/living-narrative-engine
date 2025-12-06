@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/traits-generator-main.js';
 
@@ -16,12 +23,16 @@ describe('traits-generator-main entrypoint integration', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    document.body.innerHTML = '<div id="app"></div><div id="error-display"></div>';
+    document.body.innerHTML =
+      '<div id="app"></div><div id="error-display"></div>';
     process.env = { ...originalEnv };
     delete window.__traitsGeneratorController;
 
     readyStateValue = 'complete';
-    originalReadyDescriptor = Object.getOwnPropertyDescriptor(document, 'readyState');
+    originalReadyDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      'readyState'
+    );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
       get: () => readyStateValue,
@@ -45,7 +56,9 @@ describe('traits-generator-main entrypoint integration', () => {
     process.env.NODE_ENV = 'development';
 
     const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     const controller = { id: 'controller-1' };
     let capturedConfig;
@@ -67,11 +80,17 @@ describe('traits-generator-main entrypoint integration', () => {
         .mockImplementation(async (config) => {
           capturedConfig = config;
           expect(config.controllerClass).toBe(TraitsGeneratorController);
-          expect(config.services?.traitsDisplayEnhancer).toBe(TraitsDisplayEnhancer);
+          expect(config.services?.traitsDisplayEnhancer).toBe(
+            TraitsDisplayEnhancer
+          );
           if (config.hooks?.postInit) {
             await config.hooks.postInit(controller);
           }
-          return { controller, container: { id: 'container' }, bootstrapTime: 42 };
+          return {
+            controller,
+            container: { id: 'container' },
+            bootstrapTime: 42,
+          };
         });
 
       await import(MODULE_PATH);
@@ -86,7 +105,11 @@ describe('traits-generator-main entrypoint integration', () => {
     const handler = addEventListenerSpy.mock.calls[0][1];
     const result = await handler();
 
-    expect(result).toEqual({ controller, container: { id: 'container' }, bootstrapTime: 42 });
+    expect(result).toEqual({
+      controller,
+      container: { id: 'container' },
+      bootstrapTime: 42,
+    });
     expect(bootstrapSpy).toHaveBeenCalledTimes(1);
     expect(capturedConfig.pageName).toBe('traits-generator');
     expect(capturedConfig.includeModLoading).toBe(true);
@@ -95,7 +118,9 @@ describe('traits-generator-main entrypoint integration', () => {
     ]);
     expect(typeof capturedConfig.hooks?.postInit).toBe('function');
     expect(window.__traitsGeneratorController).toBe(controller);
-    expect(consoleLogSpy).toHaveBeenCalledWith('Initializing Traits Generator...');
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'Initializing Traits Generator...'
+    );
   });
 
   it('initializes immediately when DOM is already ready', async () => {
@@ -103,7 +128,9 @@ describe('traits-generator-main entrypoint integration', () => {
     process.env.NODE_ENV = 'production';
 
     const addEventListenerSpy = jest.spyOn(document, 'addEventListener');
-    const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = jest
+      .spyOn(console, 'log')
+      .mockImplementation(() => {});
 
     const bootstrapResult = {
       controller: { id: 'controller-2' },
@@ -129,7 +156,9 @@ describe('traits-generator-main entrypoint integration', () => {
     expect(addEventListenerSpy).not.toHaveBeenCalled();
     expect(bootstrapSpy).toHaveBeenCalledTimes(1);
     expect(window.__traitsGeneratorController).toBeUndefined();
-    expect(consoleLogSpy).toHaveBeenCalledWith('Initializing Traits Generator...');
+    expect(consoleLogSpy).toHaveBeenCalledWith(
+      'Initializing Traits Generator...'
+    );
   });
 
   it('logs and rethrows errors when initialization fails', async () => {

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -207,10 +214,14 @@ describe('AlertRouter error resilience integration', () => {
       )
     ).toBe(true);
     expect(
-      errorSpy.mock.calls.some(([message]) => message === 'AlertRouter dispatch error:')
+      errorSpy.mock.calls.some(
+        ([message]) => message === 'AlertRouter dispatch error:'
+      )
     ).toBe(false);
     expect(
-      errorSpy.mock.calls.some(([msg]) => msg === 'error before iteration failure')
+      errorSpy.mock.calls.some(
+        ([msg]) => msg === 'error before iteration failure'
+      )
     ).toBe(true);
     expect(alertRouter.queue).toEqual([]);
     expect(alertRouter.flushTimer).toBeNull();

@@ -82,15 +82,15 @@ describe('lift_onto_lap actions - giving_blowjob forbidden component', () => {
 
   describe('Action structure validation', () => {
     it('lift_onto_lap_face_to_face should have positioning:giving_blowjob as forbidden component', () => {
-      expect(
-        liftOntoLapFaceToFaceAction.forbidden_components.actor
-      ).toContain('positioning:giving_blowjob');
+      expect(liftOntoLapFaceToFaceAction.forbidden_components.actor).toContain(
+        'positioning:giving_blowjob'
+      );
     });
 
     it('lift_onto_lap_facing_away should have positioning:giving_blowjob as forbidden component', () => {
-      expect(
-        liftOntoLapFacingAwayAction.forbidden_components.actor
-      ).toContain('positioning:giving_blowjob');
+      expect(liftOntoLapFacingAwayAction.forbidden_components.actor).toContain(
+        'positioning:giving_blowjob'
+      );
     });
   });
 

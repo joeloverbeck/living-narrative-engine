@@ -96,7 +96,10 @@ describe('BaseService integration', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(ServiceError);
       expect(error.code).toBe(ServiceErrorCodes.MISSING_PARAMETER);
-      expect(error.value).toEqual({ missing: ['name'], provided: ['id', 'name'] });
+      expect(error.value).toEqual({
+        missing: ['name'],
+        provided: ['id', 'name'],
+      });
     }
   });
 
@@ -123,16 +126,24 @@ describe('BaseService integration', () => {
     expect(logger.infoLogs).toEqual([
       {
         message: 'ConcreteService: resolve',
-        context: { service: 'ConcreteService', operation: 'resolve', requestId: 'r-42' },
+        context: {
+          service: 'ConcreteService',
+          operation: 'resolve',
+          requestId: 'r-42',
+        },
       },
     ]);
   });
 
   it('logs and throws service errors via throwError', () => {
     expect(() =>
-      service.throwErrorProxy('unexpected state', ServiceErrorCodes.INVALID_STATE, {
-        snapshot: 'invalid',
-      })
+      service.throwErrorProxy(
+        'unexpected state',
+        ServiceErrorCodes.INVALID_STATE,
+        {
+          snapshot: 'invalid',
+        }
+      )
     ).toThrow(ServiceError);
 
     const lastLog = logger.errorLogs.at(-1);
@@ -152,20 +163,35 @@ describe('BaseService integration', () => {
     );
 
     expect(result).toEqual({ ok: true });
-    expect(logger.debugLogs.map(({ message, context }) => ({ message, context }))).toEqual([
+    expect(
+      logger.debugLogs.map(({ message, context }) => ({ message, context }))
+    ).toEqual([
       {
         message: 'ConcreteService: hydrate',
-        context: { service: 'ConcreteService', operation: 'hydrate', status: 'started', requestId: 'r-99' },
+        context: {
+          service: 'ConcreteService',
+          operation: 'hydrate',
+          status: 'started',
+          requestId: 'r-99',
+        },
       },
       {
         message: 'ConcreteService: hydrate',
-        context: { service: 'ConcreteService', operation: 'hydrate', status: 'completed', requestId: 'r-99' },
+        context: {
+          service: 'ConcreteService',
+          operation: 'hydrate',
+          status: 'completed',
+          requestId: 'r-99',
+        },
       },
     ]);
   });
 
   it('rethrows existing ServiceError instances from executeOperation', async () => {
-    const failure = new ServiceError('boom', ServiceErrorCodes.OPERATION_FAILED);
+    const failure = new ServiceError(
+      'boom',
+      ServiceErrorCodes.OPERATION_FAILED
+    );
 
     await expect(
       service.executeOperationProxy('hydrate', async () => {
@@ -180,9 +206,13 @@ describe('BaseService integration', () => {
 
   it('wraps unexpected errors thrown during executeOperation', async () => {
     await expect(
-      service.executeOperationProxy('hydrate', async () => {
-        throw new Error('network down');
-      }, { requestId: 'r-77' })
+      service.executeOperationProxy(
+        'hydrate',
+        async () => {
+          throw new Error('network down');
+        },
+        { requestId: 'r-77' }
+      )
     ).rejects.toMatchObject({
       message: "Operation 'hydrate' failed: network down",
       code: ServiceErrorCodes.OPERATION_FAILED,

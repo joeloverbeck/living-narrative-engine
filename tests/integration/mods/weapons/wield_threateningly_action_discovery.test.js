@@ -45,7 +45,9 @@ describe('wield_threateningly action definition', () => {
     });
 
     it('should include positioning:closeness in forbidden list', () => {
-      expect(actionJson.forbidden_components.actor).toContain('positioning:closeness');
+      expect(actionJson.forbidden_components.actor).toContain(
+        'positioning:closeness'
+      );
     });
   });
 
@@ -56,7 +58,9 @@ describe('wield_threateningly action definition', () => {
     });
 
     it('should use grabbable_weapons_in_inventory scope for primary target', () => {
-      expect(actionJson.targets.primary.scope).toBe('weapons:grabbable_weapons_in_inventory');
+      expect(actionJson.targets.primary.scope).toBe(
+        'weapons:grabbable_weapons_in_inventory'
+      );
     });
 
     it('should use "target" placeholder for primary target', () => {
@@ -99,7 +103,9 @@ describe('wield_threateningly action definition', () => {
 
   describe('Schema Compliance', () => {
     it('should reference correct schema', () => {
-      expect(actionJson.$schema).toBe('schema://living-narrative-engine/action.schema.json');
+      expect(actionJson.$schema).toBe(
+        'schema://living-narrative-engine/action.schema.json'
+      );
     });
 
     it('should have all required action properties', () => {

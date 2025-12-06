@@ -10,7 +10,7 @@ describe('Movement Conditions', () => {
     beforeEach(() => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       const conditionContent = fs.readFileSync(conditionPath, 'utf8');
       condition = JSON.parse(conditionContent);
@@ -24,7 +24,7 @@ describe('Movement Conditions', () => {
 
     it('should have the correct JSON schema reference', () => {
       expect(condition.$schema).toBe(
-        'schema://living-narrative-engine/condition.schema.json',
+        'schema://living-narrative-engine/condition.schema.json'
       );
     });
 
@@ -70,7 +70,7 @@ describe('Movement Conditions', () => {
     beforeEach(() => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/event-is-action-go.condition.json',
+        'data/mods/movement/conditions/event-is-action-go.condition.json'
       );
       const conditionContent = fs.readFileSync(conditionPath, 'utf8');
       condition = JSON.parse(conditionContent);
@@ -82,7 +82,7 @@ describe('Movement Conditions', () => {
 
     it('should have the correct JSON schema reference', () => {
       expect(condition.$schema).toBe(
-        'schema://living-narrative-engine/condition.schema.json',
+        'schema://living-narrative-engine/condition.schema.json'
       );
     });
 
@@ -104,7 +104,7 @@ describe('Movement Conditions', () => {
     beforeEach(() => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/exit-is-unblocked.condition.json',
+        'data/mods/movement/conditions/exit-is-unblocked.condition.json'
       );
       const conditionContent = fs.readFileSync(conditionPath, 'utf8');
       condition = JSON.parse(conditionContent);
@@ -116,7 +116,7 @@ describe('Movement Conditions', () => {
 
     it('should have the correct JSON schema reference', () => {
       expect(condition.$schema).toBe(
-        'schema://living-narrative-engine/condition.schema.json',
+        'schema://living-narrative-engine/condition.schema.json'
       );
     });
 
@@ -147,7 +147,7 @@ describe('Movement Conditions', () => {
     it('should all have valid JSON structure', () => {
       const conditionsDir = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions',
+        'data/mods/movement/conditions'
       );
       const conditionFiles = fs
         .readdirSync(conditionsDir)
@@ -176,7 +176,7 @@ describe('Movement Conditions', () => {
     it('should all use the movement namespace', () => {
       const conditionsDir = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions',
+        'data/mods/movement/conditions'
       );
       const conditionFiles = fs
         .readdirSync(conditionsDir)

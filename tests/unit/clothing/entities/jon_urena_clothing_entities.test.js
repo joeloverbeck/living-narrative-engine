@@ -57,7 +57,13 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
                   type: 'array',
                   items: {
                     type: 'string',
-                    enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+                    enum: [
+                      'underwear',
+                      'base',
+                      'outer',
+                      'accessories',
+                      'armor',
+                    ],
                   },
                 },
               },
@@ -129,7 +135,9 @@ describe('Jon Ureña Clothing Entities Unit Tests', () => {
     });
 
     it('should have correct entity metadata', () => {
-      expect(entity.id).toBe('base-clothing:forest_green_cotton_linen_button_down');
+      expect(entity.id).toBe(
+        'base-clothing:forest_green_cotton_linen_button_down'
+      );
       expect(entity.description).toBe(
         'Forest-green cotton-linen button-down shirt'
       );

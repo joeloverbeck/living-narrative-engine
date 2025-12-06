@@ -128,11 +128,11 @@
   }
 
   /* General panel border adjustments for this breakpoint */
-  #app-layout-container>.panel:first-child {
+  #app-layout-container > .panel:first-child {
     border-top-width: var(--border-width);
   }
 
-  #app-layout-container>.panel:last-child {
+  #app-layout-container > .panel:last-child {
     border-bottom-width: var(--border-width);
     /* This was already specified for individual panes if they are the last child.
                                                                 If all panes are stacked and full width, this applies to the last one. */

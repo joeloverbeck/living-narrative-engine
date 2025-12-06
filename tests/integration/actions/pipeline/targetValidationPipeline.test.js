@@ -10,7 +10,6 @@
 import { describe, it, expect } from '@jest/globals';
 
 describe('Action Pipeline Target Validation Integration', () => {
-
   describe('Expected pipeline validation integration', () => {
     it('should validate forbidden components during action discovery', () => {
       // EXPECTED BEHAVIOR:

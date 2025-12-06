@@ -68,6 +68,7 @@ Implemented `DamageTypeEffectsService` that applies immediate damage type effect
 ### Implementation Details
 
 **Effect Processing Order** (per spec):
+
 1. Dismemberment check - dispatches `anatomy:dismembered`, skips all other effects if triggered
 2. Fracture check - adds `anatomy:fractured` component, optionally adds `anatomy:stunned` based on RNG
 3. Bleed attachment - adds `anatomy:bleeding` with severity-based tick damage
@@ -75,6 +76,7 @@ Implemented `DamageTypeEffectsService` that applies immediate damage type effect
 5. Poison attachment - adds `anatomy:poisoned` with configurable scope (part vs entity)
 
 **Key Features**:
+
 - Injectable RNG (`rngProvider`) for deterministic testing
 - Unknown damage types log warning and skip effects (no crash)
 - Destroyed parts skip ongoing effect attachments (bleed, burn, poison)

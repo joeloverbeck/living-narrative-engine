@@ -230,7 +230,14 @@ export default function createSlotAccessResolver({
       return null;
     }
 
-    const validModes = ['topmost', 'topmost_no_accessories', 'all', 'outer', 'base', 'underwear'];
+    const validModes = [
+      'topmost',
+      'topmost_no_accessories',
+      'all',
+      'outer',
+      'base',
+      'underwear',
+    ];
     if (!mode || !validModes.includes(mode)) {
       if (errorHandler) {
         errorHandler.handleError(
@@ -458,12 +465,12 @@ export default function createSlotAccessResolver({
             const slotItem = resolveSlotAccess(subItem, field, ctx);
             if (slotItem) {
               // Enhancement: Apply additional coverage validation here
-            const enhancedResult = applyEnhancedCoverage(
-              slotItem,
-              field,
-              ctx
-            );
-            resultSet.add(enhancedResult);
+              const enhancedResult = applyEnhancedCoverage(
+                slotItem,
+                field,
+                ctx
+              );
+              resultSet.add(enhancedResult);
             }
           }
         }

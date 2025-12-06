@@ -103,65 +103,62 @@ const prepareActiveActorTurn = async (
 describeTurnManagerSuite(
   'TurnManager additional coverage scenarios',
   (getBed) => {
-    test(
-      'clears previous actor state, falls back to legacy player component, and handles missing handlers',
-      async () => {
-        const bed = getBed();
-        const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
-          bed.mocks;
+    test('clears previous actor state, falls back to legacy player component, and handles missing handlers', async () => {
+      const bed = getBed();
+      const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
+        bed.mocks;
 
-        safeDispatchError.mockClear();
-        dispatcher.dispatch.mockClear();
-        logger.debug.mockClear();
-        logger.warn.mockClear();
+      safeDispatchError.mockClear();
+      dispatcher.dispatch.mockClear();
+      logger.debug.mockClear();
+      logger.warn.mockClear();
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        const actor = createLegacyPlayerActor('legacy-actor');
+      const actor = createLegacyPlayerActor('legacy-actor');
 
-        turnOrderService.isEmpty
-          .mockResolvedValueOnce(false)
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
 
-        turnOrderService.getNextEntity
-          .mockReturnValueOnce(actor)
-          .mockReturnValueOnce(actor)
-          .mockReturnValue(null);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(actor)
+        .mockReturnValueOnce(actor)
+        .mockReturnValue(null);
 
-        const handler = {
-          startTurn: jest.fn().mockResolvedValue(),
-          destroy: jest.fn().mockResolvedValue(),
-        };
-        turnHandlerResolver.resolveHandler
-          .mockResolvedValueOnce(handler)
-          .mockResolvedValueOnce(null);
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+      };
+      turnHandlerResolver.resolveHandler
+        .mockResolvedValueOnce(handler)
+        .mockResolvedValueOnce(null);
 
-        await bed.turnManager.advanceTurn();
-        await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
 
-        expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Clearing previous actor legacy-actor and handler before advancing.'
-          )
-        );
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Clearing previous actor legacy-actor and handler before advancing.'
+        )
+      );
 
-        const turnStartedCall = dispatcher.dispatch.mock.calls.find(
-          ([eventId]) => eventId === 'core:turn_started'
-        );
-        expect(turnStartedCall).toBeDefined();
-        expect(turnStartedCall[1]).toMatchObject({
-          entityId: actor.id,
-          entityType: 'player',
-        });
+      const turnStartedCall = dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === 'core:turn_started'
+      );
+      expect(turnStartedCall).toBeDefined();
+      expect(turnStartedCall[1]).toMatchObject({
+        entityId: actor.id,
+        entityType: 'player',
+      });
 
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Could not resolve a turn handler for actor legacy-actor'
-          )
-        );
-      }
-    );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Could not resolve a turn handler for actor legacy-actor'
+        )
+      );
+    });
 
     test('stops and dispatches error when a non-actor reappears in the queue', async () => {
       const bed = getBed();
@@ -224,197 +221,187 @@ describeTurnManagerSuite(
       stopSpy.mockRestore();
     });
 
-    test(
-      'dispatches TURN_PROCESSING_ENDED with player actorType when core:player_type is human',
-      async () => {
-        const bed = getBed();
-        const { turnOrderService, turnHandlerResolver, dispatcher } =
-          bed.mocks;
+    test('dispatches TURN_PROCESSING_ENDED with player actorType when core:player_type is human', async () => {
+      const bed = getBed();
+      const { turnOrderService, turnHandlerResolver, dispatcher } = bed.mocks;
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        const humanActor = {
-          id: 'player-human',
-          hasComponent: jest.fn((componentId) => {
-            if (componentId === ACTOR_COMPONENT_ID) return true;
-            if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
-            return false;
-          }),
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === PLAYER_TYPE_COMPONENT_ID) {
-              return { type: 'human' };
-            }
-            return null;
-          }),
-        };
+      const humanActor = {
+        id: 'player-human',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === ACTOR_COMPONENT_ID) return true;
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
+          return false;
+        }),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return { type: 'human' };
+          }
+          return null;
+        }),
+      };
 
-        turnOrderService.isEmpty
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
-        turnOrderService.getNextEntity
-          .mockReturnValueOnce(humanActor)
-          .mockReturnValue(null);
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(humanActor)
+        .mockReturnValue(null);
 
-        const handler = {
-          startTurn: jest.fn().mockResolvedValue(),
-          destroy: jest.fn().mockResolvedValue(),
-        };
-        turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+      };
+      turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
 
-        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
-        const advanceSpy = jest
-          .spyOn(bed.turnManager, 'advanceTurn')
-          .mockImplementationOnce(realAdvance)
-          .mockResolvedValue(undefined);
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(realAdvance)
+        .mockResolvedValue(undefined);
 
-        await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
 
-        dispatcher.dispatch.mockClear();
+      dispatcher.dispatch.mockClear();
 
-        dispatcher._triggerEvent(TURN_ENDED_ID, {
-          entityId: humanActor.id,
-          success: true,
-        });
-        await drainTimersAndMicrotasks(4);
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: humanActor.id,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
 
-        const processingEndedCall = dispatcher.dispatch.mock.calls.find(
-          ([eventId]) => eventId === TURN_PROCESSING_ENDED
-        );
+      const processingEndedCall = dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === TURN_PROCESSING_ENDED
+      );
 
-        expect(processingEndedCall).toBeDefined();
-        expect(processingEndedCall[1]).toMatchObject({
-          entityId: humanActor.id,
-          actorType: 'player',
-        });
-        expect(humanActor.getComponentData).toHaveBeenCalledWith(
-          PLAYER_TYPE_COMPONENT_ID
-        );
-        expect(humanActor.hasComponent).toHaveBeenCalledWith(
-          PLAYER_TYPE_COMPONENT_ID
-        );
+      expect(processingEndedCall).toBeDefined();
+      expect(processingEndedCall[1]).toMatchObject({
+        entityId: humanActor.id,
+        actorType: 'player',
+      });
+      expect(humanActor.getComponentData).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
+      expect(humanActor.hasComponent).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
 
-        advanceSpy.mockRestore();
-      }
-    );
+      advanceSpy.mockRestore();
+    });
 
-    test(
-      'normalises player_type values when identifying player actors',
-      async () => {
-        const bed = getBed();
-        const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
-          bed.mocks;
+    test('normalises player_type values when identifying player actors', async () => {
+      const bed = getBed();
+      const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
+        bed.mocks;
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        const humanActor = {
-          id: 'player-human-normalised',
-          hasComponent: jest.fn((componentId) => {
-            if (componentId === ACTOR_COMPONENT_ID) return true;
-            if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
-            return false;
-          }),
-          getComponentData: jest.fn((componentId) => {
-            if (componentId === PLAYER_TYPE_COMPONENT_ID) {
-              return { type: ' Human ' };
-            }
-            return null;
-          }),
-        };
+      const humanActor = {
+        id: 'player-human-normalised',
+        hasComponent: jest.fn((componentId) => {
+          if (componentId === ACTOR_COMPONENT_ID) return true;
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) return true;
+          return false;
+        }),
+        getComponentData: jest.fn((componentId) => {
+          if (componentId === PLAYER_TYPE_COMPONENT_ID) {
+            return { type: ' Human ' };
+          }
+          return null;
+        }),
+      };
 
-        turnOrderService.isEmpty
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
-        turnOrderService.getNextEntity
-          .mockReturnValueOnce(humanActor)
-          .mockReturnValue(null);
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(humanActor)
+        .mockReturnValue(null);
 
-        const handler = {
-          startTurn: jest.fn().mockResolvedValue(),
-          destroy: jest.fn().mockResolvedValue(),
-        };
-        turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        destroy: jest.fn().mockResolvedValue(),
+      };
+      turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
 
-        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
-        const advanceSpy = jest
-          .spyOn(bed.turnManager, 'advanceTurn')
-          .mockImplementationOnce(realAdvance)
-          .mockResolvedValue(undefined);
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(realAdvance)
+        .mockResolvedValue(undefined);
 
-        await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
 
-        const turnStartedCall = dispatcher.dispatch.mock.calls.find(
-          ([eventId]) => eventId === 'core:turn_started'
-        );
+      const turnStartedCall = dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === 'core:turn_started'
+      );
 
-        expect(turnStartedCall).toBeDefined();
-        expect(turnStartedCall[1]).toMatchObject({
-          entityId: humanActor.id,
-          entityType: 'player',
-        });
+      expect(turnStartedCall).toBeDefined();
+      expect(turnStartedCall[1]).toMatchObject({
+        entityId: humanActor.id,
+        entityType: 'player',
+      });
 
-        dispatcher.dispatch.mockClear();
-        logger.debug.mockClear();
+      dispatcher.dispatch.mockClear();
+      logger.debug.mockClear();
 
-        dispatcher._triggerEvent(TURN_ENDED_ID, {
-          entityId: humanActor.id,
-          success: true,
-        });
-        await drainTimersAndMicrotasks(4);
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: humanActor.id,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
 
-        const processingEndedCall = dispatcher.dispatch.mock.calls.find(
-          ([eventId]) => eventId === TURN_PROCESSING_ENDED
-        );
+      const processingEndedCall = dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === TURN_PROCESSING_ENDED
+      );
 
-        expect(processingEndedCall).toBeDefined();
-        expect(processingEndedCall[1]).toMatchObject({
-          entityId: humanActor.id,
-          actorType: 'player',
-        });
-        expect(humanActor.getComponentData).toHaveBeenCalledWith(
-          PLAYER_TYPE_COMPONENT_ID
-        );
-        expect(humanActor.hasComponent).toHaveBeenCalledWith(
-          PLAYER_TYPE_COMPONENT_ID
-        );
+      expect(processingEndedCall).toBeDefined();
+      expect(processingEndedCall[1]).toMatchObject({
+        entityId: humanActor.id,
+        actorType: 'player',
+      });
+      expect(humanActor.getComponentData).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
+      expect(humanActor.hasComponent).toHaveBeenCalledWith(
+        PLAYER_TYPE_COMPONENT_ID
+      );
 
-        advanceSpy.mockRestore();
-      }
-    );
+      advanceSpy.mockRestore();
+    });
 
-    test(
-      'ignores whitespace-only entity id events when no actor is active',
-      async () => {
-        const bed = getBed();
-        const { dispatcher, logger } = bed.mocks;
+    test('ignores whitespace-only entity id events when no actor is active', async () => {
+      const bed = getBed();
+      const { dispatcher, logger } = bed.mocks;
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        logger.warn.mockClear();
+      logger.warn.mockClear();
 
-        dispatcher._triggerEvent(TURN_ENDED_ID, {
-          entityId: '   ',
-          success: true,
-        });
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: '   ',
+        success: true,
+      });
 
-        await drainTimersAndMicrotasks(3);
+      await drainTimersAndMicrotasks(3);
 
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "entityId comprised only of whitespace. Treating the id as missing."
-          ),
-          expect.objectContaining({ originalEntityId: '   ' })
-        );
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "without an entityId and no active actor. Ignoring."
-          ),
-          expect.objectContaining({
-            type: TURN_ENDED_ID,
-            payload: expect.objectContaining({ entityId: '   ' }),
-          })
-        );
-      }
-    );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'entityId comprised only of whitespace. Treating the id as missing.'
+        ),
+        expect.objectContaining({ originalEntityId: '   ' })
+      );
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'without an entityId and no active actor. Ignoring.'
+        ),
+        expect.objectContaining({
+          type: TURN_ENDED_ID,
+          payload: expect.objectContaining({ entityId: '   ' }),
+        })
+      );
+    });
 
     test('treats invalid player_type data as an AI actor', async () => {
       const bed = getBed();
@@ -461,40 +448,36 @@ describeTurnManagerSuite(
       );
     });
 
-    test(
-      'returns early when manager stops during actor selection',
-      async () => {
-        const bed = getBed();
-        const { turnOrderService, turnHandlerResolver, dispatcher } =
-          bed.mocks;
+    test('returns early when manager stops during actor selection', async () => {
+      const bed = getBed();
+      const { turnOrderService, turnHandlerResolver, dispatcher } = bed.mocks;
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        const actor = createMockEntity('stopping-actor', {
-          isActor: true,
-          isPlayer: false,
-        });
-        bed.setActiveEntities(actor);
+      const actor = createMockEntity('stopping-actor', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
 
-        turnOrderService.isEmpty.mockResolvedValueOnce(false);
-        turnOrderService.getNextEntity.mockImplementationOnce(async () => {
-          await bed.turnManager.stop();
-          return actor;
-        });
+      turnOrderService.isEmpty.mockResolvedValueOnce(false);
+      turnOrderService.getNextEntity.mockImplementationOnce(async () => {
+        await bed.turnManager.stop();
+        return actor;
+      });
 
-        turnHandlerResolver.resolveHandler.mockClear();
-        dispatcher.dispatch.mockClear();
+      turnHandlerResolver.resolveHandler.mockClear();
+      dispatcher.dispatch.mockClear();
 
-        await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
 
-        expect(turnHandlerResolver.resolveHandler).not.toHaveBeenCalled();
-        expect(
-          dispatcher.dispatch.mock.calls.some(
-            ([eventId]) => eventId === 'core:turn_started'
-          )
-        ).toBe(false);
-      }
-    );
+      expect(turnHandlerResolver.resolveHandler).not.toHaveBeenCalled();
+      expect(
+        dispatcher.dispatch.mock.calls.some(
+          ([eventId]) => eventId === 'core:turn_started'
+        )
+      ).toBe(false);
+    });
 
     test('ignores turn ended events when manager is stopped', async () => {
       const bed = getBed();
@@ -548,178 +531,165 @@ describeTurnManagerSuite(
       );
     });
 
-    test(
-      `${TURN_PROCESSING_ENDED} rejection triggers failure reporting`,
-      async () => {
-        jest.useFakeTimers({ legacyFakeTimers: false });
-        const bed = getBed();
-        const { dispatcher, logger } = bed.mocks;
+    test(`${TURN_PROCESSING_ENDED} rejection triggers failure reporting`, async () => {
+      jest.useFakeTimers({ legacyFakeTimers: false });
+      const bed = getBed();
+      const { dispatcher, logger } = bed.mocks;
 
-        await bed.startRunning();
-        const { actor } = await prepareActiveActorTurn(
-          bed,
-          { actorId: 'rejected-processing-actor' }
-        );
+      await bed.startRunning();
+      const { actor } = await prepareActiveActorTurn(bed, {
+        actorId: 'rejected-processing-actor',
+      });
 
-        dispatcher.dispatch.mockClear();
-        logger.warn.mockClear();
-        safeDispatchError.mockClear();
+      dispatcher.dispatch.mockClear();
+      logger.warn.mockClear();
+      safeDispatchError.mockClear();
 
-        dispatcher.dispatch.mockResolvedValueOnce(false);
+      dispatcher.dispatch.mockResolvedValueOnce(false);
 
-        try {
-          dispatcher._triggerEvent(TURN_ENDED_ID, {
-            entityId: actor.id,
-            success: true,
-          });
-
-          await drainTimersAndMicrotasks(5);
-
-          expect(logger.warn).toHaveBeenCalledWith(
-            `${TURN_PROCESSING_ENDED} dispatch was rejected by dispatcher for ${actor.id}.`,
-            { actorType: 'ai' }
-          );
-
-          expect(safeDispatchError).toHaveBeenCalledWith(
-            dispatcher,
-            `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
-            expect.objectContaining({
-              entityId: actor.id,
-              actorType: 'ai',
-              error: 'Dispatcher rejected event',
-            })
-          );
-        } finally {
-          jest.useRealTimers();
-        }
-      }
-    );
-
-    test(
-      `${TURN_PROCESSING_ENDED} unexpected result generates warning`,
-      async () => {
-        const bed = getBed();
-        const { dispatcher, logger } = bed.mocks;
-
-        await bed.startRunning();
-        const { actor } = await prepareActiveActorTurn(
-          bed,
-          { actorId: 'unexpected-processing-result' }
-        );
-
-        dispatcher.dispatch.mockClear();
-        logger.warn.mockClear();
-
-        dispatcher.dispatch.mockResolvedValueOnce('not-a-boolean');
-
+      try {
         dispatcher._triggerEvent(TURN_ENDED_ID, {
           entityId: actor.id,
           success: true,
         });
 
-        await drainTimersAndMicrotasks(4);
+        await drainTimersAndMicrotasks(5);
 
         expect(logger.warn).toHaveBeenCalledWith(
-          `${TURN_PROCESSING_ENDED} dispatch returned unexpected result: not-a-boolean`,
-          { entityId: actor.id, actorType: 'ai' }
-        );
-      }
-    );
-
-    test(
-      'handles scheduled advancement failure after dispatch rejection',
-      async () => {
-        jest.useFakeTimers({ legacyFakeTimers: false });
-        const bed = getBed();
-        const { dispatcher, logger } = bed.mocks;
-
-        await bed.startRunning();
-        const { actor } = await prepareActiveActorTurn(
-          bed,
-          { actorId: 'processing-dispatch-failure' }
+          `${TURN_PROCESSING_ENDED} dispatch was rejected by dispatcher for ${actor.id}.`,
+          { actorType: 'ai' }
         );
 
-        dispatcher.dispatch.mockClear();
-        logger.error.mockClear();
-        safeDispatchError.mockClear();
-
-        const dispatchError = new Error('dispatch failure');
-        dispatcher.dispatch.mockImplementationOnce(() =>
-          Promise.reject(dispatchError)
-        );
-
-        safeDispatchError.mockImplementationOnce(() =>
-          Promise.reject(new Error('reporting failure'))
-        );
-        safeDispatchError.mockImplementationOnce(() => Promise.resolve(true));
-        safeDispatchError.mockImplementationOnce(() =>
-          Promise.reject(new Error('system dispatch failure'))
-        );
-
-        const advanceFailure = new Error('advance failure');
-        const advanceSpy = jest
-          .spyOn(bed.turnManager, 'advanceTurn')
-          .mockImplementationOnce(async () => {
-            throw advanceFailure;
-          });
-
-        try {
-          dispatcher._triggerEvent(TURN_ENDED_ID, {
+        expect(safeDispatchError).toHaveBeenCalledWith(
+          dispatcher,
+          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
+          expect.objectContaining({
             entityId: actor.id,
-            success: true,
-          });
-
-          await drainTimersAndMicrotasks(6);
-
-          expect(safeDispatchError).toHaveBeenCalledWith(
-            dispatcher,
-            `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
-            expect.objectContaining({
-              entityId: actor.id,
-              actorType: 'ai',
-              error: dispatchError.message,
-            })
-          );
-
-          expect(safeDispatchError).toHaveBeenCalledWith(
-            dispatcher,
-            'Error during scheduled turn advancement',
-            expect.objectContaining({
-              entityId: actor.id,
-              error: advanceFailure.message,
-            })
-          );
-
-          expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining(
-              `Failed to dispatch system error after ${TURN_PROCESSING_ENDED} failure for ${actor.id}`
-            ),
-            expect.any(Error)
-          );
-
-          expect(logger.error).toHaveBeenCalledWith(
-            expect.stringContaining(
-              'Failed to dispatch system error for advanceTurn failure'
-            ),
-            expect.any(Error)
-          );
-        } finally {
-          advanceSpy.mockRestore();
-          safeDispatchError.mockImplementation(actualSafeDispatchError);
-          jest.useRealTimers();
-        }
+            actorType: 'ai',
+            error: 'Dispatcher rejected event',
+          })
+        );
+      } finally {
+        jest.useRealTimers();
       }
-    );
+    });
+
+    test(`${TURN_PROCESSING_ENDED} unexpected result generates warning`, async () => {
+      const bed = getBed();
+      const { dispatcher, logger } = bed.mocks;
+
+      await bed.startRunning();
+      const { actor } = await prepareActiveActorTurn(bed, {
+        actorId: 'unexpected-processing-result',
+      });
+
+      dispatcher.dispatch.mockClear();
+      logger.warn.mockClear();
+
+      dispatcher.dispatch.mockResolvedValueOnce('not-a-boolean');
+
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: actor.id,
+        success: true,
+      });
+
+      await drainTimersAndMicrotasks(4);
+
+      expect(logger.warn).toHaveBeenCalledWith(
+        `${TURN_PROCESSING_ENDED} dispatch returned unexpected result: not-a-boolean`,
+        { entityId: actor.id, actorType: 'ai' }
+      );
+    });
+
+    test('handles scheduled advancement failure after dispatch rejection', async () => {
+      jest.useFakeTimers({ legacyFakeTimers: false });
+      const bed = getBed();
+      const { dispatcher, logger } = bed.mocks;
+
+      await bed.startRunning();
+      const { actor } = await prepareActiveActorTurn(bed, {
+        actorId: 'processing-dispatch-failure',
+      });
+
+      dispatcher.dispatch.mockClear();
+      logger.error.mockClear();
+      safeDispatchError.mockClear();
+
+      const dispatchError = new Error('dispatch failure');
+      dispatcher.dispatch.mockImplementationOnce(() =>
+        Promise.reject(dispatchError)
+      );
+
+      safeDispatchError.mockImplementationOnce(() =>
+        Promise.reject(new Error('reporting failure'))
+      );
+      safeDispatchError.mockImplementationOnce(() => Promise.resolve(true));
+      safeDispatchError.mockImplementationOnce(() =>
+        Promise.reject(new Error('system dispatch failure'))
+      );
+
+      const advanceFailure = new Error('advance failure');
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(async () => {
+          throw advanceFailure;
+        });
+
+      try {
+        dispatcher._triggerEvent(TURN_ENDED_ID, {
+          entityId: actor.id,
+          success: true,
+        });
+
+        await drainTimersAndMicrotasks(6);
+
+        expect(safeDispatchError).toHaveBeenCalledWith(
+          dispatcher,
+          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
+          expect.objectContaining({
+            entityId: actor.id,
+            actorType: 'ai',
+            error: dispatchError.message,
+          })
+        );
+
+        expect(safeDispatchError).toHaveBeenCalledWith(
+          dispatcher,
+          'Error during scheduled turn advancement',
+          expect.objectContaining({
+            entityId: actor.id,
+            error: advanceFailure.message,
+          })
+        );
+
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Failed to dispatch system error after ${TURN_PROCESSING_ENDED} failure for ${actor.id}`
+          ),
+          expect.any(Error)
+        );
+
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Failed to dispatch system error for advanceTurn failure'
+          ),
+          expect.any(Error)
+        );
+      } finally {
+        advanceSpy.mockRestore();
+        safeDispatchError.mockImplementation(actualSafeDispatchError);
+        jest.useRealTimers();
+      }
+    });
 
     test('warns when success flag type is unsupported', async () => {
       const bed = getBed();
       const { dispatcher, logger } = bed.mocks;
 
       await bed.startRunning();
-      const { actor } = await prepareActiveActorTurn(
-        bed,
-        { actorId: 'unsupported-success-actor' }
-      );
+      const { actor } = await prepareActiveActorTurn(bed, {
+        actorId: 'unsupported-success-actor',
+      });
 
       logger.warn.mockClear();
 
@@ -736,140 +706,137 @@ describeTurnManagerSuite(
       );
     });
 
-    test(
-      'handles successful turn completion with cleanup and downstream failures',
-      async () => {
-        const bed = getBed();
-        const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
-          bed.mocks;
+    test('handles successful turn completion with cleanup and downstream failures', async () => {
+      const bed = getBed();
+      const { turnOrderService, turnHandlerResolver, dispatcher, logger } =
+        bed.mocks;
 
-        safeDispatchError.mockClear();
-        dispatcher.dispatch.mockClear();
-        logger.debug.mockClear();
-        logger.warn.mockClear();
-        logger.error.mockClear();
+      safeDispatchError.mockClear();
+      dispatcher.dispatch.mockClear();
+      logger.debug.mockClear();
+      logger.warn.mockClear();
+      logger.error.mockClear();
 
-        await bed.startRunning();
+      await bed.startRunning();
 
-        const actor = {
-          id: 'actor-42',
-          hasComponent: jest.fn((componentId) =>
-            componentId === ACTOR_COMPONENT_ID
-          ),
-          getComponentData: jest.fn(() => null),
-        };
+      const actor = {
+        id: 'actor-42',
+        hasComponent: jest.fn(
+          (componentId) => componentId === ACTOR_COMPONENT_ID
+        ),
+        getComponentData: jest.fn(() => null),
+      };
 
-        turnOrderService.isEmpty
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
-        turnOrderService.getNextEntity
-          .mockReturnValueOnce(actor)
-          .mockReturnValue(null);
+      turnOrderService.isEmpty
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      turnOrderService.getNextEntity
+        .mockReturnValueOnce(actor)
+        .mockReturnValue(null);
 
-        const handler = {
-          startTurn: jest.fn().mockResolvedValue(),
-          signalNormalApparentTermination: jest.fn(),
-          destroy: jest.fn(() => Promise.reject(new Error('destroy failure'))),
-        };
-        turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
+      const handler = {
+        startTurn: jest.fn().mockResolvedValue(),
+        signalNormalApparentTermination: jest.fn(),
+        destroy: jest.fn(() => Promise.reject(new Error('destroy failure'))),
+      };
+      turnHandlerResolver.resolveHandler.mockResolvedValueOnce(handler);
 
-        let systemErrorDispatchCount = 0;
-        const dispatchMock = jest.fn((eventId) => {
-          if (eventId === TURN_PROCESSING_ENDED) {
-            return Promise.reject(new Error('processing end failure'));
+      let systemErrorDispatchCount = 0;
+      const dispatchMock = jest.fn((eventId) => {
+        if (eventId === TURN_PROCESSING_ENDED) {
+          return Promise.reject(new Error('processing end failure'));
+        }
+        if (eventId === SYSTEM_ERROR_OCCURRED_ID) {
+          systemErrorDispatchCount += 1;
+          if (systemErrorDispatchCount === 3) {
+            throw new Error('system dispatch failure');
           }
-          if (eventId === SYSTEM_ERROR_OCCURRED_ID) {
-            systemErrorDispatchCount += 1;
-            if (systemErrorDispatchCount === 3) {
-              throw new Error('system dispatch failure');
-            }
-          }
-          return Promise.resolve(true);
-        });
-        dispatcher.dispatch.mockImplementation(dispatchMock);
+        }
+        return Promise.resolve(true);
+      });
+      dispatcher.dispatch.mockImplementation(dispatchMock);
 
-        const stopError = new Error('stop failure');
-        const stopSpy = jest
-          .spyOn(bed.turnManager, 'stop')
-          .mockRejectedValueOnce(stopError);
+      const stopError = new Error('stop failure');
+      const stopSpy = jest
+        .spyOn(bed.turnManager, 'stop')
+        .mockRejectedValueOnce(stopError);
 
-        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
-        const advanceError = new Error('advance failure');
-        const advanceSpy = jest.spyOn(bed.turnManager, 'advanceTurn');
-        advanceSpy.mockImplementationOnce(realAdvance);
-        advanceSpy.mockImplementation(() => Promise.reject(advanceError));
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceError = new Error('advance failure');
+      const advanceSpy = jest.spyOn(bed.turnManager, 'advanceTurn');
+      advanceSpy.mockImplementationOnce(realAdvance);
+      advanceSpy.mockImplementation(() => Promise.reject(advanceError));
 
-        await bed.turnManager.advanceTurn();
+      await bed.turnManager.advanceTurn();
 
-        dispatcher._triggerEvent(TURN_ENDED_ID, {
-          entityId: 'stranger',
-          success: true,
-        });
-        await drainTimersAndMicrotasks(4);
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: 'stranger',
+        success: true,
+      });
+      await drainTimersAndMicrotasks(4);
 
-        expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('This event will be IGNORED by TurnManager')
-        );
-        logger.warn.mockClear();
+      expect(logger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('This event will be IGNORED by TurnManager')
+      );
+      logger.warn.mockClear();
 
-        dispatcher._triggerEvent(TURN_ENDED_ID, {
+      dispatcher._triggerEvent(TURN_ENDED_ID, {
+        entityId: actor.id,
+        success: true,
+      });
+      // Increased from 6 to 10 to accommodate async destroy() await in #handleTurnEndedEvent
+      await drainTimersAndMicrotasks(10);
+
+      expect(logger.debug).toHaveBeenCalledWith(
+        `Marking round as having had a successful turn (actor: ${actor.id}).`
+      );
+      expect(handler.signalNormalApparentTermination).toHaveBeenCalled();
+      expect(handler.destroy).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Error destroying handler for ${actor.id} after turn end`
+        ),
+        expect.any(Error)
+      );
+
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        dispatcher,
+        `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
+        expect.objectContaining({ error: 'processing end failure' })
+      );
+
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        dispatcher,
+        'Error during scheduled turn advancement',
+        expect.objectContaining({
           entityId: actor.id,
-          success: true,
-        });
-        // Increased from 6 to 10 to accommodate async destroy() await in #handleTurnEndedEvent
-        await drainTimersAndMicrotasks(10);
+          error: advanceError.message,
+        })
+      );
 
-        expect(logger.debug).toHaveBeenCalledWith(
-          `Marking round as having had a successful turn (actor: ${actor.id}).`
-        );
-        expect(handler.signalNormalApparentTermination).toHaveBeenCalled();
-        expect(handler.destroy).toHaveBeenCalled();
-        expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Error destroying handler for ${actor.id} after turn end`
-          ),
-          expect.any(Error)
-        );
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        dispatcher,
+        'Critical error during scheduled turn advancement.',
+        expect.objectContaining({ error: advanceError.message }),
+        logger
+      );
 
-        expect(safeDispatchError).toHaveBeenCalledWith(
-          dispatcher,
-          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${actor.id}`,
-          expect.objectContaining({ error: 'processing end failure' })
-        );
+      expect(logger.error).toHaveBeenCalledWith(
+        `Failed to stop manager after advanceTurn failure: ${stopError.message}`
+      );
+      expect(stopSpy).toHaveBeenCalled();
 
-        expect(safeDispatchError).toHaveBeenCalledWith(
-          dispatcher,
-          'Error during scheduled turn advancement',
-          expect.objectContaining({
-            entityId: actor.id,
-            error: advanceError.message,
-          })
-        );
+      Object.defineProperty(bed.turnManager, '_TurnManager__isRunning', {
+        value: false,
+        writable: true,
+        configurable: true,
+      });
 
-        expect(safeDispatchError).toHaveBeenCalledWith(
-          dispatcher,
-          'Critical error during scheduled turn advancement.',
-          expect.objectContaining({ error: advanceError.message }),
-          logger
-        );
-
-        expect(logger.error).toHaveBeenCalledWith(
-          `Failed to stop manager after advanceTurn failure: ${stopError.message}`
-        );
-        expect(stopSpy).toHaveBeenCalled();
-
-        Object.defineProperty(bed.turnManager, '_TurnManager__isRunning', {
-          value: false,
-          writable: true,
-          configurable: true,
-        });
-
-        advanceSpy.mockRestore();
-        stopSpy.mockRestore();
-        dispatcher.dispatch.mockImplementation(() => Promise.resolve(true));
-        jest.clearAllTimers();
-      }
-    );
+      advanceSpy.mockRestore();
+      stopSpy.mockRestore();
+      dispatcher.dispatch.mockImplementation(() => Promise.resolve(true));
+      jest.clearAllTimers();
+    });
 
     test('treats missing success flag as a successful turn', async () => {
       const bed = getBed();
@@ -908,9 +875,10 @@ describeTurnManagerSuite(
       bed.trigger(TURN_ENDED_ID, { entityId: actor.id });
       await drainTimersAndMicrotasks(6);
 
-      const systemErrorDispatches = bed.mocks.dispatcher.dispatch.mock.calls.filter(
-        ([eventId]) => eventId === SYSTEM_ERROR_OCCURRED_ID
-      );
+      const systemErrorDispatches =
+        bed.mocks.dispatcher.dispatch.mock.calls.filter(
+          ([eventId]) => eventId === SYSTEM_ERROR_OCCURRED_ID
+        );
 
       expect(stopSpy).not.toHaveBeenCalled();
       expect(systemErrorDispatches).toHaveLength(0);
@@ -929,136 +897,129 @@ describeTurnManagerSuite(
       await drainTimersAndMicrotasks(2);
     });
 
-    test(
-      'defaults missing entityId to current actor when handling turn end',
-      async () => {
-        const bed = getBed();
-        const stopSpy = bed.spyOnStopNoOp();
+    test('defaults missing entityId to current actor when handling turn end', async () => {
+      const bed = getBed();
+      const stopSpy = bed.spyOnStopNoOp();
 
-        const actor = createMockEntity('actor-missing-id', {
-          isActor: true,
-          isPlayer: false,
-        });
-        bed.setActiveEntities(actor);
+      const actor = createMockEntity('actor-missing-id', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
 
-        bed.mocks.turnOrderService.isEmpty
-          .mockResolvedValueOnce(true)
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
-        bed.mocks.turnOrderService.getNextEntity
-          .mockResolvedValueOnce(actor)
-          .mockResolvedValue(null);
-        bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+      bed.mocks.turnOrderService.isEmpty
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      bed.mocks.turnOrderService.getNextEntity
+        .mockResolvedValueOnce(actor)
+        .mockResolvedValue(null);
+      bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
 
-        const handler = bed.setupHandlerForActor(actor);
-        handler.startTurn.mockResolvedValue();
+      const handler = bed.setupHandlerForActor(actor);
+      handler.startTurn.mockResolvedValue();
 
-        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
-        const advanceSpy = jest
-          .spyOn(bed.turnManager, 'advanceTurn')
-          .mockImplementationOnce(realAdvance)
-          .mockImplementationOnce(realAdvance)
-          .mockResolvedValue(undefined);
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(realAdvance)
+        .mockImplementationOnce(realAdvance)
+        .mockResolvedValue(undefined);
 
-        await bed.turnManager.start();
-        await drainTimersAndMicrotasks(4);
+      await bed.turnManager.start();
+      await drainTimersAndMicrotasks(4);
 
-        expect(bed.turnManager.getCurrentActor()?.id).toBe(actor.id);
+      expect(bed.turnManager.getCurrentActor()?.id).toBe(actor.id);
 
-        bed.mocks.logger.warn.mockClear();
-        bed.mocks.dispatcher.dispatch.mockClear();
+      bed.mocks.logger.warn.mockClear();
+      bed.mocks.dispatcher.dispatch.mockClear();
 
-        bed.trigger(TURN_ENDED_ID, { success: true });
-        await drainTimersAndMicrotasks(6);
+      bed.trigger(TURN_ENDED_ID, { success: true });
+      await drainTimersAndMicrotasks(6);
 
-        const processingEndedCall = bed.mocks.dispatcher.dispatch.mock.calls.find(
-          ([eventId]) => eventId === TURN_PROCESSING_ENDED
-        );
+      const processingEndedCall = bed.mocks.dispatcher.dispatch.mock.calls.find(
+        ([eventId]) => eventId === TURN_PROCESSING_ENDED
+      );
 
-        expect(processingEndedCall).toBeDefined();
-        expect(processingEndedCall[1]).toMatchObject({ entityId: actor.id });
-        expect(
-          bed.mocks.logger.warn.mock.calls.some(([message]) =>
-            message.includes('without an entityId')
-          )
-        ).toBe(true);
-        expect(stopSpy).not.toHaveBeenCalled();
+      expect(processingEndedCall).toBeDefined();
+      expect(processingEndedCall[1]).toMatchObject({ entityId: actor.id });
+      expect(
+        bed.mocks.logger.warn.mock.calls.some(([message]) =>
+          message.includes('without an entityId')
+        )
+      ).toBe(true);
+      expect(stopSpy).not.toHaveBeenCalled();
 
-        advanceSpy.mockRestore();
-        await bed.turnManager.stop();
-        await drainTimersAndMicrotasks(2);
-      }
-    );
+      advanceSpy.mockRestore();
+      await bed.turnManager.stop();
+      await drainTimersAndMicrotasks(2);
+    });
 
-    test(
-      'normalises whitespace-surrounded entityId values when handling turn end events',
-      async () => {
-        const bed = getBed();
-        const stopSpy = bed.spyOnStopNoOp();
+    test('normalises whitespace-surrounded entityId values when handling turn end events', async () => {
+      const bed = getBed();
+      const stopSpy = bed.spyOnStopNoOp();
 
-        const actor = createMockEntity('actor-whitespace', {
-          isActor: true,
-          isPlayer: false,
-        });
-        bed.setActiveEntities(actor);
+      const actor = createMockEntity('actor-whitespace', {
+        isActor: true,
+        isPlayer: false,
+      });
+      bed.setActiveEntities(actor);
 
-        bed.mocks.turnOrderService.isEmpty
-          .mockResolvedValueOnce(true)
-          .mockResolvedValueOnce(false)
-          .mockResolvedValue(true);
-        bed.mocks.turnOrderService.getNextEntity
-          .mockResolvedValueOnce(actor)
-          .mockResolvedValue(null);
-        bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+      bed.mocks.turnOrderService.isEmpty
+        .mockResolvedValueOnce(true)
+        .mockResolvedValueOnce(false)
+        .mockResolvedValue(true);
+      bed.mocks.turnOrderService.getNextEntity
+        .mockResolvedValueOnce(actor)
+        .mockResolvedValue(null);
+      bed.mocks.turnOrderService.startNewRound.mockResolvedValue();
 
-        const handler = bed.setupHandlerForActor(actor);
-        handler.startTurn.mockResolvedValue();
+      const handler = bed.setupHandlerForActor(actor);
+      handler.startTurn.mockResolvedValue();
 
-        const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
-        const advanceSpy = jest
-          .spyOn(bed.turnManager, 'advanceTurn')
-          .mockImplementationOnce(realAdvance)
-          .mockImplementationOnce(realAdvance)
-          .mockResolvedValue(undefined);
+      const realAdvance = bed.turnManager.advanceTurn.bind(bed.turnManager);
+      const advanceSpy = jest
+        .spyOn(bed.turnManager, 'advanceTurn')
+        .mockImplementationOnce(realAdvance)
+        .mockImplementationOnce(realAdvance)
+        .mockResolvedValue(undefined);
 
-        await bed.turnManager.start();
-        await drainTimersAndMicrotasks(4);
+      await bed.turnManager.start();
+      await drainTimersAndMicrotasks(4);
 
-        bed.mocks.logger.warn.mockClear();
+      bed.mocks.logger.warn.mockClear();
 
-        bed.trigger(TURN_ENDED_ID, {
-          entityId: `  ${actor.id}  `,
-          success: true,
-        });
-        await drainTimersAndMicrotasks(6);
+      bed.trigger(TURN_ENDED_ID, {
+        entityId: `  ${actor.id}  `,
+        success: true,
+      });
+      await drainTimersAndMicrotasks(6);
 
-        const whitespaceWarning = bed.mocks.logger.warn.mock.calls.find(
-          ([message]) =>
-            message.includes('surrounding whitespace') &&
-            message.includes(actor.id)
-        );
-        expect(whitespaceWarning).toBeDefined();
+      const whitespaceWarning = bed.mocks.logger.warn.mock.calls.find(
+        ([message]) =>
+          message.includes('surrounding whitespace') &&
+          message.includes(actor.id)
+      );
+      expect(whitespaceWarning).toBeDefined();
 
-        const processingEndedCall =
-          bed.mocks.dispatcher.dispatch.mock.calls.find(
-            ([eventId, payload]) =>
-              eventId === TURN_PROCESSING_ENDED && payload.entityId === actor.id
-          );
-        expect(processingEndedCall).toBeDefined();
+      const processingEndedCall = bed.mocks.dispatcher.dispatch.mock.calls.find(
+        ([eventId, payload]) =>
+          eventId === TURN_PROCESSING_ENDED && payload.entityId === actor.id
+      );
+      expect(processingEndedCall).toBeDefined();
 
-        expect(
-          bed.mocks.logger.warn.mock.calls.some(([message]) =>
-            message.includes('This event will be IGNORED by TurnManager')
-          )
-        ).toBe(false);
+      expect(
+        bed.mocks.logger.warn.mock.calls.some(([message]) =>
+          message.includes('This event will be IGNORED by TurnManager')
+        )
+      ).toBe(false);
 
-        expect(stopSpy).not.toHaveBeenCalled();
+      expect(stopSpy).not.toHaveBeenCalled();
 
-        advanceSpy.mockRestore();
-        await bed.turnManager.stop();
-        await drainTimersAndMicrotasks(2);
-      }
-    );
+      advanceSpy.mockRestore();
+      await bed.turnManager.stop();
+      await drainTimersAndMicrotasks(2);
+    });
 
     test('calls eventBus.resetRecursionCounters after turn completion when eventBus is provided', async () => {
       const mockEventBus = {
@@ -1066,7 +1027,9 @@ describeTurnManagerSuite(
       };
 
       // Create a new test bed with eventBus override
-      const { createTurnManagerTestBed } = await import('../../common/turns/turnManagerTestBed.js');
+      const { createTurnManagerTestBed } = await import(
+        '../../common/turns/turnManagerTestBed.js'
+      );
       const bed = createTurnManagerTestBed({
         turnManagerOptions: { eventBus: mockEventBus },
       });
@@ -1119,7 +1082,9 @@ describeTurnManagerSuite(
       };
 
       // Create a new test bed with eventBus override
-      const { createTurnManagerTestBed } = await import('../../common/turns/turnManagerTestBed.js');
+      const { createTurnManagerTestBed } = await import(
+        '../../common/turns/turnManagerTestBed.js'
+      );
       const bed = createTurnManagerTestBed({
         turnManagerOptions: { eventBus: mockEventBusWithoutMethod },
       });

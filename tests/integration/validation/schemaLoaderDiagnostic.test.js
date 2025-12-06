@@ -114,7 +114,9 @@ describe('Schema Loader Diagnostic', () => {
     console.log(`   Added: ${conditionSchema.$id}`);
 
     // Step 4: Try to compile condition-container.schema.json
-    console.log('\n🔨 Step 4: Attempting to compile condition-container.schema.json');
+    console.log(
+      '\n🔨 Step 4: Attempting to compile condition-container.schema.json'
+    );
     let conditionValidator;
     let compilationError = null;
 
@@ -138,7 +140,9 @@ describe('Schema Loader Diagnostic', () => {
     console.log(`   Added: ${baseSchema.$id}`);
 
     // Step 6: Try to compile base-operation.schema.json
-    console.log('\n🔨 Step 6: Attempting to compile base-operation.schema.json');
+    console.log(
+      '\n🔨 Step 6: Attempting to compile base-operation.schema.json'
+    );
     let baseValidator;
 
     try {
@@ -172,7 +176,9 @@ describe('Schema Loader Diagnostic', () => {
 
     // Report final status
     console.log('\n📊 Final Status:');
-    console.log(`   json-logic compiled: ${!!ajv.getSchema(jsonLogicSchema.$id)}`);
+    console.log(
+      `   json-logic compiled: ${!!ajv.getSchema(jsonLogicSchema.$id)}`
+    );
     console.log(`   condition-container compiled: ${!!conditionValidator}`);
     console.log(`   base-operation compiled: ${!!baseValidator}`);
     console.log(`   drinkFrom compiled: ${!!drinkFromValidator}`);

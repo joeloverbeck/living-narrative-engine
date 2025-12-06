@@ -11,8 +11,8 @@ Update the `swing_at_target` action to require the new `damage-types:damage_capa
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                                    | Action | Description                                  |
+| ------------------------------------------------------- | ------ | -------------------------------------------- |
 | `data/mods/weapons/actions/swing_at_target.action.json` | UPDATE | Change required_components and add condition |
 
 ## Out of Scope
@@ -69,6 +69,7 @@ Update the `swing_at_target` action to require the new `damage-types:damage_capa
 ### Integration Tests (Run after WEADAMCAPREF-009)
 
 After weapons are migrated:
+
 - Action discovery shows `swing_at_target` for weapons with slashing capability
 - Action discovery hides `swing_at_target` for weapons without slashing (e.g., practice stick with only blunt)
 

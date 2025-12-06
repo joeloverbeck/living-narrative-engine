@@ -166,7 +166,9 @@ describe('GoapPlanner - Parameter Binding (GOAPIMPL-018-04)', () => {
       const result = planner.testBindTaskParameters(task, state, actorId);
 
       expect(result).toBeNull();
-      expect(mockScopeRegistry.getScopeAst).toHaveBeenCalledWith('core:nonexistent_scope');
+      expect(mockScopeRegistry.getScopeAst).toHaveBeenCalledWith(
+        'core:nonexistent_scope'
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Planning scope not found'),
         expect.any(Object)

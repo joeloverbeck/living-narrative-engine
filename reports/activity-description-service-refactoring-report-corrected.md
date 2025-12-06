@@ -12,6 +12,7 @@
 This corrected report addresses critical inaccuracies found in the original refactoring analysis of `ActivityDescriptionService`. While the original report correctly identifies the core architectural problems (monolithic 2,885-line God Object with fragmented caching), it contains **implementation-blocking errors** in method names, dependency names, and architectural assumptions.
 
 ### What Changed
+
 - ✅ **Verified all method signatures** against actual source code
 - ✅ **Corrected dependency names** (jsonLogicEvaluationService, not LogicExpressionEvaluator)
 - ✅ **Removed non-existent dependencies** (RelationshipService, AvailableActionsProvider)
@@ -20,6 +21,7 @@ This corrected report addresses critical inaccuracies found in the original refa
 - ✅ **Added test preservation strategy** (19+ test hooks must be maintained)
 
 ### Critical Findings
+
 1. **Correct File Location**: `src/anatomy/services/activityDescriptionService.js` (not `src/ai/`)
 2. **Method Count**: 69 private methods (not 56+)
 3. **Primary Coupling**: EntityManager (not AnatomyFormattingService)
@@ -32,13 +34,13 @@ This corrected report addresses critical inaccuracies found in the original refa
 
 ### Core Metrics
 
-| Metric | Value | Verification |
-|--------|-------|--------------|
-| File size | 2,885 lines | ✅ Line count verified |
-| Test coverage | 8,104 lines across 8 files | ✅ Test suite verified |
-| Private methods | 69 methods | ✅ Count includes all `#methodName` definitions |
-| Long method | `#formatActivityDescription` - 209 lines | ✅ Lines 1139-1347 |
-| Cache systems | 4 separate Map instances | ✅ entityName, gender, activityIndex, closeness |
+| Metric          | Value                                    | Verification                                    |
+| --------------- | ---------------------------------------- | ----------------------------------------------- |
+| File size       | 2,885 lines                              | ✅ Line count verified                          |
+| Test coverage   | 8,104 lines across 8 files               | ✅ Test suite verified                          |
+| Private methods | 69 methods                               | ✅ Count includes all `#methodName` definitions |
+| Long method     | `#formatActivityDescription` - 209 lines | ✅ Lines 1139-1347                              |
+| Cache systems   | 4 separate Map instances                 | ✅ entityName, gender, activityIndex, closeness |
 
 ### Cache Implementation (Verified)
 
@@ -51,6 +53,7 @@ This corrected report addresses critical inaccuracies found in the original refa
 ```
 
 **Cache Lifecycles**:
+
 - Name cache: 60 seconds TTL
 - Gender cache: 300 seconds TTL
 - Activity index cache: 120 seconds TTL
@@ -113,9 +116,11 @@ getTestHooks() {
 ### Correction #1: Dependency Names (HIGH IMPACT)
 
 #### ❌ Original Report Claimed
+
 - Dependency: "LogicExpressionEvaluator"
 
 #### ✅ Actual Implementation
+
 ```javascript
 // Actual constructor signature (line 91)
 constructor({
@@ -137,10 +142,12 @@ constructor({
 ### Correction #2: Non-Existent RelationshipService (HIGH IMPACT)
 
 #### ❌ Original Report Assumed
+
 - Proposed dependency: "RelationshipService" for relationship tone detection
 - Used in: Refactorings #1, #6
 
 #### ✅ Actual Implementation
+
 NO RelationshipService exists. Relationship detection uses **closeness component queries**:
 
 ```javascript
@@ -170,9 +177,11 @@ NO RelationshipService exists. Relationship detection uses **closeness component
 ### Correction #3: Activity Discovery Architecture (HIGH IMPACT)
 
 #### ❌ Original Report Assumed
+
 - Activities provided by "AvailableActionsProvider"
 
 #### ✅ Actual Implementation
+
 AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 
 **Actual Activity Discovery** (3-tier fallback):
@@ -199,6 +208,7 @@ AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 ```
 
 **Activity Sources**:
+
 1. **ActivityIndex** (optional): Pre-computed index for performance
 2. **Inline metadata**: `component.activityMetadata` embedded in component definitions
 3. **Dedicated components**: Separate `activity:description_metadata` components
@@ -213,10 +223,10 @@ AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 
 #### Metadata Collection Methods
 
-| Original Report | Actual Implementation | Line |
-|----------------|----------------------|------|
-| `#discoverInlineMetadata()` | `#collectInlineMetadata(entity)` | 436 |
-| `#discoverDedicatedMetadata()` | `#collectDedicatedMetadata(entity)` | 613 |
+| Original Report                | Actual Implementation               | Line |
+| ------------------------------ | ----------------------------------- | ---- |
+| `#discoverInlineMetadata()`    | `#collectInlineMetadata(entity)`    | 436  |
+| `#discoverDedicatedMetadata()` | `#collectDedicatedMetadata(entity)` | 613  |
 
 **Semantic Difference**: "discover" implies searching, "collect" implies gathering known items.
 
@@ -224,13 +234,13 @@ AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 
 #### Activity Filtering Methods
 
-| Original Report (WRONG) | Actual Implementation | Line |
-|------------------------|----------------------|------|
-| `#evaluateActivityConditions()` | `#filterByConditions(activities, entity)` | 775 |
-| `#checkComponentRequirements()` | `#hasRequiredComponents(entity, required)` | 980 |
-| `#isActivityVisible()` | `#evaluateActivityVisibility(activity, entity)` | 801 |
-| `#buildConditionContext()` | `#buildLogicContext(activity, entity)` | 881 |
-| *(missing)* | `#hasForbiddenComponents(entity, forbidden)` | 1014 |
+| Original Report (WRONG)         | Actual Implementation                           | Line |
+| ------------------------------- | ----------------------------------------------- | ---- |
+| `#evaluateActivityConditions()` | `#filterByConditions(activities, entity)`       | 775  |
+| `#checkComponentRequirements()` | `#hasRequiredComponents(entity, required)`      | 980  |
+| `#isActivityVisible()`          | `#evaluateActivityVisibility(activity, entity)` | 801  |
+| `#buildConditionContext()`      | `#buildLogicContext(activity, entity)`          | 881  |
+| _(missing)_                     | `#hasForbiddenComponents(entity, forbidden)`    | 1014 |
 
 **Impact**: Refactoring #3 (Activity Filtering) based on non-existent method signatures.
 
@@ -238,11 +248,11 @@ AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 
 #### Activity Grouping Methods
 
-| Original Report (WRONG) | Actual Implementation | Line |
-|------------------------|----------------------|------|
-| `#groupActivitiesByTarget()` | `#groupActivities(activities, cacheKey)` | 1839 |
-| `#sortActivitiesByPriority()` | `#sortByPriority(activities, cacheKey)` | 1040 |
-| `#determineConjunction(groupKey)` | `#determineConjunction(first, second)` | 1968 |
+| Original Report (WRONG)           | Actual Implementation                    | Line |
+| --------------------------------- | ---------------------------------------- | ---- |
+| `#groupActivitiesByTarget()`      | `#groupActivities(activities, cacheKey)` | 1839 |
+| `#sortActivitiesByPriority()`     | `#sortByPriority(activities, cacheKey)`  | 1040 |
+| `#determineConjunction(groupKey)` | `#determineConjunction(first, second)`   | 1968 |
 
 **Critical Difference**: `#determineConjunction()` takes **TWO activities**, not a groupKey.
 
@@ -267,9 +277,11 @@ AvailableActionsProvider exists BUT is NOT used by ActivityDescriptionService.
 ### Correction #5: Grouping Algorithm Misunderstood (HIGH IMPACT)
 
 #### ❌ Original Report Assumed
+
 "Group activities by target entity key"
 
 #### ✅ Actual Algorithm
+
 Sequential pair-wise comparison with candidate caching:
 
 ```javascript
@@ -310,6 +322,7 @@ Sequential pair-wise comparison with candidate caching:
 ```
 
 **Key Characteristics**:
+
 1. **Sequential processing**: Not target-based grouping
 2. **Pair-wise comparison**: Each candidate tested against current primary
 3. **Conjunction selection**: Based on priority proximity (simultaneous vs sequential)
@@ -322,9 +335,11 @@ Sequential pair-wise comparison with candidate caching:
 ### Correction #6: Pronoun Resolution Architecture (MEDIUM IMPACT)
 
 #### ❌ Original Report Assumed
+
 "Heavy coupling to AnatomyFormattingService for pronouns"
 
 #### ✅ Actual Implementation
+
 Service implements **self-contained pronoun logic**:
 
 ```javascript
@@ -373,9 +388,11 @@ Service implements **self-contained pronoun logic**:
 ### Correction #7: Primary Coupling Point (MEDIUM IMPACT)
 
 #### ❌ Original Report Claimed
+
 "Heavy coupling to AnatomyFormattingService"
 
 #### ✅ Actual Coupling
+
 **Primary coupling is to EntityManager**, not AnatomyFormattingService:
 
 ```javascript
@@ -387,6 +404,7 @@ const components = entity.getAllComponents();
 ```
 
 **Actual Dependency Weights**:
+
 - **EntityManager**: HEAVY (20+ call sites)
 - **jsonLogicEvaluationService**: MEDIUM (5-10 call sites)
 - **AnatomyFormattingService**: LIGHT (1-2 call sites)
@@ -436,6 +454,7 @@ ActivityDescriptionService
 ```
 
 **Architecture**:
+
 1. Check optional ActivityIndex first
 2. Fall back to inline component metadata
 3. Fall back to dedicated metadata components
@@ -457,6 +476,7 @@ ActivityDescriptionService
 ```
 
 **Filter Pipeline**:
+
 1. Property-based rules (category, actorType, etc.)
 2. Custom JSON Logic conditions
 3. Required component checks
@@ -482,6 +502,7 @@ ActivityDescriptionService
 ```
 
 **NLG Pipeline**:
+
 1. Configuration loading
 2. Activity limiting (maxActivities)
 3. Context-aware tone application
@@ -493,6 +514,7 @@ ActivityDescriptionService
 9. Truncation
 
 **Pronoun Resolution** (Self-Contained):
+
 - Gender detection via `core:gender` component
 - Pronoun set mapping (male/female/neutral/unknown)
 - Reflexive pronoun generation
@@ -512,6 +534,7 @@ ActivityDescriptionService
 ```
 
 **Algorithm** (Sequential Pair-Wise):
+
 ```
 FOR each activity (primary):
   Create new group with primary
@@ -524,6 +547,7 @@ END
 ```
 
 **Conjunction Selection**:
+
 - Simultaneous (priority difference ≤ 10): "while"
 - Sequential (priority difference > 10): "and"
 
@@ -546,6 +570,7 @@ END
 ```
 
 **Cache Architecture**:
+
 - Generic TTL-based caching with timestamps
 - Per-cache TTL configuration
 - Event-driven invalidation
@@ -554,6 +579,7 @@ END
 - Entity-level invalidation (all caches at once)
 
 **Cache TTLs**:
+
 ```javascript
 #setCacheValue(this.#entityNameCache, entityId, name, 60000);      // 1 minute
 #setCacheValue(this.#genderCache, entityId, gender, 300000);       // 5 minutes
@@ -572,11 +598,13 @@ END
 ```
 
 **Context Elements**:
+
 - Relationship tone (from closeness component)
 - Activity intensity (from priority mapping)
 - Contextual modifiers (softeners, adverbs)
 
 **Relationship Detection** (NO RelationshipService):
+
 ```javascript
 const closenessData = actorEntity?.getComponentData?.('positioning:closeness');
 const partners = closenessData?.partners ?? [];
@@ -602,6 +630,7 @@ if (partners.includes(targetId)) {
 ```
 
 **Index Structure**:
+
 ```javascript
 {
   byVerb: Map<verb, Set<activity>>,
@@ -648,10 +677,10 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
   }),
   caching: Object.freeze({
     enableCaching: true,
-    nameCacheTTL: 60000,        // 1 minute
-    genderCacheTTL: 300000,     // 5 minutes
-    activityCacheTTL: 120000,   // 2 minutes
-    closenessCacheTTL: 60000,   // 1 minute
+    nameCacheTTL: 60000, // 1 minute
+    genderCacheTTL: 300000, // 5 minutes
+    activityCacheTTL: 120000, // 2 minutes
+    closenessCacheTTL: 60000, // 1 minute
     maxCacheSize: 1000,
   }),
 });
@@ -665,16 +694,16 @@ const DEFAULT_ACTIVITY_FORMATTING_CONFIG = Object.freeze({
 
 ### Priority Classification
 
-| Priority | Refactoring | Accuracy | Implementation Risk |
-|----------|-------------|----------|-------------------|
-| **HIGH** | #2: Extract Caching System | 95% | LOW - Well understood |
-| **HIGH** | #1: Extract NLG System | 80% | MEDIUM - Adjust pronouns |
-| **MEDIUM** | #4: Extract Metadata Collection | 80% | LOW - Minor name fixes |
-| **MEDIUM** | #8: Extract Index Management | 90% | LOW - Accurate |
-| **LOW** | #3: Extract Activity Filtering | 60% | HIGH - Rewrite needed |
-| **LOW** | #5: Extract Activity Grouping | 40% | HIGH - Algorithm rewrite |
-| **LOW** | #6: Extract Context Building | 70% | MEDIUM - No RelationshipService |
-| **DEFERRED** | #7: Facade Pattern | 50% | MEDIUM - After extractions |
+| Priority     | Refactoring                     | Accuracy | Implementation Risk             |
+| ------------ | ------------------------------- | -------- | ------------------------------- |
+| **HIGH**     | #2: Extract Caching System      | 95%      | LOW - Well understood           |
+| **HIGH**     | #1: Extract NLG System          | 80%      | MEDIUM - Adjust pronouns        |
+| **MEDIUM**   | #4: Extract Metadata Collection | 80%      | LOW - Minor name fixes          |
+| **MEDIUM**   | #8: Extract Index Management    | 90%      | LOW - Accurate                  |
+| **LOW**      | #3: Extract Activity Filtering  | 60%      | HIGH - Rewrite needed           |
+| **LOW**      | #5: Extract Activity Grouping   | 40%      | HIGH - Algorithm rewrite        |
+| **LOW**      | #6: Extract Context Building    | 70%      | MEDIUM - No RelationshipService |
+| **DEFERRED** | #7: Facade Pattern              | 50%      | MEDIUM - After extractions      |
 
 ---
 
@@ -710,26 +739,55 @@ class ActivityNLGSystem {
   }
 
   // Name resolution
-  resolveEntityName(entityId) { /* Line 2204 */ }
-  shouldUsePronounForTarget(targetEntityId) { /* Line 2232 */ }
-  sanitizeEntityName(name) { /* Line 2755 */ }
+  resolveEntityName(entityId) {
+    /* Line 2204 */
+  }
+  shouldUsePronounForTarget(targetEntityId) {
+    /* Line 2232 */
+  }
+  sanitizeEntityName(name) {
+    /* Line 2755 */
+  }
 
   // Pronoun resolution (self-contained)
-  detectEntityGender(entityId) { /* Line 2263 - via core:gender component */ }
-  getPronounSet(gender) { /* Line 2285 */ }
-  getReflexivePronoun(pronouns) { /* Line 2304 */ }
+  detectEntityGender(entityId) {
+    /* Line 2263 - via core:gender component */
+  }
+  getPronounSet(gender) {
+    /* Line 2285 */
+  }
+  getReflexivePronoun(pronouns) {
+    /* Line 2304 */
+  }
 
   // Phrase generation
-  generateActivityPhrase(activity, names, pronounSets, context) { /* Line 1668 */ }
-  sanitizeVerbPhrase(phrase) { /* Line 1776 */ }
-  buildRelatedActivityFragment(relatedActivity, conjunction, names, pronounSets) { /* Line 1800 */ }
+  generateActivityPhrase(activity, names, pronounSets, context) {
+    /* Line 1668 */
+  }
+  sanitizeVerbPhrase(phrase) {
+    /* Line 1776 */
+  }
+  buildRelatedActivityFragment(
+    relatedActivity,
+    conjunction,
+    names,
+    pronounSets
+  ) {
+    /* Line 1800 */
+  }
 
   // Tone modifiers
-  mergeAdverb(currentAdverb, injected) { /* Line 2333 */ }
-  injectSoftener(template, descriptor) { /* Line 2359 */ }
+  mergeAdverb(currentAdverb, injected) {
+    /* Line 2333 */
+  }
+  injectSoftener(template, descriptor) {
+    /* Line 2359 */
+  }
 
   // Composition
-  truncateDescription(description, maxLength) { /* Line 2386 */ }
+  truncateDescription(description, maxLength) {
+    /* Line 2386 */
+  }
 
   // Master formatter
   formatActivityDescription(groups, entityId, context) {
@@ -742,7 +800,8 @@ class ActivityNLGSystem {
       mergeAdverb: (...args) => this.mergeAdverb(...args),
       injectSoftener: (...args) => this.injectSoftener(...args),
       sanitizeVerbPhrase: (...args) => this.sanitizeVerbPhrase(...args),
-      buildRelatedActivityFragment: (...args) => this.buildRelatedActivityFragment(...args),
+      buildRelatedActivityFragment: (...args) =>
+        this.buildRelatedActivityFragment(...args),
     };
   }
 }
@@ -751,16 +810,18 @@ class ActivityNLGSystem {
 #### Migration Strategy
 
 **Phase 1**: Extract without AnatomyFormattingService dependency
+
 ```javascript
 // ActivityNLGSystem is self-contained for pronouns
 const nlgSystem = new ActivityNLGSystem({
-  entityManager,  // For gender detection via core:gender
+  entityManager, // For gender detection via core:gender
   logger,
-  config: nlgConfig
+  config: nlgConfig,
 });
 ```
 
 **Phase 2**: Maintain backward compatibility via adapter
+
 ```javascript
 // ActivityDescriptionService maintains old test hooks
 getTestHooks() {
@@ -774,6 +835,7 @@ getTestHooks() {
 ```
 
 **Phase 3**: Update tests to use new hooks
+
 ```javascript
 // Tests migrate from service hooks to NLG hooks
 const hooks = nlgSystem.getTestHooks();
@@ -839,18 +901,34 @@ class ActivityCacheManager {
   }
 
   // Generic cache operations
-  get(cacheName, key) { /* Line 196 logic */ }
-  set(cacheName, key, value, customTTL = null) { /* Line 217 logic */ }
-  invalidate(cacheName, key) { /* Per-cache invalidation */ }
-  invalidateAll(key) { /* Line 285 - All caches for entity */ }
+  get(cacheName, key) {
+    /* Line 196 logic */
+  }
+  set(cacheName, key, value, customTTL = null) {
+    /* Line 217 logic */
+  }
+  invalidate(cacheName, key) {
+    /* Per-cache invalidation */
+  }
+  invalidateAll(key) {
+    /* Line 285 - All caches for entity */
+  }
 
   // Maintenance
-  cleanup() { /* Line 314 */ }
-  prune(cacheName) { /* Line 329 */ }
+  cleanup() {
+    /* Line 314 */
+  }
+  prune(cacheName) {
+    /* Line 329 */
+  }
 
   // Event subscriptions
-  #subscribeToInvalidationEvents() { /* Line 359 */ }
-  #setupCacheCleanup() { /* Line 299 */ }
+  #subscribeToInvalidationEvents() {
+    /* Line 359 */
+  }
+  #setupCacheCleanup() {
+    /* Line 299 */
+  }
 
   destroy() {
     clearInterval(this.#cleanupInterval);
@@ -861,6 +939,7 @@ class ActivityCacheManager {
 #### Migration Strategy
 
 **Phase 1**: Create CacheManager, maintain existing caches
+
 ```javascript
 // ActivityDescriptionService constructor
 this.#cacheManager = new ActivityCacheManager({ eventBus, logger, config });
@@ -870,10 +949,11 @@ this.#cacheManager.registerCache('activityIndex', { ttl: 120000 });
 this.#cacheManager.registerCache('closeness', { ttl: 60000 });
 
 // Keep old caches temporarily
-this.#entityNameCache = new Map();  // Will delegate to manager
+this.#entityNameCache = new Map(); // Will delegate to manager
 ```
 
 **Phase 2**: Delegate to CacheManager
+
 ```javascript
 #getCacheValue(cache, key) {
   // Determine cache name from Map reference
@@ -888,6 +968,7 @@ this.#entityNameCache = new Map();  // Will delegate to manager
 ```
 
 **Phase 3**: Remove old Map instances
+
 ```javascript
 // Delete old cache declarations
 // #entityNameCache = new Map();  // REMOVED
@@ -935,7 +1016,7 @@ Tests continue to work via public API without changes.
  */
 class ActivityFilteringSystem {
   #entityManager;
-  #jsonLogicEvaluationService;  // NOT LogicExpressionEvaluator
+  #jsonLogicEvaluationService; // NOT LogicExpressionEvaluator
   #logger;
 
   constructor({ entityManager, jsonLogicEvaluationService, logger }) {
@@ -945,25 +1026,42 @@ class ActivityFilteringSystem {
   }
 
   // Filter pipeline (CORRECTED METHOD NAMES)
-  filterByConditions(activities, entity) { /* Line 775 */ }
-  evaluateActivityVisibility(activity, entity) { /* Line 801 */ }
+  filterByConditions(activities, entity) {
+    /* Line 775 */
+  }
+  evaluateActivityVisibility(activity, entity) {
+    /* Line 801 */
+  }
 
   // Context building
-  buildLogicContext(activity, entity) { /* Line 881 */ }
-  extractEntityData(entity) { /* Line 925 */ }
+  buildLogicContext(activity, entity) {
+    /* Line 881 */
+  }
+  extractEntityData(entity) {
+    /* Line 925 */
+  }
 
   // Condition checks
-  isEmptyConditionsObject(conditions) { /* Line 950 */ }
-  matchesPropertyCondition(activity, rule) { /* Line 1099 */ }
+  isEmptyConditionsObject(conditions) {
+    /* Line 950 */
+  }
+  matchesPropertyCondition(activity, rule) {
+    /* Line 1099 */
+  }
 
   // Component requirements (BOTH methods exist)
-  hasRequiredComponents(entity, required) { /* Line 980 */ }
-  hasForbiddenComponents(entity, forbidden) { /* Line 1014 */ }
+  hasRequiredComponents(entity, required) {
+    /* Line 980 */
+  }
+  hasForbiddenComponents(entity, forbidden) {
+    /* Line 1014 */
+  }
 
   // Test hooks (MUST preserve)
   getTestHooks() {
     return {
-      evaluateActivityVisibility: (...args) => this.evaluateActivityVisibility(...args),
+      evaluateActivityVisibility: (...args) =>
+        this.evaluateActivityVisibility(...args),
       buildLogicContext: (...args) => this.buildLogicContext(...args),
       filterByConditions: (...args) => this.filterByConditions(...args),
     };
@@ -1013,6 +1111,7 @@ filterByConditions(activities, entity) {
 #### Migration Strategy
 
 **Phase 1**: Extract with corrected method names
+
 ```javascript
 const filteringSystem = new ActivityFilteringSystem({
   entityManager,
@@ -1027,6 +1126,7 @@ const filteringSystem = new ActivityFilteringSystem({
 ```
 
 **Phase 2**: Update test hooks
+
 ```javascript
 // ActivityDescriptionService maintains backward compatibility
 getTestHooks() {
@@ -1039,6 +1139,7 @@ getTestHooks() {
 ```
 
 **Phase 3**: Migrate tests
+
 ```javascript
 // Tests use new filtering system hooks
 const hooks = filteringSystem.getTestHooks();
@@ -1078,7 +1179,7 @@ const visible = hooks.evaluateActivityVisibility(activity, entity);
  */
 class ActivityMetadataCollectionSystem {
   #entityManager;
-  #activityIndex;  // Optional Phase 3 optimization
+  #activityIndex; // Optional Phase 3 optimization
   #logger;
 
   constructor({ entityManager, activityIndex = null, logger }) {
@@ -1088,24 +1189,39 @@ class ActivityMetadataCollectionSystem {
   }
 
   // Master collector (CORRECTED)
-  collectActivityMetadata(entityId, entity) { /* Line 387 */ }
+  collectActivityMetadata(entityId, entity) {
+    /* Line 387 */
+  }
 
   // Inline metadata (CORRECTED NAME)
-  collectInlineMetadata(entity) { /* Line 436 */ }
-  parseInlineMetadata(componentId, data, metadata) { /* Line 469 */ }
+  collectInlineMetadata(entity) {
+    /* Line 436 */
+  }
+  parseInlineMetadata(componentId, data, metadata) {
+    /* Line 469 */
+  }
 
   // Dedicated metadata (CORRECTED NAME)
-  collectDedicatedMetadata(entity) { /* Line 613 */ }
-  parseDedicatedMetadata(metadata, entity) { /* Line 646 */ }
+  collectDedicatedMetadata(entity) {
+    /* Line 613 */
+  }
+  parseDedicatedMetadata(metadata, entity) {
+    /* Line 646 */
+  }
 
   // Deduplication
-  deduplicateActivitiesBySignature(activities) { /* Line 719 */ }
-  buildActivityDeduplicationKey(activity) { /* Line 2811 */ }
+  deduplicateActivitiesBySignature(activities) {
+    /* Line 719 */
+  }
+  buildActivityDeduplicationKey(activity) {
+    /* Line 2811 */
+  }
 
   // Test hooks (MUST preserve)
   getTestHooks() {
     return {
-      collectActivityMetadata: (...args) => this.collectActivityMetadata(...args),
+      collectActivityMetadata: (...args) =>
+        this.collectActivityMetadata(...args),
     };
   }
 }
@@ -1141,15 +1257,17 @@ collectActivityMetadata(entityId, entity) {
 #### Migration Strategy
 
 **Phase 1**: Extract with correct method names
+
 ```javascript
 const metadataSystem = new ActivityMetadataCollectionSystem({
   entityManager,
-  activityIndex: this.#activityIndex,  // Pass through optional index
-  logger
+  activityIndex: this.#activityIndex, // Pass through optional index
+  logger,
 });
 ```
 
 **Phase 2**: Delegate metadata collection
+
 ```javascript
 #collectActivityMetadata(entityId, entity) {
   return this.#metadataSystem.collectActivityMetadata(entityId, entity);
@@ -1157,9 +1275,13 @@ const metadataSystem = new ActivityMetadataCollectionSystem({
 ```
 
 **Phase 3**: Remove delegation wrapper
+
 ```javascript
 // Direct usage
-const activities = this.#metadataSystem.collectActivityMetadata(entityId, entity);
+const activities = this.#metadataSystem.collectActivityMetadata(
+  entityId,
+  entity
+);
 ```
 
 #### Benefits
@@ -1204,20 +1326,36 @@ class ActivityGroupingSystem {
   }
 
   // Grouping algorithm (CORRECTED)
-  groupActivities(activities, cacheKey = null) { /* Line 1839 */ }
-  sortByPriority(activities, cacheKey = null) { /* Line 1040 */ }
+  groupActivities(activities, cacheKey = null) {
+    /* Line 1839 */
+  }
+  sortByPriority(activities, cacheKey = null) {
+    /* Line 1040 */
+  }
 
   // Group management
-  startActivityGroup(activity) { /* Line 1905 */ }
-  shouldGroupActivities(first, second) { /* Line 1925 */ }
+  startActivityGroup(activity) {
+    /* Line 1905 */
+  }
+  shouldGroupActivities(first, second) {
+    /* Line 1925 */
+  }
 
   // Conjunction selection (CORRECTED SIGNATURE)
-  determineConjunction(first, second) { /* Line 1968 - takes TWO activities */ }
-  activitiesOccurSimultaneously(priority1, priority2) { /* Line 1987 */ }
+  determineConjunction(first, second) {
+    /* Line 1968 - takes TWO activities */
+  }
+  activitiesOccurSimultaneously(priority1, priority2) {
+    /* Line 1987 */
+  }
 
   // Index optimization
-  buildActivityIndex(activities) { /* Line 2003 */ }
-  getActivityIndex(activities, cacheKey) { /* Line 2134 */ }
+  buildActivityIndex(activities) {
+    /* Line 2003 */
+  }
+  getActivityIndex(activities, cacheKey) {
+    /* Line 2134 */
+  }
 
   // Test hooks (MUST preserve)
   getTestHooks() {
@@ -1325,6 +1463,7 @@ shouldGroupActivities(first, second) {
 #### Migration Strategy
 
 **Phase 1**: Extract with corrected algorithm
+
 ```javascript
 const groupingSystem = new ActivityGroupingSystem({ logger, config });
 
@@ -1335,6 +1474,7 @@ const groupingSystem = new ActivityGroupingSystem({ logger, config });
 ```
 
 **Phase 2**: Migrate index caching
+
 ```javascript
 // Use shared CacheManager for activity index cache
 const cacheKey = this.#buildActivityIndexCacheKey(namespace, entityId);
@@ -1342,6 +1482,7 @@ const cachedIndex = this.#cacheManager.get('activityIndex', cacheKey);
 ```
 
 **Phase 3**: Remove original implementation
+
 ```javascript
 // Delete old #groupActivities() method
 // All grouping logic now in ActivityGroupingSystem
@@ -1390,11 +1531,15 @@ class ActivityContextBuildingSystem {
   }
 
   // Context assembly
-  buildActivityContext(actorId, activity) { /* Line 2569 */ }
+  buildActivityContext(actorId, activity) {
+    /* Line 2569 */
+  }
 
   // Relationship detection (NO RelationshipService - uses closeness component)
   detectRelationshipTone(actorEntity, targetId) {
-    const closenessData = actorEntity?.getComponentData?.('positioning:closeness');
+    const closenessData = actorEntity?.getComponentData?.(
+      'positioning:closeness'
+    );
     const partners = closenessData?.partners ?? [];
 
     if (partners.includes(targetId)) {
@@ -1407,10 +1552,14 @@ class ActivityContextBuildingSystem {
   }
 
   // Intensity mapping
-  determineActivityIntensity(priority) { /* Line 2623 */ }
+  determineActivityIntensity(priority) {
+    /* Line 2623 */
+  }
 
   // Tone application
-  applyContextualTone(activity, context) { /* Line 2650 */ }
+  applyContextualTone(activity, context) {
+    /* Line 2650 */
+  }
 
   // Test hooks (MUST preserve)
   getTestHooks() {
@@ -1472,14 +1621,16 @@ buildActivityContext(actorId, activity) {
 #### Migration Strategy
 
 **Phase 1**: Extract without RelationshipService
+
 ```javascript
 const contextSystem = new ActivityContextBuildingSystem({
-  entityManager,  // For closeness component queries
-  logger
+  entityManager, // For closeness component queries
+  logger,
 });
 ```
 
 **Phase 2**: Delegate context building
+
 ```javascript
 #buildActivityContext(actorId, activity) {
   return this.#contextSystem.buildActivityContext(actorId, activity);
@@ -1487,17 +1638,23 @@ const contextSystem = new ActivityContextBuildingSystem({
 ```
 
 **Phase 3**: Consider extracting closeness queries to utility
+
 ```javascript
 // Optional: Create ClosenessDetectionUtility
 class ClosenessDetectionUtility {
   static detectRelationshipTone(actorEntity, targetId) {
-    const closenessData = actorEntity?.getComponentData?.('positioning:closeness');
+    const closenessData = actorEntity?.getComponentData?.(
+      'positioning:closeness'
+    );
     // ... detection logic
   }
 }
 
 // Use in ActivityContextBuildingSystem
-const tone = ClosenessDetectionUtility.detectRelationshipTone(actorEntity, targetId);
+const tone = ClosenessDetectionUtility.detectRelationshipTone(
+  actorEntity,
+  targetId
+);
 ```
 
 #### Benefits
@@ -1543,10 +1700,18 @@ class ActivityIndexManager {
   }
 
   // Index building (VERIFIED)
-  buildActivityIndex(activities) { /* Line 2003 */ }
-  buildActivitySignature(activities) { /* Line 2081 */ }
-  buildActivityIndexCacheKey(namespace, entityId) { /* Line 2116 */ }
-  getActivityIndex(activities, cacheKey) { /* Line 2134 */ }
+  buildActivityIndex(activities) {
+    /* Line 2003 */
+  }
+  buildActivitySignature(activities) {
+    /* Line 2081 */
+  }
+  buildActivityIndexCacheKey(namespace, entityId) {
+    /* Line 2116 */
+  }
+  getActivityIndex(activities, cacheKey) {
+    /* Line 2134 */
+  }
 }
 ```
 
@@ -1563,12 +1728,14 @@ class ActivityIndexManager {
 **Goal**: Establish shared infrastructure for all extractions
 
 #### Task 1.1: Extract Caching System (Refactoring #2)
+
 - **Priority**: CRITICAL FIRST
 - **Accuracy**: 95%
 - **Risk**: LOW
 - **Test Impact**: Zero (implementation detail)
 
 **Deliverables**:
+
 1. `ActivityCacheManager` class
 2. Cache registration system
 3. Event-driven invalidation
@@ -1576,6 +1743,7 @@ class ActivityIndexManager {
 5. Migration adapter in ActivityDescriptionService
 
 **Success Criteria**:
+
 - ✅ All existing tests pass without modification
 - ✅ Cache behavior unchanged from user perspective
 - ✅ Event subscriptions working
@@ -1584,10 +1752,12 @@ class ActivityIndexManager {
 ---
 
 #### Task 1.2: Characterization Tests
+
 - **Priority**: HIGH
 - **Purpose**: Capture current behavior before refactoring
 
 **Test Coverage**:
+
 1. Activity metadata collection (all 3 tiers)
 2. Filtering pipeline (all 4 stages)
 3. Grouping algorithm (sequential pair-wise)
@@ -1596,6 +1766,7 @@ class ActivityIndexManager {
 6. Edge cases (empty activities, missing components, null values)
 
 **Deliverables**:
+
 1. `activityDescriptionService.characterization.test.js` (500+ lines)
 2. Golden master outputs for regression testing
 3. Property-based tests for grouping algorithm
@@ -1605,6 +1776,7 @@ class ActivityIndexManager {
 ### Phase 2: Core Extractions (Weeks 3-6)
 
 #### Task 2.1: Extract Index Management (Refactoring #8)
+
 - **Priority**: HIGH
 - **Accuracy**: 90%
 - **Risk**: LOW
@@ -1613,6 +1785,7 @@ class ActivityIndexManager {
 **Why This Second**: Clean separation, low risk, enables grouping optimization.
 
 **Deliverables**:
+
 1. `ActivityIndexManager` class
 2. Index cache integration with CacheManager
 3. Unit tests for index building
@@ -1621,12 +1794,14 @@ class ActivityIndexManager {
 ---
 
 #### Task 2.2: Extract Metadata Collection (Refactoring #4)
+
 - **Priority**: HIGH
 - **Accuracy**: 80% (minor fixes)
 - **Risk**: LOW
 - **Dependencies**: None
 
 **Deliverables**:
+
 1. `ActivityMetadataCollectionSystem` class
 2. 3-tier fallback architecture
 3. Deduplication logic
@@ -1636,12 +1811,14 @@ class ActivityIndexManager {
 ---
 
 #### Task 2.3: Extract Activity Filtering (Refactoring #3)
+
 - **Priority**: MEDIUM
 - **Accuracy**: 60% (rewrite required)
 - **Risk**: MEDIUM
 - **Dependencies**: jsonLogicEvaluationService, EntityManager
 
 **Deliverables**:
+
 1. `ActivityFilteringSystem` class with CORRECTED method names
 2. Filter pipeline implementation
 3. Component requirement checks
@@ -1651,6 +1828,7 @@ class ActivityIndexManager {
 7. Migration adapter
 
 **Special Attention**:
+
 - Verify all method signatures against actual code
 - Test component requirement/forbidden checks thoroughly
 - Validate JSON Logic context building
@@ -1660,12 +1838,14 @@ class ActivityIndexManager {
 ### Phase 3: Complex Extractions (Weeks 7-10)
 
 #### Task 3.1: Extract NLG System (Refactoring #1)
+
 - **Priority**: MEDIUM
 - **Accuracy**: 80% (adjust pronouns)
 - **Risk**: MEDIUM
 - **Dependencies**: EntityManager (gender detection), CacheManager
 
 **Deliverables**:
+
 1. `ActivityNLGSystem` class (self-contained pronouns)
 2. Name resolution with caching
 3. Gender detection via `core:gender` component
@@ -1677,6 +1857,7 @@ class ActivityIndexManager {
 9. Migration adapter
 
 **Special Attention**:
+
 - Maintain test hook compatibility (6,658 test lines depend on these)
 - Cache integration for name/gender caches
 - Self-contained pronoun logic (no AnatomyFormattingService dependency)
@@ -1684,12 +1865,14 @@ class ActivityIndexManager {
 ---
 
 #### Task 3.2: Extract Activity Grouping (Refactoring #5)
+
 - **Priority**: MEDIUM
 - **Accuracy**: 40% (algorithm rewrite)
 - **Risk**: HIGH
 - **Dependencies**: IndexManager, CacheManager
 
 **Deliverables**:
+
 1. `ActivityGroupingSystem` class with CORRECTED algorithm
 2. Sequential pair-wise grouping implementation
 3. Conjunction selection logic ("while" vs "then")
@@ -1699,6 +1882,7 @@ class ActivityIndexManager {
 7. Migration adapter
 
 **Special Attention**:
+
 - **CRITICAL**: Algorithm is NOT target-based grouping
 - Implement sequential pair-wise comparison correctly
 - Conjunction based on priority proximity (≤2 = "while", >2 = "then")
@@ -1707,12 +1891,14 @@ class ActivityIndexManager {
 ---
 
 #### Task 3.3: Extract Context Building (Refactoring #6)
+
 - **Priority**: LOW
 - **Accuracy**: 70% (no RelationshipService)
 - **Risk**: LOW
 - **Dependencies**: EntityManager
 
 **Deliverables**:
+
 1. `ActivityContextBuildingSystem` class
 2. Inline closeness component queries (NO RelationshipService)
 3. Intensity mapping
@@ -1725,11 +1911,13 @@ class ActivityIndexManager {
 ### Phase 4: Integration & Cleanup (Weeks 11-12)
 
 #### Task 4.1: Facade Pattern (Refactoring #7)
+
 - **Priority**: LOW
 - **Timing**: AFTER all extractions complete
 - **Purpose**: Simplified API for external consumers
 
 **Deliverables**:
+
 1. `ActivityDescriptionFacade` class
 2. Backward-compatible API
 3. Internal service orchestration
@@ -1738,10 +1926,12 @@ class ActivityIndexManager {
 ---
 
 #### Task 4.2: Test Migration
+
 - **Priority**: CRITICAL
 - **Scope**: Update 6,658 lines of tests
 
 **Migration Strategy**:
+
 1. Maintain all test hooks during refactoring
 2. Create parallel test suites for extracted services
 3. Gradually migrate tests to new hooks
@@ -1751,7 +1941,9 @@ class ActivityIndexManager {
 ---
 
 #### Task 4.3: Documentation Update
+
 **Deliverables**:
+
 1. Architecture documentation (dependency graph, service responsibilities)
 2. Migration guide (for consumers of ActivityDescriptionService)
 3. API documentation (new service interfaces)
@@ -1764,6 +1956,7 @@ class ActivityIndexManager {
 ### Risk #1: Test Hook Breakage (19+ hooks, 6,658 test lines)
 
 **Mitigation**:
+
 1. **Maintain all hooks** during refactoring phases
 2. Create **adapter layer** in ActivityDescriptionService delegating to extracted services
 3. **Parallel test suites** for new services
@@ -1771,6 +1964,7 @@ class ActivityIndexManager {
 5. **Coverage validation** after each phase
 
 **Example Adapter**:
+
 ```javascript
 // ActivityDescriptionService maintains backward compatibility
 getTestHooks() {
@@ -1805,12 +1999,14 @@ getTestHooks() {
 **Problem**: Most extracted services require EntityManager access
 
 **Mitigation**:
+
 1. **Accept EntityManager dependency** in extracted services (for now)
 2. **Phase 2**: Create `EntityQueryService` abstraction layer
 3. **Component access**: `getComponentData()`, `hasComponent()`
 4. **Entity retrieval**: `getEntityInstance()`
 
 **Future Optimization** (Phase 2):
+
 ```javascript
 /**
  * Entity Query Service
@@ -1840,27 +2036,29 @@ class EntityQueryService {
 **Problem**: Each extracted service might create duplicate caches
 
 **Mitigation** (via Refactoring #2):
+
 1. **Shared CacheManager** injected into all services
 2. **Centralized cache registration** in service initialization
 3. **Consistent TTL management**
 4. **Event-driven invalidation** across all caches
 
 **Example**:
+
 ```javascript
 // All services share same CacheManager instance
 const cacheManager = new ActivityCacheManager({ eventBus, logger, config });
 
 const nlgSystem = new ActivityNLGSystem({
   entityManager,
-  cacheManager,  // Shared cache
-  logger
+  cacheManager, // Shared cache
+  logger,
 });
 
 const filteringSystem = new ActivityFilteringSystem({
   entityManager,
   jsonLogicEvaluationService,
-  cacheManager,  // Same shared cache
-  logger
+  cacheManager, // Same shared cache
+  logger,
 });
 ```
 
@@ -1871,12 +2069,14 @@ const filteringSystem = new ActivityFilteringSystem({
 **Problem**: Original report contains wrong method names throughout
 
 **Mitigation**:
+
 1. **Use this corrected report** as implementation reference
 2. **Verify every method signature** against actual source before coding
 3. **Line number references** provided for all methods
 4. **Code review checklist**: Confirm method names match source exactly
 
 **Pre-Implementation Checklist**:
+
 - [ ] Method name matches source code exactly
 - [ ] Parameter count matches source signature
 - [ ] Return type/structure verified
@@ -1890,19 +2090,21 @@ const filteringSystem = new ActivityFilteringSystem({
 **Problem**: Original report completely misunderstood grouping algorithm
 
 **Mitigation**:
+
 1. **Implement characterization tests FIRST** capturing current grouping behavior
 2. **Property-based testing** for grouping algorithm
 3. **Golden master outputs** for regression testing
 4. **Pair-wise comparison validation** (not target-based grouping)
 
 **Characterization Test Example**:
+
 ```javascript
 describe('Activity Grouping - Sequential Pair-Wise Algorithm', () => {
   it('should group activities via sequential pair-wise comparison', () => {
     const activities = [
       { verb: 'touch', targetId: 'A', priority: 5 },
-      { verb: 'touch', targetId: 'A', priority: 6 },  // Groups with first (same verb+target)
-      { verb: 'kiss', targetId: 'B', priority: 8 },   // New group (different verb+target)
+      { verb: 'touch', targetId: 'A', priority: 6 }, // Groups with first (same verb+target)
+      { verb: 'kiss', targetId: 'B', priority: 8 }, // New group (different verb+target)
     ];
 
     const groups = groupActivities(activities);
@@ -1922,47 +2124,47 @@ describe('Activity Grouping - Sequential Pair-Wise Algorithm', () => {
 
 ### Code Quality Metrics
 
-| Metric | Current | Target | Verification |
-|--------|---------|--------|--------------|
-| Largest file | 2,885 lines | <500 lines | `wc -l activityDescriptionService.js` |
-| Method count | 69 methods | <15 methods/class | Method extraction count |
-| Max method length | 209 lines | <50 lines | `#formatActivityDescription` split |
-| Cache systems | 4 separate Maps | 1 manager | CacheManager singleton |
-| Test coverage | 80%+ | Maintain 80%+ | Jest coverage report |
-| Test hook count | 19+ hooks | Minimize via proper APIs | Test hook audit |
+| Metric            | Current         | Target                   | Verification                          |
+| ----------------- | --------------- | ------------------------ | ------------------------------------- |
+| Largest file      | 2,885 lines     | <500 lines               | `wc -l activityDescriptionService.js` |
+| Method count      | 69 methods      | <15 methods/class        | Method extraction count               |
+| Max method length | 209 lines       | <50 lines                | `#formatActivityDescription` split    |
+| Cache systems     | 4 separate Maps | 1 manager                | CacheManager singleton                |
+| Test coverage     | 80%+            | Maintain 80%+            | Jest coverage report                  |
+| Test hook count   | 19+ hooks       | Minimize via proper APIs | Test hook audit                       |
 
 ---
 
 ### Architectural Metrics
 
-| Metric | Current | Target | Verification |
-|--------|---------|--------|--------------|
-| God Object | 1 class, 8 responsibilities | 6-8 focused classes | Class responsibility audit |
-| Coupling score | High (EntityManager 20+ calls) | Abstracted via query service | Dependency analysis |
-| Service boundaries | None | Clear interface contracts | Interface documentation |
-| Reusability | Low (monolithic) | High (extracted services) | Service usage count |
+| Metric             | Current                        | Target                       | Verification               |
+| ------------------ | ------------------------------ | ---------------------------- | -------------------------- |
+| God Object         | 1 class, 8 responsibilities    | 6-8 focused classes          | Class responsibility audit |
+| Coupling score     | High (EntityManager 20+ calls) | Abstracted via query service | Dependency analysis        |
+| Service boundaries | None                           | Clear interface contracts    | Interface documentation    |
+| Reusability        | Low (monolithic)               | High (extracted services)    | Service usage count        |
 
 ---
 
 ### Testing Metrics
 
-| Metric | Current | Target | Verification |
-|--------|---------|--------|--------------|
-| Unit test lines | 6,658 (main test) | Distributed across services | Test file size distribution |
-| Integration tests | Limited | Comprehensive service integration | Integration test coverage |
-| Characterization tests | None | Golden master suite | Regression test suite |
-| Test execution time | Unknown | <10s for unit tests | Jest performance |
+| Metric                 | Current           | Target                            | Verification                |
+| ---------------------- | ----------------- | --------------------------------- | --------------------------- |
+| Unit test lines        | 6,658 (main test) | Distributed across services       | Test file size distribution |
+| Integration tests      | Limited           | Comprehensive service integration | Integration test coverage   |
+| Characterization tests | None              | Golden master suite               | Regression test suite       |
+| Test execution time    | Unknown           | <10s for unit tests               | Jest performance            |
 
 ---
 
 ### Performance Metrics (Maintain/Improve)
 
-| Metric | Baseline | Target | Verification |
-|--------|----------|--------|--------------|
-| Activity collection | Current performance | No regression | Benchmark suite |
-| Filtering pipeline | Current performance | No regression | Filter benchmark |
-| Grouping algorithm | Current performance | No regression | Grouping benchmark |
-| Cache hit rate | Current rate | Maintain/improve | Cache statistics |
+| Metric              | Baseline            | Target           | Verification       |
+| ------------------- | ------------------- | ---------------- | ------------------ |
+| Activity collection | Current performance | No regression    | Benchmark suite    |
+| Filtering pipeline  | Current performance | No regression    | Filter benchmark   |
+| Grouping algorithm  | Current performance | No regression    | Grouping benchmark |
+| Cache hit rate      | Current rate        | Maintain/improve | Cache statistics   |
 
 ---
 
@@ -1973,12 +2175,14 @@ describe('Activity Grouping - Sequential Pair-Wise Algorithm', () => {
 **Purpose**: Abstract EntityManager access patterns to reduce coupling
 
 **Benefits**:
+
 - Centralized entity/component queries
 - Easier to optimize (batching, caching)
 - Clearer dependency boundaries
 - Potential for query performance monitoring
 
 **Interface**:
+
 ```javascript
 class EntityQueryService {
   getComponentData(entityId, componentId);
@@ -2017,7 +2221,7 @@ class ActivityFormattingConfig {
     grouping: {
       maxActivities: 10,
       deduplicateActivities: true,
-      simultaneityThreshold: 10,  // Priority difference for "while" conjunction
+      simultaneityThreshold: 10, // Priority difference for "while" conjunction
     },
   });
 
@@ -2048,7 +2252,9 @@ class ActivityDescriptionServiceInstrumented {
 
     const metadataStart = performance.now();
     const metadata = await this.#collectActivityMetadata(entityId);
-    this.#metrics.metadataCollectionTime.push(performance.now() - metadataStart);
+    this.#metrics.metadataCollectionTime.push(
+      performance.now() - metadataStart
+    );
 
     // ... track each phase
 
@@ -2058,7 +2264,9 @@ class ActivityDescriptionServiceInstrumented {
 
   getMetrics() {
     return {
-      metadataCollection: this.#calculateStats(this.#metrics.metadataCollectionTime),
+      metadataCollection: this.#calculateStats(
+        this.#metrics.metadataCollectionTime
+      ),
       filtering: this.#calculateStats(this.#metrics.filteringTime),
       grouping: this.#calculateStats(this.#metrics.groupingTime),
       nlg: this.#calculateStats(this.#metrics.nlgTime),
@@ -2069,6 +2277,7 @@ class ActivityDescriptionServiceInstrumented {
 ```
 
 **Benefits**:
+
 - Identify performance regressions during refactoring
 - Validate optimization efforts
 - Baseline metrics for future improvements
@@ -2085,6 +2294,7 @@ class ActivityDescriptionServiceInstrumented {
 4. **Integration tests** verify service composition
 
 **Example**:
+
 ```javascript
 /**
  * @interface IActivityFilteringSystem
@@ -2120,6 +2330,7 @@ evaluateActivityVisibility(activity, entity);
 5. **Phase 5**: Cleanup and facade
 
 **Between each phase**:
+
 - ✅ Full test suite passes
 - ✅ Performance benchmarks stable
 - ✅ Code review completed
@@ -2132,12 +2343,14 @@ evaluateActivityVisibility(activity, entity);
 This corrected refactoring report provides a **solid, accurate foundation** for implementing the ActivityDescriptionService refactorings. Key improvements over the original report:
 
 ### ✅ Verified Facts
+
 - All metrics confirmed against source code
 - Method signatures corrected
 - Dependency names fixed
 - Algorithm understanding corrected
 
 ### ✅ Corrected Errors
+
 - RelationshipService removed (non-existent)
 - AvailableActionsProvider removed (not used)
 - LogicExpressionEvaluator → jsonLogicEvaluationService
@@ -2145,6 +2358,7 @@ This corrected refactoring report provides a **solid, accurate foundation** for 
 - Pronoun logic corrected (self-contained)
 
 ### ✅ Implementation-Ready
+
 - Line number references for all methods
 - Actual code examples from source
 - Test preservation strategy
@@ -2154,20 +2368,19 @@ This corrected refactoring report provides a **solid, accurate foundation** for 
 ### Priority Actions
 
 **START HERE**:
+
 1. ✅ **Refactoring #2: Extract Caching** (95% accurate, LOW risk)
 2. ✅ **Characterization Tests** (capture current behavior)
 3. ✅ **Refactoring #8: Extract Index Management** (90% accurate, LOW risk)
 4. ⚠️ **Refactoring #4: Extract Metadata Collection** (80% accurate, minor fixes)
 5. ⚠️ **Refactoring #3: Extract Filtering** (60% accurate, rewrite method names)
 
-**DEFER UNTIL LATER**:
-6. ⚠️ **Refactoring #1: Extract NLG** (80% accurate, test hook complexity)
-7. ⚠️ **Refactoring #5: Extract Grouping** (40% accurate, algorithm rewrite)
-8. ⚠️ **Refactoring #6: Extract Context Building** (70% accurate, closeness integration)
+**DEFER UNTIL LATER**: 6. ⚠️ **Refactoring #1: Extract NLG** (80% accurate, test hook complexity) 7. ⚠️ **Refactoring #5: Extract Grouping** (40% accurate, algorithm rewrite) 8. ⚠️ **Refactoring #6: Extract Context Building** (70% accurate, closeness integration)
 
 ### Success Criteria
 
 **You'll know refactoring is successful when**:
+
 - ✅ No file >500 lines
 - ✅ All tests pass without modification (via adapters)
 - ✅ Test coverage maintained ≥80%

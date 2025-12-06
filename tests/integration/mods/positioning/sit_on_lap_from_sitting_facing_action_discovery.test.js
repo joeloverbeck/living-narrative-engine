@@ -48,23 +48,30 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
         }
 
         // Filter partners where BOTH actor and partner have sitting_on
-        const bothSittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
-          const partnerHasSittingOn = !!partner?.components?.['positioning:sitting_on'];
-          const actorHasSittingOn = !!actor?.components?.['positioning:sitting_on'];
+        const bothSittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
+          const partnerHasSittingOn =
+            !!partner?.components?.['positioning:sitting_on'];
+          const actorHasSittingOn =
+            !!actor?.components?.['positioning:sitting_on'];
           return partnerHasSittingOn && actorHasSittingOn;
         });
 
         return { success: true, value: new Set(bothSittingPartners) };
       }
 
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
 
     const originalGetCondition =
       testEnv.dataRegistry.getConditionDefinition.getMockImplementation?.();
     testEnv.dataRegistry.getConditionDefinition.mockImplementation(
-      conditionId => {
+      (conditionId) => {
         if (conditionId === 'core:actor-mouth-available') {
           return mouthAvailableCondition;
         }
@@ -124,7 +131,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
       expect(actions).toBeDefined();
       expect(actions.length).toBeGreaterThan(0);
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing'
       );
       expect(sitOnLapAction).toBeDefined();
     });
@@ -177,7 +184,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
       const actions = await testFixture.discoverActions('actor1');
 
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing'
       );
       expect(sitOnLapAction).toBeDefined();
       // Note: Exact target verification would require inspecting resolved scope values
@@ -217,7 +224,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
       const actions = await testFixture.discoverActions('actor1');
 
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing'
       );
       expect(sitOnLapAction).toBeUndefined();
     });
@@ -254,7 +261,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
       const actions = await testFixture.discoverActions('actor1');
 
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing'
       );
       expect(sitOnLapAction).toBeUndefined();
     });
@@ -298,7 +305,7 @@ describe('sit_on_lap_from_sitting_facing action discovery - Integration Tests', 
       const actions = await testFixture.discoverActions('actor1');
 
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing'
       );
       expect(sitOnLapAction).toBeUndefined();
     });

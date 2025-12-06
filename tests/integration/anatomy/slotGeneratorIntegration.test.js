@@ -92,7 +92,8 @@ describe('SlotGenerator Integration', () => {
         },
       };
 
-      const generatedSlots = slotGenerator.generateBlueprintSlots(structureTemplate);
+      const generatedSlots =
+        slotGenerator.generateBlueprintSlots(structureTemplate);
 
       // Simulate additionalSlots that might be defined in blueprint
       const additionalSlots = {
@@ -145,7 +146,8 @@ describe('SlotGenerator Integration', () => {
         },
       };
 
-      const generatedSlots = slotGenerator.generateBlueprintSlots(structureTemplate);
+      const generatedSlots =
+        slotGenerator.generateBlueprintSlots(structureTemplate);
 
       // Simulate recipe with slot overrides
       const recipe = {
@@ -236,12 +238,14 @@ describe('SlotGenerator Integration', () => {
         // Part type should be one of the allowed types or the limb type itself
         const isCoordinated =
           socket.allowedTypes.includes(slotPartType) ||
-          slotPartType === structureTemplate.topology.limbSets?.find(
-            (ls) => socket.id.startsWith(ls.type)
-          )?.type ||
-          slotPartType === structureTemplate.topology.appendages?.find(
-            (a) => socket.id.startsWith(a.type)
-          )?.type;
+          slotPartType ===
+            structureTemplate.topology.limbSets?.find((ls) =>
+              socket.id.startsWith(ls.type)
+            )?.type ||
+          slotPartType ===
+            structureTemplate.topology.appendages?.find((a) =>
+              socket.id.startsWith(a.type)
+            )?.type;
         expect(isCoordinated).toBe(true);
       }
     });

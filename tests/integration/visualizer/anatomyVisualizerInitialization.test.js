@@ -181,7 +181,9 @@ describe('Anatomy Visualizer Initialization', () => {
     it('should attach back button handler that navigates to the landing page', async () => {
       const backButton = document.getElementById('back-button');
       const addListenerSpy = jest.spyOn(backButton, 'addEventListener');
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       await jest.isolateModulesAsync(async () => {
         await import('../../../src/anatomy-visualizer.js');

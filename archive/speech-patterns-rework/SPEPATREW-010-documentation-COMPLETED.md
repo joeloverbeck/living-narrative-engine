@@ -3,19 +3,24 @@
 **STATUS: ✅ COMPLETED**
 
 ## Objective
+
 Create comprehensive documentation for the new speech patterns system including modder guide, migration guide, and technical documentation.
 
 ## Priority
+
 **Medium** - Important for adoption and maintainability
 
 ## Estimated Effort
+
 0.5 days
 
 ## Dependencies
+
 - All previous SPEPATREW tickets must be completed
 - System fully implemented and tested
 
 ## Files to Touch
+
 - `docs/modding/speech-patterns-guide.md` (create new)
 - `docs/modding/speech-patterns-migration.md` (create new)
 - `README.md` (update if user-facing changes)
@@ -25,6 +30,7 @@ Create comprehensive documentation for the new speech patterns system including 
 ### Speech Patterns Guide (`docs/modding/speech-patterns-guide.md`)
 
 **Contents**:
+
 1. Overview of speech patterns system
 2. Legacy string format (with examples)
 3. New structured object format (with examples)
@@ -36,6 +42,7 @@ Create comprehensive documentation for the new speech patterns system including 
 9. Troubleshooting common issues
 
 **Key Sections**:
+
 - Format comparison table
 - Pattern organization guidelines (4-8 categories recommended)
 - Context tag vocabulary (casual, formal, manipulative, etc.)
@@ -45,6 +52,7 @@ Create comprehensive documentation for the new speech patterns system including 
 ### Migration Guide (`docs/modding/speech-patterns-migration.md`)
 
 **Contents**:
+
 1. Why migrate (benefits of structured format)
 2. Step-by-step conversion process
 3. Analyzing existing patterns
@@ -57,6 +65,7 @@ Create comprehensive documentation for the new speech patterns system including 
 10. Validation checklist
 
 **Key Sections**:
+
 - Decision tree: should I migrate?
 - Pattern grouping strategies
 - Context selection guide
@@ -66,12 +75,14 @@ Create comprehensive documentation for the new speech patterns system including 
 ### CLAUDE.md Updates
 
 **If Needed**:
+
 - Add section on speech patterns system
 - Document backward compatibility
 - Reference new documentation files
 - Update any outdated examples
 
 **Sections to Check**:
+
 - Component documentation
 - Testing requirements
 - Data structure patterns
@@ -80,11 +91,13 @@ Create comprehensive documentation for the new speech patterns system including 
 ### README.md Updates
 
 **If Needed**:
+
 - Mention enhanced speech patterns (if user-facing)
 - Link to modding documentation
 - Update feature list if applicable
 
 ## Out of Scope
+
 - **DO NOT** modify code files
 - **DO NOT** create video tutorials
 - **DO NOT** write blog posts or external documentation
@@ -96,6 +109,7 @@ Create comprehensive documentation for the new speech patterns system including 
 ## Acceptance Criteria
 
 ### Speech Patterns Guide
+
 1. Explains both formats clearly
 2. Includes side-by-side format comparison
 3. Provides at least 3 complete examples
@@ -108,6 +122,7 @@ Create comprehensive documentation for the new speech patterns system including 
 10. Includes code examples with syntax highlighting
 
 ### Migration Guide
+
 11. Provides clear step-by-step process
 12. Includes decision criteria for migration
 13. Shows before/after examples (at least 2)
@@ -120,6 +135,7 @@ Create comprehensive documentation for the new speech patterns system including 
 20. Includes Vespera conversion as case study
 
 ### Documentation Quality
+
 26. Markdown formatting correct
 27. All code blocks have language tags
 28. Internal links work correctly
@@ -129,6 +145,7 @@ Create comprehensive documentation for the new speech patterns system including 
 32. Technical terms defined on first use
 
 ### Invariants
+
 - No code changes in documentation ticket
 - Documentation matches actual implementation
 - No contradictions with existing docs
@@ -136,6 +153,7 @@ Create comprehensive documentation for the new speech patterns system including 
 - Links to real files (not placeholder paths)
 
 ## Validation Commands
+
 ```bash
 # Check markdown formatting
 npm run lint:md (if configured)
@@ -151,6 +169,7 @@ npm run docs:build
 ```
 
 ## Manual Review Checklist
+
 ```
 [ ] Read through both new doc files
 [ ] Verify all code examples are valid
@@ -167,6 +186,7 @@ npm run docs:build
 ```
 
 ## Definition of Done
+
 - [ ] `speech-patterns-guide.md` created and complete
 - [ ] `speech-patterns-migration.md` created and complete
 - [ ] README.md updated if needed
@@ -224,8 +244,10 @@ npm run docs:build
   - `archive/speech-patterns-rework/SPEPATREW-005-vespera-conversion-COMPLETED.md` as case study source
 
 ### Files Created
+
 - `docs/modding/speech-patterns-guide.md`
 - `docs/modding/speech-patterns-migration.md`
 
 ### Tests Verified
+
 - All speech patterns related tests passing (715 tests total across 48 suites)

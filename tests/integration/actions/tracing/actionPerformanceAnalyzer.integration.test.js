@@ -99,7 +99,10 @@ const createErroredTrace = async (
   return trace;
 };
 
-const createZeroDurationTrace = (factory, { actionId, actorId = 'integration-actor' }) => {
+const createZeroDurationTrace = (
+  factory,
+  { actionId, actorId = 'integration-actor' }
+) => {
   const trace = factory.createTrace({
     actionId,
     actorId,
@@ -160,35 +163,38 @@ describe('ActionPerformanceAnalyzer – real trace integration', () => {
   });
 
   it('aggregates performance metrics, highlights bottlenecks, and resets cleanly', async () => {
-    const [quickTrace, mediumTrace, slowTrace, erroredTrace] = await Promise.all([
-      createSuccessfulTrace(factory, {
-        actionId: 'integration:test:quick',
-        initialDelay: 5,
-        payloadDelay: 10,
-        metadata: { seed: 'quick' },
-      }),
-      createSuccessfulTrace(factory, {
-        actionId: 'integration:test:medium',
-        initialDelay: 12,
-        payloadDelay: 28,
-        metadata: { seed: 'medium' },
-      }),
-      createSuccessfulTrace(factory, {
-        actionId: 'integration:test:slow',
-        initialDelay: 40,
-        payloadDelay: 120,
-        metadata: { seed: 'slow' },
-      }),
-      createErroredTrace(factory, {
-        actionId: 'integration:test:error',
-        initialDelay: 10,
-        payloadDelay: 35,
-        errorMessage: 'intentional failure',
-      }),
-    ]);
+    const [quickTrace, mediumTrace, slowTrace, erroredTrace] =
+      await Promise.all([
+        createSuccessfulTrace(factory, {
+          actionId: 'integration:test:quick',
+          initialDelay: 5,
+          payloadDelay: 10,
+          metadata: { seed: 'quick' },
+        }),
+        createSuccessfulTrace(factory, {
+          actionId: 'integration:test:medium',
+          initialDelay: 12,
+          payloadDelay: 28,
+          metadata: { seed: 'medium' },
+        }),
+        createSuccessfulTrace(factory, {
+          actionId: 'integration:test:slow',
+          initialDelay: 40,
+          payloadDelay: 120,
+          metadata: { seed: 'slow' },
+        }),
+        createErroredTrace(factory, {
+          actionId: 'integration:test:error',
+          initialDelay: 10,
+          payloadDelay: 35,
+          errorMessage: 'intentional failure',
+        }),
+      ]);
 
     const zeroDurationTrace = (() => {
-      const nowSpy = jest.spyOn(highPrecisionTimer, 'now').mockReturnValue(2500);
+      const nowSpy = jest
+        .spyOn(highPrecisionTimer, 'now')
+        .mockReturnValue(2500);
       try {
         return createZeroDurationTrace(factory, {
           actionId: 'integration:test:zero-duration',

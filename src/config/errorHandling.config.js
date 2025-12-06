@@ -15,7 +15,7 @@ export const ErrorSeverity = {
   CRITICAL: 'critical',
   ERROR: 'error',
   WARNING: 'warning',
-  INFO: 'info'
+  INFO: 'info',
 };
 
 /**
@@ -48,19 +48,19 @@ export const errorHandlingConfig = {
     },
     // Domain-specific overrides
     overrides: {
-      'ClothingError': {
+      ClothingError: {
         maxAttempts: 3,
         backoff: { type: 'exponential', initialDelay: 200 },
       },
-      'AnatomyVisualizationError': {
+      AnatomyVisualizationError: {
         maxAttempts: 2,
         backoff: { type: 'exponential', initialDelay: 500 },
       },
-      'LLMInteractionError': {
+      LLMInteractionError: {
         maxAttempts: 2,
         backoff: { type: 'linear', initialDelay: 1000 },
       },
-      'NetworkError': {
+      NetworkError: {
         maxAttempts: 5,
         backoff: { type: 'exponential', initialDelay: 100, maxDelay: 10000 },
       },
@@ -285,7 +285,10 @@ export function getRetryConfig(errorType) {
  */
 export function getCircuitBreakerConfig(serviceName) {
   const config = getErrorConfig();
-  return config.circuitBreaker.overrides[serviceName] || config.circuitBreaker.default;
+  return (
+    config.circuitBreaker.overrides[serviceName] ||
+    config.circuitBreaker.default
+  );
 }
 
 /**
@@ -330,7 +333,11 @@ function deepMerge(target, source) {
   const result = { ...target };
 
   for (const key in source) {
-    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+    if (
+      source[key] &&
+      typeof source[key] === 'object' &&
+      !Array.isArray(source[key])
+    ) {
       result[key] = deepMerge(result[key] || {}, source[key]);
     } else {
       result[key] = source[key];

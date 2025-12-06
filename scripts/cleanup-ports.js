@@ -36,7 +36,9 @@ function findProcessOnPort(port) {
  */
 function getProcessInfo(pid) {
   try {
-    const result = execSync(`ps -p ${pid} -o pid,command`, { encoding: 'utf8' });
+    const result = execSync(`ps -p ${pid} -o pid,command`, {
+      encoding: 'utf8',
+    });
     return result.trim();
   } catch (error) {
     return null;
@@ -116,7 +118,9 @@ function cleanupPorts() {
       console.log(
         `⚠️  Partial cleanup: ${successful} succeeded, ${failed} failed.`
       );
-      console.log('   Manual intervention may be required for failed processes.');
+      console.log(
+        '   Manual intervention may be required for failed processes.'
+      );
 
       // Show manual cleanup instructions
       console.log('\n📋 Manual cleanup options:');

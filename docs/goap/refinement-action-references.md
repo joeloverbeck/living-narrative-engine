@@ -76,12 +76,12 @@ Actions use the multi-target format with **placeholder names**. Each action defi
 
 **Important**: Placeholder names are action-specific, not standardized:
 
-| Action | Placeholder Name | Description |
-|--------|------------------|-------------|
-| `items:pick_up_item` | `"item"` | The item to pick up |
-| `items:drink_from` | `"primary"` | The drinkable item |
-| `deference:crawl_to` | `"target"` | The destination |
-| `intimacy:hold_hand` | `"target"` | The person whose hand to hold |
+| Action               | Placeholder Name | Description                   |
+| -------------------- | ---------------- | ----------------------------- |
+| `items:pick_up_item` | `"item"`         | The item to pick up           |
+| `items:drink_from`   | `"primary"`      | The drinkable item            |
+| `deference:crawl_to` | `"target"`       | The destination               |
+| `intimacy:hold_hand` | `"target"`       | The person whose hand to hold |
 
 **Critical Rule**: You cannot use generic placeholder names. You must use the exact placeholder name defined by each action.
 
@@ -100,6 +100,7 @@ Refinement methods use `targetBindings` to map task parameters to action placeho
 ```
 
 **Binding Format**:
+
 - **Key**: Exact placeholder name from the action (e.g., `"item"`)
 - **Value**: String reference to entity ID (e.g., `"task.params.item"`)
 - **NOT JSON Logic**: Use direct string references, not `{"var": "task.params.item"}`
@@ -241,12 +242,12 @@ Refinement steps can override defaults:
     {
       "stepType": "primitive_action",
       "actionId": "items:pick_up_item",
-      "targetBindings": {"item": "task.params.item"}
+      "targetBindings": { "item": "task.params.item" }
     },
     {
       "stepType": "primitive_action",
       "actionId": "items:consume_item",
-      "targetBindings": {"item": "task.params.item"}
+      "targetBindings": { "item": "task.params.item" }
     }
   ]
 }
@@ -254,11 +255,11 @@ Refinement steps can override defaults:
 
 ### Fallback Behaviors
 
-| Behavior | Description | Use Case |
-|----------|-------------|----------|
-| `"fail"` | Stop execution, mark method as failed | Critical paths where failure is unacceptable |
-| `"continue"` | Log error, continue to next step | Optional steps where partial completion is acceptable |
-| `"replan"` | Trigger replanning (future) | When world state invalidates current plan |
+| Behavior     | Description                           | Use Case                                              |
+| ------------ | ------------------------------------- | ----------------------------------------------------- |
+| `"fail"`     | Stop execution, mark method as failed | Critical paths where failure is unacceptable          |
+| `"continue"` | Log error, continue to next step      | Optional steps where partial completion is acceptable |
+| `"replan"`   | Trigger replanning (future)           | When world state invalidates current plan             |
 
 ### Failure Propagation
 
@@ -358,6 +359,7 @@ Action applicability is checked at **execution time**, not during planning. This
 **See**: `docs/goap/examples/action-reference-bindings.refinement.json`
 
 Demonstrates:
+
 - Basic action reference
 - Single target binding
 - No parameter overrides
@@ -367,6 +369,7 @@ Demonstrates:
 **See**: `docs/goap/examples/action-reference-parameters.refinement.json`
 
 Demonstrates:
+
 - Action with custom parameters
 - Overriding default values
 - Multiple steps with different parameter sets
@@ -376,6 +379,7 @@ Demonstrates:
 **See**: `docs/goap/examples/action-reference-bindings.refinement.json`
 
 Demonstrates:
+
 - Action with multiple targets
 - Binding multiple placeholders
 - Complex task parameter mapping
@@ -385,6 +389,7 @@ Demonstrates:
 **See**: `docs/goap/examples/action-reference-failure.refinement.json`
 
 Demonstrates:
+
 - Method-level `fallbackBehavior`
 - Sequential action execution
 - Failure propagation behavior
@@ -396,6 +401,7 @@ Demonstrates:
 **Cause**: Action not found in registry.
 
 **Solution**:
+
 1. Check action exists: `data/mods/*/actions/*.action.json`
 2. Verify mod is loaded in `game.json`
 3. Check action ID format: `"modId:actionId"`
@@ -405,6 +411,7 @@ Demonstrates:
 **Cause**: Target binding key doesn't match action's placeholder.
 
 **Solution**:
+
 1. Open action definition file
 2. Find `targets` section
 3. Copy exact `placeholder` value
@@ -425,6 +432,7 @@ Demonstrates:
 **Cause**: Action requires target but no binding provided.
 
 **Solution**:
+
 1. Check action's `targets` section
 2. Identify all required targets (those without `optional: true`)
 3. Provide bindings for all required targets
@@ -434,6 +442,7 @@ Demonstrates:
 **Cause**: Attempting to override parameter not defined by action.
 
 **Solution**:
+
 1. Check action's `parameters` section
 2. Only override parameters that action defines
 3. Remove any extra parameters from refinement step
@@ -443,6 +452,7 @@ Demonstrates:
 **Cause**: Binding references `task.params.X` but task doesn't have parameter X.
 
 **Solution**:
+
 1. Check task definition's `parameters` section
 2. Ensure task parameter exists
 3. Use correct parameter name in binding reference

@@ -96,13 +96,10 @@ export async function safeDispatchError(
   const normalizedDetails = normalizeDetailsPayload(eventDetails);
 
   try {
-    const dispatchResult = await dispatcher.dispatch(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message,
-        details: normalizedDetails,
-      }
-    );
+    const dispatchResult = await dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      message,
+      details: normalizedDetails,
+    });
 
     if (dispatchResult !== true) {
       log.warn(
@@ -168,12 +165,18 @@ function normalizeDetailsPayload(rawDetails) {
     normalizedDetails = trimmed ? { raw: trimmed } : {};
   }
 
-  if (valueType === 'number' || valueType === 'boolean' || valueType === 'bigint') {
+  if (
+    valueType === 'number' ||
+    valueType === 'boolean' ||
+    valueType === 'bigint'
+  ) {
     normalizedDetails = { raw: String(rawDetails) };
   }
 
   if (valueType === 'symbol') {
-    normalizedDetails = { raw: rawDetails.description || rawDetails.toString() };
+    normalizedDetails = {
+      raw: rawDetails.description || rawDetails.toString(),
+    };
   }
 
   if (valueType === 'function') {

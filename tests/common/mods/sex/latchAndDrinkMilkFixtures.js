@@ -141,7 +141,14 @@ export function buildLatchAndDrinkMilkScenario(options = {}) {
     .build();
 
   return {
-    entities: [roomEntity, actorEntity, targetEntity, torso, leftBreast, rightBreast],
+    entities: [
+      roomEntity,
+      actorEntity,
+      targetEntity,
+      torso,
+      leftBreast,
+      rightBreast,
+    ],
     actorId,
     targetId,
     roomId,

@@ -9,6 +9,7 @@ Integrate the `HandlerCompletenessValidator` into the rule loading pipeline so t
 ## Background
 
 Per the spec, the desired behavior is:
+
 1. Parse rule JSON
 2. For each operation in the rule's actions array:
    - Verify operation type is in `KNOWN_OPERATION_TYPES` (existing behavior)
@@ -21,21 +22,21 @@ This requires the `OperationRegistry` to be available during rule loading, which
 
 ### Modify
 
-| File | Change |
-|------|--------|
-| `src/loaders/ruleLoader.js` | Add handler validation after rule parsing |
+| File                                                        | Change                                          |
+| ----------------------------------------------------------- | ----------------------------------------------- |
+| `src/loaders/ruleLoader.js`                                 | Add handler validation after rule parsing       |
 | `src/dependencyInjection/registrations/` (appropriate file) | Register validator, inject registry into loader |
 
 ### Create
 
-| File | Purpose |
-|------|---------|
+| File                                                                           | Purpose           |
+| ------------------------------------------------------------------------------ | ----------------- |
 | `tests/integration/validation/ruleLoaderHandlerValidation.integration.test.js` | Integration tests |
 
 ### Possibly Modify
 
-| File | Change |
-|------|--------|
+| File                                    | Change                                                            |
+| --------------------------------------- | ----------------------------------------------------------------- |
 | `src/loaders/ruleLoader.js` constructor | May need to accept `OperationRegistry` or validator as dependency |
 
 ## Out of Scope
@@ -54,6 +55,7 @@ This requires the `OperationRegistry` to be available during rule loading, which
 There are two approaches:
 
 **Option A: Inject registry into RuleLoader**
+
 ```javascript
 class RuleLoader {
   constructor({ schemaValidator, operationRegistry, logger }) {
@@ -69,6 +71,7 @@ class RuleLoader {
 ```
 
 **Option B: Inject validator service into RuleLoader**
+
 ```javascript
 class RuleLoader {
   constructor({ schemaValidator, handlerValidator, logger }) {
@@ -77,7 +80,10 @@ class RuleLoader {
 
   _processFetchedItem(item) {
     // ... existing parsing ...
-    this.#handlerValidator.validateRuleHandlerCompleteness(rule, this.#registry);
+    this.#handlerValidator.validateRuleHandlerCompleteness(
+      rule,
+      this.#registry
+    );
     return rule;
   }
 }
@@ -88,11 +94,13 @@ class RuleLoader {
 ### Validation Timing
 
 Validation should happen in `_processFetchedItem()` AFTER:
+
 1. JSON parsing is complete
 2. Schema validation passes
 3. Operation type whitelist validation passes (if done here)
 
 But BEFORE:
+
 1. The rule is returned/stored for execution
 
 ### Error Handling
@@ -139,6 +147,7 @@ The `OperationRegistry` must be populated with handlers BEFORE rules are loaded.
 ## Risk Assessment
 
 **MEDIUM RISK**: This changes the rule loading pipeline. Potential issues:
+
 1. DI registration order may need adjustment
 2. Some tests may set up rules before handlers
 3. Circular dependency potential if not careful
@@ -159,16 +168,19 @@ The `OperationRegistry` must be populated with handlers BEFORE rules are loaded.
 ### What Was Actually Changed
 
 **1. `src/loaders/ruleLoader.js`** (~20 lines modified):
+
 - Added 2 private fields: `#handlerValidator` and `#operationRegistry`
 - Extended constructor to accept 2 optional parameters (with default `null` for backward compatibility)
 - Added handler validation call in `_processFetchedItem()` after macro expansion, before storage
 
 **2. `src/dependencyInjection/registrations/loadersRegistrations.js`** (~25 lines added):
+
 - Added import for `HandlerCompletenessValidator`
 - Registered `HandlerCompletenessValidator` as singleton factory with logger dependency
 - Replaced `registerLoader` helper for RuleLoader with custom factory registration to inject 8 dependencies (original 6 + validator + registry)
 
 **3. `tests/integration/validation/ruleLoaderHandlerValidation.integration.test.js`** (~395 lines created):
+
 - 9 integration tests covering:
   - Valid operations loading successfully
   - Nested IF block validation
@@ -182,18 +194,19 @@ The `OperationRegistry` must be populated with handlers BEFORE rules are loaded.
 
 ### Comparison to Original Plan
 
-| Aspect | Planned | Actual |
-|--------|---------|--------|
-| Implementation lines | ~30 | ~45 |
-| Test lines | ~80 | ~395 |
-| Architecture | Option B (validator service) | Option B ✓ |
-| Validation timing | After macro expansion | After macro expansion ✓ |
-| Optional dependencies | Yes | Yes ✓ |
-| DI changes required | Yes | Yes ✓ |
+| Aspect                | Planned                      | Actual                  |
+| --------------------- | ---------------------------- | ----------------------- |
+| Implementation lines  | ~30                          | ~45                     |
+| Test lines            | ~80                          | ~395                    |
+| Architecture          | Option B (validator service) | Option B ✓              |
+| Validation timing     | After macro expansion        | After macro expansion ✓ |
+| Optional dependencies | Yes                          | Yes ✓                   |
+| DI changes required   | Yes                          | Yes ✓                   |
 
 ### Test Results
 
 All tests pass:
+
 - `tests/unit/loaders/ruleLoader.test.js`: 4/4 passed
 - `tests/unit/dependencyInjection/registrations/loadersRegistrations.test.js`: 4/4 passed
 - `tests/unit/validation/handlerCompletenessValidator.test.js`: 25/25 passed

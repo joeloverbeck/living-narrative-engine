@@ -1,8 +1,21 @@
-import { beforeEach, afterEach, describe, expect, test, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  test,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = process.env;
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 /**
  * Ensures the logger evaluates terminal capabilities in a consistent way across tests.
@@ -60,7 +73,9 @@ describe('Enhanced console logger fallback behaviour integration', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    const { getEnhancedConsoleLogger } = await import('../../src/logging/enhancedConsoleLogger.js');
+    const { getEnhancedConsoleLogger } = await import(
+      '../../src/logging/enhancedConsoleLogger.js'
+    );
     const logger = getEnhancedConsoleLogger();
 
     logger.testOutput();
@@ -91,7 +106,9 @@ describe('Enhanced console logger fallback behaviour integration', () => {
     // @ts-ignore - intentional runtime mutation for test coverage.
     console.info = undefined;
 
-    const { getEnhancedConsoleLogger } = await import('../../src/logging/enhancedConsoleLogger.js');
+    const { getEnhancedConsoleLogger } = await import(
+      '../../src/logging/enhancedConsoleLogger.js'
+    );
     const logger = getEnhancedConsoleLogger();
 
     const payload = { stage: 'integration', token: 'should-mask' };
@@ -102,13 +119,18 @@ describe('Enhanced console logger fallback behaviour integration', () => {
       'EnhancedConsoleLogger: Formatting error, falling back to simple output'
     );
 
-    const fallbackCall = logSpy.mock.calls.find(([message]) =>
-      typeof message === 'string' && message.startsWith('[FALLBACK] INFO: Observability check')
+    const fallbackCall = logSpy.mock.calls.find(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.startsWith('[FALLBACK] INFO: Observability check')
     );
 
     expect(fallbackCall).toBeDefined();
     expect(fallbackCall?.[1]).toBe(42);
-    expect(fallbackCall?.[2]).toEqual({ stage: 'integration', token: 'should-mask' });
+    expect(fallbackCall?.[2]).toEqual({
+      stage: 'integration',
+      token: 'should-mask',
+    });
 
     console.info = originalInfo;
   });

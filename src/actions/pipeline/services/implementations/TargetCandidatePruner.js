@@ -50,7 +50,8 @@ export class TargetCandidatePruner {
    * @param {{debug: Function}} [dependencies.logger] - Logger used for debug tracing.
    */
   constructor({ logger } = {}) {
-    this.#logger = logger && typeof logger.debug === 'function' ? logger : DEFAULT_LOGGER;
+    this.#logger =
+      logger && typeof logger.debug === 'function' ? logger : DEFAULT_LOGGER;
   }
 
   /**
@@ -59,7 +60,13 @@ export class TargetCandidatePruner {
    * @param {TargetCandidatePrunerParams} params - Pruning parameters.
    * @returns {TargetCandidatePrunerResult} Immutable pruning results.
    */
-  prune({ actionDef, resolvedTargets, targetContexts, registry = {}, config = {} }) {
+  prune({
+    actionDef,
+    resolvedTargets,
+    targetContexts,
+    registry = {},
+    config = {},
+  }) {
     const requirements = actionDef?.required_components;
     const clonedTargets = this.#cloneResolvedTargets(resolvedTargets);
 
@@ -90,10 +97,14 @@ export class TargetCandidatePruner {
     }
 
     const placeholderSource =
-      config?.placeholderSource ?? actionDef?.targetDefinitions ?? actionDef?.targets ?? null;
+      config?.placeholderSource ??
+      actionDef?.targetDefinitions ??
+      actionDef?.targets ??
+      null;
     const placeholderMap = new Map();
     for (const role of rolesToCheck) {
-      const placeholder = getPlaceholderForRole(role, placeholderSource) ?? null;
+      const placeholder =
+        getPlaceholderForRole(role, placeholderSource) ?? null;
       placeholderMap.set(role, placeholder);
     }
 
@@ -126,7 +137,9 @@ export class TargetCandidatePruner {
         continue;
       }
 
-      const candidates = Array.isArray(existing) ? existing.slice() : [existing];
+      const candidates = Array.isArray(existing)
+        ? existing.slice()
+        : [existing];
       const requiredComponents = Array.isArray(requirements[role])
         ? requirements[role]
         : [];
@@ -134,7 +147,11 @@ export class TargetCandidatePruner {
       let lastRemovalReason = null;
 
       for (const candidate of candidates) {
-        const evaluation = this.#candidateHasRequiredComponents(candidate, requiredComponents, role);
+        const evaluation = this.#candidateHasRequiredComponents(
+          candidate,
+          requiredComponents,
+          role
+        );
 
         if (evaluation.valid) {
           validCandidates.push(candidate);
@@ -142,7 +159,9 @@ export class TargetCandidatePruner {
           const candidateId = extractCandidateId(candidate);
           const placeholder =
             placeholderMap.get(role) ??
-            (candidateId ? contextPlaceholderByEntityId.get(candidateId) ?? null : null);
+            (candidateId
+              ? (contextPlaceholderByEntityId.get(candidateId) ?? null)
+              : null);
           removedTargets.push({
             role,
             targetId: candidateId,
@@ -160,7 +179,8 @@ export class TargetCandidatePruner {
       if (Array.isArray(existing)) {
         clonedTargets[role] = validCandidates;
       } else {
-        clonedTargets[role] = validCandidates.length > 0 ? validCandidates[0] : null;
+        clonedTargets[role] =
+          validCandidates.length > 0 ? validCandidates[0] : null;
       }
 
       if (validCandidates.length === 0) {
@@ -202,7 +222,7 @@ export class TargetCandidatePruner {
 
     const clone = {};
     for (const [role, value] of Object.entries(resolvedTargets)) {
-      clone[role] = Array.isArray(value) ? value.slice() : value ?? null;
+      clone[role] = Array.isArray(value) ? value.slice() : (value ?? null);
     }
 
     return clone;

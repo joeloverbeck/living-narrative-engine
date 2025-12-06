@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-002: Add Timeout Validation
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-002
 - **Phase:** 1 - Minimal Change
 - **Priority:** High
@@ -15,6 +16,7 @@ Add validation to ensure the configured timeout is a positive finite number. Thi
 ## Files to Modify
 
 ### Production Code
+
 - `src/turns/states/awaitingExternalTurnEndState.js`
   - Constructor (add validation after timeout resolution)
   - Imports (add `InvalidArgumentError`)
@@ -22,12 +24,14 @@ Add validation to ensure the configured timeout is a positive finite number. Thi
 ## Changes Required
 
 ### 1. Add Import for Error Class
+
 ```javascript
 // ADD to imports:
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 ```
 
 ### 2. Add Validation in Constructor
+
 ```javascript
 // UPDATE constructor after timeout resolution (~line 66):
 constructor(
@@ -60,6 +64,7 @@ constructor(
 ## Out of Scope
 
 ### Must NOT Change
+
 - Timer function validation (Ticket 003)
 - Environment provider validation (Phase 2)
 - `#resolveDefaultTimeout()` implementation
@@ -69,6 +74,7 @@ constructor(
 - Lifecycle method implementations
 
 ### Must NOT Add
+
 - Range validation (e.g., min/max timeout values)
 - Warning for unusual timeouts
 - Automatic coercion of invalid values
@@ -77,6 +83,7 @@ constructor(
 ## Acceptance Criteria
 
 ### AC1: Reject NaN Timeout
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: NaN }
 // WHEN: State instantiated
@@ -88,6 +95,7 @@ constructor(
 ```
 
 ### AC2: Reject Negative Timeout
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: -1000 }
 // WHEN: State instantiated
@@ -99,6 +107,7 @@ constructor(
 ```
 
 ### AC3: Reject Zero Timeout
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: 0 }
 // WHEN: State instantiated
@@ -110,6 +119,7 @@ constructor(
 ```
 
 ### AC4: Reject Infinity Timeout
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: Infinity }
 // WHEN: State instantiated
@@ -121,6 +131,7 @@ constructor(
 ```
 
 ### AC5: Reject Non-Number Timeout
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: "3000" }
 // WHEN: State instantiated
@@ -138,6 +149,7 @@ constructor(
 ```
 
 ### AC6: Accept Valid Positive Finite Numbers
+
 ```javascript
 // GIVEN: Constructor called with { timeoutMs: 1000 }
 // WHEN: State instantiated
@@ -154,6 +166,7 @@ constructor(
 ```
 
 ### AC7: Validation Happens Before State Setup
+
 ```javascript
 // GIVEN: Constructor called with invalid timeout
 // WHEN: Validation fails
@@ -165,6 +178,7 @@ constructor(
 ```
 
 ### AC8: Existing Tests Still Pass
+
 ```javascript
 // GIVEN: All existing unit and integration tests
 // WHEN: npm run test:unit && npm run test:integration
@@ -177,17 +191,20 @@ constructor(
 ## Invariants
 
 ### Configuration Guarantees (Must Enforce)
+
 1. **Positive Finite**: Timeout always positive finite number (enforced)
 2. **Fail Fast**: Invalid config throws at construction, not deferred
 3. **Clear Messages**: Error messages include actual value and type
 4. **No Coercion**: Invalid values rejected, not auto-corrected
 
 ### State Lifecycle Invariants (Must Maintain)
+
 1. **No Partial Construction**: Invalid config prevents state creation
 2. **Resource Safety**: No resources allocated if validation fails
 3. **Immediate Feedback**: Errors thrown synchronously from constructor
 
 ### API Contract Preservation (Must Maintain)
+
 1. **Constructor Signature**: Unchanged (validation is internal)
 2. **Error Types**: Uses project-standard `InvalidArgumentError`
 3. **Backward Compatibility**: Valid inputs behave identically
@@ -195,6 +212,7 @@ constructor(
 ## Testing Commands
 
 ### After Implementation
+
 ```bash
 # Lint modified file
 npx eslint src/turns/states/awaitingExternalTurnEndState.js
@@ -213,6 +231,7 @@ npm run test:ci
 ```
 
 ### Manual Verification
+
 ```bash
 # In Node.js REPL or test file:
 # const state = new AwaitingExternalTurnEndState({ timeoutMs: NaN, ... });
@@ -222,6 +241,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### Error Message Format
+
 - **Pattern**: `timeoutMs must be a positive finite number, got: ${value} (type: ${type})`
 - **Examples**:
   - `timeoutMs must be a positive finite number, got: NaN (type: number)`
@@ -229,6 +249,7 @@ npm run test:ci
   - `timeoutMs must be a positive finite number, got: 3000 (type: string)`
 
 ### Validation Logic
+
 ```javascript
 // Single comprehensive check:
 if (!Number.isFinite(this.#configuredTimeout) || this.#configuredTimeout <= 0) {
@@ -297,11 +318,13 @@ if (!Number.isFinite(this.#configuredTimeout) || this.#configuredTimeout <= 0) {
 ### What Differed From Plan
 
 **Ticket Assumption Corrections:**
+
 - Original ticket had incorrect constructor signature showing destructured parameters
 - Actual implementation uses `handler` as first positional parameter
 - These corrections were made to the ticket BEFORE implementation (per instructions)
 
 **Test Implementation Detail:**
+
 - Discovered that `null` behaves like `undefined` (both use default timeout via nullish coalescing)
 - Updated test to reflect this correct behavior
 - Added extra test case for `-Infinity` (not explicitly in ACs but important edge case)

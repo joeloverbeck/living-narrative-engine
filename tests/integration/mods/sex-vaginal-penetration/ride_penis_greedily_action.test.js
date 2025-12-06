@@ -114,7 +114,8 @@ describe('sex-vaginal-penetration:ride_penis_greedily action integration', () =>
     const componentEvents = testFixture.events.filter(
       (event) =>
         event.eventType === 'core:component_added' &&
-        (event.payload?.componentTypeId === 'positioning:being_fucked_vaginally' ||
+        (event.payload?.componentTypeId ===
+          'positioning:being_fucked_vaginally' ||
           event.payload?.componentTypeId === 'positioning:fucking_vaginally')
     );
     expect(componentEvents).toHaveLength(0);

@@ -16,9 +16,7 @@ import BaseCharacterBuilderController, {
 import { DOMElementManager } from '../../../../src/characterBuilder/services/domElementManager.js';
 import { EventListenerRegistry } from '../../../../src/characterBuilder/services/eventListenerRegistry.js';
 import { AsyncUtilitiesToolkit } from '../../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
-import {
-  ControllerLifecycleOrchestrator,
-} from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ControllerLifecycleOrchestrator } from '../../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
 import { PerformanceMonitor } from '../../../../src/characterBuilder/services/performanceMonitor.js';
 import { MemoryManager } from '../../../../src/characterBuilder/services/memoryManager.js';
 import { ErrorHandlingStrategy } from '../../../../src/characterBuilder/services/errorHandlingStrategy.js';
@@ -282,7 +280,9 @@ describe('BaseCharacterBuilderController lifecycle and error handling (integrati
   });
 
   it('warns when UI state manager cannot be initialized due to missing DOM structure', async () => {
-    const { controller, dependencies } = setupController({ cacheElements: false });
+    const { controller, dependencies } = setupController({
+      cacheElements: false,
+    });
     const warnSpy = jest.spyOn(dependencies.logger, 'warn');
 
     await controller.exposeInitializeUIState();
@@ -308,7 +308,9 @@ describe('BaseCharacterBuilderController lifecycle and error handling (integrati
       ({ payload }) => errorEvents.push(payload)
     );
 
-    await expect(controller.initialize()).rejects.toThrow('post-initialize failure');
+    await expect(controller.initialize()).rejects.toThrow(
+      'post-initialize failure'
+    );
 
     expect(controller.onInitializationErrorCount).toBe(1);
     expect(controller.lastInitializationError).toBeInstanceOf(Error);
@@ -420,7 +422,9 @@ describe('BaseCharacterBuilderController lifecycle and error handling (integrati
     // need to inspect the string content instead of object fields.
     expect(invalidResult.isValid).toBe(false);
     expect(invalidResult.errors[0]).toContain('name');
-    expect(invalidResult.errorMessage).toContain("must have required property 'name'");
+    expect(invalidResult.errorMessage).toContain(
+      "must have required property 'name'"
+    );
 
     const validResult = controller.validateDataExposed(
       { name: 'Hero' },

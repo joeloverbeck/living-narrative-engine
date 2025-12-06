@@ -81,10 +81,7 @@ describe('Pipeline full integration coverage', () => {
       });
     });
 
-    const pipeline = new Pipeline(
-      [stageOne, stageTwo, stageThree],
-      mockLogger
-    );
+    const pipeline = new Pipeline([stageOne, stageTwo, stageThree], mockLogger);
 
     const result = await pipeline.execute({
       actor: { id: 'actor-99' },
@@ -130,10 +127,7 @@ describe('Pipeline full integration coverage', () => {
     expect(mockLogger.error).not.toHaveBeenCalled();
 
     expect(result.success).toBe(false);
-    expect(result.actions).toEqual([
-      { id: 'act-1' },
-      { id: 'act-3' },
-    ]);
+    expect(result.actions).toEqual([{ id: 'act-1' }, { id: 'act-3' }]);
     expect(result.errors).toEqual([
       { error: 'stage failure', phase: 'PIPELINE' },
     ]);

@@ -9,7 +9,6 @@ import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 describe('Goals Component ID Fix Verification', () => {
-
   describe('Source code references', () => {
     it('should use core:goals in componentIds constant', () => {
       expect(GOALS_COMPONENT_ID).toBe('core:goals');
@@ -24,7 +23,14 @@ describe('Goals Component ID Fix Verification', () => {
 
   describe('Component definition', () => {
     it('should have goals component defined in core mod with correct ID', () => {
-      const componentPath = join(process.cwd(), 'data', 'mods', 'core', 'components', 'goals.component.json');
+      const componentPath = join(
+        process.cwd(),
+        'data',
+        'mods',
+        'core',
+        'components',
+        'goals.component.json'
+      );
       const componentData = JSON.parse(readFileSync(componentPath, 'utf8'));
 
       expect(componentData.id).toBe('core:goals');
@@ -34,12 +40,22 @@ describe('Goals Component ID Fix Verification', () => {
 
   describe('Character files', () => {
     it('should not have any p_erotica character files using movement:goals', () => {
-      const p_eroticaPath = join(process.cwd(), '.private', 'data', 'mods', 'p_erotica', 'entities', 'definitions');
+      const p_eroticaPath = join(
+        process.cwd(),
+        '.private',
+        'data',
+        'mods',
+        'p_erotica',
+        'entities',
+        'definitions'
+      );
 
       try {
-        const files = readdirSync(p_eroticaPath).filter(f => f.endsWith('.character.json'));
+        const files = readdirSync(p_eroticaPath).filter((f) =>
+          f.endsWith('.character.json')
+        );
 
-        files.forEach(file => {
+        files.forEach((file) => {
           const filePath = join(p_eroticaPath, file);
           const content = readFileSync(filePath, 'utf8');
 
@@ -53,7 +69,7 @@ describe('Goals Component ID Fix Verification', () => {
               const componentKeys = Object.keys(data.components);
               expect(componentKeys).not.toContain('movement:goals');
               // If it has goals, it should be core:goals
-              if (componentKeys.some(key => key.includes('goals'))) {
+              if (componentKeys.some((key) => key.includes('goals'))) {
                 expect(componentKeys).toContain('core:goals');
               }
             }
@@ -78,10 +94,10 @@ describe('Goals Component ID Fix Verification', () => {
         'src/characterBuilder/services/TraitsRewriterGenerator.js',
         'src/characterBuilder/services/TraitsRewriterDisplayEnhancer.js',
         'src/characterBuilder/controllers/TraitsRewriterController.js',
-        'src/characterBuilder/controllers/SpeechPatternsGeneratorController.js'
+        'src/characterBuilder/controllers/SpeechPatternsGeneratorController.js',
       ];
 
-      filesToCheck.forEach(relativePath => {
+      filesToCheck.forEach((relativePath) => {
         const filePath = join(process.cwd(), relativePath);
         const content = readFileSync(filePath, 'utf8');
 
@@ -90,7 +106,10 @@ describe('Goals Component ID Fix Verification', () => {
         expect(content).not.toMatch(/"movement:goals"/);
 
         // Should contain core:goals instead (in the files that reference goals)
-        if (relativePath.includes('componentIds') || relativePath.includes('EntityConfig')) {
+        if (
+          relativePath.includes('componentIds') ||
+          relativePath.includes('EntityConfig')
+        ) {
           expect(content).toMatch(/'core:goals'/);
         }
       });

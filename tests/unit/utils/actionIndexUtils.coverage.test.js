@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import { ActionIndexValidationError } from '../../../src/errors/actionIndexValidationError.js';
@@ -53,8 +60,18 @@ describe('assertValidActionIndex', () => {
     const debugData = { reason: 'too-high' };
 
     await expect(
-      assertValidActionIndex(5, 3, 'provider', 'actor-2', dispatcher, logger, debugData)
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+      assertValidActionIndex(
+        5,
+        3,
+        'provider',
+        'actor-2',
+        dispatcher,
+        logger,
+        debugData
+      )
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
 
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
     const [, , details] = safeDispatchError.mock.calls[0];
@@ -83,11 +100,27 @@ describe('assertValidActionIndex', () => {
       };
 
       await expect(
-        assertValidActionIndex(10, 5, 'LLMChooser', 'actor-1', dispatcher, logger, debugData)
+        assertValidActionIndex(
+          10,
+          5,
+          'LLMChooser',
+          'actor-1',
+          dispatcher,
+          logger,
+          debugData
+        )
       ).rejects.toThrow(ActionIndexValidationError);
 
       // Verify error properties separately to avoid conditional expects
-      const errorPromise = assertValidActionIndex(10, 5, 'LLMChooser', 'actor-1', dispatcher, logger, debugData);
+      const errorPromise = assertValidActionIndex(
+        10,
+        5,
+        'LLMChooser',
+        'actor-1',
+        dispatcher,
+        logger,
+        debugData
+      );
       await expect(errorPromise).rejects.toMatchObject({
         llmData: {
           speech: 'I should reconsider my approach...',
@@ -110,7 +143,15 @@ describe('assertValidActionIndex', () => {
       };
 
       await expect(
-        assertValidActionIndex(7, 3, 'LLMChooser', 'actor-2', dispatcher, logger, debugData)
+        assertValidActionIndex(
+          7,
+          3,
+          'LLMChooser',
+          'actor-2',
+          dispatcher,
+          logger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: 'Character speech',
@@ -124,7 +165,15 @@ describe('assertValidActionIndex', () => {
       const debugData = { someOtherField: 'value' };
 
       await expect(
-        assertValidActionIndex(10, 5, 'LLMChooser', 'actor-3', dispatcher, logger, debugData)
+        assertValidActionIndex(
+          10,
+          5,
+          'LLMChooser',
+          'actor-3',
+          dispatcher,
+          logger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: null,
@@ -136,7 +185,15 @@ describe('assertValidActionIndex', () => {
 
     it('should handle empty debugData object', async () => {
       await expect(
-        assertValidActionIndex(8, 4, 'LLMChooser', 'actor-4', dispatcher, logger, {})
+        assertValidActionIndex(
+          8,
+          4,
+          'LLMChooser',
+          'actor-4',
+          dispatcher,
+          logger,
+          {}
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: null,
@@ -157,7 +214,15 @@ describe('assertValidActionIndex', () => {
       };
 
       await expect(
-        assertValidActionIndex(6, 2, 'LLMChooser', 'actor-5', dispatcher, logger, debugData)
+        assertValidActionIndex(
+          6,
+          2,
+          'LLMChooser',
+          'actor-5',
+          dispatcher,
+          logger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: 'Preserved speech',
@@ -184,7 +249,15 @@ describe('assertValidActionIndex', () => {
       };
 
       await expect(
-        assertValidActionIndex(5, 2, 'LLMChooser', 'actor-6', dispatcher, logger, debugData)
+        assertValidActionIndex(
+          5,
+          2,
+          'LLMChooser',
+          'actor-6',
+          dispatcher,
+          logger,
+          debugData
+        )
       ).rejects.toMatchObject({
         llmData: {
           speech: null,

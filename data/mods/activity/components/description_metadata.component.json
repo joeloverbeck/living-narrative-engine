@@ -5,10 +5,7 @@
   "dataSchema": {
     "type": "object",
     "additionalProperties": false,
-    "required": [
-      "sourceComponent",
-      "descriptionType"
-    ],
+    "required": ["sourceComponent", "descriptionType"],
     "properties": {
       "sourceComponent": {
         "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",
@@ -16,12 +13,7 @@
       },
       "descriptionType": {
         "type": "string",
-        "enum": [
-          "template",
-          "verb",
-          "custom",
-          "conditional"
-        ],
+        "enum": ["template", "verb", "custom", "conditional"],
         "description": "How to generate the description: 'template' uses a template string, 'verb' generates from verb+adverb, 'custom' for custom logic, 'conditional' for complex conditional rules"
       },
       "template": {
@@ -47,13 +39,7 @@
       "adverb": {
         "type": "string",
         "description": "Optional adverb modifier to add nuance to the description",
-        "examples": [
-          "passionately",
-          "gently",
-          "closely",
-          "tenderly",
-          "eagerly"
-        ]
+        "examples": ["passionately", "gently", "closely", "tenderly", "eagerly"]
       },
       "targetRole": {
         "type": "string",
@@ -92,10 +78,7 @@
                 "description": "Value that the property must equal for this description to be shown. Can be any JSON type."
               }
             },
-            "required": [
-              "property",
-              "equals"
-            ]
+            "required": ["property", "equals"]
           },
           "hideIfTargetHasComponent": {
             "$ref": "schema://living-narrative-engine/common.schema.json#/definitions/namespacedId",

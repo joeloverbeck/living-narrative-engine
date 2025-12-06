@@ -9,6 +9,7 @@ Create comprehensive integration tests that verify the complete injury narrative
 ## Purpose
 
 This ticket ensures:
+
 1. All unit-level fixes (001-005) integrate correctly
 2. The UI panel receives and displays correct narratives
 3. The LLM prompt system receives correct narratives
@@ -20,12 +21,12 @@ This ticket ensures:
 
 ### Existing Test Coverage (Pre-Implementation)
 
-| Assumption | Reality | Impact |
-|------------|---------|--------|
-| Unit fixes need validation | Unit tests already exist (1709 lines in `injuryNarrativeFormatterService.test.js`) covering SPEC-001 through SPEC-004 | Scope reduced |
-| Aggregation → Formatter flow untested | Already covered by `injuryReportingFlow.integration.test.js` (675 lines) | Some overlap expected |
-| UI DOM tests needed | Would require jsdom setup; formatter already comprehensively tested | Skipped - minimal value |
-| LLM ActorDataExtractor tests needed | Pass-through behavior; formatter already tested | Skipped - minimal value |
+| Assumption                            | Reality                                                                                                               | Impact                  |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Unit fixes need validation            | Unit tests already exist (1709 lines in `injuryNarrativeFormatterService.test.js`) covering SPEC-001 through SPEC-004 | Scope reduced           |
+| Aggregation → Formatter flow untested | Already covered by `injuryReportingFlow.integration.test.js` (675 lines)                                              | Some overlap expected   |
+| UI DOM tests needed                   | Would require jsdom setup; formatter already comprehensively tested                                                   | Skipped - minimal value |
+| LLM ActorDataExtractor tests needed   | Pass-through behavior; formatter already tested                                                                       | Skipped - minimal value |
 
 ### Confirmed Unit Test Coverage (in `injuryNarrativeFormatterService.test.js`)
 
@@ -37,11 +38,13 @@ This ticket ensures:
 ### Scope Adjustment
 
 Original acceptance criteria (9 tests) reduced to 3 focused integration tests:
+
 1. `should format complex injury state correctly` - End-to-end validation
 2. `should handle the exact problematic scenario from spec` - Regression test
 3. `should filter dismembered parts from bleeding output` - Edge case
 
 Tests skipped due to existing coverage:
+
 - Healthy entity test → already in `injuryReportingFlow.integration.test.js`
 - Dying/dead state tests → already in `injuryReportingFlow.integration.test.js`
 - UI panel DOM tests → formatter tested; minimal integration value
@@ -51,9 +54,9 @@ Tests skipped due to existing coverage:
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | Create |
+| File                                                                                   | Change Type |
+| -------------------------------------------------------------------------------------- | ----------- |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | Create      |
 
 ---
 
@@ -135,47 +138,52 @@ The following are **explicitly NOT part of this ticket**:
 ## Test Data Scenarios
 
 ### Scenario 1: Basic Dismemberment
+
 ```javascript
 const entity = await createTestEntityWithInjuries({
-  dismemberedParts: [{ partType: 'ear', orientation: 'right' }]
+  dismemberedParts: [{ partType: 'ear', orientation: 'right' }],
 });
 // Expected: "My right ear is missing."
 ```
 
 ### Scenario 2: Dismemberment + Other Injuries
+
 ```javascript
 const entity = await createTestEntityWithInjuries({
   dismemberedParts: [{ partType: 'arm', orientation: 'left' }],
-  criticalParts: [{ partType: 'torso', orientation: null }]
+  criticalParts: [{ partType: 'torso', orientation: null }],
 });
 // Expected: "My left arm is missing. My torso screams with agony."
 ```
 
 ### Scenario 3: Multiple Bleeding Same Severity
+
 ```javascript
 const entity = await createTestEntityWithInjuries({
   woundedParts: [
     { partType: 'torso', orientation: null },
-    { partType: 'head', orientation: 'upper' }
+    { partType: 'head', orientation: 'upper' },
   ],
   bleedingParts: [
     { partType: 'torso', severity: 'moderate' },
-    { partType: 'head', orientation: 'upper', severity: 'moderate' }
-  ]
+    { partType: 'head', orientation: 'upper', severity: 'moderate' },
+  ],
 });
 // Expected: "...Blood flows steadily from my torso and my upper head."
 ```
 
 ### Scenario 4: Dismembered Part with Bleeding (Edge Case)
+
 ```javascript
 const entity = await createTestEntityWithInjuries({
   dismemberedParts: [{ partType: 'arm', orientation: 'left' }],
-  bleedingParts: [{ partType: 'arm', orientation: 'left', severity: 'severe' }]
+  bleedingParts: [{ partType: 'arm', orientation: 'left', severity: 'severe' }],
 });
 // Expected: "My left arm is missing." (NO bleeding for dismembered)
 ```
 
 ### Scenario 5: Complex Realistic (From Spec)
+
 ```javascript
 const entity = await createTestEntityWithInjuries({
   dismemberedParts: [{ partType: 'ear', orientation: 'right' }],
@@ -184,8 +192,8 @@ const entity = await createTestEntityWithInjuries({
   scratchedParts: [{ partType: 'brain', orientation: null }],
   bleedingParts: [
     { partType: 'torso', severity: 'moderate' },
-    { partType: 'head', orientation: 'upper', severity: 'moderate' }
-  ]
+    { partType: 'head', orientation: 'upper', severity: 'moderate' },
+  ],
 });
 // Expected: "My right ear is missing. My torso screams with agony. My upper head throbs painfully. My brain stings slightly. Blood flows steadily from my torso and my upper head."
 ```
@@ -220,12 +228,13 @@ describe('Physical Condition Narrative Improvements', () => {
         woundedParts: [{ partType: 'head', orientation: 'upper' }],
         bleedingParts: [
           { partType: 'torso', orientation: null, severity: 'moderate' },
-          { partType: 'head', orientation: 'upper', severity: 'moderate' }
-        ]
+          { partType: 'head', orientation: 'upper', severity: 'moderate' },
+        ],
       });
 
       const summary = injuryAggregationService.aggregateInjuries(entity.id);
-      const narrative = injuryNarrativeFormatterService.formatFirstPerson(summary);
+      const narrative =
+        injuryNarrativeFormatterService.formatFirstPerson(summary);
 
       // Verify output order
       const missingPos = narrative.indexOf('is missing');
@@ -247,7 +256,9 @@ describe('Physical Condition Narrative Improvements', () => {
       expect(narrative.match(/right ear/g)?.length || 0).toBe(1);
 
       // Verify bleeding grouped
-      expect(narrative).toMatch(/Blood flows steadily from my torso and my upper head\./);
+      expect(narrative).toMatch(
+        /Blood flows steadily from my torso and my upper head\./
+      );
     });
 
     it('should handle the exact problematic scenario from spec', async () => {
@@ -258,12 +269,13 @@ describe('Physical Condition Narrative Improvements', () => {
         scratchedParts: [{ partType: 'brain', orientation: null }],
         bleedingParts: [
           { partType: 'torso', orientation: null, severity: 'moderate' },
-          { partType: 'head', orientation: 'upper', severity: 'moderate' }
-        ]
+          { partType: 'head', orientation: 'upper', severity: 'moderate' },
+        ],
       });
 
       const summary = injuryAggregationService.aggregateInjuries(entity.id);
-      const narrative = injuryNarrativeFormatterService.formatFirstPerson(summary);
+      const narrative =
+        injuryNarrativeFormatterService.formatFirstPerson(summary);
 
       expect(narrative).toBe(
         'My right ear is missing. My torso screams with agony. My upper head throbs painfully. My brain stings slightly. Blood flows steadily from my torso and my upper head.'
@@ -275,7 +287,7 @@ describe('Physical Condition Narrative Improvements', () => {
     it('should display formatted narrative in injury panel', async () => {
       // Setup entity with injuries
       const entity = await createTestEntityWithInjuries({
-        woundedParts: [{ partType: 'arm', orientation: 'left' }]
+        woundedParts: [{ partType: 'arm', orientation: 'left' }],
       });
 
       // Trigger panel update
@@ -291,13 +303,15 @@ describe('Physical Condition Narrative Improvements', () => {
   describe('LLM integration', () => {
     it('should include narrative in actor prompt data', async () => {
       const entity = await createTestEntityWithInjuries({
-        criticalParts: [{ partType: 'torso', orientation: null }]
+        criticalParts: [{ partType: 'torso', orientation: null }],
       });
 
       const actorData = actorDataExtractor.extractActorData(entity.id);
 
       expect(actorData.physicalCondition).toBeDefined();
-      expect(actorData.physicalCondition.firstPersonNarrative).toContain('screams with agony');
+      expect(actorData.physicalCondition.firstPersonNarrative).toContain(
+        'screams with agony'
+      );
     });
   });
 });
@@ -331,12 +345,12 @@ async function createTestEntityWithInjuries(config) {
 
 ## Non-Functional Requirements
 
-| Requirement | Verification |
-|-------------|--------------|
-| All tests pass in CI | GitHub Actions green |
-| Test coverage ≥ 80% | Coverage report |
-| No flaky tests | 3 consecutive green runs |
-| Test execution < 30s | Timer verification |
+| Requirement          | Verification             |
+| -------------------- | ------------------------ |
+| All tests pass in CI | GitHub Actions green     |
+| Test coverage ≥ 80%  | Coverage report          |
+| No flaky tests       | 3 consecutive green runs |
+| Test execution < 30s | Timer verification       |
 
 ---
 
@@ -344,20 +358,20 @@ async function createTestEntityWithInjuries(config) {
 
 ### What Was Actually Changed vs. Originally Planned
 
-| Planned | Actual | Reason |
-|---------|--------|--------|
-| 9 integration tests | 3 focused tests | Existing coverage in unit tests and `injuryReportingFlow.integration.test.js` |
-| UI panel DOM tests | Skipped | Formatter already comprehensively tested; minimal additional value |
-| LLM ActorDataExtractor tests | Skipped | Pass-through behavior; formatter already tested |
-| New test file creation | ✅ Created | `physicalConditionNarrativeImprovements.integration.test.js` |
+| Planned                      | Actual          | Reason                                                                        |
+| ---------------------------- | --------------- | ----------------------------------------------------------------------------- |
+| 9 integration tests          | 3 focused tests | Existing coverage in unit tests and `injuryReportingFlow.integration.test.js` |
+| UI panel DOM tests           | Skipped         | Formatter already comprehensively tested; minimal additional value            |
+| LLM ActorDataExtractor tests | Skipped         | Pass-through behavior; formatter already tested                               |
+| New test file creation       | ✅ Created      | `physicalConditionNarrativeImprovements.integration.test.js`                  |
 
 ### New/Modified Tests
 
-| Test File | Test Name | Rationale |
-|-----------|-----------|-----------|
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should format complex injury state correctly (SPEC-001 through SPEC-004)` | End-to-end validation of all four spec items working together |
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should handle the exact problematic scenario from spec` | Exact regression test from bug report - most important test |
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should filter dismembered parts from bleeding output (Scenario 4)` | Edge case coverage - dismembered parts should not show bleeding |
+| Test File                                                                              | Test Name                                                                  | Rationale                                                       |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should format complex injury state correctly (SPEC-001 through SPEC-004)` | End-to-end validation of all four spec items working together   |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should handle the exact problematic scenario from spec`                   | Exact regression test from bug report - most important test     |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | `should filter dismembered parts from bleeding output (Scenario 4)`        | Edge case coverage - dismembered parts should not show bleeding |
 
 ### Key Findings
 
@@ -367,14 +381,15 @@ async function createTestEntityWithInjuries(config) {
 
 ### Files Changed
 
-| File | Change |
-|------|--------|
-| `tickets/PHYCONNARIMP-006-integration-tests.md` | Added Discrepancies Found section, Outcome section, marked COMPLETED |
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | Created - 3 focused integration tests |
+| File                                                                                   | Change                                                               |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `tickets/PHYCONNARIMP-006-integration-tests.md`                                        | Added Discrepancies Found section, Outcome section, marked COMPLETED |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | Created - 3 focused integration tests                                |
 
 ### Test Results
 
 All 3 tests pass:
+
 - `should format complex injury state correctly (SPEC-001 through SPEC-004)` ✅
 - `should handle the exact problematic scenario from spec` ✅
 - `should filter dismembered parts from bleeding output (Scenario 4)` ✅

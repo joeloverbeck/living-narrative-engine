@@ -97,7 +97,9 @@ describe('Component Schema Extension - Integration Tests', () => {
   describe('Backward Compatibility', () => {
     it('should validate all existing component schemas without validationRules', async () => {
       // Find all component schema files
-      const componentFiles = await glob('data/mods/**/components/*.component.json');
+      const componentFiles = await glob(
+        'data/mods/**/components/*.component.json'
+      );
 
       // Should have many component files
       expect(componentFiles.length).toBeGreaterThan(0);
@@ -136,7 +138,9 @@ describe('Component Schema Extension - Integration Tests', () => {
               `${fc.file}: ${fc.errors.map((e) => e.message || e.schemaPath).join(', ')}`
           )
           .join('\n');
-        throw new Error(`${failedComponents.length} components failed validation:\n${errorReport}`);
+        throw new Error(
+          `${failedComponents.length} components failed validation:\n${errorReport}`
+        );
       }
 
       expect(failedComponents).toHaveLength(0);

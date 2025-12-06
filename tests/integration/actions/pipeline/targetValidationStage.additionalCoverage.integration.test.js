@@ -45,9 +45,14 @@ const dummyErrorContextBuilder = {
   buildErrorContext: (options) => ({ ...options }),
 };
 
-const clone = (value) => (typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value)));
+const clone = (value) =>
+  typeof structuredClone === 'function'
+    ? structuredClone(value)
+    : JSON.parse(JSON.stringify(value));
 const originalBaseTargetConfig = clone(actionPipelineConfig.targetValidation);
-const originalEnvTargetConfig = clone(actionPipelineConfig.environments.test.targetValidation);
+const originalEnvTargetConfig = clone(
+  actionPipelineConfig.environments.test.targetValidation
+);
 
 /**
  *
@@ -55,10 +60,16 @@ const originalEnvTargetConfig = clone(actionPipelineConfig.environments.test.tar
 function restoreTargetValidationConfig() {
   const baseClone = clone(originalBaseTargetConfig);
   Object.assign(actionPipelineConfig.targetValidation, baseClone);
-  actionPipelineConfig.targetValidation.skipForActionTypes = [...baseClone.skipForActionTypes];
-  actionPipelineConfig.targetValidation.skipForMods = [...baseClone.skipForMods];
+  actionPipelineConfig.targetValidation.skipForActionTypes = [
+    ...baseClone.skipForActionTypes,
+  ];
+  actionPipelineConfig.targetValidation.skipForMods = [
+    ...baseClone.skipForMods,
+  ];
 
-  actionPipelineConfig.environments.test.targetValidation = clone(originalEnvTargetConfig);
+  actionPipelineConfig.environments.test.targetValidation = clone(
+    originalEnvTargetConfig
+  );
 }
 
 afterEach(() => {
@@ -69,7 +80,9 @@ afterEach(() => {
 describe('TargetComponentValidationStage configuration edge cases', () => {
   it('short-circuits when validation is disabled via configuration', async () => {
     const logger = new RecordingLogger();
-    const previousTestConfig = clone(actionPipelineConfig.environments.test.targetValidation);
+    const previousTestConfig = clone(
+      actionPipelineConfig.environments.test.targetValidation
+    );
 
     actionPipelineConfig.environments.test.targetValidation = {
       ...previousTestConfig,
@@ -87,15 +100,14 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new NoopValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
 
-    const candidateActions = [
-      { id: 'skipped:alpha' },
-      { id: 'skipped:beta' },
-    ];
+    const candidateActions = [{ id: 'skipped:alpha' }, { id: 'skipped:beta' }];
 
     class TraceRecorder {
       constructor() {
@@ -120,11 +132,14 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
     expect(result.continueProcessing).toBe(true);
 
     expect(
-      logger.debugMessages.includes('Target component validation is disabled via configuration')
+      logger.debugMessages.includes(
+        'Target component validation is disabled via configuration'
+      )
     ).toBe(true);
     expect(
-      trace.steps.some(({ message }) =>
-        message === 'Target component validation skipped (disabled in config)'
+      trace.steps.some(
+        ({ message }) =>
+          message === 'Target component validation skipped (disabled in config)'
       )
     ).toBe(true);
   });
@@ -147,7 +162,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new ValidatingStageBypass(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
@@ -164,7 +181,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
     expect(result.data.candidateActions).toEqual(candidateActions);
     expect(
       logger.debugMessages.some((message) =>
-        message.includes('Target component validation is disabled via configuration')
+        message.includes(
+          'Target component validation is disabled via configuration'
+        )
       )
     ).toBe(false);
   });
@@ -262,12 +281,16 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     expect(
       logger.debugMessages.some((message) =>
-        message.includes("Skipping validation for action 'ambient:skip-me' based on configuration")
+        message.includes(
+          "Skipping validation for action 'ambient:skip-me' based on configuration"
+        )
       )
     ).toBe(true);
     expect(
       logger.debugMessages.some((message) =>
-        message.includes("allowed in lenient mode despite: Allowed in lenient mode")
+        message.includes(
+          'allowed in lenient mode despite: Allowed in lenient mode'
+        )
       )
     ).toBe(true);
     expect(
@@ -323,7 +346,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new AlwaysValidValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
@@ -339,7 +364,10 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
       },
       {
         id: 'fallback:legacy',
-        target_entity: { id: 'target-legacy', components: { 'core:friend': {} } },
+        target_entity: {
+          id: 'target-legacy',
+          components: { 'core:friend': {} },
+        },
       },
       {
         id: 'fallback:legacy-unknown',
@@ -348,7 +376,10 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
       {
         id: 'fallback:resolved',
         resolvedTargets: {
-          target: { id: 'resolved-target', components: { 'core:observer': {} } },
+          target: {
+            id: 'resolved-target',
+            components: { 'core:observer': {} },
+          },
         },
       },
       {
@@ -405,7 +436,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new PassThroughValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
@@ -448,7 +481,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new CriticalFailureValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
@@ -470,7 +505,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
     expect(result.data.candidateActions).toHaveLength(0);
     expect(
       logger.debugMessages.some((message) =>
-        message.includes("Action 'lenient:critical' filtered out: critical failure detected")
+        message.includes(
+          "Action 'lenient:critical' filtered out: critical failure detected"
+        )
       )
     ).toBe(true);
   });
@@ -500,7 +537,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new LenientNonCriticalValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
       configProvider,
@@ -537,7 +576,9 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
 
     const stage = new TargetComponentValidationStage({
       targetComponentValidator: new AlwaysValidValidator(),
-      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({ logger }),
+      targetRequiredComponentsValidator: new TargetRequiredComponentsValidator({
+        logger,
+      }),
       logger,
       actionErrorContextBuilder: dummyErrorContextBuilder,
     });
@@ -558,7 +599,7 @@ describe('TargetComponentValidationStage configuration edge cases', () => {
     expect(result.data.candidateActions).toHaveLength(0);
     expect(
       logger.debugMessages.some((message) =>
-        message.includes("Target (target) must have component: core:friend")
+        message.includes('Target (target) must have component: core:friend')
       )
     ).toBe(true);
   });

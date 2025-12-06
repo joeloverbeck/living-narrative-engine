@@ -28,7 +28,7 @@ export class ErrorContext {
     const context = {
       errorType: error.constructor.name,
       message: error.message,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // Add stack trace if available
@@ -92,7 +92,10 @@ export class ErrorContext {
     // For regular Error objects, try to add context as properties
     try {
       for (const [key, value] of Object.entries(additionalContext)) {
-        if (isNonBlankString(key) && !Object.prototype.hasOwnProperty.call(error, key)) {
+        if (
+          isNonBlankString(key) &&
+          !Object.prototype.hasOwnProperty.call(error, key)
+        ) {
           error[key] = value;
         }
       }
@@ -167,7 +170,9 @@ export class ErrorContext {
    */
   static createSnapshot(operation, additionalContext = {}) {
     if (!isNonBlankString(operation)) {
-      throw new Error('ErrorContext.createSnapshot: operation parameter is required');
+      throw new Error(
+        'ErrorContext.createSnapshot: operation parameter is required'
+      );
     }
 
     return this.merge(
@@ -175,8 +180,9 @@ export class ErrorContext {
         operation,
         snapshotId: this.generateCorrelationId('snapshot'),
         timestamp: Date.now(),
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
-        url: typeof window !== 'undefined' ? window.location.href : 'N/A'
+        userAgent:
+          typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+        url: typeof window !== 'undefined' ? window.location.href : 'N/A',
       },
       additionalContext
     );
@@ -212,7 +218,7 @@ export class ErrorContext {
     try {
       // Handle arrays
       if (Array.isArray(obj)) {
-        return obj.map(item =>
+        return obj.map((item) =>
           this.#sanitizeRecursive(item, maxDepth, currentDepth + 1, seen)
         );
       }
@@ -227,7 +233,7 @@ export class ErrorContext {
         return {
           name: obj.name,
           message: obj.message,
-          stack: obj.stack
+          stack: obj.stack,
         };
       }
 
@@ -245,7 +251,12 @@ export class ErrorContext {
           continue;
         }
 
-        sanitized[key] = this.#sanitizeRecursive(value, maxDepth, currentDepth + 1, seen);
+        sanitized[key] = this.#sanitizeRecursive(
+          value,
+          maxDepth,
+          currentDepth + 1,
+          seen
+        );
       }
 
       return sanitized;
@@ -272,10 +283,10 @@ export class ErrorContext {
       /auth/i,
       /credential/i,
       /session/i,
-      /cookie/i
+      /cookie/i,
     ];
 
-    return sensitivePatterns.some(pattern => pattern.test(key));
+    return sensitivePatterns.some((pattern) => pattern.test(key));
   }
 }
 

@@ -32,13 +32,13 @@ jest.mock('../../../src/utils/idUtils.js', () => {
 const mockValidateRecipeDescriptors = jest.fn().mockReturnValue({
   valid: true,
   errors: [],
-  warnings: []
+  warnings: [],
 });
 
 jest.mock('../../../src/anatomy/validators/bodyDescriptorValidator.js', () => ({
   BodyDescriptorValidator: jest.fn().mockImplementation(() => ({
-    validateRecipeDescriptors: mockValidateRecipeDescriptors
-  }))
+    validateRecipeDescriptors: mockValidateRecipeDescriptors,
+  })),
 }));
 
 import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStoreItem.js';
@@ -259,7 +259,9 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
-        ).toThrow(/Co-presence constraints ensure multiple part types or components exist together/);
+        ).toThrow(
+          /Co-presence constraints ensure multiple part types or components exist together/
+        );
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
@@ -305,7 +307,9 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
-        ).toThrow(/Co-presence constraints ensure multiple part types or components exist together/);
+        ).toThrow(
+          /Co-presence constraints ensure multiple part types or components exist together/
+        );
       });
 
       it('includes example for requires components', () => {
@@ -342,23 +346,43 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
         };
 
         expect(() =>
-          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+          loader._validateConstraints(
+            constraints,
+            'test-mod',
+            'dragon.recipe.json'
+          )
         ).toThrow(/test-mod/);
 
         expect(() =>
-          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+          loader._validateConstraints(
+            constraints,
+            'test-mod',
+            'dragon.recipe.json'
+          )
         ).toThrow(/dragon.recipe.json/);
 
         expect(() =>
-          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+          loader._validateConstraints(
+            constraints,
+            'test-mod',
+            'dragon.recipe.json'
+          )
         ).toThrow(/index 0/);
 
         expect(() =>
-          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+          loader._validateConstraints(
+            constraints,
+            'test-mod',
+            'dragon.recipe.json'
+          )
         ).toThrow(/'partTypes'/);
 
         expect(() =>
-          loader._validateConstraints(constraints, 'test-mod', 'dragon.recipe.json')
+          loader._validateConstraints(
+            constraints,
+            'test-mod',
+            'dragon.recipe.json'
+          )
         ).toThrow(/'requires'/);
       });
     });
@@ -375,7 +399,9 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
-        ).toThrow(/Mutual exclusion constraints prevent incompatible parts from coexisting/);
+        ).toThrow(
+          /Mutual exclusion constraints prevent incompatible parts from coexisting/
+        );
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
@@ -421,7 +447,9 @@ describe('AnatomyRecipeLoader._validateConstraints', () => {
 
         expect(() =>
           loader._validateConstraints(constraints, 'core', 'test.recipe.json')
-        ).toThrow(/Mutual exclusion constraints prevent incompatible parts from coexisting/);
+        ).toThrow(
+          /Mutual exclusion constraints prevent incompatible parts from coexisting/
+        );
       });
 
       it('includes example for excludes components', () => {
@@ -591,11 +619,15 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       mockValidateRecipeDescriptors.mockReturnValue({
         valid: true,
         errors: [],
-        warnings: []
+        warnings: [],
       });
 
       expect(() =>
-        loader._validateBodyDescriptors({ build: 'athletic' }, 'human', 'human.json')
+        loader._validateBodyDescriptors(
+          { build: 'athletic' },
+          'human',
+          'human.json'
+        )
       ).not.toThrow();
 
       expect(logger.error).not.toHaveBeenCalled();
@@ -610,12 +642,16 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
 
       mockValidateRecipeDescriptors.mockReturnValue({
         valid: false,
-        errors: ['Invalid height descriptor: \'invalid\''],
-        warnings: []
+        errors: ["Invalid height descriptor: 'invalid'"],
+        warnings: [],
       });
 
       expect(() =>
-        loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
+        loader._validateBodyDescriptors(
+          { height: 'invalid' },
+          'human',
+          'human.json'
+        )
       ).toThrow(ValidationError);
 
       expect(logger.error).toHaveBeenCalled();
@@ -632,11 +668,15 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       mockValidateRecipeDescriptors.mockReturnValue({
         valid: false,
         errors: ['Invalid height descriptor'],
-        warnings: []
+        warnings: [],
       });
 
       expect(() =>
-        loader._validateBodyDescriptors({ height: 'invalid' }, 'human', 'human.json')
+        loader._validateBodyDescriptors(
+          { height: 'invalid' },
+          'human',
+          'human.json'
+        )
       ).not.toThrow();
 
       expect(logger.error).toHaveBeenCalled();
@@ -650,11 +690,15 @@ describe('AnatomyRecipeLoader._validateBodyDescriptors', () => {
       mockValidateRecipeDescriptors.mockReturnValue({
         valid: true,
         errors: [],
-        warnings: ['Unknown body descriptor \'unknownDescriptor\'']
+        warnings: ["Unknown body descriptor 'unknownDescriptor'"],
       });
 
       expect(() =>
-        loader._validateBodyDescriptors({ unknownDescriptor: 'value' }, 'human', 'human.json')
+        loader._validateBodyDescriptors(
+          { unknownDescriptor: 'value' },
+          'human',
+          'human.json'
+        )
       ).not.toThrow();
 
       expect(logger.warn).toHaveBeenCalled();

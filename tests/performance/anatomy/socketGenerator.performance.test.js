@@ -432,10 +432,26 @@ describe('SocketGenerator - Performance Tests', () => {
   describe('Performance Summary', () => {
     it('should demonstrate that socket generation is performant across all scales', () => {
       const testCases = [
-        { name: '1 socket', template: createStructureTemplate(1, 1), target: 0.01 },
-        { name: '10 sockets', template: createStructureTemplate(1, 10), target: 0.1 },
-        { name: '20 sockets', template: createStructureTemplate(1, 20), target: 0.2 },
-        { name: '50 sockets', template: createStructureTemplate(1, 50), target: 0.5 },
+        {
+          name: '1 socket',
+          template: createStructureTemplate(1, 1),
+          target: 0.01,
+        },
+        {
+          name: '10 sockets',
+          template: createStructureTemplate(1, 10),
+          target: 0.1,
+        },
+        {
+          name: '20 sockets',
+          template: createStructureTemplate(1, 20),
+          target: 0.2,
+        },
+        {
+          name: '50 sockets',
+          template: createStructureTemplate(1, 50),
+          target: 0.5,
+        },
         {
           name: '100 sockets',
           template: createStructureTemplate(1, 100),

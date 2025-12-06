@@ -30,25 +30,39 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
   describe('Action structure validation', () => {
     it('should have correct action structure', () => {
       expect(setAggressiveMoodAction).toBeDefined();
-      expect(setAggressiveMoodAction.id).toBe('music:set_aggressive_mood_on_instrument');
-      expect(setAggressiveMoodAction.name).toBe('Set Aggressive Mood on Instrument');
+      expect(setAggressiveMoodAction.id).toBe(
+        'music:set_aggressive_mood_on_instrument'
+      );
+      expect(setAggressiveMoodAction.name).toBe(
+        'Set Aggressive Mood on Instrument'
+      );
       expect(setAggressiveMoodAction.description).toContain('aggressive');
       expect(setAggressiveMoodAction.description).toContain('instrument');
-      expect(setAggressiveMoodAction.template).toBe('set aggressive mood on {instrument}');
+      expect(setAggressiveMoodAction.template).toBe(
+        'set aggressive mood on {instrument}'
+      );
     });
 
     it('should use items:examinable_items scope for primary targets', () => {
       expect(setAggressiveMoodAction.targets).toBeDefined();
       expect(setAggressiveMoodAction.targets.primary).toBeDefined();
-      expect(setAggressiveMoodAction.targets.primary.scope).toBe('items:examinable_items');
-      expect(setAggressiveMoodAction.targets.primary.placeholder).toBe('instrument');
-      expect(setAggressiveMoodAction.targets.primary.description).toBe('Instrument to play with aggressive mood');
+      expect(setAggressiveMoodAction.targets.primary.scope).toBe(
+        'items:examinable_items'
+      );
+      expect(setAggressiveMoodAction.targets.primary.placeholder).toBe(
+        'instrument'
+      );
+      expect(setAggressiveMoodAction.targets.primary.description).toBe(
+        'Instrument to play with aggressive mood'
+      );
     });
 
     it('should require music:is_musician component on actor', () => {
       expect(setAggressiveMoodAction.required_components).toBeDefined();
       expect(setAggressiveMoodAction.required_components.actor).toBeDefined();
-      expect(setAggressiveMoodAction.required_components.actor).toEqual(['music:is_musician']);
+      expect(setAggressiveMoodAction.required_components.actor).toEqual([
+        'music:is_musician',
+      ]);
     });
 
     it('should require items:item and music:is_instrument components on primary target', () => {
@@ -69,7 +83,9 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
       expect(setAggressiveMoodAction.visual).toBeDefined();
       expect(setAggressiveMoodAction.visual.backgroundColor).toBe('#1a2332');
       expect(setAggressiveMoodAction.visual.textColor).toBe('#d1d5db');
-      expect(setAggressiveMoodAction.visual.hoverBackgroundColor).toBe('#2d3748');
+      expect(setAggressiveMoodAction.visual.hoverBackgroundColor).toBe(
+        '#2d3748'
+      );
       expect(setAggressiveMoodAction.visual.hoverTextColor).toBe('#f3f4f6');
     });
   });
@@ -131,7 +147,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([room, actor, instrument]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -200,7 +217,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([room, actor, instrument]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -294,7 +312,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([room, actor]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -365,7 +384,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([roomA, roomB, actor, instrument]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -438,7 +458,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([room, actor, nonInstrument]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',
@@ -531,7 +552,8 @@ describe('music:set_aggressive_mood_on_instrument - Action Discovery', () => {
 
         testFixture.reset([room, actor, trumpet, drum]);
 
-        const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+        const actorInstance =
+          testFixture.entityManager.getEntityInstance('actor1');
         const scopeContext = {
           actor: {
             id: 'actor1',

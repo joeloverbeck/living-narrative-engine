@@ -16,9 +16,11 @@ Create the `anatomy:part_health` component schema that tracks health status on b
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/anatomy/components/part_health.component.json`
 
 ### Modified Files
+
 - `tests/unit/schemas/core.allComponents.schema.test.js` (add test fixtures for part_health component)
 
 ---
@@ -26,6 +28,7 @@ Create the `anatomy:part_health` component schema that tracks health status on b
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing anatomy components (`part.component.json`, `joint.component.json`, etc.)
 - Any entity definition files
 - Any operation handler files
@@ -62,13 +65,7 @@ Create `data/mods/anatomy/components/part_health.component.json`:
       },
       "state": {
         "type": "string",
-        "enum": [
-          "healthy",
-          "bruised",
-          "wounded",
-          "badly_damaged",
-          "destroyed"
-        ],
+        "enum": ["healthy", "bruised", "wounded", "badly_damaged", "destroyed"],
         "description": "Narrative health state based on percentage thresholds. healthy (76-100%), bruised (51-75%), wounded (26-50%), badly_damaged (1-25%), destroyed (0%)."
       },
       "turnsInState": {
@@ -78,11 +75,7 @@ Create `data/mods/anatomy/components/part_health.component.json`:
         "description": "Consecutive turns the part has been in the current state. Resets to 0 when state changes."
       }
     },
-    "required": [
-      "currentHealth",
-      "maxHealth",
-      "state"
-    ],
+    "required": ["currentHealth", "maxHealth", "state"],
     "additionalProperties": false
   },
   "validationRules": {
@@ -121,6 +114,7 @@ Create `data/mods/anatomy/components/part_health.component.json`:
    - `npm run validate:strict` passes without errors
 
 2. **JSON schema validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/components/part_health.component.json'))"
    ```

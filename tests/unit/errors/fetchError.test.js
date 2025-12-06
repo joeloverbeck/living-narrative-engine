@@ -5,7 +5,10 @@ import BaseError from '../../../src/errors/baseError.js';
 
 describe('FetchError', () => {
   it('captures path context and exposes BaseError contract', () => {
-    const error = new FetchError('Unable to fetch resource', '/mods/quest.json');
+    const error = new FetchError(
+      'Unable to fetch resource',
+      '/mods/quest.json'
+    );
 
     expect(error).toBeInstanceOf(BaseError);
     expect(error).toBeInstanceOf(FetchError);
@@ -33,7 +36,7 @@ describe('FetchError', () => {
         context: { path: '/mods/quest.json' },
         severity: 'warning',
         recoverable: true,
-      }),
+      })
     );
   });
 
@@ -42,6 +45,8 @@ describe('FetchError', () => {
 
     expect(error.path).toBeNull();
     expect(error.context).toEqual({ path: null });
-    expect(error.toString()).toContain('FetchError[FETCH_ERROR]: Config fetch failed');
+    expect(error.toString()).toContain(
+      'FetchError[FETCH_ERROR]: Config fetch failed'
+    );
   });
 });

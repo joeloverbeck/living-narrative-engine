@@ -110,9 +110,7 @@ describe('handle_let_go_of_restrained_target rule', () => {
     const unlockGrabbing = findAction('UNLOCK_GRABBING');
     expect(unlockGrabbing?.parameters.actor_id).toBe('{event.payload.actorId}');
     expect(unlockGrabbing?.parameters.count).toBe(2);
-    expect(unlockGrabbing?.parameters.item_id).toBe(
-      '{event.payload.targetId}'
-    );
+    expect(unlockGrabbing?.parameters.item_id).toBe('{event.payload.targetId}');
 
     const regenOps = handleLetGoRule.actions.filter(
       (op) => op.type === 'REGENERATE_DESCRIPTION'
@@ -125,7 +123,8 @@ describe('handle_let_go_of_restrained_target rule', () => {
     const dispatch = findAction('DISPATCH_PERCEPTIBLE_EVENT');
     const logMessage = handleLetGoRule.actions.find(
       (op) =>
-        op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
     const expectedMessage =
       '{context.actorName} lets go of {context.targetName}, leaving them unrestrained.';

@@ -40,7 +40,7 @@ async function main() {
     let loadContext = createLoadContext({
       worldName: 'effects-validation',
       requestedMods: args.mods || [],
-      registry: dataRegistry
+      registry: dataRegistry,
     });
     loadContext = await schemaPhase.execute(loadContext);
     logger.info('✅ Schemas loaded');
@@ -125,11 +125,7 @@ function displayResults(results, logger) {
  */
 async function writeReport(reportPath, results, logger) {
   try {
-    await fs.writeFile(
-      reportPath,
-      JSON.stringify(results, null, 2),
-      'utf8'
-    );
+    await fs.writeFile(reportPath, JSON.stringify(results, null, 2), 'utf8');
     logger.info(`\n✓ Report written to ${reportPath}`);
   } catch (error) {
     logger.error(`Failed to write report to ${reportPath}`, error);
@@ -144,7 +140,7 @@ function parseArgs(argv) {
   const args = {
     mod: null,
     report: null,
-    mods: []
+    mods: [],
   };
 
   for (const arg of argv) {

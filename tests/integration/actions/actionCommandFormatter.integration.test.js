@@ -54,9 +54,7 @@ describe('ActionCommandFormatter integration', () => {
   const buildActor = (id, name) => ({
     id,
     components: {
-      [NAME_COMPONENT_ID]: name
-        ? { text: name }
-        : undefined,
+      [NAME_COMPONENT_ID]: name ? { text: name } : undefined,
     },
   });
 
@@ -73,11 +71,17 @@ describe('ActionCommandFormatter integration', () => {
   });
 
   const runFormat = (definition, context, options = {}, deps = {}) =>
-    formatter.format(definition, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-      ...options,
-    }, deps);
+    formatter.format(
+      definition,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+        ...options,
+      },
+      deps
+    );
 
   it('formats entity targets using real entity data and debugging', () => {
     const actionDef = {
@@ -89,9 +93,11 @@ describe('ActionCommandFormatter integration', () => {
     const result = runFormat(actionDef, targetContext, { debug: true });
 
     expect(result).toEqual({ ok: true, value: 'greet Astra the Bold' });
-    expect(logger.debugLogs.some((args) => args[0].includes('Final formatted command'))).toBe(
-      true
-    );
+    expect(
+      logger.debugLogs.some((args) =>
+        args[0].includes('Final formatted command')
+      )
+    ).toBe(true);
     expect(dispatcher.events).toHaveLength(0);
   });
 
@@ -105,7 +111,9 @@ describe('ActionCommandFormatter integration', () => {
     const result = runFormat(actionDef, targetContext);
 
     expect(result).toEqual({ ok: true, value: 'salute wanderer' });
-    expect(logger.warnLogs.some((args) => args[0].includes('no usable name'))).toBe(true);
+    expect(
+      logger.warnLogs.some((args) => args[0].includes('no usable name'))
+    ).toBe(true);
   });
 
   it('supports custom placeholders on the target context', () => {
@@ -128,18 +136,23 @@ describe('ActionCommandFormatter integration', () => {
     };
     const targetContext = ActionTargetContext.forEntity('hero');
 
-    const result = runFormat(actionDef, targetContext, {}, { formatterMap: {} });
+    const result = runFormat(
+      actionDef,
+      targetContext,
+      {},
+      { formatterMap: {} }
+    );
 
     expect(result).toEqual({ ok: true, value: 'signal {target}' });
-    expect(logger.warnLogs.some((args) => args[0].includes('Unknown targetContext type'))).toBe(
-      true
-    );
+    expect(
+      logger.warnLogs.some((args) =>
+        args[0].includes('Unknown targetContext type')
+      )
+    ).toBe(true);
   });
 
   it('warns and uses target id when entity is missing from the manager', () => {
-    entityManager.setEntities([
-      buildActor('hero', 'Astra the Bold'),
-    ]);
+    entityManager.setEntities([buildActor('hero', 'Astra the Bold')]);
 
     const actionDef = {
       id: 'core:ping',
@@ -167,7 +180,7 @@ describe('ActionCommandFormatter integration', () => {
     const result = runFormat(actionDef, malformedContext);
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain("entityId is missing");
+    expect(result.error).toContain('entityId is missing');
   });
 
   it('normalizes string formatter results from custom formatter maps', () => {
@@ -201,7 +214,9 @@ describe('ActionCommandFormatter integration', () => {
 
     expect(result.ok).toBe(false);
     expect(dispatcher.events).toHaveLength(1);
-    expect(dispatcher.events[0].payload.message).toContain('Invalid or missing actionDefinition');
+    expect(dispatcher.events[0].payload.message).toContain(
+      'Invalid or missing actionDefinition'
+    );
   });
 
   it('warns when templates with none targets contain placeholders', () => {
@@ -214,7 +229,9 @@ describe('ActionCommandFormatter integration', () => {
     const result = runFormat(actionDef, targetContext);
 
     expect(result).toEqual({ ok: true, value: 'wait {target}' });
-    expect(logger.warnLogs.some((args) => args[0].includes('target_domain'))).toBe(true);
+    expect(
+      logger.warnLogs.some((args) => args[0].includes('target_domain'))
+    ).toBe(true);
   });
 
   it('dispatches system errors when target formatter throws', () => {

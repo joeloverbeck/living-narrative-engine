@@ -280,7 +280,10 @@ describe('ContextUpdateEmitter additional branch coverage integration', () => {
       keptTargets: expect.objectContaining({
         support: expect.arrayContaining([
           expect.objectContaining({ entity: support }),
-          expect.objectContaining({ id: 'label-only', note: 'no entity present' }),
+          expect.objectContaining({
+            id: 'label-only',
+            note: 'no entity present',
+          }),
         ]),
         nested: expect.objectContaining({ entity: nested }),
         literal: 'value',
@@ -298,7 +301,9 @@ describe('ContextUpdateEmitter additional branch coverage integration', () => {
       actionId: null,
       kept: true,
       keptTargets: null,
-      stageUpdates: [expect.objectContaining({ removedTargets: [], removalReasons: [] })],
+      stageUpdates: [
+        expect.objectContaining({ removedTargets: [], removalReasons: [] }),
+      ],
     });
 
     expect(results[2]).toMatchObject({
@@ -315,21 +320,27 @@ describe('ContextUpdateEmitter additional branch coverage integration', () => {
 
     expect(context.candidateActions).toHaveLength(2);
     expect(context.candidateActions[0]).toBe(keepAction);
-    expect(context.candidateActions[0].resolvedTargets.support[0].entity).toBe(support);
+    expect(context.candidateActions[0].resolvedTargets.support[0].entity).toBe(
+      support
+    );
     expect(context.candidateActions[0].resolvedTargets.support[0]).not.toBe(
-      normalized.items[0].resolvedTargets.support[0],
+      normalized.items[0].resolvedTargets.support[0]
     );
     expect(context.candidateActions[0].resolvedTargets.support[1]).toEqual(
-      expect.objectContaining({ id: 'label-only', note: 'no entity present' }),
+      expect.objectContaining({ id: 'label-only', note: 'no entity present' })
     );
     expect(context.candidateActions[1]).toBe(actorOnlyAction);
-    expect(Object.prototype.hasOwnProperty.call(actorOnlyAction, 'resolvedTargets')).toBe(false);
+    expect(
+      Object.prototype.hasOwnProperty.call(actorOnlyAction, 'resolvedTargets')
+    ).toBe(false);
 
     expect(metadata.sharedResolvedTargetsRef).toEqual(
       expect.objectContaining({
-        support: expect.arrayContaining([expect.objectContaining({ entity: support })]),
+        support: expect.arrayContaining([
+          expect.objectContaining({ entity: support }),
+        ]),
         nested: expect.objectContaining({ entity: nested }),
-      }),
+      })
     );
     expect(metadata.sharedResolvedTargetsRef.obsolete).toBeUndefined();
   });
@@ -415,6 +426,8 @@ describe('ContextUpdateEmitter additional branch coverage integration', () => {
     expect(results).toHaveLength(1);
     expect(results[0].actionId).toBe('unsupported:action');
     expect(results[0].kept).toBe(false);
-    expect(context.candidateActions[0].resolvedTargets.ally[0].entity).toBe(ally);
+    expect(context.candidateActions[0].resolvedTargets.ally[0].entity).toBe(
+      ally
+    );
   });
 });

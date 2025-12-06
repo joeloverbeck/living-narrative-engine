@@ -116,7 +116,12 @@ describe('main.js inline factory and fallback coverage', () => {
       document,
     };
 
-    const logger = { debug: jest.fn(), info: jest.fn(), error: jest.fn(), warn: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+    };
 
     let createdEngine;
 
@@ -133,31 +138,38 @@ describe('main.js inline factory and fallback coverage', () => {
       expect(container).toEqual({ marker: 'app-container' });
       // Return a container with proper resolve method for handler completeness validation
       const baseContainer = createMainBootstrapContainerMock();
-      return { success: true, payload: { ...container, resolve: baseContainer.resolve } };
+      return {
+        success: true,
+        payload: { ...container, resolve: baseContainer.resolve },
+      };
     });
 
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitGlobalConfig.mockResolvedValue({ success: true });
 
-    mockInitEngine.mockImplementation(async (_container, resolvedLogger, options) => {
-      expect(resolvedLogger).toBe(logger);
-      expect(typeof options.createGameEngine).toBe('function');
-      createdEngine = options.createGameEngine({ bootstrap: true });
-      expect(createdEngine.bootstrap).toBe(true);
-      expect(createdGameEngines).toContain(createdEngine);
-      return { success: true, payload: createdEngine };
-    });
+    mockInitEngine.mockImplementation(
+      async (_container, resolvedLogger, options) => {
+        expect(resolvedLogger).toBe(logger);
+        expect(typeof options.createGameEngine).toBe('function');
+        createdEngine = options.createGameEngine({ bootstrap: true });
+        expect(createdEngine.bootstrap).toBe(true);
+        expect(createdGameEngines).toContain(createdEngine);
+        return { success: true, payload: createdEngine };
+      }
+    );
 
     mockInitAux.mockResolvedValue({ success: true });
     mockMenu.mockResolvedValue({ success: true });
     mockGlobal.mockResolvedValue({ success: true });
 
-    mockStartGame.mockImplementation(async (engine, worldName, providedLogger) => {
-      expect(engine).toBe(createdEngine);
-      expect(worldName).toBe('andromeda');
-      expect(providedLogger).toBe(logger);
-      return { success: true };
-    });
+    mockStartGame.mockImplementation(
+      async (engine, worldName, providedLogger) => {
+        expect(engine).toBe(createdEngine);
+        expect(worldName).toBe('andromeda');
+        expect(providedLogger).toBe(logger);
+        return { success: true };
+      }
+    );
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -212,7 +224,8 @@ describe('main.js inline factory and fallback coverage', () => {
     expect(mockSetupDI).not.toHaveBeenCalled();
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
 
-    const [, errorDetails, passedLogger, domHelpers] = mockDisplayFatal.mock.calls[0];
+    const [, errorDetails, passedLogger, domHelpers] =
+      mockDisplayFatal.mock.calls[0];
     expect(errorDetails.errorObject).toBe(bootstrapFailure);
     expect(passedLogger).toBeNull();
 

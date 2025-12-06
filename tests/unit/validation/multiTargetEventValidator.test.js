@@ -318,7 +318,9 @@ describe('MultiTargetEventValidator', () => {
       const result = validator.validateEvent(event);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Legacy targetId must be a string or null');
+      expect(result.errors).toContain(
+        'Legacy targetId must be a string or null'
+      );
     });
 
     it('should require targetId when targets object exists', () => {
@@ -376,7 +378,10 @@ describe('MultiTargetEventValidator', () => {
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Multi-target validation took longer than expected',
-        expect.objectContaining({ duration: expect.any(String), target: '< 10ms' })
+        expect.objectContaining({
+          duration: expect.any(String),
+          target: '< 10ms',
+        })
       );
 
       performanceSpy.mockRestore();

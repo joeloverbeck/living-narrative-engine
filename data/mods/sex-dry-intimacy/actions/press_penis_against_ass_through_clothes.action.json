@@ -17,18 +17,13 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "template": "press your penis against {primary}'s ass through the {secondary}",
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "penis"
-        ]
+        "hasPartOfType": ["actor", "penis"]
       },
       "failure_message": "You need a penis to perform this action."
     }

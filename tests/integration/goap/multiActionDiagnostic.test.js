@@ -112,7 +112,9 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
       goapController: setup.controller,
       dataRegistry: setup.dataRegistry,
       entityManager: setup.entityManager,
-      entityDisplayDataProvider: { getEntityDisplayData: (id) => ({ name: id }) },
+      entityDisplayDataProvider: {
+        getEntityDisplayData: (id) => ({ name: id }),
+      },
       logger,
     });
     const stateDiffViewer = new StateDiffViewer({ logger });
@@ -165,7 +167,9 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       priority: 10,
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+      },
     });
 
     setup.dataRegistry.register('goals', goal.id, goal);
@@ -214,12 +218,18 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     const events = setup.eventBus.getEvents();
 
     console.log('=== EVENT BUS ANALYSIS ===\n');
-    const eventTypes = events.map(e => e.type);
+    const eventTypes = events.map((e) => e.type);
     console.log('Events dispatched:', eventTypes);
 
-    const planningStarted = events.find(e => e.type === GOAP_EVENTS.PLANNING_STARTED);
-    const planningCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
-    const planningFailed = events.find(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+    const planningStarted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_STARTED
+    );
+    const planningCompleted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
+    const planningFailed = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+    );
 
     console.log('\nPlanning lifecycle events:');
     console.log('  PLANNING_STARTED:', planningStarted ? '✓ YES' : '✗ NO');
@@ -241,14 +251,14 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     const failures = goapDebugger.getFailureHistory('test_actor');
     console.log('Failed goals:', failures.failedGoals.length);
     if (failures.failedGoals.length > 0) {
-      failures.failedGoals.forEach(f => {
+      failures.failedGoals.forEach((f) => {
         console.log(`  - ${f.goalId}: ${f.reason}`);
       });
     }
 
     console.log('Failed tasks:', failures.failedTasks.length);
     if (failures.failedTasks.length > 0) {
-      failures.failedTasks.forEach(f => {
+      failures.failedTasks.forEach((f) => {
         console.log(`  - ${f.taskId}: ${f.reason}`);
       });
     }
@@ -311,7 +321,9 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       priority: 10,
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+      },
     });
 
     setup.dataRegistry.register('goals', goal.id, goal);
@@ -336,13 +348,18 @@ describe('GOAP Multi-Action Planning Diagnostic', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planningCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planningCompleted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
 
     console.log('Planning result:', planningCompleted ? 'SUCCESS' : 'FAILED');
 
     if (planningCompleted) {
       console.log('Plan tasks:', planningCompleted.payload.tasks);
-      console.log('Expected: 1 task, Actual:', planningCompleted.payload.tasks.length);
+      console.log(
+        'Expected: 1 task, Actual:',
+        planningCompleted.payload.tasks.length
+      );
     }
 
     goapDebugger.stopTrace('test_actor');

@@ -26,10 +26,7 @@
       "warm_hands_between_yours.action.json",
       "withdraw_hand_from_grasp.action.json"
     ],
-    "components": [
-      "hand_held.component.json",
-      "holding_hand.component.json"
-    ],
+    "components": ["hand_held.component.json", "holding_hand.component.json"],
     "conditions": [
       "actors-are-holding-hands.condition.json",
       "event-is-action-hold-hand.condition.json",
@@ -51,8 +48,6 @@
     },
     "events": [],
     "macros": [],
-    "scopes": [
-      "actor_whose_hand_target_is_holding.scope"
-    ]
+    "scopes": ["actor_whose_hand_target_is_holding.scope"]
   }
 }

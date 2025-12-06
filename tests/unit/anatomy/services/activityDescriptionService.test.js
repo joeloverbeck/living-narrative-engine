@@ -94,7 +94,9 @@ const createMockDependencies = () => {
       invalidateAll,
       clearAll,
       destroy,
-      _getInternalCacheForTesting: jest.fn((cacheName) => caches.get(cacheName) ?? new Map()),
+      _getInternalCacheForTesting: jest.fn(
+        (cacheName) => caches.get(cacheName) ?? new Map()
+      ),
     },
     indexManager: {
       buildIndex: jest.fn(),
@@ -110,7 +112,9 @@ const createMockDependencies = () => {
         fromCache: false,
         payload: activities,
       })),
-      buildActivityIndexCacheKey: jest.fn((namespace, entityId) => `${namespace}:${entityId}`),
+      buildActivityIndexCacheKey: jest.fn(
+        (namespace, entityId) => `${namespace}:${entityId}`
+      ),
     },
     metadataCollectionSystem: {
       collectActivityMetadata: jest.fn((entityId) => [
@@ -164,15 +168,20 @@ const createMockDependencies = () => {
         reflexive: 'themselves',
       })),
       generateActivityPhrase: jest.fn((actorReference, activity) => ({
-        fullPhrase: `${actorReference ?? 'Unknown'} ${activity?.verb ?? 'does something'}`.trim(),
+        fullPhrase:
+          `${actorReference ?? 'Unknown'} ${activity?.verb ?? 'does something'}`.trim(),
         verbPhrase: activity?.verb ?? 'does something',
       })),
-      buildRelatedActivityFragment: jest.fn(
-        (conjunction, components) => `${conjunction ?? 'and'} ${components.verbPhrase ?? ''}`.trim()
+      buildRelatedActivityFragment: jest.fn((conjunction, components) =>
+        `${conjunction ?? 'and'} ${components.verbPhrase ?? ''}`.trim()
       ),
       truncateDescription: jest.fn((description) => description),
-      mergeAdverb: jest.fn((current, injected) => `${current ?? ''} ${injected}`.trim()),
-      injectSoftener: jest.fn((template, descriptor) => `${template ?? ''} ${descriptor}`.trim()),
+      mergeAdverb: jest.fn((current, injected) =>
+        `${current ?? ''} ${injected}`.trim()
+      ),
+      injectSoftener: jest.fn((template, descriptor) =>
+        `${template ?? ''} ${descriptor}`.trim()
+      ),
       getPronoun: jest.fn(() => 'they'),
     },
     filteringSystem: {
@@ -218,7 +227,9 @@ describe('ActivityDescriptionService', () => {
     const hooks = service.getTestHooks();
 
     expect(dependencies.cacheManager.registerCache).toHaveBeenCalledTimes(4);
-    expect(() => hooks.filterByConditions([], { id: 'entity-1' })).not.toThrow();
+    expect(() =>
+      hooks.filterByConditions([], { id: 'entity-1' })
+    ).not.toThrow();
     expect(typeof hooks.formatActivityDescription).toBe('function');
   });
 
@@ -230,7 +241,9 @@ describe('ActivityDescriptionService', () => {
     const service = new ActivityDescriptionService(dependencies);
     const hooks = service.getTestHooks();
 
-    expect(hooks.dispatchError('NO_BUS', { reason: 'missing bus' })).toBeUndefined();
+    expect(
+      hooks.dispatchError('NO_BUS', { reason: 'missing bus' })
+    ).toBeUndefined();
     expect(dependencies.cacheManager.registerCache).toHaveBeenCalledTimes(4);
   });
 
@@ -242,34 +255,43 @@ describe('ActivityDescriptionService', () => {
         intensity: 'casual',
         relationshipTone: 'neutral',
       }));
-      deps.contextBuildingSystem.applyContextualTone = jest.fn((activity) => activity);
+      deps.contextBuildingSystem.applyContextualTone = jest.fn(
+        (activity) => activity
+      );
     });
 
     const hooks = service.getTestHooks();
-    const filtered = hooks.filterByConditions([{ id: 'activity' }], { id: 'entity-1' });
+    const filtered = hooks.filterByConditions([{ id: 'activity' }], {
+      id: 'entity-1',
+    });
     expect(filtered).toEqual([{ id: 'kept' }]);
-    const description = hooks.formatActivityDescription([
-      {
-        verb: 'scouts',
-        priority: 80,
-        relatedActivities: [],
-      },
-    ], { id: 'entity-1' }, 'cache:entity-1');
+    const description = hooks.formatActivityDescription(
+      [
+        {
+          verb: 'scouts',
+          priority: 80,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-1' },
+      'cache:entity-1'
+    );
 
     expect(typeof description).toBe('string');
-    expect(dependencies.filteringSystem.filterByConditions).toHaveBeenCalledWith(
-      [{ id: 'activity' }],
-      { id: 'entity-1' }
-    );
-    expect(dependencies.contextBuildingSystem.buildActivityContext).toHaveBeenCalled();
+    expect(
+      dependencies.filteringSystem.filterByConditions
+    ).toHaveBeenCalledWith([{ id: 'activity' }], { id: 'entity-1' });
+    expect(
+      dependencies.contextBuildingSystem.buildActivityContext
+    ).toHaveBeenCalled();
   });
 
   it('throws when generateActivityDescription receives a blank entity id', async () => {
     const { service } = instantiateService();
 
-    await expect(service.generateActivityDescription('   ')).rejects.toBeInstanceOf(
-      InvalidArgumentError
-    );
+    await expect(
+      service.generateActivityDescription('   ')
+    ).rejects.toBeInstanceOf(InvalidArgumentError);
   });
 
   it('handles entity lookup errors gracefully', async () => {
@@ -316,7 +338,9 @@ describe('ActivityDescriptionService', () => {
     });
 
     const dateSpy = jest.spyOn(Date, 'now').mockReturnValue(321);
-    const result = await service.generateActivityDescription('entity-lookup-generic');
+    const result = await service.generateActivityDescription(
+      'entity-lookup-generic'
+    );
 
     expect(result).toBe('');
     expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
@@ -368,11 +392,16 @@ describe('ActivityDescriptionService', () => {
       deps.entityManager.getEntityInstance.mockReturnValue(entity);
     });
 
-    const result = await service.generateActivityDescription('entity-components');
+    const result =
+      await service.generateActivityDescription('entity-components');
 
-    expect(result).toBe('Activity: Entity entity-components observes and notes. they reflects.');
+    expect(result).toBe(
+      'Activity: Entity entity-components observes and notes. they reflects.'
+    );
     expect(dependencies.logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to inspect componentTypeIds for entity entity-components'),
+      expect.stringContaining(
+        'Failed to inspect componentTypeIds for entity entity-components'
+      ),
       expect.any(Error)
     );
   });
@@ -387,13 +416,16 @@ describe('ActivityDescriptionService', () => {
       deps.entityManager.getEntityInstance.mockReturnValue(entity);
     });
 
-    const result = await service.generateActivityDescription('entity-non-array');
+    const result =
+      await service.generateActivityDescription('entity-non-array');
 
-    expect(result).toBe('Activity: Entity entity-non-array observes and notes. they reflects.');
-    expect(
-      dependencies.logger.warn
-    ).not.toHaveBeenCalledWith(
-      expect.stringContaining('Failed to inspect componentTypeIds for entity entity-non-array'),
+    expect(result).toBe(
+      'Activity: Entity entity-non-array observes and notes. they reflects.'
+    );
+    expect(dependencies.logger.warn).not.toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Failed to inspect componentTypeIds for entity entity-non-array'
+      ),
       expect.any(Error)
     );
   });
@@ -426,23 +458,26 @@ describe('ActivityDescriptionService', () => {
 
   it('skips deduplication when the configuration disables it explicitly', async () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: 'Activity: ',
-        suffix: '.',
-        separator: '. ',
-        maxActivities: 5,
-        deduplicateActivities: false,
-        enableContextAwareness: true,
-        maxDescriptionLength: 200,
-        nameResolution: {
-          usePronounsWhenAvailable: true,
-          preferReflexivePronouns: true,
-        },
-      });
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: 'Activity: ',
+          suffix: '.',
+          separator: '. ',
+          maxActivities: 5,
+          deduplicateActivities: false,
+          enableContextAwareness: true,
+          maxDescriptionLength: 200,
+          nameResolution: {
+            usePronounsWhenAvailable: true,
+            preferReflexivePronouns: true,
+          },
+        }
+      );
     });
 
-    const description = await service.generateActivityDescription('entity-no-dedupe');
+    const description =
+      await service.generateActivityDescription('entity-no-dedupe');
 
     expect(description.startsWith('Activity:')).toBe(true);
     expect(
@@ -452,8 +487,9 @@ describe('ActivityDescriptionService', () => {
 
   it('returns an empty string when deduplication removes every activity', async () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.metadataCollectionSystem.deduplicateActivitiesBySignature = jest
-        .fn(() => []);
+      deps.metadataCollectionSystem.deduplicateActivitiesBySignature = jest.fn(
+        () => []
+      );
     });
 
     const result = await service.generateActivityDescription('entity-5');
@@ -477,21 +513,21 @@ describe('ActivityDescriptionService', () => {
     const result = await service.generateActivityDescription('entity-no-id');
 
     expect(result.startsWith('Activity:')).toBe(true);
-    expect(dependencies.indexManager.buildActivityIndexCacheKey).toHaveBeenCalledWith(
-      'priority',
-      'entity-no-id'
-    );
-    expect(dependencies.indexManager.buildActivityIndexCacheKey).toHaveBeenCalledWith(
-      'group',
-      'entity-no-id'
-    );
+    expect(
+      dependencies.indexManager.buildActivityIndexCacheKey
+    ).toHaveBeenCalledWith('priority', 'entity-no-id');
+    expect(
+      dependencies.indexManager.buildActivityIndexCacheKey
+    ).toHaveBeenCalledWith('group', 'entity-no-id');
   });
 
   it('handles metadata collection errors via the top-level error handler', async () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.metadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        throw new Error('collection failure');
-      });
+      deps.metadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          throw new Error('collection failure');
+        }
+      );
       deps.eventBus = {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
@@ -517,9 +553,11 @@ describe('ActivityDescriptionService', () => {
 
   it('falls back to an unknown error reason when top-level failures lack a message', async () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.metadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        throw { message: undefined };
-      });
+      deps.metadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          throw { message: undefined };
+        }
+      );
       deps.eventBus = {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
@@ -527,7 +565,9 @@ describe('ActivityDescriptionService', () => {
       };
     });
 
-    const result = await service.generateActivityDescription('entity-collect-generic');
+    const result = await service.generateActivityDescription(
+      'entity-collect-generic'
+    );
 
     expect(result).toBe('');
     expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
@@ -722,7 +762,9 @@ describe('ActivityDescriptionService', () => {
       };
     });
 
-    const result = await service.generateActivityDescription('entity-primary-unknown');
+    const result = await service.generateActivityDescription(
+      'entity-primary-unknown'
+    );
 
     expect(result).toBe('');
     expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
@@ -750,26 +792,32 @@ describe('ActivityDescriptionService', () => {
       });
     });
 
-    const description = await service.generateActivityDescription('entity-empty-primary');
+    const description = await service.generateActivityDescription(
+      'entity-empty-primary'
+    );
 
     expect(description).toBe('');
-    expect(dependencies.nlgSystem.generateActivityPhrase).toHaveBeenCalledTimes(1);
+    expect(dependencies.nlgSystem.generateActivityPhrase).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it('continues description generation when related phrase creation fails', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       let callCount = 0;
-      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
-        if (callCount === 1) {
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(
+        (actorReference, activity) => {
+          if (callCount === 1) {
+            callCount += 1;
+            throw new Error('related failure');
+          }
           callCount += 1;
-          throw new Error('related failure');
+          return {
+            fullPhrase: `${actorReference} ${activity.verb}`.trim(),
+            verbPhrase: activity.verb,
+          };
         }
-        callCount += 1;
-        return {
-          fullPhrase: `${actorReference} ${activity.verb}`.trim(),
-          verbPhrase: activity.verb,
-        };
-      });
+      );
       deps.eventBus = {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
@@ -796,17 +844,19 @@ describe('ActivityDescriptionService', () => {
   it('uses a default related phrase error reason when the thrown error has no message', async () => {
     const { service, dependencies } = instantiateService((deps) => {
       let callCount = 0;
-      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
-        if (callCount === 1) {
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(
+        (actorReference, activity) => {
+          if (callCount === 1) {
+            callCount += 1;
+            throw { message: undefined };
+          }
           callCount += 1;
-          throw { message: undefined };
+          return {
+            fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(),
+            verbPhrase: activity?.verb ?? '',
+          };
         }
-        callCount += 1;
-        return {
-          fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(),
-          verbPhrase: activity?.verb ?? '',
-        };
-      });
+      );
       deps.eventBus = {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
@@ -846,17 +896,20 @@ describe('ActivityDescriptionService', () => {
         getComponentData: jest.fn(() => null),
       });
       let callCount = 0;
-      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
-        if (callCount === 0) {
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(
+        (actorReference, activity) => {
+          if (callCount === 0) {
+            callCount += 1;
+            return {
+              fullPhrase:
+                `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
+              verbPhrase: activity?.verb ?? '',
+            };
+          }
           callCount += 1;
-          return {
-            fullPhrase: `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
-            verbPhrase: activity?.verb ?? '',
-          };
+          throw new Error('related failure');
         }
-        callCount += 1;
-        throw new Error('related failure');
-      });
+      );
       deps.eventBus = {
         dispatch: jest.fn(),
         subscribe: jest.fn(),
@@ -911,10 +964,12 @@ describe('ActivityDescriptionService', () => {
         componentTypeIds: ['core:name'],
         getComponentData: jest.fn(() => null),
       });
-      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => ({
-        fullPhrase: `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
-        verbPhrase: activity?.verb ?? '',
-      }));
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(
+        (actorReference, activity) => ({
+          fullPhrase: `${actorReference ?? ''} ${activity?.verb ?? ''}`.trim(),
+          verbPhrase: activity?.verb ?? '',
+        })
+      );
       deps.nlgSystem.buildRelatedActivityFragment.mockImplementation(() => {
         throw new Error('fragment failure');
       });
@@ -925,7 +980,9 @@ describe('ActivityDescriptionService', () => {
       };
     });
 
-    const result = await service.generateActivityDescription('entity-fragment-unknown');
+    const result = await service.generateActivityDescription(
+      'entity-fragment-unknown'
+    );
 
     expect(result).toBe('Activity: Unknown Entity observes. they reflects.');
     expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith({
@@ -979,13 +1036,19 @@ describe('ActivityDescriptionService', () => {
 
     const result = await service.generateActivityDescription('entity-10');
 
-    expect(result).toBe('Activity: Entity entity-10 observes and notes. they reflects.');
-
-    const pronounCall = dependencies.nlgSystem.generateActivityPhrase.mock.calls.find(
-      ([, , usePronoun, options]) => usePronoun === true && options?.omitActor !== true
+    expect(result).toBe(
+      'Activity: Entity entity-10 observes and notes. they reflects.'
     );
+
+    const pronounCall =
+      dependencies.nlgSystem.generateActivityPhrase.mock.calls.find(
+        ([, , usePronoun, options]) =>
+          usePronoun === true && options?.omitActor !== true
+      );
     expect(pronounCall?.[0]).toBe('they');
-    expect(dependencies.contextBuildingSystem.buildActivityContext).toHaveBeenCalled();
+    expect(
+      dependencies.contextBuildingSystem.buildActivityContext
+    ).toHaveBeenCalled();
   });
 
   it('returns an empty string when formatted description is blank', async () => {
@@ -993,7 +1056,10 @@ describe('ActivityDescriptionService', () => {
       deps.groupingSystem.groupActivities.mockReturnValue([
         { primaryActivity: { verb: '  ' }, relatedActivities: [] },
       ]);
-      deps.nlgSystem.generateActivityPhrase.mockReturnValue({ fullPhrase: '   ', verbPhrase: '' });
+      deps.nlgSystem.generateActivityPhrase.mockReturnValue({
+        fullPhrase: '   ',
+        verbPhrase: '',
+      });
     });
 
     const result = await service.generateActivityDescription('entity-11');
@@ -1003,9 +1069,11 @@ describe('ActivityDescriptionService', () => {
 
   it('returns an empty string when formatting is disabled via configuration', () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: false,
-      });
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: false,
+        }
+      );
     });
 
     const hooks = service.getTestHooks();
@@ -1031,7 +1099,11 @@ describe('ActivityDescriptionService', () => {
     const { service } = instantiateService();
     const hooks = service.getTestHooks();
 
-    const result = hooks.formatActivityDescription(null, { id: 'entity-invalid' }, 'cache:invalid');
+    const result = hooks.formatActivityDescription(
+      null,
+      { id: 'entity-invalid' },
+      'cache:invalid'
+    );
 
     expect(result).toBe('');
   });
@@ -1056,20 +1128,22 @@ describe('ActivityDescriptionService', () => {
 
   it('uses fallback formatting options when configuration values are undefined or disabled', () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue({
-        enabled: true,
-        prefix: undefined,
-        suffix: undefined,
-        separator: undefined,
-        maxActivities: null,
-        deduplicateActivities: true,
-        enableContextAwareness: false,
-        maxDescriptionLength: undefined,
-        nameResolution: {
-          usePronounsWhenAvailable: false,
-          preferReflexivePronouns: true,
-        },
-      });
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        {
+          enabled: true,
+          prefix: undefined,
+          suffix: undefined,
+          separator: undefined,
+          maxActivities: null,
+          deduplicateActivities: true,
+          enableContextAwareness: false,
+          maxDescriptionLength: undefined,
+          nameResolution: {
+            usePronounsWhenAvailable: false,
+            preferReflexivePronouns: true,
+          },
+        }
+      );
     });
 
     const hooks = service.getTestHooks();
@@ -1094,7 +1168,9 @@ describe('ActivityDescriptionService', () => {
       expect.any(String),
       500
     );
-    expect(dependencies.contextBuildingSystem.buildActivityContext).not.toHaveBeenCalled();
+    expect(
+      dependencies.contextBuildingSystem.buildActivityContext
+    ).not.toHaveBeenCalled();
   });
 
   it('logs a warning when contextual tone application fails', () => {
@@ -1143,18 +1219,25 @@ describe('ActivityDescriptionService', () => {
     );
 
     expect(description.startsWith('Activity:')).toBe(true);
-    expect(dependencies.contextBuildingSystem.applyContextualTone).toHaveBeenCalled();
+    expect(
+      dependencies.contextBuildingSystem.applyContextualTone
+    ).toHaveBeenCalled();
   });
 
   it('supports iterable grouping results and warns on unexpected responses', () => {
     const { service, dependencies } = instantiateService((deps) => {
       deps.groupingSystem.groupActivities
-        .mockReturnValueOnce(new Set([
-          {
-            primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
-            relatedActivities: [],
-          },
-        ]))
+        .mockReturnValueOnce(
+          new Set([
+            {
+              primaryActivity: {
+                verb: 'observe',
+                sourceComponent: 'testing:observer',
+              },
+              relatedActivities: [],
+            },
+          ])
+        )
         .mockReturnValueOnce({ unexpected: true });
     });
 
@@ -1196,26 +1279,27 @@ describe('ActivityDescriptionService', () => {
       deps.groupingSystem.groupActivities.mockReturnValue(
         new Set([
           {
-            primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
+            primaryActivity: {
+              verb: 'observe',
+              sourceComponent: 'testing:observer',
+            },
             relatedActivities: [],
           },
         ])
       );
     });
 
-    const description = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [],
-          },
-        ],
-        { id: 'entity-set-only' },
-        'cache:entity-set-only'
-      );
+    const description = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-set-only' },
+      'cache:entity-set-only'
+    );
 
     expect(description.startsWith('Activity:')).toBe(true);
   });
@@ -1225,19 +1309,17 @@ describe('ActivityDescriptionService', () => {
       deps.groupingSystem.groupActivities.mockReturnValue(null);
     });
 
-    const result = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [],
-          },
-        ],
-        { id: 'entity-null-group' },
-        'cache:entity-null-group'
-      );
+    const result = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-null-group' },
+      'cache:entity-null-group'
+    );
 
     expect(result).toBe('');
     expect(dependencies.logger.warn).not.toHaveBeenCalledWith(
@@ -1247,29 +1329,34 @@ describe('ActivityDescriptionService', () => {
 
   it('accepts string primary phrases returned by the NLG system', () => {
     const { service } = instantiateService((deps) => {
-      deps.nlgSystem.generateActivityPhrase.mockImplementation((actorReference, activity) => {
-        if (activity?.verb === 'observe') {
-          return `${actorReference ?? 'Unknown'} observes`;
+      deps.nlgSystem.generateActivityPhrase.mockImplementation(
+        (actorReference, activity) => {
+          if (activity?.verb === 'observe') {
+            return `${actorReference ?? 'Unknown'} observes`;
+          }
+          return {
+            fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(),
+            verbPhrase: activity?.verb ?? '',
+          };
         }
-        return { fullPhrase: `${actorReference} ${activity?.verb ?? ''}`.trim(), verbPhrase: activity?.verb ?? '' };
-      });
+      );
     });
 
-    const description = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [],
-          },
-        ],
-        { id: 'entity-string-primary' },
-        'cache:entity-string-primary'
-      );
+    const description = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-string-primary' },
+      'cache:entity-string-primary'
+    );
 
-    expect(description).toBe('Activity: Entity entity-string-primary observes.');
+    expect(description).toBe(
+      'Activity: Entity entity-string-primary observes.'
+    );
   });
 
   it('uses fullPhrase output when the NLG system returns phrase components', () => {
@@ -1280,19 +1367,17 @@ describe('ActivityDescriptionService', () => {
       });
     });
 
-    const description = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [],
-          },
-        ],
-        { id: 'entity-object' },
-        'cache:entity-object'
-      );
+    const description = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-object' },
+      'cache:entity-object'
+    );
 
     expect(description).toBe('Activity: Entity entity-object observes.');
   });
@@ -1300,24 +1385,28 @@ describe('ActivityDescriptionService', () => {
   it('skips groups when string phrases are blank after trimming', () => {
     const { service } = instantiateService((deps) => {
       deps.groupingSystem.groupActivities.mockReturnValue([
-        { primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' }, relatedActivities: [] },
+        {
+          primaryActivity: {
+            verb: 'observe',
+            sourceComponent: 'testing:observer',
+          },
+          relatedActivities: [],
+        },
       ]);
       deps.nlgSystem.generateActivityPhrase.mockReturnValue('   ');
     });
 
-    const result = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [],
-          },
-        ],
-        { id: 'entity-string-empty' },
-        'cache:entity-string-empty'
-      );
+    const result = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [],
+        },
+      ],
+      { id: 'entity-string-empty' },
+      'cache:entity-string-empty'
+    );
 
     expect(result).toBe('');
   });
@@ -1327,7 +1416,10 @@ describe('ActivityDescriptionService', () => {
       deps.groupingSystem.groupActivities.mockReturnValue([
         null,
         {
-          primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
+          primaryActivity: {
+            verb: 'observe',
+            sourceComponent: 'testing:observer',
+          },
           relatedActivities: [
             null,
             {
@@ -1337,43 +1429,45 @@ describe('ActivityDescriptionService', () => {
           ],
         },
       ]);
-      deps.anatomyFormattingService.getActivityIntegrationConfig = jest.fn(() => ({
-        enabled: true,
-        prefix: 'Activity: ',
-        suffix: '.',
-        separator: '. ',
-        maxActivities: 5,
-        deduplicateActivities: true,
-        enableContextAwareness: true,
-        maxDescriptionLength: 200,
-        nameResolution: {
-          usePronounsWhenAvailable: false,
-          preferReflexivePronouns: true,
-        },
-      }));
+      deps.anatomyFormattingService.getActivityIntegrationConfig = jest.fn(
+        () => ({
+          enabled: true,
+          prefix: 'Activity: ',
+          suffix: '.',
+          separator: '. ',
+          maxActivities: 5,
+          deduplicateActivities: true,
+          enableContextAwareness: true,
+          maxDescriptionLength: 200,
+          nameResolution: {
+            usePronounsWhenAvailable: false,
+            preferReflexivePronouns: true,
+          },
+        })
+      );
     });
 
-    const description = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [
-              null,
-              {
-                conjunction: 'and',
-                activity: { verb: 'smiles', sourceComponent: 'testing:observer' },
-              },
-            ],
-          },
-        ],
-        { id: 'entity-skip' },
-        'cache:entity-skip'
-      );
+    const description = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [
+            null,
+            {
+              conjunction: 'and',
+              activity: { verb: 'smiles', sourceComponent: 'testing:observer' },
+            },
+          ],
+        },
+      ],
+      { id: 'entity-skip' },
+      'cache:entity-skip'
+    );
 
-    expect(description).toBe('Activity: Entity entity-skip observe and smiles.');
+    expect(description).toBe(
+      'Activity: Entity entity-skip observe and smiles.'
+    );
   });
 
   it('does not append related fragments when the builder returns an empty string', () => {
@@ -1381,52 +1475,53 @@ describe('ActivityDescriptionService', () => {
       deps.nlgSystem.buildRelatedActivityFragment.mockReturnValue('');
     });
 
-    const result = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: [
-              {
-                conjunction: 'and',
-                activity: { verb: 'smiles', sourceComponent: 'testing:observer' },
-              },
-            ],
-          },
-        ],
-        { id: 'entity-empty-fragment' },
-        'cache:entity-empty-fragment'
-      );
+    const result = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: [
+            {
+              conjunction: 'and',
+              activity: { verb: 'smiles', sourceComponent: 'testing:observer' },
+            },
+          ],
+        },
+      ],
+      { id: 'entity-empty-fragment' },
+      'cache:entity-empty-fragment'
+    );
 
     expect(result).toBe('Activity: Entity entity-empty-fragment observe.');
-    expect(dependencies.nlgSystem.buildRelatedActivityFragment).toHaveBeenCalled();
+    expect(
+      dependencies.nlgSystem.buildRelatedActivityFragment
+    ).toHaveBeenCalled();
   });
 
   it('treats non-array related activities as empty collections', () => {
     const { service } = instantiateService((deps) => {
       deps.groupingSystem.groupActivities.mockImplementation(() => [
         {
-          primaryActivity: { verb: 'observe', sourceComponent: 'testing:observer' },
+          primaryActivity: {
+            verb: 'observe',
+            sourceComponent: 'testing:observer',
+          },
           relatedActivities: null,
         },
       ]);
     });
 
-    const description = service
-      .getTestHooks()
-      .formatActivityDescription(
-        [
-          {
-            verb: 'observe',
-            priority: 10,
-            relatedActivities: null,
-          },
-        ],
-        { id: 'entity-no-related' },
-        'cache:entity-no-related'
-      );
+    const description = service.getTestHooks().formatActivityDescription(
+      [
+        {
+          verb: 'observe',
+          priority: 10,
+          relatedActivities: null,
+        },
+      ],
+      { id: 'entity-no-related' },
+      'cache:entity-no-related'
+    );
 
     expect(description).toBe('Activity: Entity entity-no-related observe.');
   });
@@ -1454,7 +1549,9 @@ describe('ActivityDescriptionService', () => {
 
   it('falls back to defaults when configuration getter returns invalid data', () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue('invalid');
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        'invalid'
+      );
     });
 
     const hooks = service.getTestHooks();
@@ -1478,9 +1575,11 @@ describe('ActivityDescriptionService', () => {
 
   it('logs a warning when configuration retrieval throws', () => {
     const { service, dependencies } = instantiateService((deps) => {
-      deps.anatomyFormattingService.getActivityIntegrationConfig.mockImplementation(() => {
-        throw new Error('config failure');
-      });
+      deps.anatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+        () => {
+          throw new Error('config failure');
+        }
+      );
     });
 
     const hooks = service.getTestHooks();
@@ -1550,15 +1649,16 @@ describe('ActivityDescriptionService', () => {
     const cacheKey = hooks.buildActivityIndexCacheKey('priority', 'entity:16');
 
     expect(cacheKey).toBe('priority:entity:16');
-    expect(dependencies.indexManager.buildActivityIndex).toHaveBeenCalledWith(activities);
+    expect(dependencies.indexManager.buildActivityIndex).toHaveBeenCalledWith(
+      activities
+    );
     expect(dependencies.indexManager.getActivityIndex).toHaveBeenCalledWith(
       activities,
       'hook-cache'
     );
-    expect(dependencies.indexManager.buildActivityIndexCacheKey).toHaveBeenCalledWith(
-      'priority',
-      'entity:16'
-    );
+    expect(
+      dependencies.indexManager.buildActivityIndexCacheKey
+    ).toHaveBeenCalledWith('priority', 'entity:16');
 
     hooks.subscribeToInvalidationEvents();
 
@@ -1628,7 +1728,9 @@ describe('ActivityDescriptionService', () => {
     service.destroy();
     dependencies.cacheManager.invalidate.mockClear();
 
-    const description = await service.generateActivityDescription('entity-after-destroy');
+    const description = await service.generateActivityDescription(
+      'entity-after-destroy'
+    );
 
     expect(description.startsWith('Activity:')).toBe(true);
     expect(dependencies.cacheManager.invalidate).not.toHaveBeenCalledWith(
@@ -1697,9 +1799,15 @@ describe('ActivityDescriptionService', () => {
     service.invalidateEntities(['entity-18', 'entity-19']);
 
     expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledTimes(2);
-    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith('entity-18');
-    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith('entity-19');
-    expect(dependencies.contextBuildingSystem.invalidateClosenessCache).toHaveBeenCalledTimes(2);
+    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith(
+      'entity-18'
+    );
+    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith(
+      'entity-19'
+    );
+    expect(
+      dependencies.contextBuildingSystem.invalidateClosenessCache
+    ).toHaveBeenCalledTimes(2);
   });
 
   it('skips invalid or blank identifiers during batch cache invalidation', () => {
@@ -1708,7 +1816,9 @@ describe('ActivityDescriptionService', () => {
     service.invalidateEntities(['entity-21', '', '  ', null, undefined]);
 
     expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledTimes(1);
-    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith('entity-21');
+    expect(dependencies.cacheManager.invalidateAll).toHaveBeenCalledWith(
+      'entity-21'
+    );
   });
 
   it('skips cache manager calls when invalidating after destroy', () => {
@@ -1721,9 +1831,9 @@ describe('ActivityDescriptionService', () => {
     service.invalidateEntities(['entity-post-destroy']);
 
     expect(dependencies.cacheManager.invalidateAll).not.toHaveBeenCalled();
-    expect(dependencies.contextBuildingSystem.invalidateClosenessCache).toHaveBeenCalledWith(
-      'entity-post-destroy'
-    );
+    expect(
+      dependencies.contextBuildingSystem.invalidateClosenessCache
+    ).toHaveBeenCalledWith('entity-post-destroy');
   });
 
   it('invalidates caches based on cache type', () => {
@@ -1741,14 +1851,17 @@ describe('ActivityDescriptionService', () => {
       'entityName',
       'entity-20'
     );
-    expect(dependencies.cacheManager.invalidate).toHaveBeenCalledWith('gender', 'entity-20');
+    expect(dependencies.cacheManager.invalidate).toHaveBeenCalledWith(
+      'gender',
+      'entity-20'
+    );
     expect(dependencies.cacheManager.invalidate).toHaveBeenCalledWith(
       'activityIndex',
       'entity-20'
     );
-    expect(dependencies.contextBuildingSystem.invalidateClosenessCache).toHaveBeenCalledWith(
-      'entity-20'
-    );
+    expect(
+      dependencies.contextBuildingSystem.invalidateClosenessCache
+    ).toHaveBeenCalledWith('entity-20');
     expect(dependencies.logger.warn).toHaveBeenCalledWith(
       'ActivityDescriptionService: Unknown cache type: unknown'
     );

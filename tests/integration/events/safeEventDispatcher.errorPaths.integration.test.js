@@ -84,7 +84,9 @@ describe('SafeEventDispatcher failure recovery edge cases', () => {
   it('falls back to console logging when async dispatch errors and logger fails', async () => {
     const logger = new RecordingLogger();
     logger.throwOnError = true;
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     try {
       const dispatcher = new SafeEventDispatcher({
@@ -92,9 +94,12 @@ describe('SafeEventDispatcher failure recovery edge cases', () => {
         logger,
       });
 
-      const result = await dispatcher.dispatch('integration:noncritical-event', {
-        value: 1,
-      });
+      const result = await dispatcher.dispatch(
+        'integration:noncritical-event',
+        {
+          value: 1,
+        }
+      );
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -112,7 +117,9 @@ describe('SafeEventDispatcher failure recovery edge cases', () => {
 
   it('logs directly to the console when synchronous error events fail to dispatch', async () => {
     const logger = new RecordingLogger();
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     try {
       const dispatcher = new SafeEventDispatcher({
@@ -120,11 +127,16 @@ describe('SafeEventDispatcher failure recovery edge cases', () => {
         logger,
       });
 
-      const outcome = await dispatcher.dispatch('core:system_error_occurred', {});
+      const outcome = await dispatcher.dispatch(
+        'core:system_error_occurred',
+        {}
+      );
 
       expect(outcome).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('SafeEventDispatcher: Exception caught while dispatching event'),
+        expect.stringContaining(
+          'SafeEventDispatcher: Exception caught while dispatching event'
+        ),
         expect.objectContaining({ error: expect.any(Error) })
       );
     } finally {
@@ -139,7 +151,10 @@ describe('SafeEventDispatcher failure recovery edge cases', () => {
       logger,
     });
 
-    const returnValue = dispatcher.unsubscribe('integration:undefined-unsubscribe', () => {});
+    const returnValue = dispatcher.unsubscribe(
+      'integration:undefined-unsubscribe',
+      () => {}
+    );
 
     expect(returnValue).toBeUndefined();
     expect(

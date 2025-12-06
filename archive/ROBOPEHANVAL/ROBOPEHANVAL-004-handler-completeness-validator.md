@@ -9,6 +9,7 @@ Create a validation service that can check whether operations in a rule have reg
 ## Background
 
 The spec requires two validation capabilities:
+
 1. **Rule Validation**: Given a rule, verify all its operations have handlers registered
 2. **Registry Validation**: Compare whitelist against registry to find mismatches
 
@@ -18,15 +19,15 @@ This service provides the validation logic; integration into loaders/startup is 
 
 ### Create
 
-| File | Purpose |
-|------|---------|
-| `src/validation/handlerCompletenessValidator.js` | Validation service implementation |
-| `tests/unit/validation/handlerCompletenessValidator.test.js` | Unit tests |
+| File                                                         | Purpose                           |
+| ------------------------------------------------------------ | --------------------------------- |
+| `src/validation/handlerCompletenessValidator.js`             | Validation service implementation |
+| `tests/unit/validation/handlerCompletenessValidator.test.js` | Unit tests                        |
 
 ### Modify
 
-| File | Change |
-|------|--------|
+| File                                            | Change                                   |
+| ----------------------------------------------- | ---------------------------------------- |
 | `src/dependencyInjection/tokens/tokens-core.js` | Add `HandlerCompletenessValidator` token |
 
 ## Out of Scope
@@ -177,11 +178,11 @@ Consider whether to use DI for this service. If the project pattern is to inject
 
 ### Ticket Corrections Made Before Implementation
 
-| Original Assumption | Correction |
-|---------------------|------------|
-| Token file: `tokens-validation.js` | Corrected to `tokens-core.js` (actual location) |
-| Rule structure: only `type` operations | Added documentation for macro references `{ "macro": "ns:id" }` |
-| Nested operations: vague mention | Explicit documentation of `then_actions`/`else_actions` handling |
+| Original Assumption                    | Correction                                                       |
+| -------------------------------------- | ---------------------------------------------------------------- |
+| Token file: `tokens-validation.js`     | Corrected to `tokens-core.js` (actual location)                  |
+| Rule structure: only `type` operations | Added documentation for macro references `{ "macro": "ns:id" }`  |
+| Nested operations: vague mention       | Explicit documentation of `then_actions`/`else_actions` handling |
 
 ### Deviations from Original Plan
 

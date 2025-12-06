@@ -151,9 +151,10 @@ describe('CacheService integrated eviction and invalidation coverage', () => {
 
     const infoMessages = logger.info.mock.calls.map((call) => String(call[0]));
     expect(
-      infoMessages.some((message) =>
-        message.includes('CacheService: Invalidated') &&
-        message.includes('pattern')
+      infoMessages.some(
+        (message) =>
+          message.includes('CacheService: Invalidated') &&
+          message.includes('pattern')
       )
     ).toBe(true);
 
@@ -165,7 +166,9 @@ describe('CacheService integrated eviction and invalidation coverage', () => {
     jest.advanceTimersByTime(30);
     await Promise.resolve();
 
-    const debugMessages = logger.debug.mock.calls.map((call) => String(call[0]));
+    const debugMessages = logger.debug.mock.calls.map((call) =>
+      String(call[0])
+    );
     expect(
       debugMessages.some((message) =>
         message.includes('CacheService: Auto cleanup removed')

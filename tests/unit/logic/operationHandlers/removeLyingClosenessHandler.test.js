@@ -359,8 +359,7 @@ describe('RemoveLyingClosenessHandler', () => {
         actor_id: 'game:alice',
       };
 
-      mockEntityManager.getComponentData
-        .mockReturnValueOnce(null); // Missing furniture component causes validation error
+      mockEntityManager.getComponentData.mockReturnValueOnce(null); // Missing furniture component causes validation error
 
       await handler.execute(parameters, executionContext);
 
@@ -554,18 +553,29 @@ describe('RemoveLyingClosenessHandler', () => {
       };
 
       // Set up mocks to return invalid data (duplicates should cause validation error)
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentType) => {
-        if (entityId === 'furniture:bed' && componentType === 'positioning:allows_lying_on') {
-          return {};
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentType) => {
+          if (
+            entityId === 'furniture:bed' &&
+            componentType === 'positioning:allows_lying_on'
+          ) {
+            return {};
+          }
+          if (
+            entityId === 'game:alice' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:bob', 'game:charlie', 'game:bob'] }; // Duplicate partners trigger validation error
+          }
+          if (
+            entityId === 'game:bob' &&
+            componentType === 'positioning:closeness'
+          ) {
+            return { partners: ['game:alice'] };
+          }
+          return null;
         }
-        if (entityId === 'game:alice' && componentType === 'positioning:closeness') {
-          return { partners: ['game:bob', 'game:charlie', 'game:bob'] }; // Duplicate partners trigger validation error
-        }
-        if (entityId === 'game:bob' && componentType === 'positioning:closeness') {
-          return { partners: ['game:alice'] };
-        }
-        return null;
-      });
+      );
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([
         { id: 'game:bob' },
@@ -992,8 +1002,7 @@ describe('RemoveLyingClosenessHandler', () => {
         { id: 'game:bob' },
       ]);
 
-      mockClosenessCircleService.repair
-        .mockReturnValueOnce([]); // Alice has no partners left
+      mockClosenessCircleService.repair.mockReturnValueOnce([]); // Alice has no partners left
 
       await handler.execute(parameters, executionContext);
 

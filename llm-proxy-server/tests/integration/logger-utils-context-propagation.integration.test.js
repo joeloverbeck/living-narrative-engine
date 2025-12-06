@@ -1,6 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
-import { createSecureLogger, ensureValidLogger } from '../../src/utils/loggerUtils.js';
+import {
+  createSecureLogger,
+  ensureValidLogger,
+} from '../../src/utils/loggerUtils.js';
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
 
 /**
@@ -63,18 +73,18 @@ describe('logger utilities context propagation with RetryManager', () => {
     expect(captured.debug.length).toBeGreaterThanOrEqual(2);
     expect(captured.info.length).toBeGreaterThanOrEqual(1);
 
-    expect(
-      captured.debug.some((entry) => entry.context === undefined)
-    ).toBe(true);
-    expect(
-      captured.info.some((entry) => entry.context === undefined)
-    ).toBe(true);
-    expect(
-      captured.warn.every((entry) => entry.context === undefined)
-    ).toBe(true);
-    expect(
-      captured.error.every((entry) => entry.context === undefined)
-    ).toBe(true);
+    expect(captured.debug.some((entry) => entry.context === undefined)).toBe(
+      true
+    );
+    expect(captured.info.some((entry) => entry.context === undefined)).toBe(
+      true
+    );
+    expect(captured.warn.every((entry) => entry.context === undefined)).toBe(
+      true
+    );
+    expect(captured.error.every((entry) => entry.context === undefined)).toBe(
+      true
+    );
   });
 
   test('ensureValidLogger default fallback cooperates with RetryManager logging', async () => {

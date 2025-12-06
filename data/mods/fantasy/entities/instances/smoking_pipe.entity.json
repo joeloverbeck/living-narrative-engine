@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:smoking_pipe_instance",
-    "definitionId": "items:smoking_pipe"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:smoking_pipe_instance",
+  "definitionId": "items:smoking_pipe"
 }

@@ -10,6 +10,7 @@
 ## Objective
 
 Implement the `BreakBidirectionalClosenessHandler` class that:
+
 1. Removes relationship components from actor
 2. Removes relationship components from target
 3. Optionally regenerates entity descriptions
@@ -21,9 +22,11 @@ This handler will reduce release/break rules from ~200 lines to ~20 lines (85% r
 ## Files to Touch
 
 ### New Files
+
 - `src/logic/operationHandlers/breakBidirectionalClosenessHandler.js`
 
 ### Files NOT to Touch
+
 - DI registration files (OPEHANARCANA-014)
 - Test files (OPEHANARCANA-014)
 - preValidationUtils.js (OPEHANARCANA-014)
@@ -33,6 +36,7 @@ This handler will reduce release/break rules from ~200 lines to ~20 lines (85% r
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handlers
 - Any rule files
 - DI container or token files
@@ -54,7 +58,10 @@ This handler will reduce release/break rules from ~200 lines to ~20 lines (85% r
  */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -68,7 +75,12 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   #regenerateDescriptionHandler;
   #dispatcher;
 
-  constructor({ entityManager, regenerateDescriptionHandler, safeEventDispatcher, logger }) {
+  constructor({
+    entityManager,
+    regenerateDescriptionHandler,
+    safeEventDispatcher,
+    logger,
+  }) {
     const depSpec = {
       logger: { value: logger },
       entityManager: {
@@ -101,7 +113,13 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
 
-    if (!assertParamsObject(params, this.#dispatcher, 'BREAK_BIDIRECTIONAL_CLOSENESS')) {
+    if (
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'BREAK_BIDIRECTIONAL_CLOSENESS'
+      )
+    ) {
       return executionContext;
     }
 
@@ -113,10 +131,14 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
     const { actorId, targetId } = this.#getPayloadIds(executionContext);
 
     if (!actorId || !targetId) {
-       await safeDispatchError(
+      await safeDispatchError(
         this.#dispatcher,
         'BREAK_BIDIRECTIONAL_CLOSENESS: actorId or targetId missing from event payload',
-        { actorId, targetId, payload: executionContext?.evaluationContext?.event?.payload },
+        {
+          actorId,
+          targetId,
+          payload: executionContext?.evaluationContext?.event?.payload,
+        },
         log
       );
       return executionContext;
@@ -174,7 +196,9 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
     return {
       actorComponentType,
       targetComponentType,
-      additionalComponentTypes: Array.isArray(params.additional_component_types_to_remove)
+      additionalComponentTypes: Array.isArray(
+        params.additional_component_types_to_remove
+      )
         ? params.additional_component_types_to_remove
         : [],
       regenerateDescriptions: params.regenerate_descriptions !== false,
@@ -184,7 +208,7 @@ class BreakBidirectionalClosenessHandler extends BaseOperationHandler {
   #getPayloadIds(executionContext) {
     return {
       actorId: executionContext?.evaluationContext?.event?.payload?.actorId,
-      targetId: executionContext?.evaluationContext?.event?.payload?.targetId
+      targetId: executionContext?.evaluationContext?.event?.payload?.targetId,
     };
   }
 
@@ -244,11 +268,13 @@ export default BreakBidirectionalClosenessHandler;
 ### Tests That Must Pass
 
 1. **File compiles without errors:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **ESLint passes:**
+
    ```bash
    npx eslint src/logic/operationHandlers/breakBidirectionalClosenessHandler.js
    ```
@@ -294,6 +320,7 @@ git status --porcelain | grep -v breakBidirectionalClosenessHandler
 ## Outcome
 
 Implemented `BreakBidirectionalClosenessHandler` with the following adjustments from the initial proposal:
+
 1.  **Dependency Injection**: Used `RegenerateDescriptionHandler` (via `execute`) instead of non-existent `IDescriptionRegenerator`.
 2.  **Base Class Usage**: Correctly passed name and dependency spec to `super()` in `BaseOperationHandler` constructor.
 3.  **Robustness**: Added `assertParamsObject` and `validateStringParam` for stricter parameter validation, matching the pattern in `EstablishBidirectionalClosenessHandler`.

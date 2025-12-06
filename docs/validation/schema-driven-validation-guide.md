@@ -85,14 +85,17 @@ When a user provides invalid input:
 ### Field Descriptions
 
 #### `generateValidator` (boolean, required)
+
 - **Purpose:** Enable/disable validator generation for this component
 - **Default:** N/A (must be explicitly set)
 - **Recommendation:** Always set to `true` when adding validationRules
 
 #### `errorMessages` (object, optional)
+
 Custom error message templates with placeholder support.
 
 **Available Placeholders:**
+
 - `{{value}}` - The invalid value provided
 - `{{validValues}}` - List of valid enum values (comma-separated)
 - `{{field}}` - The property name
@@ -100,11 +103,13 @@ Custom error message templates with placeholder support.
 - `{{actualType}}` - The actual data type received
 
 **Supported Error Types:**
+
 - `invalidEnum` - Used when value not in enum list
 - `missingRequired` - Used when required field is absent
 - `invalidType` - Used when value has wrong data type
 
 **Example:**
+
 ```json
 {
   "errorMessages": {
@@ -116,14 +121,17 @@ Custom error message templates with placeholder support.
 ```
 
 #### `suggestions` (object, optional)
+
 Configuration for typo suggestions using Levenshtein distance.
 
 **Fields:**
+
 - `enableSimilarity` (boolean) - Enable/disable similarity matching
 - `maxDistance` (number, 0-10) - Maximum edit distance for suggestions (default: 3)
 - `maxSuggestions` (number) - Maximum number of suggestions to return (default: 1)
 
 **Levenshtein Distance Guide:**
+
 - Distance 1: Single character change ("smooth" → "smoth")
 - Distance 2: Two character changes ("athletic" → "athetic")
 - Distance 3: Three character changes ("massive" → "masive")
@@ -137,6 +145,7 @@ Configuration for typo suggestions using Levenshtein distance.
 **When to Use:** Properties with predefined list of valid values
 
 **Example:**
+
 ```json
 {
   "dataSchema": {
@@ -161,6 +170,7 @@ Configuration for typo suggestions using Levenshtein distance.
 ```
 
 **Result:**
+
 ```javascript
 // Input: { build: "athlet" }
 // Output: "Invalid build: 'athlet'. Did you mean 'athletic'?"
@@ -171,6 +181,7 @@ Configuration for typo suggestions using Levenshtein distance.
 **When to Use:** Enforce correct data types
 
 **Supported Types:**
+
 - `string`
 - `number`
 - `integer`
@@ -180,6 +191,7 @@ Configuration for typo suggestions using Levenshtein distance.
 - `null`
 
 **Example:**
+
 ```json
 {
   "dataSchema": {
@@ -203,6 +215,7 @@ Configuration for typo suggestions using Levenshtein distance.
 **When to Use:** Mandatory properties that must be present
 
 **Example:**
+
 ```json
 {
   "dataSchema": {
@@ -232,12 +245,14 @@ Configuration for typo suggestions using Levenshtein distance.
 ### Migration Steps
 
 1. **Open Component Schema File**
+
    ```bash
    # Component schemas are in:
    data/mods/{mod-name}/components/{component-name}.component.json
    ```
 
 2. **Add validationRules Section**
+
    ```json
    {
      // ... existing schema fields ...
@@ -248,6 +263,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 3. **Add Error Messages (Optional but Recommended)**
+
    ```json
    {
      "validationRules": {
@@ -262,6 +278,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 4. **Enable Suggestions for Enums (Recommended)**
+
    ```json
    {
      "validationRules": {
@@ -276,6 +293,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 5. **Validate Schema**
+
    ```bash
    npm run validate
    ```
@@ -305,6 +323,7 @@ Configuration for typo suggestions using Levenshtein distance.
 ### DO ✅
 
 1. **Use Descriptive Error Messages**
+
    ```json
    // Good
    "invalidEnum": "Invalid body build '{{value}}'. Choose from: {{validValues}}"
@@ -314,6 +333,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 2. **Enable Suggestions for Enums**
+
    ```json
    // Always enable for enum validation
    "suggestions": {
@@ -323,6 +343,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 3. **Keep maxDistance Reasonable**
+
    ```json
    // Good - catches most typos
    "maxDistance": 3
@@ -344,6 +365,7 @@ Configuration for typo suggestions using Levenshtein distance.
 ### DON'T ❌
 
 1. **Don't Add validationRules to Marker Components**
+
    ```json
    // Component with empty schema - DON'T add validationRules
    {
@@ -359,6 +381,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 2. **Don't Duplicate AJV Validation**
+
    ```json
    // Don't create redundant type validation
    // AJV already validates types from dataSchema
@@ -370,6 +393,7 @@ Configuration for typo suggestions using Levenshtein distance.
    ```
 
 3. **Don't Use Excessive maxDistance**
+
    ```json
    // Bad - will suggest unrelated values
    "maxDistance": 10  // Too high!
@@ -473,6 +497,7 @@ Configuration for typo suggestions using Levenshtein distance.
 ```
 
 **Why This Works:**
+
 - 47 enum values → high chance of typos
 - Suggestions help users find correct values
 - Clear error messages guide users
@@ -634,10 +659,10 @@ The ValidatorGenerator automatically caches generated validators:
 
 ```javascript
 // First validation - generates validator
-ajvValidator.validate(data, "descriptors:texture");
+ajvValidator.validate(data, 'descriptors:texture');
 
 // Subsequent validations - uses cached validator (fast!)
-ajvValidator.validate(data, "descriptors:texture");
+ajvValidator.validate(data, 'descriptors:texture');
 ```
 
 **No action needed** - caching is automatic.
@@ -649,9 +674,9 @@ To optimize startup performance, validators can be pre-generated:
 ```javascript
 // During mod loading (after component schemas loaded):
 ajvValidator.preGenerateValidators([
-  "descriptors:texture",
-  "descriptors:build",
-  "descriptors:height",
+  'descriptors:texture',
+  'descriptors:build',
+  'descriptors:height',
   // ... other frequently-used components
 ]);
 ```
@@ -668,6 +693,7 @@ ajvValidator.clearCache();
 ```
 
 **When to Clear:**
+
 - After schema hot-reload during development
 - When debugging validation issues
 - After mod configuration changes
@@ -679,6 +705,7 @@ ajvValidator.clearCache();
 **Symptom:** Standard AJV errors instead of enhanced messages
 
 **Solutions:**
+
 1. Verify `generateValidator: true` in validationRules
 2. Check schema syntax (run `npm run validate`)
 3. Ensure component ID matches what you're validating against
@@ -689,6 +716,7 @@ ajvValidator.clearCache();
 **Symptom:** Error message but no "Did you mean..." suggestion
 
 **Solutions:**
+
 1. Verify `enableSimilarity: true` in suggestions config
 2. Check if typo is within maxDistance threshold
 3. Ensure property has enum defined in dataSchema
@@ -699,6 +727,7 @@ ajvValidator.clearCache();
 **Symptom:** Noticeable delay during validation
 
 **Solutions:**
+
 1. Enable pre-generation for frequently-used components
 2. Check if maxDistance is too high (> 5)
 3. Verify validator caching is working
@@ -709,6 +738,7 @@ ajvValidator.clearCache();
 **Symptom:** Generic error messages appear
 
 **Solutions:**
+
 1. Verify errorMessages object in validationRules
 2. Check placeholder syntax (use `{{placeholders}}` not `${placeholders}`)
 3. Ensure error type matches (invalidEnum, missingRequired, invalidType)
@@ -737,30 +767,30 @@ describe('MyComponent - Validation', () => {
     const validator = testBed.getValidator();
 
     const result = validator.validate(
-      { myField: "invald" },  // typo
-      "my_mod:my_component"
+      { myField: 'invald' }, // typo
+      'my_mod:my_component'
     );
 
     expect(result.isValid).toBe(false);
-    expect(result.errors[0].suggestion).toBe("invalid");
-    expect(result.errors[0].message).toContain("Did you mean");
+    expect(result.errors[0].suggestion).toBe('invalid');
+    expect(result.errors[0].message).toContain('Did you mean');
   });
 
   it('should reject missing required field', () => {
     const validator = testBed.getValidator();
 
-    const result = validator.validate({}, "my_mod:my_component");
+    const result = validator.validate({}, 'my_mod:my_component');
 
     expect(result.isValid).toBe(false);
-    expect(result.errors[0].type).toBe("missingRequired");
+    expect(result.errors[0].type).toBe('missingRequired');
   });
 
   it('should accept valid input', () => {
     const validator = testBed.getValidator();
 
     const result = validator.validate(
-      { myField: "valid" },
-      "my_mod:my_component"
+      { myField: 'valid' },
+      'my_mod:my_component'
     );
 
     expect(result.isValid).toBe(true);
@@ -788,7 +818,7 @@ describe('MyComponent - Integration Validation', () => {
 
   it('should validate component data in real mod context', async () => {
     const entity = fixture.createEntity({
-      'my_mod:my_component': { myField: "valid" }
+      'my_mod:my_component': { myField: 'valid' },
     });
 
     // Validation happens automatically during entity creation
@@ -798,7 +828,7 @@ describe('MyComponent - Integration Validation', () => {
   it('should fail validation with invalid data', async () => {
     expect(() => {
       fixture.createEntity({
-        'my_mod:my_component': { myField: "invalid_value" }
+        'my_mod:my_component': { myField: 'invalid_value' },
       });
     }).toThrow(/Invalid.*myField/);
   });
@@ -852,6 +882,7 @@ Migrate these first for maximum impact:
 ### Q: Should I add validationRules to every component?
 
 **A:** No. Only add validationRules when:
+
 - Component has enum properties (for typo suggestions)
 - Custom error messages would improve user experience
 - Component has complex validation requirements
@@ -861,6 +892,7 @@ Marker components with empty schemas don't need validationRules.
 ### Q: What's the difference between AJV validation and ValidatorGenerator?
 
 **A:**
+
 - **AJV (Stage 1):** Structural validation against JSON Schema
 - **ValidatorGenerator (Stage 2):** Enhanced error messages + typo suggestions
 
@@ -869,6 +901,7 @@ ValidatorGenerator complements AJV, doesn't replace it. Both run in sequence.
 ### Q: Can I use validationRules without enum properties?
 
 **A:** Yes! ValidatorGenerator supports:
+
 - Type validation (any property with `type`)
 - Required field validation (any field in `required` array)
 - Enum validation with suggestions (properties with `enum`)
@@ -876,6 +909,7 @@ ValidatorGenerator complements AJV, doesn't replace it. Both run in sequence.
 ### Q: How do I test my validationRules?
 
 **A:** Three approaches:
+
 1. Run unit tests with `npm run test:unit`
 2. Use integration tests with real mod context
 3. Test manually by loading mod and triggering validation
@@ -883,6 +917,7 @@ ValidatorGenerator complements AJV, doesn't replace it. Both run in sequence.
 ### Q: Will validationRules break existing mods?
 
 **A:** No. `validationRules` is optional and backward compatible:
+
 - Components without validationRules use standard AJV validation
 - No changes required to existing components
 - Migration is incremental and non-breaking
@@ -890,6 +925,7 @@ ValidatorGenerator complements AJV, doesn't replace it. Both run in sequence.
 ### Q: What happens if I make a syntax error in validationRules?
 
 **A:** Schema validation will catch it:
+
 ```bash
 npm run validate
 # Will report: "validationRules syntax error at..."
@@ -898,10 +934,11 @@ npm run validate
 ### Q: Can I disable suggestions for specific components?
 
 **A:** Yes:
+
 ```json
 {
   "suggestions": {
-    "enableSimilarity": false  // Disables suggestions
+    "enableSimilarity": false // Disables suggestions
   }
 }
 ```
@@ -909,6 +946,7 @@ npm run validate
 ### Q: How do I know if validationRules is working?
 
 **A:** Check the error message:
+
 - **Standard AJV:** "should be equal to one of the allowed values"
 - **ValidatorGenerator:** "Invalid texture: 'smoth'. Did you mean 'smooth'?"
 
@@ -937,6 +975,7 @@ If you see the second format, it's working!
 ### Migration Status
 
 See `workflows/ANASYSIMP-019-schema-driven-validation-generation.md` for:
+
 - Current migration progress (46/131 components)
 - Remaining work breakdown
 - Implementation roadmap
@@ -944,6 +983,7 @@ See `workflows/ANASYSIMP-019-schema-driven-validation-generation.md` for:
 ## Support
 
 For questions or issues:
+
 1. Check this guide first
 2. Review existing migrated components for examples
 3. Check workflow document for implementation status

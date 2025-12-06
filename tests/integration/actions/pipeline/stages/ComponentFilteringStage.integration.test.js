@@ -100,7 +100,9 @@ describe('ComponentFilteringStage integration', () => {
 
     expect(result.success).toBe(true);
     expect(result.data.candidateActions).toHaveLength(2);
-    const candidateIds = result.data.candidateActions.map((action) => action.id);
+    const candidateIds = result.data.candidateActions.map(
+      (action) => action.id
+    );
     expect(candidateIds).toEqual(['core:rest', 'core:stealth_move']);
 
     expect(trace.captureActionData).toHaveBeenCalledTimes(4);

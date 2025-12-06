@@ -53,7 +53,9 @@ describe('Notes Formatting Integration', () => {
     const mockServices = createMockServices();
 
     const characterDataXmlBuilder = {
-      buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+      buildCharacterDataXml: jest.fn(
+        () => '<character_data>Mock XML</character_data>'
+      ),
     };
 
     const modActionMetadataProvider = {
@@ -475,11 +477,11 @@ describe('Notes Formatting Integration', () => {
 
       // Verify new taxonomy categories (6 types: entity, event, plan, knowledge, state, other)
       const categories = [
-        'Entities',      // Bobby, Hospital
-        'Events',        // Council vote, Deadline
-        'Plans',         // Escape plan
-        'Knowledge',     // Reality theory, Wizard pattern, Jon's knowledge
-        'States',        // My crisis
+        'Entities', // Bobby, Hospital
+        'Events', // Council vote, Deadline
+        'Plans', // Escape plan
+        'Knowledge', // Reality theory, Wizard pattern, Jon's knowledge
+        'States', // My crisis
       ];
 
       // Verify all categories are present

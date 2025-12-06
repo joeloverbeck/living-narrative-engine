@@ -162,8 +162,9 @@ describe('CacheService', () => {
       }).not.toThrow();
 
       expect(
-        logger.info.mock.calls.some(([message]) =>
-          typeof message === 'string' && message.includes('Evicted')
+        logger.info.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' && message.includes('Evicted')
         )
       ).toBe(false);
 

@@ -33,7 +33,7 @@ function createMockLogger() {
 function createMockEntityManager(entityComponents = {}) {
   return {
     hasComponent: jest.fn((entityId, componentId) => {
-      return !!(entityComponents[entityId]?.[componentId]);
+      return !!entityComponents[entityId]?.[componentId];
     }),
     getComponentData: jest.fn((entityId, componentId) => {
       return entityComponents[entityId]?.[componentId] ?? null;
@@ -59,7 +59,7 @@ const WEAPON_ATTACK_MODIFIERS = [
   {
     condition: {
       logic: {
-        '!!': [{ 'var': 'entity.secondary.components.positioning:fallen' }],
+        '!!': [{ var: 'entity.secondary.components.positioning:fallen' }],
       },
     },
     type: 'flat',
@@ -71,7 +71,9 @@ const WEAPON_ATTACK_MODIFIERS = [
   {
     condition: {
       logic: {
-        '!!': [{ 'var': 'entity.secondary.components.positioning:being_restrained' }],
+        '!!': [
+          { var: 'entity.secondary.components.positioning:being_restrained' },
+        ],
       },
     },
     type: 'flat',
@@ -113,13 +115,15 @@ describe('Weapon Attack Target State Modifiers', () => {
     it('should apply +15 flat bonus when target has positioning:fallen component', () => {
       // Arrange - Target is fallen
       setupServices({
-        'attacker': {
+        attacker: {
           'core:actor': { name: 'Attacker' },
           'skills:melee_skill': { value: 50 },
         },
-        'fallen_target': {
+        fallen_target: {
           'core:actor': { name: 'Fallen Target' },
-          'positioning:fallen': { activityMetadata: { shouldDescribeInActivity: true } },
+          'positioning:fallen': {
+            activityMetadata: { shouldDescribeInActivity: true },
+          },
           'skills:defense_skill': { value: 30 },
         },
       });
@@ -146,8 +150,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should have "target downed" tag when target is fallen', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'fallen_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        fallen_target: {
           'core:actor': { name: 'Fallen Target' },
           'positioning:fallen': {},
         },
@@ -159,7 +163,9 @@ describe('Weapon Attack Target State Modifiers', () => {
         actionConfig: { modifiers: WEAPON_ATTACK_MODIFIERS },
       });
 
-      expect(result.modifiers.some((m) => m.tag === 'target downed')).toBe(true);
+      expect(result.modifiers.some((m) => m.tag === 'target downed')).toBe(
+        true
+      );
     });
   });
 
@@ -167,13 +173,16 @@ describe('Weapon Attack Target State Modifiers', () => {
     it('should apply +10 flat bonus when target has positioning:being_restrained component', () => {
       // Arrange - Target is restrained
       setupServices({
-        'attacker': {
+        attacker: {
           'core:actor': { name: 'Attacker' },
           'skills:melee_skill': { value: 50 },
         },
-        'restrained_target': {
+        restrained_target: {
           'core:actor': { name: 'Restrained Target' },
-          'positioning:being_restrained': { restraining_entity_id: 'holder', consented: false },
+          'positioning:being_restrained': {
+            restraining_entity_id: 'holder',
+            consented: false,
+          },
           'skills:defense_skill': { value: 30 },
         },
       });
@@ -200,8 +209,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should have "target restrained" tag when target is restrained', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'restrained_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        restrained_target: {
           'core:actor': { name: 'Restrained Target' },
           'positioning:being_restrained': { restraining_entity_id: 'holder' },
         },
@@ -213,7 +222,9 @@ describe('Weapon Attack Target State Modifiers', () => {
         actionConfig: { modifiers: WEAPON_ATTACK_MODIFIERS },
       });
 
-      expect(result.modifiers.some((m) => m.tag === 'target restrained')).toBe(true);
+      expect(result.modifiers.some((m) => m.tag === 'target restrained')).toBe(
+        true
+      );
     });
   });
 
@@ -221,14 +232,19 @@ describe('Weapon Attack Target State Modifiers', () => {
     it('should apply BOTH modifiers when target is fallen AND restrained (+25 total)', () => {
       // Arrange - Target is both fallen and restrained
       setupServices({
-        'attacker': {
+        attacker: {
           'core:actor': { name: 'Attacker' },
           'skills:melee_skill': { value: 50 },
         },
-        'helpless_target': {
+        helpless_target: {
           'core:actor': { name: 'Helpless Target' },
-          'positioning:fallen': { activityMetadata: { shouldDescribeInActivity: true } },
-          'positioning:being_restrained': { restraining_entity_id: 'holder', consented: false },
+          'positioning:fallen': {
+            activityMetadata: { shouldDescribeInActivity: true },
+          },
+          'positioning:being_restrained': {
+            restraining_entity_id: 'holder',
+            consented: false,
+          },
           'skills:defense_skill': { value: 30 },
         },
       });
@@ -257,8 +273,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should have both "target downed" and "target restrained" tags', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'helpless_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        helpless_target: {
           'core:actor': { name: 'Helpless Target' },
           'positioning:fallen': {},
           'positioning:being_restrained': { restraining_entity_id: 'holder' },
@@ -272,14 +288,18 @@ describe('Weapon Attack Target State Modifiers', () => {
       });
 
       expect(result.modifiers).toHaveLength(2);
-      expect(result.modifiers.find((m) => m.tag === 'target downed')).toBeDefined();
-      expect(result.modifiers.find((m) => m.tag === 'target restrained')).toBeDefined();
+      expect(
+        result.modifiers.find((m) => m.tag === 'target downed')
+      ).toBeDefined();
+      expect(
+        result.modifiers.find((m) => m.tag === 'target restrained')
+      ).toBeDefined();
     });
 
     it('should stack modifiers additively (no stackId = all apply)', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'helpless_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        helpless_target: {
           'core:actor': { name: 'Helpless Target' },
           'positioning:fallen': {},
           'positioning:being_restrained': { restraining_entity_id: 'holder' },
@@ -302,11 +322,11 @@ describe('Weapon Attack Target State Modifiers', () => {
     it('should apply NO modifiers when target has neither fallen nor restrained component', () => {
       // Arrange - Target is standing and free
       setupServices({
-        'attacker': {
+        attacker: {
           'core:actor': { name: 'Attacker' },
           'skills:melee_skill': { value: 50 },
         },
-        'normal_target': {
+        normal_target: {
           'core:actor': { name: 'Normal Target' },
           'skills:defense_skill': { value: 30 },
           // No positioning:fallen or positioning:being_restrained
@@ -332,8 +352,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should not display any modifier tags when target is in normal state', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'normal_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        normal_target: {
           'core:actor': { name: 'Normal Target' },
         },
       });
@@ -360,7 +380,11 @@ describe('Weapon Attack Target State Modifiers', () => {
           enabled: true,
           contestType: 'opposed',
           actorSkill: { component: 'skills:melee_skill', default: 10 },
-          targetSkill: { component: 'skills:defense_skill', default: 0, targetRole: 'secondary' },
+          targetSkill: {
+            component: 'skills:defense_skill',
+            default: 0,
+            targetRole: 'secondary',
+          },
           modifiers: WEAPON_ATTACK_MODIFIERS,
         },
       },
@@ -372,7 +396,11 @@ describe('Weapon Attack Target State Modifiers', () => {
           enabled: true,
           contestType: 'opposed',
           actorSkill: { component: 'skills:melee_skill', default: 10 },
-          targetSkill: { component: 'skills:defense_skill', default: 0, targetRole: 'secondary' },
+          targetSkill: {
+            component: 'skills:defense_skill',
+            default: 0,
+            targetRole: 'secondary',
+          },
           modifiers: WEAPON_ATTACK_MODIFIERS,
         },
       },
@@ -384,7 +412,11 @@ describe('Weapon Attack Target State Modifiers', () => {
           enabled: true,
           contestType: 'opposed',
           actorSkill: { component: 'skills:melee_skill', default: 10 },
-          targetSkill: { component: 'skills:defense_skill', default: 0, targetRole: 'secondary' },
+          targetSkill: {
+            component: 'skills:defense_skill',
+            default: 0,
+            targetRole: 'secondary',
+          },
           modifiers: WEAPON_ATTACK_MODIFIERS,
         },
       },
@@ -394,8 +426,8 @@ describe('Weapon Attack Target State Modifiers', () => {
       describe(`${actionDef.name} (${actionId})`, () => {
         it('should apply fallen modifier (+15) to fallen target', () => {
           setupServices({
-            'attacker': { 'core:actor': { name: 'Attacker' } },
-            'fallen_target': {
+            attacker: { 'core:actor': { name: 'Attacker' } },
+            fallen_target: {
               'core:actor': { name: 'Fallen Target' },
               'positioning:fallen': {},
             },
@@ -413,10 +445,12 @@ describe('Weapon Attack Target State Modifiers', () => {
 
         it('should apply restrained modifier (+10) to restrained target', () => {
           setupServices({
-            'attacker': { 'core:actor': { name: 'Attacker' } },
-            'restrained_target': {
+            attacker: { 'core:actor': { name: 'Attacker' } },
+            restrained_target: {
               'core:actor': { name: 'Restrained Target' },
-              'positioning:being_restrained': { restraining_entity_id: 'holder' },
+              'positioning:being_restrained': {
+                restraining_entity_id: 'holder',
+              },
             },
           });
 
@@ -432,11 +466,13 @@ describe('Weapon Attack Target State Modifiers', () => {
 
         it('should apply both modifiers (+25) to fallen AND restrained target', () => {
           setupServices({
-            'attacker': { 'core:actor': { name: 'Attacker' } },
-            'helpless_target': {
+            attacker: { 'core:actor': { name: 'Attacker' } },
+            helpless_target: {
               'core:actor': { name: 'Helpless Target' },
               'positioning:fallen': {},
-              'positioning:being_restrained': { restraining_entity_id: 'holder' },
+              'positioning:being_restrained': {
+                restraining_entity_id: 'holder',
+              },
             },
           });
 
@@ -456,7 +492,7 @@ describe('Weapon Attack Target State Modifiers', () => {
   describe('Edge Cases', () => {
     it('should handle missing secondary target gracefully', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
+        attacker: { 'core:actor': { name: 'Attacker' } },
       });
 
       const result = modifierCollectorService.collectModifiers({
@@ -472,7 +508,7 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should handle non-existent target entity gracefully', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
+        attacker: { 'core:actor': { name: 'Attacker' } },
         // 'nonexistent_target' is not in entity manager
       });
 
@@ -489,11 +525,11 @@ describe('Weapon Attack Target State Modifiers', () => {
     it('should not confuse actor state with target state', () => {
       // Actor is fallen, target is not - modifiers should NOT apply
       setupServices({
-        'attacker': {
+        attacker: {
           'core:actor': { name: 'Fallen Attacker' },
           'positioning:fallen': {}, // Actor is fallen
         },
-        'normal_target': {
+        normal_target: {
           'core:actor': { name: 'Normal Target' },
           // Target is NOT fallen or restrained
         },
@@ -512,8 +548,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should work with empty modifiers array', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'fallen_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        fallen_target: {
           'core:actor': { name: 'Fallen Target' },
           'positioning:fallen': {},
         },
@@ -531,8 +567,8 @@ describe('Weapon Attack Target State Modifiers', () => {
 
     it('should work when actionConfig has no modifiers property', () => {
       setupServices({
-        'attacker': { 'core:actor': { name: 'Attacker' } },
-        'fallen_target': {
+        attacker: { 'core:actor': { name: 'Attacker' } },
+        fallen_target: {
           'core:actor': { name: 'Fallen Target' },
           'positioning:fallen': {},
         },

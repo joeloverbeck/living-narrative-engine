@@ -26,7 +26,7 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
   let container;
   let controller;
   let logger;
-  
+
   const createController = (overrides = {}) => {
     if (!container) {
       throw new Error('DI container not initialized for controller creation');
@@ -202,9 +202,7 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       const mockCharacterBuilderService = {
         initialize: jest.fn().mockResolvedValue(),
         getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-        getAllThematicDirectionsWithConcepts: jest
-          .fn()
-          .mockResolvedValue([]),
+        getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
         createCharacterConcept: jest.fn().mockResolvedValue({}),
         updateCharacterConcept: jest.fn().mockResolvedValue({}),
         deleteCharacterConcept: jest.fn().mockResolvedValue(),
@@ -415,9 +413,7 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
       const mockCharacterBuilderService = {
         initialize: jest.fn().mockResolvedValue(),
         getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-        getAllThematicDirectionsWithConcepts: jest
-          .fn()
-          .mockResolvedValue([]),
+        getAllThematicDirectionsWithConcepts: jest.fn().mockResolvedValue([]),
         createCharacterConcept: jest.fn().mockResolvedValue({}),
         updateCharacterConcept: jest.fn().mockResolvedValue({}),
         deleteCharacterConcept: jest.fn().mockResolvedValue(),
@@ -460,7 +456,10 @@ describe('ThematicDirectionsManagerController - EventDefinition Warnings Validat
         // Instead, we verify that when the controller DOES dispatch events (like ANALYTICS_TRACK),
         // they don't generate warnings because the event definitions are loaded.
 
-        console.log('Dispatched events during initialization:', dispatchedEvents);
+        console.log(
+          'Dispatched events during initialization:',
+          dispatchedEvents
+        );
 
         // Verify no EventDefinition warnings occurred during initialization
         const eventDefinitionWarnings = loggedWarnings.filter(

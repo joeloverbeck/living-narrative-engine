@@ -16,9 +16,7 @@ import {
 } from '../../../src/scopeDsl/core/entityHelpers.js';
 import { LogLevel } from '../../../src/logging/consoleLogger.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import {
-  createMinimalTestContainer,
-} from '../../common/scopeDsl/minimalTestContainer.js';
+import { createMinimalTestContainer } from '../../common/scopeDsl/minimalTestContainer.js';
 
 /**
  *
@@ -81,9 +79,21 @@ describe('entityHelpers advanced integration coverage', () => {
       },
     });
 
-    services.dataRegistry.store('entityDefinitions', 'test:actor', actorDefinition);
-    services.dataRegistry.store('entityDefinitions', 'test:item', itemDefinition);
-    services.dataRegistry.store('entityDefinitions', 'test:location', locationDefinition);
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:actor',
+      actorDefinition
+    );
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:item',
+      itemDefinition
+    );
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:location',
+      locationDefinition
+    );
   });
 
   afterAll(async () => {
@@ -139,7 +149,11 @@ describe('entityHelpers advanced integration coverage', () => {
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
 
-    const inventoryReference = { itemId: '   test:item   ', quantity: 3, detail: 'stacked' };
+    const inventoryReference = {
+      itemId: '   test:item   ',
+      quantity: 3,
+      detail: 'stacked',
+    };
 
     const context = createEvaluationContext(
       inventoryReference,
@@ -164,7 +178,14 @@ describe('entityHelpers advanced integration coverage', () => {
     const trace = { addLog: jest.fn() };
 
     // First call populates the cache
-    createEvaluationContext(item.id, actor, gateway, locationProvider, trace, runtimeCtx);
+    createEvaluationContext(
+      item.id,
+      actor,
+      gateway,
+      locationProvider,
+      trace,
+      runtimeCtx
+    );
 
     for (let i = 0; i < 1000; i += 1) {
       createEvaluationContext(
@@ -211,7 +232,14 @@ describe('entityHelpers advanced integration coverage', () => {
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
 
-    createEvaluationContext(item.id, actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext(
+      item.id,
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
 
     getEntitySpy.mockClear();
 
@@ -226,7 +254,14 @@ describe('entityHelpers advanced integration coverage', () => {
       );
     }
 
-    createEvaluationContext(item.id, actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext(
+      item.id,
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
     expect(getEntitySpy).toHaveBeenCalled();
 
     getEntitySpy.mockRestore();
@@ -258,8 +293,12 @@ describe('entityHelpers advanced integration coverage', () => {
       runtimeCtx
     );
 
-    expect(componentRegistry.getDefinition).toHaveBeenCalledWith('item:virtual-object');
-    expect(firstContext.entity.components['core:tags'].tags).toContain('virtual');
+    expect(componentRegistry.getDefinition).toHaveBeenCalledWith(
+      'item:virtual-object'
+    );
+    expect(firstContext.entity.components['core:tags'].tags).toContain(
+      'virtual'
+    );
 
     componentRegistry.getDefinition.mockClear();
 
@@ -372,9 +411,7 @@ describe('entityHelpers advanced integration coverage', () => {
     class LegacyMapEntity {
       constructor() {
         this.id = 'legacy-map';
-        this.components = new Map([
-          ['core:tags', { tags: ['legacy'] }],
-        ]);
+        this.components = new Map([['core:tags', { tags: ['legacy'] }]]);
       }
 
       legacyMethod() {
@@ -427,9 +464,7 @@ describe('entityHelpers advanced integration coverage', () => {
 
     const actor = {
       id: 'map-actor',
-      components: new Map([
-        ['core:name', { text: 'Map Actor' }],
-      ]),
+      components: new Map([['core:name', { text: 'Map Actor' }]]),
     };
 
     const processed = preprocessActorForEvaluation(actor, gateway);
@@ -446,9 +481,7 @@ describe('entityHelpers advanced integration coverage', () => {
 
     const actor = {
       id: 'map-context-actor',
-      components: new Map([
-        ['core:name', { text: 'Context Actor' }],
-      ]),
+      components: new Map([['core:name', { text: 'Context Actor' }]]),
     };
 
     const context = createEvaluationContext(
@@ -561,7 +594,9 @@ describe('entityHelpers advanced integration coverage', () => {
   it('emits cacheEvents for hits, misses, and evictions when lookup debugging is enabled', async () => {
     const { actor, location } = await createActorItemAndLocation();
     const cacheEvents = jest.fn();
-    const resolveSpy = jest.fn((entityId, manager) => manager?.getEntityInstance(entityId));
+    const resolveSpy = jest.fn((entityId, manager) =>
+      manager?.getEntityInstance(entityId)
+    );
     const logger = {
       warn: jest.fn(),
       debug: jest.fn(),
@@ -584,8 +619,22 @@ describe('entityHelpers advanced integration coverage', () => {
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
 
-    createEvaluationContext('missing:0', actor, gateway, locationProvider, null, runtimeCtx);
-    createEvaluationContext('missing:0', actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext(
+      'missing:0',
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
+    createEvaluationContext(
+      'missing:0',
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
 
     for (let i = 1; i <= ENTITY_CACHE_SIZE_LIMIT + 5; i += 1) {
       createEvaluationContext(
@@ -622,8 +671,22 @@ describe('entityHelpers advanced integration coverage', () => {
     const gateway = scopeEngine._createEntitiesGateway(runtimeCtx);
     const locationProvider = createLocationProvider(runtimeCtx.location);
 
-    createEvaluationContext('synthetic-warning', actor, gateway, locationProvider, null, runtimeCtx);
-    createEvaluationContext('synthetic-warning', actor, gateway, locationProvider, null, runtimeCtx);
+    createEvaluationContext(
+      'synthetic-warning',
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
+    createEvaluationContext(
+      'synthetic-warning',
+      actor,
+      gateway,
+      locationProvider,
+      null,
+      runtimeCtx
+    );
 
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(/synthetic entity/i);

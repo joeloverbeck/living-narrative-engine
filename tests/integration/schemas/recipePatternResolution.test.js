@@ -13,7 +13,8 @@ import recipeSchema from '../../../data/schemas/anatomy.recipe.schema.json';
 import blueprintSchema from '../../../data/schemas/anatomy.blueprint.schema.json';
 import structureTemplateSchema from '../../../data/schemas/anatomy.structure-template.schema.json';
 
-const RECIPE_SCHEMA_ID = 'schema://living-narrative-engine/anatomy.recipe.schema.json';
+const RECIPE_SCHEMA_ID =
+  'schema://living-narrative-engine/anatomy.recipe.schema.json';
 const BLUEPRINT_SCHEMA_ID =
   'schema://living-narrative-engine/anatomy.blueprint.schema.json';
 const TEMPLATE_SCHEMA_ID =
@@ -62,7 +63,10 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
 
     const result = validator.validate(RECIPE_SCHEMA_ID, spiderRecipe);
     if (!result.isValid) {
-      console.log('Recipe validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Recipe validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -222,7 +226,10 @@ describe('Recipe Pattern Resolution - Dragon (Wildcard Patterns)', () => {
 
     const result = validator.validate(RECIPE_SCHEMA_ID, dragonRecipe);
     if (!result.isValid) {
-      console.log('Recipe validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Recipe validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -338,7 +345,10 @@ describe('Recipe Pattern Resolution - Mixed V1 and V2 Patterns', () => {
 
     const result = validator.validate(RECIPE_SCHEMA_ID, mixedRecipe);
     if (!result.isValid) {
-      console.log('Recipe validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Recipe validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -468,7 +478,10 @@ describe('Recipe Pattern Resolution - Property-Based Filtering', () => {
 
     const result = validator.validate(RECIPE_SCHEMA_ID, orientationRecipe);
     if (!result.isValid) {
-      console.log('Recipe validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Recipe validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });
@@ -594,7 +607,10 @@ describe('Recipe Pattern Resolution - Pattern Exclusions', () => {
 
     const result = validator.validate(RECIPE_SCHEMA_ID, exclusionRecipe);
     if (!result.isValid) {
-      console.log('Recipe validation errors:', JSON.stringify(result.errors, null, 2));
+      console.log(
+        'Recipe validation errors:',
+        JSON.stringify(result.errors, null, 2)
+      );
     }
     expect(result.isValid).toBe(true);
   });

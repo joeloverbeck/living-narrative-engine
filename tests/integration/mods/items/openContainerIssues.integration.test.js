@@ -28,7 +28,9 @@ describe('Open Container Issues - Integration', () => {
     locationId = 'test:location';
 
     // Setup entities using ModEntityBuilder
-    const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+    const room = new ModEntityBuilder(locationId)
+      .asRoom('Test Location')
+      .build();
 
     const actor = new ModEntityBuilder(actorId)
       .withName('Test Actor')
@@ -78,9 +80,15 @@ describe('Open Container Issues - Integration', () => {
       const pickUpItemAction = require('../../../../data/mods/items/actions/pick_up_item.action.json');
 
       // All templates should start with lowercase
-      expect(openContainerAction.template.charAt(0)).toBe(openContainerAction.template.charAt(0).toLowerCase());
-      expect(dropItemAction.template.charAt(0)).toBe(dropItemAction.template.charAt(0).toLowerCase());
-      expect(pickUpItemAction.template.charAt(0)).toBe(pickUpItemAction.template.charAt(0).toLowerCase());
+      expect(openContainerAction.template.charAt(0)).toBe(
+        openContainerAction.template.charAt(0).toLowerCase()
+      );
+      expect(dropItemAction.template.charAt(0)).toBe(
+        dropItemAction.template.charAt(0).toLowerCase()
+      );
+      expect(pickUpItemAction.template.charAt(0)).toBe(
+        pickUpItemAction.template.charAt(0).toLowerCase()
+      );
 
       // open_container should follow the same pattern
       expect(openContainerAction.template).toMatch(/^[a-z]/);
@@ -92,7 +100,10 @@ describe('Open Container Issues - Integration', () => {
       // Read the scope file directly
       const fs = require('fs');
       const path = require('path');
-      const scopePath = path.resolve(__dirname, '../../../../data/mods/items/scopes/openable_containers_at_location.scope');
+      const scopePath = path.resolve(
+        __dirname,
+        '../../../../data/mods/items/scopes/openable_containers_at_location.scope'
+      );
       const scopeContent = fs.readFileSync(scopePath, 'utf8');
 
       // Verify the scope includes the isOpen filter
@@ -100,13 +111,18 @@ describe('Open Container Issues - Integration', () => {
       expect(scopeContent).toContain('false');
 
       // Verify the filter checks that isOpen equals false
-      expect(scopeContent).toMatch(/{\s*"=="\s*:\s*\[.*items:container\.isOpen.*false.*\]/);
+      expect(scopeContent).toMatch(
+        /{\s*"=="\s*:\s*\[.*items:container\.isOpen.*false.*\]/
+      );
     });
 
     it('scope definition should include location and component checks', () => {
       const fs = require('fs');
       const path = require('path');
-      const scopePath = path.resolve(__dirname, '../../../../data/mods/items/scopes/openable_containers_at_location.scope');
+      const scopePath = path.resolve(
+        __dirname,
+        '../../../../data/mods/items/scopes/openable_containers_at_location.scope'
+      );
       const scopeContent = fs.readFileSync(scopePath, 'utf8');
 
       // Should check for items:openable component
@@ -123,7 +139,9 @@ describe('Open Container Issues - Integration', () => {
   describe('Scope Filter Validation', () => {
     it('should filter containers correctly in openable_containers_at_location scope', () => {
       // Create room
-      const room = new ModEntityBuilder(locationId).asRoom('Test Location').build();
+      const room = new ModEntityBuilder(locationId)
+        .asRoom('Test Location')
+        .build();
 
       // Create actor
       const actor = new ModEntityBuilder(actorId)
@@ -210,7 +228,8 @@ describe('Open Container Issues - Integration', () => {
       await testFixture.executeAction(actorId, containerId);
 
       // Verify the container is still open (no change)
-      const container = testFixture.entityManager.getEntityInstance(containerId);
+      const container =
+        testFixture.entityManager.getEntityInstance(containerId);
       expect(container.components['items:container'].isOpen).toBe(true);
 
       // Verify turn ended with failure

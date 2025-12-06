@@ -40,7 +40,12 @@ describe('ScopeEvaluationTracer', () => {
   describe('Step logging', () => {
     it('should log resolver step when enabled', () => {
       tracer.enable();
-      tracer.logStep('SourceResolver', "resolve(kind='actor')", { type: 'Context' }, new Set(['actor-123']));
+      tracer.logStep(
+        'SourceResolver',
+        "resolve(kind='actor')",
+        { type: 'Context' },
+        new Set(['actor-123'])
+      );
 
       const trace = tracer.getTrace();
       expect(trace.steps).toHaveLength(1);
@@ -50,7 +55,12 @@ describe('ScopeEvaluationTracer', () => {
     });
 
     it('should not log when disabled', () => {
-      tracer.logStep('SourceResolver', "resolve(kind='actor')", { type: 'Context' }, new Set(['actor-123']));
+      tracer.logStep(
+        'SourceResolver',
+        "resolve(kind='actor')",
+        { type: 'Context' },
+        new Set(['actor-123'])
+      );
 
       const trace = tracer.getTrace();
       expect(trace.steps).toHaveLength(0);
@@ -117,7 +127,9 @@ describe('ScopeEvaluationTracer', () => {
 
     it('should limit large collections to 10 items', () => {
       tracer.enable();
-      const largeSet = new Set(Array.from({ length: 20 }, (_, i) => `entity-${i}`));
+      const largeSet = new Set(
+        Array.from({ length: 20 }, (_, i) => `entity-${i}`)
+      );
       const largeArray = Array.from({ length: 15 }, (_, i) => i);
 
       tracer.logStep('FilterResolver', 'filter()', largeSet, largeArray);
@@ -140,12 +152,9 @@ describe('ScopeEvaluationTracer', () => {
   describe('Filter evaluation logging', () => {
     it('should log filter evaluation', () => {
       tracer.enable();
-      tracer.logFilterEvaluation(
-        'entity-456',
-        { '==': [1, 1] },
-        true,
-        { var1: 'value1' }
-      );
+      tracer.logFilterEvaluation('entity-456', { '==': [1, 1] }, true, {
+        var1: 'value1',
+      });
 
       const trace = tracer.getTrace();
       expect(trace.steps).toHaveLength(1);
@@ -178,7 +187,7 @@ describe('ScopeEvaluationTracer', () => {
       tracer.enable();
       const breakdown = {
         and: {
-          'condition_ref': false,
+          condition_ref: false,
           '==': true,
         },
       };
@@ -240,7 +249,12 @@ describe('ScopeEvaluationTracer', () => {
     it('should calculate summary statistics', () => {
       tracer.enable();
       tracer.logStep('SourceResolver', 'resolve()', {}, new Set(['actor-1']));
-      tracer.logStep('FilterResolver', 'filter()', new Set(['actor-1']), new Set(['actor-1']));
+      tracer.logStep(
+        'FilterResolver',
+        'filter()',
+        new Set(['actor-1']),
+        new Set(['actor-1'])
+      );
       tracer.logFilterEvaluation('actor-1', {}, true, {});
       tracer.logError('test', new Error('test'), {});
 
@@ -332,7 +346,9 @@ describe('ScopeEvaluationTracer', () => {
 
     it('should format errors', () => {
       tracer.enable();
-      tracer.logError('resolution', new Error('Test error'), { node: 'Source' });
+      tracer.logError('resolution', new Error('Test error'), {
+        node: 'Source',
+      });
 
       const formatted = tracer.format();
       expect(formatted).toContain('[ERROR] resolution');
@@ -341,8 +357,18 @@ describe('ScopeEvaluationTracer', () => {
 
     it('should format complete trace', () => {
       tracer.enable();
-      tracer.logStep('SourceResolver', "resolve(kind='actor')", {}, new Set(['actor-1']));
-      tracer.logStep('StepResolver', 'resolve(field)', new Set(['actor-1']), new Set(['target-1', 'target-2']));
+      tracer.logStep(
+        'SourceResolver',
+        "resolve(kind='actor')",
+        {},
+        new Set(['actor-1'])
+      );
+      tracer.logStep(
+        'StepResolver',
+        'resolve(field)',
+        new Set(['actor-1']),
+        new Set(['target-1', 'target-2'])
+      );
       tracer.logFilterEvaluation('target-1', { '==': [1, 1] }, false, {});
       tracer.logFilterEvaluation('target-2', { '==': [1, 1] }, true, {});
 
@@ -513,7 +539,12 @@ describe('ScopeEvaluationTracer', () => {
       const start = Date.now();
 
       for (let i = 0; i < iterations; i++) {
-        tracer.logStep('SourceResolver', 'resolve()', {}, new Set([`entity-${i}`]));
+        tracer.logStep(
+          'SourceResolver',
+          'resolve()',
+          {},
+          new Set([`entity-${i}`])
+        );
         tracer.logFilterEvaluation(`entity-${i}`, { '==': [1, 1] }, true, {});
       }
 
@@ -591,7 +622,9 @@ describe('ScopeEvaluationTracer', () => {
       expect(formatted).toContain('Entity: entity-3');
 
       // Output should show only passed entities
-      expect(formatted).toContain("Output: Set (2 items) ['entity-1', 'entity-3']");
+      expect(formatted).toContain(
+        "Output: Set (2 items) ['entity-1', 'entity-3']"
+      );
     });
 
     it('should separate filter groups when resolver steps are interleaved', () => {
@@ -600,7 +633,12 @@ describe('ScopeEvaluationTracer', () => {
       tracer.logStep('SourceResolver', 'resolve()', {}, new Set(['actor-1']));
       tracer.logFilterEvaluation('entity-1', {}, true, {});
       tracer.logFilterEvaluation('entity-2', {}, false, {});
-      tracer.logStep('StepResolver', 'resolve()', new Set(['entity-1']), new Set(['target-1']));
+      tracer.logStep(
+        'StepResolver',
+        'resolve()',
+        new Set(['entity-1']),
+        new Set(['target-1'])
+      );
       tracer.logFilterEvaluation('target-1', {}, true, {});
 
       const formatted = tracer.format();
@@ -637,8 +675,12 @@ describe('ScopeEvaluationTracer', () => {
 
       const trace = tracer.getTrace();
 
-      expect(trace.steps[1].timestamp).toBeGreaterThanOrEqual(trace.steps[0].timestamp);
-      expect(trace.steps[2].timestamp).toBeGreaterThanOrEqual(trace.steps[1].timestamp);
+      expect(trace.steps[1].timestamp).toBeGreaterThanOrEqual(
+        trace.steps[0].timestamp
+      );
+      expect(trace.steps[2].timestamp).toBeGreaterThanOrEqual(
+        trace.steps[1].timestamp
+      );
     });
   });
 });

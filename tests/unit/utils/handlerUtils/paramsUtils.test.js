@@ -54,9 +54,12 @@ describe('handlerUtils/paramsUtils', () => {
       const result = assertParamsObject(null, logger, 'MissingParamsOp');
 
       expect(result).toBe(false);
-      expect(logger.warn).toHaveBeenCalledWith('MissingParamsOp: params missing or invalid.', {
-        params: null,
-      });
+      expect(logger.warn).toHaveBeenCalledWith(
+        'MissingParamsOp: params missing or invalid.',
+        {
+          params: null,
+        }
+      );
       expect(safeDispatchErrorMock).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
 
@@ -75,7 +78,7 @@ describe('handlerUtils/paramsUtils', () => {
         dispatcher,
         'DispatchOp: params missing or invalid.',
         { params: undefined },
-        dispatcher,
+        dispatcher
       );
     });
 
@@ -87,9 +90,12 @@ describe('handlerUtils/paramsUtils', () => {
 
       expect(result).toBe(false);
       expect(safeDispatchErrorMock).not.toHaveBeenCalled();
-      expect(warnSpy).toHaveBeenCalledWith('ConsoleOp: params missing or invalid.', {
-        params: undefined,
-      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        'ConsoleOp: params missing or invalid.',
+        {
+          params: undefined,
+        }
+      );
 
       warnSpy.mockRestore();
     });
@@ -101,7 +107,12 @@ describe('handlerUtils/paramsUtils', () => {
       const logger = { warn: jest.fn() };
       const dispatcher = { dispatch: jest.fn() };
 
-      const result = validateStringParam('  Hello World  ', 'greeting', logger, dispatcher);
+      const result = validateStringParam(
+        '  Hello World  ',
+        'greeting',
+        logger,
+        dispatcher
+      );
 
       expect(result).toBe('Hello World');
       expect(safeDispatchErrorMock).not.toHaveBeenCalled();
@@ -121,7 +132,7 @@ describe('handlerUtils/paramsUtils', () => {
         dispatcher,
         'Invalid "username" parameter',
         { username: '   ' },
-        logger,
+        logger
       );
       expect(logger.warn).not.toHaveBeenCalled();
     });
@@ -133,7 +144,9 @@ describe('handlerUtils/paramsUtils', () => {
       const result = validateStringParam('', 'alias', logger, null);
 
       expect(result).toBeNull();
-      expect(logger.warn).toHaveBeenCalledWith('Invalid "alias" parameter', { alias: '' });
+      expect(logger.warn).toHaveBeenCalledWith('Invalid "alias" parameter', {
+        alias: '',
+      });
       expect(safeDispatchErrorMock).not.toHaveBeenCalled();
     });
 

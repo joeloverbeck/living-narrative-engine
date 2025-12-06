@@ -301,19 +301,22 @@ export function registerInfrastructure(container) {
   );
 
   // ─── Unified Cache Infrastructure ─────────────────────────────
-  
+
   // Register UnifiedCache as singleton
   container.register(
     tokens.IUnifiedCache,
     (c) =>
-      new UnifiedCache({
-        logger: c.resolve(tokens.ILogger),
-      }, {
-        maxSize: 1000,
-        ttl: 300000, // 5 minutes
-        enableMetrics: true,
-        evictionPolicy: 'lru',
-      }),
+      new UnifiedCache(
+        {
+          logger: c.resolve(tokens.ILogger),
+        },
+        {
+          maxSize: 1000,
+          ttl: 300000, // 5 minutes
+          enableMetrics: true,
+          evictionPolicy: 'lru',
+        }
+      ),
     { lifecycle: 'singleton' }
   );
   safeDebug(`Registered ${String(tokens.IUnifiedCache)}.`);
@@ -365,9 +368,7 @@ export function registerInfrastructure(container) {
     (c) => c.resolve(tokens.ICacheMetrics),
     { lifecycle: 'singleton' }
   );
-  safeDebug(
-    `Registered ${String(tokens.CacheMetrics)} -> ICacheMetrics.`
-  );
+  safeDebug(`Registered ${String(tokens.CacheMetrics)} -> ICacheMetrics.`);
 
   // ─── Facade Infrastructure ─────────────────────────────
 
@@ -426,8 +427,8 @@ export function registerInfrastructure(container) {
         logger: c.resolve(tokens.ILogger),
         eventBus: c.resolve(tokens.IEventBus),
         unifiedCache: c.resolve(tokens.IUnifiedCache),
-        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker) 
-          ? c.resolve(tokens.ICircuitBreaker) 
+        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker)
+          ? c.resolve(tokens.ICircuitBreaker)
           : null,
       }),
     { lifecycle: 'singleton' }
@@ -447,8 +448,8 @@ export function registerInfrastructure(container) {
         logger: c.resolve(tokens.ILogger),
         eventBus: c.resolve(tokens.IEventBus),
         unifiedCache: c.resolve(tokens.IUnifiedCache),
-        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker) 
-          ? c.resolve(tokens.ICircuitBreaker) 
+        circuitBreaker: c.isRegistered(tokens.ICircuitBreaker)
+          ? c.resolve(tokens.ICircuitBreaker)
           : null,
       }),
     { lifecycle: 'singleton' }
@@ -509,7 +510,14 @@ export function registerInfrastructure(container) {
       version: '1.0.0',
       description: 'Simplified interface for anatomy system operations',
       tags: ['anatomy', 'body-parts', 'graph-operations', 'descriptions'],
-      capabilities: ['query', 'modification', 'validation', 'bulk', 'graph', 'description'],
+      capabilities: [
+        'query',
+        'modification',
+        'validation',
+        'bulk',
+        'graph',
+        'description',
+      ],
       singleton: true,
     };
 

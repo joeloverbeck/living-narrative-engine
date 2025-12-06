@@ -16,16 +16,10 @@
       "music:playing_music",
       "music:performance_mood"
     ],
-    "primary": [
-      "items:item",
-      "music:is_instrument"
-    ]
+    "primary": ["items:item", "music:is_instrument"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:being_restrained"
-    ]
+    "actor": ["positioning:closeness", "positioning:being_restrained"]
   },
   "prerequisites": [],
   "template": "play phrase on {instrument}",

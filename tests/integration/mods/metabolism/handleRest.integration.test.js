@@ -40,14 +40,14 @@ describe('metabolism:rest action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 0.8
+          metabolic_efficiency_multiplier: 0.8,
         })
         .build();
 
@@ -55,8 +55,10 @@ describe('metabolism:rest action integration', () => {
 
       await testFixture.executeAction('test:actor1', null);
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
       expect(metabolicStore.current_energy).toBe(100);
 
       const fuelConverter = actorEntity.components['metabolism:fuel_converter'];
@@ -66,11 +68,17 @@ describe('metabolism:rest action integration', () => {
       const perceptibleEvent = testFixture.events.find(
         (event) => event.eventType === 'core:perceptible_event'
       );
-      expect(perceptibleEvent?.payload.descriptionText).toBe('Alice rests and recovers energy.');
+      expect(perceptibleEvent?.payload.descriptionText).toBe(
+        'Alice rests and recovers energy.'
+      );
       expect(perceptibleEvent?.payload.perceptionType).toBe('rest_action');
 
-      expect(testFixture.events).toDispatchEvent('core:display_successful_action_result');
-      expect(testFixture.events).toHaveActionSuccess('Alice rests and recovers energy.');
+      expect(testFixture.events).toDispatchEvent(
+        'core:display_successful_action_result'
+      );
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice rests and recovers energy.'
+      );
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
 
       const turnEndedEvent = testFixture.events.find(
@@ -91,14 +99,14 @@ describe('metabolism:rest action integration', () => {
           max_energy: 120,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 1.5
+          metabolic_efficiency_multiplier: 1.5,
         })
         .build();
 
@@ -106,15 +114,19 @@ describe('metabolism:rest action integration', () => {
 
       await testFixture.executeAction('test:actor1', null);
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.current_energy).toBe(120);
 
       const fuelConverter = actorEntity.components['metabolism:fuel_converter'];
       expect(fuelConverter.metabolic_efficiency_multiplier).toBe(1.0);
 
-      expect(testFixture.events).toHaveActionSuccess('Bob rests and recovers energy.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Bob rests and recovers energy.'
+      );
     });
 
     it('dispatches events in correct order', async () => {
@@ -129,14 +141,14 @@ describe('metabolism:rest action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 0.9
+          metabolic_efficiency_multiplier: 0.9,
         })
         .build();
 
@@ -145,16 +157,16 @@ describe('metabolism:rest action integration', () => {
       await testFixture.executeAction('test:actor1', null);
 
       const perceptibleIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:perceptible_event'
+        (e) => e.eventType === 'core:perceptible_event'
       );
       const displayIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
       const successIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:action_success'
+        (e) => e.eventType === 'core:action_success'
       );
       const turnEndedIdx = testFixture.events.findIndex(
-        e => e.eventType === 'core:turn_ended'
+        (e) => e.eventType === 'core:turn_ended'
       );
 
       expect(perceptibleIdx).toBeLessThan(displayIdx);
@@ -176,14 +188,14 @@ describe('metabolism:rest action integration', () => {
           max_energy: 100,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         })
         .build();
 
@@ -191,15 +203,19 @@ describe('metabolism:rest action integration', () => {
 
       await testFixture.executeAction('test:actor1', null);
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.current_energy).toBe(100);
 
       const fuelConverter = actorEntity.components['metabolism:fuel_converter'];
       expect(fuelConverter.metabolic_efficiency_multiplier).toBe(1.0);
 
-      expect(testFixture.events).toHaveActionSuccess('Dave rests and recovers energy.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Dave rests and recovers energy.'
+      );
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
     });
 
@@ -215,16 +231,16 @@ describe('metabolism:rest action integration', () => {
           max_energy: 100,
           buffer_storage: [
             { bulk: 2, energy_content: 30 },
-            { bulk: 1, energy_content: 15 }
+            { bulk: 1, energy_content: 15 },
           ],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 0.7
+          metabolic_efficiency_multiplier: 0.7,
         })
         .build();
 
@@ -232,8 +248,10 @@ describe('metabolism:rest action integration', () => {
 
       await testFixture.executeAction('test:actor1', null);
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.current_energy).toBe(100);
       expect(metabolicStore.buffer_storage).toHaveLength(2);
@@ -241,11 +259,15 @@ describe('metabolism:rest action integration', () => {
       const fuelConverter = actorEntity.components['metabolism:fuel_converter'];
       expect(fuelConverter.metabolic_efficiency_multiplier).toBe(1.0);
 
-      expect(testFixture.events).toHaveActionSuccess('Eve rests and recovers energy.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Eve rests and recovers energy.'
+      );
     });
 
     it('handles rest with different max_energy values', async () => {
-      const room = new ModEntityBuilder('test:room1').asRoom('Fortress').build();
+      const room = new ModEntityBuilder('test:room1')
+        .asRoom('Fortress')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Frank')
@@ -256,14 +278,14 @@ describe('metabolism:rest action integration', () => {
           max_energy: 150,
           base_burn_rate: 1.0,
           buffer_storage: [],
-          buffer_capacity: 10
+          buffer_capacity: 10,
         })
         .withComponent('metabolism:fuel_converter', {
           capacity: 10,
           conversion_rate: 1.0,
           efficiency: 1.0,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 1.2
+          metabolic_efficiency_multiplier: 1.2,
         })
         .build();
 
@@ -271,12 +293,16 @@ describe('metabolism:rest action integration', () => {
 
       await testFixture.executeAction('test:actor1', null);
 
-      const actorEntity = testFixture.entityManager.getEntityInstance('test:actor1');
-      const metabolicStore = actorEntity.components['metabolism:metabolic_store'];
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const metabolicStore =
+        actorEntity.components['metabolism:metabolic_store'];
 
       expect(metabolicStore.current_energy).toBe(150);
 
-      expect(testFixture.events).toHaveActionSuccess('Frank rests and recovers energy.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Frank rests and recovers energy.'
+      );
     });
   });
 });

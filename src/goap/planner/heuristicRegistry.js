@@ -29,13 +29,22 @@ class HeuristicRegistry {
    * @param {object} params.relaxedPlanningGraphHeuristic - RPG heuristic implementation
    * @param {object} params.logger - Logger instance
    */
-  constructor({ goalDistanceHeuristic, relaxedPlanningGraphHeuristic, logger }) {
+  constructor({
+    goalDistanceHeuristic,
+    relaxedPlanningGraphHeuristic,
+    logger,
+  }) {
     this.#logger = ensureValidLogger(logger, 'HeuristicRegistry.constructor');
 
     // Validate heuristic dependencies
-    validateDependency(goalDistanceHeuristic, 'IGoalDistanceHeuristic', this.#logger, {
-      requiredMethods: ['calculate'],
-    });
+    validateDependency(
+      goalDistanceHeuristic,
+      'IGoalDistanceHeuristic',
+      this.#logger,
+      {
+        requiredMethods: ['calculate'],
+      }
+    );
 
     validateDependency(
       relaxedPlanningGraphHeuristic,

@@ -430,12 +430,7 @@ export class SpeechBubbleRenderer extends BoundDomRendererBase {
       return;
     }
 
-    const {
-      speechContent,
-      allowHtml = false,
-      thoughts,
-      notes,
-    } = payload;
+    const { speechContent, allowHtml = false, thoughts, notes } = payload;
 
     const elementInfo = this.#createSpeechElements(payload);
     if (!elementInfo) return;

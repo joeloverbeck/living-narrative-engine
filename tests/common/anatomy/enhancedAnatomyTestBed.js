@@ -38,7 +38,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       this._initializeClothingIntegration();
     } else {
       // Create mock clothing management service for minimal mode
-      this.clothingManagementService = this.createMockClothingManagementService();
+      this.clothingManagementService =
+        this.createMockClothingManagementService();
     }
 
     // Override anatomy description service with appropriate mocking strategy
@@ -56,23 +57,31 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       this.anatomyDescriptionService = {
         generateAllDescriptions: jest.fn().mockResolvedValue({
           bodyDescription: 'Simple test body.',
-          partDescriptions: new Map([['part-1', 'Simple part.']])
+          partDescriptions: new Map([['part-1', 'Simple part.']]),
         }),
-        generateBodyDescription: jest.fn().mockResolvedValue('Simple test body.'),
+        generateBodyDescription: jest
+          .fn()
+          .mockResolvedValue('Simple test body.'),
         generatePartDescription: jest.fn().mockResolvedValue('Simple part.'),
       };
     } else {
       // Use realistic mocks that simulate production memory patterns
       this.anatomyDescriptionService = {
-        generateAllDescriptions: jest.fn().mockImplementation(async (bodyEntity) => {
-          const bodyDescription = this._generateRealisticBodyDescription(bodyEntity);
-          const partDescriptions = this._generateRealisticPartDescriptions(bodyEntity);
-          
-          return { bodyDescription, partDescriptions };
-        }),
-        generateBodyDescription: jest.fn().mockImplementation(async (bodyEntity) => {
-          return this._generateRealisticBodyDescription(bodyEntity);
-        }),
+        generateAllDescriptions: jest
+          .fn()
+          .mockImplementation(async (bodyEntity) => {
+            const bodyDescription =
+              this._generateRealisticBodyDescription(bodyEntity);
+            const partDescriptions =
+              this._generateRealisticPartDescriptions(bodyEntity);
+
+            return { bodyDescription, partDescriptions };
+          }),
+        generateBodyDescription: jest
+          .fn()
+          .mockImplementation(async (bodyEntity) => {
+            return this._generateRealisticBodyDescription(bodyEntity);
+          }),
         generatePartDescription: jest.fn().mockImplementation((partId) => {
           return this._generateRealisticPartDescription(partId);
         }),
@@ -89,7 +98,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   _generateRealisticBodyDescription(bodyEntity) {
     const entityId = bodyEntity?.id || 'unknown';
-    
+
     // Simulate realistic description generation with moderate complexity
     // Reduced template count for better memory balance
     const templates = [
@@ -97,18 +106,18 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       `The framework consists of articulated segments arranged in hierarchical patterns.`,
       `Surface characteristics include varied textural elements and structural modifications.`,
       `The overall configuration reflects adaptations for environmental requirements.`,
-      `Integrated systems provide functionality across the entire structure.`
+      `Integrated systems provide functionality across the entire structure.`,
     ];
-    
+
     // Simulate basic template processing
     const processedSections = templates.map((template, index) => {
       return `${index + 1}. ${template}`;
     });
-    
+
     // Assemble final description with minimal metadata
     const baseDescription = processedSections.join(' ');
     const final = `${baseDescription} [Entity: ${entityId}]`;
-    
+
     return final;
   }
 
@@ -121,13 +130,16 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   _generateRealisticPartDescriptions(bodyEntity) {
     const partDescriptions = new Map();
-    
+
     // Simulate generating descriptions for multiple parts (reduced from 10 to 3 for better balance)
     for (let i = 1; i <= 3; i++) {
       const partId = `part-${i}-${bodyEntity?.id || 'unknown'}`;
-      partDescriptions.set(partId, this._generateRealisticPartDescription(partId));
+      partDescriptions.set(
+        partId,
+        this._generateRealisticPartDescription(partId)
+      );
     }
-    
+
     return partDescriptions;
   }
 
@@ -141,16 +153,21 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   _generateRealisticPartDescription(partId) {
     // Simulate realistic part description with balanced complexity
     const descriptors = ['articulated', 'flexible', 'reinforced', 'responsive'];
-    const functions = ['structural support', 'movement facilitation', 'system coordination'];
-    
+    const functions = [
+      'structural support',
+      'movement facilitation',
+      'system coordination',
+    ];
+
     // Select descriptors to simulate dynamic generation (reduced randomness for memory efficiency)
-    const descriptor = descriptors[Math.floor(Math.random() * descriptors.length)];
+    const descriptor =
+      descriptors[Math.floor(Math.random() * descriptors.length)];
     const func = functions[Math.floor(Math.random() * functions.length)];
-    
+
     // Build concise but realistic description
     const baseDesc = `This ${descriptor} component (${partId}) provides ${func}.`;
     const detailDesc = `Configuration enables optimal performance with system integration.`;
-    
+
     return `${baseDesc} ${detailDesc}`;
   }
 
@@ -164,7 +181,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       // Create clothing slot validator
       this.clothingSlotValidator = new ClothingSlotValidator({
         logger: this.logger,
-        anatomyBlueprintRepository: this.anatomyBlueprintRepository || this.createMockAnatomyBlueprintRepository(),
+        anatomyBlueprintRepository:
+          this.anatomyBlueprintRepository ||
+          this.createMockAnatomyBlueprintRepository(),
       });
 
       // Create clothing instantiation service
@@ -190,7 +209,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         logger: this.logger,
         eventDispatcher: this.eventDispatcher,
         equipmentOrchestrator: this.equipmentOrchestrator,
-        anatomyBlueprintRepository: this.anatomyBlueprintRepository || this.createMockAnatomyBlueprintRepository(),
+        anatomyBlueprintRepository:
+          this.anatomyBlueprintRepository ||
+          this.createMockAnatomyBlueprintRepository(),
         clothingSlotValidator: this.clothingSlotValidator,
         bodyGraphService: this.bodyGraphService,
         anatomyClothingCache: this.anatomyClothingCache,
@@ -203,18 +224,19 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           'clothingSlotValidator',
           'clothingInstantiationService',
           'equipmentOrchestrator',
-          'clothingManagementService'
-        ]
+          'clothingManagementService',
+        ],
       });
     } catch (error) {
       this.processingLog.push({
         action: 'clothingIntegrationInitializationFailed',
         timestamp: Date.now(),
-        error: error.message
+        error: error.message,
       });
-      
+
       // Create mock clothing management service as fallback
-      this.clothingManagementService = this.createMockClothingManagementService();
+      this.clothingManagementService =
+        this.createMockClothingManagementService();
     }
   }
 
@@ -242,20 +264,20 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   createMockClothingManagementService() {
     return {
-      equipClothing: jest.fn().mockResolvedValue({ 
-        success: true, 
+      equipClothing: jest.fn().mockResolvedValue({
+        success: true,
         equipped: true,
         clothingItemId: 'mock-clothing-item',
-        targetSlot: 'mock-slot'
+        targetSlot: 'mock-slot',
       }),
-      unequipClothing: jest.fn().mockResolvedValue({ 
+      unequipClothing: jest.fn().mockResolvedValue({
         success: true,
-        unequipped: true
+        unequipped: true,
       }),
       getEquippedItems: jest.fn().mockResolvedValue(new Map()),
-      validateCompatibility: jest.fn().mockResolvedValue({ 
+      validateCompatibility: jest.fn().mockResolvedValue({
         compatible: true,
-        conflicts: []
+        conflicts: [],
       }),
       getAvailableSlots: jest.fn().mockResolvedValue(new Map()),
       transferClothing: jest.fn().mockResolvedValue({ success: true }),
@@ -278,7 +300,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       this.loadBlueprints(blueprintData.blueprints);
     }
 
-    // Load entity definitions using test bed loader methods  
+    // Load entity definitions using test bed loader methods
     if (blueprintData.entityDefinitions) {
       this.loadEntityDefinitions(blueprintData.entityDefinitions);
     }
@@ -299,7 +321,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       action: 'loadComplexBlueprints',
       timestamp: Date.now(),
       blueprintCount: Object.keys(blueprintData.blueprints).length,
-      partCount: blueprintData.parts ? Object.keys(blueprintData.parts).length : 0
+      partCount: blueprintData.parts
+        ? Object.keys(blueprintData.parts).length
+        : 0,
     });
   }
 
@@ -316,7 +340,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       errorType,
       config: errorConfig,
       triggered: false,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     this.processingLog.push({
@@ -324,7 +348,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       timestamp: Date.now(),
       stage,
       errorType,
-      config: errorConfig
+      config: errorConfig,
     });
   }
 
@@ -342,12 +366,15 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       errors: [],
       warnings: [],
       metrics: {},
-      structure: null
+      structure: null,
     };
 
     try {
       // Get anatomy structure
-      const anatomyData = this.entityManager.getComponentData(entityId, 'anatomy:body');
+      const anatomyData = this.entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      );
       if (!anatomyData || !anatomyData.body) {
         validation.success = false;
         validation.errors.push('No anatomy body data found');
@@ -357,10 +384,14 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       validation.structure = anatomyData.body;
 
       // Validate root entity exists
-      const rootEntity = this.entityManager.getEntityInstance(anatomyData.body.root);
+      const rootEntity = this.entityManager.getEntityInstance(
+        anatomyData.body.root
+      );
       if (!rootEntity) {
         validation.success = false;
-        validation.errors.push(`Root entity ${anatomyData.body.root} not found`);
+        validation.errors.push(
+          `Root entity ${anatomyData.body.root} not found`
+        );
         return validation;
       }
 
@@ -381,8 +412,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       await this._validateConstraintConsistency(entityId, validation);
 
       validation.metrics.processingTime = Date.now() - startTime;
-      validation.metrics.partCount = Object.keys(anatomyData.body.parts || {}).length;
-
+      validation.metrics.partCount = Object.keys(
+        anatomyData.body.parts || {}
+      ).length;
     } catch (error) {
       validation.success = false;
       validation.errors.push(`Validation error: ${error.message}`);
@@ -395,7 +427,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       success: validation.success,
       errorCount: validation.errors.length,
       warningCount: validation.warnings.length,
-      processingTime: validation.metrics.processingTime
+      processingTime: validation.metrics.processingTime,
     });
 
     return validation;
@@ -408,15 +440,19 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   trackBlueprintProcessing(enabled = true) {
     this.processingTracking = enabled;
-    
-    if (enabled && this.eventDispatcher && typeof this.eventDispatcher.on === 'function') {
+
+    if (
+      enabled &&
+      this.eventDispatcher &&
+      typeof this.eventDispatcher.on === 'function'
+    ) {
       // Hook into processing events if supported
       this.eventDispatcher.on('BLUEPRINT_PROCESSING_STARTED', (event) => {
         this.processingLog.push({
           action: 'blueprintProcessingStarted',
           timestamp: Date.now(),
           blueprintId: event.payload.blueprintId,
-          entityId: event.payload.entityId
+          entityId: event.payload.entityId,
         });
       });
 
@@ -426,7 +462,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           timestamp: Date.now(),
           slotId: event.payload.slotId,
           success: event.payload.success,
-          processingTime: event.payload.processingTime
+          processingTime: event.payload.processingTime,
         });
       });
 
@@ -435,7 +471,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           action: 'constraintViolation',
           timestamp: Date.now(),
           violationType: event.payload.violationType,
-          context: event.payload.context
+          context: event.payload.context,
         });
       });
     } else if (enabled) {
@@ -443,7 +479,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       this.processingLog.push({
         action: 'trackingEnabled',
         timestamp: Date.now(),
-        note: 'Event hooks not available, using basic tracking'
+        note: 'Event hooks not available, using basic tracking',
       });
     }
   }
@@ -458,7 +494,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     if (!actionFilter) {
       return [...this.processingLog];
     }
-    return this.processingLog.filter(entry => entry.action === actionFilter);
+    return this.processingLog.filter((entry) => entry.action === actionFilter);
   }
 
   /**
@@ -480,30 +516,39 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   validatePerformanceThresholds(operation, thresholds) {
     const metrics = this.performanceMetrics.get(operation);
     if (!metrics) {
-      return { success: false, error: `No metrics found for operation: ${operation}` };
+      return {
+        success: false,
+        error: `No metrics found for operation: ${operation}`,
+      };
     }
 
     const validation = {
       success: true,
       violations: [],
-      metrics: metrics
+      metrics: metrics,
     };
 
-    if (thresholds.maxProcessingTime && metrics.processingTime > thresholds.maxProcessingTime) {
+    if (
+      thresholds.maxProcessingTime &&
+      metrics.processingTime > thresholds.maxProcessingTime
+    ) {
       validation.success = false;
       validation.violations.push({
         type: 'processingTime',
         actual: metrics.processingTime,
-        threshold: thresholds.maxProcessingTime
+        threshold: thresholds.maxProcessingTime,
       });
     }
 
-    if (thresholds.maxMemoryUsage && metrics.memoryUsage > thresholds.maxMemoryUsage) {
+    if (
+      thresholds.maxMemoryUsage &&
+      metrics.memoryUsage > thresholds.maxMemoryUsage
+    ) {
       validation.success = false;
       validation.violations.push({
         type: 'memoryUsage',
         actual: metrics.memoryUsage,
-        threshold: thresholds.maxMemoryUsage
+        threshold: thresholds.maxMemoryUsage,
       });
     }
 
@@ -519,7 +564,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   recordPerformanceMetrics(operation, metrics) {
     this.performanceMetrics.set(operation, {
       ...metrics,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
   }
 
@@ -532,9 +577,16 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    * @param depth
    * @private
    */
-  async _validateStructureRecursive(entityId, expectedStructure, validation, depth) {
+  async _validateStructureRecursive(
+    entityId,
+    expectedStructure,
+    validation,
+    depth
+  ) {
     if (depth > 10) {
-      validation.warnings.push(`Maximum validation depth reached at entity ${entityId}`);
+      validation.warnings.push(
+        `Maximum validation depth reached at entity ${entityId}`
+      );
       return;
     }
 
@@ -556,16 +608,25 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
     // Validate children if specified
     if (expectedStructure.children) {
-      const childEntities = this.entityManager.getEntitiesWithComponent('anatomy:part')
-        .filter(e => e.getComponentData('anatomy:part')?.parentId === entityId);
+      const childEntities = this.entityManager
+        .getEntitiesWithComponent('anatomy:part')
+        .filter(
+          (e) => e.getComponentData('anatomy:part')?.parentId === entityId
+        );
 
-      for (const [childKey, childExpected] of Object.entries(expectedStructure.children)) {
-        const matchingChild = childEntities.find(e => 
-          e.getComponentData('anatomy:part')?.subType === childExpected.partType
+      for (const [childKey, childExpected] of Object.entries(
+        expectedStructure.children
+      )) {
+        const matchingChild = childEntities.find(
+          (e) =>
+            e.getComponentData('anatomy:part')?.subType ===
+            childExpected.partType
         );
 
         if (!matchingChild && childExpected.required !== false) {
-          validation.errors.push(`Required child ${childKey} not found under ${entityId}`);
+          validation.errors.push(
+            `Required child ${childKey} not found under ${entityId}`
+          );
         } else if (matchingChild) {
           await this._validateStructureRecursive(
             matchingChild.id,
@@ -586,7 +647,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    * @private
    */
   async _validateSlotConflicts(entityId, validation) {
-    const anatomyData = this.entityManager.getComponentData(entityId, 'anatomy:body');
+    const anatomyData = this.entityManager.getComponentData(
+      entityId,
+      'anatomy:body'
+    );
     const socketUsage = new Map();
 
     // Track socket usage across all parts
@@ -597,9 +661,14 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       const socketsData = partEntity.getComponentData('anatomy:sockets');
       if (!socketsData) continue;
 
-      for (const [socketId, socketInfo] of Object.entries(socketsData.sockets || {})) {
+      for (const [socketId, socketInfo] of Object.entries(
+        socketsData.sockets || {}
+      )) {
         if (!socketUsage.has(socketId)) {
-          socketUsage.set(socketId, { capacity: socketInfo.capacity || 1, used: [] });
+          socketUsage.set(socketId, {
+            capacity: socketInfo.capacity || 1,
+            used: [],
+          });
         }
         socketUsage.get(socketId).used.push(partId);
       }
@@ -625,7 +694,9 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   async _validateConstraintConsistency(entityId, validation) {
     // Implementation would check constraint rules
     // For now, we'll add a placeholder that can be expanded
-    validation.warnings.push('Constraint consistency validation not fully implemented');
+    validation.warnings.push(
+      'Constraint consistency validation not fully implemented'
+    );
   }
 
   /**
@@ -650,7 +721,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
     if (clothingIntegrationData.recipe) {
       const recipeData = {};
-      recipeData[clothingIntegrationData.recipe.id] = clothingIntegrationData.recipe;
+      recipeData[clothingIntegrationData.recipe.id] =
+        clothingIntegrationData.recipe;
       this.loadRecipes(recipeData);
     }
 
@@ -690,8 +762,12 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       action: 'loadClothingIntegrationData',
       timestamp: Date.now(),
       recipesLoaded: clothingIntegrationData.recipe ? 1 : 0,
-      clothingItemsLoaded: clothingIntegrationData.clothingItems ? clothingIntegrationData.clothingItems.length : 0,
-      blueprintsLoaded: clothingIntegrationData.blueprints ? Object.keys(clothingIntegrationData.blueprints).length : 0,
+      clothingItemsLoaded: clothingIntegrationData.clothingItems
+        ? clothingIntegrationData.clothingItems.length
+        : 0,
+      blueprintsLoaded: clothingIntegrationData.blueprints
+        ? Object.keys(clothingIntegrationData.blueprints).length
+        : 0,
     });
   }
 
@@ -711,18 +787,26 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
     try {
       // Check anatomy cache if available
-      if (this.anatomyCacheManager && typeof this.anatomyCacheManager.isValid === 'function') {
+      if (
+        this.anatomyCacheManager &&
+        typeof this.anatomyCacheManager.isValid === 'function'
+      ) {
         state.anatomyCache.isValid = this.anatomyCacheManager.isValid();
       }
 
       // Check clothing cache if available
-      if (this.anatomyClothingCache && typeof this.anatomyClothingCache.isValid === 'function') {
+      if (
+        this.anatomyClothingCache &&
+        typeof this.anatomyClothingCache.isValid === 'function'
+      ) {
         state.clothingCache.isValid = this.anatomyClothingCache.isValid();
       }
 
       // Overall validity
-      state.isValid = state.anatomyCache.isValid && state.clothingCache.isValid && state.descriptionCache.isValid;
-
+      state.isValid =
+        state.anatomyCache.isValid &&
+        state.clothingCache.isValid &&
+        state.descriptionCache.isValid;
     } catch (error) {
       state.isValid = false;
       state.error = error.message;
@@ -773,7 +857,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     if (metricName) {
       return this.performanceMetrics.get(metricName) || [];
     }
-    
+
     const allMetrics = {};
     for (const [name, metrics] of this.performanceMetrics.entries()) {
       allMetrics[name] = metrics;
@@ -803,21 +887,28 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
     try {
       // Check anatomy presence
-      const bodyComponent = this.entityManager.getComponentData(entityId, 'anatomy:body');
+      const bodyComponent = this.entityManager.getComponentData(
+        entityId,
+        'anatomy:body'
+      );
       validation.checks.anatomyPresent = !!bodyComponent;
       if (!bodyComponent) {
         validation.errors.push('Anatomy body component not found');
       }
 
       // Check slot metadata
-      const slotMetadata = this.entityManager.getComponentData(entityId, 'clothing:slot_metadata');
+      const slotMetadata = this.entityManager.getComponentData(
+        entityId,
+        'clothing:slot_metadata'
+      );
       validation.checks.slotMetadataPresent = !!slotMetadata;
       if (!slotMetadata) {
         validation.warnings.push('Clothing slot metadata not found');
       }
 
       // Check clothing items
-      const clothingComponents = this.entityManager.getEntitiesWithComponent('clothing:wearable');
+      const clothingComponents =
+        this.entityManager.getEntitiesWithComponent('clothing:wearable');
       validation.checks.clothingItemsEquipped = clothingComponents.length > 0;
 
       // Check slot consistency
@@ -840,7 +931,6 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
 
       // Overall success
       validation.success = validation.errors.length === 0;
-
     } catch (error) {
       validation.success = false;
       validation.errors.push(`Integration validation error: ${error.message}`);
@@ -882,8 +972,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         components: {
           'core:actor': {},
           'core:name': { text: 'Test Actor' },
-          'core:description': { description: 'A test actor entity' }
-        }
+          'core:description': { description: 'A test actor entity' },
+        },
       },
       'test:simple_part': {
         id: 'test:simple_part',
@@ -893,17 +983,17 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
             subType: 'generic_part',
           },
           'core:name': { text: 'Test Part' },
-          'core:description': { description: 'A test anatomy part' }
-        }
+          'core:description': { description: 'A test anatomy part' },
+        },
       },
       'anatomy:blueprint_slot': {
         id: 'anatomy:blueprint_slot',
         description: 'Blueprint slot entity for anatomy generation',
         components: {
           'anatomy:slot': {},
-          'core:name': { text: 'Blueprint Slot' }
-        }
-      }
+          'core:name': { text: 'Blueprint Slot' },
+        },
+      },
     });
   }
 
@@ -977,13 +1067,16 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     // For memory tests, we should reuse the same entity definition to avoid accumulation
     // Only create unique definitions when testing definition-specific behavior
     const reuseDefinition = this.options?.reuseEntityDefinitions !== false;
-    
-    const entityDefId = reuseDefinition 
+
+    const entityDefId = reuseDefinition
       ? 'test:simple_torso_reusable'
       : `test:simple_torso_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Only load the definition if it doesn't exist or we're creating a unique one
-    if (!reuseDefinition || !this.registry.get('entityDefinitions', entityDefId)) {
+    if (
+      !reuseDefinition ||
+      !this.registry.get('entityDefinitions', entityDefId)
+    ) {
       const entityDef = {
         id: entityDefId,
         components: {
@@ -1002,16 +1095,19 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     // Create a unique instance ID for the entity itself
     const instanceId = `torso_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const torso = await this.entityManager.createEntityInstance(entityDefId, {
-      instanceId: instanceId
+      instanceId: instanceId,
     });
-    
+
     await this.entityManager.addComponent(torso.id, 'anatomy:body', {
       rootPartId: torso.id,
       recipeId: 'test:simple_recipe',
       body: { root: torso.id },
     });
 
-    return { rootId: torso.id, entityDefId: reuseDefinition ? null : entityDefId };
+    return {
+      rootId: torso.id,
+      entityDefId: reuseDefinition ? null : entityDefId,
+    };
   }
 
   /**
@@ -1021,9 +1117,12 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    * @returns {Promise<object>} Created part entity
    */
   async createAnatomyPart(partId) {
-    const part = await this.entityManager.createEntityInstance('test:simple_part', {
-      instanceId: partId,
-    });
+    const part = await this.entityManager.createEntityInstance(
+      'test:simple_part',
+      {
+        instanceId: partId,
+      }
+    );
     await this.entityManager.addComponent(part.id, 'anatomy:part', {
       subType: 'generic_part',
     });
@@ -1056,7 +1155,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   calculateMaxDepth(rootId) {
     const visited = new Set();
-    
+
     const calculateDepthRecursive = (entityId, currentDepth = 0) => {
       if (visited.has(entityId)) {
         return currentDepth;
@@ -1088,21 +1187,23 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   async cleanupEntity(entityInfo) {
     try {
-      const rootId = typeof entityInfo === 'string' ? entityInfo : entityInfo.rootId;
-      const entityDefId = typeof entityInfo === 'object' ? entityInfo.entityDefId : null;
-      
+      const rootId =
+        typeof entityInfo === 'string' ? entityInfo : entityInfo.rootId;
+      const entityDefId =
+        typeof entityInfo === 'object' ? entityInfo.entityDefId : null;
+
       // Get all parts in the anatomy
       // getAllParts expects a bodyComponent object, not a rootId string
       const bodyComponent = { root: rootId };
       const allParts = this.bodyGraphService.getAllParts(bodyComponent);
-      
+
       // Delete all parts
       for (const part of allParts) {
         await this.entityManager.removeEntityInstance(part.id);
       }
 
       // Also delete the root if not in allParts
-      if (!allParts.find(p => p.id === rootId)) {
+      if (!allParts.find((p) => p.id === rootId)) {
         await this.entityManager.removeEntityInstance(rootId);
       }
 
@@ -1121,14 +1222,20 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           }
         } catch (defError) {
           // Entity definition cleanup is optional - don't fail the whole cleanup
-          this.logger?.debug(`Could not cleanup entity definition ${entityDefId}:`, defError);
+          this.logger?.debug(
+            `Could not cleanup entity definition ${entityDefId}:`,
+            defError
+          );
         }
       }
 
       // Invalidate caches
       this.anatomyCacheManager?.invalidateCacheForRoot(rootId);
     } catch (error) {
-      this.logger.warn(`Failed to fully cleanup entity ${typeof entityInfo === 'string' ? entityInfo : entityInfo.rootId}:`, error);
+      this.logger.warn(
+        `Failed to fully cleanup entity ${typeof entityInfo === 'string' ? entityInfo : entityInfo.rootId}:`,
+        error
+      );
     }
   }
 
@@ -1143,11 +1250,15 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     const entity = await this.entityManager.createEntityInstance('core:actor', {
       instanceId: entityId,
     });
-    
+
     // Add the requested component with minimal data
     const componentData = this.getMinimalComponentData(componentType);
-    await this.entityManager.addComponent(entity.id, componentType, componentData);
-    
+    await this.entityManager.addComponent(
+      entity.id,
+      componentType,
+      componentData
+    );
+
     return entity;
   }
 
@@ -1177,12 +1288,16 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    * @param {Error} [error] - Custom error to throw
    */
   injectGenerationFailure(phase, error = null) {
-    const failureError = error || new Error(`Injected failure at ${phase} phase`);
-    
+    const failureError =
+      error || new Error(`Injected failure at ${phase} phase`);
+
     switch (phase) {
       case 'validation':
         // Mock recipe validation to fail
-        if (this.anatomyGenerationWorkflow && this.anatomyGenerationWorkflow.validateRecipe) {
+        if (
+          this.anatomyGenerationWorkflow &&
+          this.anatomyGenerationWorkflow.validateRecipe
+        ) {
           const original = this.anatomyGenerationWorkflow.validateRecipe;
           this.anatomyGenerationWorkflow.validateRecipe = jest.fn(() => {
             this.anatomyGenerationWorkflow.validateRecipe = original; // Restore after use
@@ -1190,36 +1305,51 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           });
         }
         break;
-        
+
       case 'generation':
         // Mock anatomy generation to fail
-        if (this.anatomyGenerationWorkflow && this.anatomyGenerationWorkflow.generate) {
+        if (
+          this.anatomyGenerationWorkflow &&
+          this.anatomyGenerationWorkflow.generate
+        ) {
           const original = this.anatomyGenerationWorkflow.generate;
-          this.anatomyGenerationWorkflow.generate = jest.fn().mockRejectedValue(failureError);
+          this.anatomyGenerationWorkflow.generate = jest
+            .fn()
+            .mockRejectedValue(failureError);
           // Store original for restoration
           this.anatomyGenerationWorkflow._originalGenerate = original;
         }
         break;
-        
+
       case 'cache':
         // Mock cache building to fail
-        if (this.graphBuildingWorkflow && this.graphBuildingWorkflow.buildCache) {
+        if (
+          this.graphBuildingWorkflow &&
+          this.graphBuildingWorkflow.buildCache
+        ) {
           const original = this.graphBuildingWorkflow.buildCache;
-          this.graphBuildingWorkflow.buildCache = jest.fn().mockRejectedValue(failureError);
+          this.graphBuildingWorkflow.buildCache = jest
+            .fn()
+            .mockRejectedValue(failureError);
           this.graphBuildingWorkflow._originalBuildCache = original;
         }
         break;
-        
+
       case 'description':
         // Mock description generation to fail
-        if (this.anatomyDescriptionService && this.anatomyDescriptionService.generateAll) {
+        if (
+          this.anatomyDescriptionService &&
+          this.anatomyDescriptionService.generateAll
+        ) {
           const original = this.anatomyDescriptionService.generateAll;
-          this.anatomyDescriptionService.generateAll = jest.fn().mockRejectedValue(failureError);
+          this.anatomyDescriptionService.generateAll = jest
+            .fn()
+            .mockRejectedValue(failureError);
           this.anatomyDescriptionService._originalGenerateAll = original;
         }
         break;
     }
-    
+
     this.processingLog.push({
       action: 'injectedFailure',
       timestamp: Date.now(),
@@ -1234,19 +1364,22 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
   restoreOriginalMethods() {
     // Restore generation workflow
     if (this.anatomyGenerationWorkflow?._originalGenerate) {
-      this.anatomyGenerationWorkflow.generate = this.anatomyGenerationWorkflow._originalGenerate;
+      this.anatomyGenerationWorkflow.generate =
+        this.anatomyGenerationWorkflow._originalGenerate;
       delete this.anatomyGenerationWorkflow._originalGenerate;
     }
-    
+
     // Restore cache workflow
     if (this.graphBuildingWorkflow?._originalBuildCache) {
-      this.graphBuildingWorkflow.buildCache = this.graphBuildingWorkflow._originalBuildCache;
+      this.graphBuildingWorkflow.buildCache =
+        this.graphBuildingWorkflow._originalBuildCache;
       delete this.graphBuildingWorkflow._originalBuildCache;
     }
-    
+
     // Restore description service
     if (this.anatomyDescriptionService?._originalGenerateAll) {
-      this.anatomyDescriptionService.generateAll = this.anatomyDescriptionService._originalGenerateAll;
+      this.anatomyDescriptionService.generateAll =
+        this.anatomyDescriptionService._originalGenerateAll;
       delete this.anatomyDescriptionService._originalGenerateAll;
     }
   }
@@ -1260,7 +1393,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     if (!this.anatomyCacheManager) {
       throw new Error('Cache manager not available');
     }
-    
+
     switch (corruptionType) {
       case 'invalidReferences':
         // Add fake entries to cache
@@ -1271,7 +1404,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           children: ['non-existent-child'],
         });
         break;
-        
+
       case 'missingNodes':
         // Remove some nodes but keep references
         const entries = Array.from(this.anatomyCacheManager.entries());
@@ -1281,7 +1414,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
           this.anatomyCacheManager.delete(nodeId);
         }
         break;
-        
+
       case 'circularDependency':
         // Create circular reference
         const firstEntry = Array.from(this.anatomyCacheManager.entries())[0];
@@ -1293,7 +1426,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         }
         break;
     }
-    
+
     this.processingLog.push({
       action: 'corruptedCache',
       timestamp: Date.now(),
@@ -1314,9 +1447,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       remainingComponents: [],
       cacheEntries: [],
     };
-    
+
     // Check for orphaned anatomy parts
-    const anatomyParts = this.entityManager.getEntitiesWithComponent('anatomy:part');
+    const anatomyParts =
+      this.entityManager.getEntitiesWithComponent('anatomy:part');
     for (const part of anatomyParts) {
       const partData = part.getComponentData('anatomy:part');
       if (partData?.ownerId === entityId) {
@@ -1324,7 +1458,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         validation.success = false;
       }
     }
-    
+
     // Check if anatomy body was cleared
     const entity = this.entityManager.getEntityInstance(entityId);
     if (entity) {
@@ -1334,7 +1468,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         validation.success = false;
       }
     }
-    
+
     // Check cache is clean
     if (this.anatomyCacheManager.size() > 0) {
       const entries = Array.from(this.anatomyCacheManager.entries());
@@ -1343,7 +1477,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         validation.cacheEntries.push(cacheId);
       }
     }
-    
+
     this.processingLog.push({
       action: 'validatedRollback',
       timestamp: Date.now(),
@@ -1355,7 +1489,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         cache: validation.cacheEntries.length,
       },
     });
-    
+
     return validation;
   }
 
@@ -1366,9 +1500,11 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   captureRollbackSequence() {
     const sequence = [];
-    
+
     // Mock removeEntityInstance to capture sequence
-    const originalRemove = this.entityManager.removeEntityInstance.bind(this.entityManager);
+    const originalRemove = this.entityManager.removeEntityInstance.bind(
+      this.entityManager
+    );
     this.entityManager.removeEntityInstance = jest.fn(async (entityId) => {
       sequence.push({
         entityId,
@@ -1376,10 +1512,10 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       });
       return originalRemove(entityId);
     });
-    
+
     // Store original for restoration
     this.entityManager._originalRemoveEntityInstance = originalRemove;
-    
+
     return sequence;
   }
 
@@ -1388,7 +1524,8 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
    */
   restoreEntityManager() {
     if (this.entityManager._originalRemoveEntityInstance) {
-      this.entityManager.removeEntityInstance = this.entityManager._originalRemoveEntityInstance;
+      this.entityManager.removeEntityInstance =
+        this.entityManager._originalRemoveEntityInstance;
       delete this.entityManager._originalRemoveEntityInstance;
     }
   }
@@ -1405,7 +1542,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
       blueprint: null,
       expectedError: null,
     };
-    
+
     switch (violationType) {
       case 'missingRequired':
         scenario.recipe = {
@@ -1427,15 +1564,13 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         };
         scenario.expectedError = 'Required part type not satisfied';
         break;
-        
+
       case 'exclusion':
         scenario.recipe = {
           id: 'test:exclusion',
           blueprintId: 'test:conflicting',
           constraints: {
-            excludes: [
-              { parts: ['arm', 'wing'], message: 'Cannot have both' },
-            ],
+            excludes: [{ parts: ['arm', 'wing'], message: 'Cannot have both' }],
           },
         };
         scenario.blueprint = {
@@ -1448,7 +1583,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         };
         scenario.expectedError = 'Exclusion constraint violated';
         break;
-        
+
       case 'slotLimit':
         scenario.recipe = {
           id: 'test:slot_limit',
@@ -1469,14 +1604,14 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
         scenario.expectedError = 'Slot limit exceeded';
         break;
     }
-    
+
     this.processingLog.push({
       action: 'createdConstraintScenario',
       timestamp: Date.now(),
       violationType,
       recipeId: scenario.recipe?.id,
     });
-    
+
     return scenario;
   }
 
@@ -1487,7 +1622,7 @@ export default class EnhancedAnatomyTestBed extends AnatomyIntegrationTestBed {
     // Restore any mocked methods
     this.restoreOriginalMethods();
     this.restoreEntityManager();
-    
+
     // Call parent cleanup
     super.cleanup();
     this.dataGenerator.clear();

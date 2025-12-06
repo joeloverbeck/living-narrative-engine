@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { CharacterBuilderService } from '../../../src/characterBuilder/services/characterBuilderService.js';
 import { ThematicDirectionsManagerController } from '../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 import { BaseCharacterBuilderControllerTestBase } from '../../unit/characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
@@ -157,9 +164,9 @@ describe('ThematicDirectionsManagerController integration: event wiring and clea
 
     document.getElementById('refresh-btn').click();
     document.getElementById('modal-confirm-btn').click();
-    document.getElementById('confirmation-modal').dispatchEvent(
-      new Event('click', { bubbles: true })
-    );
+    document
+      .getElementById('confirmation-modal')
+      .dispatchEvent(new Event('click', { bubbles: true }));
 
     expect(refreshSpy).toHaveBeenCalled();
     expect(confirmSpy).toHaveBeenCalled();
@@ -171,7 +178,9 @@ describe('ThematicDirectionsManagerController integration: event wiring and clea
         properties: expect.objectContaining({ action: 'filter' }),
       })
     );
-    expect(localStorage.getItem('thematic-directions-dropdown-state')).not.toBeNull();
+    expect(
+      localStorage.getItem('thematic-directions-dropdown-state')
+    ).not.toBeNull();
   });
 
   it('cleans up resources and reports lingering editors during destruction', () => {

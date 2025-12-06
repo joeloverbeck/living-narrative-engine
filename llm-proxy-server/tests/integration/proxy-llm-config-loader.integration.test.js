@@ -40,7 +40,11 @@ describe('Proxy LLM Config Loader integration', () => {
       JSON.stringify(configData)
     );
 
-    const result = await loadProxyLlmConfigs(filePath, console, fileSystemReader);
+    const result = await loadProxyLlmConfigs(
+      filePath,
+      console,
+      fileSystemReader
+    );
 
     expect(result).toEqual({
       error: false,
@@ -147,7 +151,9 @@ describe('Proxy LLM Config Loader integration', () => {
 
     expect(result.error).toBe(true);
     expect(result.stage).toBe('unknown_load_parse_error');
-    expect(result.message).toContain('ProxyLlmConfigLoader: An unexpected error occurred');
+    expect(result.message).toContain(
+      'ProxyLlmConfigLoader: An unexpected error occurred'
+    );
     expect(result.originalError).toBeInstanceOf(Error);
   });
 });

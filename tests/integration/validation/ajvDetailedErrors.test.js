@@ -64,9 +64,18 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
 
         // Log what we learned
         console.log('\n=== ERROR ANALYSIS ===');
-        console.log('Error type:', errorMsg.includes('Pre-validation') ? 'Pre-validation' : 'AJV Schema');
-        console.log('Error contains operation type info:', errorMsg.includes('operation type'));
-        console.log('Error contains path info:', errorMsg.includes('path') || errorMsg.includes('Location'));
+        console.log(
+          'Error type:',
+          errorMsg.includes('Pre-validation') ? 'Pre-validation' : 'AJV Schema'
+        );
+        console.log(
+          'Error contains operation type info:',
+          errorMsg.includes('operation type')
+        );
+        console.log(
+          'Error contains path info:',
+          errorMsg.includes('path') || errorMsg.includes('Location')
+        );
         console.log('======================\n');
       } else {
         // If validation passed, that's actually what we want!
@@ -79,7 +88,9 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
       const ruleData = JSON.parse(ruleContent);
 
       const operations = ruleData.actions || [];
-      console.log(`\n=== Validating ${operations.length} operations individually ===`);
+      console.log(
+        `\n=== Validating ${operations.length} operations individually ===`
+      );
 
       const operationResults = operations.map((operation, index) => {
         const hasType = operation.type !== undefined && operation.type !== '';
@@ -152,12 +163,23 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
 
         const errorMsg = validationError.message;
         console.log('\n=== ERROR ANALYSIS ===');
-        console.log('Error type:', errorMsg.includes('Pre-validation') ? 'Pre-validation' : 'AJV Schema');
-        console.log('Error contains operation type info:', errorMsg.includes('operation type'));
-        console.log('Error contains path info:', errorMsg.includes('path') || errorMsg.includes('Location'));
+        console.log(
+          'Error type:',
+          errorMsg.includes('Pre-validation') ? 'Pre-validation' : 'AJV Schema'
+        );
+        console.log(
+          'Error contains operation type info:',
+          errorMsg.includes('operation type')
+        );
+        console.log(
+          'Error contains path info:',
+          errorMsg.includes('path') || errorMsg.includes('Location')
+        );
         console.log('======================\n');
       } else {
-        console.log('\n✅ handle_drink_entirely.rule.json validated successfully!');
+        console.log(
+          '\n✅ handle_drink_entirely.rule.json validated successfully!'
+        );
       }
     });
 
@@ -166,7 +188,9 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
       const ruleData = JSON.parse(ruleContent);
 
       const operations = ruleData.actions || [];
-      console.log(`\n=== Validating ${operations.length} operations individually ===`);
+      console.log(
+        `\n=== Validating ${operations.length} operations individually ===`
+      );
 
       const operationResults = operations.map((operation, index) => {
         const hasType = operation.type !== undefined && operation.type !== '';
@@ -212,15 +236,21 @@ describe('AJV Detailed Error Analysis for Drinking Rules', () => {
         currentDirPath,
         '../../../src/utils/preValidationUtils.js'
       );
-      const preValidationContent = readFileSync(preValidationUtilsPath, 'utf-8');
+      const preValidationContent = readFileSync(
+        preValidationUtilsPath,
+        'utf-8'
+      );
 
       // Check if operations are in the whitelist
       const hasDrinkFrom = preValidationContent.includes("'DRINK_FROM'");
-      const hasDrinkEntirely = preValidationContent.includes("'DRINK_ENTIRELY'");
+      const hasDrinkEntirely =
+        preValidationContent.includes("'DRINK_ENTIRELY'");
 
       console.log('\n=== PRE-VALIDATION WHITELIST CHECK ===');
       console.log(`DRINK_FROM in whitelist: ${hasDrinkFrom ? '✅' : '❌'}`);
-      console.log(`DRINK_ENTIRELY in whitelist: ${hasDrinkEntirely ? '✅' : '❌'}`);
+      console.log(
+        `DRINK_ENTIRELY in whitelist: ${hasDrinkEntirely ? '✅' : '❌'}`
+      );
       console.log('=====================================\n');
 
       expect(hasDrinkFrom).toBe(true);

@@ -195,11 +195,7 @@ describe('JSON Logic Operator Registration', () => {
       const mockAllowedOps = new Set(['hasPartOfType']); // Missing hasOtherActorsAtLocation
 
       expect(() => {
-        validateOperatorWhitelist(
-          mockRegisteredOps,
-          mockAllowedOps,
-          logger
-        );
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger);
       }).toThrow('hasOtherActorsAtLocation');
     });
 
@@ -212,11 +208,7 @@ describe('JSON Logic Operator Registration', () => {
 
       // Should not throw, but should warn
       expect(() => {
-        validateOperatorWhitelist(
-          mockRegisteredOps,
-          mockAllowedOps,
-          logger
-        );
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger);
       }).not.toThrow();
 
       // Should have logged a warning
@@ -233,11 +225,7 @@ describe('JSON Logic Operator Registration', () => {
       const mockAllowedOps = new Set([]);
 
       expect(() => {
-        validateOperatorWhitelist(
-          mockRegisteredOps,
-          mockAllowedOps,
-          logger
-        );
+        validateOperatorWhitelist(mockRegisteredOps, mockAllowedOps, logger);
       }).toThrow();
 
       // Check that error was logged with details
@@ -446,7 +434,9 @@ describe('JSON Logic Operator Registration', () => {
     });
 
     it('should return true for weapon hand grabbing operators', () => {
-      expect(evaluationService.isOperatorAllowed('canActorGrabItem')).toBe(true);
+      expect(evaluationService.isOperatorAllowed('canActorGrabItem')).toBe(
+        true
+      );
       expect(evaluationService.isOperatorAllowed('isItemBeingGrabbed')).toBe(
         true
       );

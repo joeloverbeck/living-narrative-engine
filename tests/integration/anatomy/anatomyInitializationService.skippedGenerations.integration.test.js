@@ -111,11 +111,14 @@ describe('AnatomyInitializationService skipped generation integration', () => {
       anatomyGenerationService: testBed.anatomyGenerationService,
     });
 
-    restoreGenerate = testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
-      testBed.anatomyGenerationService
-    );
+    restoreGenerate =
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
+        testBed.anatomyGenerationService
+      );
 
-    testBed.anatomyGenerationService.generateAnatomyIfNeeded = async (entityId) => {
+    testBed.anatomyGenerationService.generateAnatomyIfNeeded = async (
+      entityId
+    ) => {
       await new Promise((resolve) => setTimeout(resolve, 15));
       return restoreGenerate(entityId);
     };
@@ -123,14 +126,16 @@ describe('AnatomyInitializationService skipped generation integration', () => {
 
   afterEach(async () => {
     if (testBed?.anatomyGenerationService && restoreGenerate) {
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = restoreGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        restoreGenerate;
     }
     service?.destroy();
     await testBed.cleanup();
   });
 
   const createActorWithRecipe = async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -138,9 +143,10 @@ describe('AnatomyInitializationService skipped generation integration', () => {
   };
 
   const findGenerationLogs = (entityId) =>
-    logger.calls.info.filter(([message]) =>
-      typeof message === 'string' &&
-      message.includes(`Generated anatomy for entity '${entityId}'`)
+    logger.calls.info.filter(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes(`Generated anatomy for entity '${entityId}'`)
     );
 
   it('resolves waiters with false when anatomy generation skips existing data without leaving pending work', async () => {
@@ -154,7 +160,7 @@ describe('AnatomyInitializationService skipped generation integration', () => {
       wasReconstructed: false,
     });
     // Wait for event to be processed before creating waiter
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
     const firstWait = service.waitForEntityGeneration(actor.id);
 
     await firstDispatch;
@@ -176,7 +182,7 @@ describe('AnatomyInitializationService skipped generation integration', () => {
       wasReconstructed: false,
     });
     // Wait for event to be processed before creating waiter
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
     const skipWait = service.waitForEntityGeneration(actor.id);
 
     await secondDispatch;
@@ -187,9 +193,10 @@ describe('AnatomyInitializationService skipped generation integration', () => {
     expect(service.getPendingGenerationCount()).toBe(0);
     expect(findGenerationLogs(actor.id)).toHaveLength(1);
 
-    const finishLogs = logger.calls.debug.filter(([message]) =>
-      typeof message === 'string' &&
-      message.includes('Finished processing anatomy generation queue')
+    const finishLogs = logger.calls.debug.filter(
+      ([message]) =>
+        typeof message === 'string' &&
+        message.includes('Finished processing anatomy generation queue')
     );
     expect(finishLogs.length).toBeGreaterThanOrEqual(2);
   });

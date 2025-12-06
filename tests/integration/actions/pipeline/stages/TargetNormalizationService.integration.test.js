@@ -13,7 +13,9 @@ import {
 import { TargetNormalizationService } from '../../../../../src/actions/pipeline/stages/actionFormatting/TargetNormalizationService.js';
 import { TargetExtractionResult } from '../../../../../src/entities/multiTarget/targetExtractionResult.js';
 import { ActionTargetContext } from '../../../../../src/models/actionTargetContext.js';
-import ConsoleLogger, { LogLevel } from '../../../../../src/logging/consoleLogger.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../../src/logging/consoleLogger.js';
 
 /**
  * Helper to create a context with display name metadata.
@@ -161,10 +163,7 @@ describe('TargetNormalizationService - Integration', () => {
     const result = service.normalize({
       resolvedTargets: {
         primary: [{ id: 'test:entity_primary', displayName: 'Alpha' }],
-        helper: [
-          { id: 'test:entity_helper1' },
-          { id: 'test:entity_helper2' },
-        ],
+        helper: [{ id: 'test:entity_helper1' }, { id: 'test:entity_helper2' }],
         broken: [{ foo: 'bar' }, null],
       },
       isMultiTarget: false,
@@ -189,10 +188,14 @@ describe('TargetNormalizationService - Integration', () => {
       entityId: 'test:entity_primary',
       displayName: 'Alpha',
     });
-    expect(result.targetExtractionResult).toBeInstanceOf(TargetExtractionResult);
+    expect(result.targetExtractionResult).toBeInstanceOf(
+      TargetExtractionResult
+    );
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid target entries detected for placeholders: broken')
+      expect.stringContaining(
+        'Invalid target entries detected for placeholders: broken'
+      )
     );
   });
 
@@ -208,7 +211,9 @@ describe('TargetNormalizationService - Integration', () => {
     expect(result.error).toBeNull();
     expect(result.targetIds).toEqual({ helper: ['test:entity_helper'] });
     expect(result.primaryTargetContext).toBeNull();
-    expect(result.params).toEqual({ targetIds: { helper: ['test:entity_helper'] } });
+    expect(result.params).toEqual({
+      targetIds: { helper: ['test:entity_helper'] },
+    });
   });
 
   it('ignores malformed primary entries when deriving primary context', () => {
@@ -223,9 +228,13 @@ describe('TargetNormalizationService - Integration', () => {
     expect(result.error).toBeNull();
     expect(result.targetIds).toEqual({ target: ['test:valid_target'] });
     expect(result.primaryTargetContext).toBeNull();
-    expect(result.params).toEqual({ targetIds: { target: ['test:valid_target'] } });
+    expect(result.params).toEqual({
+      targetIds: { target: ['test:valid_target'] },
+    });
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Invalid target entries detected for placeholders: primary')
+      expect.stringContaining(
+        'Invalid target entries detected for placeholders: primary'
+      )
     );
   });
 
@@ -265,7 +274,9 @@ describe('TargetNormalizationService - Integration', () => {
       displayName: 'Context Hero',
     });
     expect(result.params).toEqual({ targetId: 'test:context_entity' });
-    expect(result.targetExtractionResult).toBeInstanceOf(TargetExtractionResult);
+    expect(result.targetExtractionResult).toBeInstanceOf(
+      TargetExtractionResult
+    );
   });
 
   it('handles legacy contexts that lack entity identifiers', () => {

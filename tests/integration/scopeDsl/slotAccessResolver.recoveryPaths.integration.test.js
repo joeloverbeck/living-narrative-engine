@@ -208,11 +208,7 @@ describe('slotAccessResolver integration recovery paths', () => {
       },
       {
         dispatcher: {
-          resolve: () =>
-            new Set([
-              clothingAccess,
-              storageEntityId,
-            ]),
+          resolve: () => new Set([clothingAccess, storageEntityId]),
         },
         trace: null,
       }

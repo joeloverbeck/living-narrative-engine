@@ -103,7 +103,7 @@ async function createService() {
 
   const originalGenerate =
     testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
-      testBed.anatomyGenerationService,
+      testBed.anatomyGenerationService
     );
 
   const restoreGenerator = () => {
@@ -140,7 +140,7 @@ describe('AnatomyInitializationService resilience scenarios', () => {
         new AnatomyInitializationService({
           logger,
           anatomyGenerationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -148,7 +148,7 @@ describe('AnatomyInitializationService resilience scenarios', () => {
         new AnatomyInitializationService({
           eventDispatcher: dispatcher,
           anatomyGenerationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -156,7 +156,7 @@ describe('AnatomyInitializationService resilience scenarios', () => {
         new AnatomyInitializationService({
           eventDispatcher: dispatcher,
           logger,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
   });
 
@@ -169,8 +169,8 @@ describe('AnatomyInitializationService resilience scenarios', () => {
 
       expect(
         logger.calls.warn.some(([message]) =>
-          message.includes('Already initialized'),
-        ),
+          message.includes('Already initialized')
+        )
       ).toBe(true);
     } finally {
       await cleanup();
@@ -199,41 +199,49 @@ describe('AnatomyInitializationService resilience scenarios', () => {
   });
 
   it('rejects waiters when anatomy generation fails and continues processing', async () => {
-    const { service, safeDispatcher, testBed, logger, cleanup, restoreGenerator } =
-      await createService();
+    const {
+      service,
+      safeDispatcher,
+      testBed,
+      logger,
+      cleanup,
+      restoreGenerator,
+    } = await createService();
 
     try {
       service.initialize();
 
-      const failingActor = await testBed.entityManager.createEntityInstance(
-        'core:actor',
-      );
-      const succeedingActor = await testBed.entityManager.createEntityInstance(
-        'core:actor',
-      );
+      const failingActor =
+        await testBed.entityManager.createEntityInstance('core:actor');
+      const succeedingActor =
+        await testBed.entityManager.createEntityInstance('core:actor');
 
       await testBed.entityManager.addComponent(
         failingActor.id,
         'anatomy:body',
-        { recipeId: 'anatomy:human_female' },
+        { recipeId: 'anatomy:human_female' }
       );
       await testBed.entityManager.addComponent(
         succeedingActor.id,
         'anatomy:body',
-        { recipeId: 'anatomy:human_female' },
+        { recipeId: 'anatomy:human_female' }
       );
 
       const originalGenerate =
         testBed.anatomyGenerationService.generateAnatomyIfNeeded;
 
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest
-        .fn(async (entityId) => {
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(
+        async (entityId) => {
           await new Promise((resolve) => setTimeout(resolve, 30));
           if (entityId === failingActor.id) {
             throw new Error('simulated generation failure');
           }
-          return originalGenerate.call(testBed.anatomyGenerationService, entityId);
-        });
+          return originalGenerate.call(
+            testBed.anatomyGenerationService,
+            entityId
+          );
+        }
+      );
 
       await safeDispatcher.dispatch(ENTITY_CREATED_ID, {
         instanceId: failingActor.id,
@@ -251,7 +259,10 @@ describe('AnatomyInitializationService resilience scenarios', () => {
       });
 
       await waitForTick();
-      const successWait = service.waitForEntityGeneration(succeedingActor.id, 200);
+      const successWait = service.waitForEntityGeneration(
+        succeedingActor.id,
+        200
+      );
 
       await expect(failureWait).rejects.toThrow('simulated generation failure');
       await successWait;
@@ -260,15 +271,15 @@ describe('AnatomyInitializationService resilience scenarios', () => {
 
       const generatedBody = testBed.entityManager.getComponentData(
         succeedingActor.id,
-        'anatomy:body',
+        'anatomy:body'
       );
       expect(generatedBody?.body?.root).toBeTruthy();
 
       expect(service.hasPendingGenerations()).toBe(false);
       expect(
         logger.calls.error.some(([message]) =>
-          message.includes('Failed to generate anatomy for entity'),
-        ),
+          message.includes('Failed to generate anatomy for entity')
+        )
       ).toBe(true);
     } finally {
       restoreGenerator();
@@ -284,34 +295,36 @@ describe('AnatomyInitializationService resilience scenarios', () => {
       const originalGenerate =
         testBed.anatomyGenerationService.generateAnatomyIfNeeded;
 
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(async () =>
-        true,
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(
+        async () => true
       );
 
       await expect(
-        service.generateAnatomy('entity-success', 'blueprint-alpha'),
+        service.generateAnatomy('entity-success', 'blueprint-alpha')
       ).resolves.toBe(true);
       expect(
         logger.calls.info.some(([message]) =>
-          message.includes('Successfully generated anatomy for entity'),
-        ),
+          message.includes('Successfully generated anatomy for entity')
+        )
       ).toBe(true);
 
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest
-        .fn(async () => {
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(
+        async () => {
           throw new Error('direct failure');
-        });
+        }
+      );
 
       await expect(
-        service.generateAnatomy('entity-failure', 'blueprint-beta'),
+        service.generateAnatomy('entity-failure', 'blueprint-beta')
       ).rejects.toThrow('direct failure');
       expect(
         logger.calls.error.some(([message]) =>
-          message.includes('Failed to generate anatomy for entity'),
-        ),
+          message.includes('Failed to generate anatomy for entity')
+        )
       ).toBe(true);
 
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = originalGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        originalGenerate;
     } finally {
       restoreGenerator();
       await cleanup();
@@ -328,11 +341,15 @@ describe('AnatomyInitializationService resilience scenarios', () => {
         processing: true,
       });
 
-      await expect(
-        service.waitForAllGenerationsToComplete(25),
-      ).rejects.toThrow('Timeout waiting for anatomy generation to complete');
+      await expect(service.waitForAllGenerationsToComplete(25)).rejects.toThrow(
+        'Timeout waiting for anatomy generation to complete'
+      );
 
-      service.__TEST_ONLY__setInternalState({ queue: [], pending: [], processing: false });
+      service.__TEST_ONLY__setInternalState({
+        queue: [],
+        pending: [],
+        processing: false,
+      });
     } finally {
       await cleanup();
     }
@@ -345,7 +362,7 @@ describe('AnatomyInitializationService resilience scenarios', () => {
       service.__TEST_ONLY__setInternalState({ pending: ['ghost-entity'] });
 
       await expect(
-        service.waitForEntityGeneration('ghost-entity', 30),
+        service.waitForEntityGeneration('ghost-entity', 30)
       ).rejects.toThrow('Timeout waiting for anatomy generation for entity');
 
       service.__TEST_ONLY__setInternalState({ pending: [], queue: [] });
@@ -355,7 +372,8 @@ describe('AnatomyInitializationService resilience scenarios', () => {
   });
 
   it('executes queue processing helper with ensureProcessingFlag', async () => {
-    const { service, testBed, cleanup, restoreGenerator } = await createService();
+    const { service, testBed, cleanup, restoreGenerator } =
+      await createService();
 
     try {
       const processed = [];
@@ -366,7 +384,7 @@ describe('AnatomyInitializationService resilience scenarios', () => {
         async (entityId) => {
           processed.push(entityId);
           return false;
-        },
+        }
       );
 
       service.__TEST_ONLY__setInternalState({
@@ -380,7 +398,8 @@ describe('AnatomyInitializationService resilience scenarios', () => {
       expect(processed).toEqual(['queued-entity']);
       expect(service.hasPendingGenerations()).toBe(false);
 
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = originalGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        originalGenerate;
     } finally {
       restoreGenerator();
       await cleanup();

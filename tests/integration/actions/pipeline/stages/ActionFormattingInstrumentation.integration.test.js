@@ -1,8 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-} from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { ActionFormattingInstrumentation } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingInstrumentation.js';
 import { ActionFormattingCoordinator } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingCoordinator.js';
 import { ActionFormattingDecider } from '../../../../../src/actions/pipeline/stages/actionFormatting/ActionFormattingDecider.js';
@@ -86,7 +82,10 @@ const buildEnvironment = () => {
 
   const targetNormalizationService = new TargetNormalizationService({ logger });
   const baseFormatter = new ActionCommandFormatter();
-  const multiTargetFormatter = new MultiTargetActionFormatter(baseFormatter, logger);
+  const multiTargetFormatter = new MultiTargetActionFormatter(
+    baseFormatter,
+    logger
+  );
   const fallbackFormatter = new LegacyFallbackFormatter({
     commandFormatter: baseFormatter,
     entityManager,
@@ -149,7 +148,7 @@ describe('ActionFormattingInstrumentation integration coverage', () => {
     });
 
     await expect(coordinator.run()).rejects.toThrow(
-      'ActionFormattingInstrumentation.stageStarted must be implemented',
+      'ActionFormattingInstrumentation.stageStarted must be implemented'
     );
   });
 
@@ -190,7 +189,7 @@ describe('ActionFormattingInstrumentation integration coverage', () => {
     });
 
     await expect(coordinator.run()).rejects.toThrow(
-      'ActionFormattingInstrumentation.actionStarted must be implemented',
+      'ActionFormattingInstrumentation.actionStarted must be implemented'
     );
   });
 
@@ -264,7 +263,7 @@ describe('ActionFormattingInstrumentation integration coverage', () => {
     });
 
     await expect(coordinator.run()).rejects.toThrow(
-      'ActionFormattingInstrumentation.actionCompleted must be implemented',
+      'ActionFormattingInstrumentation.actionCompleted must be implemented'
     );
   });
 
@@ -312,7 +311,7 @@ describe('ActionFormattingInstrumentation integration coverage', () => {
     });
 
     await expect(coordinator.run()).rejects.toThrow(
-      'ActionFormattingInstrumentation.actionFailed must be implemented',
+      'ActionFormattingInstrumentation.actionFailed must be implemented'
     );
   });
 
@@ -388,7 +387,7 @@ describe('ActionFormattingInstrumentation integration coverage', () => {
     });
 
     await expect(coordinator.run()).rejects.toThrow(
-      'ActionFormattingInstrumentation.stageCompleted must be implemented',
+      'ActionFormattingInstrumentation.stageCompleted must be implemented'
     );
   });
 });

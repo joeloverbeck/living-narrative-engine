@@ -43,9 +43,12 @@ describe('Violence Mod: Squeeze Neck With Both Hands Action Integration', () => 
     });
 
     it('rejects the action when the actor is hugging someone', async () => {
-      const scenario = testFixture.createStandardActorTarget(['Noah', 'Piper'], {
-        includeRoom: false,
-      });
+      const scenario = testFixture.createStandardActorTarget(
+        ['Noah', 'Piper'],
+        {
+          includeRoom: false,
+        }
+      );
 
       scenario.actor.components['positioning:hugging'] = {
         embraced_entity_id: scenario.target.id,

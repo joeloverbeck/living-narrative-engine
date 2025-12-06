@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import KeyboardShortcutsManager from '../../../src/logging/keyboardShortcutsManager.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
@@ -26,7 +33,12 @@ function createKeydownEvent(target, overrides = {}) {
   for (const [prop, base] of Object.entries(baseValues)) {
     const value = overrides[prop] ?? base;
     let finalValue = value;
-    if (prop === 'ctrlKey' || prop === 'shiftKey' || prop === 'altKey' || prop === 'metaKey') {
+    if (
+      prop === 'ctrlKey' ||
+      prop === 'shiftKey' ||
+      prop === 'altKey' ||
+      prop === 'metaKey'
+    ) {
       finalValue = Boolean(value);
     }
 

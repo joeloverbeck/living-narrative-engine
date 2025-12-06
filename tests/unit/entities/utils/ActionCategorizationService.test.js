@@ -44,7 +44,16 @@ describe('ActionCategorizationService', () => {
           enabled: true,
           minActionsForGrouping: 6,
           minNamespacesForGrouping: 2,
-          namespaceOrder: ['core', 'affection', 'kissing', 'caressing', 'sex', 'anatomy', 'clothing', 'movement'],
+          namespaceOrder: [
+            'core',
+            'affection',
+            'kissing',
+            'caressing',
+            'sex',
+            'anatomy',
+            'clothing',
+            'movement',
+          ],
           showCounts: false,
           performance: {
             enableCaching: true,

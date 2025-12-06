@@ -29,7 +29,10 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
   }
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-vaginal-penetration', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-vaginal-penetration',
+      ACTION_ID
+    );
     restoreScopeResolver = installStraddlingMilkingScopeOverrides(testFixture);
   });
 
@@ -48,7 +51,9 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
   describe('Action structure validation', () => {
     it('defines metadata and template correctly', () => {
       expect(straddlingMilkingAction.id).toBe(ACTION_ID);
-      expect(straddlingMilkingAction.template).toBe("milk {primary}'s penis slowly");
+      expect(straddlingMilkingAction.template).toBe(
+        "milk {primary}'s penis slowly"
+      );
       expect(straddlingMilkingAction.targets.primary.scope).toBe(
         'sex-vaginal-penetration:actors_fucking_me_vaginally'
       );
@@ -72,7 +77,8 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
         },
         {
           logic: { not: { isSocketCovered: ['actor', 'vagina'] } },
-          failure_message: 'Your vagina must be uncovered to perform this action.',
+          failure_message:
+            'Your vagina must be uncovered to perform this action.',
         },
       ]);
     });
@@ -87,47 +93,62 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       const actorEntity = testFixture.entityManager.getEntityInstance(
         STRADDLING_MILKING_ACTOR_ID
       );
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        straddlingMilkingAction.prerequisites,
-        straddlingMilkingAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          straddlingMilkingAction.prerequisites,
+          straddlingMilkingAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(true);
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeDefined();
     });
 
     it('appears when the partner faces away but maintains penetration', async () => {
-      const entities = buildStraddlingMilkingScenario({ targetFacingAway: true });
+      const entities = buildStraddlingMilkingScenario({
+        targetFacingAway: true,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeDefined();
     });
 
     it('remains available even when the actor is not straddling the partner', async () => {
-      const entities = buildStraddlingMilkingScenario({ includeStraddling: false });
+      const entities = buildStraddlingMilkingScenario({
+        includeStraddling: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeDefined();
     });
 
     it('does not appear without closeness', async () => {
-      const entities = buildStraddlingMilkingScenario({ includeCloseness: false });
+      const entities = buildStraddlingMilkingScenario({
+        includeCloseness: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -140,7 +161,9 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -151,7 +174,9 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -165,14 +190,17 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       const actorEntity = testFixture.entityManager.getEntityInstance(
         STRADDLING_MILKING_ACTOR_ID
       );
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        straddlingMilkingAction.prerequisites,
-        straddlingMilkingAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          straddlingMilkingAction.prerequisites,
+          straddlingMilkingAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(false);
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -186,14 +214,17 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       const actorEntity = testFixture.entityManager.getEntityInstance(
         STRADDLING_MILKING_ACTOR_ID
       );
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        straddlingMilkingAction.prerequisites,
-        straddlingMilkingAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          straddlingMilkingAction.prerequisites,
+          straddlingMilkingAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(false);
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -207,7 +238,9 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
@@ -221,18 +254,24 @@ describe('sex-vaginal-penetration:straddling_penis_milking action discovery', ()
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();
     });
 
     it('does not appear when the actor lacks the vaginal penetration state', async () => {
-      const entities = buildStraddlingMilkingScenario({ actorBeingFucked: false });
+      const entities = buildStraddlingMilkingScenario({
+        actorBeingFucked: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery();
 
-      const actions = await testFixture.discoverActions(STRADDLING_MILKING_ACTOR_ID);
+      const actions = await testFixture.discoverActions(
+        STRADDLING_MILKING_ACTOR_ID
+      );
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeUndefined();

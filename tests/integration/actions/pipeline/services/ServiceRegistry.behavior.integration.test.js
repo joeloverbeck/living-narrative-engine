@@ -45,9 +45,13 @@ describe('ServiceRegistry integration with real factory and container', () => {
   });
 
   it('manages lifecycle and dependency metadata for services created via ServiceFactory', () => {
-    container.register('TestService', () => ({ id: 'service:test', ready: true }), {
-      lifecycle: 'singleton',
-    });
+    container.register(
+      'TestService',
+      () => ({ id: 'service:test', ready: true }),
+      {
+        lifecycle: 'singleton',
+      }
+    );
     container.register(
       'DependencyService',
       () => ({ id: 'service:dependency', dependenciesSatisfied: true }),
@@ -62,8 +66,12 @@ describe('ServiceRegistry integration with real factory and container', () => {
       description: 'Primary pipeline service',
     });
 
-    const dependencyCheckBefore = registry.validateDependencies('pipeline:test');
-    expect(dependencyCheckBefore).toEqual({ valid: false, missing: ['pipeline:dependency'] });
+    const dependencyCheckBefore =
+      registry.validateDependencies('pipeline:test');
+    expect(dependencyCheckBefore).toEqual({
+      valid: false,
+      missing: ['pipeline:dependency'],
+    });
 
     const dependencyService = factory.createService('DependencyService');
     registry.register('pipeline:dependency', dependencyService, {
@@ -73,7 +81,10 @@ describe('ServiceRegistry integration with real factory and container', () => {
 
     const dependencyCheckAfter = registry.validateDependencies('pipeline:test');
     expect(dependencyCheckAfter).toEqual({ valid: true, missing: [] });
-    expect(registry.validateDependencies('pipeline:dependency')).toEqual({ valid: true, missing: [] });
+    expect(registry.validateDependencies('pipeline:dependency')).toEqual({
+      valid: true,
+      missing: [],
+    });
 
     expect(registry.has('pipeline:test')).toBe(true);
     expect(registry.get('pipeline:test')).toBe(primaryService);
@@ -90,7 +101,9 @@ describe('ServiceRegistry integration with real factory and container', () => {
     expect(allServices.get('pipeline:dependency')).toBe(dependencyService);
 
     const tokens = registry.getTokens();
-    expect(tokens).toEqual(expect.arrayContaining(['pipeline:test', 'pipeline:dependency']));
+    expect(tokens).toEqual(
+      expect.arrayContaining(['pipeline:test', 'pipeline:dependency'])
+    );
 
     const stats = registry.getStats();
     expect(stats.totalServices).toBe(2);
@@ -108,7 +121,10 @@ describe('ServiceRegistry integration with real factory and container', () => {
 
     const bareService = { id: 'pipeline:bare-service' };
     registry.register('pipeline:bare', bareService);
-    expect(registry.validateDependencies('pipeline:bare')).toEqual({ valid: true, missing: [] });
+    expect(registry.validateDependencies('pipeline:bare')).toEqual({
+      valid: true,
+      missing: [],
+    });
 
     const bareMetadata = registry.getMetadata('pipeline:bare');
     expect(bareMetadata.registeredAt).toBeInstanceOf(Date);
@@ -134,7 +150,9 @@ describe('ServiceRegistry integration with real factory and container', () => {
   it('raises ServiceError for duplicate registrations and missing services', () => {
     registry.register('pipeline:duplicate', { id: 'duplicate' });
 
-    expect(() => registry.register('pipeline:duplicate', { id: 'other' })).toThrow(ServiceError);
+    expect(() =>
+      registry.register('pipeline:duplicate', { id: 'other' })
+    ).toThrow(ServiceError);
     expect(() => registry.get('pipeline:unknown')).toThrow(ServiceError);
   });
 });

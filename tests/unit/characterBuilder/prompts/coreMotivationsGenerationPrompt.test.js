@@ -141,7 +141,9 @@ describe('coreMotivationsGenerationPrompt', () => {
 
   describe('formatClichesForPrompt', () => {
     it('should return fallback message when cliches is null', () => {
-      expect(formatClichesForPrompt(null)).toBe('No specific clichés provided.');
+      expect(formatClichesForPrompt(null)).toBe(
+        'No specific clichés provided.'
+      );
     });
 
     it('should return fallback message when cliches is not an object', () => {
@@ -442,7 +444,10 @@ describe('coreMotivationsGenerationPrompt', () => {
       });
 
       it('should throw error when direction.narrativePotential is an empty string', () => {
-        const invalidDirection = { ...validDirection, narrativePotential: '   ' };
+        const invalidDirection = {
+          ...validDirection,
+          narrativePotential: '   ',
+        };
         expect(() => {
           buildCoreMotivationsGenerationPrompt(
             validCharacterConcept,

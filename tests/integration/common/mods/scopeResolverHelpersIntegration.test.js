@@ -42,7 +42,9 @@ describe('ScopeResolverHelpers Integration - Positioning Registration', () => {
     ];
 
     expectedScopes.forEach((scopeName) => {
-      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(true);
+      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(
+        true
+      );
     });
   });
 
@@ -107,7 +109,9 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
     ];
 
     expectedScopes.forEach((scopeName) => {
-      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(true);
+      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(
+        true
+      );
     });
   });
 
@@ -153,7 +157,9 @@ describe('ScopeResolverHelpers Integration - Anatomy Registration', () => {
     ];
 
     expectedScopes.forEach((scopeName) => {
-      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(true);
+      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(
+        true
+      );
     });
   });
 
@@ -195,9 +201,17 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     }).not.toThrow();
 
     // Verify scopes from all categories are present
-    expect(testFixture.testEnv._registeredResolvers.has('positioning:sitting_actors')).toBe(true);
-    expect(testFixture.testEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
-    expect(testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')).toBe(true);
+    expect(
+      testFixture.testEnv._registeredResolvers.has('positioning:sitting_actors')
+    ).toBe(true);
+    expect(
+      testFixture.testEnv._registeredResolvers.has(
+        'items:portable_items_at_location'
+      )
+    ).toBe(true);
+    expect(
+      testFixture.testEnv._registeredResolvers.has('anatomy:actors_at_location')
+    ).toBe(true);
 
     // Verify total count is the sum of all categories (26 + 7 + 2 = 35)
     expect(testFixture.testEnv._registeredResolvers.size).toBe(35);
@@ -216,7 +230,6 @@ describe('ScopeResolverHelpers Integration - Multiple Category Registration', ()
     expect(result).toBeDefined();
   });
 });
-
 
 describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
   let testFixture;
@@ -255,14 +268,16 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
     ];
 
     newScopes.forEach((scopeName) => {
-      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(true);
+      expect(testFixture.testEnv._registeredResolvers.has(scopeName)).toBe(
+        true
+      );
     });
   });
 
   it('should verify total count of positioning scopes registered', () => {
-    const positioningScopes = Array.from(testFixture.testEnv._registeredResolvers.keys()).filter(
-      (key) => key.startsWith('positioning:')
-    );
+    const positioningScopes = Array.from(
+      testFixture.testEnv._registeredResolvers.keys()
+    ).filter((key) => key.startsWith('positioning:'));
 
     // 4 scopes migrated to personal-space: furniture_actor_sitting_on, closest_leftmost_occupant,
     // closest_rightmost_occupant, actors_sitting_with_space_to_right
@@ -270,7 +285,10 @@ describe('ScopeResolverHelpers Integration - TEAOUTTHR-006 New Scopes', () => {
   });
 
   it('should call all new scopes without errors (smoke test)', () => {
-    const scenario = testFixture.createStandardActorTarget(['Actor', 'Partner']);
+    const scenario = testFixture.createStandardActorTarget([
+      'Actor',
+      'Partner',
+    ]);
     testFixture.reset([scenario.actor, scenario.target]);
 
     const scopesToTest = [

@@ -121,12 +121,16 @@ describe('TurnIdleState.startTurn', () => {
     const actor = makeActor('actor-transition');
     const transitionError = new Error('transition boom');
     const ctx = buildCtx(actor);
-    ctx.requestAwaitingInputStateTransition.mockRejectedValueOnce(transitionError);
+    ctx.requestAwaitingInputStateTransition.mockRejectedValueOnce(
+      transitionError
+    );
     const handler = buildHandler(ctx);
     const idle = new TurnIdleState(handler);
     const stateName = idle.getStateName();
 
-    await expect(idle.startTurn(handler, actor)).rejects.toThrow(transitionError);
+    await expect(idle.startTurn(handler, actor)).rejects.toThrow(
+      transitionError
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
       `TurnIdleState: Failed to transition to AwaitingActorDecisionState for ${actor.id}. Error: ${transitionError.message}`,

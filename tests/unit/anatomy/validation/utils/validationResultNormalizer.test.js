@@ -11,7 +11,9 @@ const createLogger = () => ({
 describe('normalizeValidationResult', () => {
   it('injects synthetic error when pipeline result is missing', () => {
     const logger = createLogger();
-    const monitoringCoordinator = { incrementValidationPipelineHealth: jest.fn() };
+    const monitoringCoordinator = {
+      incrementValidationPipelineHealth: jest.fn(),
+    };
     const recipe = { recipeId: 'anatomy:test_recipe' };
 
     const normalized = normalizeValidationResult(recipe, undefined, logger, {
@@ -25,21 +27,28 @@ describe('normalizeValidationResult', () => {
       severity: 'error',
     });
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('ValidationPipeline returned no payload for anatomy:test_recipe')
+      expect.stringContaining(
+        'ValidationPipeline returned no payload for anatomy:test_recipe'
+      )
     );
-    expect(logger.error).toHaveBeenCalledWith('ValidationPipeline:invalid_result', {
-      recipeId: 'anatomy:test_recipe',
-      validatorCount: 11,
-      issue: 'missing_payload',
-    });
-    expect(monitoringCoordinator.incrementValidationPipelineHealth).toHaveBeenCalledWith(
-      'missing_payload'
+    expect(logger.error).toHaveBeenCalledWith(
+      'ValidationPipeline:invalid_result',
+      {
+        recipeId: 'anatomy:test_recipe',
+        validatorCount: 11,
+        issue: 'missing_payload',
+      }
     );
+    expect(
+      monitoringCoordinator.incrementValidationPipelineHealth
+    ).toHaveBeenCalledWith('missing_payload');
   });
 
   it('applies defaults for missing arrays and logs debug diagnostics', () => {
     const logger = createLogger();
-    const monitoringCoordinator = { incrementValidationPipelineHealth: jest.fn() };
+    const monitoringCoordinator = {
+      incrementValidationPipelineHealth: jest.fn(),
+    };
     const recipe = { recipeId: 'anatomy:test_recipe', recipePath: 'foo.json' };
 
     const normalized = normalizeValidationResult(
@@ -60,18 +69,31 @@ describe('normalizeValidationResult', () => {
       'ValidationPipeline: normalized missing fields',
       expect.objectContaining({
         recipeId: 'anatomy:test_recipe',
-        defaultsApplied: expect.arrayContaining(['warnings', 'suggestions', 'passed', 'isValid']),
+        defaultsApplied: expect.arrayContaining([
+          'warnings',
+          'suggestions',
+          'passed',
+          'isValid',
+        ]),
       })
     );
-    expect(logger.warn).toHaveBeenCalledWith('ValidationPipeline:invalid_result', {
-      recipeId: 'anatomy:test_recipe',
-      validatorCount: 0,
-      issue: 'missing_fields',
-      fields: expect.arrayContaining(['warnings', 'suggestions', 'passed', 'isValid']),
-    });
-    expect(monitoringCoordinator.incrementValidationPipelineHealth).toHaveBeenCalledWith(
-      'missing_fields'
+    expect(logger.warn).toHaveBeenCalledWith(
+      'ValidationPipeline:invalid_result',
+      {
+        recipeId: 'anatomy:test_recipe',
+        validatorCount: 0,
+        issue: 'missing_fields',
+        fields: expect.arrayContaining([
+          'warnings',
+          'suggestions',
+          'passed',
+          'isValid',
+        ]),
+      }
     );
+    expect(
+      monitoringCoordinator.incrementValidationPipelineHealth
+    ).toHaveBeenCalledWith('missing_fields');
   });
 
   it('returns frozen payloads even when source is frozen', () => {
@@ -87,7 +109,11 @@ describe('normalizeValidationResult', () => {
       isValid: true,
     });
 
-    const normalized = normalizeValidationResult({ recipeId: 'anatomy:test_recipe' }, source, logger);
+    const normalized = normalizeValidationResult(
+      { recipeId: 'anatomy:test_recipe' },
+      source,
+      logger
+    );
 
     expect(Object.isFrozen(normalized)).toBe(true);
     expect(normalized).not.toBe(source);

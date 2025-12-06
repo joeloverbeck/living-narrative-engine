@@ -22,10 +22,12 @@ export class AnatomyGenerationError extends BaseError {
     super(message, 'ANATOMY_GENERATION_ERROR', {
       entityId,
       recipeId,
-      cause: cause ? {
-        name: cause.name,
-        message: cause.message
-      } : null
+      cause: cause
+        ? {
+            name: cause.name,
+            message: cause.message,
+          }
+        : null,
     });
     // Backward compatibility
     this.entityId = entityId;
@@ -33,8 +35,12 @@ export class AnatomyGenerationError extends BaseError {
     this.cause = cause;
   }
 
-  getSeverity() { return 'error'; }
-  isRecoverable() { return true; } // Can retry generation
+  getSeverity() {
+    return 'error';
+  }
+  isRecoverable() {
+    return true;
+  } // Can retry generation
 }
 
 /**
@@ -54,10 +60,12 @@ export class DescriptionGenerationError extends BaseError {
     super(message, 'DESCRIPTION_GENERATION_ERROR', {
       entityId,
       partIds,
-      cause: cause ? {
-        name: cause.name,
-        message: cause.message
-      } : null
+      cause: cause
+        ? {
+            name: cause.name,
+            message: cause.message,
+          }
+        : null,
     });
     // Backward compatibility
     this.entityId = entityId;
@@ -65,8 +73,12 @@ export class DescriptionGenerationError extends BaseError {
     this.cause = cause;
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; } // Can regenerate descriptions
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  } // Can regenerate descriptions
 }
 
 /**
@@ -84,18 +96,24 @@ export class GraphBuildingError extends BaseError {
   constructor(message, rootId = null, cause = null) {
     super(message, 'GRAPH_BUILDING_ERROR', {
       rootId,
-      cause: cause ? {
-        name: cause.name,
-        message: cause.message
-      } : null
+      cause: cause
+        ? {
+            name: cause.name,
+            message: cause.message,
+          }
+        : null,
     });
     // Backward compatibility
     this.rootId = rootId;
     this.cause = cause;
   }
 
-  getSeverity() { return 'error'; }
-  isRecoverable() { return false; } // Graph structure errors are critical
+  getSeverity() {
+    return 'error';
+  }
+  isRecoverable() {
+    return false;
+  } // Graph structure errors are critical
 }
 
 /**
@@ -115,20 +133,25 @@ export class AnatomyErrorHandler {
    */
   constructor({ logger, centralErrorHandler, recoveryStrategyManager }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['error', 'warn', 'info', 'debug']
+      requiredMethods: ['error', 'warn', 'info', 'debug'],
     });
 
     // New dependencies - Optional for backward compatibility
     if (centralErrorHandler) {
       validateDependency(centralErrorHandler, 'ICentralErrorHandler', logger, {
-        requiredMethods: ['handle', 'handleSync']
+        requiredMethods: ['handle', 'handleSync'],
       });
     }
 
     if (recoveryStrategyManager) {
-      validateDependency(recoveryStrategyManager, 'IRecoveryStrategyManager', logger, {
-        requiredMethods: ['executeWithRecovery', 'registerStrategy']
-      });
+      validateDependency(
+        recoveryStrategyManager,
+        'IRecoveryStrategyManager',
+        logger,
+        {
+          requiredMethods: ['executeWithRecovery', 'registerStrategy'],
+        }
+      );
     }
 
     this.#logger = logger;
@@ -171,7 +194,7 @@ export class AnatomyErrorHandler {
 
         const result = this.#centralErrorHandler.handleSync(wrappedError, {
           ...context,
-          domain: 'anatomy'
+          domain: 'anatomy',
         });
 
         // If central handler returned recovery result, return the wrapped error
@@ -180,9 +203,12 @@ export class AnatomyErrorHandler {
         }
         return result;
       } catch (centralError) {
-        this.#logger.warn('Central error handler failed, using local handling', {
-          error: centralError.message
-        });
+        this.#logger.warn(
+          'Central error handler failed, using local handling',
+          {
+            error: centralError.message,
+          }
+        );
       }
     }
 
@@ -221,12 +247,15 @@ export class AnatomyErrorHandler {
 
         return await this.#centralErrorHandler.handle(wrappedError, {
           ...context,
-          domain: 'anatomy'
+          domain: 'anatomy',
         });
       } catch (centralError) {
-        this.#logger.warn('Central error handler failed, using local handling', {
-          error: centralError.message
-        });
+        this.#logger.warn(
+          'Central error handler failed, using local handling',
+          {
+            error: centralError.message,
+          }
+        );
       }
     }
 
@@ -351,7 +380,7 @@ export class AnatomyErrorHandler {
     this.#recoveryStrategyManager.registerStrategy('AnatomyGenerationError', {
       retry: {
         maxRetries: 2,
-        backoff: 'exponential'
+        backoff: 'exponential',
       },
       fallback: async (error, operation) => {
         this.#logger.warn('Using default anatomy fallback');
@@ -359,35 +388,40 @@ export class AnatomyErrorHandler {
       },
       circuitBreaker: {
         failureThreshold: 3,
-        resetTimeout: 120000 // 2 minutes
-      }
+        resetTimeout: 120000, // 2 minutes
+      },
     });
 
     // Strategy for description generation errors
-    this.#recoveryStrategyManager.registerStrategy('DescriptionGenerationError', {
-      retry: {
-        maxRetries: 3,
-        backoff: 'linear'
-      },
-      fallback: async (error, operation) => {
-        this.#logger.warn('Using generic description fallback');
-        return this.#getGenericDescription(error.context);
+    this.#recoveryStrategyManager.registerStrategy(
+      'DescriptionGenerationError',
+      {
+        retry: {
+          maxRetries: 3,
+          backoff: 'linear',
+        },
+        fallback: async (error, operation) => {
+          this.#logger.warn('Using generic description fallback');
+          return this.#getGenericDescription(error.context);
+        },
       }
-    });
+    );
 
     // Strategy for graph building errors
     this.#recoveryStrategyManager.registerStrategy('GraphBuildingError', {
       retry: {
         maxRetries: 1,
-        backoff: 'constant'
+        backoff: 'constant',
       },
       fallback: async (error, operation) => {
         this.#logger.warn('Using minimal graph structure fallback');
         return this.#getMinimalGraphStructure(error.context);
-      }
+      },
     });
 
-    this.#logger.info('Anatomy recovery strategies registered with central system');
+    this.#logger.info(
+      'Anatomy recovery strategies registered with central system'
+    );
   }
 
   /**
@@ -407,8 +441,8 @@ export class AnatomyErrorHandler {
         { id: 'leftArm', type: 'arm', description: 'left arm' },
         { id: 'rightArm', type: 'arm', description: 'right arm' },
         { id: 'leftLeg', type: 'leg', description: 'left leg' },
-        { id: 'rightLeg', type: 'leg', description: 'right leg' }
-      ]
+        { id: 'rightLeg', type: 'leg', description: 'right leg' },
+      ],
     };
   }
 
@@ -424,10 +458,12 @@ export class AnatomyErrorHandler {
       type: 'fallback',
       entityId: context.entityId,
       description: 'A standard humanoid form.',
-      parts: context.partIds ? context.partIds.map(id => ({
-        id,
-        description: `${id} part`
-      })) : []
+      parts: context.partIds
+        ? context.partIds.map((id) => ({
+            id,
+            description: `${id} part`,
+          }))
+        : [],
     };
   }
 
@@ -443,7 +479,7 @@ export class AnatomyErrorHandler {
       type: 'fallback',
       rootId: context.rootId,
       nodes: [{ id: context.rootId, type: 'root' }],
-      edges: []
+      edges: [],
     };
   }
 }

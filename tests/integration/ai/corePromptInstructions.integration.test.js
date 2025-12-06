@@ -56,7 +56,8 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
 
     it('should have exactly 6 subject types in schema enum', () => {
       const enumValues =
-        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
+        coreNotesComponent.dataSchema.properties.notes.items.properties
+          .subjectType.enum;
       expect(enumValues).toHaveLength(6);
       expect(enumValues).toEqual([
         'entity',
@@ -76,7 +77,9 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
     it('should describe entity type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
       expect(promptText).toContain('1. entity - Describing who/what/where');
-      expect(promptText).toContain('people, places, things, creatures, organizations');
+      expect(promptText).toContain(
+        'people, places, things, creatures, organizations'
+      );
     });
 
     it('should describe event type correctly', () => {
@@ -93,19 +96,25 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
 
     it('should describe knowledge type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-      expect(promptText).toContain('4. knowledge - Information, theories, observations');
+      expect(promptText).toContain(
+        '4. knowledge - Information, theories, observations'
+      );
       expect(promptText).toContain('what you know, noticed, or theorize');
     });
 
     it('should describe state type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-      expect(promptText).toContain('5. state - Mental/emotional/psychological conditions');
+      expect(promptText).toContain(
+        '5. state - Mental/emotional/psychological conditions'
+      );
       expect(promptText).toContain('feelings or complex mental states');
     });
 
     it('should describe other type correctly', () => {
       const promptText = corePromptText.finalLlmInstructionText;
-      expect(promptText).toContain('6. other - Anything not clearly fitting above');
+      expect(promptText).toContain(
+        '6. other - Anything not clearly fitting above'
+      );
       expect(promptText).toContain('Uncertain or abstract concepts');
     });
   });
@@ -293,8 +302,12 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
     it('should include PRIORITY GUIDELINES section', () => {
       const promptText = corePromptText.finalLlmInstructionText;
       expect(promptText).toContain('PRIORITY GUIDELINES:');
-      expect(promptText).toContain('HIGH: Character secrets, survival plans, critical deadlines');
-      expect(promptText).toContain('MEDIUM: Behavioral patterns, theories, relationships');
+      expect(promptText).toContain(
+        'HIGH: Character secrets, survival plans, critical deadlines'
+      );
+      expect(promptText).toContain(
+        'MEDIUM: Behavioral patterns, theories, relationships'
+      );
       expect(promptText).toContain('LOW: Routine events, common knowledge');
     });
   });
@@ -334,7 +347,8 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
 
     it('should have default subjectType of "other"', () => {
       const subjectTypeSchema =
-        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType;
+        coreNotesComponent.dataSchema.properties.notes.items.properties
+          .subjectType;
       expect(subjectTypeSchema.default).toBe('other');
     });
 
@@ -357,7 +371,8 @@ describe('Enhanced LLM Prompt Instructions Integration (Simplified Taxonomy)', (
 
     it('should have all constants matching schema enum values', () => {
       const enumValues =
-        coreNotesComponent.dataSchema.properties.notes.items.properties.subjectType.enum;
+        coreNotesComponent.dataSchema.properties.notes.items.properties
+          .subjectType.enum;
       const constantValues = Object.values(SUBJECT_TYPES);
 
       expect(constantValues.sort()).toEqual(enumValues.sort());

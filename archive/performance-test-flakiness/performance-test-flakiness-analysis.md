@@ -3,6 +3,7 @@
 **Date**: 2025-11-23
 **Issue**: Flaky performance tests in `npm run test:performance`
 **Tests Analyzed**:
+
 - `tests/performance/goap/numericPlanning.performance.test.js` (Memory leak tests)
 - `tests/performance/anatomy/slotGenerator.performance.test.js` (Performance timing test)
 
@@ -84,12 +85,14 @@ The GOAP planning system has **unbounded cache growth** that accumulates across 
 ##### Memory Retention from Planning Data Structures
 
 **PlanningNode deep cloning** (src/goap/planner/planningNode.js):
+
 - Line 78: `this.#state = Object.freeze(deepClone(state))`
 - Each node creates a **full deep clone** of the entire planning state
 - Parent chain references (line 86) keep entire node chains in memory
 - With 1000 planning iterations, each creating dozens of nodes, this compounds significantly
 
 **Example memory footprint per planning session:**
+
 - Average state size: ~2KB (10-20 component states)
 - Nodes per planning session: ~50-200 (depends on goal complexity)
 - Memory per session: 100KB - 400KB just for nodes
@@ -113,6 +116,7 @@ for (let i = 0; i < 1000; i++) {
 ```
 
 **What accumulates:**
+
 1. Goal normalization cache entries (unique per goal signature)
 2. Diagnostic maps per actor
 3. Failed goal/task arrays growing with each iteration
@@ -121,6 +125,7 @@ for (let i = 0; i < 1000; i++) {
 **Memory growth observed**: 220MB over 1000 iterations = ~220KB per iteration
 
 This is **consistent with the analysis** given:
+
 - Deep clones of planning state: ~2KB × 50 nodes = 100KB per iteration
 - Cache overhead: ~10-20KB per iteration
 - Parent chain retention: ~100KB per iteration until GC
@@ -128,6 +133,7 @@ This is **consistent with the analysis** given:
 #### Impact on Production
 
 **In a long-running game:**
+
 - Players making 100 decisions per hour
 - Each decision triggers planning
 - **Projected memory growth**: 22MB per hour per actor
@@ -135,6 +141,7 @@ This is **consistent with the analysis** given:
 - Over 24-hour game session: **5.3GB memory leak**
 
 This is a **critical production issue** that will cause:
+
 - Degraded performance over time
 - Out-of-memory crashes in long sessions
 - Poor user experience
@@ -142,6 +149,7 @@ This is a **critical production issue** that will cause:
 #### Recommended Fixes
 
 1. **Add cache size limits with LRU eviction:**
+
    ```javascript
    class BoundedCache {
      constructor(maxSize = 100) {
@@ -160,6 +168,7 @@ This is a **critical production issue** that will cause:
    ```
 
 2. **Prune failed goal/task arrays by timestamp:**
+
    ```javascript
    #pruneOldFailures(map, maxAge = 3600000) { // 1 hour
      const now = Date.now();
@@ -228,6 +237,7 @@ The `SlotGenerator` implementation is **performant and optimized:**
 **Actual performance measured**: 0.03ms per slot generation = **30 microseconds**
 
 This is **extremely fast** for the operations performed:
+
 - Object creation
 - String manipulation
 - Frozen object allocation
@@ -257,6 +267,7 @@ This is **extremely fast** for the operations performed:
 #### Impact on Production
 
 **No production impact:**
+
 - Slot generation happens during blueprint initialization
 - Infrequent operation (only on character creation)
 - 30 microseconds is well within acceptable latency
@@ -337,6 +348,7 @@ if (!process.env.CI) {
 ## Files Analyzed
 
 ### Production Code
+
 - `src/goap/planner/goapPlanner.js` (lines 1-1850)
 - `src/goap/controllers/goapController.js` (lines 1-250)
 - `src/goap/planner/planningNode.js` (lines 1-255)
@@ -344,6 +356,7 @@ if (!process.env.CI) {
 - `src/anatomy/slotGenerator.js` (lines 1-353)
 
 ### Test Code
+
 - `tests/performance/goap/numericPlanning.performance.test.js` (lines 662-845)
 - `tests/performance/anatomy/slotGenerator.performance.test.js` (lines 81-106)
 

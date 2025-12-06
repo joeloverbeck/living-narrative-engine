@@ -15,6 +15,7 @@ Create three data components for weapons: `firearm` (weapon properties), `ammuni
 **Original Assumption:** Full JSON specifications available in `specs/weapons-system-implementation.spec.md` lines 373-569
 **Reality:** Spec file does not exist in repository
 **Resolution:** Implement based on:
+
 - Component property descriptions in this ticket
 - Usage patterns from WEASYSIMP-011 (shoot weapon) and WEASYSIMP-012 (reload weapon)
 - Test requirements from WEASYSIMP-021
@@ -120,6 +121,7 @@ Unit tests: `tests/unit/mods/weapons/components/`
 ### Test Coverage
 
 **Total Tests Created:** 110+ tests across 4 test files
+
 - Schema validation compliance
 - Component ID and description validation
 - Property type validation
@@ -134,6 +136,7 @@ Unit tests: `tests/unit/mods/weapons/components/`
 **Major Deviation:** Original spec file (`specs/weapons-system-implementation.spec.md`) does not exist in repository.
 
 **Resolution:**
+
 - Documented discrepancy in ticket "Assumptions Assessment" section
 - Implemented components based on:
   - Property descriptions provided in ticket
@@ -144,6 +147,7 @@ Unit tests: `tests/unit/mods/weapons/components/`
 - Used containerType enum values as explicitly specified in ticket
 
 **Other Notes:**
+
 - All components follow established patterns from items mod (container, aimed_at)
 - All JSON syntax validated successfully
 - Component structure validated (IDs, schema references, properties)
@@ -163,6 +167,7 @@ Unit tests: `tests/unit/mods/weapons/components/`
 ### Next Steps
 
 These components are now ready for use in:
+
 - WEASYSIMP-011: Shoot weapon action and rule
 - WEASYSIMP-012: Reload weapon action and rule
 - WEASYSIMP-013: Chamber round action and rule

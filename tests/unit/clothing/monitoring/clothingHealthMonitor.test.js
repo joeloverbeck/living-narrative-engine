@@ -101,13 +101,19 @@ describe('ClothingHealthMonitor', () => {
     });
 
     expect(logger.debug).toHaveBeenCalledTimes(4);
-    expect(services.clothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
-      expect.stringContaining('health_check_entity_'),
-      { mode: 'topmost' },
+    expect(
+      services.clothingAccessibilityService.getAccessibleItems
+    ).toHaveBeenCalledWith(expect.stringContaining('health_check_entity_'), {
+      mode: 'topmost',
+    });
+    expect(services.priorityManager.calculatePriority).toHaveBeenCalledWith(
+      'base',
+      'removal'
     );
-    expect(services.priorityManager.calculatePriority).toHaveBeenCalledWith('base', 'removal');
 
-    expect(monitor.getServiceHealth('ClothingAccessibilityService')).toMatchObject({
+    expect(
+      monitor.getServiceHealth('ClothingAccessibilityService')
+    ).toMatchObject({
       healthy: true,
       testOperation: 'getAccessibleItems',
     });
@@ -143,7 +149,7 @@ describe('ClothingHealthMonitor', () => {
       expect.objectContaining({
         service: 'ClothingAccessibilityService',
         healthy: false,
-      }),
+      })
     );
 
     const overall = monitor.getOverallHealth();
@@ -234,10 +240,10 @@ describe('ClothingHealthMonitor', () => {
     const monitor = new ClothingHealthMonitor({}, logger);
 
     expect(() => monitor.registerHealthCheck('', () => ({}))).toThrow(
-      'serviceName must be a non-empty string',
+      'serviceName must be a non-empty string'
     );
     expect(() => monitor.registerHealthCheck('Custom', null)).toThrow(
-      'healthCheck must be a function',
+      'healthCheck must be a function'
     );
 
     monitor.registerHealthCheck('ExplosiveService', () => {
@@ -278,7 +284,9 @@ describe('ClothingHealthMonitor', () => {
     expect(checkSpy).toHaveBeenCalledTimes(2);
 
     monitor.startMonitoring();
-    expect(logger.warn).toHaveBeenCalledWith('Health monitoring already started');
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Health monitoring already started'
+    );
 
     monitor.stopMonitoring();
     expect(logger.info).toHaveBeenCalledWith('Health monitoring stopped');

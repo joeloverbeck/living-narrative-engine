@@ -54,7 +54,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         id: 'test:eat_goal',
         relevance: { '==': [true, true] },
         goalState: {
-          has_component: [actor1.id, 'test:fed'],  // Goal: actor should HAVE test:fed
+          has_component: [actor1.id, 'test:fed'], // Goal: actor should HAVE test:fed
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -109,7 +109,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
       // Goal is to HAVE test:fed, so don't add it to initial state
       const world = {
         state: {
-          [`${actor1.id}:test:hungry`]: {},  // Actor starts hungry (NOT fed)
+          [`${actor1.id}:test:hungry`]: {}, // Actor starts hungry (NOT fed)
           [`food_item:test:edible`]: {},
         },
         entities: {},
@@ -123,7 +123,12 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
       );
 
-      console.log('[TEST DEBUG] actor1Planned:', actor1Planned, 'events:', events1.map(e => e.type));
+      console.log(
+        '[TEST DEBUG] actor1Planned:',
+        actor1Planned,
+        'events:',
+        events1.map((e) => e.type)
+      );
 
       if (actor1Planned) {
         // Simulate: Actor 1 consumes food
@@ -185,7 +190,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         id: 'test:meal_goal',
         relevance: { '==': [true, true] },
         goalState: {
-          has_component: [chef.id, 'test:has_meal'],  // Goal: actor should HAVE test:has_meal
+          has_component: [chef.id, 'test:has_meal'], // Goal: actor should HAVE test:has_meal
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -318,10 +323,12 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         const chefCanCook = chefPlan.payload.tasks.includes('test:cook_food');
 
         // Simple cannot access cook task (filtered by structural gate)
-        const simpleCanCook = simplePlan.payload.tasks.includes('test:cook_food');
+        const simpleCanCook =
+          simplePlan.payload.tasks.includes('test:cook_food');
 
         // Simple must use eat_ready task
-        const simpleUsesReady = simplePlan.payload.tasks.includes('test:eat_ready');
+        const simpleUsesReady =
+          simplePlan.payload.tasks.includes('test:eat_ready');
 
         // Verify capability-based differentiation
         expect(chefCanCook || simpleUsesReady).toBe(true);
@@ -362,7 +369,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         id: 'test:treasure_goal',
         relevance: { '==': [true, true] },
         goalState: {
-          has_component: [knowledgeable.id, 'test:has_treasure'],  // Goal: actor should HAVE test:has_treasure
+          has_component: [knowledgeable.id, 'test:has_treasure'], // Goal: actor should HAVE test:has_treasure
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -527,7 +534,7 @@ describe('GOAP Multi-Actor Coordination - Integration', () => {
         id: 'test:shared_goal',
         relevance: { '==': [true, true] },
         goalState: {
-          has_component: ['actor', 'test:completed'],  // Goal: actor should HAVE test:completed
+          has_component: ['actor', 'test:completed'], // Goal: actor should HAVE test:completed
         },
       });
       setup.dataRegistry.register('goals', goal.id, goal);

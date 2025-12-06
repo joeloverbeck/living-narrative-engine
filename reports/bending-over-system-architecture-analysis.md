@@ -17,12 +17,14 @@ Actor → Action (sit_down) → Target (furniture) → Rule Processing → State
 ### 1.2 Core Components
 
 #### 1.2.1 allows_sitting Component
+
 - **Purpose**: Marks furniture as sittable and tracks occupancy
 - **Key Design**: Uses a `spots` array where each index represents a seating position
 - **State Management**: `null` = empty spot, entity ID = occupied spot
 - **Capacity**: Supports 1-10 spots (configurable)
 
 #### 1.2.2 sitting_on Component
+
 - **Purpose**: Tracks actor's current sitting state
 - **Key Fields**:
   - `furniture_id`: Reference to the furniture entity
@@ -32,11 +34,13 @@ Actor → Action (sit_down) → Target (furniture) → Rule Processing → State
 ### 1.3 Actions
 
 #### 1.3.1 sit_down Action
+
 - **Targets**: `positioning:available_furniture` scope
 - **Prerequisites**: Actor must NOT have `sitting_on` or `kneeling_before` components
 - **Effect**: Initiates sitting process
 
 #### 1.3.2 get_up_from_furniture Action
+
 - **Targets**: `positioning:furniture_im_sitting_on` scope
 - **Prerequisites**: Actor MUST have `sitting_on` component
 - **Effect**: Removes sitting state
@@ -44,6 +48,7 @@ Actor → Action (sit_down) → Target (furniture) → Rule Processing → State
 ### 1.4 Scope Definitions
 
 #### 1.4.1 available_furniture Scope
+
 ```
 entities(positioning:allows_sitting)[][{
   "and": [
@@ -56,6 +61,7 @@ entities(positioning:allows_sitting)[][{
 ```
 
 #### 1.4.2 furniture_im_sitting_on Scope
+
 ```
 entities(positioning:allows_sitting)[][{
   "==": [entity.id, actor's furniture_id]
@@ -65,7 +71,9 @@ entities(positioning:allows_sitting)[][{
 ### 1.5 Rule Processing
 
 #### 1.5.1 handle_sit_down Rule
+
 **Key Operations**:
+
 1. Sequential spot allocation (tries spots 0, 1, 2 using atomic operations)
 2. If successful:
    - Adds `sitting_on` component to actor
@@ -75,7 +83,9 @@ entities(positioning:allows_sitting)[][{
    - Logs success and ends turn
 
 #### 1.5.2 handle_get_up_from_furniture Rule
+
 **Key Operations**:
+
 1. Removes automatic closeness relationships
 2. Clears the occupied spot in furniture
 3. Removes `sitting_on` component from actor
@@ -96,6 +106,7 @@ entities(positioning:allows_sitting)[][{
 ### 2.1 System Requirements
 
 The bending over system should support:
+
 - Actors bending over surfaces (counters, sofas, tables, desks)
 - Unlimited actors bending over the same surface (no position tracking)
 - Movement restriction while bent over
@@ -161,7 +172,11 @@ The bending over system should support:
     "actor": []
   },
   "forbidden_components": {
-    "actor": ["positioning:sitting_on", "positioning:bending_over", "positioning:kneeling_before"]
+    "actor": [
+      "positioning:sitting_on",
+      "positioning:bending_over",
+      "positioning:kneeling_before"
+    ]
   },
   "template": "bend over {target}",
   "prerequisites": [],
@@ -269,11 +284,13 @@ positioning:surface_im_bending_over := entities(positioning:allows_bending_over)
 **File**: `data/mods/positioning/rules/handle_bend_over.rule.json`
 
 This rule is simpler than `handle_sit_down` since it doesn't need position tracking:
+
 - Verifies target has `positioning:allows_bending_over` component
 - Adds `positioning:bending_over` component to actor with surface reference
 - Custom log messages for bending over
 
 **Key Operations**:
+
 1. Verify target has `allows_bending_over` component
 2. Add `bending_over` component to actor with surface_id
 3. Lock movement (prevent actor from moving while bent over)
@@ -285,6 +302,7 @@ This rule is simpler than `handle_sit_down` since it doesn't need position track
 **File**: `data/mods/positioning/rules/handle_straighten_up.rule.json`
 
 This rule is simpler than `handle_get_up_from_furniture` since there's no position to clear:
+
 - Removes closeness relationships with other actors at the same surface
 - Removes `bending_over` component from actor
 - Unlocks movement
@@ -295,7 +313,9 @@ This rule is simpler than `handle_get_up_from_furniture` since there's no positi
 ### 3.1 Compatibility with Existing Systems
 
 #### 3.1.1 Mutual Exclusivity
+
 The system enforces that an actor cannot simultaneously:
+
 - Sit AND bend over
 - Kneel AND bend over
 - Be in multiple positioning states
@@ -303,11 +323,13 @@ The system enforces that an actor cannot simultaneously:
 This is enforced through `forbidden_components` in action definitions.
 
 #### 3.1.2 Movement System Integration
+
 - Bending over locks movement (same as sitting)
 - Movement is restored when straightening up
 - Compatible with existing movement lock/unlock operations
 
 #### 3.1.3 Closeness System
+
 - Automatic closeness established between all actors bent over the same surface
 - Uses existing `ESTABLISH_SITTING_CLOSENESS` operation (can be generalized)
 - Since there are no specific positions, all actors at the surface are considered close to each other
@@ -315,6 +337,7 @@ This is enforced through `forbidden_components` in action definitions.
 ### 3.2 Entity Examples
 
 #### 3.2.1 Kitchen Counter Entity
+
 ```json
 {
   "id": "kitchen:counter_01",
@@ -325,6 +348,7 @@ This is enforced through `forbidden_components` in action definitions.
 ```
 
 #### 3.2.2 Living Room Sofa Entity
+
 ```json
 {
   "id": "living:sofa_01",
@@ -344,22 +368,27 @@ Note: A sofa can support both sitting AND bending over, but an actor can only do
 ### 4.1 New Files to Create
 
 **Components** (2 files):
+
 - [ ] `data/mods/positioning/components/allows_bending_over.component.json`
 - [ ] `data/mods/positioning/components/bending_over.component.json`
 
 **Actions** (2 files):
+
 - [ ] `data/mods/positioning/actions/bend_over.action.json`
 - [ ] `data/mods/positioning/actions/straighten_up.action.json`
 
 **Scopes** (2 files):
+
 - [ ] `data/mods/positioning/scopes/available_surfaces.scope`
 - [ ] `data/mods/positioning/scopes/surface_im_bending_over.scope`
 
 **Conditions** (2 files):
+
 - [ ] `data/mods/positioning/conditions/event-is-action-bend-over.condition.json`
 - [ ] `data/mods/positioning/conditions/event-is-action-straighten-up.condition.json`
 
 **Rules** (2 files):
+
 - [ ] `data/mods/positioning/rules/handle_bend_over.rule.json`
 - [ ] `data/mods/positioning/rules/handle_straighten_up.rule.json`
 
@@ -400,12 +429,15 @@ The implementation requires creating 10 new files with no modifications to exist
 ## Appendix A: Key Design Decisions
 
 ### A.1 Why no position tracking?
+
 Since bending over surfaces won't happen regularly with many actors, tracking individual positions adds unnecessary complexity. The simpler approach of allowing unlimited actors is more practical.
 
 ### A.2 Why reuse ESTABLISH_SITTING_CLOSENESS?
+
 The operation is generic enough to handle any proximity-based closeness. Could be renamed to ESTABLISH_PROXIMITY_CLOSENESS in future refactoring.
 
 ### A.3 Why keep the component data schema empty?
+
 The `allows_bending_over` component serves as a simple marker/flag. An empty schema is sufficient since the component's mere presence indicates the surface can be bent over.
 
 ## Appendix B: Rule Implementation Details
@@ -414,6 +446,6 @@ The complete rule implementations would be simpler than the sitting rules since 
 
 ---
 
-*Report Generated: [Current Date]*
-*Author: System Architecture Analysis Tool*
-*Version: 1.0*
+_Report Generated: [Current Date]_
+_Author: System Architecture Analysis Tool_
+_Version: 1.0_

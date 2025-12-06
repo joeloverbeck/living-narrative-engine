@@ -15,11 +15,13 @@ Create turn-based rules that automatically process energy burn and digestion for
 ## Files to Touch
 
 ### New Files (3)
+
 - `data/mods/metabolism/rules/turn_1_energy_burn.rule.json`
 - `data/mods/metabolism/rules/turn_2_digestion.rule.json`
 - `data/mods/metabolism/rules/turn_3_hunger_update.rule.json` (placeholder for HUNMETSYS-014)
 
 ### Modified Files (1)
+
 - `data/mods/metabolism/mod-manifest.json` (add rules to content.rules array)
 
 ## Out of Scope
@@ -170,15 +172,17 @@ Create turn-based rules that automatically process energy burn and digestion for
 ### Processing Order
 
 Rules execute in this order per turn (specified by rule_id alphabetically):
+
 1. **turn_1_energy_burn** - Reduces current_energy
 2. **turn_2_digestion** - Converts buffer_storage to current_energy
 3. **turn_3_hunger_update** - Recalculates state based on final energy (placeholder)
 
-**Important:** Rule names use numeric prefixes (turn_1_, turn_2_, turn_3_) to ensure correct alphabetical execution order. Without these prefixes, "turn_digestion" would execute before "turn_energy_burn" alphabetically, violating the requirement that energy burn must happen first.
+**Important:** Rule names use numeric prefixes (turn*1*, turn*2*, turn*3*) to ensure correct alphabetical execution order. Without these prefixes, "turn_digestion" would execute before "turn_energy_burn" alphabetically, violating the requirement that energy burn must happen first.
 
 ## Acceptance Criteria
 
 ### Rule Files
+
 - [ ] All 3 rule files created with valid JSON
 - [ ] Rules validate against rule.schema.json
 - [ ] Event types correctly reference core:turn_started
@@ -186,6 +190,7 @@ Rules execute in this order per turn (specified by rule_id alphabetically):
 - [ ] Parameters use correct entity reference syntax
 
 ### Rule Logic
+
 - [ ] Energy burn rule triggers for all entities with metabolism
 - [ ] Digestion rule only triggers when buffer_storage > 0
 - [ ] Hunger update rule triggers for all entities with metabolic_store
@@ -193,10 +198,12 @@ Rules execute in this order per turn (specified by rule_id alphabetically):
 - [ ] Entity references correctly passed to operations
 
 ### Mod Manifest
+
 - [ ] All 3 rules added to content.rules array in mod-manifest.json
 - [ ] Manifest still validates after update
 
 ### Validation
+
 ```bash
 npm run validate           # All rules validate
 npm run scope:lint        # If using scope DSL expressions
@@ -205,12 +212,14 @@ npm run scope:lint        # If using scope DSL expressions
 ## Invariants
 
 ### Must Remain True
+
 - Energy burn must happen before digestion each turn
 - Rules must not modify components directly (use operations)
 - Each rule must be idempotent (safe to run multiple times)
 - Rules must check for component existence before operation
 
 ### System Invariants
+
 - Turn system continues functioning correctly
 - Other turn-based rules continue executing
 - Rule execution order is deterministic
@@ -219,6 +228,7 @@ npm run scope:lint        # If using scope DSL expressions
 ## Testing Notes
 
 **Manual Testing:**
+
 1. Create entity with metabolism components
 2. Advance one turn
 3. Verify energy decreased by base_burn_rate
@@ -226,6 +236,7 @@ npm run scope:lint        # If using scope DSL expressions
 5. Verify hunger state updated (once HUNMETSYS-014 complete)
 
 **Unit tests will be in HUNMETSYS-017** covering:
+
 - Rules trigger on correct events
 - Rules execute correct operations
 - Processing order is maintained
@@ -254,29 +265,34 @@ npm run scope:lint        # If using scope DSL expressions
 ### What Was Changed vs Originally Planned
 
 **Syntax Corrections Made:**
+
 1. **Component reference syntax**: Original ticket used invalid `{component.X}` syntax that doesn't exist in codebase
    - **Fixed**: Use `QUERY_COMPONENTS` to retrieve components, then access via `{context.variableName.field}` or JSON Logic `{"var": "context.variableName.field"}`
 
 2. **Rule execution order**: Original naming (turn_energy_burn, turn_digestion, turn_hunger_update) would execute in wrong alphabetical order
-   - **Fixed**: Added numeric prefixes (turn_1_, turn_2_, turn_3_) to ensure burn → digest → update order
+   - **Fixed**: Added numeric prefixes (turn*1*, turn*2*, turn*3*) to ensure burn → digest → update order
 
 3. **Placeholder rule**: Original included non-existent UPDATE_HUNGER_STATE operation that would fail validation
    - **Fixed**: Created placeholder with empty actions array and comment explaining it's for HUNMETSYS-014
 
 **Files Created:**
+
 - ✅ `data/mods/metabolism/rules/turn_1_energy_burn.rule.json`
 - ✅ `data/mods/metabolism/rules/turn_2_digestion.rule.json`
 - ✅ `data/mods/metabolism/rules/turn_3_hunger_update.rule.json`
 
 **Files Modified:**
+
 - ✅ `data/mods/metabolism/mod-manifest.json` (added 3 rules to content.rules array)
 
 **Validation Results:**
+
 - ✅ All rules validate against schema
 - ✅ Metabolism mod has 0 cross-reference violations
 - ✅ No syntax errors, all JSON valid
 
 **Key Implementation Details:**
+
 - Rules use `QUERY_COMPONENTS` + `IF` pattern instead of inline `has_component` conditions
 - Numeric prefixes ensure deterministic execution order (alphabetically)
 - Empty placeholder avoids validation failure while reserving slot for HUNMETSYS-014

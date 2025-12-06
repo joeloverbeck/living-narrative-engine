@@ -28,15 +28,21 @@ describe('PlanInspector', () => {
     ]);
 
     // Mock data registry
-    mockDataRegistry = testBed.createMock('dataRegistry', ['getGoalDefinition', 'get']);
+    mockDataRegistry = testBed.createMock('dataRegistry', [
+      'getGoalDefinition',
+      'get',
+    ]);
 
     // Mock entity manager
-    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'getEntityInstance',
+    ]);
 
     // Mock entity display data provider
-    mockEntityDisplayDataProvider = testBed.createMock('entityDisplayDataProvider', [
-      'getEntityName',
-    ]);
+    mockEntityDisplayDataProvider = testBed.createMock(
+      'entityDisplayDataProvider',
+      ['getEntityName']
+    );
 
     planInspector = new PlanInspector({
       goapController: mockGoapController,
@@ -122,7 +128,9 @@ describe('PlanInspector', () => {
       const result = planInspector.inspect('actor-123');
 
       expect(result).toBe('No active GOAP plan for actor: actor-123');
-      expect(mockGoapController.getActivePlan).toHaveBeenCalledWith('actor-123');
+      expect(mockGoapController.getActivePlan).toHaveBeenCalledWith(
+        'actor-123'
+      );
     });
 
     it('should format active plan with goal and tasks', () => {
@@ -131,7 +139,9 @@ describe('PlanInspector', () => {
         goal: {
           id: 'stay_fed',
           priority: 10,
-          goalState: { '<=': [{ var: 'actor.components.core_needs.hunger' }, 30] },
+          goalState: {
+            '<=': [{ var: 'actor.components.core_needs.hunger' }, 30],
+          },
         },
         tasks: [
           {
@@ -189,8 +199,12 @@ describe('PlanInspector', () => {
       expect(result).toContain('Description: Keep actor fed and healthy');
       expect(result).toContain('Goal Priority: 10');
       expect(result).toContain('Goal Priority: 10');
-      expect(result).toContain('Numeric Heuristic: ACTIVE (pure numeric root comparator)');
-      expect(result).toContain('Heuristic Reason: Root operator is <=, <, >=, or >');
+      expect(result).toContain(
+        'Numeric Heuristic: ACTIVE (pure numeric root comparator)'
+      );
+      expect(result).toContain(
+        'Heuristic Reason: Root operator is <=, <, >=, or >'
+      );
       expect(result).toContain('Plan Length: 2 task(s)');
       expect(result).toContain('[consume_nourishing_item] (COMPLETED)');
       expect(result).toContain('[gather_resources] (CURRENT)');
@@ -280,7 +294,9 @@ describe('PlanInspector', () => {
       mockDataRegistry.getGoalDefinition.mockReturnValue({ name: 'Test Goal' });
       mockDataRegistry.get.mockReturnValue(null);
       mockEntityManager.getEntityInstance.mockReturnValue({ id: 'entity-456' });
-      mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Magic Sword');
+      mockEntityDisplayDataProvider.getEntityName.mockReturnValue(
+        'Magic Sword'
+      );
 
       const result = planInspector.inspect('actor-123');
 
@@ -306,15 +322,29 @@ describe('PlanInspector', () => {
         {
           goalId: 'test_goal',
           failures: [
-            { reason: 'No path to goal', code: 'NO_VALID_PLAN', timestamp: 1700000002000 },
-            { reason: 'Preconditions failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1700000003000 },
+            {
+              reason: 'No path to goal',
+              code: 'NO_VALID_PLAN',
+              timestamp: 1700000002000,
+            },
+            {
+              reason: 'Preconditions failed',
+              code: 'NO_APPLICABLE_TASKS',
+              timestamp: 1700000003000,
+            },
           ],
         },
       ]);
       mockGoapController.getFailedTasks.mockReturnValue([
         {
           taskId: 'task1',
-          failures: [{ reason: 'Item not found', code: 'TASK_FAILURE', timestamp: 1700000004000 }],
+          failures: [
+            {
+              reason: 'Item not found',
+              code: 'TASK_FAILURE',
+              timestamp: 1700000004000,
+            },
+          ],
         },
       ]);
       mockDataRegistry.getGoalDefinition.mockReturnValue({ name: 'Test Goal' });
@@ -420,7 +450,9 @@ describe('PlanInspector', () => {
         goal: {
           id: 'stay_fed',
           priority: 10,
-          goalState: { '<=': [{ var: 'actor.components.core_needs.hunger' }, 30] },
+          goalState: {
+            '<=': [{ var: 'actor.components.core_needs.hunger' }, 30],
+          },
         },
         tasks: [
           {

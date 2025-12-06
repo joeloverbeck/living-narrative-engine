@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
 const fixtures = [];
@@ -32,7 +27,9 @@ describe('Inventory scenario helpers - integration', () => {
     await fixture.executeAction('picker', 'pickup_target');
 
     const actor = fixture.entityManager.getEntityInstance('picker');
-    expect(actor.components['items:inventory'].items).toContain('pickup_target');
+    expect(actor.components['items:inventory'].items).toContain(
+      'pickup_target'
+    );
     const item = fixture.entityManager.getEntityInstance('pickup_target');
     expect(item.components['core:position']).toBeUndefined();
     expect(scenario.groundItem.id).toBe('pickup_target');
@@ -52,7 +49,9 @@ describe('Inventory scenario helpers - integration', () => {
     await fixture.executeAction('dropper', 'drop_target');
 
     const actor = fixture.entityManager.getEntityInstance('dropper');
-    expect(actor.components['items:inventory'].items).not.toContain('drop_target');
+    expect(actor.components['items:inventory'].items).not.toContain(
+      'drop_target'
+    );
 
     const dropped = fixture.entityManager.getEntityInstance('drop_target');
     expect(dropped.components['core:position'].locationId).toBe(
@@ -89,9 +88,8 @@ describe('Inventory scenario helpers - integration', () => {
 
     await unlockedFixture.executeAction('unlocked_actor', 'unlocked_crate');
 
-    const unlockedContainer = unlockedFixture.entityManager.getEntityInstance(
-      'unlocked_crate'
-    );
+    const unlockedContainer =
+      unlockedFixture.entityManager.getEntityInstance('unlocked_crate');
     expect(unlockedContainer.components['items:container'].isOpen).toBe(true);
     expect(unlockedScenario.actor.id).toBe('unlocked_actor');
 
@@ -108,9 +106,8 @@ describe('Inventory scenario helpers - integration', () => {
 
     await lockedFixture.executeAction('locked_actor', 'locked_vault');
 
-    const lockedContainer = lockedFixture.entityManager.getEntityInstance(
-      'locked_vault'
-    );
+    const lockedContainer =
+      lockedFixture.entityManager.getEntityInstance('locked_vault');
     expect(lockedContainer.components['items:container'].isOpen).toBe(true);
     expect(lockedScenario.actorInventoryItems.map((item) => item.id)).toContain(
       'vault_key'

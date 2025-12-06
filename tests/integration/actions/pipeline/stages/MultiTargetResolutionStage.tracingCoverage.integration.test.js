@@ -3,12 +3,7 @@
  * action-aware tracing interactions and failure handling across legacy and multi-target workflows.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
   createMultiTargetResolutionStage,
   createTestContextFromAction,
@@ -313,9 +308,7 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
 
       unifiedScopeResolver.resolve.mockImplementation((scope) => {
         if (scope === 'test:primary_scope') {
-          return Promise.resolve(
-            ActionResult.success(new Set(['ally-001']))
-          );
+          return Promise.resolve(ActionResult.success(new Set(['ally-001'])));
         }
         if (scope === 'test:secondary_scope') {
           return Promise.resolve(
@@ -325,7 +318,9 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
         if (scope === 'test:legacy_scope') {
           return Promise.resolve(ActionResult.success(new Set(['actor-001'])));
         }
-        return Promise.resolve(ActionResult.failure({ error: 'unknown scope' }));
+        return Promise.resolve(
+          ActionResult.failure({ error: 'unknown scope' })
+        );
       });
 
       const legacyAction = createTestLegacyAction({
@@ -362,7 +357,9 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
 
       expect(trace.legacyDetections.length).toBeGreaterThanOrEqual(1);
       expect(
-        trace.legacyDetections.some((entry) => entry.actionId === 'legacy:salute')
+        trace.legacyDetections.some(
+          (entry) => entry.actionId === 'legacy:salute'
+        )
       ).toBe(true);
       expect(trace.legacyConversions).toHaveLength(1);
       expect(trace.multiTargetResolutions).toHaveLength(1);
@@ -374,7 +371,9 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
       const warnMessages = logger.logs.warn.map((entry) => entry.message);
       expect(
         warnMessages.some((message) =>
-          message.includes('Failed to capture target resolution data for action')
+          message.includes(
+            'Failed to capture target resolution data for action'
+          )
         )
       ).toBe(true);
       expect(
@@ -384,9 +383,12 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
       ).toBe(true);
 
       expect(
-        logger.logs.warn.some((entry) =>
-          typeof entry.message === 'string' &&
-          entry.message.includes('Failed to capture performance data for action')
+        logger.logs.warn.some(
+          (entry) =>
+            typeof entry.message === 'string' &&
+            entry.message.includes(
+              'Failed to capture performance data for action'
+            )
         )
       ).toBe(true);
 
@@ -396,7 +398,9 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
       ]);
       expect(trace.steps).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("Resolving targets for action 'legacy:salute'"),
+          expect.stringContaining(
+            "Resolving targets for action 'legacy:salute'"
+          ),
           expect.stringContaining(
             "Resolving targets for action 'mission:coordinate'"
           ),
@@ -471,23 +475,21 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
     const unifiedScopeResolver = {
       resolve: jest.fn((scope) => {
         if (scope === 'primary.scope') {
+          return Promise.resolve(ActionResult.success(new Set(['ally-001'])));
+        }
+        if (scope === 'secondary.scope') {
+          return Promise.resolve(ActionResult.success(new Set()));
+        }
+        if (scope === 'invalid.scope') {
           return Promise.resolve(
-            ActionResult.success(new Set(['ally-001']))
+            ActionResult.failure([{ message: 'invalid scope' }])
           );
         }
-    if (scope === 'secondary.scope') {
-      return Promise.resolve(ActionResult.success(new Set()));
-    }
-    if (scope === 'invalid.scope') {
-      return Promise.resolve(
-        ActionResult.failure([{ message: 'invalid scope' }])
-      );
-    }
-    if (scope === 'ghost.scope') {
-      return Promise.resolve(ActionResult.success(new Set(['ghost-001'])));
-    }
-    return Promise.resolve(ActionResult.success(new Set(['ally-001'])));
-  }),
+        if (scope === 'ghost.scope') {
+          return Promise.resolve(ActionResult.success(new Set(['ghost-001'])));
+        }
+        return Promise.resolve(ActionResult.success(new Set(['ally-001'])));
+      }),
     };
 
     const stage = createMultiTargetResolutionStage({
@@ -551,8 +553,16 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
 
       const candidateActions = [
         { id: 'legacy:empty', name: 'Legacy Empty', targets: 'self' },
-        { id: 'legacy:missing-targets', name: 'Legacy Missing', targets: 'self' },
-        { id: 'legacy:conversion-error', name: 'Legacy Conversion Error', targets: 'self' },
+        {
+          id: 'legacy:missing-targets',
+          name: 'Legacy Missing',
+          targets: 'self',
+        },
+        {
+          id: 'legacy:conversion-error',
+          name: 'Legacy Conversion Error',
+          targets: 'self',
+        },
         { id: 'legacy:throws', name: 'Legacy Throws', targets: 'self' },
         { id: 'multi:invalid-config', name: 'Invalid Multi', targets: null },
         {
@@ -643,13 +653,15 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
       ).toBe(true);
 
       expect(
-        logger.logs.debug.slice(debugLogsBeforeSuccessRun).some(
-          (entry) =>
-            typeof entry.message === 'string' &&
-            entry.message.includes(
-              "Captured target resolution error for action 'legacy:throws'"
-            )
-        )
+        logger.logs.debug
+          .slice(debugLogsBeforeSuccessRun)
+          .some(
+            (entry) =>
+              typeof entry.message === 'string' &&
+              entry.message.includes(
+                "Captured target resolution error for action 'legacy:throws'"
+              )
+          )
       ).toBe(true);
 
       expect(targetResolver.resolveTargets).toHaveBeenCalledWith(
@@ -660,7 +672,6 @@ describe('MultiTargetResolutionStage tracing coverage integration', () => {
         'legacy:empty'
       );
       expect(targetDependencyResolver.getResolutionOrder).toHaveBeenCalled();
-
     } finally {
       entityTestBed.cleanup();
     }

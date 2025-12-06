@@ -17,9 +17,7 @@
       "sockets": [
         {
           "id": "foot",
-          "allowedTypes": [
-            "tortoise_foot"
-          ],
+          "allowedTypes": ["tortoise_foot"],
           "nameTpl": "{{orientation}} foot"
         }
       ]

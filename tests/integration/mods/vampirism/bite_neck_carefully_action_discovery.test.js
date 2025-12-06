@@ -87,7 +87,10 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
 
   describe('Positive Discovery Cases', () => {
     it('discovers action when actor is a vampire with closeness and facing target', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Victim',
+      ]);
 
       // Add vampire marker to actor
       scenario.actor.components['vampirism:is_vampire'] = {};
@@ -95,14 +98,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
     });
 
     it('discovers action when vampire actor is behind target', () => {
-      const scenario = testFixture.createStandardActorTarget(['Dracula', 'Jonathan']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Dracula',
+        'Jonathan',
+      ]);
 
       // Add vampire marker and standing_behind component
       scenario.actor.components['vampirism:is_vampire'] = {};
@@ -113,7 +121,9 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).toContain(ACTION_ID);
@@ -122,20 +132,28 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
 
   describe('Negative Discovery Cases', () => {
     it('does not discover when actor is not a vampire', () => {
-      const scenario = testFixture.createStandardActorTarget(['Human', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Human',
+        'Victim',
+      ]);
 
       // Actor has closeness but NOT vampirism:is_vampire
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when closeness component is missing', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Victim',
+      ]);
 
       // Remove closeness
       delete scenario.actor.components['positioning:closeness'];
@@ -147,14 +165,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when vampire actor already has biting_neck component', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Victim',
+      ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       scenario.actor.components['positioning:biting_neck'] = {
@@ -165,14 +188,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when vampire actor has giving_blowjob component', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Victim',
+      ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       scenario.actor.components['positioning:giving_blowjob'] = {
@@ -182,14 +210,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when target has being_bitten_in_neck component', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Victim']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Victim',
+      ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       scenario.target.components['positioning:being_bitten_in_neck'] = {
@@ -199,7 +232,9 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
@@ -227,14 +262,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room2 = ModEntityScenarios.createRoom('room2', 'Guest Room');
       testFixture.reset([room1, room2, actor, target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when vampire actor is kneeling before target', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Master']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Master',
+      ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       scenario.actor.components['positioning:kneeling_before'] = {
@@ -244,14 +284,19 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);
     });
 
     it('does not discover when target is kneeling before vampire actor', () => {
-      const scenario = testFixture.createStandardActorTarget(['Vampire', 'Servant']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Vampire',
+        'Servant',
+      ]);
 
       scenario.actor.components['vampirism:is_vampire'] = {};
       scenario.target.components['positioning:kneeling_before'] = {
@@ -261,7 +306,9 @@ describe('vampirism:bite_neck_carefully - Action Discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = availableActions.map((action) => action.id);
 
       expect(ids).not.toContain(ACTION_ID);

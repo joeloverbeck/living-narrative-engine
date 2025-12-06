@@ -55,7 +55,11 @@
       {
         "condition": {
           "logic": {
-            "!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",
@@ -67,7 +71,11 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",
@@ -79,7 +87,9 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.warding:warded_by_salt" }]
+            "!!": [
+              { "var": "entity.primary.components.warding:warded_by_salt" }
+            ]
           }
         },
         "type": "flat",

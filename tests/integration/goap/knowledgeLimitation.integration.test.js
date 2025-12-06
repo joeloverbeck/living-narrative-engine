@@ -213,9 +213,7 @@ describe('Knowledge System Integration', () => {
       expect(knowledgeUpdateEvents.length).toBe(0);
 
       // Verify warning was logged (KnowledgeManager uses warn for missing actors)
-      expect(logger.warn).toHaveBeenCalledWith(
-        `Actor not found: ${actorId}`
-      );
+      expect(logger.warn).toHaveBeenCalledWith(`Actor not found: ${actorId}`);
     });
 
     it('should not block turn flow when knowledge update is fast', async () => {
@@ -244,8 +242,7 @@ describe('Knowledge System Integration', () => {
     });
 
     it('should filter out entities in different locations', async () => {
-      const { actorId, visibleItemId, invisibleItemId } =
-        setupMultiLocation();
+      const { actorId, visibleItemId, invisibleItemId } = setupMultiLocation();
 
       await knowledgeManager.updateKnowledge(actorId, {});
 

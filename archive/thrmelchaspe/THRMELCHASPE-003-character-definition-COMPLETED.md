@@ -18,9 +18,11 @@ Create the complete character definition file for "Threadscar" Melissa, includin
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/fantasy/entities/definitions/threadscar_melissa.character.json`
 
 ### Modified Files
+
 None (Note: Recipe file already exists from THRMELCHASPE-002, no modifications needed)
 
 ---
@@ -28,6 +30,7 @@ None (Note: Recipe file already exists from THRMELCHASPE-002, no modifications n
 ## Out of Scope
 
 **Must NOT change:**
+
 - Anatomy recipe file (already created in THRMELCHASPE-002)
 - Anatomy part entities
 - Schema files
@@ -37,6 +40,7 @@ None (Note: Recipe file already exists from THRMELCHASPE-002, no modifications n
 - Instance files (optional, separate concern)
 
 **Must NOT create:**
+
 - Portrait image (separate ticket THRMELCHASPE-005)
 - Test files (separate ticket THRMELCHASPE-004)
 - Instance file (optional, not required for definition)
@@ -54,6 +58,7 @@ Create file: `data/mods/fantasy/entities/definitions/threadscar_melissa.characte
 The file must include these component groups:
 
 #### 1. Core Identity Components (6 components)
+
 - `core:name` - Character name with nickname
 - `core:portrait` - Portrait image reference
 - `core:apparent_age` - Age range (35-50)
@@ -62,6 +67,7 @@ The file must include these component groups:
 - `core:perception_log` - Perception logging system
 
 #### 2. Narrative Components (11 components)
+
 - `core:profile` - First-person summary (from spec)
 - `core:personality` - Personality description (from spec)
 - `core:strengths` - Character strengths (from spec)
@@ -76,12 +82,15 @@ The file must include these component groups:
 - `core:dilemmas` - Central dilemmas (from spec)
 
 #### 3. Behavioral Components (1 component)
+
 - `core:speech_patterns` - Speech pattern array (15 patterns from spec)
 
 #### 4. Physical Components (1 component)
+
 - `anatomy:body` - Reference to recipe: `fantasy:threadscar_melissa_recipe`
 
 #### 5. Memory Components (1 component)
+
 - `core:notes` - 10 character notes (from spec)
 
 **Total Components**: 20 components
@@ -150,7 +159,7 @@ The file must include these component groups:
   "core:speech_patterns": {
     "patterns": [
       "(Extremely direct statements without social lubrication) 'You're asking the wrong question. Real question is: can you afford me.'",
-      "(Tactical observations delivered as casual fact) 'Three exits. Two windows. Guard's competent but tired. We could leave cleanly if needed.'",
+      "(Tactical observations delivered as casual fact) 'Three exits. Two windows. Guard's competent but tired. We could leave cleanly if needed.'"
       // ... 13 more patterns
     ]
   }
@@ -169,7 +178,7 @@ The file must include these component groups:
         "text": "I got the nickname 'Threadscar' from a specific fight fifteen years ago...",
         "subject": "The 'Threadscar' incident",
         "subjectType": "event"
-      },
+      }
       // ... 9 more notes
     ]
   }
@@ -177,6 +186,7 @@ The file must include these component groups:
 ```
 
 Valid `subjectType` values (from existing usage):
+
 - `event`
 - `habit`
 - `observation`
@@ -190,18 +200,21 @@ Valid `subjectType` values (from existing usage):
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] File validates against `entity-definition.schema.json`
 - [ ] Entity ID is `fantasy:threadscar_melissa`
 - [ ] Schema reference uses `schema://` URI format
 - [ ] All component references are valid
 
 ### Component Completeness
+
 - [ ] All 20 required components present
 - [ ] No components missing from specification
 - [ ] No unexpected additional components
 - [ ] All component data structures match their schemas
 
 ### Text Content Validation
+
 - [ ] `core:profile` text matches specification exactly
 - [ ] `core:personality` text matches specification exactly
 - [ ] All 11 narrative components have correct text from spec
@@ -210,22 +223,26 @@ Valid `subjectType` values (from existing usage):
 - [ ] All text uses first-person perspective (character voice)
 
 ### Goals Validation
+
 - [ ] `core:goals` has 4 goal objects
 - [ ] Each goal has `text` field
 - [ ] Goal texts match specification
 
 ### Notes Validation
+
 - [ ] `core:notes` has 10 note objects
 - [ ] Each note has `text`, `subject`, and `subjectType` fields
 - [ ] All `subjectType` values are valid
 - [ ] Note content matches specification
 
 ### Speech Patterns Validation
+
 - [ ] `core:speech_patterns` has 15 pattern strings
 - [ ] Each pattern includes context descriptor in parentheses
 - [ ] Pattern examples match character voice
 
 ### Anatomy Reference Validation
+
 - [ ] `anatomy:body` component references `fantasy:threadscar_melissa_recipe`
 - [ ] Recipe ID format is correct (not full path)
 - [x] Recipe exists (verified at `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`)
@@ -233,12 +250,14 @@ Valid `subjectType` values (from existing usage):
 - **Note**: Recipe uses `c_cup_firm` breasts (not `b_cup_firm` as in spec) - this is acceptable variation
 
 ### System Components Validation
+
 - [ ] `core:actor` component present (empty object)
 - [ ] `core:player_type` has `type: "human"`
 - [ ] `core:perception_log` has `maxEntries: 50` and empty `logEntries` array
 - [ ] `core:apparent_age` has `minAge: 35` and `maxAge: 50`
 
 ### Validation Commands
+
 ```bash
 # Schema validation
 npm run validate
@@ -254,12 +273,14 @@ grep -r "fantasy:threadscar_melissa_recipe" data/mods/fantasy/recipes/
 ```
 
 ### Expected Results
+
 - [ ] `npm run validate` passes without errors
 - [ ] No schema validation failures
 - [ ] File is valid JSON (no syntax errors)
 - [ ] Recipe reference resolves correctly
 
 ### Invariants That Must Remain True
+
 - [ ] No recipe files are modified
 - [ ] No anatomy parts are modified
 - [ ] No schema files are changed
@@ -274,6 +295,7 @@ grep -r "fantasy:threadscar_melissa_recipe" data/mods/fantasy/recipes/
 **Note**: Full integration testing in THRMELCHASPE-004
 
 Manual verification for this ticket:
+
 1. All 20 components present
 2. Text content matches specification
 3. Recipe reference is valid
@@ -285,6 +307,7 @@ Manual verification for this ticket:
 ## Pre-Implementation Checklist
 
 Before starting implementation:
+
 - [ ] THRMELCHASPE-002 is complete (recipe exists)
 - [ ] Review specification document for all text content
 - [ ] Verify all component schemas exist
@@ -312,6 +335,7 @@ Before starting implementation:
 ### What Was Actually Changed vs Originally Planned
 
 **As Planned**:
+
 - Created `data/mods/fantasy/entities/definitions/threadscar_melissa.character.json` with all 20 required components
 - All narrative text copied from specification document (first-person voice maintained)
 - Recipe reference (`fantasy:threadscar_melissa_recipe`) correctly implemented
@@ -320,24 +344,29 @@ Before starting implementation:
 - Validation passes without errors
 
 **Discovered During Implementation**:
+
 - THRMELCHASPE-002 was already completed - recipe and anatomy part already existed
 - Recipe uses `c_cup_firm` breasts instead of `b_cup_firm` from spec (acceptable variation)
 - No code changes were needed - only created the character definition file
 - Total implementation time was ~30 minutes (much less than estimated 2-3 hours)
 
 **Files Created**:
+
 1. `data/mods/fantasy/entities/definitions/threadscar_melissa.character.json` (150 lines, 17KB)
 
 **Files Modified**:
+
 - None (as planned)
 
 **Validation Results**:
+
 - ✅ Schema validation passes
 - ✅ All component references valid
 - ✅ Recipe reference resolves correctly
 - ✅ No typecheck errors introduced
 
 **Character Components Summary**:
+
 - Core Identity: 6 components (name, portrait, age, actor, player_type, perception_log)
 - Narrative: 11 components (profile through dilemmas)
 - Behavioral: 1 component (speech_patterns with 15 patterns)
@@ -346,6 +375,7 @@ Before starting implementation:
 - **Total**: 20 components as specified
 
 **Quality Metrics**:
+
 - Character voice consistency: 100% first-person perspective maintained
 - Text accuracy: All narrative content matches specification
 - Component completeness: All required components present

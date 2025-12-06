@@ -102,9 +102,12 @@ describe('dispatchWithLogging integration with SafeEventDispatcher', () => {
     registerEventDefinition(env.registry, 'integration:dispatch-success');
 
     const receivedEvents = [];
-    env.safeEventDispatcher.subscribe('integration:dispatch-success', (event) => {
-      receivedEvents.push(event);
-    });
+    env.safeEventDispatcher.subscribe(
+      'integration:dispatch-success',
+      (event) => {
+        receivedEvents.push(event);
+      }
+    );
 
     await dispatchWithLogging(
       env.safeEventDispatcher,
@@ -151,10 +154,13 @@ describe('dispatchWithLogging integration with SafeEventDispatcher', () => {
     );
 
     expect(
-      env.logger.calls.error.some(([message, error]) =>
-        message.includes("Failed dispatching 'integration:dispatch-reject' event for failure-context") &&
-        error instanceof Error &&
-        error.message === 'forced failure for coverage'
+      env.logger.calls.error.some(
+        ([message, error]) =>
+          message.includes(
+            "Failed dispatching 'integration:dispatch-reject' event for failure-context"
+          ) &&
+          error instanceof Error &&
+          error.message === 'forced failure for coverage'
       )
     ).toBe(true);
   });

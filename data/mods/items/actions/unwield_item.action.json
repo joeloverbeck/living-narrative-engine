@@ -5,10 +5,7 @@
   "description": "Stop wielding an item, freeing up your hands",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory",
-      "positioning:wielding"
-    ]
+    "actor": ["items:inventory", "positioning:wielding"]
   },
   "targets": {
     "primary": {

@@ -182,7 +182,9 @@ export class CharacterDefinitionValidator {
 
         // Add quality-based warnings
         const overallScore =
-          qualityResult.metrics?.overallScore ?? qualityResult.overallScore ?? 0;
+          qualityResult.metrics?.overallScore ??
+          qualityResult.overallScore ??
+          0;
         if (overallScore < 0.4) {
           result.warnings.push(
             'Character definition may need more detail for optimal results'
@@ -330,8 +332,7 @@ export class CharacterDefinitionValidator {
         const { firstName, lastName } = nameComponent.personal;
         const firstTrimmed =
           typeof firstName === 'string' ? firstName.trim() : '';
-        const lastTrimmed =
-          typeof lastName === 'string' ? lastName.trim() : '';
+        const lastTrimmed = typeof lastName === 'string' ? lastName.trim() : '';
 
         if (
           (typeof firstName === 'string' || typeof lastName === 'string') &&

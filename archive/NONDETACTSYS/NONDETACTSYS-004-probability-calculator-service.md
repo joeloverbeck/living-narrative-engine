@@ -8,17 +8,17 @@ Create the `ProbabilityCalculatorService` that calculates success probability us
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/ProbabilityCalculatorService.js` | Service implementation |
-| `tests/unit/combat/services/ProbabilityCalculatorService.test.js` | Unit tests |
+| File                                                              | Purpose                |
+| ----------------------------------------------------------------- | ---------------------- |
+| `src/combat/services/ProbabilityCalculatorService.js`             | Service implementation |
+| `tests/unit/combat/services/ProbabilityCalculatorService.test.js` | Unit tests             |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                            | Change                                   |
+| ----------------------------------------------- | ---------------------------------------- |
 | `src/dependencyInjection/tokens/tokens-core.js` | Add `ProbabilityCalculatorService` token |
-| `src/combat/index.js` | Export the service |
+| `src/combat/index.js`                           | Export the service                       |
 
 ## Implementation Details
 
@@ -57,11 +57,11 @@ export default ProbabilityCalculatorService;
 
 ### Supported Formulas
 
-| Formula | Calculation | Best For |
-|---------|-------------|----------|
-| `ratio` (default) | `actor / (actor + target) * 100` | Opposed skill checks |
-| `logistic` | `100 / (1 + e^(-0.1 * diff))` | Bell-curve distribution |
-| `linear` | `50 + (actor - difficulty)` | Fixed difficulty checks |
+| Formula           | Calculation                      | Best For                |
+| ----------------- | -------------------------------- | ----------------------- |
+| `ratio` (default) | `actor / (actor + target) * 100` | Opposed skill checks    |
+| `logistic`        | `100 / (1 + e^(-0.1 * diff))`    | Bell-curve distribution |
+| `linear`          | `50 + (actor - difficulty)`      | Fixed difficulty checks |
 
 ### API Contract
 
@@ -85,12 +85,13 @@ export default ProbabilityCalculatorService;
  *   }
  * }}
  */
-calculate(params)
+calculate(params);
 ```
 
 ### DI Token
 
 Add to `tokens-core.js`:
+
 ```javascript
 ProbabilityCalculatorService: 'ProbabilityCalculatorService',
 ```
@@ -121,6 +122,7 @@ npx eslint src/combat/services/ProbabilityCalculatorService.js
 ### Required Test Cases
 
 #### Ratio Formula Tests
+
 1. `calculate({ actorSkill: 50, targetSkill: 50 })` → 50%
 2. `calculate({ actorSkill: 75, targetSkill: 25 })` → 75%
 3. `calculate({ actorSkill: 25, targetSkill: 75 })` → 25%
@@ -128,26 +130,31 @@ npx eslint src/combat/services/ProbabilityCalculatorService.js
 5. `calculate({ actorSkill: 100, targetSkill: 0 })` → 95% (clamped to max)
 
 #### Logistic Formula Tests
+
 1. Equal skills → ~50%
 2. Large positive difference → approaches 95%
 3. Large negative difference → approaches 5%
 
 #### Linear Formula Tests
+
 1. `calculate({ actorSkill: 50, difficulty: 50, formula: 'linear' })` → 50%
 2. `calculate({ actorSkill: 60, difficulty: 50, formula: 'linear' })` → 60%
 3. `calculate({ actorSkill: 40, difficulty: 50, formula: 'linear' })` → 40%
 
 #### Bounds Tests
+
 1. Custom bounds `{ min: 10, max: 90 }` clamps correctly
 2. Invalid bounds (min > max) throws error
 3. Default bounds (5-95) applied when not specified
 
 #### Modifier Tests
+
 1. Flat modifiers apply to base chance
 2. Percentage modifiers apply multiplicatively
 3. Modifiers respect bounds
 
 #### Edge Cases
+
 1. Zero actor skill handled gracefully
 2. Zero target skill handled gracefully
 3. Negative values handled gracefully
@@ -170,10 +177,10 @@ npx eslint src/combat/services/ProbabilityCalculatorService.js
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/clothing/services/clothingAccessibilityService.js` | Service pattern reference |
-| `src/logic/jsonLogicEvaluationService.js` | Pure calculation service pattern |
+| File                                                    | Purpose                          |
+| ------------------------------------------------------- | -------------------------------- |
+| `src/clothing/services/clothingAccessibilityService.js` | Service pattern reference        |
+| `src/logic/jsonLogicEvaluationService.js`               | Pure calculation service pattern |
 
 ---
 
@@ -219,15 +226,15 @@ Tests:       48 passed, 48 total
 
 ### Additional Test Cases Added Beyond Requirements
 
-| Test Case | Rationale |
-|-----------|-----------|
-| Both skills = 0 returns 50% | Edge case for ratio formula division by zero |
-| NaN actorSkill handling | Defensive programming for invalid input |
-| Empty modifiers/bounds objects | Graceful handling of empty objects |
-| Negative flat modifiers | Support for debuffs |
-| Percentage modifiers < 1 | Support for percentage penalties |
-| Very large skill values | Numerical stability verification |
-| Logistic with difficulty fallback | targetSkill = 0 uses difficulty |
+| Test Case                         | Rationale                                    |
+| --------------------------------- | -------------------------------------------- |
+| Both skills = 0 returns 50%       | Edge case for ratio formula division by zero |
+| NaN actorSkill handling           | Defensive programming for invalid input      |
+| Empty modifiers/bounds objects    | Graceful handling of empty objects           |
+| Negative flat modifiers           | Support for debuffs                          |
+| Percentage modifiers < 1          | Support for percentage penalties             |
+| Very large skill values           | Numerical stability verification             |
+| Logistic with difficulty fallback | targetSkill = 0 uses difficulty              |
 
 ### Notes
 

@@ -34,7 +34,9 @@ describe('DamageEventMessageRenderer Composed Event Handling', () => {
       dispatch: jest.fn(),
       subscribe: jest.fn((eventName, handler) => {
         eventListeners[eventName] = handler;
-        return () => { delete eventListeners[eventName]; };
+        return () => {
+          delete eventListeners[eventName];
+        };
       }),
     };
 
@@ -75,7 +77,8 @@ describe('DamageEventMessageRenderer Composed Event Handling', () => {
     handler({
       payload: {
         perceptionType: 'damage_received',
-        descriptionText: 'Hero takes 25 slashing damage to their arm. The arm is severed!',
+        descriptionText:
+          'Hero takes 25 slashing damage to their arm. The arm is severed!',
         totalDamage: 25,
       },
     });
@@ -85,7 +88,9 @@ describe('DamageEventMessageRenderer Composed Event Handling', () => {
     // Verify the composed message was rendered
     expect(mockDomElementFactory.li).toHaveBeenCalledTimes(1);
     const liElement = mockDomElementFactory.li.mock.results[0].value;
-    expect(liElement.textContent).toBe('Hero takes 25 slashing damage to their arm. The arm is severed!');
+    expect(liElement.textContent).toBe(
+      'Hero takes 25 slashing damage to their arm. The arm is severed!'
+    );
   });
 
   it('should handle multiple composed damage events in sequence', async () => {

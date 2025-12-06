@@ -45,8 +45,8 @@ describe('closeness_auto_move.rule.json Validation', () => {
       parameters: {
         actor_id: '{event.payload.entityId}',
         destination_id: '{event.payload.currentLocationId}',
-        previous_location_id: '{event.payload.previousLocationId}'
-      }
+        previous_location_id: '{event.payload.previousLocationId}',
+      },
     };
 
     // Act & Assert - Validate against operation schema

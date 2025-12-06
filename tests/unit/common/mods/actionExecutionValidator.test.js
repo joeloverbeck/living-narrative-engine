@@ -10,7 +10,7 @@ describe('actionExecutionValidator - Entity Existence', () => {
   beforeEach(() => {
     mockEntityManager = {
       // Note: EntityManager uses getEntityInstance(), not entityExists()
-      getEntityInstance: jest.fn(id =>
+      getEntityInstance: jest.fn((id) =>
         id === 'existing_entity' ? {} : undefined
       ),
       hasComponent: jest.fn(() => false),
@@ -165,10 +165,7 @@ describe('actionExecutionValidator - Forbidden Components', () => {
       getEntityInstance: jest.fn(() => ({})), // All entities exist in this test suite
       hasComponent: jest.fn((entityId, componentType) => {
         // Simulate actor1 has positioning:kneeling
-        if (
-          entityId === 'actor1' &&
-          componentType === 'positioning:kneeling'
-        ) {
+        if (entityId === 'actor1' && componentType === 'positioning:kneeling') {
           return true;
         }
         return false;

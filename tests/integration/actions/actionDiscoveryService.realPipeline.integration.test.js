@@ -55,10 +55,7 @@ describe('ActionDiscoveryService - real pipeline integration', () => {
     });
     playerActor = entityManager.getEntityInstance(actors.player.id);
 
-    await ActionTestUtilities.setupActionIndex(
-      { registry, actionIndex },
-      []
-    );
+    await ActionTestUtilities.setupActionIndex({ registry, actionIndex }, []);
 
     baseService = testBed.get(tokens.IActionDiscoveryService);
   });
@@ -81,7 +78,8 @@ describe('ActionDiscoveryService - real pipeline integration', () => {
     expect(actionIds).toContain('core:wait');
 
     const actionWithCommand = result.actions.find(
-      (action) => typeof action.command === 'string' && action.command.length > 0
+      (action) =>
+        typeof action.command === 'string' && action.command.length > 0
     );
     expect(actionWithCommand).toBeDefined();
     expect(actionWithCommand?.params).toBeTruthy();
@@ -129,9 +127,13 @@ describe('ActionDiscoveryService - real pipeline integration', () => {
       actionTraceOutputService: outputService,
     });
 
-    const result = await service.getValidActions(playerActor, { reason: 'trace' }, {
-      trace: true,
-    });
+    const result = await service.getValidActions(
+      playerActor,
+      { reason: 'trace' },
+      {
+        trace: true,
+      }
+    );
 
     expect(result.actions.length).toBeGreaterThan(0);
     expect(result.trace).toBeDefined();
@@ -168,7 +170,9 @@ describe('ActionDiscoveryService - real pipeline integration', () => {
       expect.stringContaining('actionTraceFilter missing required methods')
     );
     expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('actionTraceOutputService missing writeTrace method')
+      expect.stringContaining(
+        'actionTraceOutputService missing writeTrace method'
+      )
     );
   });
 
@@ -191,7 +195,11 @@ describe('ActionDiscoveryService - real pipeline integration', () => {
       actionTraceFilter: flakyFilter,
     });
 
-    const result = await service.getValidActions(playerActor, {}, { trace: true });
+    const result = await service.getValidActions(
+      playerActor,
+      {},
+      { trace: true }
+    );
     expect(result.actions.length).toBeGreaterThan(0);
 
     expect(testBed.mockLogger.warn).toHaveBeenCalledWith(

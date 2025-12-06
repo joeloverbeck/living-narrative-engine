@@ -202,7 +202,12 @@ describe('Bending Over System Edge Cases', () => {
   describe('Concurrent Operations', () => {
     it('should handle multiple actors bending simultaneously', async () => {
       const locationId = 'location:test';
-      const counter = createSurface(testEnv, 'test:counter', 'counter', locationId);
+      const counter = createSurface(
+        testEnv,
+        'test:counter',
+        'counter',
+        locationId
+      );
 
       // Create 5 actors
       const actors = [];
@@ -213,7 +218,7 @@ describe('Bending Over System Edge Cases', () => {
       }
 
       // All actors attempt to bend over simultaneously
-      const promises = actors.map(actorId =>
+      const promises = actors.map((actorId) =>
         testEnv.dispatchAction({
           actionId: 'positioning:bend_over',
           actorId,
@@ -224,7 +229,7 @@ describe('Bending Over System Edge Cases', () => {
       await Promise.all(promises);
 
       // Verify all succeeded (no position limits for bending)
-      actors.forEach(actorId => {
+      actors.forEach((actorId) => {
         const bendingOver = testEnv.entityManager.getComponentData(
           actorId,
           'positioning:bending_over'
@@ -236,7 +241,12 @@ describe('Bending Over System Edge Cases', () => {
 
     it('should handle concurrent bend and straighten operations', async () => {
       const locationId = 'location:test';
-      const surface = createSurface(testEnv, 'test:surface', 'surface', locationId);
+      const surface = createSurface(
+        testEnv,
+        'test:surface',
+        'surface',
+        locationId
+      );
       const actor1 = createActor(testEnv, 'test:actor1', 'Actor1', locationId);
       const actor2 = createActor(testEnv, 'test:actor2', 'Actor2', locationId);
 
@@ -279,7 +289,12 @@ describe('Bending Over System Edge Cases', () => {
 
   describe('Invalid States', () => {
     it('should handle missing surface gracefully', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'location:test');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
 
       // Try to bend over non-existent surface
       await testEnv.dispatchAction({
@@ -298,8 +313,18 @@ describe('Bending Over System Edge Cases', () => {
     });
 
     it('should handle corrupt component data', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'location:test');
-      const surface = createSurface(testEnv, 'test:surface', 'surface', 'location:test');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const surface = createSurface(
+        testEnv,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Manually set invalid component data
       testEnv.entityManager.addComponent(actor, 'positioning:bending_over', {
@@ -323,7 +348,12 @@ describe('Bending Over System Edge Cases', () => {
     });
 
     it('should handle missing actor gracefully', async () => {
-      const surface = createSurface(testEnv, 'test:surface', 'surface', 'location:test');
+      const surface = createSurface(
+        testEnv,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Try to dispatch action with non-existent actor
       await testEnv.dispatchAction({
@@ -344,8 +374,18 @@ describe('Bending Over System Edge Cases', () => {
 
   describe('State Transitions', () => {
     it('should handle rapid bend-straighten cycles', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'location:test');
-      const counter = createSurface(testEnv, 'test:counter', 'counter', 'location:test');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const counter = createSurface(
+        testEnv,
+        'test:counter',
+        'counter',
+        'location:test'
+      );
 
       // Rapid state changes
       for (let i = 0; i < 10; i++) {
@@ -412,7 +452,12 @@ describe('Bending Over System Edge Cases', () => {
 
   describe('Boundary Conditions', () => {
     it('should handle empty location (no surfaces)', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'empty:location');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'empty:location'
+      );
 
       // Try to bend when no surfaces exist in location
       // Action discovery would normally prevent this
@@ -432,7 +477,12 @@ describe('Bending Over System Edge Cases', () => {
 
     it('should handle actor with no position component', async () => {
       const actorId = 'test:actor';
-      const surface = createSurface(testEnv, 'test:surface', 'surface', 'location:test');
+      const surface = createSurface(
+        testEnv,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Create actor without position
       testEnv.entityManager.addComponent(actorId, ACTOR_COMPONENT_ID, {});
@@ -460,8 +510,18 @@ describe('Bending Over System Edge Cases', () => {
 
   describe('Complex Interactions', () => {
     it('should handle actor already in multiple positioning states', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'location:test');
-      const surface = createSurface(testEnv, 'test:surface', 'surface', 'location:test');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const surface = createSurface(
+        testEnv,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Add multiple positioning components (invalid state but test resilience)
       testEnv.entityManager.addComponent(actor, 'positioning:sitting_on', {
@@ -501,7 +561,12 @@ describe('Bending Over System Edge Cases', () => {
     });
 
     it('should handle surface with special characters in ID', async () => {
-      const actor = createActor(testEnv, 'test:actor', 'Actor', 'location:test');
+      const actor = createActor(
+        testEnv,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
       const surfaceId = 'test:surface-with_special.chars123';
       createSurface(testEnv, surfaceId, 'special surface', 'location:test');
 

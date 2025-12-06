@@ -8,6 +8,7 @@
 > **⚠️ NOTE**: This report has been revised to correct inaccuracies in the initial analysis. Several features that were listed as "recommended solutions" actually **already exist** in the codebase. The revised report accurately reflects the current state and identifies the actual gaps.
 >
 > **Key Corrections Made**:
+>
 > - ✅ `autoRegisterScopes` feature already exists (was incorrectly listed as "Mid-Term" addition)
 > - ✅ `scopeCategories` option already exists (was incorrectly listed as "Mid-Term" addition)
 > - ✅ `ScopeResolverHelpers` library already exists with registration methods
@@ -28,6 +29,7 @@ Two integration tests initially failed but were fixed using existing workarounds
 ## Verification Summary
 
 **Features that ALREADY EXIST** ✅:
+
 - `ModTestFixture.forAction()` with `autoRegisterScopes` option (lines 152-234 of ModTestFixture.js)
 - `scopeCategories` option supporting positioning, inventory, items, anatomy
 - `ScopeResolverHelpers.registerPositioningScopes()` and related methods
@@ -35,6 +37,7 @@ Two integration tests initially failed but were fixed using existing workarounds
 - `_registerResolvers()` method for custom scope registration
 
 **Features that DO NOT EXIST** ❌:
+
 - `dataRegistry.add()` or `dataRegistry.addCondition()` method
 - Automatic loading of dependency mod conditions
 - `ScopeResolverHelpers.registerCustomScope()` convenience method
@@ -48,24 +51,27 @@ Two integration tests initially failed but were fixed using existing workarounds
 **Location**: `tests/common/engine/systemLogicTestEnv.js` lines 116-141
 
 **Current API**:
+
 ```javascript
 const testDataRegistry = {
   getAllSystemRules: jest.fn(),
   getAllActionDefinitions: jest.fn(),
-  getConditionDefinition: jest.fn(),  // Uses closure over conditions map
+  getConditionDefinition: jest.fn(), // Uses closure over conditions map
   getMacroDefinition: jest.fn(),
   getComponentDefinition: jest.fn(),
-  get: jest.fn()
+  get: jest.fn(),
   // NO add() method
 };
 ```
 
 **What Tests Expected**:
+
 ```javascript
 testFixture.testEnv.dataRegistry.add('condition', conditionObject);
 ```
 
 **Resolution**:
+
 - Fixed by extending the `getConditionDefinition` mock to handle the specific condition needed
 - This is a workaround, not a proper solution
 
@@ -74,6 +80,7 @@ testFixture.testEnv.dataRegistry.add('condition', conditionObject);
 **Problem**: When a mod's custom scope references conditions from dependency mods (e.g., positioning), there's no convenience method to load those conditions. Standard scopes registered via `autoRegisterScopes` work fine, but custom mod-specific scopes that use `condition_ref` require manual workarounds.
 
 **Example**: The `sex-anal-penetration` mod's custom scope uses:
+
 ```javascript
 {"condition_ref": "positioning:actor-in-entity-facing-away"}
 ```
@@ -81,6 +88,7 @@ testFixture.testEnv.dataRegistry.add('condition', conditionObject);
 This condition needs to be available in the dataRegistry for jsonLogic evaluation. While `ModTestFixture` provides `autoRegisterScopes` for standard scopes, it doesn't automatically load conditions referenced by custom scopes.
 
 **Current Workaround (Working Solution)**:
+
 ```javascript
 // Manually load condition
 const positioningCondition = await import('...condition.json');
@@ -101,11 +109,13 @@ This is fragile and requires each test to know about all transitive condition de
 **Issue**: The `ScopeEngine.resolve()` method signature uses `actorEntity` as the parameter name, which might suggest passing only the entity. However, for scopes that start with `actor.`, you should pass a context object with an `actor` property.
 
 **Method Signature** (src/scopeDsl/engine.js:290):
+
 ```javascript
-resolve(ast, actorEntity, runtimeCtx, trace = null)
+resolve(ast, actorEntity, runtimeCtx, (trace = null));
 ```
 
 **Correct Usage for Scopes Starting with `actor.`**:
+
 ```javascript
 const context = { actor: actorEntityObject };
 const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
@@ -120,12 +130,14 @@ const result = scopeEngine.resolve(scopeAst, context, runtimeCtx);
 **Details**: The scope uses custom JSON Logic operators like `hasPartOfType` and `isSocketCovered`. These operators ARE properly registered in the test environment.
 
 **Location**:
+
 - Scope definition uses: `{"hasPartOfType": [".", "asshole"]}` and `{"isSocketCovered": [".", "asshole"]}`
 - Registration: `tests/common/engine/systemLogicTestEnv.js` lines 322-327
 - Implementation: `src/logic/jsonLogicCustomOperators.js`
 - Operator whitelisting: `src/logic/jsonLogicEvaluationService.js` lines 132, 137
 
 **How it works**:
+
 ```javascript
 const jsonLogicCustomOperators = new JsonLogicCustomOperators({
   logger: testLogger,
@@ -142,6 +154,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 1. **✅ ALREADY EXISTS: Use autoRegisterScopes Feature**
 
    The `ModTestFixture.forAction()` method already supports automatic scope registration:
+
    ```javascript
    const fixture = await ModTestFixture.forAction(
      'sex-anal-penetration',
@@ -150,7 +163,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
      null,
      {
        autoRegisterScopes: true,
-       scopeCategories: ['positioning']  // Default: ['positioning']
+       scopeCategories: ['positioning'], // Default: ['positioning']
      }
    );
    ```
@@ -167,11 +180,12 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 ### Mid-Term (Next Sprint)
 
 1. **Add Convenience Method for Loading Dependency Conditions** (NEW FEATURE PROPOSAL)
+
    ```javascript
    // Proposed API - does not currently exist
    testFixture.loadDependencyConditions([
      'positioning:actor-in-entity-facing-away',
-     'positioning:entity-not-in-facing-away'
+     'positioning:entity-not-in-facing-away',
    ]);
    ```
 
@@ -183,6 +197,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
    - Cache loaded conditions to avoid redundant file reads
 
 3. **Add Helper for Custom Scope Registration** (NEW FEATURE PROPOSAL)
+
    ```javascript
    // Proposed API - does not currently exist
    ScopeResolverHelpers.registerCustomScope(
@@ -216,6 +231,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 ### ✅ Available Now
 
 1. **Use `autoRegisterScopes` for standard mod scopes**
+
    ```javascript
    const fixture = await ModTestFixture.forAction(
      'violence',
@@ -229,6 +245,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
    **Benefit**: Automatically registers all positioning scopes via `ScopeResolverHelpers.registerPositioningScopes()`.
 
 2. **Use existing `ScopeResolverHelpers` methods for manual registration**
+
    ```javascript
    const fixture = await ModTestFixture.forAction('mod', 'action');
    ScopeResolverHelpers.registerPositioningScopes(fixture.testEnv);
@@ -247,6 +264,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 ### 🎯 Recommended Practices
 
 1. **Document condition dependencies in test files**
+
    ```javascript
    /**
     * This action uses custom scopes that reference:
@@ -256,9 +274,12 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
    ```
 
 2. **Extend dataRegistry mock for dependency conditions**
+
    ```javascript
    // Load condition from dependency mod
-   const conditionDef = await import('...condition.json', { assert: { type: 'json' }});
+   const conditionDef = await import('...condition.json', {
+     assert: { type: 'json' },
+   });
 
    // Extend mock to return it
    const original = testFixture.testEnv.dataRegistry.getConditionDefinition;
@@ -276,23 +297,27 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 **Current State**: Testing standard mod scopes is well-supported, but testing custom mod-specific scopes with dependency conditions requires manual workarounds.
 
 **What Works Well** ✅:
+
 - Testing mods that use standard positioning/inventory/anatomy scopes
 - Automatic scope registration via `autoRegisterScopes` option
 - Custom JSON Logic operators are always available in tests
 - Clear patterns for manual scope registration when needed
 
 **What Needs Improvement** ⚠️:
+
 - Loading conditions from dependency mods requires manual mock extension
 - Custom mod-specific scopes need verbose manual registration (36+ lines of setup code)
 - No helper method to simplify loading dependency conditions
 - Documentation could be clearer about the different approaches
 
 **Affected Tests**:
+
 - `sex-anal-penetration` mod (2 tests) - required workarounds, now passing
 - Potentially other mods using custom scopes with dependency conditions
 - Any future mods that need similar patterns
 
 **Developer Experience**:
+
 - Standard cases: ✅ Excellent - one-line `autoRegisterScopes` option
 - Custom scopes: ⚠️ Moderate - requires understanding of ScopeEngine and mock extension
 - Error messages: Could be improved to guide developers to solutions
@@ -302,6 +327,7 @@ jsonLogicCustomOperators.registerOperators(jsonLogic);
 The test infrastructure has strong support for common testing scenarios through the existing `autoRegisterScopes` feature and `ScopeResolverHelpers` library. The report initially misidentified these features as missing when they already exist.
 
 **Actual Gap**: The remaining challenge is testing mods with **custom scopes that reference conditions from dependency mods**. This currently requires:
+
 1. Manually loading the dependency condition file
 2. Extending the dataRegistry mock to return it
 3. Manually registering the custom scope with ScopeEngine

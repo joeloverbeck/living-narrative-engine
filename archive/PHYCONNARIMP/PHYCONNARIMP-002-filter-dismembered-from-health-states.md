@@ -11,11 +11,13 @@ Prevent dismembered body parts from appearing in health state descriptions. A mi
 ## Problem Statement
 
 **Current buggy output:**
+
 ```
 My right ear is completely numb. My right ear is missing.
 ```
 
 **Expected output:**
+
 ```
 My right ear is missing.
 ```
@@ -23,6 +25,7 @@ My right ear is missing.
 ## Root Cause
 
 The code processes health states and effects independently. A dismembered part has:
+
 1. `state: 'destroyed'` - Health state at 0%
 2. `isDismembered: true` - Physical status (severed)
 
@@ -35,17 +38,17 @@ When iterating over health states, exclude any parts that appear in the `dismemb
 ```javascript
 // Build exclusion set ONCE at start
 const dismemberedPartIds = new Set(
-  (summary.dismemberedParts || []).map(p => p.partEntityId)
+  (summary.dismemberedParts || []).map((p) => p.partEntityId)
 );
 
 // In health state processing loop:
 if (state === 'destroyed') {
   parts = (summary.destroyedParts || []).filter(
-    p => !dismemberedPartIds.has(p.partEntityId)
+    (p) => !dismemberedPartIds.has(p.partEntityId)
   );
 } else {
   parts = (summary.injuredParts || []).filter(
-    p => p.state === state && !dismemberedPartIds.has(p.partEntityId)
+    (p) => p.state === state && !dismemberedPartIds.has(p.partEntityId)
   );
 }
 ```
@@ -54,10 +57,10 @@ if (state === 'destroyed') {
 
 ## Files to Touch
 
-| File | Change Type | Lines |
-|------|-------------|-------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Modify | ~119-139 (formatFirstPerson health states loop), ~278-327 (#formatEffectsFirstPerson for bleeding/burning/etc filtering) |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests | New test cases |
+| File                                                                  | Change Type | Lines                                                                                                                    |
+| --------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Modify      | ~119-139 (formatFirstPerson health states loop), ~278-327 (#formatEffectsFirstPerson for bleeding/burning/etc filtering) |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Add tests   | New test cases                                                                                                           |
 
 ---
 
@@ -115,14 +118,14 @@ All existing tests must continue to pass.
 
 ### Business Rules
 
-| Part State | Has `isDismembered` | Output |
-|------------|---------------------|--------|
-| destroyed | No | "My X is completely numb." |
-| destroyed | Yes | "My X is missing." (from effects section only) |
-| critical | No | "My X screams with agony." |
-| critical | Yes | "My X is missing." (from effects section only) |
-| other | No | Appropriate health state description |
-| other | Yes | "My X is missing." (from effects section only) |
+| Part State | Has `isDismembered` | Output                                         |
+| ---------- | ------------------- | ---------------------------------------------- |
+| destroyed  | No                  | "My X is completely numb."                     |
+| destroyed  | Yes                 | "My X is missing." (from effects section only) |
+| critical   | No                  | "My X screams with agony."                     |
+| critical   | Yes                 | "My X is missing." (from effects section only) |
+| other      | No                  | Appropriate health state description           |
+| other      | Yes                 | "My X is missing." (from effects section only) |
 
 ---
 
@@ -143,17 +146,32 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
       poisonedParts: [],
       fracturedParts: [],
       dismemberedParts: [
-        { partEntityId: 'part-1', partType: 'ear', orientation: 'right', isDismembered: true }
+        {
+          partEntityId: 'part-1',
+          partType: 'ear',
+          orientation: 'right',
+          isDismembered: true,
+        },
       ],
       isDying: false,
       isDead: false,
@@ -168,10 +186,20 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'torso', orientation: null, state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'torso',
+          orientation: null,
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'torso', orientation: null, state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'torso',
+          orientation: null,
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [],
       burningParts: [],
@@ -191,19 +219,39 @@ describe('dismembered parts filtering', () => {
     const summary = {
       entityId: 'entity-1',
       injuredParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       destroyedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', state: 'destroyed' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          state: 'destroyed',
+        },
       ],
       bleedingParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          bleedingSeverity: 'severe',
+        },
       ],
       burningParts: [],
       poisonedParts: [],
       fracturedParts: [],
       dismemberedParts: [
-        { partEntityId: 'part-1', partType: 'arm', orientation: 'left', isDismembered: true }
+        {
+          partEntityId: 'part-1',
+          partType: 'arm',
+          orientation: 'left',
+          isDismembered: true,
+        },
       ],
       isDying: false,
       isDead: false,
@@ -267,6 +315,7 @@ describe('dismembered parts filtering', () => {
 ### Test Results
 
 All 52 tests pass (43 existing + 9 new):
+
 - All acceptance criteria tests implemented and passing
 - All existing tests continue to pass
 - Public API `formatFirstPerson(summary)` signature unchanged

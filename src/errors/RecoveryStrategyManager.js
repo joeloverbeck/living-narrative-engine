@@ -12,7 +12,7 @@ import {
   getRetryConfig,
   getCircuitBreakerConfig,
   getFallbackValue,
-  isRetriable
+  isRetriable,
 } from '../config/errorHandling.config.js';
 
 /**
@@ -34,13 +34,18 @@ class RecoveryStrategyManager {
 
   constructor({ logger, monitoringCoordinator }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'error', 'warn', 'debug']
+      requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
 
     if (monitoringCoordinator) {
-      validateDependency(monitoringCoordinator, 'IMonitoringCoordinator', logger, {
-        requiredMethods: ['getCircuitBreaker']
-      });
+      validateDependency(
+        monitoringCoordinator,
+        'IMonitoringCoordinator',
+        logger,
+        {
+          requiredMethods: ['getCircuitBreaker'],
+        }
+      );
     }
 
     this.#logger = logger;
@@ -74,8 +79,10 @@ class RecoveryStrategyManager {
       fallback: strategy.fallback || this.#defaultFallback,
       circuitBreaker: strategy.circuitBreaker || this.#defaultCircuitBreaker,
       maxRetries: strategy.maxRetries || retryConfig.maxAttempts,
-      backoff: strategy.backoff || (retryConfig.backoff ? retryConfig.backoff.type : 'exponential'),
-      timeout: strategy.timeout || retryConfig.timeout || 5000
+      backoff:
+        strategy.backoff ||
+        (retryConfig.backoff ? retryConfig.backoff.type : 'exponential'),
+      timeout: strategy.timeout || retryConfig.timeout || 5000,
     });
     this.#logger.debug(`Registered recovery strategy for ${errorType}`);
   }
@@ -98,7 +105,9 @@ class RecoveryStrategyManager {
   async executeWithRecovery(operation, options = {}) {
     // Get configuration for specific error type
     const errorTypeTemp = options.errorType || null;
-    const retryConfig = errorTypeTemp ? getRetryConfig(errorTypeTemp) : getRetryConfig(null);
+    const retryConfig = errorTypeTemp
+      ? getRetryConfig(errorTypeTemp)
+      : getRetryConfig(null);
     const config = getErrorConfig();
 
     const {
@@ -109,7 +118,7 @@ class RecoveryStrategyManager {
       useCircuitBreaker = true,
       useFallback = true,
       cacheResult = config.fallback.useCache,
-      timeout = retryConfig.timeout || 5000
+      timeout = retryConfig.timeout || 5000,
     } = options;
 
     // Check cache first
@@ -122,9 +131,10 @@ class RecoveryStrategyManager {
     }
 
     // Get circuit breaker if enabled
-    const circuitBreaker = useCircuitBreaker && this.#monitoringCoordinator
-      ? this.#monitoringCoordinator.getCircuitBreaker(operationName, {})
-      : null;
+    const circuitBreaker =
+      useCircuitBreaker && this.#monitoringCoordinator
+        ? this.#monitoringCoordinator.getCircuitBreaker(operationName, {})
+        : null;
 
     // Execute with circuit breaker if available
     if (circuitBreaker) {
@@ -144,15 +154,17 @@ class RecoveryStrategyManager {
 
     // Execute with retry logic
     try {
-      const result = await this.#executeWithRetry(
-        operation,
-        { maxRetries, backoff, timeout, operationName }
-      );
+      const result = await this.#executeWithRetry(operation, {
+        maxRetries,
+        backoff,
+        timeout,
+        operationName,
+      });
 
       if (cacheResult) {
         this.#cache.set(operationName, {
           value: result,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
       }
 
@@ -201,7 +213,9 @@ class RecoveryStrategyManager {
         // Add timeout wrapper
         const result = await this.#withTimeout(operation(), timeout);
 
-        this.#logger.debug(`Operation ${operationName} succeeded on attempt ${attempt}`);
+        this.#logger.debug(
+          `Operation ${operationName} succeeded on attempt ${attempt}`
+        );
         return result;
       } catch (error) {
         lastError = error;
@@ -209,14 +223,16 @@ class RecoveryStrategyManager {
         // Check if error is retriable
         if (!this.#isRetriable(error)) {
           this.#logger.warn(`Non-retriable error for ${operationName}`, {
-            error: error.message
+            error: error.message,
           });
           throw error;
         }
 
         if (attempt < maxRetries) {
           const delay = this.#calculateBackoff(attempt, backoff);
-          this.#logger.debug(`Retrying ${operationName} after ${delay}ms (attempt ${attempt}/${maxRetries})`);
+          this.#logger.debug(
+            `Retrying ${operationName} after ${delay}ms (attempt ${attempt}/${maxRetries})`
+          );
           await this.#wait(delay);
         }
       }
@@ -224,7 +240,7 @@ class RecoveryStrategyManager {
 
     this.#logger.error(`All retry attempts failed for ${operationName}`, {
       attempts: maxRetries,
-      lastError: lastError.message
+      lastError: lastError.message,
     });
     throw lastError;
   }
@@ -248,7 +264,7 @@ class RecoveryStrategyManager {
         return await strategy.fallback(error, operationName);
       } catch (fallbackError) {
         this.#logger.error(`Fallback failed for ${operationName}`, {
-          error: fallbackError.message
+          error: fallbackError.message,
         });
       }
     }
@@ -295,7 +311,7 @@ class RecoveryStrategyManager {
       'ConfigurationError',
       'InitializationError',
       'AuthenticationError',
-      'AuthorizationError'
+      'AuthorizationError',
     ];
 
     if (nonRetriableErrors.includes(error.constructor.name)) {
@@ -307,7 +323,7 @@ class RecoveryStrategyManager {
       'INVALID_ARGUMENT',
       'PERMISSION_DENIED',
       'NOT_FOUND',
-      'ALREADY_EXISTS'
+      'ALREADY_EXISTS',
     ];
 
     if (error.code && nonRetriableCodes.includes(error.code)) {
@@ -319,10 +335,14 @@ class RecoveryStrategyManager {
       'ECONNREFUSED',
       'ETIMEDOUT',
       'ENOTFOUND',
-      'timeout'
+      'timeout',
     ];
 
-    if (retriableMessages.some(msg => error.message && error.message.includes(msg))) {
+    if (
+      retriableMessages.some(
+        (msg) => error.message && error.message.includes(msg)
+      )
+    ) {
       return true;
     }
 
@@ -344,7 +364,10 @@ class RecoveryStrategyManager {
     switch (strategy) {
       case 'exponential': {
         // Exponential backoff with jitter
-        const exponentialDelay = Math.min(baseDelay * Math.pow(2, attempt - 1), 30000);
+        const exponentialDelay = Math.min(
+          baseDelay * Math.pow(2, attempt - 1),
+          30000
+        );
         const jitter = Math.random() * exponentialDelay * 0.1; // 10% jitter
         return exponentialDelay + jitter;
       }
@@ -371,7 +394,7 @@ class RecoveryStrategyManager {
    * @private
    */
   #wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -386,8 +409,11 @@ class RecoveryStrategyManager {
     return Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms)
-      )
+        setTimeout(
+          () => reject(new Error(`Operation timed out after ${ms}ms`)),
+          ms
+        )
+      ),
     ]);
   }
 
@@ -412,7 +438,10 @@ class RecoveryStrategyManager {
     if (operationName.includes('validate') || operationName.includes('check')) {
       return false;
     }
-    if (operationName.includes('generate') || operationName.includes('create')) {
+    if (
+      operationName.includes('generate') ||
+      operationName.includes('create')
+    ) {
       return {};
     }
 
@@ -430,7 +459,7 @@ class RecoveryStrategyManager {
     // Default retry strategy from config
     this.#defaultRetry = {
       maxRetries: config.retry.default.maxAttempts,
-      backoff: config.retry.default.backoff.type
+      backoff: config.retry.default.backoff.type,
     };
 
     // Default fallback strategy
@@ -443,7 +472,7 @@ class RecoveryStrategyManager {
     // Default circuit breaker config from configuration
     this.#defaultCircuitBreaker = {
       failureThreshold: config.circuitBreaker.default.failureThreshold,
-      resetTimeout: config.circuitBreaker.default.timeout
+      resetTimeout: config.circuitBreaker.default.timeout,
     };
   }
 
@@ -457,7 +486,7 @@ class RecoveryStrategyManager {
       registeredStrategies: this.#strategies.size,
       registeredFallbacks: this.#fallbacks.size,
       cacheSize: this.#cache.size,
-      circuitBreakers: this.#circuitBreakers.size
+      circuitBreakers: this.#circuitBreakers.size,
     };
   }
 

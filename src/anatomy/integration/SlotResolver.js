@@ -170,10 +170,17 @@ class SlotResolver {
 
     try {
       // Resolve using the selected strategy
-      const attachmentPoints = await strategy.resolve(entityId, mapping, slotEntityMappings);
+      const attachmentPoints = await strategy.resolve(
+        entityId,
+        mapping,
+        slotEntityMappings
+      );
 
       // Cache the result
-      if (supportsCacheServiceInterface && typeof this.#cache.set === 'function') {
+      if (
+        supportsCacheServiceInterface &&
+        typeof this.#cache.set === 'function'
+      ) {
         // Using new cache service
         this.#cache.set(
           CacheKeyTypes.SLOT_RESOLUTION,
@@ -234,8 +241,12 @@ class SlotResolver {
    */
   setSlotEntityMappings(slotEntityMappings) {
     this.#strategies
-      .filter((strategy) => typeof strategy.setSlotEntityMappings === 'function')
-      .forEach((strategy) => strategy.setSlotEntityMappings(slotEntityMappings));
+      .filter(
+        (strategy) => typeof strategy.setSlotEntityMappings === 'function'
+      )
+      .forEach((strategy) =>
+        strategy.setSlotEntityMappings(slotEntityMappings)
+      );
   }
 
   /**

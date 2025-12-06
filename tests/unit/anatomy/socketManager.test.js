@@ -30,11 +30,13 @@ describe('SocketManager', () => {
     });
 
     it('throws when logger is missing', () => {
-      expect(() =>
-        new SocketManager({ entityManager: { getComponentData: jest.fn() } })
+      expect(
+        () =>
+          new SocketManager({ entityManager: { getComponentData: jest.fn() } })
       ).toThrow(InvalidArgumentError);
-      expect(() =>
-        new SocketManager({ entityManager: { getComponentData: jest.fn() } })
+      expect(
+        () =>
+          new SocketManager({ entityManager: { getComponentData: jest.fn() } })
       ).toThrow('logger is required');
     });
   });

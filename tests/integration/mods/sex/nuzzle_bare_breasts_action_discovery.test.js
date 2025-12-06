@@ -63,9 +63,7 @@ describe('sex-breastplay:nuzzle_bare_breasts action discovery', () => {
       );
       expect(nuzzleBareBreastsAction.prerequisites).toEqual([]);
 
-      expect(nuzzleBareBreastsAction.targets.primary.scope).toBe(
-        SCOPE_ID
-      );
+      expect(nuzzleBareBreastsAction.targets.primary.scope).toBe(SCOPE_ID);
       expect(nuzzleBareBreastsAction.targets.primary.placeholder).toBe(
         'target'
       );

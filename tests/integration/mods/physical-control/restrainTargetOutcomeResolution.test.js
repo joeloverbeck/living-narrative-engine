@@ -5,8 +5,7 @@ import restrainTargetAction from '../../../../data/mods/physical-control/actions
 const findIfByOutcome = (actions, outcomeValue) =>
   actions.find(
     (op) =>
-      op.type === 'IF' &&
-      op.parameters?.condition?.['==']?.[1] === outcomeValue
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcomeValue
   );
 
 describe('handle_restrain_target outcome resolution', () => {
@@ -72,10 +71,7 @@ describe('handle_restrain_target outcome resolution', () => {
       handleRestrainTargetRule.actions,
       'FAILURE'
     );
-    const fumble = findIfByOutcome(
-      handleRestrainTargetRule.actions,
-      'FUMBLE'
-    );
+    const fumble = findIfByOutcome(handleRestrainTargetRule.actions, 'FUMBLE');
 
     expect(criticalSuccess).toBeDefined();
     expect(success).toBeDefined();

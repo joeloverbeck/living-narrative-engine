@@ -8,19 +8,12 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "nylon",
-      "properties": [
-        "breathable",
-        "flexible"
-      ],
-      "careInstructions": [
-        "machine_washable"
-      ]
+      "properties": ["breathable", "flexible"],
+      "careInstructions": ["machine_washable"]
     },
     "core:name": {
       "text": "longline sports bra"
@@ -35,9 +28,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "underwear"
     },
     "items:item": {},

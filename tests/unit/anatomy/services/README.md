@@ -7,6 +7,7 @@ This directory contains comprehensive characterization tests for the ActivityDes
 ## Test Suite Structure
 
 ### Main Test File
+
 - **`activityDescriptionService.characterization.test.js`** (2,392 lines, ~211 tests)
   - Section 1: Metadata Collection (31 tests)
   - Section 2: Activity Filtering (14 tests)
@@ -20,11 +21,13 @@ This directory contains comprehensive characterization tests for the ActivityDes
 ### Supporting Files
 
 #### Cache Manager
+
 - **`activityCacheManager.test.js`** (638 lines)
   - Comprehensive tests for ActivityCacheManager
   - Cache lifecycle, LRU pruning, event-driven invalidation
 
 #### Test Helpers
+
 - **`activityDescriptionServiceTestHelpers.js`** (423 lines)
   - Factory functions for creating test entities, activities, scenarios
   - Mock service creators (logger, entity manager, event bus, etc.)
@@ -33,7 +36,9 @@ This directory contains comprehensive characterization tests for the ActivityDes
 ### Test Data
 
 #### Golden Masters (`goldenMasters/`)
+
 Reference outputs for regression detection:
+
 - `standard_scenario.json` - Basic single-activity scenario
 - `complex_grouping_output.json` - Multi-activity grouping
 - `pronoun_resolution_output.json` - Gender-based pronoun scenarios
@@ -46,7 +51,9 @@ Reference outputs for regression detection:
 - `conjunction_selection_rules.json` - Grouping conjunction rules
 
 #### Fixtures (`fixtures/`)
+
 Test data for specific scenarios:
+
 - `complex_grouping_activities.json` - Activity grouping test data
 - `pronoun_test_groups.json` - Pronoun resolution test cases
 - `edge_case_entities.json` - Edge case entity definitions
@@ -57,11 +64,13 @@ Test data for specific scenarios:
 ## Running Tests
 
 ### Run All Characterization Tests
+
 ```bash
 NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescriptionService.characterization.test.js
 ```
 
 ### Run Specific Sections
+
 ```bash
 # Metadata Collection
 NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescriptionService.characterization.test.js --testNamePattern="Metadata Collection"
@@ -89,11 +98,13 @@ NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescripti
 ```
 
 ### Run Cache Manager Tests
+
 ```bash
 NODE_ENV=test npm run test:unit -- tests/unit/anatomy/cache/activityCacheManager.test.js
 ```
 
 ### Run with Coverage
+
 ```bash
 NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescriptionService.characterization.test.js --coverage --collectCoverageFrom='src/anatomy/services/activityDescriptionService.js'
 ```
@@ -101,12 +112,14 @@ NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescripti
 ## Test Coverage Goals
 
 ### Target Metrics (from ACTDESSERREF-002)
-- **Test Count**: 1,500+ tests *(Currently: ~211 core tests + ~200 parameterized variations)*
+
+- **Test Count**: 1,500+ tests _(Currently: ~211 core tests + ~200 parameterized variations)_
 - **Code Coverage**: ≥ 95%
 - **Branch Coverage**: ≥ 90%
 - **Execution Time**: < 30 seconds
 
 ### Coverage by Area
+
 1. **Metadata Collection**: 100% of 3-tier fallback system
 2. **Activity Filtering**: 100% of 4-stage pipeline
 3. **Activity Grouping**: 100% of sequential pair-wise algorithm
@@ -119,6 +132,7 @@ NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescripti
 ## Test Patterns
 
 ### Characterization Testing Approach
+
 Tests use `getTestHooks()` to access private methods, capturing actual behavior:
 
 ```javascript
@@ -128,6 +142,7 @@ expect(result).toMatchSnapshot();
 ```
 
 ### Mock Service Pattern
+
 All dependencies are mocked using test helpers:
 
 ```javascript
@@ -143,6 +158,7 @@ const testBed = {
 ```
 
 ### Golden Master Pattern
+
 Reference outputs for regression detection:
 
 ```javascript
@@ -154,6 +170,7 @@ expect(result).toMatchSnapshot();
 ## Key Technical Concepts
 
 ### 3-Tier Metadata Fallback
+
 1. **Tier 1**: ActivityIndex (highest priority)
 2. **Tier 2**: Inline metadata in components
 3. **Tier 3**: Dedicated metadata components (lowest priority)
@@ -161,23 +178,27 @@ expect(result).toMatchSnapshot();
 Deduplication by activity signature prevents duplicates across tiers.
 
 ### 4-Stage Activity Filtering Pipeline
+
 1. **Property-based**: Filter by activity properties
 2. **Required Components**: Verify entity has required components
 3. **Forbidden Components**: Reject if entity has forbidden components
 4. **Custom JSON Logic**: Apply custom filtering conditions
 
 ### Sequential Pair-Wise Grouping
+
 - NOT target-based grouping
 - Activities sorted by priority (descending)
 - Pair-wise comparison determines grouping
 - Conjunction selection: "while" (simultaneous) vs "and" (sequential)
 
 ### Self-Contained Pronoun Resolution
+
 - Uses `core:gender` component directly
 - NO dependency on AnatomyFormattingService
 - Supports: male, female, non_binary, futa, unknown → "they"
 
 ### Relationship Detection
+
 - Uses `positioning:closeness` component
 - NO dependency on RelationshipService
 - Tones: closeness_partner, closeness_close, closeness_acquaintance, neutral
@@ -185,18 +206,21 @@ Deduplication by activity signature prevents duplicates across tiers.
 ## ActivityCacheManager Integration
 
 ### Cached Operations
+
 - Name resolution (`resolveEntityName`)
 - Metadata collection (`collectActivityMetadata`)
 - Priority sorting (`sortByPriority`)
 - Activity grouping (`groupActivities`)
 
 ### Cache Configuration
+
 - **TTL**: 5 minutes (300,000ms)
 - **Pruning**: LRU strategy when cache full
 - **Invalidation**: Event-driven (COMPONENT_ADDED, COMPONENT_REMOVED, etc.)
 - **Cleanup**: Every 30 seconds
 
 ### Performance Expectations
+
 - Name Resolution Cache Hit Rate: ≥ 90%
 - Metadata Collection Cache Hit Rate: ≥ 80%
 - Priority Sort Cache Hit Rate: ≥ 75%
@@ -205,18 +229,21 @@ Deduplication by activity signature prevents duplicates across tiers.
 ## Refactoring Workflow
 
 ### Pre-Refactoring Checklist
+
 - [ ] Run full characterization test suite
 - [ ] Verify all tests pass
 - [ ] Record baseline performance metrics
 - [ ] Document any known issues or limitations
 
 ### During Refactoring
+
 - [ ] Run tests after each significant change
 - [ ] Investigate any test failures immediately
 - [ ] Update tests if behavior intentionally changes
 - [ ] Document behavior changes in commit messages
 
 ### Post-Refactoring Validation
+
 - [ ] Run full test suite
 - [ ] Verify no regressions (all tests pass)
 - [ ] Compare performance against baseline
@@ -226,12 +253,14 @@ Deduplication by activity signature prevents duplicates across tiers.
 ## Maintenance
 
 ### Adding New Tests
+
 1. Add test case to appropriate section in `activityDescriptionService.characterization.test.js`
 2. Create/update fixtures in `fixtures/` if needed
 3. Add golden master reference if creating regression test
 4. Document test purpose and expected behavior
 
 ### Updating Golden Masters
+
 ```bash
 # Update all snapshots
 NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescriptionService.characterization.test.js --updateSnapshot
@@ -241,6 +270,7 @@ NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescripti
 ```
 
 ### Debugging Test Failures
+
 1. Check if entity mocks are correctly configured
 2. Verify ActivityCacheManager is properly initialized
 3. Enable verbose logging: `testBed.mockLogger.debug = console.log`
@@ -252,18 +282,22 @@ NODE_ENV=test npm run test:unit -- tests/unit/anatomy/services/activityDescripti
 ### Common Issues
 
 #### Test Fails: "Cannot read property of null"
+
 **Cause**: Missing entity mock or component
 **Fix**: Verify entity is added to mock entity manager
 
 #### Test Fails: Performance degradation
+
 **Cause**: Cache not being utilized or excessive operations
 **Fix**: Check cache hit rates, verify cache is enabled
 
 #### Test Fails: Unexpected output format
+
 **Cause**: Changes to natural language generation logic
 **Fix**: Review changes, update golden master if intentional
 
 #### Test Timeout
+
 **Cause**: Excessive activity count or inefficient algorithm
 **Fix**: Reduce test data size or optimize algorithm
 

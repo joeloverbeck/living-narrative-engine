@@ -1,15 +1,19 @@
 # TORPERANAREC-002: Create Tortoise Person Blueprint V2 ✅ COMPLETED
 
 ## Objective
+
 Create the V2 blueprint definition that references the structure template and defines shell mounting slots.
 
 ## Dependencies
+
 - **REQUIRES**: TORPERANAREC-001 (structure template must exist) ✅
 
 ## Files to Touch
+
 - **CREATE**: `data/mods/anatomy/blueprints/tortoise_person.blueprint.json` ✅
 
 ## Out of Scope
+
 - Do NOT modify existing blueprint files ✅
 - Do NOT create the structure template (handled in TORPERANAREC-001) ✅
 - Do NOT create entity definitions yet (handled in TORPERANAREC-003-013) ✅
@@ -49,12 +53,14 @@ Create blueprint with:
 ## Acceptance Criteria
 
 ### Tests that must pass:
+
 1. ✅ `npm run validate` - Schema validation passes
 2. ✅ Blueprint validates against `anatomy.blueprint.schema.json`
 3. ✅ Structure template reference resolves (after TORPERANAREC-001)
 4. ✅ JSON is well-formed and parseable
 
 ### Invariants that must remain true:
+
 1. ✅ No existing blueprints are modified
 2. ✅ schemaVersion is exactly "2.0" (string, not number)
 3. ✅ additionalSlots reference sockets that will exist in root torso entity
@@ -63,11 +69,13 @@ Create blueprint with:
 6. ✅ Root entity ID matches what will be created in TORPERANAREC-003
 
 ## Validation Commands
+
 ```bash
 npm run validate
 ```
 
 ## Definition of Done
+
 - [x] File created with correct schema reference
 - [x] Structure template reference is correct
 - [x] Additional slots properly defined
@@ -82,6 +90,7 @@ npm run validate
 **Status**: ✅ COMPLETED
 
 **What was changed**:
+
 - Created `data/mods/anatomy/blueprints/tortoise_person.blueprint.json` with V2 schema
 - Blueprint references existing structure template `anatomy:structure_tortoise_biped`
 - Defined two additional slots for shell mounting: `shell_upper` and `shell_lower`
@@ -90,11 +99,13 @@ npm run validate
 
 **Differences from original plan**: None - implementation matches specification exactly.
 
-**Validation results**: 
+**Validation results**:
+
 - Schema validation: ✅ PASS
 - Structure template resolution: ✅ PASS (template exists and is valid)
 - JSON well-formedness: ✅ PASS
 - All invariants maintained: ✅ PASS
 
-**Next steps**: 
+**Next steps**:
+
 - Proceed to TORPERANAREC-003 (create root torso entity with shell sockets)

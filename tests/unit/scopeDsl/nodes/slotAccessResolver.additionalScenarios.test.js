@@ -5,13 +5,16 @@ const mockGetLayersByMode = jest.fn();
 const mockCalculatePriorityWithValidation = jest.fn();
 const mockSortCandidatesWithTieBreaking = jest.fn();
 
-jest.mock('../../../../src/scopeDsl/prioritySystem/priorityCalculator.js', () => ({
-  calculatePriorityWithValidation: (...args) =>
-    mockCalculatePriorityWithValidation(...args),
-  sortCandidatesWithTieBreaking: (...args) =>
-    mockSortCandidatesWithTieBreaking(...args),
-  getLayersByMode: (...args) => mockGetLayersByMode(...args),
-}));
+jest.mock(
+  '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js',
+  () => ({
+    calculatePriorityWithValidation: (...args) =>
+      mockCalculatePriorityWithValidation(...args),
+    sortCandidatesWithTieBreaking: (...args) =>
+      mockSortCandidatesWithTieBreaking(...args),
+    getLayersByMode: (...args) => mockGetLayersByMode(...args),
+  })
+);
 
 describe('slotAccessResolver additional scenarios', () => {
   let entitiesGateway;
@@ -34,10 +37,12 @@ describe('slotAccessResolver additional scenarios', () => {
       return mapping[mode] || ['outer', 'base', 'underwear'];
     });
 
-    mockCalculatePriorityWithValidation.mockImplementation((coveragePriority) => {
-      const weights = { outer: 30, base: 20, underwear: 10, direct: 5 };
-      return weights[coveragePriority] ?? 0;
-    });
+    mockCalculatePriorityWithValidation.mockImplementation(
+      (coveragePriority) => {
+        const weights = { outer: 30, base: 20, underwear: 10, direct: 5 };
+        return weights[coveragePriority] ?? 0;
+      }
+    );
 
     mockSortCandidatesWithTieBreaking.mockImplementation((candidates) =>
       [...candidates].sort((a, b) => b.priority - a.priority)
@@ -128,17 +133,24 @@ describe('slotAccessResolver additional scenarios', () => {
       mode: 'topmost',
     };
 
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (component === 'clothing:coverage_mapping' && entityId === 'cloak-layer') {
-        return { covers: ['torso_upper'], coveragePriority: 'outer' };
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (
+          component === 'clothing:coverage_mapping' &&
+          entityId === 'cloak-layer'
+        ) {
+          return { covers: ['torso_upper'], coveragePriority: 'outer' };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
     mockCalculatePriorityWithValidation.mockImplementation(() => 10);
-    mockSortCandidatesWithTieBreaking.mockImplementation((candidates) => [...candidates]);
+    mockSortCandidatesWithTieBreaking.mockImplementation((candidates) => [
+      ...candidates,
+    ]);
 
     const finalSelectionSpan = {
       addEvent: jest.fn(),

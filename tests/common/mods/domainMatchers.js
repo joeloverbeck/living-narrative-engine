@@ -24,14 +24,19 @@ function toHaveActionSuccess(received, expectedMessage) {
   );
 
   // If no expected message is provided, just check that success event exists
-  const pass = expectedMessage === undefined
-    ? !!successEvent
-    : successEvent && successEvent.payload.message === expectedMessage;
+  const pass =
+    expectedMessage === undefined
+      ? !!successEvent
+      : successEvent && successEvent.payload.message === expectedMessage;
 
   if (pass) {
     return {
       message: () =>
-        matcherHint('.not.toHaveActionSuccess', 'events', printExpected(expectedMessage)) +
+        matcherHint(
+          '.not.toHaveActionSuccess',
+          'events',
+          printExpected(expectedMessage)
+        ) +
         '\n\n' +
         'Expected action NOT to succeed with message:\n' +
         `  ${printExpected(expectedMessage)}\n\n` +
@@ -47,7 +52,9 @@ function toHaveActionSuccess(received, expectedMessage) {
     failureDetails += '\nNo success event found in events array\n';
 
     // Check for error events
-    const errorEvent = received.find((e) => e.eventType === 'core:system_error_occurred');
+    const errorEvent = received.find(
+      (e) => e.eventType === 'core:system_error_occurred'
+    );
     if (errorEvent) {
       failureDetails += `\nFound error event: ${errorEvent.payload.error}\n`;
     }
@@ -62,7 +69,11 @@ function toHaveActionSuccess(received, expectedMessage) {
 
   return {
     message: () =>
-      matcherHint('.toHaveActionSuccess', 'events', printExpected(expectedMessage)) +
+      matcherHint(
+        '.toHaveActionSuccess',
+        'events',
+        printExpected(expectedMessage)
+      ) +
       '\n\n' +
       'Expected action to succeed with message:' +
       failureDetails,
@@ -129,7 +140,9 @@ function toHaveComponent(received, componentType) {
   }
 
   if (!received.components) {
-    throw new Error('toHaveComponent: received object must have a components property');
+    throw new Error(
+      'toHaveComponent: received object must have a components property'
+    );
   }
 
   const hasComponent = received.components[componentType] !== undefined;
@@ -137,7 +150,11 @@ function toHaveComponent(received, componentType) {
   if (hasComponent) {
     return {
       message: () =>
-        matcherHint('.not.toHaveComponent', 'entity', printExpected(componentType)) +
+        matcherHint(
+          '.not.toHaveComponent',
+          'entity',
+          printExpected(componentType)
+        ) +
         '\n\n' +
         `Expected entity '${received.id}' NOT to have component ${printExpected(componentType)}` +
         '\n\n' +
@@ -146,7 +163,8 @@ function toHaveComponent(received, componentType) {
     };
   }
 
-  const actualComponents = Object.keys(received.components).join(', ') || 'none';
+  const actualComponents =
+    Object.keys(received.components).join(', ') || 'none';
 
   return {
     message: () =>
@@ -178,7 +196,9 @@ function toNotHaveComponent(received, componentType) {
   }
 
   if (!received.components) {
-    throw new Error('toNotHaveComponent: received object must have a components property');
+    throw new Error(
+      'toNotHaveComponent: received object must have a components property'
+    );
   }
 
   const hasComponent = received.components[componentType] !== undefined;
@@ -186,7 +206,11 @@ function toNotHaveComponent(received, componentType) {
   if (!hasComponent) {
     return {
       message: () =>
-        matcherHint('.toNotHaveComponent', 'entity', printExpected(componentType)) +
+        matcherHint(
+          '.toNotHaveComponent',
+          'entity',
+          printExpected(componentType)
+        ) +
         '\n\n' +
         `Expected entity '${received.id}' to have component ${printExpected(componentType)}` +
         '\n\n' +
@@ -199,7 +223,11 @@ function toNotHaveComponent(received, componentType) {
 
   return {
     message: () =>
-      matcherHint('.not.toNotHaveComponent', 'entity', printExpected(componentType)) +
+      matcherHint(
+        '.not.toNotHaveComponent',
+        'entity',
+        printExpected(componentType)
+      ) +
       '\n\n' +
       `Expected entity '${received.id}' NOT to have component ${printExpected(componentType)}` +
       '\n\n' +
@@ -220,7 +248,9 @@ function toBeAt(received, locationId) {
   const { printExpected, printReceived, matcherHint } = this.utils;
 
   if (!received || typeof received !== 'object') {
-    throw new Error('toBeAt: received must be an entity object from entityManager.getEntityInstance()');
+    throw new Error(
+      'toBeAt: received must be an entity object from entityManager.getEntityInstance()'
+    );
   }
 
   if (!received.components) {
@@ -279,7 +309,9 @@ function toDispatchEvent(received, eventType) {
   const { printExpected, printReceived, matcherHint } = this.utils;
 
   if (!Array.isArray(received)) {
-    throw new Error('toDispatchEvent: received must be an events array from testFixture.events');
+    throw new Error(
+      'toDispatchEvent: received must be an events array from testFixture.events'
+    );
   }
 
   const pass = received.some((e) => e.eventType === eventType);
@@ -287,7 +319,11 @@ function toDispatchEvent(received, eventType) {
   if (pass) {
     return {
       message: () =>
-        matcherHint('.not.toDispatchEvent', 'events', printExpected(eventType)) +
+        matcherHint(
+          '.not.toDispatchEvent',
+          'events',
+          printExpected(eventType)
+        ) +
         '\n\n' +
         `Expected event ${printExpected(eventType)} NOT to be dispatched` +
         '\n\n' +
@@ -328,7 +364,9 @@ function toHaveComponentData(received, componentType, expectedData) {
   }
 
   if (!received.components) {
-    throw new Error('toHaveComponentData: received object must have a components property');
+    throw new Error(
+      'toHaveComponentData: received object must have a components property'
+    );
   }
 
   const component = received.components[componentType];
@@ -420,7 +458,11 @@ function toContainAction(received, actionId, properties = {}) {
   if (Object.keys(properties).length === 0) {
     return {
       message: () =>
-        matcherHint('.not.toContainAction', 'actions', printExpected(actionId)) +
+        matcherHint(
+          '.not.toContainAction',
+          'actions',
+          printExpected(actionId)
+        ) +
         '\n\n' +
         `Expected actions array NOT to contain action ${printExpected(actionId)}\n` +
         `But it was found`,

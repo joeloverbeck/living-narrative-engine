@@ -3,9 +3,6 @@
   "id": "items:event-is-action-apply-lipstick",
   "description": "Checks if the attempted action is items:apply_lipstick.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:apply_lipstick"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:apply_lipstick"]
   }
 }

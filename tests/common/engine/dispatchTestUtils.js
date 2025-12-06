@@ -65,10 +65,7 @@ export function buildSaveDispatches(saveName, filePath) {
         inputDisabledMessage: `Saving game "${saveName}"...`,
       },
     ],
-    [
-      GAME_SAVED_ID,
-      { saveName, path: filePath, type: 'manual' },
-    ],
+    [GAME_SAVED_ID, { saveName, path: filePath, type: 'manual' }],
     [
       ENGINE_READY_UI,
       {

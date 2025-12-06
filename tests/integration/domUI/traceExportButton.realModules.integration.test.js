@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraceExportButton } from '../../../src/domUI/components/traceExportButton.js';
 
 class TestLogger {
@@ -182,13 +189,17 @@ describe('TraceExportButton real integration', () => {
     await flushMicrotasks();
 
     expect(service.calls).toEqual([{ format: 'text' }]);
-    expect(logger.infoMessages).toContain('Starting trace export in text format');
+    expect(logger.infoMessages).toContain(
+      'Starting trace export in text format'
+    );
     expect(logger.infoMessages).toContain(
       'Successfully exported 5 traces to /exports/run-1'
     );
 
     const progressText = document.querySelector('.export-progress-text');
-    expect(progressText.textContent).toContain('Successfully exported 5 traces to /exports/run-1');
+    expect(progressText.textContent).toContain(
+      'Successfully exported 5 traces to /exports/run-1'
+    );
     expect(progressText.style.color).toBe('rgb(76, 175, 80)');
 
     const progressFill = document.querySelector('.export-progress-fill');

@@ -246,7 +246,8 @@ export const coreTokens = freeze({
   MathHandler: 'MathHandler',
   RemoveFromClosenessCircleHandler: 'RemoveFromClosenessCircleHandler',
   BreakBidirectionalClosenessHandler: 'BreakBidirectionalClosenessHandler',
-  EstablishBidirectionalClosenessHandler: 'EstablishBidirectionalClosenessHandler',
+  EstablishBidirectionalClosenessHandler:
+    'EstablishBidirectionalClosenessHandler',
   EstablishSittingClosenessHandler: 'EstablishSittingClosenessHandler',
   EstablishLyingClosenessHandler: 'EstablishLyingClosenessHandler',
   RemoveSittingClosenessHandler: 'RemoveSittingClosenessHandler',

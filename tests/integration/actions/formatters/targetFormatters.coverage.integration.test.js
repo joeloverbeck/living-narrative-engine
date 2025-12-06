@@ -55,7 +55,8 @@ describe('target formatters integration coverage', () => {
   };
 
   it('returns a formatted error when the target context omits entityId', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv();
+    const { formatter, entityManager, logger, dispatcher } =
+      createFormatterEnv();
 
     const result = formatter.format(
       baseAction,
@@ -66,23 +67,25 @@ describe('target formatters integration coverage', () => {
 
     expect(result.ok).toBe(false);
     expect(result.error).toBe(
-      "formatActionCommand: Target context type is 'entity' but entityId is missing for action mission:greet. Template: \"Salute {target}\""
+      'formatActionCommand: Target context type is \'entity\' but entityId is missing for action mission:greet. Template: "Salute {target}"'
     );
     expect(logger.warnMessages).toEqual([
-      "formatActionCommand: Target context type is 'entity' but entityId is missing for action mission:greet. Template: \"Salute {target}\"",
+      'formatActionCommand: Target context type is \'entity\' but entityId is missing for action mission:greet. Template: "Salute {target}"',
     ]);
     expect(dispatcher.events).toHaveLength(0);
   });
 
   it('emits debug details when resolving an entity while debug mode is enabled', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv([
-      {
-        id: 'npc-007',
-        components: {
-          'core:name': { text: 'Agent Specter' },
+    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv(
+      [
+        {
+          id: 'npc-007',
+          components: {
+            'core:name': { text: 'Agent Specter' },
+          },
         },
-      },
-    ]);
+      ]
+    );
 
     const result = formatter.format(
       baseAction,
@@ -99,7 +102,8 @@ describe('target formatters integration coverage', () => {
   });
 
   it('falls back to the entity identifier and warns when lookup fails', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv();
+    const { formatter, entityManager, logger, dispatcher } =
+      createFormatterEnv();
 
     const result = formatter.format(
       baseAction,
@@ -119,18 +123,24 @@ describe('target formatters integration coverage', () => {
   });
 
   it('replaces custom placeholders using the formatter map', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv([
-      {
-        id: 'npc-042',
-        components: {
-          'core:name': { text: 'Agent Nebula' },
+    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv(
+      [
+        {
+          id: 'npc-042',
+          components: {
+            'core:name': { text: 'Agent Nebula' },
+          },
         },
-      },
-    ]);
+      ]
+    );
 
     const result = formatter.format(
       { ...baseAction, template: 'Signal {companion}' },
-      /** @type {any} */ ({ type: 'entity', entityId: 'npc-042', placeholder: 'companion' }),
+      /** @type {any} */ ({
+        type: 'entity',
+        entityId: 'npc-042',
+        placeholder: 'companion',
+      }),
       entityManager,
       { logger, safeEventDispatcher: dispatcher }
     );
@@ -141,7 +151,8 @@ describe('target formatters integration coverage', () => {
   });
 
   it('logs diagnostic details for none-target actions that still contain placeholders', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv();
+    const { formatter, entityManager, logger, dispatcher } =
+      createFormatterEnv();
 
     const result = formatter.format(
       { ...baseAction, id: 'mission:reflect', template: 'Reflect on {target}' },
@@ -151,14 +162,17 @@ describe('target formatters integration coverage', () => {
     );
 
     expect(result).toEqual({ ok: true, value: 'Reflect on {target}' });
-    expect(logger.debugMessages).toContain(' -> No target type, using template as is.');
+    expect(logger.debugMessages).toContain(
+      ' -> No target type, using template as is.'
+    );
     expect(logger.warnMessages).toEqual([
-      "formatActionCommand: Action mission:reflect has target_domain 'none' but template \"Reflect on {target}\" contains placeholders.",
+      'formatActionCommand: Action mission:reflect has target_domain \'none\' but template "Reflect on {target}" contains placeholders.',
     ]);
   });
 
   it('returns the template without logging when no placeholder is present for none targets', () => {
-    const { formatter, entityManager, logger, dispatcher } = createFormatterEnv();
+    const { formatter, entityManager, logger, dispatcher } =
+      createFormatterEnv();
 
     const result = formatter.format(
       { ...baseAction, id: 'mission:idle', template: 'Meditate quietly.' },

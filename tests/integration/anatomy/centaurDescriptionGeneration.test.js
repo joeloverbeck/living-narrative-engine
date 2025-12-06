@@ -69,10 +69,14 @@ describe('Centaur Description Generation Integration', () => {
         'activity',
       ],
       getGroupedParts: () => new Set(),
-      getPairedParts: () => new Set(['eye', 'ear', 'arm', 'leg', 'hand', 'foot']),
+      getPairedParts: () =>
+        new Set(['eye', 'ear', 'arm', 'leg', 'hand', 'foot']),
       getIrregularPlurals: () => ({ foot: 'feet' }),
       getNoArticleParts: () => new Set(),
-      getDescriptorOrder: () => ['descriptors:size_category', 'descriptors:color_basic'],
+      getDescriptorOrder: () => [
+        'descriptors:size_category',
+        'descriptors:color_basic',
+      ],
       getDescriptorValueKeys: () => ['value', 'color', 'size'],
     };
 
@@ -135,7 +139,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -162,7 +167,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -179,7 +185,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['head-1'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['head-1'].components[componentId],
         },
         'arm-right': {
           id: 'arm-right',
@@ -208,13 +215,18 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['arm-left'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['arm-left'].components[componentId],
         },
       };
 
       mockEntityFinder.getEntityInstance = (id) => parts[id] || bodyEntity;
       mockEntityManager.getEntityInstance = (id) => parts[id] || bodyEntity;
-      mockBodyGraphService.getAllParts = () => ['head-1', 'arm-right', 'arm-left'];
+      mockBodyGraphService.getAllParts = () => [
+        'head-1',
+        'arm-right',
+        'arm-left',
+      ];
 
       const description = await composer.composeDescription(bodyEntity);
 
@@ -238,7 +250,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -282,7 +295,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -326,7 +340,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -369,7 +384,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -386,7 +402,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['tail-1'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['tail-1'].components[componentId],
         },
       };
 
@@ -420,7 +437,8 @@ describe('Centaur Description Generation Integration', () => {
             },
           },
         },
-        hasComponent: (componentId) => componentId === ANATOMY_BODY_COMPONENT_ID,
+        hasComponent: (componentId) =>
+          componentId === ANATOMY_BODY_COMPONENT_ID,
         getComponentData: (componentId) => bodyEntity.components[componentId],
       };
 
@@ -437,7 +455,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['head-1'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['head-1'].components[componentId],
         },
         'upper-torso-1': {
           id: 'upper-torso-1',
@@ -496,7 +515,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['arm-left'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['arm-left'].components[componentId],
         },
         'leg-lf': {
           id: 'leg-lf',
@@ -510,7 +530,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['leg-lf'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['leg-lf'].components[componentId],
         },
         'leg-rf': {
           id: 'leg-rf',
@@ -524,7 +545,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['leg-rf'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['leg-rf'].components[componentId],
         },
         'leg-lr': {
           id: 'leg-lr',
@@ -538,7 +560,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['leg-lr'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['leg-lr'].components[componentId],
         },
         'leg-rr': {
           id: 'leg-rr',
@@ -552,7 +575,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['leg-rr'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['leg-rr'].components[componentId],
         },
         'tail-1': {
           id: 'tail-1',
@@ -566,7 +590,8 @@ describe('Centaur Description Generation Integration', () => {
               componentId
             );
           },
-          getComponentData: (componentId) => parts['tail-1'].components[componentId],
+          getComponentData: (componentId) =>
+            parts['tail-1'].components[componentId],
         },
         'quiver-mount': {
           id: 'quiver-mount',

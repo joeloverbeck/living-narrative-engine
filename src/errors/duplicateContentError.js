@@ -27,7 +27,13 @@ export class DuplicateContentError extends BaseError {
       `Mod '${modId}'${sourceInfo} is attempting to override content originally defined by mod '${existingModId}'. ` +
       `Mod overrides are not allowed.`;
 
-    const context = { contentType, qualifiedId, modId, existingModId, sourceFile };
+    const context = {
+      contentType,
+      qualifiedId,
+      modId,
+      existingModId,
+      sourceFile,
+    };
     super(message, 'DUPLICATE_CONTENT_ERROR', context);
     this.name = 'DuplicateContentError';
     // Backward compatibility

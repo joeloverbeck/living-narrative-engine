@@ -91,7 +91,9 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
       expect.objectContaining({ type: SUBJECT_TYPES.ENTITY, count: 2 })
     );
     expect(summary.topMisclassifications[0]).toEqual(
-      expect.objectContaining({ pattern: `${SUBJECT_TYPES.OTHER}→${SUBJECT_TYPES.ENTITY}` })
+      expect.objectContaining({
+        pattern: `${SUBJECT_TYPES.OTHER}→${SUBJECT_TYPES.ENTITY}`,
+      })
     );
     expect(summary.underutilizedTypes).toContain(SUBJECT_TYPES.KNOWLEDGE);
     expect(summary.categorizationErrors).toHaveLength(2);
@@ -237,7 +239,10 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
 
     it('reports failures from storage.load', async () => {
       const error = new Error('corrupt payload');
-      const storage = { load: jest.fn().mockRejectedValue(error), save: jest.fn() };
+      const storage = {
+        load: jest.fn().mockRejectedValue(error),
+        save: jest.fn(),
+      };
       const service = new NotesAnalyticsService({ logger, storage });
 
       await service.loadAnalytics();
@@ -249,4 +254,3 @@ describe('NotesAnalyticsService storage and reporting coverage', () => {
     });
   });
 });
-

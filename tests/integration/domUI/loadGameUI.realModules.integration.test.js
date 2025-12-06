@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import LoadGameUI from '../../../src/domUI/loadGameUI.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
@@ -142,11 +149,17 @@ describe('LoadGameUI real-module integration', () => {
       },
       deleteManualSave: async (identifier) => {
         if (deleteResultFactory) {
-          return deleteResultFactory({ identifier, currentSlots, setSlots: (next) => {
-            currentSlots = next.map((slot) => ({ ...slot }));
-          } });
+          return deleteResultFactory({
+            identifier,
+            currentSlots,
+            setSlots: (next) => {
+              currentSlots = next.map((slot) => ({ ...slot }));
+            },
+          });
         }
-        currentSlots = currentSlots.filter((slot) => slot.identifier !== identifier);
+        currentSlots = currentSlots.filter(
+          (slot) => slot.identifier !== identifier
+        );
         return { success: true, message: '' };
       },
     };
@@ -229,7 +242,8 @@ describe('LoadGameUI real-module integration', () => {
     ui.show();
     await flushAsync();
 
-    const { confirmLoadButtonEl, deleteSaveButtonEl, listContainerElement } = ui.elements;
+    const { confirmLoadButtonEl, deleteSaveButtonEl, listContainerElement } =
+      ui.elements;
     expect(listContainerElement?.querySelectorAll('.save-slot').length).toBe(2);
     expect(confirmLoadButtonEl?.disabled).toBe(true);
     expect(deleteSaveButtonEl?.disabled).toBe(true);
@@ -253,8 +267,14 @@ describe('LoadGameUI real-module integration', () => {
 
     expect(ui.isVisible).toBe(false);
     expect(ui.currentSlotsDisplayData).toEqual([]);
-    expect(environment.logger.records.debug.some((entry) => entry[0]?.includes('Load slots list populated'))).toBe(true);
-    expect(ui.elements.statusMessageElement?.textContent).toContain('loaded successfully');
+    expect(
+      environment.logger.records.debug.some((entry) =>
+        entry[0]?.includes('Load slots list populated')
+      )
+    ).toBe(true);
+    expect(ui.elements.statusMessageElement?.textContent).toContain(
+      'loaded successfully'
+    );
   });
 
   it('handles load precondition failures and load errors', async () => {
@@ -270,9 +290,7 @@ describe('LoadGameUI real-module integration', () => {
     expect(environment.logger.records.warn.length).toBeGreaterThan(0);
 
     const listContainer = ui.elements.listContainerElement;
-    const corruptedSlot = listContainer?.querySelector(
-      '.save-slot.corrupted'
-    );
+    const corruptedSlot = listContainer?.querySelector('.save-slot.corrupted');
     corruptedSlot?.dispatchEvent(new Event('click', { bubbles: true }));
     await flushAsync();
 
@@ -337,7 +355,11 @@ describe('LoadGameUI real-module integration', () => {
     await flushAsync();
 
     await ui._handleDelete();
-    expect(environment.logger.records.debug.some((entry) => entry[0]?.includes('Delete operation cancelled'))).toBe(true);
+    expect(
+      environment.logger.records.debug.some((entry) =>
+        entry[0]?.includes('Delete operation cancelled')
+      )
+    ).toBe(true);
     expect(userPrompt.prompts).toHaveLength(1);
 
     await ui._handleDelete();
@@ -358,7 +380,8 @@ describe('LoadGameUI real-module integration', () => {
     ui.show();
     await flushAsync();
 
-    const firstSlot = ui.elements.listContainerElement?.querySelector('.save-slot');
+    const firstSlot =
+      ui.elements.listContainerElement?.querySelector('.save-slot');
     firstSlot?.dispatchEvent(new Event('click', { bubbles: true }));
     await flushAsync();
 
@@ -396,7 +419,8 @@ describe('LoadGameUI real-module integration', () => {
     emptyEnv.ui.init({ load: async () => ({ success: true }) });
     emptyEnv.ui.show();
     await flushAsync();
-    const emptyMessage = emptyEnv.ui.elements.listContainerElement?.textContent?.trim();
+    const emptyMessage =
+      emptyEnv.ui.elements.listContainerElement?.textContent?.trim();
     expect(emptyMessage).toBe('No saved games found.');
   });
 

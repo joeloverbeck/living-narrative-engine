@@ -22,7 +22,6 @@ This concept is similar to how many RPGs handle “called shots” or tricky man
 
 Your system can handle this in a data-driven way: Each action (or each contextual variant of an action) could carry tags or properties for environmental modifiers and inherent difficulty. For example, an action might have "base_chance": X plus adjustments like "precision_penalty": 20% or "darkness_penalty": 15% that the engine applies if relevant. Since your architecture already checks “gate” components (like is_vampire enabling vampire actions), you can similarly include checks for environment state (e.g. a dark_area component on the location could auto-impose the darkness penalty on relevant actions).
 
-
 The goal is to give a realistic and transparent impact of conditions. The player (or AI) should be told something like “[In darkness] Slash Emily with longsword – 40% chance” so they understand the risk. This clarity lets them make informed decisions – maybe they’ll decide to lure Emily into a lit area first, or choose a different strategy if the odds are too low. Designers note that the most interesting decisions happen when success odds are neither trivial nor hopeless; typically somewhere in the 30%–90% range is the “fun” zone. Environmental and difficulty modifiers help push attempts into that range. For instance, a player might normally have an 80% chance to hit an enemy, but darkness drops it to 50% – now it’s a risky proposition, and therefore a more engaging choice.
 
 ## Balancing Skill and Chance: Probability Mechanics
@@ -33,7 +32,7 @@ A bell curve (e.g. rolling 3d6 and summing) produces more moderate outcomes most
 
 For your system, since you plan to display an explicit percentage chance (e.g. 55% chance), you don’t necessarily have to literally roll multiple dice – you can simulate the effect with math. One simple and effective approach is to use a formula based on the attacker’s skill vs. defender’s skill (or difficulty) to derive success probability. For example, many games use a ratio or logistic formula:
 
- Ratio formula: Chance to hit = AttackerSkill / (AttackerSkill + DefenderSkill).
+Ratio formula: Chance to hit = AttackerSkill / (AttackerSkill + DefenderSkill).
 
 If my sword skill is 8 and Emily’s defense skill is 8, that’s 8/(8+8) = 0.50 = 50% chance. If I’m much better – say 12 vs her 8 – then chance = 12/(12+8) = 0.60 = 60%. If I’m much worse (5 vs 10) then 5/(15) ≈ 33%. This formula has some nice properties: it naturally caps out near 100% as the attacker’s skill grows huge relative to the opponent, and bottoms out near 0% if the attacker is vastly inferior, but it never absolutely reaches 0 or 100 until one side is effectively infinitely better. It’s also symmetrical (if A has X% to beat B, then B has 100–X% to beat A in that contest).
 
@@ -61,31 +60,31 @@ Many systems implement this by looking at the margin or natural roll. For instan
 
 Translating this to your system, you could implement tiers like:
 
- Critical Success: e.g. succeed by a wide margin or by an extremely lucky roll. Outcome: not only do you succeed, but with extra effect. In combat, this could mean double damage or a decisive hit (perhaps a chance to decapitate if that’s in scope!). In non-combat, it could mean succeeding and gaining some bonus (you picked the lock silently and in record time).
+Critical Success: e.g. succeed by a wide margin or by an extremely lucky roll. Outcome: not only do you succeed, but with extra effect. In combat, this could mean double damage or a decisive hit (perhaps a chance to decapitate if that’s in scope!). In non-combat, it could mean succeeding and gaining some bonus (you picked the lock silently and in record time).
 
- Normal Success: The action succeeds as expected.
+Normal Success: The action succeeds as expected.
 
- Normal Failure: The action fails, but nothing dramatically bad happens – you just don’t achieve your goal.
+Normal Failure: The action fails, but nothing dramatically bad happens – you just don’t achieve your goal.
 
- Critical Failure (Fumble): fail and suffer a downside. For an attack, this might mean you slip and drop your weapon, or the weapon breaks – a common trope is weapon breaking on a fumbled attack.
+Critical Failure (Fumble): fail and suffer a downside. For an attack, this might mean you slip and drop your weapon, or the weapon breaks – a common trope is weapon breaking on a fumbled attack.
 
 Crucially, these ranges can scale with skill if you want skilled characters to also have higher chance of critical success. (In BRP, someone with 80% skill has a 4% crit chance (1/20 of 80) whereas someone with 20% skill has only a 1% crit chance. High skill also reduces your fumble chances since you’re less likely to fail in the first place.) Or you can make criticals a flat percentage (like “natural 20” in D&D is ~5% for everyone). The former approach further rewards skill – experts not only succeed more, they critically succeed more and fumble less. This might fit your goal of highlighting character uniqueness and ability.
 
 Implementing degrees in code could be as simple as generating a second random roll or checking the first roll’s value relative to thresholds. For instance, if using a 100-scale roll:
 
- If roll ≤ 5 (out of 100) maybe call it a crit success (or ≤ skill/5 if scaling by skill).
+If roll ≤ 5 (out of 100) maybe call it a crit success (or ≤ skill/5 if scaling by skill).
 
- If roll ≥ 96, call it a fumble (assuming 100 is mapped to 0-99 or 1-100, etc., you decide exact range).
+If roll ≥ 96, call it a fumble (assuming 100 is mapped to 0-99 or 1-100, etc., you decide exact range).
 
 You’ll also want to define the narrative and mechanical effects of these outcomes. Perhaps:
 
- Critical success on an attack: the target is severely wounded or an immediate follow-up is allowed.
+Critical success on an attack: the target is severely wounded or an immediate follow-up is allowed.
 
- Critical failure on an attack: as said, weapon breaks or you hit an ally, etc., depending on how punishing you want it.
+Critical failure on an attack: as said, weapon breaks or you hit an ally, etc., depending on how punishing you want it.
 
- Critical success on a non-combat action: you not only succeed but get additional benefits (e.g. crafting yields a higher-quality item, persuading an NPC yields more influence than expected).
+Critical success on a non-combat action: you not only succeed but get additional benefits (e.g. crafting yields a higher-quality item, persuading an NPC yields more influence than expected).
 
- Critical failure on non-combat: a disastrous outcome (the lockpick snaps inside the lock, making it even harder to open now).
+Critical failure on non-combat: a disastrous outcome (the lockpick snaps inside the lock, making it even harder to open now).
 
 ## Summary of the recommended system:
 
@@ -95,12 +94,12 @@ You’ll also want to define the narrative and mechanical effects of these outco
 
 When an action is attempted, calculate success probability based on the actor’s relevant skill vs. the target’s opposing skill or a difficulty rating. A formula that emphasizes the difference (such as a logistic curve or opposed roll calculation) will ensure skilled characters have a high edge. For simplicity, you might implement this as:
 
- EffectiveSkill = ActorSkill + modifiers (environment, difficulty of action)
+EffectiveSkill = ActorSkill + modifiers (environment, difficulty of action)
 
- EffectiveDefense = TargetSkill/Defense + modifiers,
- 
- then Chance = EffectiveSkill / (EffectiveSkill + EffectiveDefense) (or another chosen formula giving similar outcomes).
- 
+EffectiveDefense = TargetSkill/Defense + modifiers,
+
+then Chance = EffectiveSkill / (EffectiveSkill + EffectiveDefense) (or another chosen formula giving similar outcomes).
+
 This yields a percentage to display.
 
 ### Incorporate Modifiers
@@ -117,13 +116,13 @@ Determine if the result is a critical/fumble. You can do this by checking how mu
 
 By implementing all the above, you’ll achieve a system where:
 
- The player can see their chances and make an informed risk-vs-reward decision.
+The player can see their chances and make an informed risk-vs-reward decision.
 
- Skill truly matters: a highly skilled character will see much higher percentages in their favor, especially against less skilled opponents, reflecting their expertise. They will still occasionally fail – those moments will be surprising (hopefully in a fun way) because they’re rare. Likewise, a low-skill character will usually fail but every now and then get a lucky break.
+Skill truly matters: a highly skilled character will see much higher percentages in their favor, especially against less skilled opponents, reflecting their expertise. They will still occasionally fail – those moments will be surprising (hopefully in a fun way) because they’re rare. Likewise, a low-skill character will usually fail but every now and then get a lucky break.
 
- Environmental and situational factors keep the game dynamic: even a master swordsman might think twice about attacking in pitch darkness with a slippery floor, because their displayed chance will drop, encouraging them to change the situation.
+Environmental and situational factors keep the game dynamic: even a master swordsman might think twice about attacking in pitch darkness with a slippery floor, because their displayed chance will drop, encouraging them to change the situation.
 
- Critical successes and failures add spice to the narrative. They create memorable moments (the sword that spectacularly shatters on a bad swing, or the miraculous one-hit takedown of an enemy on a crit) that enhance the emergent storytelling – something an immersive sim thrives on.
+Critical successes and failures add spice to the narrative. They create memorable moments (the sword that spectacularly shatters on a bad swing, or the miraculous one-hit takedown of an enemy on a crit) that enhance the emergent storytelling – something an immersive sim thrives on.
 
 ## First non-deterministic action:
 
@@ -131,12 +130,8 @@ By implementing all the above, you’ll achieve a system where:
 
 - Create in the 'weapons' mod ( data/mods/weapons/ ) a new action with a template like 'swing {weapon} at {target} (chance X%)', that requires the {weapon} to have the can_cut.component.json . There's currently no code for calculating those percentage changes, nor for adding them to the templates.
 
-- In the corresponding rule for this action, if the calculated resolution is a success, then a perceptible event message and successful action message should be like '{actor} swings their {weapon} at {target}, cutting their flesh.' If the calculated resolution is a failure, thena  perceptible event message and failure action message should be like '{actor} swings their {weapon} at {target}, but the swing fails to connect.'
+- In the corresponding rule for this action, if the calculated resolution is a success, then a perceptible event message and successful action message should be like '{actor} swings their {weapon} at {target}, cutting their flesh.' If the calculated resolution is a failure, thena perceptible event message and failure action message should be like '{actor} swings their {weapon} at {target}, but the swing fails to connect.'
 
 Currently we won't actually damage body parts; a whole new health and damage system is future work.
 
 - In order to determine the calculation of the outcome, we would need a skill, likely in a new 'skills' mod, that would be like melee_skill.component.json . We would also need a defense_skill.component.json which the target actor would have. The absence of either would mean a value of zero (e. g., if the attacker does have a melee_skill.component.json but the target doesn't have a defense_skill.component.json , then their defense value is considered to be 0).
-
-
-
-

@@ -20,7 +20,9 @@ describe('Domain Matchers - Unit Tests', () => {
 
     it('should fail when action did not succeed', () => {
       const events = [{ eventType: 'core:some_other_event', payload: {} }];
-      expect(() => expect(events).toHaveActionSuccess('Alice sits down on Chair.')).toThrow();
+      expect(() =>
+        expect(events).toHaveActionSuccess('Alice sits down on Chair.')
+      ).toThrow();
     });
 
     it('should pass when action failed', () => {
@@ -46,7 +48,10 @@ describe('Domain Matchers - Unit Tests', () => {
     it('should show error event in message when present', () => {
       const events = [
         { eventType: 'core:action_initiated', payload: {} },
-        { eventType: 'core:system_error_occurred', payload: { error: 'Something went wrong' } },
+        {
+          eventType: 'core:system_error_occurred',
+          payload: { error: 'Something went wrong' },
+        },
       ];
 
       try {
@@ -272,7 +277,9 @@ describe('Domain Matchers - Unit Tests', () => {
     });
 
     it('should throw when entity is invalid', () => {
-      expect(() => expect(null).toBeAt('bedroom')).toThrow('toBeAt: received must be an entity object');
+      expect(() => expect(null).toBeAt('bedroom')).toThrow(
+        'toBeAt: received must be an entity object'
+      );
     });
 
     it('should throw when entity has no components property', () => {
@@ -297,7 +304,9 @@ describe('Domain Matchers - Unit Tests', () => {
     it('should fail when event was not dispatched', () => {
       const events = [{ eventType: 'core:component_added', payload: {} }];
 
-      expect(() => expect(events).toDispatchEvent('core:component_removed')).toThrow();
+      expect(() =>
+        expect(events).toDispatchEvent('core:component_removed')
+      ).toThrow();
     });
 
     it('should show actual events in error message', () => {
@@ -327,9 +336,9 @@ describe('Domain Matchers - Unit Tests', () => {
     });
 
     it('should throw when events is not an array', () => {
-      expect(() => expect(null).toDispatchEvent('core:component_added')).toThrow(
-        'toDispatchEvent: received must be an events array'
-      );
+      expect(() =>
+        expect(null).toDispatchEvent('core:component_added')
+      ).toThrow('toDispatchEvent: received must be an events array');
     });
   });
 
@@ -410,7 +419,9 @@ describe('Domain Matchers - Unit Tests', () => {
       };
 
       try {
-        expect(entity).toHaveComponentData('core:position', { locationId: 'bedroom' });
+        expect(entity).toHaveComponentData('core:position', {
+          locationId: 'bedroom',
+        });
         throw new Error('Should have thrown');
       } catch (err) {
         expect(err.message).toContain('component not found');
@@ -455,15 +466,21 @@ describe('Domain Matchers - Unit Tests', () => {
 
     it('should throw when entity is invalid', () => {
       expect(() =>
-        expect(null).toHaveComponentData('core:position', { locationId: 'bedroom' })
+        expect(null).toHaveComponentData('core:position', {
+          locationId: 'bedroom',
+        })
       ).toThrow('toHaveComponentData: received must be an entity object');
     });
 
     it('should throw when entity has no components property', () => {
       const entity = { id: 'actor1' };
       expect(() =>
-        expect(entity).toHaveComponentData('core:position', { locationId: 'bedroom' })
-      ).toThrow('toHaveComponentData: received object must have a components property');
+        expect(entity).toHaveComponentData('core:position', {
+          locationId: 'bedroom',
+        })
+      ).toThrow(
+        'toHaveComponentData: received object must have a components property'
+      );
     });
   });
 

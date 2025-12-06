@@ -171,7 +171,8 @@ const createBaseEnvironment = ({
   const scopeResolver = new ConfigurableScopeResolver();
 
   const targetResolutionService =
-    targetOverride ?? new TargetResolutionService({
+    targetOverride ??
+    new TargetResolutionService({
       unifiedScopeResolver: scopeResolver,
       logger,
     });
@@ -340,7 +341,11 @@ describe('ActionCandidateProcessor integration edge cases', () => {
     expect(result.success).toBe(true);
     expect(result.value.cause).toBe('resolution-error');
     expect(result.value.errors).toHaveLength(1);
-    expect(logger.errorLogs.some((entry) => entry[0].includes('Error resolving scope'))).toBe(true);
+    expect(
+      logger.errorLogs.some((entry) =>
+        entry[0].includes('Error resolving scope')
+      )
+    ).toBe(true);
   });
 
   it('captures formatter exceptions as actionable error contexts', () => {

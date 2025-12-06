@@ -79,7 +79,7 @@ class DirectSocketStrategy {
 
       if (socketsComponent?.sockets) {
         this.#logger.info(
-          `DirectSocketStrategy: Part '${partId}' has ${socketsComponent.sockets.length} sockets: ${socketsComponent.sockets.map(s => s.id).join(', ')}`
+          `DirectSocketStrategy: Part '${partId}' has ${socketsComponent.sockets.length} sockets: ${socketsComponent.sockets.map((s) => s.id).join(', ')}`
         );
         for (const socket of socketsComponent.sockets) {
           if (mapping.anatomySockets.includes(socket.id)) {

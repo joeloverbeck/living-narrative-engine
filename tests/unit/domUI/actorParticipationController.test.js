@@ -4,7 +4,14 @@
  * participation toggles, error handling, and cleanup.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import ActorParticipationController from '../../../src/domUI/actorParticipationController.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
@@ -32,7 +39,10 @@ describe('ActorParticipationController', () => {
         <div id="actor-participation-status"></div>
       </div>
     `;
-    dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+    dom = new JSDOM(html, {
+      runScripts: 'dangerously',
+      pretendToBeVisual: true,
+    });
     mockDocument = dom.window.document;
 
     // Create mocks
@@ -144,7 +154,9 @@ describe('ActorParticipationController', () => {
       controller.initialize();
 
       expect(mockLogger.debug).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('[ActorParticipation] Initialization complete');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '[ActorParticipation] Initialization complete'
+      );
     });
 
     it('should attach event listeners on initialize()', () => {
@@ -155,12 +167,17 @@ describe('ActorParticipationController', () => {
         entityManager: mockEntityManager,
       });
 
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
       const addEventListenerSpy = jest.spyOn(listContainer, 'addEventListener');
 
       controller.initialize();
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function));
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'change',
+        expect.any(Function)
+      );
     });
 
     it('should subscribe to ENGINE_READY_UI event on initialize()', () => {
@@ -181,8 +198,14 @@ describe('ActorParticipationController', () => {
 
     it('should handle missing DOM elements gracefully on initialize()', () => {
       // Create empty DOM
-      const emptyDom = new JSDOM('', { runScripts: 'dangerously', pretendToBeVisual: true });
-      const emptyDocumentContext = new DocumentContext(emptyDom.window.document, emptyDom.window);
+      const emptyDom = new JSDOM('', {
+        runScripts: 'dangerously',
+        pretendToBeVisual: true,
+      });
+      const emptyDocumentContext = new DocumentContext(
+        emptyDom.window.document,
+        emptyDom.window
+      );
 
       controller = new ActorParticipationController({
         eventBus: mockEventBus,
@@ -215,7 +238,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID);
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        ACTOR_COMPONENT_ID
+      );
     });
 
     it('should handle defensive actor loading failure gracefully', () => {
@@ -250,7 +275,9 @@ describe('ActorParticipationController', () => {
         entityManager: mockEntityManager,
       });
 
-      expect(() => controller.initialize()).toThrow('Event bus subscription failed');
+      expect(() => controller.initialize()).toThrow(
+        'Event bus subscription failed'
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         '[ActorParticipation] Failed to initialize',
         expect.any(Error)
@@ -283,7 +310,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
       expect(listContainer).not.toBeNull();
     });
 
@@ -302,8 +331,14 @@ describe('ActorParticipationController', () => {
     });
 
     it('should log warnings when elements are missing', () => {
-      const emptyDom = new JSDOM('', { runScripts: 'dangerously', pretendToBeVisual: true });
-      const emptyDocumentContext = new DocumentContext(emptyDom.window.document, emptyDom.window);
+      const emptyDom = new JSDOM('', {
+        runScripts: 'dangerously',
+        pretendToBeVisual: true,
+      });
+      const emptyDocumentContext = new DocumentContext(
+        emptyDom.window.document,
+        emptyDom.window
+      );
 
       controller = new ActorParticipationController({
         eventBus: mockEventBus,
@@ -395,7 +430,9 @@ describe('ActorParticipationController', () => {
       gameReadyHandler();
       gameReadyHandler();
 
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledTimes(4); // 1 defensive + 3 triggered
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledTimes(
+        4
+      ); // 1 defensive + 3 triggered
     });
 
     it('should log error if ENGINE_READY_UI subscription fails', () => {
@@ -427,7 +464,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID);
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        ACTOR_COMPONENT_ID
+      );
     });
 
     it('should receive Entity objects and extract data correctly', () => {
@@ -455,8 +494,12 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      expect(mockEntity.getComponentData).toHaveBeenCalledWith(NAME_COMPONENT_ID);
-      expect(mockEntity.getComponentData).toHaveBeenCalledWith(PARTICIPATION_COMPONENT_ID);
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        NAME_COMPONENT_ID
+      );
+      expect(mockEntity.getComponentData).toHaveBeenCalledWith(
+        PARTICIPATION_COMPONENT_ID
+      );
     });
 
     it('should extract actor names using entity.getComponentData(NAME_COMPONENT_ID)', () => {
@@ -481,7 +524,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
       const label = listContainer.querySelector('label');
       expect(label.textContent).toBe('Bob');
     });
@@ -595,7 +640,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('[ActorParticipation] Loaded 0 actors');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[ActorParticipation] Loaded 0 actors'
+      );
     });
 
     it('should fallback to entity ID when name component has no text', () => {
@@ -627,7 +674,9 @@ describe('ActorParticipationController', () => {
 
   describe('Actor Rendering', () => {
     it('should clear previous content before rendering', () => {
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
       listContainer.innerHTML = '<div>Old content</div>';
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
@@ -729,7 +778,8 @@ describe('ActorParticipationController', () => {
           id: 'actor-1',
           getComponentData: jest.fn((componentId) => {
             if (componentId === NAME_COMPONENT_ID) return { text: 'Alice' };
-            if (componentId === PARTICIPATION_COMPONENT_ID) return { participating: true };
+            if (componentId === PARTICIPATION_COMPONENT_ID)
+              return { participating: true };
             return null;
           }),
         },
@@ -737,7 +787,8 @@ describe('ActorParticipationController', () => {
           id: 'actor-2',
           getComponentData: jest.fn((componentId) => {
             if (componentId === NAME_COMPONENT_ID) return { text: 'Bob' };
-            if (componentId === PARTICIPATION_COMPONENT_ID) return { participating: false };
+            if (componentId === PARTICIPATION_COMPONENT_ID)
+              return { participating: false };
             return null;
           }),
         },
@@ -754,7 +805,9 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      const checkboxes = Array.from(mockDocument.querySelectorAll('input[type="checkbox"]'));
+      const checkboxes = Array.from(
+        mockDocument.querySelectorAll('input[type="checkbox"]')
+      );
       expect(checkboxes[0].checked).toBe(true);
       expect(checkboxes[1].checked).toBe(false);
     });
@@ -810,7 +863,10 @@ describe('ActorParticipationController', () => {
 
       // Trigger change event
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       // Wait for async operations
@@ -847,7 +903,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       // Wait for async operations
@@ -880,7 +939,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -917,13 +979,18 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const status = mockDocument.querySelector('#actor-participation-status');
-      expect(status.textContent).toContain('Disabled participation for actor-1');
+      expect(status.textContent).toContain(
+        'Disabled participation for actor-1'
+      );
       expect(status.className).toContain('status-success');
     });
 
@@ -952,7 +1019,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -972,7 +1042,9 @@ describe('ActorParticipationController', () => {
       };
 
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([mockEntity]);
-      mockEntityManager.addComponent.mockRejectedValue(new Error('Network error'));
+      mockEntityManager.addComponent.mockRejectedValue(
+        new Error('Network error')
+      );
 
       controller = new ActorParticipationController({
         eventBus: mockEventBus,
@@ -988,7 +1060,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = !originalState;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -1022,7 +1097,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -1055,7 +1133,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await new Promise((resolve) => setTimeout(resolve, 10));
@@ -1090,7 +1171,10 @@ describe('ActorParticipationController', () => {
       checkbox.checked = false;
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await jest.runAllTimersAsync();
@@ -1129,7 +1213,10 @@ describe('ActorParticipationController', () => {
       // First toggle
       checkbox.checked = false;
       let changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await Promise.resolve();
@@ -1140,7 +1227,10 @@ describe('ActorParticipationController', () => {
       // Second toggle before first timeout expires
       checkbox.checked = true;
       changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await Promise.resolve();
@@ -1159,8 +1249,14 @@ describe('ActorParticipationController', () => {
           <div id="actor-participation-list-container"></div>
         </div>
       `;
-      const partialDom = new JSDOM(partialHtml, { runScripts: 'dangerously', pretendToBeVisual: true });
-      const partialDocumentContext = new DocumentContext(partialDom.window.document, partialDom.window);
+      const partialDom = new JSDOM(partialHtml, {
+        runScripts: 'dangerously',
+        pretendToBeVisual: true,
+      });
+      const partialDocumentContext = new DocumentContext(
+        partialDom.window.document,
+        partialDom.window
+      );
 
       const mockEntity = {
         id: 'actor-1',
@@ -1182,11 +1278,18 @@ describe('ActorParticipationController', () => {
       controller.initialize();
 
       // Trigger a participation toggle to call #showStatus
-      const checkbox = partialDom.window.document.querySelector('input[type="checkbox"]');
+      const checkbox = partialDom.window.document.querySelector(
+        'input[type="checkbox"]'
+      );
       checkbox.checked = false;
 
-      const changeEvent = new partialDom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      const changeEvent = new partialDom.window.Event('change', {
+        bubbles: true,
+      });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       // Wait for async operations
@@ -1198,7 +1301,6 @@ describe('ActorParticipationController', () => {
 
       partialDom.window.close();
     });
-
   });
 
   describe('Cleanup', () => {
@@ -1227,13 +1329,21 @@ describe('ActorParticipationController', () => {
         entityManager: mockEntityManager,
       });
 
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
-      const removeEventListenerSpy = jest.spyOn(listContainer, 'removeEventListener');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
+      const removeEventListenerSpy = jest.spyOn(
+        listContainer,
+        'removeEventListener'
+      );
 
       controller.initialize();
       controller.cleanup();
 
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('change', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'change',
+        expect.any(Function)
+      );
     });
 
     it('should clear element references', () => {
@@ -1247,7 +1357,9 @@ describe('ActorParticipationController', () => {
       controller.initialize();
       controller.cleanup();
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('[ActorParticipation] Cleanup complete');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[ActorParticipation] Cleanup complete'
+      );
     });
 
     it('should clear status timeout on cleanup', async () => {
@@ -1274,7 +1386,10 @@ describe('ActorParticipationController', () => {
       const checkbox = mockDocument.querySelector('input[type="checkbox"]');
       checkbox.checked = false;
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       // Wait for async operations to complete
@@ -1288,7 +1403,9 @@ describe('ActorParticipationController', () => {
       expect(() => controller.cleanup()).not.toThrow();
 
       // After cleanup, logger should show cleanup complete
-      expect(mockLogger.debug).toHaveBeenCalledWith('[ActorParticipation] Cleanup complete');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        '[ActorParticipation] Cleanup complete'
+      );
     });
 
     it('should not throw errors if called multiple times', () => {
@@ -1357,7 +1474,10 @@ describe('ActorParticipationController', () => {
       const checkbox = mockDocument.querySelector('input[type="checkbox"]');
       checkbox.checked = false;
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       await Promise.resolve();
@@ -1406,8 +1526,14 @@ describe('ActorParticipationController', () => {
     });
 
     it('should handle error when DOM elements are missing during render', () => {
-      const emptyDom = new JSDOM('', { runScripts: 'dangerously', pretendToBeVisual: true });
-      const emptyDocumentContext = new DocumentContext(emptyDom.window.document, emptyDom.window);
+      const emptyDom = new JSDOM('', {
+        runScripts: 'dangerously',
+        pretendToBeVisual: true,
+      });
+      const emptyDocumentContext = new DocumentContext(
+        emptyDom.window.document,
+        emptyDom.window
+      );
 
       controller = new ActorParticipationController({
         eventBus: mockEventBus,
@@ -1436,13 +1562,18 @@ describe('ActorParticipationController', () => {
       controller.initialize();
 
       // Create a checkbox without data-actor-id
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
       const checkbox = mockDocument.createElement('input');
       checkbox.type = 'checkbox';
       listContainer.appendChild(checkbox);
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: checkbox, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: checkbox,
+        enumerable: true,
+      });
       checkbox.dispatchEvent(changeEvent);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -1460,14 +1591,19 @@ describe('ActorParticipationController', () => {
 
       controller.initialize();
 
-      const listContainer = mockDocument.querySelector('#actor-participation-list-container');
+      const listContainer = mockDocument.querySelector(
+        '#actor-participation-list-container'
+      );
 
       // Trigger change event with non-checkbox target
       const div = mockDocument.createElement('div');
       listContainer.appendChild(div);
 
       const changeEvent = new dom.window.Event('change', { bubbles: true });
-      Object.defineProperty(changeEvent, 'target', { value: div, enumerable: true });
+      Object.defineProperty(changeEvent, 'target', {
+        value: div,
+        enumerable: true,
+      });
       div.dispatchEvent(changeEvent);
 
       // Should not attempt to process non-checkbox elements
@@ -1536,7 +1672,9 @@ describe('ActorParticipationController', () => {
       // Call refresh
       controller.refresh();
 
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(ACTOR_COMPONENT_ID);
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        ACTOR_COMPONENT_ID
+      );
     });
 
     it('should re-render list on refresh', () => {
@@ -1568,7 +1706,9 @@ describe('ActorParticipationController', () => {
         }),
       };
 
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue([newMockEntity]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([
+        newMockEntity,
+      ]);
 
       controller.refresh();
 

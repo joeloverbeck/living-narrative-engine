@@ -104,7 +104,9 @@ describe('observation:examine_owned_item rule execution', () => {
         (e) => e.eventType === 'core:display_successful_action_result'
       );
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toBe('Alice examines their letter-1.');
+      expect(successEvent.payload.message).toBe(
+        'Alice examines their letter-1.'
+      );
 
       // Assert: Verify turn ended successfully
       expectSuccessfulTurnEnd(testFixture.events);
@@ -166,7 +168,9 @@ describe('observation:examine_owned_item rule execution', () => {
       expect(examineEvent.payload.descriptionText).toContain('Dave');
       expect(examineEvent.payload.descriptionText).toContain('their');
       expect(examineEvent.payload.descriptionText).toContain('tool-1');
-      expect(examineEvent.payload.descriptionText).toContain('A well-worn hammer.');
+      expect(examineEvent.payload.descriptionText).toContain(
+        'A well-worn hammer.'
+      );
 
       expectSuccessfulTurnEnd(testFixture.events);
     });

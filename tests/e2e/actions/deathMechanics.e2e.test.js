@@ -51,7 +51,10 @@ const buildActorWithVitals = ({
   const heart = new ModEntityBuilder(`${actorId}-heart`)
     .withName('Heart')
     .withComponent('anatomy:part', { subType: 'heart', orientation: 'mid' })
-    .withComponent('anatomy:joint', { parentId: torso.id, socketId: 'heart_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: torso.id,
+      socketId: 'heart_socket',
+    })
     .withComponent('anatomy:part_health', {
       currentHealth: heartHealth,
       maxHealth: heartHealth,
@@ -64,7 +67,10 @@ const buildActorWithVitals = ({
   const brain = new ModEntityBuilder(`${actorId}-brain`)
     .withName('Brain')
     .withComponent('anatomy:part', { subType: 'brain', orientation: 'mid' })
-    .withComponent('anatomy:joint', { parentId: torso.id, socketId: 'brain_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: torso.id,
+      socketId: 'brain_socket',
+    })
     .withComponent('anatomy:part_health', {
       currentHealth: brainHealth,
       maxHealth: brainHealth,
@@ -77,7 +83,10 @@ const buildActorWithVitals = ({
   const spine = new ModEntityBuilder(`${actorId}-spine`)
     .withName('Spine')
     .withComponent('anatomy:part', { subType: 'spine', orientation: 'mid' })
-    .withComponent('anatomy:joint', { parentId: torso.id, socketId: 'spine_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: torso.id,
+      socketId: 'spine_socket',
+    })
     .withComponent('anatomy:part_health', {
       currentHealth: spineHealth,
       maxHealth: spineHealth,
@@ -127,13 +136,10 @@ describe('death mechanics e2e (critical)', () => {
   let applyDamageHandler;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -146,7 +152,13 @@ describe('death mechanics e2e (critical)', () => {
     }
   });
 
-  const applyDamage = async ({ entityId, partId, amount, actorId = 'attacker', damageType = 'piercing' }) => {
+  const applyDamage = async ({
+    entityId,
+    partId,
+    amount,
+    actorId = 'attacker',
+    damageType = 'piercing',
+  }) => {
     await applyDamageHandler.execute(
       {
         entity_ref: entityId,
@@ -196,7 +208,15 @@ describe('death mechanics e2e (critical)', () => {
 
   const prepareActor = async (options = {}) => {
     const { actor, parts, room, attacker } = buildActorWithVitals(options);
-    fixture.reset([actor, parts.torso, parts.heart, parts.brain, parts.spine, room, attacker]);
+    fixture.reset([
+      actor,
+      parts.torso,
+      parts.heart,
+      parts.brain,
+      parts.spine,
+      room,
+      attacker,
+    ]);
     fixture.clearEvents();
 
     bodyGraphService = new BodyGraphService({
@@ -267,9 +287,17 @@ describe('death mechanics e2e (critical)', () => {
       actorId: attacker.id,
     });
 
-    const deathEvent = fixture.events.find((e) => e.eventType === 'anatomy:entity_died');
-    const deadComponent = testEnv.entityManager.getComponentData(actor.id, 'anatomy:dead');
-    const dyingComponent = testEnv.entityManager.getComponentData(actor.id, 'anatomy:dying');
+    const deathEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_died'
+    );
+    const deadComponent = testEnv.entityManager.getComponentData(
+      actor.id,
+      'anatomy:dead'
+    );
+    const dyingComponent = testEnv.entityManager.getComponentData(
+      actor.id,
+      'anatomy:dying'
+    );
 
     expect(deathEvent).toBeDefined();
     expect(deathEvent.payload).toEqual(
@@ -295,7 +323,9 @@ describe('death mechanics e2e (critical)', () => {
       damageType: 'crushing',
     });
 
-    const deathEvent = fixture.events.find((e) => e.eventType === 'anatomy:entity_died');
+    const deathEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_died'
+    );
     const message = deathEvent?.payload?.finalMessage || '';
 
     expect(deathEvent).toBeDefined();
@@ -311,15 +341,22 @@ describe('death mechanics e2e (critical)', () => {
 
     await pushToDyingThreshold({ actor, parts, attacker });
 
-    const dyingComponent = testEnv.entityManager.getComponentData(actor.id, 'anatomy:dying');
-    const dyingEvent = fixture.events.find((e) => e.eventType === 'anatomy:entity_dying');
+    const dyingComponent = testEnv.entityManager.getComponentData(
+      actor.id,
+      'anatomy:dying'
+    );
+    const dyingEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_dying'
+    );
 
     expect(dyingComponent).toBeDefined();
     expect(dyingComponent.turnsRemaining).toBe(3);
     expect(dyingComponent.causeOfDying).toBe('overall_health_critical');
     expect(dyingEvent).toBeDefined();
     expect(dyingEvent.payload.turnsRemaining).toBe(3);
-    expect(testEnv.entityManager.getComponentData(actor.id, 'anatomy:dead')).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData(actor.id, 'anatomy:dead')
+    ).toBeNull();
   });
 
   it('expires the dying countdown into death when turns reach zero', async () => {
@@ -333,8 +370,13 @@ describe('death mechanics e2e (critical)', () => {
     expect(deathCheckService.processDyingTurn(actor.id)).toBe(false);
     expect(deathCheckService.processDyingTurn(actor.id)).toBe(true);
 
-    const deathEvent = fixture.events.find((e) => e.eventType === 'anatomy:entity_died');
-    const deadComponent = testEnv.entityManager.getComponentData(actor.id, 'anatomy:dead');
+    const deathEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_died'
+    );
+    const deadComponent = testEnv.entityManager.getComponentData(
+      actor.id,
+      'anatomy:dead'
+    );
 
     expect(deathEvent).toBeDefined();
     expect(deathEvent.payload.causeOfDeath).toBe('bleeding_out');
@@ -352,7 +394,9 @@ describe('death mechanics e2e (critical)', () => {
       damageType: 'piercing',
     });
 
-    const deathEvent = fixture.events.find((e) => e.eventType === 'anatomy:entity_died');
+    const deathEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_died'
+    );
 
     expect(deathEvent).toBeDefined();
     expect(deathEvent.payload).toEqual(

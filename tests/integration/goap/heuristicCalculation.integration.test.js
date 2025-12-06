@@ -66,9 +66,12 @@ describe('GOAP Heuristics - Integration with Real Components', () => {
       entityManager,
       logger: mockLogger,
     });
-    jsonLogicEvaluator.addOperation('has_component', function (entityPath, componentId) {
-      return hasComponentOp.evaluate([entityPath, componentId], this);
-    });
+    jsonLogicEvaluator.addOperation(
+      'has_component',
+      function (entityPath, componentId) {
+        return hasComponentOp.evaluate([entityPath, componentId], this);
+      }
+    );
 
     // Create numeric constraint evaluator
     const numericConstraintEvaluator = new NumericConstraintEvaluator({

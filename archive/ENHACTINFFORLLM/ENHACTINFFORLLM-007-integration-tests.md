@@ -3,15 +3,19 @@
 **STATUS: COMPLETED**
 
 ## Summary
+
 Create integration tests that verify the end-to-end behavior of action metadata formatting using real service instances with mocked data dependencies.
 
 ## Prerequisites
+
 - All previous tickets (001-006) must be completed ✅
 
 ## Files to Touch
+
 - `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` (NEW FILE)
 
 ## Out of Scope
+
 - DO NOT modify any source implementation files
 - DO NOT modify existing test files
 - DO NOT modify mod manifest JSON files
@@ -19,7 +23,9 @@ Create integration tests that verify the end-to-end behavior of action metadata 
 ## Implementation Details
 
 ### Test Approach
+
 Following the established integration test pattern in `AIPromptPipeline.integration.test.js`:
+
 - Instantiate real service classes directly
 - Inject mocked data dependencies (DataRegistry)
 - Test end-to-end formatting pipeline
@@ -33,6 +39,7 @@ Following the established integration test pattern in `AIPromptPipeline.integrat
 3. **Testing pattern**: Uses direct class instantiation with mocked `IDataRegistry`, not full `AppContainer` setup.
 
 ### Test Coverage
+
 - Full formatting pipeline verification
 - Mixed metadata scenarios (some mods have metadata, others don't)
 - Performance benchmarks
@@ -42,11 +49,13 @@ Following the established integration test pattern in `AIPromptPipeline.integrat
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 - `npm run test:integration -- tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` passes
 - All test cases pass
 - Performance test completes within time limit
 
 ### Invariants That Must Remain True
+
 1. Tests use real service instances with properly mocked data registry
 2. Tests verify actual output format matches spec
 3. Tests cover both happy path and edge cases
@@ -54,6 +63,7 @@ Following the established integration test pattern in `AIPromptPipeline.integrat
 5. Cache verification ensures efficiency
 
 ## Verification Steps
+
 1. Run `npm run test:integration -- tests/integration/prompting/actionFormattingWithMetadata.integration.test.js --verbose`
 2. Verify tests integrate with existing test infrastructure
 3. Ensure no flaky tests (run multiple times)
@@ -63,6 +73,7 @@ Following the established integration test pattern in `AIPromptPipeline.integrat
 **Implementation Date**: 2025-11-25
 
 ### Deliverables
+
 - Created `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` (387 lines)
 - 13 integration tests covering:
   - Full formatting pipeline with metadata from manifests (4 tests)
@@ -71,10 +82,12 @@ Following the established integration test pattern in `AIPromptPipeline.integrat
   - Real-world scenario simulation (1 test)
 
 ### Key Implementation Decisions
+
 1. **Field name**: Tests use `actionId` (not `id`) to match `ActionCategorizationService.groupActionsByNamespace` expectations
 2. **Test config**: Created `integrationTestConfig` with lower grouping thresholds (`minActionsForGrouping: 2`, `minNamespacesForGrouping: 1`) to make tests practical
 3. **Mock registry**: Used simple mock `IDataRegistry` with configurable manifest data, following existing test patterns
 4. **Cache verification**: Tested via `clearCache()` method and registry call counting
 
 ### Test Results
+
 All 13 tests pass. Combined with 14 unit tests for `ModActionMetadataProvider` and 11 unit tests for `AIPromptContentProvider.actionMetadata`, total test coverage for the metadata feature is 38 tests.

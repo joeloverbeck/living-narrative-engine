@@ -11,11 +11,19 @@
  * @param {string[]} [allowedUndefined] - Properties allowed to be undefined.
  * @returns {Proxy} Proxied object.
  */
-export function createStrictProxy(target, objectName = 'Object', allowedUndefined = []) {
+export function createStrictProxy(
+  target,
+  objectName = 'Object',
+  allowedUndefined = []
+) {
   return new Proxy(target, {
     get(obj, prop) {
       // Allow prototype chain and special properties
-      if (prop === 'constructor' || prop === '__proto__' || prop === 'prototype') {
+      if (
+        prop === 'constructor' ||
+        prop === '__proto__' ||
+        prop === 'prototype'
+      ) {
         return obj[prop];
       }
 
@@ -50,7 +58,7 @@ export function createStrictProxy(target, objectName = 'Object', allowedUndefine
           `Available properties: [${availableProps}]\n` +
           `Did you mean: ${findSimilarProperty(String(prop), Object.keys(obj))}`
       );
-    }
+    },
   });
 }
 
@@ -68,7 +76,10 @@ export function findSimilarProperty(target, available) {
   let closest = available[0];
 
   for (const prop of available) {
-    const distance = levenshteinDistance(target.toLowerCase(), prop.toLowerCase());
+    const distance = levenshteinDistance(
+      target.toLowerCase(),
+      prop.toLowerCase()
+    );
     if (distance < minDistance) {
       minDistance = distance;
       closest = prop;

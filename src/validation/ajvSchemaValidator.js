@@ -133,16 +133,17 @@ class AjvSchemaValidator {
         return null;
       }
 
-      const candidates = fragment
-        ? [`${baseId}${fragment}`, baseId]
-        : [baseId];
+      const candidates = fragment ? [`${baseId}${fragment}`, baseId] : [baseId];
 
       for (const candidateId of candidates) {
         try {
           const schemaEnv = this.#ajv.getSchema(candidateId);
           if (schemaEnv) {
             if (fragment && candidateId === baseId) {
-              const fragmentSchema = resolveFragment(schemaEnv.schema, fragment);
+              const fragmentSchema = resolveFragment(
+                schemaEnv.schema,
+                fragment
+              );
               if (fragmentSchema) {
                 return fragmentSchema;
               }
@@ -333,7 +334,13 @@ class AjvSchemaValidator {
    * @param {import('../interfaces/coreServices.js').IDataRegistry} [params.dataRegistry]
    * @param {Array<{ schema: object, id: string }>} [params.preloadSchemas]
    */
-  constructor({ logger, ajvInstance, validatorGenerator, dataRegistry, preloadSchemas }) {
+  constructor({
+    logger,
+    ajvInstance,
+    validatorGenerator,
+    dataRegistry,
+    preloadSchemas,
+  }) {
     if (
       !logger ||
       typeof logger.info !== 'function' ||
@@ -354,17 +361,24 @@ class AjvSchemaValidator {
         requiredMethods: ['generate'],
       });
       validateDependency(dataRegistry, 'IDataRegistry', logger, {
-        requiredMethods: ['getComponentDefinition', 'getAllComponentDefinitions'],
+        requiredMethods: [
+          'getComponentDefinition',
+          'getAllComponentDefinitions',
+        ],
       });
       this.#validatorGenerator = validatorGenerator;
       this.#dataRegistry = dataRegistry;
       this.#generatedValidators = new Map();
-      this.#logger.debug('AjvSchemaValidator: Enhanced validation enabled with ValidatorGenerator');
+      this.#logger.debug(
+        'AjvSchemaValidator: Enhanced validation enabled with ValidatorGenerator'
+      );
     } else {
       this.#validatorGenerator = null;
       this.#dataRegistry = null;
       this.#generatedValidators = null;
-      this.#logger.debug('AjvSchemaValidator: Enhanced validation disabled (ValidatorGenerator or DataRegistry not provided)');
+      this.#logger.debug(
+        'AjvSchemaValidator: Enhanced validation disabled (ValidatorGenerator or DataRegistry not provided)'
+      );
     }
 
     try {
@@ -798,7 +812,11 @@ class AjvSchemaValidator {
    */
   #validateWithGenerated(schemaId, data) {
     // Enhanced validation disabled
-    if (!this.#validatorGenerator || !this.#dataRegistry || !this.#generatedValidators) {
+    if (
+      !this.#validatorGenerator ||
+      !this.#dataRegistry ||
+      !this.#generatedValidators
+    ) {
       return null;
     }
 
@@ -817,10 +835,13 @@ class AjvSchemaValidator {
     // Generate validator on first use
     // Note: Use IDataRegistry to retrieve component definition
     // Component definitions contain the dataSchema needed by ValidatorGenerator
-    const componentDefinition = this.#dataRegistry.getComponentDefinition(schemaId);
+    const componentDefinition =
+      this.#dataRegistry.getComponentDefinition(schemaId);
 
     if (!componentDefinition) {
-      this.#logger.debug(`Component definition not found: ${schemaId} (may not be a component schema)`);
+      this.#logger.debug(
+        `Component definition not found: ${schemaId} (may not be a component schema)`
+      );
       this.#generatedValidators.set(schemaId, null);
       return null;
     }
@@ -1069,7 +1090,9 @@ class AjvSchemaValidator {
    */
   getLoadedComponentSchemas() {
     if (!this.#dataRegistry) {
-      this.#logger.debug('No data registry available for retrieving component schemas');
+      this.#logger.debug(
+        'No data registry available for retrieving component schemas'
+      );
       return [];
     }
 
@@ -1092,13 +1115,20 @@ class AjvSchemaValidator {
    * @param {Array<object>} [componentSchemas] - Optional array of component schemas to pre-generate
    */
   preGenerateValidators(componentSchemas) {
-    if (!this.#validatorGenerator || !this.#dataRegistry || !this.#generatedValidators) {
-      this.#logger.debug('Pre-generation skipped: Enhanced validation not enabled');
+    if (
+      !this.#validatorGenerator ||
+      !this.#dataRegistry ||
+      !this.#generatedValidators
+    ) {
+      this.#logger.debug(
+        'Pre-generation skipped: Enhanced validation not enabled'
+      );
       return;
     }
 
     // If no schemas provided, get all component definitions from registry
-    const schemas = componentSchemas || this.#dataRegistry.getAllComponentDefinitions();
+    const schemas =
+      componentSchemas || this.#dataRegistry.getAllComponentDefinitions();
 
     assertPresent(schemas, 'Component schemas required for pre-generation');
 

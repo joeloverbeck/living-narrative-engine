@@ -133,9 +133,13 @@ const configureSuccessfulStages = (logger) => {
     }
   );
 
-  mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
+  mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+    success: true,
+  });
   mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-  mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+  mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+    success: true,
+  });
   mockStages.startGameStage.mockResolvedValue({ success: true });
 
   return uiElements;
@@ -271,7 +275,8 @@ describe('main bootstrap integration', () => {
     );
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiRefs, details, passedLogger] = mockDisplayFatalStartupError.mock.calls[0];
+    const [uiRefs, details, passedLogger] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(uiRefs).toBe(uiElements);
     expect(passedLogger).toBe(logger);
     expect(details).toMatchObject({
@@ -333,7 +338,8 @@ describe('main bootstrap integration', () => {
     await expect(beginGame()).rejects.toThrow('start stage failure');
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiRefs, details, passedLogger] = mockDisplayFatalStartupError.mock.calls[0];
+    const [uiRefs, details, passedLogger] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(uiRefs).toMatchObject({
       outputDiv: document.getElementById('outputDiv'),
     });

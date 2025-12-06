@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import MonitoringCoordinator from '../../../src/entities/monitoring/MonitoringCoordinator.js';
@@ -16,19 +23,22 @@ describe('CentralErrorHandler - Integration Tests', () => {
     testBed = createTestBed();
 
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
+    ]);
 
     // Create real MonitoringCoordinator instance
     monitoringCoordinator = new MonitoringCoordinator({
       logger: mockLogger,
       enabled: true,
-      checkInterval: 1000
+      checkInterval: 1000,
     });
 
     centralErrorHandler = new CentralErrorHandler({
       logger: mockLogger,
       eventBus: mockEventBus,
-      monitoringCoordinator
+      monitoringCoordinator,
     });
   });
 
@@ -47,17 +57,24 @@ describe('CentralErrorHandler - Integration Tests', () => {
       // Verify MonitoringCoordinator has required methods
       expect(typeof monitoringCoordinator.executeMonitored).toBe('function');
       expect(typeof monitoringCoordinator.getStats).toBe('function');
-      expect(typeof monitoringCoordinator.getPerformanceMonitor).toBe('function');
+      expect(typeof monitoringCoordinator.getPerformanceMonitor).toBe(
+        'function'
+      );
     });
 
     it('should coordinate with MonitoringCoordinator for error tracking', async () => {
-      const error = new BaseError('Integration test error', ErrorCodes.INVALID_DATA_GENERIC);
+      const error = new BaseError(
+        'Integration test error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
 
       try {
         await centralErrorHandler.handle(error, { integration: true });
       } catch (enhancedError) {
         expect(enhancedError).toBeInstanceOf(BaseError);
-        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledBy')).toBe(
+          'CentralErrorHandler'
+        );
       }
 
       // Verify metrics are tracked
@@ -73,19 +90,29 @@ describe('CentralErrorHandler - Integration Tests', () => {
 
     it('should handle errors with MonitoringCoordinator circuit breaker integration', async () => {
       // Get circuit breaker for error handling operations
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('errorHandling', {
-        failureThreshold: 2,
-        resetTimeout: 100
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'errorHandling',
+        {
+          failureThreshold: 2,
+          resetTimeout: 100,
+        }
+      );
 
       expect(circuitBreaker).toBeDefined();
 
       // Create a recoverable error that will succeed on recovery
-      const mockStrategy = jest.fn().mockResolvedValue('recovered successfully');
-      centralErrorHandler.registerRecoveryStrategy('RecoverableError', mockStrategy);
+      const mockStrategy = jest
+        .fn()
+        .mockResolvedValue('recovered successfully');
+      centralErrorHandler.registerRecoveryStrategy(
+        'RecoverableError',
+        mockStrategy
+      );
 
       class RecoverableError extends BaseError {
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
         constructor(message) {
           super(message, 'RECOVERABLE_ERROR');
           this.name = 'RecoverableError';
@@ -105,10 +132,14 @@ describe('CentralErrorHandler - Integration Tests', () => {
 
   describe('Error Flow Integration', () => {
     it('should handle complete error flow from classification to event dispatch', async () => {
-      const error = new BaseError('Complete flow test', ErrorCodes.INVALID_DATA_GENERIC, {
-        component: 'test',
-        operation: 'integration'
-      });
+      const error = new BaseError(
+        'Complete flow test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {
+          component: 'test',
+          operation: 'integration',
+        }
+      );
 
       const eventPromise = new Promise((resolve) => {
         mockEventBus.dispatch.mockImplementation((event) => {
@@ -135,17 +166,20 @@ describe('CentralErrorHandler - Integration Tests', () => {
           severity: 'error',
           recoverable: false,
           message: 'Complete flow test',
-          timestamp: expect.any(Number)
-        })
+          timestamp: expect.any(Number),
+        }),
       });
 
       // Verify logging occurred
-      expect(mockLogger.error).toHaveBeenCalledWith('Error occurred', expect.objectContaining({
-        errorId: expect.any(String),
-        type: 'BaseError',
-        code: ErrorCodes.INVALID_DATA_GENERIC,
-        message: 'Complete flow test'
-      }));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Error occurred',
+        expect.objectContaining({
+          errorId: expect.any(String),
+          type: 'BaseError',
+          code: ErrorCodes.INVALID_DATA_GENERIC,
+          message: 'Complete flow test',
+        })
+      );
 
       // Verify metrics were updated
       const metrics = centralErrorHandler.getMetrics();
@@ -159,23 +193,28 @@ describe('CentralErrorHandler - Integration Tests', () => {
 
       // Create a promise to capture the handled error
       const handlePromise = new Promise((resolve, reject) => {
-        const originalHandle = centralErrorHandler.handle.bind(centralErrorHandler);
-        jest.spyOn(centralErrorHandler, 'handle').mockImplementation(async (error, context) => {
-          try {
-            await originalHandle(error, context);
-          } catch (handledError) {
-            resolve(handledError);
-          }
-        });
+        const originalHandle =
+          centralErrorHandler.handle.bind(centralErrorHandler);
+        jest
+          .spyOn(centralErrorHandler, 'handle')
+          .mockImplementation(async (error, context) => {
+            try {
+              await originalHandle(error, context);
+            } catch (handledError) {
+              resolve(handledError);
+            }
+          });
       });
 
       // Simulate domain error event
-      const clothingCallback = mockEventBus.subscribe.mock.calls.find(call => call[0] === 'CLOTHING_ERROR_OCCURRED')[1];
+      const clothingCallback = mockEventBus.subscribe.mock.calls.find(
+        (call) => call[0] === 'CLOTHING_ERROR_OCCURRED'
+      )[1];
       await clothingCallback({
         payload: {
           error: clothingError,
-          context: clothingContext
-        }
+          context: clothingContext,
+        },
       });
 
       const handledError = await handlePromise;
@@ -192,27 +231,32 @@ describe('CentralErrorHandler - Integration Tests', () => {
       let recoveryAttempted = false;
 
       // Register a complex recovery strategy that simulates real recovery logic
-      centralErrorHandler.registerRecoveryStrategy('ComplexError', async (errorInfo) => {
-        recoveryAttempted = true;
+      centralErrorHandler.registerRecoveryStrategy(
+        'ComplexError',
+        async (errorInfo) => {
+          recoveryAttempted = true;
 
-        // Simulate recovery using MonitoringCoordinator
-        return await monitoringCoordinator.executeMonitored(
-          'errorRecovery',
-          async () => {
-            // Simulate some recovery work
-            await new Promise(resolve => setTimeout(resolve, 10));
-            return {
-              recovered: true,
-              fallbackData: { status: 'recovered', timestamp: Date.now() },
-              originalError: errorInfo.type
-            };
-          },
-          { context: 'error recovery operation' }
-        );
-      });
+          // Simulate recovery using MonitoringCoordinator
+          return await monitoringCoordinator.executeMonitored(
+            'errorRecovery',
+            async () => {
+              // Simulate some recovery work
+              await new Promise((resolve) => setTimeout(resolve, 10));
+              return {
+                recovered: true,
+                fallbackData: { status: 'recovered', timestamp: Date.now() },
+                originalError: errorInfo.type,
+              };
+            },
+            { context: 'error recovery operation' }
+          );
+        }
+      );
 
       class ComplexError extends BaseError {
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
         constructor(message) {
           super(message, 'COMPLEX_ERROR');
           this.name = 'ComplexError';
@@ -220,13 +264,15 @@ describe('CentralErrorHandler - Integration Tests', () => {
       }
 
       const error = new ComplexError('Complex recoverable error');
-      const result = await centralErrorHandler.handle(error, { integration: true });
+      const result = await centralErrorHandler.handle(error, {
+        integration: true,
+      });
 
       expect(recoveryAttempted).toBe(true);
       expect(result).toEqual({
         recovered: true,
         fallbackData: expect.objectContaining({ status: 'recovered' }),
-        originalError: 'ComplexError'
+        originalError: 'ComplexError',
       });
 
       const metrics = centralErrorHandler.getMetrics();
@@ -245,7 +291,9 @@ describe('CentralErrorHandler - Integration Tests', () => {
       });
 
       class FailingError extends BaseError {
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
         constructor(message) {
           super(message, 'FAILING_ERROR');
           this.name = 'FailingError';
@@ -267,10 +315,13 @@ describe('CentralErrorHandler - Integration Tests', () => {
       expect(metrics.recoveryRate).toBe(0);
 
       // Verify recovery failure was logged
-      expect(mockLogger.error).toHaveBeenCalledWith('Recovery failed', expect.objectContaining({
-        originalError: expect.any(Object),
-        recoveryError: 'Recovery failed'
-      }));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Recovery failed',
+        expect.objectContaining({
+          originalError: expect.any(Object),
+          recoveryError: 'Recovery failed',
+        })
+      );
     });
   });
 
@@ -282,18 +333,20 @@ describe('CentralErrorHandler - Integration Tests', () => {
 
       // Generate multiple errors to test performance
       for (let i = 0; i < errorCount; i++) {
-        const error = new BaseError(`Load test error ${i}`, ErrorCodes.INVALID_DATA_GENERIC, {
-          iteration: i,
-          loadTest: true
-        });
+        const error = new BaseError(
+          `Load test error ${i}`,
+          ErrorCodes.INVALID_DATA_GENERIC,
+          {
+            iteration: i,
+            loadTest: true,
+          }
+        );
         errors.push(error);
       }
 
       // Process errors in parallel
       const results = await Promise.allSettled(
-        errors.map(error =>
-          centralErrorHandler.handle(error).catch(e => e)
-        )
+        errors.map((error) => centralErrorHandler.handle(error).catch((e) => e))
       );
 
       const endTime = Date.now();
@@ -301,7 +354,7 @@ describe('CentralErrorHandler - Integration Tests', () => {
 
       // Verify all errors were processed
       expect(results).toHaveLength(errorCount);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.status).toBe('fulfilled');
         expect(result.value).toBeInstanceOf(BaseError);
       });
@@ -320,27 +373,32 @@ describe('CentralErrorHandler - Integration Tests', () => {
     });
   });
 
-
   describe('Error Context Integration', () => {
     it('should preserve and enhance error context through complete flow', async () => {
       const originalContext = {
         userId: 'user123',
         sessionId: 'session456',
         operation: 'dataProcessing',
-        component: 'dataValidator'
+        component: 'dataValidator',
       };
 
-      const error = new BaseError('Context preservation test', ErrorCodes.INVALID_DATA_GENERIC, {
-        field: 'email',
-        value: 'invalid-email'
-      });
+      const error = new BaseError(
+        'Context preservation test',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {
+          field: 'email',
+          value: 'invalid-email',
+        }
+      );
 
       try {
         await centralErrorHandler.handle(error, originalContext);
       } catch (enhancedError) {
         // Verify error was enhanced by CentralErrorHandler
         expect(enhancedError).toBeInstanceOf(BaseError);
-        expect(enhancedError.getContext('handledBy')).toBe('CentralErrorHandler');
+        expect(enhancedError.getContext('handledBy')).toBe(
+          'CentralErrorHandler'
+        );
         expect(enhancedError.getContext('handledAt')).toBeDefined();
         expect(enhancedError.getContext('recoveryAttempted')).toBe(false);
 

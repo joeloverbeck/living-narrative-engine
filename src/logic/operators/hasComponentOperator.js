@@ -42,9 +42,7 @@ export class HasComponentOperator {
    */
   constructor({ entityManager, logger }) {
     if (!entityManager || !logger) {
-      throw new Error(
-        'HasComponentOperator: Missing required dependencies'
-      );
+      throw new Error('HasComponentOperator: Missing required dependencies');
     }
 
     this.#entityManager = entityManager;
@@ -69,7 +67,8 @@ export class HasComponentOperator {
       }
 
       let [entityPath, componentId] = params;
-      const jsonLogicExpression = this.#serializeExpressionForMetadata(entityPath);
+      const jsonLogicExpression =
+        this.#serializeExpressionForMetadata(entityPath);
 
       // If entityPath is a JSON Logic expression (e.g., {"var": "entity.blocker"}),
       // evaluate it using the context to get the actual value
@@ -107,10 +106,16 @@ export class HasComponentOperator {
           // Path resolution failed - check if this looks like a context path or an entity ID
           // Common context paths: "entity", "actor", "location", "target", "targets"
           // Also paths with dots: "entity.blocker", "actor.items"
-          const commonContextKeys = ['entity', 'actor', 'location', 'target', 'targets', 'event'];
+          const commonContextKeys = [
+            'entity',
+            'actor',
+            'location',
+            'target',
+            'targets',
+            'event',
+          ];
           const looksLikeContextPath =
-            commonContextKeys.includes(entityPath) ||
-            entityPath.includes('.');
+            commonContextKeys.includes(entityPath) || entityPath.includes('.');
 
           if (looksLikeContextPath) {
             // This looks like a context path that should exist but doesn't - log warning
@@ -133,7 +138,10 @@ export class HasComponentOperator {
           // This happens when resolving entity IDs like "actor_1" from nested context
           // The context has {actor_1: {components...}} which resolves to the component object
           // In this case, we should use the original entityPath as the entity ID
-          if (typeof resolved.entity === 'object' && !hasValidEntityId(resolved.entity)) {
+          if (
+            typeof resolved.entity === 'object' &&
+            !hasValidEntityId(resolved.entity)
+          ) {
             this.#logger.debug(
               `${this.#operatorName}: Resolved "${entityPath}" to object without id, treating original path as entity ID`
             );
@@ -231,8 +239,7 @@ export class HasComponentOperator {
     const { jsonLogicExpression = null } = options;
     // Check if we're in planning mode (context has a 'state' object).
     // During planning, the symbolic planning state is the source of truth.
-    const hasPlanningState =
-      context.state && typeof context.state === 'object';
+    const hasPlanningState = context.state && typeof context.state === 'object';
     let planningActorId = null;
 
     if (hasPlanningState) {
@@ -313,5 +320,4 @@ export class HasComponentOperator {
     }
     return null;
   }
-
 }

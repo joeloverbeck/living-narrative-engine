@@ -259,7 +259,13 @@ class BlueprintSlotStrategy {
    * @returns {Promise<string|null>} Entity ID that corresponds to the slot, or null
    * @private
    */
-  async #findEntityAtSlotPath(entityId, slotId, blueprint, bodyGraph, slotEntityMappings) {
+  async #findEntityAtSlotPath(
+    entityId,
+    slotId,
+    blueprint,
+    bodyGraph,
+    slotEntityMappings
+  ) {
     // Check if we have a direct mapping for this slot
     if (slotEntityMappings && slotEntityMappings.has(slotId)) {
       const mappedEntity = slotEntityMappings.get(slotId);

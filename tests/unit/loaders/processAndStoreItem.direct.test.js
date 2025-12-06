@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 let processAndStoreItem;
 let parseAndValidateIdSpy;
@@ -7,10 +14,7 @@ describe('processAndStoreItem helper', () => {
   beforeEach(async () => {
     jest.resetModules();
     const idUtilsModule = await import('../../../src/utils/idUtils.js');
-    parseAndValidateIdSpy = jest.spyOn(
-      idUtilsModule,
-      'parseAndValidateId'
-    );
+    parseAndValidateIdSpy = jest.spyOn(idUtilsModule, 'parseAndValidateId');
     ({ processAndStoreItem } = await import(
       '../../../src/loaders/helpers/processAndStoreItem.js'
     ));
@@ -57,7 +61,13 @@ describe('processAndStoreItem helper', () => {
       loader._logger,
       { allowOverrides: true }
     );
-    expect(storeSpy).toHaveBeenCalledWith('weapons', 'mod', 'test-item', data, 'items.json');
+    expect(storeSpy).toHaveBeenCalledWith(
+      'weapons',
+      'mod',
+      'test-item',
+      data,
+      'items.json'
+    );
     expect(result).toEqual({
       qualifiedId: 'mod:test-item',
       didOverride: false,
@@ -182,7 +192,13 @@ describe('processAndStoreItem helper', () => {
       'mod:with-schema#defs',
       { success: 'registered schema for mod:with-schema' }
     );
-    expect(storeSpy).toHaveBeenCalledWith('items', 'mod', 'with-schema', data, 'items.json');
+    expect(storeSpy).toHaveBeenCalledWith(
+      'items',
+      'mod',
+      'with-schema',
+      data,
+      'items.json'
+    );
     expect(result.fullId).toBe('mod:with-schema');
   });
 
@@ -258,6 +274,12 @@ describe('processAndStoreItem helper', () => {
     });
 
     expect(registerSpy).not.toHaveBeenCalled();
-    expect(storeSpy).toHaveBeenCalledWith('items', 'mod', 'plain', data, 'items.json');
+    expect(storeSpy).toHaveBeenCalledWith(
+      'items',
+      'mod',
+      'plain',
+      data,
+      'items.json'
+    );
   });
 });

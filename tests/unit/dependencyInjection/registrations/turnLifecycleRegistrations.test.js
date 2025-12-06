@@ -399,9 +399,7 @@ describe('registerTurnLifecycle - Unit Tests', () => {
       expect(actor.getComponentData).toHaveBeenCalledWith(
         PLAYER_TYPE_COMPONENT_ID
       );
-      expect(actor.hasComponent).not.toHaveBeenCalledWith(
-        PLAYER_COMPONENT_ID
-      );
+      expect(actor.hasComponent).not.toHaveBeenCalledWith(PLAYER_COMPONENT_ID);
       expect(handler).toBe(mockDependencies.actorTurnHandler);
     });
 

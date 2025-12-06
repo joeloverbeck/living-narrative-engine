@@ -2,7 +2,14 @@
  * @file Unit tests for CacheMetrics
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import { CacheMetrics } from '../../../src/cache/CacheMetrics.js';
 
@@ -15,13 +22,13 @@ describe('CacheMetrics', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    
+
     mockCache = testBed.createMock('cache', [
       'getMetrics',
       'getMemoryUsage',
-      'resetStats'
+      'resetStats',
     ]);
-    
+
     mockCache.getMetrics.mockReturnValue({
       size: 10,
       maxSize: 100,
@@ -32,24 +39,24 @@ describe('CacheMetrics', () => {
         sets: 100,
         deletes: 10,
         evictions: 5,
-        prunings: 2
+        prunings: 2,
       },
       config: {
         maxSize: 100,
         ttl: 5000,
-        evictionPolicy: 'LRU'
+        evictionPolicy: 'LRU',
       },
-      strategyName: 'LRU'
+      strategyName: 'LRU',
     });
-    
+
     mockCache.getMemoryUsage.mockReturnValue({
       currentBytes: 1024,
       currentMB: 0.001,
       maxBytes: 102400,
       maxMB: 0.1,
-      utilizationPercent: 1.0
+      utilizationPercent: 1.0,
     });
-    
+
     metrics = new CacheMetrics({
       logger: mockLogger,
     });
@@ -71,24 +78,27 @@ describe('CacheMetrics', () => {
     });
 
     it('should create with custom configuration', () => {
-      const customMetrics = new CacheMetrics({
-        logger: mockLogger,
-      }, {
-        collectionInterval: 10000,
-        historyRetention: 48
-      });
-      
+      const customMetrics = new CacheMetrics(
+        {
+          logger: mockLogger,
+        },
+        {
+          collectionInterval: 10000,
+          historyRetention: 48,
+        }
+      );
+
       expect(customMetrics).toBeDefined();
     });
   });
 
   describe('Cache Registration', () => {
     it('should register cache for monitoring', () => {
-      metrics.registerCache('test-cache', mockCache, { 
+      metrics.registerCache('test-cache', mockCache, {
         description: 'Test cache',
-        category: 'entity'
+        category: 'entity',
       });
-      
+
       const registeredCaches = metrics.getRegisteredCaches();
       expect(registeredCaches).toHaveLength(1);
       expect(registeredCaches[0]).toEqual('test-cache');
@@ -97,7 +107,7 @@ describe('CacheMetrics', () => {
 
     it('should register cache with minimal metadata', () => {
       metrics.registerCache('simple-cache', mockCache);
-      
+
       const registeredCaches = metrics.getRegisteredCaches();
       expect(registeredCaches).toHaveLength(1);
       expect(registeredCaches[0]).toEqual('simple-cache');
@@ -107,7 +117,7 @@ describe('CacheMetrics', () => {
       expect(() => {
         metrics.registerCache('', mockCache);
       }).toThrow(Error);
-      
+
       expect(() => {
         metrics.registerCache(null, mockCache);
       }).toThrow(Error);
@@ -117,7 +127,7 @@ describe('CacheMetrics', () => {
       expect(() => {
         metrics.registerCache('test-cache', null);
       }).toThrow(Error);
-      
+
       expect(() => {
         metrics.registerCache('test-cache', {});
       }).toThrow(Error);
@@ -125,7 +135,7 @@ describe('CacheMetrics', () => {
 
     it('should allow duplicate cache registration', () => {
       metrics.registerCache('test-cache', mockCache);
-      
+
       // Production code allows re-registration, overwrites the existing one
       expect(() => {
         metrics.registerCache('test-cache', mockCache);
@@ -140,28 +150,28 @@ describe('CacheMetrics', () => {
 
     it('should unregister existing cache', () => {
       const result = metrics.unregisterCache('test-cache');
-      
+
       expect(result).toBe(true);
       expect(metrics.getRegisteredCaches()).toHaveLength(0);
     });
 
     it('should return false for non-existent cache', () => {
       const result = metrics.unregisterCache('non-existent');
-      
+
       expect(result).toBe(false);
     });
   });
 
   describe('Individual Cache Metrics Collection', () => {
     beforeEach(() => {
-      metrics.registerCache('test-cache', mockCache, { 
-        description: 'Test cache' 
+      metrics.registerCache('test-cache', mockCache, {
+        description: 'Test cache',
       });
     });
 
     it('should collect metrics for specific cache', () => {
       const cacheMetrics = metrics.collectCacheMetrics('test-cache');
-      
+
       expect(cacheMetrics).toMatchObject({
         cacheId: 'test-cache',
         size: 10,
@@ -173,24 +183,24 @@ describe('CacheMetrics', () => {
           sets: 100,
           deletes: 10,
           evictions: 5,
-          prunings: 2
+          prunings: 2,
         },
         config: {
           maxSize: 100,
           ttl: 5000,
-          evictionPolicy: 'LRU'
+          evictionPolicy: 'LRU',
         },
         strategyName: 'LRU',
         metadata: expect.objectContaining({
           description: 'Test cache',
-          registeredAt: expect.any(Number)
-        })
+          registeredAt: expect.any(Number),
+        }),
       });
     });
 
     it('should return null for non-existent cache', () => {
       const cacheMetrics = metrics.collectCacheMetrics('non-existent');
-      
+
       expect(cacheMetrics).toBeNull();
     });
 
@@ -198,9 +208,9 @@ describe('CacheMetrics', () => {
       mockCache.getMetrics.mockImplementation(() => {
         throw new Error('Metrics error');
       });
-      
+
       const cacheMetrics = metrics.collectCacheMetrics('test-cache');
-      
+
       expect(cacheMetrics).toBeNull();
       expect(mockLogger.error).toHaveBeenCalled();
     });
@@ -215,23 +225,23 @@ describe('CacheMetrics', () => {
       // Collect metrics multiple times
       metrics.collectCacheMetrics('test-cache');
       metrics.collectCacheMetrics('test-cache');
-      
+
       const history = metrics.getCacheHistory('test-cache', 1);
-      
+
       expect(history).toHaveLength(2);
       expect(history[0].timestamp).toBeLessThanOrEqual(history[1].timestamp);
     });
 
     it('should return null for non-existent cache history', () => {
       const history = metrics.getCacheHistory('non-existent');
-      
+
       expect(history).toBeNull();
     });
 
     it('should filter history by hours', () => {
       // This is a simplified test since we can't easily mock time
       const history = metrics.getCacheHistory('test-cache', 0.001);
-      
+
       expect(history).toBeDefined();
     });
   });
@@ -254,7 +264,7 @@ describe('CacheMetrics', () => {
         maxSize: 10,
         hitRate: 0.5,
         stats: { hits: 5, misses: 5 },
-        strategyName: 'FIFO'
+        strategyName: 'FIFO',
       });
 
       metrics.registerCache('primary-cache', mockCache);
@@ -272,7 +282,9 @@ describe('CacheMetrics', () => {
       const history = metrics.getHistoricalData();
 
       expect(history).toHaveLength(3);
-      expect(history.map(entry => entry.timestamp)).toEqual([1000, 2000, 3000]);
+      expect(history.map((entry) => entry.timestamp)).toEqual([
+        1000, 2000, 3000,
+      ]);
       expect(history[0].cacheId).toBe('primary-cache');
       expect(history[2].cacheId).toBe('secondary-cache');
     });
@@ -284,9 +296,9 @@ describe('CacheMetrics', () => {
     beforeEach(() => {
       mockCache2 = testBed.createMock('cache', [
         'getMetrics',
-        'getMemoryUsage'
+        'getMemoryUsage',
       ]);
-      
+
       mockCache2.getMetrics.mockReturnValue({
         size: 20,
         maxSize: 200,
@@ -297,27 +309,27 @@ describe('CacheMetrics', () => {
           sets: 150,
           deletes: 5,
           evictions: 10,
-          prunings: 3
+          prunings: 3,
         },
         config: { maxSize: 200, ttl: 10000, evictionPolicy: 'LFU' },
-        strategyName: 'LFU'
+        strategyName: 'LFU',
       });
-      
+
       mockCache2.getMemoryUsage.mockReturnValue({
         currentBytes: 2048,
         currentMB: 0.002,
         maxBytes: 204800,
         maxMB: 0.2,
-        utilizationPercent: 1.0
+        utilizationPercent: 1.0,
       });
-      
+
       metrics.registerCache('cache1', mockCache, { category: 'entity' });
       metrics.registerCache('cache2', mockCache2, { category: 'component' });
     });
 
     it('should provide aggregated metrics across all caches', () => {
       const aggregated = metrics.getAggregatedMetrics();
-      
+
       expect(aggregated).toMatchObject({
         cacheCount: 2,
         totalSize: 30, // 10 + 20
@@ -329,21 +341,21 @@ describe('CacheMetrics', () => {
         totalDeletes: 15,
         strategyDistribution: {
           LRU: 1,
-          LFU: 1
+          LFU: 1,
         },
         memoryUtilization: expect.any(Object),
         caches: {
           cache1: expect.objectContaining({
             size: 10,
             hitRate: 0.75,
-            strategy: 'LRU'
+            strategy: 'LRU',
           }),
           cache2: expect.objectContaining({
             size: 20,
             hitRate: 0.8,
-            strategy: 'LFU'
-          })
-        }
+            strategy: 'LFU',
+          }),
+        },
       });
     });
 
@@ -361,7 +373,7 @@ describe('CacheMetrics', () => {
         totalSets: 0,
         totalDeletes: 0,
         strategyDistribution: {},
-        caches: {}
+        caches: {},
       });
     });
 
@@ -375,7 +387,7 @@ describe('CacheMetrics', () => {
         strategyName: 'LRU',
         memoryUsageMB: 20,
         memorySize: 20480,
-        utilizationPercent: 92
+        utilizationPercent: 92,
       });
 
       const detailedCache = testBed.createMock('cache', ['getMetrics']);
@@ -387,7 +399,7 @@ describe('CacheMetrics', () => {
         strategyName: 'FIFO',
         memoryUsageMB: 15,
         memorySize: 15360,
-        utilizationPercent: 88
+        utilizationPercent: 88,
       });
 
       const service = new CacheMetrics({ logger: mockLogger });
@@ -399,7 +411,10 @@ describe('CacheMetrics', () => {
       expect(aggregated.memoryUtilization.totalMB).toBeCloseTo(35, 5);
       expect(aggregated.memoryUtilization.totalBytes).toBe(35840);
       expect(aggregated.memoryUtilization.highestUtilization).toBe(92);
-      expect(aggregated.memoryUtilization.averageUtilization).toBeCloseTo(90, 5);
+      expect(aggregated.memoryUtilization.averageUtilization).toBeCloseTo(
+        90,
+        5
+      );
     });
 
     it('should handle partial cache errors in aggregation', () => {
@@ -424,9 +439,9 @@ describe('CacheMetrics', () => {
           hits: 0,
           misses: 0,
           sets: 0,
-          deletes: 0
+          deletes: 0,
         },
-        strategyName: 'LRU'
+        strategyName: 'LRU',
       });
 
       const service = new CacheMetrics({ logger: mockLogger });
@@ -446,7 +461,7 @@ describe('CacheMetrics', () => {
           totalHits: 0,
           totalMisses: 0,
           totalSets: 0,
-          totalDeletes: 0
+          totalDeletes: 0,
         })
       );
     });
@@ -462,7 +477,7 @@ describe('CacheMetrics', () => {
           maxSize: 30,
           hitRate: 0.5,
           strategyName: 'custom-strategy',
-          stats: { hits: 0, misses: 0 }
+          stats: { hits: 0, misses: 0 },
         }));
 
       const aggregated = service.getAggregatedMetrics();
@@ -471,7 +486,7 @@ describe('CacheMetrics', () => {
         'unknown',
         expect.objectContaining({
           size: 3,
-          strategy: 'custom-strategy'
+          strategy: 'custom-strategy',
         })
       );
 
@@ -482,48 +497,62 @@ describe('CacheMetrics', () => {
   describe('Performance Summary', () => {
     beforeEach(() => {
       // First cache with high hit rate (> 0.8 to be considered high performing)
-      const highHitCache = testBed.createMock('cache', ['getMetrics', 'getMemoryUsage']);
+      const highHitCache = testBed.createMock('cache', [
+        'getMetrics',
+        'getMemoryUsage',
+      ]);
       highHitCache.getMetrics.mockReturnValue({
         size: 10,
         maxSize: 100,
         hitRate: 0.85, // > 0.8 to be high performing
         stats: { hits: 85, misses: 15, sets: 100, deletes: 10 },
         strategyName: 'LRU',
-        memoryUsageMB: 0.001
+        memoryUsageMB: 0.001,
       });
-      metrics.registerCache('high-hit-cache', highHitCache, { description: 'High hit rate' });
-      
+      metrics.registerCache('high-hit-cache', highHitCache, {
+        description: 'High hit rate',
+      });
+
       // Second cache with low hit rate (< 0.5 to be considered low performing)
-      const lowHitCache = testBed.createMock('cache', ['getMetrics', 'getMemoryUsage']);
+      const lowHitCache = testBed.createMock('cache', [
+        'getMetrics',
+        'getMemoryUsage',
+      ]);
       lowHitCache.getMetrics.mockReturnValue({
         size: 50,
         maxSize: 100,
         hitRate: 0.3, // < 0.5 to be low performing
         stats: { hits: 30, misses: 70, evictions: 20 },
         strategyName: 'FIFO',
-        memoryUsageMB: 0.005
+        memoryUsageMB: 0.005,
       });
       lowHitCache.getMemoryUsage.mockReturnValue({
         currentBytes: 5120,
-        utilizationPercent: 5.0
+        utilizationPercent: 5.0,
       });
-      
-      metrics.registerCache('low-hit-cache', lowHitCache, { description: 'Low hit rate' });
-      
+
+      metrics.registerCache('low-hit-cache', lowHitCache, {
+        description: 'Low hit rate',
+      });
+
       // Collect metrics to populate the cache data
       metrics.collectAllMetrics();
     });
 
     it('should analyze cache performance', () => {
       const summary = metrics.getPerformanceSummary();
-      
+
       expect(summary.overview).toMatchObject({
         cacheCount: 2,
-        overallHitRate: expect.any(Number)
+        overallHitRate: expect.any(Number),
       });
-      
-      expect(summary.performance.highPerformingCaches).toContain('high-hit-cache');
-      expect(summary.performance.lowPerformingCaches).toContain('low-hit-cache');
+
+      expect(summary.performance.highPerformingCaches).toContain(
+        'high-hit-cache'
+      );
+      expect(summary.performance.lowPerformingCaches).toContain(
+        'low-hit-cache'
+      );
       expect(summary.recommendations).toBeInstanceOf(Array);
     });
 
@@ -535,9 +564,11 @@ describe('CacheMetrics', () => {
       expect(Array.isArray(summary.recommendations)).toBe(true);
 
       // Since overall hit rate is 0.575 ((85+30)/(85+15+30+70)) which is < 0.6, should have recommendation
-      expect(summary.recommendations.some(r =>
-        r.includes('hit rate') || r.includes('60%')
-      )).toBe(true);
+      expect(
+        summary.recommendations.some(
+          (r) => r.includes('hit rate') || r.includes('60%')
+        )
+      ).toBe(true);
     });
 
     it('should handle performance summary with no caches', () => {
@@ -565,7 +596,7 @@ describe('CacheMetrics', () => {
         memoryUsageMB: 50,
         memorySize: 51200,
         utilizationPercent: 95,
-        metadata: { type: 'entity' }
+        metadata: { type: 'entity' },
       });
 
       const slowCache = testBed.createMock('cache', ['getMetrics']);
@@ -577,7 +608,7 @@ describe('CacheMetrics', () => {
         strategyName: 'FIFO',
         memoryUsageMB: 12,
         memorySize: 12288,
-        utilizationPercent: 90
+        utilizationPercent: 90,
       });
 
       const mediumCache = testBed.createMock('cache', ['getMetrics']);
@@ -589,7 +620,7 @@ describe('CacheMetrics', () => {
         strategyName: 'LFU',
         memoryUsageMB: 11,
         memorySize: 11264,
-        utilizationPercent: 88
+        utilizationPercent: 88,
       });
 
       service.registerCache('saturated-cache', saturatedCache);
@@ -598,18 +629,22 @@ describe('CacheMetrics', () => {
 
       const summary = service.getPerformanceSummary();
 
-      expect(summary.performance.memoryIntensiveCaches).toEqual(expect.arrayContaining([
-        { id: 'saturated-cache', memoryMB: 50 },
-        { id: 'slow-cache', memoryMB: 12 },
-        { id: 'medium-cache', memoryMB: 11 }
-      ]));
+      expect(summary.performance.memoryIntensiveCaches).toEqual(
+        expect.arrayContaining([
+          { id: 'saturated-cache', memoryMB: 50 },
+          { id: 'slow-cache', memoryMB: 12 },
+          { id: 'medium-cache', memoryMB: 11 },
+        ])
+      );
 
-      expect(summary.recommendations).toEqual(expect.arrayContaining([
-        expect.stringContaining('hit rate'),
-        expect.stringContaining('Memory utilization is high'),
-        expect.stringContaining('Consider using LRU strategy'),
-        expect.stringContaining('maximum capacity')
-      ]));
+      expect(summary.recommendations).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('hit rate'),
+          expect.stringContaining('Memory utilization is high'),
+          expect.stringContaining('Consider using LRU strategy'),
+          expect.stringContaining('maximum capacity'),
+        ])
+      );
     });
   });
 
@@ -626,7 +661,7 @@ describe('CacheMetrics', () => {
         cacheId: 'test-cache',
         size: 10,
         maxSize: 100,
-        hitRate: 0.75
+        hitRate: 0.75,
       });
     });
   });
@@ -638,7 +673,9 @@ describe('CacheMetrics', () => {
 
     it('should start and stop automatic metrics collection on the provided interval', () => {
       jest.useFakeTimers();
-      const collectSpy = jest.spyOn(metrics, 'collectAllMetrics').mockReturnValue([]);
+      const collectSpy = jest
+        .spyOn(metrics, 'collectAllMetrics')
+        .mockReturnValue([]);
 
       metrics.startCollection(100);
       jest.advanceTimersByTime(350);
@@ -655,7 +692,9 @@ describe('CacheMetrics', () => {
 
     it('should restart automatic collection when already running', () => {
       jest.useFakeTimers();
-      const collectSpy = jest.spyOn(metrics, 'collectAllMetrics').mockReturnValue([]);
+      const collectSpy = jest
+        .spyOn(metrics, 'collectAllMetrics')
+        .mockReturnValue([]);
 
       metrics.startCollection(200);
       jest.advanceTimersByTime(200);
@@ -664,7 +703,9 @@ describe('CacheMetrics', () => {
       metrics.startCollection(50);
       jest.advanceTimersByTime(150);
 
-      expect(collectSpy.mock.calls.length).toBeGreaterThan(firstInvocationCount);
+      expect(collectSpy.mock.calls.length).toBeGreaterThan(
+        firstInvocationCount
+      );
 
       metrics.stopCollection();
       collectSpy.mockRestore();
@@ -681,14 +722,19 @@ describe('CacheMetrics', () => {
 
       expect(stopSpy).toHaveBeenCalled();
       expect(service.getRegisteredCaches()).toHaveLength(0);
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('CacheMetrics service destroyed'));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('CacheMetrics service destroyed')
+      );
 
       stopSpy.mockRestore();
     });
 
     it('should default to configured interval when none is provided', () => {
       jest.useFakeTimers();
-      const service = new CacheMetrics({ logger: mockLogger }, { collectionInterval: 250 });
+      const service = new CacheMetrics(
+        { logger: mockLogger },
+        { collectionInterval: 250 }
+      );
       const intervalSpy = jest.spyOn(global, 'setInterval');
 
       service.startCollection();
@@ -719,7 +765,7 @@ describe('CacheMetrics', () => {
         maxSize: 100,
         hitRate: 0.9,
         stats: { hits: 90, misses: 10 },
-        strategyName: 'LRU'
+        strategyName: 'LRU',
       });
 
       const lowCache = testBed.createMock('cache', ['getMetrics']);
@@ -728,7 +774,7 @@ describe('CacheMetrics', () => {
         maxSize: 100,
         hitRate: 0.2,
         stats: { hits: 10, misses: 40 },
-        strategyName: 'FIFO'
+        strategyName: 'FIFO',
       });
 
       service.registerCache('high-cache', highCache);
@@ -739,10 +785,10 @@ describe('CacheMetrics', () => {
 
       expect(analysis.summary.totalCaches).toBe(2);
       expect(analysis.topPerformers).toEqual([
-        expect.objectContaining({ id: 'high-cache', hitRate: 0.9 })
+        expect.objectContaining({ id: 'high-cache', hitRate: 0.9 }),
       ]);
       expect(analysis.poorPerformers).toEqual([
-        expect.objectContaining({ id: 'low-cache', hitRate: 0.2 })
+        expect.objectContaining({ id: 'low-cache', hitRate: 0.2 }),
       ]);
       expect(Array.isArray(analysis.recommendations)).toBe(true);
       expect(analysis.strategyDistribution).toMatchObject({ LRU: 1, FIFO: 1 });
@@ -757,7 +803,7 @@ describe('CacheMetrics', () => {
         maxSize: 100,
         hitRate: 0.95,
         stats: { hits: 95, misses: 5 },
-        strategyName: 'LRU'
+        strategyName: 'LRU',
       });
 
       const highSecondary = testBed.createMock('cache', ['getMetrics']);
@@ -766,7 +812,7 @@ describe('CacheMetrics', () => {
         maxSize: 80,
         hitRate: 0.9,
         stats: { hits: 90, misses: 10 },
-        strategyName: 'LFU'
+        strategyName: 'LFU',
       });
 
       const lowPrimary = testBed.createMock('cache', ['getMetrics']);
@@ -775,7 +821,7 @@ describe('CacheMetrics', () => {
         maxSize: 100,
         hitRate: 0.3,
         stats: { hits: 30, misses: 70 },
-        strategyName: 'FIFO'
+        strategyName: 'FIFO',
       });
 
       const lowSecondary = testBed.createMock('cache', ['getMetrics']);
@@ -784,7 +830,7 @@ describe('CacheMetrics', () => {
         maxSize: 90,
         hitRate: 0.1,
         stats: { hits: 10, misses: 90 },
-        strategyName: 'MRU'
+        strategyName: 'MRU',
       });
 
       service.registerCache('high-primary', highPrimary);
@@ -796,13 +842,13 @@ describe('CacheMetrics', () => {
 
       const analysis = service.analyzePerformance();
 
-      expect(analysis.topPerformers.map(p => p.id)).toEqual([
+      expect(analysis.topPerformers.map((p) => p.id)).toEqual([
         'high-primary',
-        'high-secondary'
+        'high-secondary',
       ]);
-      expect(analysis.poorPerformers.map(p => p.id)).toEqual([
+      expect(analysis.poorPerformers.map((p) => p.id)).toEqual([
         'low-secondary',
-        'low-primary'
+        'low-primary',
       ]);
     });
   });
@@ -810,29 +856,29 @@ describe('CacheMetrics', () => {
   describe('Error Handling and Edge Cases', () => {
     it('should handle concurrent operations safely', async () => {
       metrics.registerCache('test-cache', mockCache);
-      
+
       // Simulate concurrent metric collections
-      const promises = Array.from({ length: 5 }, () => 
+      const promises = Array.from({ length: 5 }, () =>
         Promise.resolve(metrics.collectAllMetrics())
       );
-      
+
       const results = await Promise.all(promises);
       expect(results).toHaveLength(5);
-      expect(results.every(r => r.length === 1)).toBe(true);
+      expect(results.every((r) => r.length === 1)).toBe(true);
     });
 
     it('should handle malformed cache metrics gracefully', () => {
       metrics.registerCache('test-cache', mockCache);
       mockCache.getMetrics.mockReturnValue(null);
-      
+
       const cacheMetrics = metrics.collectCacheMetrics('test-cache');
       // When getMetrics returns null, the spread operator still creates an object with metadata
       expect(cacheMetrics).toMatchObject({
         cacheId: 'test-cache',
         timestamp: expect.any(Number),
-        metadata: expect.any(Object)
+        metadata: expect.any(Object),
       });
-      
+
       const aggregated = metrics.getAggregatedMetrics();
       expect(aggregated.cacheCount).toBe(1); // Cache is still registered
     });
@@ -841,10 +887,10 @@ describe('CacheMetrics', () => {
   describe('Cache Registration Check', () => {
     it('should check if cache is registered', () => {
       expect(metrics.isCacheRegistered('test-cache')).toBe(false);
-      
+
       metrics.registerCache('test-cache', mockCache);
       expect(metrics.isCacheRegistered('test-cache')).toBe(true);
-      
+
       metrics.unregisterCache('test-cache');
       expect(metrics.isCacheRegistered('test-cache')).toBe(false);
     });

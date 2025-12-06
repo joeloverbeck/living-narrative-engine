@@ -159,7 +159,9 @@ describe('processingErrorUtils integration', () => {
       expect(result.logger).toBe(console);
       expect(result.actorId).toBe('missing-actor');
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ErrorState: Critical error - turnCtx is invalid in resolveLogger.')
+        expect.stringContaining(
+          'ErrorState: Critical error - turnCtx is invalid in resolveLogger.'
+        )
       );
     });
   });
@@ -193,7 +195,13 @@ describe('processingErrorUtils integration', () => {
       const logger = new CollectingLogger();
 
       expect(() =>
-        dispatchSystemError(dispatcher, logger, 'StateName', 'actor-999', new Error('fail'))
+        dispatchSystemError(
+          dispatcher,
+          logger,
+          'StateName',
+          'actor-999',
+          new Error('fail')
+        )
       ).not.toThrow();
 
       expect(logger.errorEntries).toHaveLength(1);
@@ -205,10 +213,18 @@ describe('processingErrorUtils integration', () => {
     it('warns when the dispatcher is not available', () => {
       const logger = new CollectingLogger();
 
-      dispatchSystemError(null, logger, 'StateName', 'actor-404', new Error('missing dispatcher'));
+      dispatchSystemError(
+        null,
+        logger,
+        'StateName',
+        'actor-404',
+        new Error('missing dispatcher')
+      );
 
       expect(logger.warnEntries).toHaveLength(1);
-      expect(logger.warnEntries[0].message).toContain('SafeEventDispatcher not available');
+      expect(logger.warnEntries[0].message).toContain(
+        'SafeEventDispatcher not available'
+      );
     });
   });
 });

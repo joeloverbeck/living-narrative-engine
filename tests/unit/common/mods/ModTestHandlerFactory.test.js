@@ -271,12 +271,13 @@ describe('ModTestHandlerFactory', () => {
 
   describe('createHandlersWithComponentMutations', () => {
     it('should include standard handlers plus add/remove component support', () => {
-      const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
-        mockEntityManager,
-        mockEventBus,
-        mockLogger,
-        mockGameDataRepository
-      );
+      const handlers =
+        ModTestHandlerFactory.createHandlersWithComponentMutations(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
       const expectedHandlers = [
         'QUERY_COMPONENT',
@@ -305,12 +306,13 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should configure mutation handlers with executable methods', () => {
-      const handlers = ModTestHandlerFactory.createHandlersWithComponentMutations(
-        mockEntityManager,
-        mockEventBus,
-        mockLogger,
-        mockGameDataRepository
-      );
+      const handlers =
+        ModTestHandlerFactory.createHandlersWithComponentMutations(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
       expect(typeof handlers.ADD_COMPONENT.execute).toBe('function');
       expect(typeof handlers.REMOVE_COMPONENT.execute).toBe('function');
@@ -627,7 +629,12 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
 
       // Test by calling the factory and checking if it produces the expected result
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
 
       // Verify positioning-specific handlers are present
       expect(handlers.ADD_COMPONENT).toBeDefined();
@@ -648,7 +655,12 @@ describe('ModTestHandlerFactory', () => {
     it('should return createHandlersWithComponentMutations for affection', () => {
       const factory =
         ModTestHandlerFactory.getHandlerFactoryForCategory('affection');
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
@@ -683,9 +695,13 @@ describe('ModTestHandlerFactory', () => {
     });
 
     it('should return createHandlersWithComponentMutations for sex', () => {
-      const factory =
-        ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+      const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('sex');
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
 
       expect(handlers.ADD_COMPONENT).toBeDefined();
       expect(handlers.REMOVE_COMPONENT).toBeDefined();
@@ -718,7 +734,12 @@ describe('ModTestHandlerFactory', () => {
         ModTestHandlerFactory.getHandlerFactoryForCategory('positioning');
 
       // Should be able to call the returned factory method
-      const handlers = factory(mockEntityManager, mockEventBus, mockLogger, mockGameDataRepository);
+      const handlers = factory(
+        mockEntityManager,
+        mockEventBus,
+        mockLogger,
+        mockGameDataRepository
+      );
       expect(handlers.ADD_COMPONENT).toBeDefined();
     });
   });

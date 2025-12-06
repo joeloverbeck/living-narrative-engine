@@ -19,9 +19,7 @@ import SVGRenderer from '../../../../src/domUI/anatomy-renderer/SVGRenderer.js';
 import LayoutEngine from '../../../../src/domUI/anatomy-renderer/LayoutEngine.js';
 import RadialLayoutStrategy from '../../../../src/domUI/anatomy-renderer/layouts/RadialLayoutStrategy.js';
 import { AnatomyRenderError } from '../../../../src/errors/anatomyRenderError.js';
-import {
-  createEntityManagerAdapter,
-} from '../../../common/entities/entityManagerTestFactory.js';
+import { createEntityManagerAdapter } from '../../../common/entities/entityManagerTestFactory.js';
 
 class FailingSVGRenderer extends SVGRenderer {
   /**
@@ -202,7 +200,10 @@ describe('VisualizationComposer integration coverage', () => {
               return null;
             },
             getAllComponents: () => ({
-              'anatomy:joint': { parentId: 'root-entity', socketId: 'broken-socket' },
+              'anatomy:joint': {
+                parentId: 'root-entity',
+                socketId: 'broken-socket',
+              },
             }),
           };
         }
@@ -430,7 +431,10 @@ describe('VisualizationComposer integration coverage', () => {
       eventBus: eventBus2,
     });
     const layoutEngine2 = new LayoutEngine({ logger });
-    layoutEngine2.registerStrategy('radial', new RadialLayoutStrategy({ logger }));
+    layoutEngine2.registerStrategy(
+      'radial',
+      new RadialLayoutStrategy({ logger })
+    );
     const entityManager2 = createEntityManagerAdapter({
       logger,
       initialEntities,
@@ -454,9 +458,7 @@ describe('VisualizationComposer integration coverage', () => {
   });
 
   it('should throw if renderVisualization runs without initialization', async () => {
-    const {
-      composer,
-    } = createComposer({ initialEntities: [] });
+    const { composer } = createComposer({ initialEntities: [] });
 
     await expect(composer.renderVisualization()).rejects.toThrow(
       AnatomyRenderError

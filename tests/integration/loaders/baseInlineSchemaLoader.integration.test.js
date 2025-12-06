@@ -114,14 +114,19 @@ async function ensureDirectory(dirPath) {
 async function writeComponentFile(baseModsPath, modId, fileName, data) {
   const targetDir = path.join(baseModsPath, modId, 'components');
   await ensureDirectory(targetDir);
-  await fs.writeFile(path.join(targetDir, fileName), JSON.stringify(data, null, 2));
+  await fs.writeFile(
+    path.join(targetDir, fileName),
+    JSON.stringify(data, null, 2)
+  );
 }
 
 describe('Integration: BaseInlineSchemaLoader schema registration via ComponentLoader', () => {
   let tempModsRoot;
 
   beforeEach(async () => {
-    tempModsRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'inline-schema-mods-'));
+    tempModsRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'inline-schema-mods-')
+    );
   });
 
   afterEach(async () => {
@@ -139,7 +144,8 @@ describe('Integration: BaseInlineSchemaLoader schema registration via ComponentL
     const dataRegistry =
       options.dataRegistry ?? new InMemoryDataRegistry({ logger });
     const config = options.config ?? new TestConfiguration(tempModsRoot);
-    const pathResolver = options.pathResolver ?? new TestPathResolver(tempModsRoot);
+    const pathResolver =
+      options.pathResolver ?? new TestPathResolver(tempModsRoot);
     const dataFetcher = options.dataFetcher ?? new FileSystemDataFetcher();
     const loader = new ComponentLoader(
       config,
@@ -310,7 +316,12 @@ describe('Integration: BaseInlineSchemaLoader schema registration via ComponentL
       'components'
     );
 
-    expect(reloadResult).toEqual({ count: 1, overrides: 0, errors: 0, failures: [] });
+    expect(reloadResult).toEqual({
+      count: 1,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    });
     expect(schemaValidator.removedSchemas).toContain(componentId);
     expect(schemaValidator.schemas.get(componentId)).toEqual(
       updatedData.dataSchema

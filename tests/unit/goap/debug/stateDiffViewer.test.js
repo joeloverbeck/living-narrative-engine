@@ -201,8 +201,12 @@ describe('StateDiffViewer', () => {
     });
 
     it('should not detect identical nested objects as modified', () => {
-      const before = { 'actor-1:core:hungry': { level: 50, status: 'moderate' } };
-      const after = { 'actor-1:core:hungry': { level: 50, status: 'moderate' } };
+      const before = {
+        'actor-1:core:hungry': { level: 50, status: 'moderate' },
+      };
+      const after = {
+        'actor-1:core:hungry': { level: 50, status: 'moderate' },
+      };
 
       const diff = viewer.diff(before, after);
 
@@ -311,7 +315,10 @@ describe('StateDiffViewer', () => {
         'actor-1:core:inventory': { items: ['sword', 'shield'], weight: 10 },
       };
       const after = {
-        'actor-1:core:inventory': { items: ['sword', 'shield', 'potion'], weight: 11 },
+        'actor-1:core:inventory': {
+          items: ['sword', 'shield', 'potion'],
+          weight: 11,
+        },
       };
 
       const diff = viewer.diff(before, after);
@@ -388,7 +395,9 @@ describe('StateDiffViewer', () => {
 
       const output = viewer.visualize(diff);
 
-      expect(output).toContain('Changes: 1 total (1 added, 0 modified, 0 removed)');
+      expect(output).toContain(
+        'Changes: 1 total (1 added, 0 modified, 0 removed)'
+      );
       expect(output).toContain('ADDED:');
       expect(output).toContain('+ actor-1:core:hungry:');
     });
@@ -451,7 +460,9 @@ describe('StateDiffViewer', () => {
 
       const output = viewer.visualize(diff);
 
-      expect(output).toContain('Changes: 0 total (0 added, 0 modified, 0 removed)');
+      expect(output).toContain(
+        'Changes: 0 total (0 added, 0 modified, 0 removed)'
+      );
       expect(output).toContain('No state changes detected.');
     });
 
@@ -470,7 +481,9 @@ describe('StateDiffViewer', () => {
 
       const output = viewer.visualize(diff);
 
-      expect(output).toContain('Changes: 3 total (1 added, 1 modified, 1 removed)');
+      expect(output).toContain(
+        'Changes: 3 total (1 added, 1 modified, 1 removed)'
+      );
       expect(output).toContain('ADDED:');
       expect(output).toContain('MODIFIED:');
       expect(output).toContain('REMOVED:');

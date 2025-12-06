@@ -204,7 +204,7 @@ describe('ReportFormatter', () => {
       const formatter = new ReportFormatter(report);
       const html = formatter.toHTML();
 
-      expect(html).toContain('<strong>Location:</strong>  \'\'');
+      expect(html).toContain("<strong>Location:</strong>  ''");
     });
   });
 
@@ -318,7 +318,9 @@ describe('ReportFormatter', () => {
       const formatter = new ReportFormatter(report);
       const csv = formatter.toCSV();
 
-      expect(csv).toContain('Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion');
+      expect(csv).toContain(
+        'Severity,Type,Message,Location Type,Location Name,Component,Fix,Suggestion'
+      );
     });
 
     it('should include errors in CSV', () => {
@@ -439,10 +441,10 @@ describe('ReportFormatter', () => {
       };
       const report = new ValidationReport(minimalData);
       const formatter = new ReportFormatter(report);
-      
+
       // We can indirectly test escapeHtml via toHTML with a report having empty strings if needed,
       // but the null checks are internal.
-      // However, toHTML passes existing properties. 
+      // However, toHTML passes existing properties.
       // Let's trust the previous tests covered the main paths.
     });
   });

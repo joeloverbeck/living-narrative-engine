@@ -81,10 +81,9 @@ describe('ClichesGeneratorController - Initialization Issues', () => {
     });
 
     it('should use valid states only (not idle)', async () => {
-      const idleStateWarnings =
-        testBed.logger.warn.mock.calls.filter((call) =>
-          stringifyCall(call).includes("Invalid state 'idle'")
-        );
+      const idleStateWarnings = testBed.logger.warn.mock.calls.filter((call) =>
+        stringifyCall(call).includes("Invalid state 'idle'")
+      );
 
       expect(idleStateWarnings.length).toBe(0);
     });

@@ -2,7 +2,14 @@
  * @file Integration tests exercising buildActorContext with a live EntityManager.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { EntityManagerTestBed } from '../../../common/entities/entityManagerTestBed.js';
 import { buildActorContext } from '../../../../src/actions/validation/contextBuilders.js';
 import { ComponentAccessorError } from '../../../../src/logic/componentAccessor.js';
@@ -78,14 +85,14 @@ describe('buildActorContext integration', () => {
     const context = buildActorContext(actor.id, entityManager, logger);
     const original = entityManager.getComponentData.bind(entityManager);
 
-    jest.spyOn(entityManager, 'getComponentData').mockImplementation(
-      (entityId, componentId, ...rest) => {
+    jest
+      .spyOn(entityManager, 'getComponentData')
+      .mockImplementation((entityId, componentId, ...rest) => {
         if (componentId === 'core:status') {
           throw new Error('component lookup failed');
         }
         return original(entityId, componentId, ...rest);
-      }
-    );
+      });
 
     const failingAccess = context.components['core:status'];
     expect(failingAccess).toHaveProperty('error');

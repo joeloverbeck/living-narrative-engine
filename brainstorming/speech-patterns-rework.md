@@ -13,10 +13,10 @@ Currently, characters, such as vespera_nightwhisper.character.json from the 'fan
 
 We want to allow in speech_patterns.component.json , in addition to the current structure so that the additions are backwards compatible, a structure like the following:
 
-  **Feline Verbal Tics**
-     Casual context: "meow", "mrow", "mmh" integrated naturally into speech
-     Manipulative context: Intensified cuteness ("meow-y goodness~") when deceiving
-     Vulnerable context: Complete absence of cat-sounds when genuinely upset
+**Feline Verbal Tics**
+Casual context: "meow", "mrow", "mmh" integrated naturally into speech
+Manipulative context: Intensified cuteness ("meow-y goodness~") when deceiving
+Vulnerable context: Complete absence of cat-sounds when genuinely upset
 
      Examples:
      - "Mrrrow... I could play the ballad about the duke's wife... or mmh... maybe something newer?"

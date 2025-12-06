@@ -19,7 +19,10 @@
  * @see src/utils/preValidationUtils.js - KNOWN_OPERATION_TYPES whitelist
  */
 
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { unlockAppendagesHoldingItem } from '../../utils/grabbingUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
@@ -59,7 +62,11 @@ class UnwieldItemHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -82,10 +89,22 @@ class UnwieldItemHandler extends BaseOperationHandler {
       return null;
     }
 
-    const { actorEntity, itemEntity } = /** @type {UnwieldItemParams} */ (params);
+    const { actorEntity, itemEntity } = /** @type {UnwieldItemParams} */ (
+      params
+    );
 
-    const validatedActor = validateStringParam(actorEntity, 'actorEntity', logger, this.#dispatcher);
-    const validatedItem = validateStringParam(itemEntity, 'itemEntity', logger, this.#dispatcher);
+    const validatedActor = validateStringParam(
+      actorEntity,
+      'actorEntity',
+      logger,
+      this.#dispatcher
+    );
+    const validatedItem = validateStringParam(
+      itemEntity,
+      'itemEntity',
+      logger,
+      this.#dispatcher
+    );
 
     if (!validatedActor || !validatedItem) {
       return null;
@@ -115,12 +134,17 @@ class UnwieldItemHandler extends BaseOperationHandler {
     // Validation
     const validated = this.#validateParams(params, log);
     if (!validated) {
-      log.warn('[UNWIELD_ITEM] Parameter validation failed', { rawParams: params });
+      log.warn('[UNWIELD_ITEM] Parameter validation failed', {
+        rawParams: params,
+      });
       return { success: false, error: 'validation_failed' };
     }
 
     const { actorEntity, itemEntity } = validated;
-    log.debug('[UNWIELD_ITEM] Parameters validated', { actorEntity, itemEntity });
+    log.debug('[UNWIELD_ITEM] Parameters validated', {
+      actorEntity,
+      itemEntity,
+    });
 
     try {
       // Check wielding component
@@ -129,25 +153,37 @@ class UnwieldItemHandler extends BaseOperationHandler {
       );
 
       if (!wieldingData) {
-        log.debug('[UNWIELD_ITEM] No wielding component on actor, idempotent success', { actorEntity });
+        log.debug(
+          '[UNWIELD_ITEM] No wielding component on actor, idempotent success',
+          { actorEntity }
+        );
         return { success: true };
       }
 
       const wieldedItemIds = wieldingData.wielded_item_ids || [];
-      log.debug('[UNWIELD_ITEM] Current wielded items', { actorEntity, wieldedItemIds });
+      log.debug('[UNWIELD_ITEM] Current wielded items', {
+        actorEntity,
+        wieldedItemIds,
+      });
 
       // Check if item is wielded
       if (!wieldedItemIds.includes(itemEntity)) {
-        log.debug('[UNWIELD_ITEM] Item not in wielded list, idempotent success', {
-          actorEntity,
-          itemEntity,
-          wieldedItemIds,
-        });
+        log.debug(
+          '[UNWIELD_ITEM] Item not in wielded list, idempotent success',
+          {
+            actorEntity,
+            itemEntity,
+            wieldedItemIds,
+          }
+        );
         return { success: true };
       }
 
       // Unlock grabbing appendages holding this item
-      log.debug('[UNWIELD_ITEM] Unlocking grabbing appendages', { actorEntity, itemEntity });
+      log.debug('[UNWIELD_ITEM] Unlocking grabbing appendages', {
+        actorEntity,
+        itemEntity,
+      });
       const unlockResult = await unlockAppendagesHoldingItem(
         this.#entityManager,
         actorEntity,
@@ -160,22 +196,33 @@ class UnwieldItemHandler extends BaseOperationHandler {
       });
 
       // Update wielding component
-      const remainingItems = wieldedItemIds.filter((/** @type {string} */ id) => id !== itemEntity);
+      const remainingItems = wieldedItemIds.filter(
+        (/** @type {string} */ id) => id !== itemEntity
+      );
 
       if (remainingItems.length === 0) {
         // Remove component entirely if no more wielded items
-        log.debug('[UNWIELD_ITEM] Removing empty wielding component', { actorEntity });
-        await this.#entityManager.removeComponent(actorEntity, WIELDING_COMPONENT_ID);
+        log.debug('[UNWIELD_ITEM] Removing empty wielding component', {
+          actorEntity,
+        });
+        await this.#entityManager.removeComponent(
+          actorEntity,
+          WIELDING_COMPONENT_ID
+        );
       } else {
         // Update component with remaining items
         log.debug('[UNWIELD_ITEM] Updating wielding component', {
           actorEntity,
           remainingItems,
         });
-        await this.#entityManager.addComponent(actorEntity, WIELDING_COMPONENT_ID, {
-          ...wieldingData,
-          wielded_item_ids: remainingItems,
-        });
+        await this.#entityManager.addComponent(
+          actorEntity,
+          WIELDING_COMPONENT_ID,
+          {
+            ...wieldingData,
+            wielded_item_ids: remainingItems,
+          }
+        );
       }
 
       // Dispatch success event
@@ -197,7 +244,6 @@ class UnwieldItemHandler extends BaseOperationHandler {
         remainingWieldedItems: remainingItems,
       });
       return { success: true };
-
     } catch (error) {
       const err = /** @type {Error} */ (error);
       log.error('[UNWIELD_ITEM] Operation failed with exception', err, {

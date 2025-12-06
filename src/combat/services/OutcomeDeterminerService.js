@@ -75,8 +75,11 @@ class OutcomeDeterminerService {
    * @returns {DetermineResult} Outcome determination result
    */
   determine(params) {
-    const { finalChance, thresholds = DEFAULT_THRESHOLDS, forcedRoll } =
-      params || {};
+    const {
+      finalChance,
+      thresholds = DEFAULT_THRESHOLDS,
+      forcedRoll,
+    } = params || {};
 
     // Validate finalChance
     const validatedChance = this.#validateFinalChance(finalChance);
@@ -100,8 +103,7 @@ class OutcomeDeterminerService {
       isSuccess,
       normalizedThresholds
     );
-    const isCritical =
-      outcome === 'CRITICAL_SUCCESS' || outcome === 'FUMBLE';
+    const isCritical = outcome === 'CRITICAL_SUCCESS' || outcome === 'FUMBLE';
 
     this.#logger.debug(
       `OutcomeDeterminerService.determine: roll=${roll}, chance=${validatedChance}, margin=${margin}, outcome=${outcome}, isCritical=${isCritical}`

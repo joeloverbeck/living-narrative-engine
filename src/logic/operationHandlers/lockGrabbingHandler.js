@@ -138,7 +138,13 @@ class LockGrabbingHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         `LOCK_GRABBING: failed to lock appendages for entity ${actorId}`,
-        { actor_id: actorId, count, item_id: itemId, error: err.message, stack: err.stack },
+        {
+          actor_id: actorId,
+          count,
+          item_id: itemId,
+          error: err.message,
+          stack: err.stack,
+        },
         logger
       );
     }

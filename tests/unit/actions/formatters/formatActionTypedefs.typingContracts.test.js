@@ -1,7 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import {
-  __formatActionTypedefs,
-} from '../../../../src/actions/formatters/formatActionTypedefs.js';
+import { __formatActionTypedefs } from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
 /**
  * These tests exercise the runtime helpers provided by the typedef module.
@@ -21,7 +19,10 @@ describe('formatActionTypedefs typedef helpers', () => {
         expect(command).toBe('greet {target}!');
         expect(context).toEqual({ entityId: 'friend', placeholder: 'buddy' });
 
-        return { ok: true, value: command.replace('{target}', context.entityId) };
+        return {
+          ok: true,
+          value: command.replace('{target}', context.entityId),
+        };
       },
       fail(command, context, deps) {
         expect(command).toBe('explain {target}!');
@@ -40,9 +41,13 @@ describe('formatActionTypedefs typedef helpers', () => {
       entityId: 'friend',
       placeholder: 'buddy',
     });
-    const failure = formatters.fail('explain {target}!', {}, {
-      logger: { warn: () => {} },
-    });
+    const failure = formatters.fail(
+      'explain {target}!',
+      {},
+      {
+        logger: { warn: () => {} },
+      }
+    );
 
     expect(success).toEqual({ ok: true, value: 'greet friend!' });
     expect(failure).toEqual({

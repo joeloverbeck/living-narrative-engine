@@ -10,18 +10,18 @@ Create the `ModifierCollectorService` that collects and aggregates applicable mo
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/ModifierCollectorService.js` | Service implementation |
-| `tests/unit/combat/services/ModifierCollectorService.test.js` | Unit tests |
+| File                                                          | Purpose                |
+| ------------------------------------------------------------- | ---------------------- |
+| `src/combat/services/ModifierCollectorService.js`             | Service implementation |
+| `tests/unit/combat/services/ModifierCollectorService.test.js` | Unit tests             |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/combat/index.js` | Export ModifierCollectorService |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add ModifierCollectorService token |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | Register ModifierCollectorService |
+| File                                                           | Change                             |
+| -------------------------------------------------------------- | ---------------------------------- |
+| `src/combat/index.js`                                          | Export ModifierCollectorService    |
+| `src/dependencyInjection/tokens/tokens-core.js`                | Add ModifierCollectorService token |
+| `src/dependencyInjection/registrations/combatRegistrations.js` | Register ModifierCollectorService  |
 
 ## Implementation Details
 
@@ -216,11 +216,11 @@ export { default as ModifierCollectorService } from './services/ModifierCollecto
 
 The service implements the following stacking rules from the spec:
 
-| Rule | Behavior |
-|------|----------|
-| Flat modifiers | Sum all applicable values |
+| Rule                 | Behavior                                      |
+| -------------------- | --------------------------------------------- |
+| Flat modifiers       | Sum all applicable values                     |
 | Percentage modifiers | Add percentages together (applied after flat) |
-| Same stackId | Only highest absolute value modifier applies |
+| Same stackId         | Only highest absolute value modifier applies  |
 
 ## Out of Scope
 
@@ -297,11 +297,11 @@ Required test cases:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/SkillResolverService.js` | Service pattern reference |
-| `src/combat/services/ProbabilityCalculatorService.js` | Service pattern reference |
-| `tests/unit/combat/services/skillResolverService.test.js` | Test pattern reference |
+| File                                                      | Purpose                   |
+| --------------------------------------------------------- | ------------------------- |
+| `src/combat/services/SkillResolverService.js`             | Service pattern reference |
+| `src/combat/services/ProbabilityCalculatorService.js`     | Service pattern reference |
+| `tests/unit/combat/services/skillResolverService.test.js` | Test pattern reference    |
 
 ---
 
@@ -315,18 +315,18 @@ Successfully implemented ModifierCollectorService as a Phase 5 stub with full in
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/combat/services/ModifierCollectorService.js` | Service implementation with stacking rules and total calculation |
-| `tests/unit/combat/services/ModifierCollectorService.test.js` | 24 unit tests covering all required scenarios |
+| File                                                          | Description                                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `src/combat/services/ModifierCollectorService.js`             | Service implementation with stacking rules and total calculation |
+| `tests/unit/combat/services/ModifierCollectorService.test.js` | 24 unit tests covering all required scenarios                    |
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Added `ModifierCollectorService` token (alphabetically sorted) |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | Added import and singleton factory registration |
-| `src/combat/index.js` | Added export for ModifierCollectorService |
+| File                                                           | Change                                                         |
+| -------------------------------------------------------------- | -------------------------------------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                | Added `ModifierCollectorService` token (alphabetically sorted) |
+| `src/dependencyInjection/registrations/combatRegistrations.js` | Added import and singleton factory registration                |
+| `src/combat/index.js`                                          | Added export for ModifierCollectorService                      |
 
 ### Test Results
 

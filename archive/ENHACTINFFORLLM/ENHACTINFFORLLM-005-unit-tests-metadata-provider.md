@@ -3,17 +3,21 @@
 ## Status: COMPLETED ✅
 
 ## Summary
+
 Create comprehensive unit tests for the ModActionMetadataProvider service.
 
 ## Prerequisites
+
 - ENHACTINFFORLLM-002 must be completed (service implementation) ✅
 
 ## Files to Touch
+
 - `tests/unit/prompting/modActionMetadataProvider.test.js` (NEW FILE)
 
 > **Note**: The original ticket incorrectly specified `tests/unit/prompting/services/` but the service is at `src/prompting/modActionMetadataProvider.js` (not in a `services/` subfolder). Test file location updated to mirror the source structure.
 
 ## Out of Scope
+
 - DO NOT modify the service implementation
 - DO NOT modify any other test files
 - DO NOT create integration tests (that's ENHACTINFFORLLM-007)
@@ -21,6 +25,7 @@ Create comprehensive unit tests for the ModActionMetadataProvider service.
 ## Implementation Details
 
 ### Directory Structure
+
 Tests go in: `tests/unit/prompting/` (mirroring source location)
 
 ### Test File Structure
@@ -51,17 +56,23 @@ describe('ModActionMetadataProvider', () => {
 
   describe('constructor', () => {
     it('should throw when dataRegistry is missing', () => {
-      expect(() => new ModActionMetadataProvider({
-        dataRegistry: null,
-        logger: mockLogger,
-      })).toThrow();
+      expect(
+        () =>
+          new ModActionMetadataProvider({
+            dataRegistry: null,
+            logger: mockLogger,
+          })
+      ).toThrow();
     });
 
     it('should throw when logger is missing', () => {
-      expect(() => new ModActionMetadataProvider({
-        dataRegistry: mockDataRegistry,
-        logger: null,
-      })).toThrow();
+      expect(
+        () =>
+          new ModActionMetadataProvider({
+            dataRegistry: mockDataRegistry,
+            logger: null,
+          })
+      ).toThrow();
     });
   });
 
@@ -81,7 +92,10 @@ describe('ModActionMetadataProvider', () => {
         actionPurpose: manifest.actionPurpose,
         actionConsiderWhen: manifest.actionConsiderWhen,
       });
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('mod_manifests', 'positioning');
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'mod_manifests',
+        'positioning'
+      );
     });
 
     it('should return metadata with only actionPurpose', () => {
@@ -153,7 +167,10 @@ describe('ModActionMetadataProvider', () => {
 
       provider.getMetadataForMod('POSITIONING');
 
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('mod_manifests', 'positioning');
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'mod_manifests',
+        'positioning'
+      );
     });
 
     it('should cache results correctly (same result on repeated calls)', () => {
@@ -203,11 +220,13 @@ describe('ModActionMetadataProvider', () => {
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 - `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js` passes ✅
 - All 14 test cases pass ✅
 - Coverage > 90% for the service file ✅ (100% achieved)
 
 ### Invariants That Must Remain True
+
 1. Tests use `@jest/globals` imports consistently ✅
 2. Tests follow AAA pattern (Arrange, Act, Assert) ✅
 3. Mock objects created fresh in `beforeEach` ✅
@@ -215,6 +234,7 @@ describe('ModActionMetadataProvider', () => {
 5. Test file location mirrors source location ✅
 
 ## Verification Steps
+
 1. Run `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js --verbose` ✅
 2. Run `npm run test:unit -- tests/unit/prompting/modActionMetadataProvider.test.js --coverage` ✅
 3. Verify all test names are descriptive and follow "should..." convention ✅
@@ -226,21 +246,25 @@ describe('ModActionMetadataProvider', () => {
 ### What was changed vs originally planned
 
 **Originally Planned:**
+
 - Create test file at `tests/unit/prompting/services/modActionMetadataProvider.test.js`
 - Import from `../../../../src/prompting/services/modActionMetadataProvider.js`
 - 15 test cases
 
 **Actually Implemented:**
+
 - Created test file at `tests/unit/prompting/modActionMetadataProvider.test.js` (corrected path - no `services/` subfolder since the source file is at `src/prompting/modActionMetadataProvider.js`)
 - Import from `../../../src/prompting/modActionMetadataProvider.js`
 - 14 test cases (original had a minor count error)
 
 **Discrepancies Corrected in Ticket:**
+
 1. File path updated to match actual source location (no `services/` folder)
 2. Import path corrected accordingly
 3. Test count corrected to 14 (actual)
 
 **Results:**
+
 - All 14 tests pass
 - 100% code coverage on `src/prompting/modActionMetadataProvider.js`
 - No ESLint errors

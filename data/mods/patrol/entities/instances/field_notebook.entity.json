@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "patrol:field_notebook_instance",
-    "definitionId": "patrol:field_notebook"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "patrol:field_notebook_instance",
+  "definitionId": "patrol:field_notebook"
 }

@@ -73,17 +73,16 @@ export const HEIGHT_CATEGORIES = arrayToConstantObject(
  *
  * @deprecated Import BODY_DESCRIPTOR_REGISTRY directly instead
  */
-export const DESCRIPTOR_METADATA = Object.entries(BODY_DESCRIPTOR_REGISTRY).reduce(
-  (acc, [key, metadata]) => {
-    acc[key] = {
-      label: metadata.displayLabel,
-      validValues: metadata.validValues,
-      description: `${metadata.displayLabel} descriptor`,
-    };
-    return acc;
-  },
-  {}
-);
+export const DESCRIPTOR_METADATA = Object.entries(
+  BODY_DESCRIPTOR_REGISTRY
+).reduce((acc, [key, metadata]) => {
+  acc[key] = {
+    label: metadata.displayLabel,
+    validValues: metadata.validValues,
+    description: `${metadata.displayLabel} descriptor`,
+  };
+  return acc;
+}, {});
 
 /**
  * All supported descriptor property names

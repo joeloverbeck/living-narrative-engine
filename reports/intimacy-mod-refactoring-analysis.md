@@ -7,15 +7,19 @@
 ## Executive Summary
 
 ### Current Situation
+
 The `intimacy` mod has grown to contain 32 distinct actions covering a wide semantic range from friendly affection to deep kissing to sensual caressing. This mixing of interaction types creates maintenance challenges and unclear boundaries for future content additions.
 
 ### Proposed Solution
+
 Extract the intimacy mod into **3 semantically coherent mods**:
+
 1. **`affection`** - Gentle, caring, platonic-compatible physical contact
 2. **`kissing`** - All mouth-based romantic interactions
 3. **`caressing`** - Sensual, flirtatious touching actions
 
 ### Expected Outcomes
+
 - ✅ **Clear semantic boundaries** for each interaction type
 - ✅ **Improved maintainability** with smaller, focused modules
 - ✅ **Visual differentiation** through distinct color schemes
@@ -23,6 +27,7 @@ Extract the intimacy mod into **3 semantically coherent mods**:
 - ✅ **Easier extensibility** with well-defined categories
 
 ### Key Metrics
+
 - **Current State**: 1 mod, 32 actions, 1 color scheme
 - **Proposed State**: 3 mods, 32 actions distributed logically, 3 color schemes
 - **Files Affected**: ~96 files to move/update
@@ -34,14 +39,14 @@ Extract the intimacy mod into **3 semantically coherent mods**:
 
 ### File Inventory
 
-| File Type | Count | Location |
-|-----------|-------|----------|
-| Actions | 32 | `data/mods/intimacy/actions/` |
-| Rules | 31 | `data/mods/intimacy/rules/` |
-| Conditions | 34 | `data/mods/intimacy/conditions/` |
-| Components | 1 | `data/mods/intimacy/components/` |
-| Scopes | 13 | `data/mods/intimacy/scopes/` |
-| **Total** | **111** | - |
+| File Type  | Count   | Location                         |
+| ---------- | ------- | -------------------------------- |
+| Actions    | 32      | `data/mods/intimacy/actions/`    |
+| Rules      | 31      | `data/mods/intimacy/rules/`      |
+| Conditions | 34      | `data/mods/intimacy/conditions/` |
+| Components | 1       | `data/mods/intimacy/components/` |
+| Scopes     | 13      | `data/mods/intimacy/scopes/`     |
+| **Total**  | **111** | -                                |
 
 ### Current Dependencies
 
@@ -56,6 +61,7 @@ Extract the intimacy mod into **3 semantically coherent mods**:
 ```
 
 ### Visual Properties
+
 - **Color Scheme**: Rose Pink (3.2)
 - **Background**: `#ad1457`
 - **Text**: `#ffffff`
@@ -64,23 +70,28 @@ Extract the intimacy mod into **3 semantically coherent mods**:
 ### Identified Problems
 
 #### 1. Semantic Overloading
+
 The mod mixes fundamentally different interaction types:
+
 - **Friendly affection** (hold_hand, hug_tight) - platonic-compatible
 - **Romantic kissing** (lean_in_for_deep_kiss, explore_mouth_with_tongue) - explicitly romantic
 - **Sensual touching** (fondle_ass, caress_abdomen) - escalation/sexual tension
 
 #### 2. Maintainability Challenges
+
 - 32 actions in one directory makes navigation difficult
 - Unclear where new actions should be added
 - Single color scheme limits visual differentiation
 - Difficult to understand mod purpose at a glance
 
 #### 3. Dependency Management
+
 - Mods depending on intimacy get ALL actions, even if they only need kissing
 - No granular control over which intimacy types are available
 - Harder to create content variations (e.g., platonic-only scenarios)
 
 #### 4. Extensibility Issues
+
 - Adding new action types unclear (is "cuddle" affection or intimacy?)
 - No semantic guidance for future development
 - Risk of continued bloat
@@ -114,9 +125,11 @@ Proposed:
 ## Mod 1: `affection` - Gentle Physical Contact
 
 ### Purpose
+
 Caring, supportive physical interactions that can be platonic or romantic. These actions express warmth and comfort without necessarily implying romantic interest.
 
 ### Semantic Scope
+
 - Hand-holding and gentle touches
 - Hugs and supportive gestures
 - Comforting physical contact
@@ -124,16 +137,16 @@ Caring, supportive physical interactions that can be platonic or romantic. These
 
 ### Actions (8)
 
-| Action ID | Name | Description |
-|-----------|------|-------------|
-| `affection:hold_hand` | Hold Hand | Reach out and hold someone's hand affectionately |
-| `hugging:hug_tight` | Hug Tight | Give someone a tight, tender hug |
-| `affection:brush_hand` | Brush Hand | Lightly brush your hand against theirs |
-| `affection:massage_back` | Massage Back | Gently massage the target's back |
-| `affection:massage_shoulders` | Massage Shoulders | Massage the target's shoulders |
-| `affection:sling_arm_around_shoulders` | Sling Arm Around Shoulders | Casually put your arm around their shoulders |
-| `affection:wrap_arm_around_waist` | Wrap Arm Around Waist | Wrap your arm around their waist |
-| `affection:place_hand_on_waist` | Place Hand on Waist | Place your hand on their waist |
+| Action ID                              | Name                       | Description                                      |
+| -------------------------------------- | -------------------------- | ------------------------------------------------ |
+| `affection:hold_hand`                  | Hold Hand                  | Reach out and hold someone's hand affectionately |
+| `hugging:hug_tight`                    | Hug Tight                  | Give someone a tight, tender hug                 |
+| `affection:brush_hand`                 | Brush Hand                 | Lightly brush your hand against theirs           |
+| `affection:massage_back`               | Massage Back               | Gently massage the target's back                 |
+| `affection:massage_shoulders`          | Massage Shoulders          | Massage the target's shoulders                   |
+| `affection:sling_arm_around_shoulders` | Sling Arm Around Shoulders | Casually put your arm around their shoulders     |
+| `affection:wrap_arm_around_waist`      | Wrap Arm Around Waist      | Wrap your arm around their waist                 |
+| `affection:place_hand_on_waist`        | Place Hand on Waist        | Place your hand on their waist                   |
 
 ### Visual Properties
 
@@ -166,9 +179,11 @@ Caring, supportive physical interactions that can be platonic or romantic. These
 ```
 
 ### Components
+
 None required (stateless actions)
 
 ### Scopes (Shared)
+
 - `close_actors_facing_each_other_or_behind_target.scope`
 - `close_actors_facing_each_other.scope`
 - `close_actors_facing_away.scope`
@@ -176,6 +191,7 @@ None required (stateless actions)
 - `actors_with_arms_in_intimacy.scope`
 
 ### Rules Pattern
+
 Simple descriptive actions using `core:logSuccessAndEndTurn` macro pattern.
 
 ---
@@ -183,9 +199,11 @@ Simple descriptive actions using `core:logSuccessAndEndTurn` macro pattern.
 ## Mod 2: `kissing` - Mouth-Based Romantic Intimacy
 
 ### Purpose
+
 All actions involving kissing and mouth-based romantic interactions. Explicitly romantic and requires mutual participation through state management.
 
 ### Semantic Scope
+
 - Kiss initiation and responses
 - Deep/passionate kissing variations
 - Kiss-related gestures
@@ -193,23 +211,23 @@ All actions involving kissing and mouth-based romantic interactions. Explicitly 
 
 ### Actions (15)
 
-| Action ID | Name | Category |
-|-----------|------|----------|
-| `kissing:kiss_cheek` | Kiss Cheek | Initiation |
-| `kissing:peck_on_lips` | Peck on Lips | Initiation |
-| `kissing:lean_in_for_deep_kiss` | Lean in for Deep Kiss | Initiation |
-| `kissing:kiss_back_passionately` | Kiss Back Passionately | Response |
-| `kissing:accept_kiss_passively` | Accept Kiss Passively | Response |
-| `kissing:explore_mouth_with_tongue` | Explore Mouth with Tongue | During Kiss |
-| `kissing:suck_on_tongue` | Suck on Tongue | During Kiss |
-| `kissing:nibble_lower_lip` | Nibble Lower Lip | During Kiss |
-| `kissing:cup_face_while_kissing` | Cup Face While Kissing | During Kiss |
-| `kissing:break_kiss_gently` | Break Kiss Gently | Ending |
-| `kissing:pull_back_breathlessly` | Pull Back Breathlessly | Ending |
-| `kissing:pull_back_in_revulsion` | Pull Back in Revulsion | Ending |
-| `kissing:kiss_neck_sensually` | Kiss Neck Sensually | Variation |
-| `kissing:suck_on_neck_to_leave_hickey` | Suck on Neck to Leave Hickey | Variation |
-| `kissing:nibble_earlobe_playfully` | Nibble Earlobe Playfully | Variation |
+| Action ID                              | Name                         | Category    |
+| -------------------------------------- | ---------------------------- | ----------- |
+| `kissing:kiss_cheek`                   | Kiss Cheek                   | Initiation  |
+| `kissing:peck_on_lips`                 | Peck on Lips                 | Initiation  |
+| `kissing:lean_in_for_deep_kiss`        | Lean in for Deep Kiss        | Initiation  |
+| `kissing:kiss_back_passionately`       | Kiss Back Passionately       | Response    |
+| `kissing:accept_kiss_passively`        | Accept Kiss Passively        | Response    |
+| `kissing:explore_mouth_with_tongue`    | Explore Mouth with Tongue    | During Kiss |
+| `kissing:suck_on_tongue`               | Suck on Tongue               | During Kiss |
+| `kissing:nibble_lower_lip`             | Nibble Lower Lip             | During Kiss |
+| `kissing:cup_face_while_kissing`       | Cup Face While Kissing       | During Kiss |
+| `kissing:break_kiss_gently`            | Break Kiss Gently            | Ending      |
+| `kissing:pull_back_breathlessly`       | Pull Back Breathlessly       | Ending      |
+| `kissing:pull_back_in_revulsion`       | Pull Back in Revulsion       | Ending      |
+| `kissing:kiss_neck_sensually`          | Kiss Neck Sensually          | Variation   |
+| `kissing:suck_on_neck_to_leave_hickey` | Suck on Neck to Leave Hickey | Variation   |
+| `kissing:nibble_earlobe_playfully`     | Nibble Earlobe Playfully     | Variation   |
 
 ### Visual Properties
 
@@ -254,26 +272,32 @@ All actions involving kissing and mouth-based romantic interactions. Explicitly 
     "required": ["partner", "initiator"],
     "properties": {
       "partner": { "description": "Entity ID of kissing partner" },
-      "initiator": { "description": "Whether this character initiated the kiss" }
+      "initiator": {
+        "description": "Whether this character initiated the kiss"
+      }
     }
   }
 }
 ```
 
 ### Scopes (Mod-Specific)
+
 - `current_kissing_partner.scope` - identifies active kissing partner
 - `actors_with_mouth_facing_each_other.scope` - mouth positioning
 
 ### Scopes (Shared)
+
 - `close_actors_facing_each_other.scope`
 - `close_actors_facing_each_other_or_behind_target.scope`
 
 ### Rules Pattern
+
 - **Kiss initiation**: Adds `kissing` component to both participants, locks mouth engagement
 - **During kiss**: Maintains kissing state, provides variations
 - **Kiss ending**: Removes `kissing` component, unlocks mouth engagement
 
 ### Special Mechanics
+
 - **Mouth Engagement Locking**: Uses `LOCK_MOUTH_ENGAGEMENT` operation
 - **State Management**: Bilateral component addition/removal
 - **Partner Tracking**: Maintains bidirectional partner references
@@ -283,9 +307,11 @@ All actions involving kissing and mouth-based romantic interactions. Explicitly 
 ## Mod 3: `caressing` - Sensual Touch Actions
 
 ### Purpose
+
 Flirtatious and sensual touching that creates or escalates sexual tension. More intimate than affection, distinct from kissing through touch-based interaction.
 
 ### Semantic Scope
+
 - Sensual face/body touching
 - Flirtatious gestures
 - Clothing-aware intimate touches
@@ -293,17 +319,17 @@ Flirtatious and sensual touching that creates or escalates sexual tension. More 
 
 ### Actions (9)
 
-| Action ID | Name | Intimacy Level |
-|-----------|------|----------------|
-| `caressing:run_thumb_across_lips` | Run Thumb Across Lips | High |
-| `caressing:thumb_wipe_cheek` | Thumb Wipe Cheek | Medium |
-| `caressing:nuzzle_face_into_neck` | Nuzzle Face into Neck | High |
-| `caressing:lick_lips` | Lick Lips | Medium |
-| `caressing:adjust_clothing` | Adjust Clothing | Medium |
-| `caressing:fondle_ass` | Fondle Ass | Very High |
-| `caressing:caress_abdomen` | Caress Abdomen | High |
-| `caressing:feel_arm_muscles` | Feel Arm Muscles | Medium |
-| `caressing:run_fingers_through_hair` | Run Fingers Through Hair | Medium |
+| Action ID                            | Name                     | Intimacy Level |
+| ------------------------------------ | ------------------------ | -------------- |
+| `caressing:run_thumb_across_lips`    | Run Thumb Across Lips    | High           |
+| `caressing:thumb_wipe_cheek`         | Thumb Wipe Cheek         | Medium         |
+| `caressing:nuzzle_face_into_neck`    | Nuzzle Face into Neck    | High           |
+| `caressing:lick_lips`                | Lick Lips                | Medium         |
+| `caressing:adjust_clothing`          | Adjust Clothing          | Medium         |
+| `caressing:fondle_ass`               | Fondle Ass               | Very High      |
+| `caressing:caress_abdomen`           | Caress Abdomen           | High           |
+| `caressing:feel_arm_muscles`         | Feel Arm Muscles         | Medium         |
+| `caressing:run_fingers_through_hair` | Run Fingers Through Hair | Medium         |
 
 ### Visual Properties
 
@@ -331,7 +357,7 @@ Flirtatious and sensual touching that creates or escalates sexual tension. More 
     { "id": "anatomy", "version": "^1.0.0" },
     { "id": "positioning", "version": "^1.0.0" },
     { "id": "descriptors", "version": "^1.0.0" },
-    { "id": "clothing", "version": "^1.0.0" }  // for fondle_ass, caress_abdomen
+    { "id": "clothing", "version": "^1.0.0" } // for fondle_ass, caress_abdomen
   ]
 }
 ```
@@ -339,25 +365,30 @@ Flirtatious and sensual touching that creates or escalates sexual tension. More 
 **Note**: Clothing dependency needed for actions that target clothing items (fondle_ass, caress_abdomen use multi-target system with clothing scopes).
 
 ### Components
+
 None required (stateless actions)
 
 ### Scopes (Mod-Specific)
+
 - `actors_with_ass_cheeks_facing_each_other.scope`
 - `actors_with_ass_cheeks_facing_each_other_or_behind_target.scope`
 - `actors_with_ass_cheeks_in_intimacy.scope`
 - `actors_with_muscular_arms_facing_each_other_or_behind_target.scope`
 
 ### Scopes (Shared)
+
 - `close_actors_facing_each_other.scope`
 - `close_actors_facing_away.scope`
 - `close_actors_facing_each_other_or_behind_target.scope`
 - `close_actors_facing_each_other_with_torso_clothing.scope`
 
 ### Rules Pattern
+
 - Most use simple `core:logSuccessAndEndTurn` macro
 - Multi-target actions (fondle_ass, caress_abdomen) include clothing selection logic
 
 ### Special Mechanics
+
 - **Multi-Target System**: Some actions target both actor and clothing item
 - **Clothing Integration**: Uses `clothing:target_topmost_*` scopes
 - **Prerequisite Checks**: Some actions verify closeness state
@@ -369,6 +400,7 @@ None required (stateless actions)
 ### Actions Distribution
 
 #### Affection Mod (8 actions)
+
 ```
 intimacy/actions/hold_hand.action.json                    → affection/actions/hold_hand.action.json
 intimacy/actions/hug_tight.action.json                    → affection/actions/hug_tight.action.json
@@ -381,6 +413,7 @@ intimacy/actions/place_hand_on_waist.action.json          → affection/actions/
 ```
 
 #### Kissing Mod (15 actions)
+
 ```
 intimacy/actions/kiss_cheek.action.json                   → kissing/actions/kiss_cheek.action.json
 intimacy/actions/peck_on_lips.action.json                 → kissing/actions/peck_on_lips.action.json
@@ -400,6 +433,7 @@ intimacy/actions/nibble_earlobe_playfully.action.json     → kissing/actions/ni
 ```
 
 #### Caressing Mod (9 actions)
+
 ```
 intimacy/actions/run_thumb_across_lips.action.json        → caressing/actions/run_thumb_across_lips.action.json
 intimacy/actions/thumb_wipe_cheek.action.json             → caressing/actions/thumb_wipe_cheek.action.json
@@ -453,6 +487,7 @@ close_actors_facing_away.scope                            → affection, caressi
 #### Mod-Specific Scopes
 
 **Affection-specific**:
+
 ```
 actors_with_arms_facing_each_other_or_behind_target.scope
 actors_with_arms_facing_each_other.scope
@@ -460,12 +495,14 @@ actors_with_arms_in_intimacy.scope
 ```
 
 **Kissing-specific**:
+
 ```
 current_kissing_partner.scope
 actors_with_mouth_facing_each_other.scope
 ```
 
 **Caressing-specific**:
+
 ```
 actors_with_ass_cheeks_facing_each_other.scope
 actors_with_ass_cheeks_facing_each_other_or_behind_target.scope
@@ -479,9 +516,11 @@ close_actors_facing_each_other_with_torso_clothing.scope
 ## Migration Strategy
 
 ### Phase 1: Preparation
+
 **Duration**: 2-4 hours
 
 1. **Create new mod structures**
+
    ```bash
    mkdir -p data/mods/affection/{actions,rules,conditions,scopes}
    mkdir -p data/mods/kissing/{actions,rules,conditions,components,scopes}
@@ -498,6 +537,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
    - **Recommendation**: Duplicate for now (simpler, more independent)
 
 ### Phase 2: File Migration
+
 **Duration**: 4-6 hours
 
 1. **Copy and update action files**
@@ -524,6 +564,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
    - Update scope IDs with mod prefixes
 
 ### Phase 3: Update References
+
 **Duration**: 2-3 hours
 
 1. **Update mod manifests**
@@ -532,6 +573,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
    - Set version to 1.0.0
 
 2. **Search for `intimacy:` references in other mods**
+
    ```bash
    grep -r "intimacy:" data/mods/sex-*/
    grep -r "intimacy:" data/mods/seduction/
@@ -544,6 +586,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
    - Update scope references if needed
 
 ### Phase 4: Testing
+
 **Duration**: 3-4 hours
 
 1. **Create integration tests**
@@ -564,6 +607,7 @@ close_actors_facing_each_other_with_torso_clothing.scope
    - Test state management (kissing)
 
 ### Phase 5: Cleanup
+
 **Duration**: 1 hour
 
 1. **Mark intimacy mod as deprecated**
@@ -594,16 +638,17 @@ Based on semantic relationship, these mods likely reference intimacy content:
 ### Required Updates Per Dependent Mod
 
 #### Example: sex mod
+
 **Before**:
+
 ```json
 {
-  "dependencies": [
-    { "id": "intimacy", "version": "^1.0.0" }
-  ]
+  "dependencies": [{ "id": "intimacy", "version": "^1.0.0" }]
 }
 ```
 
 **After**:
+
 ```json
 {
   "dependencies": [
@@ -638,11 +683,13 @@ grep -r "intimacy:kissing" data/mods/*/
 ## Testing Requirements
 
 ### Unit Tests
+
 Not applicable for data-only mods (actions are declarative JSON).
 
 ### Integration Tests
 
 #### Affection Mod
+
 **File**: `tests/integration/mods/affection/affection_actions.integration.test.js`
 
 - Test all 8 affection actions can be discovered
@@ -651,6 +698,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - Verify action execution and message display
 
 #### Kissing Mod
+
 **File**: `tests/integration/mods/kissing/kissing_workflow.integration.test.js`
 
 - Test kiss initiation (lean_in_for_deep_kiss)
@@ -661,6 +709,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - Test different kiss responses (passionate vs passive)
 
 #### Caressing Mod
+
 **File**: `tests/integration/mods/caressing/caressing_actions.integration.test.js`
 
 - Test all 9 caressing actions
@@ -696,26 +745,31 @@ Not applicable for data-only mods (actions are declarative JSON).
 ### Benefits
 
 #### 1. Semantic Clarity ✅
+
 - **Clear categories**: Developers immediately understand action purpose
 - **Easier onboarding**: New contributors know where to add content
 - **Better discoverability**: Players can identify action types visually
 
 #### 2. Improved Maintainability ✅
+
 - **Smaller scope**: 8-15 actions per mod vs 32 in one
 - **Focused changes**: Updates affect specific interaction types
 - **Easier debugging**: Smaller surface area per mod
 
 #### 3. Visual Differentiation ✅
+
 - **Color coding**: Purple gradient from gentle (Soft Purple) to sensual (Dark Purple) with romantic pink for kissing
 - **User experience**: Players can quickly identify action intensity
 - **Accessibility**: AAA contrast on all schemes
 
 #### 4. Better Modularity ✅
+
 - **Selective loading**: Games can include only needed interaction types
 - **Dependency control**: Mods depend only on what they use
 - **Version management**: Independent versioning per interaction type
 
 #### 5. Extensibility ✅
+
 - **Clear boundaries**: Know exactly where new actions belong
 - **Scalability**: Each mod can grow without affecting others
 - **Composition**: Combine mods in different ways for different experiences
@@ -723,42 +777,50 @@ Not applicable for data-only mods (actions are declarative JSON).
 ### Risks
 
 #### 1. Migration Complexity ⚠️
+
 - **File volume**: 96+ files to move and update
 - **Reference updates**: Must find all `intimacy:*` references across codebase
 - **Testing burden**: Need comprehensive tests to ensure nothing breaks
 
 **Mitigation**:
+
 - Automated search/replace for ID updates
 - Comprehensive integration test suite
 - Phased rollout with backward compatibility period
 
 #### 2. Breaking Changes ⚠️
+
 - **Dependent mods**: sex, seduction, p_erotica may break
 - **Saved games**: Games with `intimacy:*` action state may fail
 - **External mods**: Community mods depending on intimacy
 
 **Mitigation**:
+
 - Thorough dependency analysis before migration
 - Deprecation period with warnings
 - Migration guide for mod developers
 - Saved game migration script if needed
 
 #### 3. Scope Management ⚠️
+
 - **Shared scopes**: Some scopes used by multiple mods
 - **Duplication**: Duplicating scopes increases maintenance
 - **Helper mod**: Creating helper mod adds dependency
 
 **Mitigation**:
+
 - Decision: Duplicate scopes for now (simpler)
 - Document shared scopes clearly
 - Consider helper mod in future if needed
 
 #### 4. Increased Complexity ⚠️
+
 - **More mods**: 3 mods instead of 1
 - **Load order**: Dependency chain could become complex
 - **Cognitive load**: Developers need to know which mod to use
 
 **Mitigation**:
+
 - Clear documentation of mod purposes
 - Naming conventions make purpose obvious
 - Progressive intimacy model is intuitive
@@ -768,12 +830,14 @@ Not applicable for data-only mods (actions are declarative JSON).
 ## Implementation Checklist
 
 ### Preparation Tasks
+
 - [ ] Review this analysis document with team
 - [ ] Decide on scope handling strategy (duplicate vs helper mod)
 - [ ] Allocate development time (~12-18 hours total)
 - [ ] Create git branch for refactoring work
 
 ### Structure Creation (Phase 1)
+
 - [ ] Create affection mod directory structure
 - [ ] Create kissing mod directory structure
 - [ ] Create caressing mod directory structure
@@ -782,6 +846,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Write caressing mod-manifest.json
 
 ### File Migration (Phase 2)
+
 - [ ] Migrate affection actions (8 files)
 - [ ] Migrate affection rules (8 files)
 - [ ] Migrate affection conditions (8 files)
@@ -795,6 +860,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Distribute scope files to appropriate mods
 
 ### ID Updates (Phase 2)
+
 - [ ] Update action IDs in all action files
 - [ ] Update rule IDs and action references in all rules
 - [ ] Update condition IDs and action references in all conditions
@@ -803,6 +869,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Update color schemes in all action visual properties
 
 ### Dependency Updates (Phase 3)
+
 - [ ] Search for intimacy references in sex mod
 - [ ] Search for intimacy references in seduction mod
 - [ ] Search for intimacy references in p_erotica mod
@@ -811,6 +878,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Update game.json with new mods
 
 ### Testing (Phase 4)
+
 - [ ] Create affection integration tests
 - [ ] Create kissing integration tests
 - [ ] Create caressing integration tests
@@ -821,6 +889,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Test dependent mods (sex, seduction)
 
 ### Cleanup (Phase 5)
+
 - [ ] Mark intimacy mod as deprecated (or remove)
 - [ ] Update project documentation
 - [ ] Update CLAUDE.md if needed
@@ -830,6 +899,7 @@ Not applicable for data-only mods (actions are declarative JSON).
 - [ ] Create release notes
 
 ### Post-Migration
+
 - [ ] Monitor for issues in production
 - [ ] Collect feedback from users
 - [ ] Address any migration bugs

@@ -104,10 +104,7 @@ export class IsClosestRightOccupantOperator extends BaseFurnitureOperator {
     const actorIndex = actorSitting.spot_index;
     const candidateIndex = candidateSitting.spot_index;
 
-    if (
-      typeof actorIndex !== 'number' ||
-      typeof candidateIndex !== 'number'
-    ) {
+    if (typeof actorIndex !== 'number' || typeof candidateIndex !== 'number') {
       this.logger.warn(
         `${this.operatorName}: Invalid spot_index values - actor: ${actorIndex}, candidate: ${candidateIndex}`
       );

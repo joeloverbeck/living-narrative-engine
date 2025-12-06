@@ -181,10 +181,7 @@ describe('AnatomyCacheManager', () => {
         children: [],
       });
 
-      const invalidateSpy = jest.spyOn(
-        cacheManager,
-        'invalidateCacheForRoot'
-      );
+      const invalidateSpy = jest.spyOn(cacheManager, 'invalidateCacheForRoot');
 
       await cacheManager.buildCache('torso-1', mockEntityManager);
 
@@ -860,7 +857,7 @@ describe('AnatomyCacheManager', () => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
             return {
               type: 'humanoid',
-              body: { root: 'anatomy-root-1' } // NEW: Fix requires body.root field
+              body: { root: 'anatomy-root-1' }, // NEW: Fix requires body.root field
             };
           }
           if (id === 'anatomy-root-1' && componentId === 'anatomy:part') {
@@ -896,7 +893,9 @@ describe('AnatomyCacheManager', () => {
       expect(anatomyRootNode.children).toContain('child-part-1');
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining("Successfully connected actor 'actor-1' to its own anatomy root 'anatomy-root-1'")
+        expect.stringContaining(
+          "Successfully connected actor 'actor-1' to its own anatomy root 'anatomy-root-1'"
+        )
       );
     });
 
@@ -920,7 +919,7 @@ describe('AnatomyCacheManager', () => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
             return {
               type: 'humanoid',
-              body: { root: 'valid-root-1' } // NEW: Fix requires body.root field
+              body: { root: 'valid-root-1' }, // NEW: Fix requires body.root field
             };
           }
           if (id === 'valid-root-1' && componentId === 'anatomy:part') {
@@ -955,7 +954,7 @@ describe('AnatomyCacheManager', () => {
           if (id === 'actor-1' && componentId === 'anatomy:body') {
             return {
               type: 'humanoid',
-              body: { root: 'valid-root-1' } // NEW: Fix requires body.root field
+              body: { root: 'valid-root-1' }, // NEW: Fix requires body.root field
             };
           }
           if (id === 'valid-root-1' && componentId === 'anatomy:part') {
@@ -1070,7 +1069,9 @@ describe('AnatomyCacheManager', () => {
 
       // Should log error (caught in buildCacheRecursive, not handleDisconnectedActorAnatomy)
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to build cache node for entity 'actor-1'"),
+        expect.stringContaining(
+          "Failed to build cache node for entity 'actor-1'"
+        ),
         expect.objectContaining({ error: expect.any(Error) })
       );
     });
@@ -1146,7 +1147,10 @@ describe('AnatomyCacheManager', () => {
             return null;
           }
           if (id === 'floating-child' && componentId === 'anatomy:joint') {
-            return { parentEntityId: 'floating-root', socketId: 'child-socket' };
+            return {
+              parentEntityId: 'floating-root',
+              socketId: 'child-socket',
+            };
           }
           return null;
         }

@@ -33,13 +33,13 @@ This ticket is reduced to **optional enhancements** rather than critical fixes:
 
 ## Files Assessment (REVISED)
 
-| File | Original Action | Actual Status | Required Change |
-|------|-----------------|---------------|-----------------|
-| `tests/unit/prompting/AIPromptContentProvider.test.js` | MODIFY | ✅ **PASSES** - Already mocks XML builder correctly | NONE |
-| `tests/unit/prompting/AIPromptContentProvider.coverage.test.js` | MODIFY | ✅ **PASSES** - Tests builder error handling | NONE |
-| `tests/unit/prompting/AIPromptContentProvider.promptData.test.js` | MODIFY | ✅ **PASSES** - No persona assertions | NONE |
-| `tests/integration/prompting/CharacterDataFormatter.integration.test.js` | MODIFY | ✅ **PASSES** - Uses hybrid mock approach | OPTIONAL: Add XML matchers for stricter validation |
-| `tests/integration/CharacterDataFormatter.integration.test.js` | MODIFY | ❌ **WRONG FILE** - This is MultiTargetValidation tests | NONE (unrelated to this epic) |
+| File                                                                     | Original Action | Actual Status                                           | Required Change                                    |
+| ------------------------------------------------------------------------ | --------------- | ------------------------------------------------------- | -------------------------------------------------- |
+| `tests/unit/prompting/AIPromptContentProvider.test.js`                   | MODIFY          | ✅ **PASSES** - Already mocks XML builder correctly     | NONE                                               |
+| `tests/unit/prompting/AIPromptContentProvider.coverage.test.js`          | MODIFY          | ✅ **PASSES** - Tests builder error handling            | NONE                                               |
+| `tests/unit/prompting/AIPromptContentProvider.promptData.test.js`        | MODIFY          | ✅ **PASSES** - No persona assertions                   | NONE                                               |
+| `tests/integration/prompting/CharacterDataFormatter.integration.test.js` | MODIFY          | ✅ **PASSES** - Uses hybrid mock approach               | OPTIONAL: Add XML matchers for stricter validation |
+| `tests/integration/CharacterDataFormatter.integration.test.js`           | MODIFY          | ❌ **WRONG FILE** - This is MultiTargetValidation tests | NONE (unrelated to this epic)                      |
 
 ---
 
@@ -52,6 +52,7 @@ This ticket is reduced to **optional enhancements** rather than critical fixes:
    - CHADATXMLREW-005: ✅ Completed (XML matchers available at `tests/common/prompting/xmlMatchers.js`)
 
 2. **Ran test suites:**
+
    ```bash
    NODE_ENV=test npx jest tests/unit/prompting/AIPromptContentProvider.test.js \
      tests/unit/prompting/AIPromptContentProvider.coverage.test.js \
@@ -95,6 +96,7 @@ This ticket is reduced to **optional enhancements** rather than critical fixes:
 ## Out of Scope
 
 **DO NOT modify:**
+
 - `CharacterDataFormatter.js` - handled in CHADATXMLREW-007
 - `CharacterDataXmlBuilder.js` - created in CHADATXMLREW-002
 - Unit tests for CharacterDataFormatter itself (will be deprecated with the class)
@@ -147,11 +149,13 @@ npm run test:ci
 ## Outcome
 
 **Originally Planned:**
+
 - Update 4-5 test files to expect XML format instead of Markdown
 - Migrate assertions to use custom XML matchers from CHADATXMLREW-005
 - Estimated 3-4 hours of work
 
 **Actually Changed:**
+
 - **No code changes required** - all tests already pass
 - Ticket assumptions were incorrect; test architecture correctly handles XML transition via mocking
 - Reduced ticket scope from P1-HIGH to P3-LOW (assessment only)

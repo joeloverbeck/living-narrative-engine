@@ -3,9 +3,6 @@
   "id": "ranged:event-is-action-throw-item-at-target",
   "description": "Checks if the current event is a throw_item_at_target action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "ranged:throw_item_at_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "ranged:throw_item_at_target"]
   }
 }

@@ -51,9 +51,8 @@ export class RecipeUsageValidator extends BaseValidator {
    */
   async performValidation(recipe, _options, builder) {
     try {
-      const rawEntityDefinitions = this.#dataRegistry.getAll(
-        'entityDefinitions'
-      );
+      const rawEntityDefinitions =
+        this.#dataRegistry.getAll('entityDefinitions');
       const entityDefinitions = Array.isArray(rawEntityDefinitions)
         ? rawEntityDefinitions
         : [];

@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": [
-        "outer"
-      ]
+      "allowedLayers": ["outer"]
     },
     "core:material": {
       "material": "fabric"
@@ -31,9 +29,7 @@
       "length": "very-long"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "outer"
     },
     "items:item": {},

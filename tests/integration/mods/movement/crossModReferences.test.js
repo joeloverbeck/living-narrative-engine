@@ -8,18 +8,21 @@ describe('Cross-Mod References', () => {
       // Load positioning action that references movement condition
       const turnAroundPath = path.resolve(
         process.cwd(),
-        'data/mods/physical-control/actions/turn_around.action.json',
+        'data/mods/physical-control/actions/turn_around.action.json'
       );
-      const turnAroundAction = JSON.parse(fs.readFileSync(turnAroundPath, 'utf8'));
+      const turnAroundAction = JSON.parse(
+        fs.readFileSync(turnAroundPath, 'utf8')
+      );
 
       // Verify it references movement condition
-      const conditionRef = turnAroundAction.prerequisites[0].logic.condition_ref;
+      const conditionRef =
+        turnAroundAction.prerequisites[0].logic.condition_ref;
       expect(conditionRef).toBe('movement:actor-can-move');
 
       // Verify the referenced condition exists
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
       expect(fs.existsSync(conditionPath)).toBe(true);
 
@@ -32,13 +35,13 @@ describe('Cross-Mod References', () => {
       // get_close was migrated to personal-space mod
       const getClosePath = path.resolve(
         process.cwd(),
-        'data/mods/personal-space/actions/get_close.action.json',
+        'data/mods/personal-space/actions/get_close.action.json'
       );
       const getCloseAction = JSON.parse(fs.readFileSync(getClosePath, 'utf8'));
 
       // Verify positioning condition reference (moved from movement to avoid circular dependency)
       const hasPositioningRef = getCloseAction.prerequisites.some(
-        (prereq) => prereq.logic?.condition_ref === 'positioning:actor-can-move',
+        (prereq) => prereq.logic?.condition_ref === 'positioning:actor-can-move'
       );
       expect(hasPositioningRef).toBe(true);
     });
@@ -46,7 +49,7 @@ describe('Cross-Mod References', () => {
     it('should have step_back action with appropriate conditions', () => {
       const stepBackPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/step_back.action.json',
+        'data/mods/positioning/actions/step_back.action.json'
       );
       const stepBackAction = JSON.parse(fs.readFileSync(stepBackPath, 'utf8'));
 
@@ -59,9 +62,11 @@ describe('Cross-Mod References', () => {
     it('should have place_yourself_behind action with appropriate conditions', () => {
       const placeBehindPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/place_yourself_behind.action.json',
+        'data/mods/positioning/actions/place_yourself_behind.action.json'
       );
-      const placeBehindAction = JSON.parse(fs.readFileSync(placeBehindPath, 'utf8'));
+      const placeBehindAction = JSON.parse(
+        fs.readFileSync(placeBehindPath, 'utf8')
+      );
 
       // This action may or may not require movement ability depending on implementation
       expect(placeBehindAction.prerequisites).toBeDefined();
@@ -71,9 +76,11 @@ describe('Cross-Mod References', () => {
     it('should have turn_around_to_face action with appropriate conditions', () => {
       const turnToFacePath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/turn_around_to_face.action.json',
+        'data/mods/positioning/actions/turn_around_to_face.action.json'
       );
-      const turnToFaceAction = JSON.parse(fs.readFileSync(turnToFacePath, 'utf8'));
+      const turnToFaceAction = JSON.parse(
+        fs.readFileSync(turnToFacePath, 'utf8')
+      );
 
       // Turning around doesn't necessarily require movement ability
       expect(turnToFaceAction.prerequisites).toBeDefined();
@@ -83,7 +90,7 @@ describe('Cross-Mod References', () => {
     it('should have turn_your_back action with appropriate conditions', () => {
       const turnBackPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/turn_your_back.action.json',
+        'data/mods/positioning/actions/turn_your_back.action.json'
       );
       const turnBackAction = JSON.parse(fs.readFileSync(turnBackPath, 'utf8'));
 
@@ -97,7 +104,7 @@ describe('Cross-Mod References', () => {
     it('should have movement:actor-can-move condition accessible to other mods', () => {
       const conditionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions/actor-can-move.condition.json',
+        'data/mods/movement/conditions/actor-can-move.condition.json'
       );
 
       // Verify the condition exists
@@ -109,14 +116,14 @@ describe('Cross-Mod References', () => {
       expect(condition.description).toBeDefined();
       expect(condition.logic).toBeDefined();
       expect(condition.$schema).toBe(
-        'schema://living-narrative-engine/condition.schema.json',
+        'schema://living-narrative-engine/condition.schema.json'
       );
     });
 
     it('should have all movement conditions properly exported for cross-mod use', () => {
       const conditionsDir = path.resolve(
         process.cwd(),
-        'data/mods/movement/conditions',
+        'data/mods/movement/conditions'
       );
 
       const conditionFiles = fs
@@ -142,16 +149,16 @@ describe('Cross-Mod References', () => {
     it('should have movement mod declare dependency on positioning mod', () => {
       const movementManifestPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json'
       );
       const movementManifest = JSON.parse(
-        fs.readFileSync(movementManifestPath, 'utf8'),
+        fs.readFileSync(movementManifestPath, 'utf8')
       );
 
       // Movement now depends on positioning (reversed to avoid circular dependency)
       // Dependencies are objects with id and version, not just strings
       const hasPositioningDep = movementManifest.dependencies.some(
-        (dep) => dep.id === 'positioning',
+        (dep) => dep.id === 'positioning'
       );
       expect(hasPositioningDep).toBe(true);
     });
@@ -159,9 +166,11 @@ describe('Cross-Mod References', () => {
     it('should have movement mod available as a dependency', () => {
       const movementManifestPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/mod-manifest.json',
+        'data/mods/movement/mod-manifest.json'
       );
-      const movementManifest = JSON.parse(fs.readFileSync(movementManifestPath, 'utf8'));
+      const movementManifest = JSON.parse(
+        fs.readFileSync(movementManifestPath, 'utf8')
+      );
 
       // Movement mod should be properly structured for dependency
       expect(movementManifest.id).toBe('movement');
@@ -174,7 +183,7 @@ describe('Cross-Mod References', () => {
     it('should have positioning actions with valid prerequisite structures', () => {
       const positioningActionsDir = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions',
+        'data/mods/positioning/actions'
       );
 
       const actionFiles = fs
@@ -209,7 +218,7 @@ describe('Cross-Mod References', () => {
     it('should not have broken cross-mod references', () => {
       const positioningActionsDir = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions',
+        'data/mods/positioning/actions'
       );
 
       const actionFiles = fs
@@ -234,13 +243,13 @@ describe('Cross-Mod References', () => {
           const conditionId = conditionRef.split(':')[1];
           const conditionPath = path.resolve(
             process.cwd(),
-            `data/mods/movement/conditions/${conditionId}.condition.json`,
+            `data/mods/movement/conditions/${conditionId}.condition.json`
           );
 
           const conditionExists = fs.existsSync(conditionPath);
           expect(conditionExists).toBe(
             true,
-            `${actionFile} references non-existent condition: ${conditionRef}`,
+            `${actionFile} references non-existent condition: ${conditionRef}`
           );
         });
       });

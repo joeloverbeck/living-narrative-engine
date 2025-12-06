@@ -61,19 +61,17 @@ const createTurnContext = ({
 } = {}) => {
   const logger = createLogger();
   const actor = { id: actorId };
-  const baseServices =
-    services ??
-    {
-      safeEventDispatcher: new SafeEventDispatcher({
-        validatedEventDispatcher: createEventBus({ captureEvents: true }),
-        logger,
-      }),
-      turnEndPort: { signalTurnEnd: jest.fn() },
-      entityManager: {
-        getComponentData: jest.fn().mockReturnValue(null),
-        getEntityInstance: jest.fn().mockReturnValue(null),
-      },
-    };
+  const baseServices = services ?? {
+    safeEventDispatcher: new SafeEventDispatcher({
+      validatedEventDispatcher: createEventBus({ captureEvents: true }),
+      logger,
+    }),
+    turnEndPort: { signalTurnEnd: jest.fn() },
+    entityManager: {
+      getComponentData: jest.fn().mockReturnValue(null),
+      getEntityInstance: jest.fn().mockReturnValue(null),
+    },
+  };
 
   const turnContext = new TurnContext({
     actor,
@@ -98,10 +96,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       const handler = new TestTurnHandler(logger);
       const { turnContext, onEndTurn } = createTurnContext({ handler });
       handler.setTurnContext(turnContext);
-      const state = new AwaitingActorDecisionState(
-        handler,
-        () => ({ run: jest.fn().mockResolvedValue(undefined) })
-      );
+      const state = new AwaitingActorDecisionState(handler, () => ({
+        run: jest.fn().mockResolvedValue(undefined),
+      }));
 
       turnContext.requestProcessingCommandStateTransition = undefined;
 
@@ -111,7 +108,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       const [errorArg] = onEndTurn.mock.calls[0];
       expect(errorArg).toBeInstanceOf(Error);
       expect(errorArg.message).toContain('missing required methods');
-      expect(errorArg.message).toContain('requestProcessingCommandStateTransition');
+      expect(errorArg.message).toContain(
+        'requestProcessingCommandStateTransition'
+      );
     });
 
     it('allows context validation to succeed when methods are present', async () => {
@@ -120,10 +119,7 @@ describe('turnStateValidationUtils integration coverage', () => {
       const { turnContext, onEndTurn } = createTurnContext({ handler });
       handler.setTurnContext(turnContext);
       const workflow = { run: jest.fn().mockResolvedValue(undefined) };
-      const state = new AwaitingActorDecisionState(
-        handler,
-        () => workflow
-      );
+      const state = new AwaitingActorDecisionState(handler, () => workflow);
 
       await state.enterState(handler, null);
 
@@ -141,9 +137,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       handler.setTurnContext(turnContext);
       const state = new TurnIdleState(handler);
 
-      await expect(state.startTurn(handler, { name: 'unknown' })).rejects.toThrow(
-        /invalid actorEntity/i
-      );
+      await expect(
+        state.startTurn(handler, { name: 'unknown' })
+      ).rejects.toThrow(/invalid actorEntity/i);
       expect(handler.resetStateAndResources).toHaveBeenCalledWith(
         expect.stringContaining('invalid-actor')
       );
@@ -190,9 +186,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       handler.setTurnContext(turnContext);
       const state = new TurnIdleState(handler);
 
-      await expect(state.startTurn(handler, { id: 'actor-integrated' })).rejects.toThrow(
-        /ITurnContext is missing or invalid/
-      );
+      await expect(
+        state.startTurn(handler, { id: 'actor-integrated' })
+      ).rejects.toThrow(/ITurnContext is missing or invalid/);
     });
 
     it('confirms actor matching path when context and caller align', async () => {
@@ -218,10 +214,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       const handler = new TestTurnHandler(logger);
       const { turnContext, actor } = createTurnContext({ handler });
       handler.setTurnContext(turnContext);
-      const state = new AwaitingActorDecisionState(
-        handler,
-        () => ({ run: jest.fn().mockResolvedValue(undefined) })
-      );
+      const state = new AwaitingActorDecisionState(handler, () => ({
+        run: jest.fn().mockResolvedValue(undefined),
+      }));
 
       const badStrategy = { decideAction: undefined };
       jest.spyOn(turnContext, 'getStrategy').mockReturnValue(badStrategy);
@@ -237,10 +232,9 @@ describe('turnStateValidationUtils integration coverage', () => {
       const strategy = { decideAction: jest.fn() };
       const { turnContext, actor } = createTurnContext({ handler, strategy });
       handler.setTurnContext(turnContext);
-      const state = new AwaitingActorDecisionState(
-        handler,
-        () => ({ run: jest.fn().mockResolvedValue(undefined) })
-      );
+      const state = new AwaitingActorDecisionState(handler, () => ({
+        run: jest.fn().mockResolvedValue(undefined),
+      }));
 
       const resolved = state.retrieveStrategy(turnContext, actor);
       expect(resolved).toBe(strategy);
@@ -301,10 +295,11 @@ describe('turnStateValidationUtils integration coverage', () => {
       const logger = createLogger();
       const handler = new TestTurnHandler(logger);
 
-      expect(() =>
-        new ProcessingCommandState(
-          createProcessingDeps({ handler, commandString: '   ' })
-        )
+      expect(
+        () =>
+          new ProcessingCommandState(
+            createProcessingDeps({ handler, commandString: '   ' })
+          )
       ).toThrow(/commandString must be a non-empty string/);
     });
 
@@ -312,19 +307,21 @@ describe('turnStateValidationUtils integration coverage', () => {
       const logger = createLogger();
       const handler = new TestTurnHandler(logger);
 
-      expect(() =>
-        new ProcessingCommandState(
-          createProcessingDeps({ handler, turnAction: 'walk-north' })
-        )
+      expect(
+        () =>
+          new ProcessingCommandState(
+            createProcessingDeps({ handler, turnAction: 'walk-north' })
+          )
       ).toThrow(/turnAction must be an object/);
 
-      expect(() =>
-        new ProcessingCommandState(
-          createProcessingDeps({
-            handler,
-            turnAction: { actionDefinitionId: '   ' },
-          })
-        )
+      expect(
+        () =>
+          new ProcessingCommandState(
+            createProcessingDeps({
+              handler,
+              turnAction: { actionDefinitionId: '   ' },
+            })
+          )
       ).toThrow(/turnAction.actionDefinitionId must be a non-empty string/);
     });
   });
@@ -337,7 +334,9 @@ describe('turnStateValidationUtils integration coverage', () => {
 
     class IntrospectingState extends AbstractTurnState {
       async ensure() {
-        return await this._ensureContextWithMethods('integration', ['getActor']);
+        return await this._ensureContextWithMethods('integration', [
+          'getActor',
+        ]);
       }
     }
 
@@ -348,7 +347,10 @@ describe('turnStateValidationUtils integration coverage', () => {
 
   describe('validation helper fallbacks', () => {
     it('returns all required method names when context is absent', () => {
-      const missing = validateContextMethods(null, AWAITING_DECISION_CONTEXT_METHODS);
+      const missing = validateContextMethods(
+        null,
+        AWAITING_DECISION_CONTEXT_METHODS
+      );
       expect(missing).toEqual(AWAITING_DECISION_CONTEXT_METHODS);
     });
 
@@ -384,7 +386,11 @@ describe('turnStateValidationUtils integration coverage', () => {
     it('throws when context actor metadata is invalid during validation', () => {
       const turnContext = { getActor: () => ({}) };
       expect(() =>
-        validateActorInContext(turnContext, { id: 'actor-expected' }, 'StateName')
+        validateActorInContext(
+          turnContext,
+          { id: 'actor-expected' },
+          'StateName'
+        )
       ).toThrow(/invalid actorEntity/);
     });
   });

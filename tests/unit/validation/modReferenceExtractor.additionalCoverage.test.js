@@ -47,25 +47,20 @@ describe('ModReferenceExtractor additional coverage', () => {
 
   it('logs and rethrows errors during contextual extraction', async () => {
     const failure = new Error('context-failure');
-    jest
-      .spyOn(extractor, 'extractReferences')
-      .mockRejectedValueOnce(failure);
+    jest.spyOn(extractor, 'extractReferences').mockRejectedValueOnce(failure);
 
     await expect(
       extractor.extractReferencesWithFileContext('/mods/sample')
     ).rejects.toThrow(failure);
 
     expect(logger.error).toHaveBeenCalledWith(
-      "Failed to extract contextual references from /mods/sample",
+      'Failed to extract contextual references from /mods/sample',
       failure
     );
   });
 
   it('logs unknown scope AST node types', () => {
-    extractor._extractFromScopeExpression(
-      { type: 'CustomNode' },
-      new Map()
-    );
+    extractor._extractFromScopeExpression({ type: 'CustomNode' }, new Map());
 
     expect(logger.debug).toHaveBeenCalledWith(
       'Processing AST node type: CustomNode'
@@ -94,7 +89,11 @@ describe('ModReferenceExtractor additional coverage', () => {
     const value =
       'alpha:primary := rule\n beta:component.field usage with core:ignored';
 
-    extractor._extractModReferencesFromString(value, references, 'test_context');
+    extractor._extractModReferencesFromString(
+      value,
+      references,
+      'test_context'
+    );
 
     expect(references.get('alpha')).toEqual(new Set(['primary']));
     expect(references.get('beta')).toEqual(new Set(['component']));
@@ -190,7 +189,10 @@ describe('ModReferenceExtractor additional coverage', () => {
       { structure: 'iota:blueprint' },
       references
     );
-    extractor._extractFromRecipeFile({ ingredients: 'kappa:ingredient' }, references);
+    extractor._extractFromRecipeFile(
+      { ingredients: 'kappa:ingredient' },
+      references
+    );
 
     expect(references.get('iota')).toEqual(new Set(['blueprint']));
     expect(references.get('kappa')).toEqual(new Set(['ingredient']));
@@ -220,7 +222,10 @@ describe('ModReferenceExtractor additional coverage', () => {
     ];
 
     extractor._extractFromOperationHandlers(operations, references);
-    extractor._extractFromOperationHandlers({ component: 'xi:omega' }, references);
+    extractor._extractFromOperationHandlers(
+      { component: 'xi:omega' },
+      references
+    );
 
     expect(references.get('theta')).toEqual(new Set(['alpha']));
     expect(references.get('iota')).toEqual(new Set(['beta']));
@@ -265,7 +270,10 @@ describe('ModReferenceExtractor additional coverage', () => {
     const references = new Map();
     fs.readFile.mockResolvedValue('{"misc": "phi:item"}');
 
-    await extractor._extractFromJsonFile('/mods/unknown.config.json', references);
+    await extractor._extractFromJsonFile(
+      '/mods/unknown.config.json',
+      references
+    );
 
     expect(references.get('phi')).toEqual(new Set(['item']));
   });

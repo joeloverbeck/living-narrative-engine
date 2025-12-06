@@ -17,16 +17,12 @@
       "sockets": [
         {
           "id": "foot",
-          "allowedTypes": [
-            "chicken_foot"
-          ],
+          "allowedTypes": ["chicken_foot"],
           "nameTpl": "{{effective_orientation}} {{type}}"
         },
         {
           "id": "spur",
-          "allowedTypes": [
-            "chicken_spur"
-          ],
+          "allowedTypes": ["chicken_spur"],
           "nameTpl": "{{effective_orientation}} {{type}}"
         }
       ]

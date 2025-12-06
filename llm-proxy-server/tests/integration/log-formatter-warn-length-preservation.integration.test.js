@@ -8,8 +8,14 @@ import {
 } from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 const ORIGINAL_STDOUT_VALUE = process.stdout.isTTY;
 const ORIGINAL_STDERR_VALUE = process.stderr.isTTY;
 
@@ -83,9 +89,13 @@ describe('log formatter warn level truncation guard integration', () => {
 
     expect(mainLine.endsWith(longWarning)).toBe(true);
     expect(
-      lines.includes('                    ↳ Details[0]: primitive-warning-detail')
+      lines.includes(
+        '                    ↳ Details[0]: primitive-warning-detail'
+      )
     ).toBe(true);
-    expect(lines.some((line) => line.includes('"cause": "timeout"'))).toBe(true);
+    expect(lines.some((line) => line.includes('"cause": "timeout"'))).toBe(
+      true
+    );
 
     warnSpy.mockRestore();
   });

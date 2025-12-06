@@ -12,10 +12,10 @@ Create the `damage-types:damage_capabilities` component definition that weapons 
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `data/mods/damage-types/components/damage_capabilities.component.json` | CREATE | New component definition |
-| `data/mods/damage-types/mod-manifest.json` | UPDATE | Add component to manifest |
+| File                                                                   | Action | Description               |
+| ---------------------------------------------------------------------- | ------ | ------------------------- |
+| `data/mods/damage-types/components/damage_capabilities.component.json` | CREATE | New component definition  |
+| `data/mods/damage-types/mod-manifest.json`                             | UPDATE | Add component to manifest |
 
 ## Out of Scope
 
@@ -56,6 +56,7 @@ Create `data/mods/damage-types/components/damage_capabilities.component.json`:
 ### Manifest Update
 
 Add to `data/mods/damage-types/mod-manifest.json` components array:
+
 ```json
 "components": [
   "can_cut.component.json",

@@ -950,7 +950,9 @@ describe('LogCategoryDetector', () => {
     it('should include level-based and pattern categories', () => {
       const hints = detector.getValidCategoryHints();
 
-      expect(hints).toEqual(expect.arrayContaining(['error', 'warning', 'info', 'debug']));
+      expect(hints).toEqual(
+        expect.arrayContaining(['error', 'warning', 'info', 'debug'])
+      );
       expect(hints).toContain('ecs');
       expect(hints).toContain('engine');
     });

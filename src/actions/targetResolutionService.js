@@ -128,19 +128,16 @@ export class TargetResolutionService extends ITargetResolutionService {
       actionId === 'positioning:sit_down' ||
       scopeName === 'positioning:available_furniture'
     ) {
-      this.#logger.debug(
-        'Resolving scope for sit_down',
-        {
-          scopeName,
-          actionId,
-          actorId: actorEntity?.id,
-          actorLocation: discoveryContext?.currentLocation,
-          hasDiscoveryContext: !!discoveryContext,
-          discoveryContextKeys: discoveryContext
-            ? Object.keys(discoveryContext)
-            : null,
-        }
-      );
+      this.#logger.debug('Resolving scope for sit_down', {
+        scopeName,
+        actionId,
+        actorId: actorEntity?.id,
+        actorLocation: discoveryContext?.currentLocation,
+        hasDiscoveryContext: !!discoveryContext,
+        discoveryContextKeys: discoveryContext
+          ? Object.keys(discoveryContext)
+          : null,
+      });
     }
 
     trace?.info(

@@ -75,7 +75,13 @@ class GOAPDebugger {
       requiredMethods: ['startCapture', 'stopCapture', 'getTrace', 'format'],
     });
     validateDependency(eventTraceProbe, 'IGoapEventTraceProbe', logger, {
-      requiredMethods: ['record', 'startCapture', 'stopCapture', 'getSnapshot', 'clear'],
+      requiredMethods: [
+        'record',
+        'startCapture',
+        'stopCapture',
+        'getSnapshot',
+        'clear',
+      ],
     });
     if (goapEventDispatcher) {
       validateDependency(goapEventDispatcher, 'IGoapEventDispatcher', logger, {
@@ -504,10 +510,13 @@ class GOAPDebugger {
       return this.#goapEventDispatcherDiagnostics.getProbeDiagnostics();
     } catch (error) {
       if (!this.#probeDiagnosticsErrorLogged) {
-        this.#logger.warn('GOAPDebugger failed to read GOAP event dispatcher probe diagnostics.', {
-          code: 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED',
-          error,
-        });
+        this.#logger.warn(
+          'GOAPDebugger failed to read GOAP event dispatcher probe diagnostics.',
+          {
+            code: 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED',
+            error,
+          }
+        );
         this.#probeDiagnosticsErrorLogged = true;
       }
       return null;
@@ -524,11 +533,16 @@ class GOAPDebugger {
   }
 
   #collectDiagnostics(actorId) {
-    const taskLibraryDiagnostics = this.#goapController.getTaskLibraryDiagnostics(actorId);
-    const planningStateDiagnostics = this.#goapController.getPlanningStateDiagnostics(actorId);
-    const eventComplianceDiagnostics = this.#goapController.getEventComplianceDiagnostics(actorId);
-    const goalPathDiagnostics = this.#goapController.getGoalPathDiagnostics(actorId);
-    const effectFailureTelemetry = this.#goapController.getEffectFailureTelemetry(actorId);
+    const taskLibraryDiagnostics =
+      this.#goapController.getTaskLibraryDiagnostics(actorId);
+    const planningStateDiagnostics =
+      this.#goapController.getPlanningStateDiagnostics(actorId);
+    const eventComplianceDiagnostics =
+      this.#goapController.getEventComplianceDiagnostics(actorId);
+    const goalPathDiagnostics =
+      this.#goapController.getGoalPathDiagnostics(actorId);
+    const effectFailureTelemetry =
+      this.#goapController.getEffectFailureTelemetry(actorId);
 
     return {
       taskLibraryDiagnostics,
@@ -552,7 +566,8 @@ class GOAPDebugger {
               Array.isArray(payload.lastMisses) &&
               payload.lastMisses.length > 0
             ) {
-              return payload.lastMisses[payload.lastMisses.length - 1].timestamp;
+              return payload.lastMisses[payload.lastMisses.length - 1]
+                .timestamp;
             }
             return null;
           },
@@ -571,13 +586,15 @@ class GOAPDebugger {
         }),
         goalPathViolations: this.#buildDiagnosticsMeta({
           actorId,
-          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.goalPathViolations,
+          section:
+            GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.goalPathViolations,
           payload: goalPathDiagnostics,
           lastUpdatedResolver: (payload) => payload?.lastViolationAt,
         }),
         effectFailureTelemetry: this.#buildDiagnosticsMeta({
           actorId,
-          section: GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.effectFailureTelemetry,
+          section:
+            GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.sections.effectFailureTelemetry,
           payload: effectFailureTelemetry,
           lastUpdatedResolver: (payload) => payload?.lastFailureAt,
         }),
@@ -695,7 +712,9 @@ class GOAPDebugger {
           `  • ${new Date(miss.timestamp).toISOString()} :: path=${miss.path || 'n/a'} origin=${miss.origin || 'unknown'} reason=${miss.reason}`
         );
       }
-      lines.push('See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.');
+      lines.push(
+        'See docs/goap/debugging-tools.md#planning-state-assertions for remediation steps.'
+      );
     }
 
     return `${lines.join('\n')}\n`;
@@ -731,7 +750,10 @@ class GOAPDebugger {
     };
 
     formatEntry('Global Totals', payload.global);
-    formatEntry(`Actor (${payload.actor?.actorId || meta.actorId})`, payload.actor);
+    formatEntry(
+      `Actor (${payload.actor?.actorId || meta.actorId})`,
+      payload.actor
+    );
 
     const actorViolations = payload.actor?.missingPayloads ?? 0;
     const globalViolations = payload.global?.missingPayloads ?? 0;
@@ -764,7 +786,9 @@ class GOAPDebugger {
 
     const entries = Array.isArray(payload.entries) ? payload.entries : [];
     if (entries.length === 0) {
-      lines.push('Recent Violations: ∅ (all goals follow actor.components.* contract).');
+      lines.push(
+        'Recent Violations: ∅ (all goals follow actor.components.* contract).'
+      );
     } else {
       lines.push('Recent Violations (max 5):');
       for (const entry of entries) {
@@ -774,7 +798,9 @@ class GOAPDebugger {
             .join(', ')}`
         );
       }
-      lines.push('See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.');
+      lines.push(
+        'See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.'
+      );
     }
 
     return `${lines.join('\n')}\n`;
@@ -806,7 +832,9 @@ class GOAPDebugger {
           `  • ${new Date(failure.timestamp).toISOString()} :: task=${failure.taskId || 'unknown'} phase=${failure.phase || 'n/a'} goal=${failure.goalId || 'n/a'} reason=${failure.message}`
         );
       }
-      lines.push('INVALID_EFFECT_DEFINITION failures halt planning — confirm task.preconditions gate simulator usage.');
+      lines.push(
+        'INVALID_EFFECT_DEFINITION failures halt planning — confirm task.preconditions gate simulator usage.'
+      );
     }
 
     return `${lines.join('\n')}\n`;
@@ -824,7 +852,9 @@ class GOAPDebugger {
     lines.push(`Violations Recorded: ${eventStream.totalViolations}`);
 
     if (!eventStream.events || eventStream.events.length === 0) {
-      lines.push('Recent Events: ∅ (enable tracing via GOAPDebugger.startTrace).');
+      lines.push(
+        'Recent Events: ∅ (enable tracing via GOAPDebugger.startTrace).'
+      );
       return `${lines.join('\n')}\n`;
     }
 
@@ -834,7 +864,9 @@ class GOAPDebugger {
       const timestamp = new Date(event.timestamp).toISOString();
       const violationLabel = event.violation ? ' ⚠ violation' : '';
       const actorLabel = event.payload?.actorId || event.actorId || 'unknown';
-      const taskLabel = event.payload?.taskId ? ` task=${event.payload.taskId}` : '';
+      const taskLabel = event.payload?.taskId
+        ? ` task=${event.payload.taskId}`
+        : '';
       lines.push(`  • ${timestamp} :: ${event.type}${violationLabel}`);
       lines.push(`    actor=${actorLabel}${taskLabel}`);
       if (event.payload && Object.keys(event.payload).length > 0) {
@@ -853,15 +885,12 @@ class GOAPDebugger {
     }
 
     this.#diagnosticWarningCache.set(cacheKey, true);
-    this.#logger.warn(
-      GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.missingWarningCode,
-      {
-        actorId,
-        sectionId,
-        contractVersion: this.#diagnosticsContractVersion,
-        hint: 'Instrumentation missing — see docs/goap/debugging-tools.md#diagnostics-contract',
-      }
-    );
+    this.#logger.warn(GOAP_DEBUGGER_DIAGNOSTICS_CONTRACT.missingWarningCode, {
+      actorId,
+      sectionId,
+      contractVersion: this.#diagnosticsContractVersion,
+      hint: 'Instrumentation missing — see docs/goap/debugging-tools.md#diagnostics-contract',
+    });
   }
 }
 

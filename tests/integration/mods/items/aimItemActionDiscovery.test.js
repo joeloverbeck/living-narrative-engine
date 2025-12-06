@@ -25,7 +25,7 @@ describe('items:aim_item action definition', () => {
     expect(aimItemAction.id).toBe('items:aim_item');
     expect(aimItemAction.name).toBe('Aim Item');
     expect(aimItemAction.description).toBe(
-      'Aim an aimable item at a target entity. The item must have items:aimable component and be in actor\'s inventory.'
+      "Aim an aimable item at a target entity. The item must have items:aimable component and be in actor's inventory."
     );
     expect(aimItemAction.template).toBe('aim {item} at {target}');
   });
@@ -56,6 +56,8 @@ describe('items:aim_item action definition', () => {
 
   it('should require actor to have inventory', () => {
     expect(aimItemAction.required_components).toBeDefined();
-    expect(aimItemAction.required_components.actor).toEqual(['items:inventory']);
+    expect(aimItemAction.required_components.actor).toEqual([
+      'items:inventory',
+    ]);
   });
 });

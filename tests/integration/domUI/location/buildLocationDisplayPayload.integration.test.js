@@ -1,4 +1,11 @@
-import { jest, beforeEach, afterEach, describe, it, expect } from '@jest/globals';
+import {
+  jest,
+  beforeEach,
+  afterEach,
+  describe,
+  it,
+  expect,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import DocumentContext from '../../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../../src/domUI/domElementFactory.js';
@@ -78,7 +85,7 @@ function setupDomContainer() {
     portraitVisuals,
     descriptionDisplay,
     exitsDisplay,
-    charactersDisplay,
+    charactersDisplay
   );
 
   document.body.appendChild(container);
@@ -122,13 +129,17 @@ function setupRenderer({
 
   const entityInstances = {
     [actorId]: {
-      hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID),
+      hasComponent: jest.fn(
+        (componentId) => componentId === ACTOR_COMPONENT_ID
+      ),
     },
   };
 
   Object.keys(characterInfoById).forEach((id) => {
     entityInstances[id] = {
-      hasComponent: jest.fn((componentId) => componentId === ACTOR_COMPONENT_ID),
+      hasComponent: jest.fn(
+        (componentId) => componentId === ACTOR_COMPONENT_ID
+      ),
     };
   });
 
@@ -185,21 +196,21 @@ function setupRenderer({
 }
 
 describe('Location display payload integration', () => {
-    let testBed;
-    let buildPayloadSpy;
+  let testBed;
+  let buildPayloadSpy;
 
-    beforeEach(() => {
-      testBed = createTestBed();
-      buildPayloadSpy = jest.spyOn(
-        buildLocationDisplayPayloadModule,
-        'buildLocationDisplayPayload',
-      );
-      document.body.innerHTML = '';
-    });
+  beforeEach(() => {
+    testBed = createTestBed();
+    buildPayloadSpy = jest.spyOn(
+      buildLocationDisplayPayloadModule,
+      'buildLocationDisplayPayload'
+    );
+    document.body.innerHTML = '';
+  });
 
-    afterEach(() => {
-      document.body.innerHTML = '';
-    });
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
 
   it('builds payload with gathered characters and fallback portrait alt text', () => {
     const locationDetails = {
@@ -229,13 +240,17 @@ describe('Location display payload integration', () => {
       },
     };
 
-    const { renderer, safeEventDispatcher, domElements, entityDisplayDataProvider } =
-      setupRenderer({
-        testBed,
-        locationDetails,
-        portraitData,
-        characterInfoById,
-      });
+    const {
+      renderer,
+      safeEventDispatcher,
+      domElements,
+      entityDisplayDataProvider,
+    } = setupRenderer({
+      testBed,
+      locationDetails,
+      portraitData,
+      characterInfoById,
+    });
 
     safeEventDispatcher.dispatch('core:turn_started', {
       entityId: DEFAULT_ACTOR_ID,
@@ -243,7 +258,7 @@ describe('Location display payload integration', () => {
     });
 
     expect(entityDisplayDataProvider.getLocationDetails).toHaveBeenCalledWith(
-      DEFAULT_LOCATION_ID,
+      DEFAULT_LOCATION_ID
     );
     expect(buildPayloadSpy).toHaveBeenCalledTimes(1);
     const [detailsArg, portraitArg, charactersArg] =
@@ -276,7 +291,7 @@ describe('Location display payload integration', () => {
 
     const dispatchedEvents = safeEventDispatcher.dispatch.mock.calls;
     const errorEvents = dispatchedEvents.filter(
-      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID,
+      ([eventName]) => eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(errorEvents).toHaveLength(0);
 
@@ -342,13 +357,17 @@ describe('Location display payload integration', () => {
       },
     };
 
-    const { renderer, safeEventDispatcher, domElements, entityDisplayDataProvider } =
-      setupRenderer({
-        testBed,
-        locationDetails,
-        portraitData: null,
-        characterInfoById,
-      });
+    const {
+      renderer,
+      safeEventDispatcher,
+      domElements,
+      entityDisplayDataProvider,
+    } = setupRenderer({
+      testBed,
+      locationDetails,
+      portraitData: null,
+      characterInfoById,
+    });
 
     safeEventDispatcher.dispatch('core:turn_started', {
       entityId: DEFAULT_ACTOR_ID,
@@ -356,7 +375,7 @@ describe('Location display payload integration', () => {
     });
 
     expect(entityDisplayDataProvider.getLocationDetails).toHaveBeenCalledWith(
-      DEFAULT_LOCATION_ID,
+      DEFAULT_LOCATION_ID
     );
     expect(buildPayloadSpy).toHaveBeenCalledTimes(1);
     const payload = buildPayloadSpy.mock.results[0].value;

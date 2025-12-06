@@ -10,75 +10,75 @@ describe('OrientationResolver', () => {
   describe('bilateral scheme', () => {
     it('should resolve left/right for count=2 (1-based indexing)', () => {
       // Note: Tests use 1-based indices to match actual caller behavior
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 1, 2)
-      ).toBe('left');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 2, 2)
-      ).toBe('right');
+      expect(OrientationResolver.resolveOrientation('bilateral', 1, 2)).toBe(
+        'left'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 2, 2)).toBe(
+        'right'
+      );
     });
 
     it('should resolve quadrupedal positions for count=4 (1-based indexing)', () => {
       // Note: Position names follow actual implementation (left_front not front_left)
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 1, 4)
-      ).toBe('left_front');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 2, 4)
-      ).toBe('right_front');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 3, 4)
-      ).toBe('left_rear');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 4, 4)
-      ).toBe('right_rear');
+      expect(OrientationResolver.resolveOrientation('bilateral', 1, 4)).toBe(
+        'left_front'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 2, 4)).toBe(
+        'right_front'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 3, 4)).toBe(
+        'left_rear'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 4, 4)).toBe(
+        'right_rear'
+      );
     });
 
     it('should handle quadrupedal arrangement explicitly (1-based indexing)', () => {
-      expect(
-        OrientationResolver.resolveOrientation('quadrupedal', 1, 4)
-      ).toBe('left_front');
-      expect(
-        OrientationResolver.resolveOrientation('quadrupedal', 2, 4)
-      ).toBe('right_front');
-      expect(
-        OrientationResolver.resolveOrientation('quadrupedal', 3, 4)
-      ).toBe('left_rear');
-      expect(
-        OrientationResolver.resolveOrientation('quadrupedal', 4, 4)
-      ).toBe('right_rear');
+      expect(OrientationResolver.resolveOrientation('quadrupedal', 1, 4)).toBe(
+        'left_front'
+      );
+      expect(OrientationResolver.resolveOrientation('quadrupedal', 2, 4)).toBe(
+        'right_front'
+      );
+      expect(OrientationResolver.resolveOrientation('quadrupedal', 3, 4)).toBe(
+        'left_rear'
+      );
+      expect(OrientationResolver.resolveOrientation('quadrupedal', 4, 4)).toBe(
+        'right_rear'
+      );
     });
 
     it('should alternate left/right for counts other than 2 or 4', () => {
       // Count of 6 should alternate left/right
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 1, 6)
-      ).toBe('left');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 2, 6)
-      ).toBe('right');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 3, 6)
-      ).toBe('left');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 4, 6)
-      ).toBe('right');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 5, 6)
-      ).toBe('left');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 6, 6)
-      ).toBe('right');
+      expect(OrientationResolver.resolveOrientation('bilateral', 1, 6)).toBe(
+        'left'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 2, 6)).toBe(
+        'right'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 3, 6)).toBe(
+        'left'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 4, 6)).toBe(
+        'right'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 5, 6)).toBe(
+        'left'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 6, 6)).toBe(
+        'right'
+      );
     });
 
     it('should fallback to index string for out-of-bounds (1-based indexing)', () => {
       // Out of bounds for count=4
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 5, 4)
-      ).toBe('5');
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 10, 4)
-      ).toBe('10');
+      expect(OrientationResolver.resolveOrientation('bilateral', 5, 4)).toBe(
+        '5'
+      );
+      expect(OrientationResolver.resolveOrientation('bilateral', 10, 4)).toBe(
+        '10'
+      );
     });
   });
 
@@ -157,9 +157,9 @@ describe('OrientationResolver', () => {
 
     it('should fallback to index string for out-of-bounds octagonal (1-based indexing)', () => {
       expect(OrientationResolver.resolveOrientation('radial', 9, 8)).toBe('9');
-      expect(
-        OrientationResolver.resolveOrientation('radial', 10, 8)
-      ).toBe('10');
+      expect(OrientationResolver.resolveOrientation('radial', 10, 8)).toBe(
+        '10'
+      );
     });
   });
 
@@ -222,38 +222,34 @@ describe('OrientationResolver', () => {
 
   describe('indexed scheme', () => {
     it('should return index as string (1-based indexing)', () => {
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 1, 10)
-      ).toBe('1');
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 7, 10)
-      ).toBe('7');
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 10, 10)
-      ).toBe('10');
+      expect(OrientationResolver.resolveOrientation('indexed', 1, 10)).toBe(
+        '1'
+      );
+      expect(OrientationResolver.resolveOrientation('indexed', 7, 10)).toBe(
+        '7'
+      );
+      expect(OrientationResolver.resolveOrientation('indexed', 10, 10)).toBe(
+        '10'
+      );
     });
 
     it('should handle any count value', () => {
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 1, 1)
-      ).toBe('1');
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 50, 100)
-      ).toBe('50');
-      expect(
-        OrientationResolver.resolveOrientation('indexed', 999, 1000)
-      ).toBe('999');
+      expect(OrientationResolver.resolveOrientation('indexed', 1, 1)).toBe('1');
+      expect(OrientationResolver.resolveOrientation('indexed', 50, 100)).toBe(
+        '50'
+      );
+      expect(OrientationResolver.resolveOrientation('indexed', 999, 1000)).toBe(
+        '999'
+      );
     });
   });
 
   describe('edge cases', () => {
     it('should handle unknown schemes as indexed', () => {
-      expect(
-        OrientationResolver.resolveOrientation('unknown', 3, 5)
-      ).toBe('3');
-      expect(
-        OrientationResolver.resolveOrientation('invalid', 7, 10)
-      ).toBe('7');
+      expect(OrientationResolver.resolveOrientation('unknown', 3, 5)).toBe('3');
+      expect(OrientationResolver.resolveOrientation('invalid', 7, 10)).toBe(
+        '7'
+      );
       expect(OrientationResolver.resolveOrientation(null, 1, 2)).toBe('1');
     });
 
@@ -278,18 +274,18 @@ describe('OrientationResolver', () => {
       ).not.toThrow();
 
       // Negative index should result in negative array index, which returns fallback
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', -1, 2)
-      ).toBe('-1');
+      expect(OrientationResolver.resolveOrientation('bilateral', -1, 2)).toBe(
+        '-1'
+      );
     });
 
     it('should handle very large indices', () => {
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 1000, 2)
-      ).toBe('1000');
-      expect(
-        OrientationResolver.resolveOrientation('radial', 999, 8)
-      ).toBe('999');
+      expect(OrientationResolver.resolveOrientation('bilateral', 1000, 2)).toBe(
+        '1000'
+      );
+      expect(OrientationResolver.resolveOrientation('radial', 999, 8)).toBe(
+        '999'
+      );
       expect(
         OrientationResolver.resolveOrientation('custom', 500, 10, [
           'a',
@@ -320,15 +316,15 @@ describe('OrientationResolver', () => {
     });
 
     it('should handle null/undefined positions parameter', () => {
-      expect(
-        OrientationResolver.resolveOrientation('radial', 1, 6, null)
-      ).toBe('1');
+      expect(OrientationResolver.resolveOrientation('radial', 1, 6, null)).toBe(
+        '1'
+      );
       expect(
         OrientationResolver.resolveOrientation('radial', 1, 6, undefined)
       ).toBe('1');
-      expect(
-        OrientationResolver.resolveOrientation('custom', 1, 3, null)
-      ).toBe('1');
+      expect(OrientationResolver.resolveOrientation('custom', 1, 3, null)).toBe(
+        '1'
+      );
       expect(
         OrientationResolver.resolveOrientation('custom', 1, 3, undefined)
       ).toBe('1');
@@ -347,14 +343,12 @@ describe('OrientationResolver', () => {
   describe('parameter validation', () => {
     it('should handle missing optional parameters', () => {
       // Should use default empty array for positions
-      expect(
-        OrientationResolver.resolveOrientation('radial', 1, 6)
-      ).toBe('1');
+      expect(OrientationResolver.resolveOrientation('radial', 1, 6)).toBe('1');
 
       // Should use default null for arrangement
-      expect(
-        OrientationResolver.resolveOrientation('bilateral', 1, 2)
-      ).toBe('left');
+      expect(OrientationResolver.resolveOrientation('bilateral', 1, 2)).toBe(
+        'left'
+      );
     });
 
     it('should handle all parameters provided', () => {
@@ -375,15 +369,15 @@ describe('OrientationResolver', () => {
     it('should return consistent results for same input', () => {
       // Call multiple times with same parameters
       for (let i = 0; i < 10; i++) {
-        expect(
-          OrientationResolver.resolveOrientation('bilateral', 1, 2)
-        ).toBe('left');
-        expect(
-          OrientationResolver.resolveOrientation('radial', 3, 8)
-        ).toBe('right');
-        expect(
-          OrientationResolver.resolveOrientation('indexed', 5, 10)
-        ).toBe('5');
+        expect(OrientationResolver.resolveOrientation('bilateral', 1, 2)).toBe(
+          'left'
+        );
+        expect(OrientationResolver.resolveOrientation('radial', 3, 8)).toBe(
+          'right'
+        );
+        expect(OrientationResolver.resolveOrientation('indexed', 5, 10)).toBe(
+          '5'
+        );
       }
     });
 

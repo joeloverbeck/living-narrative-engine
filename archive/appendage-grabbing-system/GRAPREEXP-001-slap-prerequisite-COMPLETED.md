@@ -8,14 +8,14 @@ Add a prerequisite to the `violence:slap` action requiring the actor to have at 
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                          | Change                                                 |
+| --------------------------------------------- | ------------------------------------------------------ |
 | `data/mods/violence/actions/slap.action.json` | Add `prerequisites` array after `forbidden_components` |
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                         | Purpose                                       |
+| ------------------------------------------------------------ | --------------------------------------------- |
 | `tests/integration/mods/violence/slap_prerequisites.test.js` | Integration tests for prerequisite evaluation |
 
 ## Implementation Details
@@ -23,6 +23,7 @@ Add a prerequisite to the `violence:slap` action requiring the actor to have at 
 ### slap.action.json
 
 **Current State (lines 13-16)**:
+
 ```json
   "forbidden_components": {
     "actor": ["positioning:hugging", "positioning:giving_blowjob", "positioning:doing_complex_performance", "positioning:bending_over"]
@@ -31,6 +32,7 @@ Add a prerequisite to the `violence:slap` action requiring the actor to have at 
 ```
 
 **New State**:
+
 ```json
   "forbidden_components": {
     "actor": ["positioning:hugging", "positioning:giving_blowjob", "positioning:doing_complex_performance", "positioning:bending_over"]
@@ -89,25 +91,30 @@ npx eslint data/mods/violence/actions/slap.action.json tests/integration/mods/vi
 ### Required Test Suites
 
 #### 1. Action Definition Structure
+
 - `should have prerequisites array defined`
 - `should reference anatomy:actor-has-free-grabbing-appendage condition`
 - `should have failure_message for user feedback`
 - `should preserve other action properties` (id, template, targets, forbidden_components, visual)
 
 #### 2. Prerequisite Evaluation - Pass Cases
+
 - `should pass when actor has exactly one free grabbing appendage`
 - `should pass when actor has multiple free grabbing appendages`
 - `should pass for actor with two hands both free`
 
 #### 3. Prerequisite Evaluation - Fail Cases
+
 - `should fail when actor has zero free grabbing appendages`
 - `should fail when all appendages are locked (holding items)`
 
 #### 4. Edge Cases
+
 - `should handle missing actor gracefully`
 - `should handle actor with no grabbing appendages`
 
 #### 5. Condition Definition Validation
+
 - `should use hasFreeGrabbingAppendages operator with parameter 1`
 - `condition ID should match what the action references`
 
@@ -129,11 +136,11 @@ npx eslint data/mods/violence/actions/slap.action.json tests/integration/mods/vi
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern template |
+| File                                                                            | Purpose                |
+| ------------------------------------------------------------------------------- | ---------------------- |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`      | Test pattern template  |
 | `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition to reference |
-| `specs/grabbing-prerequisites-expansion.md` | Full specification |
+| `specs/grabbing-prerequisites-expansion.md`                                     | Full specification     |
 
 ---
 

@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-007: Add Retry Logic to Child Entity Creation
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-007
 - **Priority**: MEDIUM
 - **Severity**: P7
@@ -54,10 +55,10 @@ async createAndAttachPart(parentId, socketId, partDefinitionId, ...) {
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
-| `src/anatomy/entityGraphBuilder.js` | `createAndAttachPart` (lines ~210-222) | Extend verification retry to 5 with exponential backoff |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | lines 475-540 | Update existing retry tests |
+| File                                            | Line(s)                                | Change Type                                             |
+| ----------------------------------------------- | -------------------------------------- | ------------------------------------------------------- |
+| `src/anatomy/entityGraphBuilder.js`             | `createAndAttachPart` (lines ~210-222) | Extend verification retry to 5 with exponential backoff |
+| `tests/unit/anatomy/entityGraphBuilder.test.js` | lines 475-540                          | Update existing retry tests                             |
 
 ---
 
@@ -68,6 +69,7 @@ async createAndAttachPart(parentId, socketId, partDefinitionId, ...) {
 Replace single-retry verification with exponential backoff matching `createRootEntity`:
 
 **Before (1 retry, 10ms fixed):**
+
 ```javascript
 const verifyChildEntity = this.#entityManager.getEntityInstance(childEntity.id);
 if (!verifyChildEntity) {
@@ -75,15 +77,18 @@ if (!verifyChildEntity) {
     `EntityGraphBuilder: Created child entity ${childEntity.id} not immediately available`,
     { entityId: childEntity.id, partDefinitionId, parentId }
   );
-  await new Promise(resolve => setTimeout(resolve, 10));
+  await new Promise((resolve) => setTimeout(resolve, 10));
   const retryVerify = this.#entityManager.getEntityInstance(childEntity.id);
   if (!retryVerify) {
-    throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
+    throw new Error(
+      `Child entity creation-verification race condition: ${childEntity.id}`
+    );
   }
 }
 ```
 
 **After (5 retries, exponential backoff):**
+
 ```javascript
 let verifyEntity = this.#entityManager.getEntityInstance(childEntity.id);
 let retries = 0;
@@ -95,7 +100,7 @@ while (!verifyEntity && retries < maxRetries) {
     { entityId: childEntity.id, partDefinitionId, parentId }
   );
   const delay = 10 * Math.pow(2, retries);
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
   verifyEntity = this.#entityManager.getEntityInstance(childEntity.id);
   retries++;
 }
@@ -105,17 +110,21 @@ if (!verifyEntity) {
     `EntityGraphBuilder: Child entity creation-verification failed after ${maxRetries} retries`,
     { entityId: childEntity.id, partDefinitionId, parentId }
   );
-  throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
+  throw new Error(
+    `Child entity creation-verification race condition: ${childEntity.id}`
+  );
 }
 ```
 
 ### Step 2: Update Existing Tests
 
 **Modify test "retries child verification before continuing":**
+
 - Mock `getEntityInstance` to fail 2+ times before success
 - Add timer advances for exponential backoff
 
 **Modify test "returns null when child verification fails after retry":**
+
 - Mock `getEntityInstance` to fail all 6 attempts (initial + 5 retries)
 - Update call count assertion from 2 to 6
 
@@ -141,7 +150,7 @@ if (!verifyEntity) {
 ## Acceptance Criteria (CORRECTED)
 
 - [x] `createAndAttachPart` uses same retry pattern as `createRootEntity`
-- [x] Exponential backoff implemented (10 * 2^attempt ms): 10, 20, 40, 80, 160ms
+- [x] Exponential backoff implemented (10 \* 2^attempt ms): 10, 20, 40, 80, 160ms
 - [x] Max 5 retries for verification (matching root entity)
 - [x] Retry attempts logged as warnings with retry count
 - [x] Final failure logged as error with context
@@ -171,11 +180,13 @@ if (!verifyEntity) {
 ### What Changed vs Originally Planned
 
 **Original Ticket Assumptions (INCORRECT)**:
+
 - Claimed root entity wraps `createEntity()` in retry loop for CREATION
 - Claimed child entity has "NO retry logic"
 - Used incorrect API names (`createEntity()` vs `createEntityInstance()`)
 
 **Actual Situation Discovered**:
+
 - Both root and child call `createEntityInstance()` once - no creation retries
 - Retries are for VERIFICATION via `getEntityInstance()`, not creation
 - Root entity already had 5 retries with exponential backoff
@@ -186,11 +197,11 @@ Extended child entity verification retry from 1 retry/10ms to 5 retries with exp
 
 ### Files Modified
 
-| File | Change Description |
-|------|-------------------|
-| `src/anatomy/entityGraphBuilder.js` | Updated `createAndAttachPart` verification retry (lines 207-233) |
-| `tests/unit/anatomy/entityGraphBuilder.test.js` | Updated 2 existing tests for 5-retry behavior |
-| `tickets/ANAGRAGENARCANA-007-retry-logic-child-entity-creation.md` | Corrected assumptions before implementation |
+| File                                                               | Change Description                                               |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `src/anatomy/entityGraphBuilder.js`                                | Updated `createAndAttachPart` verification retry (lines 207-233) |
+| `tests/unit/anatomy/entityGraphBuilder.test.js`                    | Updated 2 existing tests for 5-retry behavior                    |
+| `tickets/ANAGRAGENARCANA-007-retry-logic-child-entity-creation.md` | Corrected assumptions before implementation                      |
 
 ### Tests Updated
 

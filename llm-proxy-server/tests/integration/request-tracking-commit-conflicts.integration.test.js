@@ -53,10 +53,15 @@ describe('request tracking response guard conflict coverage (integration)', () =
         requestIdAtFinish = req.requestId;
       });
 
-      firstAttemptResult = guard.sendError(502, 'llm.upstream.failure', 'Upstream failure', {
-        target: 'primary',
-        attempt: 1,
-      });
+      firstAttemptResult = guard.sendError(
+        502,
+        'llm.upstream.failure',
+        'Upstream failure',
+        {
+          target: 'primary',
+          attempt: 1,
+        }
+      );
 
       secondAttemptResult = guard.sendSuccess(200, {
         ok: true,
@@ -64,7 +69,9 @@ describe('request tracking response guard conflict coverage (integration)', () =
       });
     });
 
-    const response = await request(app).post('/error-before-success').send({ payload: 'data' });
+    const response = await request(app)
+      .post('/error-before-success')
+      .send({ payload: 'data' });
     await waitFor();
 
     expect(firstAttemptResult).toBe(true);
@@ -124,9 +131,14 @@ describe('request tracking response guard conflict coverage (integration)', () =
       });
 
       res.write('partial-chunk');
-      guardAttemptResult = guard.sendError(503, 'llm.stream.failure', 'Stream failure detected', {
-        chunk: 'initial',
-      });
+      guardAttemptResult = guard.sendError(
+        503,
+        'llm.stream.failure',
+        'Stream failure detected',
+        {
+          chunk: 'initial',
+        }
+      );
       res.end();
     });
 
@@ -140,7 +152,9 @@ describe('request tracking response guard conflict coverage (integration)', () =
     expect(response.text).toBe('partial-chunk');
 
     expect(entries.error).not.toHaveLength(0);
-    expect(entries.error[0].message).toContain('Headers already sent, cannot send error response');
+    expect(entries.error[0].message).toContain(
+      'Headers already sent, cannot send error response'
+    );
     expect(entries.error[0].metadata).toMatchObject({
       requestId: expect.any(String),
       stage: 'llm.stream.failure',

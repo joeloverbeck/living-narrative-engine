@@ -22,12 +22,18 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
     mockClothingAccessibilityService = {
       getAccessibleItems: jest.fn((entityId, options = {}) => {
         if (entityId === 'player_character') {
-          const { mode = 'topmost' } = options;  // Changed default to 'topmost' to match production
-          
+          const { mode = 'topmost' } = options; // Changed default to 'topmost' to match production
+
           // Return all clothing items based on mode
           switch (mode) {
             case 'all':
-              return ['leather_jacket_001', 'cotton_shirt_002', 'wool_sweater_004', 'boots_003', 'steel_helmet_005'];
+              return [
+                'leather_jacket_001',
+                'cotton_shirt_002',
+                'wool_sweater_004',
+                'boots_003',
+                'steel_helmet_005',
+              ];
             case 'topmost':
               return ['leather_jacket_001', 'boots_003', 'steel_helmet_005'];
             case 'outer':
@@ -175,7 +181,7 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
                   }
                 }
                 return components;
-              })
+              }),
             };
           }
           return null;
@@ -250,12 +256,14 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
       // Should return all clothing entity instance IDs via ClothingAccessibilityService
       // The service should be called with mode 'all' and return all items
       expect(result.size).toBe(5);
-      expect(mockClothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+      expect(
+        mockClothingAccessibilityService.getAccessibleItems
+      ).toHaveBeenCalledWith(
         'player_character',
         expect.objectContaining({
           mode: 'all',
           context: 'removal',
-          sortByPriority: true
+          sortByPriority: true,
         })
       );
       expect(result).toContain('leather_jacket_001');
@@ -469,11 +477,19 @@ describe('Scope DSL Phase 2: Enhanced Filtering Integration', () => {
 
     it('should maintain existing clothing query functionality for topmost slot access', () => {
       const torsoUpperAst = parser.parse('actor.topmost_clothing.torso_upper');
-      const torsoUpperResult = engine.resolve(torsoUpperAst, mockActorEntity, mockRuntimeContext);
+      const torsoUpperResult = engine.resolve(
+        torsoUpperAst,
+        mockActorEntity,
+        mockRuntimeContext
+      );
       expect(Array.from(torsoUpperResult)).toEqual(['leather_jacket_001']);
 
       const feetAst = parser.parse('actor.topmost_clothing.feet');
-      const feetResult = engine.resolve(feetAst, mockActorEntity, mockRuntimeContext);
+      const feetResult = engine.resolve(
+        feetAst,
+        mockActorEntity,
+        mockRuntimeContext
+      );
       expect(Array.from(feetResult)).toEqual(['boots_003']);
     });
   });

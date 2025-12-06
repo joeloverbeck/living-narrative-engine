@@ -1,6 +1,16 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModActionTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
 import handleLetGoRule from '../../../../data/mods/physical-control/rules/handle_let_go_of_restrained_target.rule.json' assert { type: 'json' };
 import letGoCondition from '../../../../data/mods/physical-control/conditions/event-is-action-let-go-of-restrained-target.condition.json' assert { type: 'json' };
@@ -109,7 +119,10 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
         const targetEntity = entityManager.getEntityInstance(targetId);
         const beingRestrained =
           targetEntity?.components?.['positioning:being_restrained'] || null;
-        if (!targetEntity || beingRestrained?.restraining_entity_id !== actorId) {
+        if (
+          !targetEntity ||
+          beingRestrained?.restraining_entity_id !== actorId
+        ) {
           return { success: true, value: new Set() };
         }
 
@@ -125,12 +138,19 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     configureScopeResolution();
 
     const unlockSpy = jest.fn().mockResolvedValue(undefined);
-    testFixture.testEnv.operationRegistry.register('UNLOCK_GRABBING', unlockSpy);
+    testFixture.testEnv.operationRegistry.register(
+      'UNLOCK_GRABBING',
+      unlockSpy
+    );
 
-    await testFixture.executeAction(actor.id, target.id, { skipValidation: true });
+    await testFixture.executeAction(actor.id, target.id, {
+      skipValidation: true,
+    });
 
     const actorInstance = testFixture.entityManager.getEntityInstance(actor.id);
-    const targetInstance = testFixture.entityManager.getEntityInstance(target.id);
+    const targetInstance = testFixture.entityManager.getEntityInstance(
+      target.id
+    );
 
     expect(actorInstance).toNotHaveComponent('positioning:restraining');
     expect(targetInstance).toNotHaveComponent('positioning:being_restrained');

@@ -3,7 +3,14 @@
  * @description Verifies CacheService pattern-based invalidation using the production ConsoleLogger implementation.
  */
 
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import CacheService from '../../src/services/cacheService.js';
@@ -62,7 +69,9 @@ describe('CacheService pattern invalidation integration', () => {
       .filter((message) => typeof message === 'string');
 
     const summaryLog = infoMessages.find((message) =>
-      message.includes('CacheService: Invalidated 2 cache entries matching pattern /^api_key:/')
+      message.includes(
+        'CacheService: Invalidated 2 cache entries matching pattern /^api_key:/'
+      )
     );
 
     expect(summaryLog).toBeDefined();

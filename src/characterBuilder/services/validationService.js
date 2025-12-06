@@ -69,7 +69,9 @@ export class ValidationService {
   configure(config = {}) {
     if (config.handleError) {
       if (typeof config.handleError !== 'function') {
-        throw new Error('ValidationService.configure requires a handleError function.');
+        throw new Error(
+          'ValidationService.configure requires a handleError function.'
+        );
       }
       this.#handleError = config.handleError;
     }
@@ -150,7 +152,9 @@ export class ValidationService {
 
       if (error && typeof error === 'object') {
         if (error.instancePath && error.message) {
-          const field = error.instancePath.replace(/^\//, '').replace(/\//g, '.');
+          const field = error.instancePath
+            .replace(/^\//, '')
+            .replace(/\//g, '.');
           return field ? `${field}: ${error.message}` : error.message;
         }
 

@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  jest,
+} from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import { UnifiedScopeResolver } from '../../../src/actions/scopes/unifiedScopeResolver.js';
 import { ActionErrorContextBuilder } from '../../../src/actions/errors/actionErrorContextBuilder.js';
@@ -90,7 +98,13 @@ async function buildRealService() {
     jsonLogicEval: services.jsonLogicEval,
   };
 
-  return { containerHandle, services, targetResolutionService, actor, discoveryContext };
+  return {
+    containerHandle,
+    services,
+    targetResolutionService,
+    actor,
+    discoveryContext,
+  };
 }
 
 describe('TargetResolutionService real-module integration', () => {
@@ -125,19 +139,31 @@ describe('TargetResolutionService real-module integration', () => {
 
     expect(result.success).toBe(true);
     const entityIds = result.value.map((ctx) => ctx.entityId);
-    expect(entityIds).toEqual(expect.arrayContaining(['test-npc', 'test-follower']));
-    result.value.forEach((ctx) => expect(ctx).toBeInstanceOf(ActionTargetContext));
+    expect(entityIds).toEqual(
+      expect.arrayContaining(['test-npc', 'test-follower'])
+    );
+    result.value.forEach((ctx) =>
+      expect(ctx).toBeInstanceOf(ActionTargetContext)
+    );
 
     const spanTree = trace.getHierarchicalView();
     expect(spanTree?.operation).toBe('target.resolve');
     expect(spanTree?.children.length).toBeGreaterThan(0);
-    expect(trace.logs.some((log) => log.message.includes("Delegating scope resolution"))).toBe(true);
+    expect(
+      trace.logs.some((log) =>
+        log.message.includes('Delegating scope resolution')
+      )
+    ).toBe(true);
   });
 
   it('returns a noTarget context when resolving the none scope', () => {
     const { targetResolutionService, actor, discoveryContext } = testHarness;
 
-    const result = targetResolutionService.resolveTargets('none', actor, discoveryContext);
+    const result = targetResolutionService.resolveTargets(
+      'none',
+      actor,
+      discoveryContext
+    );
 
     expect(result.success).toBe(true);
     expect(result.value).toHaveLength(1);
@@ -206,15 +232,33 @@ describe('TargetResolutionService real-module integration', () => {
     expect(result.success).toBe(true);
     const targetedCalls = debugSpy.mock.calls
       .map(([message, details]) => ({ message, details }))
-      .filter(({ message }) => typeof message === 'string' && message.includes('TargetResolutionService:'));
+      .filter(
+        ({ message }) =>
+          typeof message === 'string' &&
+          message.includes('TargetResolutionService:')
+      );
 
     expect(targetedCalls.length).toBeGreaterThanOrEqual(3);
-    expect(targetedCalls.some(({ message }) => message.includes('Resolving scope for sit_down'))).toBe(true);
-    expect(targetedCalls.some(({ message }) => message.includes('Context built for UnifiedScopeResolver'))).toBe(true);
-    expect(targetedCalls.some(({ message }) => message.includes('UnifiedScopeResolver result for sit_down'))).toBe(true);
+    expect(
+      targetedCalls.some(({ message }) =>
+        message.includes('Resolving scope for sit_down')
+      )
+    ).toBe(true);
+    expect(
+      targetedCalls.some(({ message }) =>
+        message.includes('Context built for UnifiedScopeResolver')
+      )
+    ).toBe(true);
+    expect(
+      targetedCalls.some(({ message }) =>
+        message.includes('UnifiedScopeResolver result for sit_down')
+      )
+    ).toBe(true);
     debugSpy.mockRestore();
 
     const infoLogs = trace.logs.filter((entry) => entry.type === 'info');
-    expect(infoLogs.some((log) => log.message.includes('resolved to'))).toBe(true);
+    expect(infoLogs.some((log) => log.message.includes('resolved to'))).toBe(
+      true
+    );
   });
 });

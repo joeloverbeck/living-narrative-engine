@@ -13,11 +13,13 @@
 ## Outcome
 
 ### What Was Originally Planned
+
 The original ticket proposed creating a new `common.schema.json` file with template string definitions.
 
 ### What Was Actually Changed
 
 **Key Discovery**: `common.schema.json` already existed at `data/schemas/common.schema.json` with 6 existing definitions:
+
 - `BaseDefinition`
 - `namespacedId`
 - `nullableNamespacedId`
@@ -26,6 +28,7 @@ The original ticket proposed creating a new `common.schema.json` file with templ
 - `structuredNote`
 
 **Actual Changes Made**:
+
 1. **Updated ticket** to correct the assumption - changed from "Create" to "Add definitions to existing"
 2. **Added 6 new template definitions** to existing `common.schema.json`:
    - `templateString` - Base pattern: `^\\{[a-zA-Z_][a-zA-Z0-9_]*(\\.[a-zA-Z_][a-zA-Z0-9_]*)*\\}$`
@@ -37,6 +40,7 @@ The original ticket proposed creating a new `common.schema.json` file with templ
 3. **Created comprehensive unit tests** at `tests/unit/schemas/common.schema.test.js` (71 tests)
 
 **Note on Pattern Strictness**: The new template pattern is stricter than the existing `^\\{.+\\}$` pattern in `lockGrabbing.schema.json`. The new pattern validates:
+
 - Proper identifier format (starts with letter or underscore)
 - No spaces
 - No empty braces
@@ -44,12 +48,15 @@ The original ticket proposed creating a new `common.schema.json` file with templ
 - No leading/trailing dots
 
 ### Files Modified
+
 - `data/schemas/common.schema.json` - Added 6 template definitions
 
 ### Files Created
+
 - `tests/unit/schemas/common.schema.test.js` - 71 unit tests for template definitions
 
 ### Tests Added
+
 - 71 new unit tests covering:
   - 10 valid template string formats
   - 15 invalid template string formats (edge cases)
@@ -61,6 +68,7 @@ The original ticket proposed creating a new `common.schema.json` file with templ
   - 2 cross-definition consistency tests
 
 ### Ticket Viability Assessment
+
 - **SCHVALTESINT-006** (this ticket): ✅ VIABLE - Completed successfully with corrected scope
 - **SCHVALTESINT-007** (migrate lockGrabbing): ✅ VIABLE - Can now reference `common.schema.json#/definitions/positiveIntegerOrTemplate`
 - **SCHVALTESINT-008** (migrate unlockGrabbing): ✅ VIABLE - Can now reference `common.schema.json#/definitions/positiveIntegerOrTemplate`
@@ -74,6 +82,7 @@ Add reusable template string pattern definitions to the **existing** `common.sch
 ## Corrected Assumptions (2025-11-26)
 
 The original ticket incorrectly stated "Create a shared `common.schema.json` file". **The file already exists** at `data/schemas/common.schema.json` with the following definitions:
+
 - `BaseDefinition`
 - `namespacedId`
 - `nullableNamespacedId`
@@ -87,22 +96,22 @@ This ticket adds **new** template-related definitions to the existing file.
 
 ### Files to Modify
 
-| File | Purpose |
-|------|---------|
+| File                              | Purpose                                          |
+| --------------------------------- | ------------------------------------------------ |
 | `data/schemas/common.schema.json` | Add template string definitions to existing file |
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                       | Purpose                             |
+| ------------------------------------------ | ----------------------------------- |
 | `tests/unit/schemas/common.schema.test.js` | Unit tests for template definitions |
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/lockGrabbing.schema.json` | Current local oneOf pattern (uses `^\\{.+\\}$`) |
-| `data/schemas/operations/unlockGrabbing.schema.json` | Similar pattern reference |
+| File                                                 | Purpose                                         |
+| ---------------------------------------------------- | ----------------------------------------------- |
+| `data/schemas/operations/lockGrabbing.schema.json`   | Current local oneOf pattern (uses `^\\{.+\\}$`) |
+| `data/schemas/operations/unlockGrabbing.schema.json` | Similar pattern reference                       |
 
 ---
 
@@ -296,6 +305,7 @@ describe('common.schema.json - Template Definitions', () => {
 ### Manual Verification Steps
 
 1. **Validate schema syntax**:
+
    ```bash
    npm run validate:strict
    ```
@@ -306,7 +316,9 @@ describe('common.schema.json - Template Definitions', () => {
    {
      "type": "object",
      "properties": {
-       "count": { "$ref": "../common.schema.json#/definitions/positiveIntegerOrTemplate" }
+       "count": {
+         "$ref": "../common.schema.json#/definitions/positiveIntegerOrTemplate"
+       }
      }
    }
    ```

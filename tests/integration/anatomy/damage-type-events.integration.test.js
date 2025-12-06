@@ -6,7 +6,14 @@
  * @see tickets/DAMTYPANDSPEEFF-004-event-and-propagation-integration.md
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 
 import BleedingTickSystem from '../../../src/anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../../src/anatomy/services/burningTickSystem.js';
@@ -57,7 +64,10 @@ function createMockEntityManager() {
       const result = [];
       for (const key of components.keys()) {
         if (key.endsWith(`:${componentId}`)) {
-          const entityId = key.substring(0, key.length - componentId.length - 1);
+          const entityId = key.substring(
+            0,
+            key.length - componentId.length - 1
+          );
           if (!result.includes(entityId)) {
             result.push(entityId);
           }

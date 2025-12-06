@@ -16,9 +16,11 @@ Create the JSON schema for the `PREPARE_ACTION_CONTEXT` operation, which will co
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/prepareActionContext.schema.json`
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry)
 - `src/configuration/staticConfiguration.js` (register new schema file)
 
@@ -27,6 +29,7 @@ Create the JSON schema for the `PREPARE_ACTION_CONTEXT` operation, which will co
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handler schemas
 - Any operation handler implementation files
 - Any rule files (migrations are separate tickets)
@@ -149,4 +152,3 @@ npm run test:integration
 - Added reference to `data/schemas/operation.schema.json`.
 - **Deviation:** Modified `src/configuration/staticConfiguration.js` to register the new schema file (omitted from original ticket scope).
 - **Note:** `npm run test:ci` and `npm run test:integration` are currently failing as expected due to missing implementation and DI registration, which are covered in subsequent tickets (OPEHANARCANA-002, OPEHANARCANA-003). The "Out of Scope" constraints prevented fixing these tests in this ticket.
-

@@ -59,7 +59,9 @@ describe('scoot_closer action discovery - Integration Tests', () => {
 
       // Custom resolver for closest_leftmost_occupant
       if (scopeName === 'personal-space:closest_leftmost_occupant') {
-        console.log(`  📌 Context actor ID: ${context?.actor?.id}, target ID: ${context?.target?.id}`);
+        console.log(
+          `  📌 Context actor ID: ${context?.actor?.id}, target ID: ${context?.target?.id}`
+        );
         const actorId = context?.actor?.id;
         const furnitureId = context?.target?.id;
 
@@ -69,15 +71,25 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         }
 
         const actor = testFixture.entityManager.getEntityInstance(actorId);
-        const furniture = testFixture.entityManager.getEntityInstance(furnitureId);
-        console.log(`  👤 Actor: ${actor ? 'found' : 'NOT FOUND'}, 🪑 Furniture: ${furniture ? 'found' : 'NOT FOUND'}`);
+        const furniture =
+          testFixture.entityManager.getEntityInstance(furnitureId);
+        console.log(
+          `  👤 Actor: ${actor ? 'found' : 'NOT FOUND'}, 🪑 Furniture: ${furniture ? 'found' : 'NOT FOUND'}`
+        );
 
         const actorSitting = actor?.components?.['positioning:sitting_on'];
-        const sittingComponent = furniture?.components?.['positioning:allows_sitting'];
+        const sittingComponent =
+          furniture?.components?.['positioning:allows_sitting'];
         console.log(`  📍 Actor sitting: ${JSON.stringify(actorSitting)}`);
-        console.log(`  🛋️ Furniture spots: ${JSON.stringify(sittingComponent?.spots)}`);
+        console.log(
+          `  🛋️ Furniture spots: ${JSON.stringify(sittingComponent?.spots)}`
+        );
 
-        if (!actorSitting || !sittingComponent || !Array.isArray(sittingComponent.spots)) {
+        if (
+          !actorSitting ||
+          !sittingComponent ||
+          !Array.isArray(sittingComponent.spots)
+        ) {
           console.log(`  ❌ Invalid sitting components`);
           return { success: true, value: new Set() };
         }
@@ -94,7 +106,9 @@ describe('scoot_closer action discovery - Integration Tests', () => {
 
         const spotToLeft = spots[actorIndex - 1];
         if (spotToLeft) {
-          console.log(`  ⚠️ Spot immediately to left is occupied: ${spotToLeft}`);
+          console.log(
+            `  ⚠️ Spot immediately to left is occupied: ${spotToLeft}`
+          );
           return { success: true, value: new Set() };
         }
 
@@ -105,7 +119,11 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         for (let i = actorIndex - 2; i >= 0; i--) {
           const occupantId = spots[i];
           console.log(`    Checking spot ${i}: ${occupantId}`);
-          if (occupantId && typeof occupantId === 'string' && occupantId !== actorId) {
+          if (
+            occupantId &&
+            typeof occupantId === 'string' &&
+            occupantId !== actorId
+          ) {
             closestOccupantId = occupantId;
             closestIndex = i;
             // Found the closest occupant - break immediately
@@ -119,12 +137,18 @@ describe('scoot_closer action discovery - Integration Tests', () => {
         }
 
         // Valid scooting scenario - can move closer to closest occupant
-        console.log(`  ✅ Found closest occupant at index ${closestIndex}: ${closestOccupantId}`);
+        console.log(
+          `  ✅ Found closest occupant at index ${closestIndex}: ${closestOccupantId}`
+        );
         return { success: true, value: new Set([closestOccupantId]) };
       }
 
       // Fall back to original resolution for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
   });
 
@@ -179,23 +203,33 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       // Debug output
       console.log(`\n🎬 DISCOVERED ACTIONS:`);
       console.log(`  Total: ${actions.length}`);
-      console.log(`  Action IDs:`, actions.map(a => a.id));
+      console.log(
+        `  Action IDs:`,
+        actions.map((a) => a.id)
+      );
       console.log(`  Full actions:`, JSON.stringify(actions, null, 2));
 
       // Assert
       const scootAction = actions.find(
         (a) => a.id === 'personal-space:scoot_closer'
       );
-      console.log(`\n🔍 scoot_closer action:`, scootAction ? 'FOUND ✅' : 'NOT FOUND ❌');
+      console.log(
+        `\n🔍 scoot_closer action:`,
+        scootAction ? 'FOUND ✅' : 'NOT FOUND ❌'
+      );
       if (scootAction) {
         console.log(`  Targets:`, JSON.stringify(scootAction.targets, null, 2));
       }
       expect(scootAction).toBeDefined();
       expect(scootAction.targets).toBeDefined();
       expect(scootAction.targets.primary).toBeDefined();
-      expect(scootAction.targets.primary.scope).toBe('personal-space:furniture_actor_sitting_on');
+      expect(scootAction.targets.primary.scope).toBe(
+        'personal-space:furniture_actor_sitting_on'
+      );
       expect(scootAction.targets.secondary).toBeDefined();
-      expect(scootAction.targets.secondary.scope).toBe('personal-space:closest_leftmost_occupant');
+      expect(scootAction.targets.secondary.scope).toBe(
+        'personal-space:closest_leftmost_occupant'
+      );
       expect(scootAction.targets.secondary.contextFrom).toBe('primary');
     });
 
@@ -245,9 +279,13 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       expect(scootAction).toBeDefined();
       expect(scootAction.targets).toBeDefined();
       expect(scootAction.targets.primary).toBeDefined();
-      expect(scootAction.targets.primary.scope).toBe('personal-space:furniture_actor_sitting_on');
+      expect(scootAction.targets.primary.scope).toBe(
+        'personal-space:furniture_actor_sitting_on'
+      );
       expect(scootAction.targets.secondary).toBeDefined();
-      expect(scootAction.targets.secondary.scope).toBe('personal-space:closest_leftmost_occupant');
+      expect(scootAction.targets.secondary.scope).toBe(
+        'personal-space:closest_leftmost_occupant'
+      );
       expect(scootAction.targets.secondary.contextFrom).toBe('primary');
     });
 
@@ -510,7 +548,9 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const actions = await testFixture.discoverActions('actor1');
 
       // Assert - spot to left is occupied, should not discover
-      const scootAction = actions.find((a) => a.id === 'personal-space:scoot_closer');
+      const scootAction = actions.find(
+        (a) => a.id === 'personal-space:scoot_closer'
+      );
       expect(scootAction).toBeUndefined();
     });
 
@@ -543,7 +583,9 @@ describe('scoot_closer action discovery - Integration Tests', () => {
       const actions = await testFixture.discoverActions('actor1');
 
       // Assert - leftmost position, should not discover
-      const scootAction = actions.find((a) => a.id === 'personal-space:scoot_closer');
+      const scootAction = actions.find(
+        (a) => a.id === 'personal-space:scoot_closer'
+      );
       expect(scootAction).toBeUndefined();
     });
   });

@@ -158,7 +158,10 @@ function createSaveAdapterEnvironment() {
   const entityDisplayDataProvider = { getEntityName: jest.fn() };
 
   const ensureRegistered = (token, value) => {
-    if (typeof container.isRegistered === 'function' && container.isRegistered(token)) {
+    if (
+      typeof container.isRegistered === 'function' &&
+      container.isRegistered(token)
+    ) {
       return;
     }
     container.register(token, value);
@@ -366,7 +369,8 @@ describe('GameEngineSaveAdapter real integration', () => {
       {
         eventId: 'core:ui_operation_failed',
         payload: {
-          errorMessage: 'Failed to save game: Unexpected error during save: Disk I/O failure',
+          errorMessage:
+            'Failed to save game: Unexpected error during save: Disk I/O failure',
           errorTitle: 'Save Failed',
         },
         options: undefined,

@@ -84,24 +84,23 @@ class ScopeRegistry extends IScopeRegistry {
       const registeredScopes = this.getAllScopeNames();
       const suggestions = registeredScopes.slice(0, 5);
 
-      throw new ScopeResolutionError(
-        `Scope "${name}" not found`,
-        {
-          scopeName: name,
-          phase: 'scope lookup',
-          parameters: {
-            requestedScope: name,
-            totalRegisteredScopes: registeredScopes.length,
-          },
-          hint: 'Check that the scope is registered and the name is correct',
-          suggestion: suggestions.length > 0
+      throw new ScopeResolutionError(`Scope "${name}" not found`, {
+        scopeName: name,
+        phase: 'scope lookup',
+        parameters: {
+          requestedScope: name,
+          totalRegisteredScopes: registeredScopes.length,
+        },
+        hint: 'Check that the scope is registered and the name is correct',
+        suggestion:
+          suggestions.length > 0
             ? `Available scopes (first ${suggestions.length}): ${suggestions.join(', ')}`
             : 'No scopes are currently registered',
-          example: registeredScopes.length > 0
+        example:
+          registeredScopes.length > 0
             ? `Example: scopeRegistry.getScope('${registeredScopes[0]}')`
             : undefined,
-        }
-      );
+      });
     }
 
     return scopeData;

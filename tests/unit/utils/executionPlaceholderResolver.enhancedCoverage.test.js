@@ -72,7 +72,8 @@ describe('ExecutionPlaceholderResolver context-aware behavior', () => {
   };
 
   it('wraps the logger to suppress context warnings while forwarding other messages', () => {
-    const { wrappedLogger, providedLogger, validatedLogger } = instantiateResolver();
+    const { wrappedLogger, providedLogger, validatedLogger } =
+      instantiateResolver();
 
     expect(ensureValidLogger).toHaveBeenCalledWith(
       providedLogger,
@@ -87,7 +88,9 @@ describe('ExecutionPlaceholderResolver context-aware behavior', () => {
 
     expect(validatedLogger.debug).toHaveBeenCalledWith('debug-message', 42);
     expect(validatedLogger.info).toHaveBeenCalledWith('info-message');
-    expect(validatedLogger.error).toHaveBeenCalledWith('error-message', { code: 500 });
+    expect(validatedLogger.error).toHaveBeenCalledWith('error-message', {
+      code: 500,
+    });
 
     wrappedLogger.warn(
       'executionContext.evaluationContext.context is missing or invalid'
@@ -101,7 +104,10 @@ describe('ExecutionPlaceholderResolver context-aware behavior', () => {
     expect(validatedLogger.warn).toHaveBeenNthCalledWith(1, {
       text: 'non-string warning payload',
     });
-    expect(validatedLogger.warn).toHaveBeenNthCalledWith(2, 'different warning');
+    expect(validatedLogger.warn).toHaveBeenNthCalledWith(
+      2,
+      'different warning'
+    );
   });
 
   it('resolves placeholder paths using the wrapped logger and default log path', () => {

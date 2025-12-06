@@ -10,6 +10,7 @@
 ## Objective
 
 Create integration tests that verify `PREPARE_ACTION_CONTEXT` works correctly:
+
 1. With the full DI container
 2. Within rule execution context
 3. Before the `core:logSuccessAndEndTurn` macro
@@ -20,6 +21,7 @@ Create integration tests that verify `PREPARE_ACTION_CONTEXT` works correctly:
 ## Files to Touch
 
 ### New Files
+
 - `tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js`
 
 ---
@@ -27,6 +29,7 @@ Create integration tests that verify `PREPARE_ACTION_CONTEXT` works correctly:
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation file
 - Any schema files
 - Any DI registration files
@@ -73,7 +76,10 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
   describe('context preparation', () => {
     it('should set all required context variables', async () => {
       // Create test fixture with minimal setup
-      fixture = await ModTestFixture.forRule('core', 'core:test_prepare_context');
+      fixture = await ModTestFixture.forRule(
+        'core',
+        'core:test_prepare_context'
+      );
 
       // Create test entities
       const actor = fixture.createEntity({
@@ -122,11 +128,13 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
 ### Tests That Must Pass
 
 1. **All integration tests pass:**
+
    ```bash
    npm run test:integration -- tests/integration/logic/operationHandlers/prepareActionContext.integration.test.js
    ```
 
 2. **Full integration suite passes:**
+
    ```bash
    npm run test:integration
    ```

@@ -94,7 +94,9 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
       const controller = new GoapController(createValidDependencies());
 
       expect(controller).toBeInstanceOf(GoapController);
-      expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'GoapController initialized'
+      );
     });
 
     it('should throw if jsonLogicService is missing', () => {
@@ -139,7 +141,9 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
       const controller = new GoapController(createValidDependencies());
 
       expect(controller).toBeInstanceOf(GoapController);
-      expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'GoapController initialized'
+      );
     });
 
     it('should throw if dataRegistry is missing', () => {
@@ -212,7 +216,9 @@ describe('GoapController - New Dependencies for Goal Selection', () => {
       });
 
       expect(controller).toBeInstanceOf(GoapController);
-      expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'GoapController initialized'
+      );
     });
 
     it('should maintain backward compatibility with existing tests', () => {

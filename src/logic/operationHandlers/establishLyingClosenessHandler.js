@@ -68,7 +68,11 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'getEntitiesWithComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'getEntitiesWithComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -377,11 +381,14 @@ class EstablishLyingClosenessHandler extends BaseOperationHandler {
    * @private
    */
   #handleNoOtherActors(parameters, operationId, executionContext, logger) {
-    logger.info('No other lying actors found, closeness establishment skipped', {
-      operationId,
-      actorId: parameters.actor_id,
-      furnitureId: parameters.furniture_id,
-    });
+    logger.info(
+      'No other lying actors found, closeness establishment skipped',
+      {
+        operationId,
+        actorId: parameters.actor_id,
+        furnitureId: parameters.furniture_id,
+      }
+    );
 
     if (parameters.result_variable) {
       tryWriteContextVariable(

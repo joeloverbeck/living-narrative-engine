@@ -98,7 +98,9 @@ describe('Damage/Death Message Ordering', () => {
       getAllDescendants: jest.fn().mockReturnValue([]),
     };
     damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
-    damagePropagationService = { propagateDamage: jest.fn().mockReturnValue([]) };
+    damagePropagationService = {
+      propagateDamage: jest.fn().mockReturnValue([]),
+    };
     injuryAggregationService = {
       aggregateInjuries: jest.fn().mockReturnValue({ destroyedParts: [] }),
     };
@@ -167,7 +169,7 @@ describe('Damage/Death Message Ordering', () => {
             turnsInState: 0,
           },
           [VITAL_ORGAN_COMPONENT_ID]: {
-            organType: 'brain',  // Must match IMMEDIATE_DEATH_ORGANS list
+            organType: 'brain', // Must match IMMEDIATE_DEATH_ORGANS list
           },
         },
         'rooster-entity': {
@@ -258,7 +260,8 @@ describe('Damage/Death Message Ordering', () => {
 
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part') return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part')
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -275,7 +278,9 @@ describe('Damage/Death Message Ordering', () => {
       await handler.execute(params, executionContext);
 
       // Get all events in order
-      const sortedEvents = [...eventLog].sort((a, b) => a.timestamp - b.timestamp);
+      const sortedEvents = [...eventLog].sort(
+        (a, b) => a.timestamp - b.timestamp
+      );
 
       // Find indices
       const damageIndex = sortedEvents.findIndex(
@@ -348,7 +353,8 @@ describe('Damage/Death Message Ordering', () => {
 
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part') return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part')
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -375,7 +381,9 @@ describe('Damage/Death Message Ordering', () => {
 
       await handler.execute(params, executionContext);
 
-      const sortedEvents = [...eventLog].sort((a, b) => a.timestamp - b.timestamp);
+      const sortedEvents = [...eventLog].sort(
+        (a, b) => a.timestamp - b.timestamp
+      );
 
       // Find the LAST damage event and the death event
       const damageEvents = sortedEvents.filter(

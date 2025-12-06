@@ -28,12 +28,16 @@ describe('textUtils integration', () => {
 
     it('preserves punctuation when already present', () => {
       expect(ensureTerminalPunctuation('Ready!')).toBe('Ready!');
-      expect(ensureTerminalPunctuation(' Are you sure?  ')).toBe('Are you sure?');
+      expect(ensureTerminalPunctuation(' Are you sure?  ')).toBe(
+        'Are you sure?'
+      );
     });
 
     it('appends a period when terminal punctuation is missing', () => {
       expect(ensureTerminalPunctuation('Hello there')).toBe('Hello there.');
-      expect(ensureTerminalPunctuation('  Trim me please  ')).toBe('Trim me please.');
+      expect(ensureTerminalPunctuation('  Trim me please  ')).toBe(
+        'Trim me please.'
+      );
     });
   });
 
@@ -79,7 +83,9 @@ describe('textUtils integration', () => {
 
   describe('formatTimestamp', () => {
     it('returns the default fallback when provided a non-string fallback and nullish timestamp', () => {
-      expect(formatTimestamp(null, { message: 'not used' })).toBe('Invalid Date');
+      expect(formatTimestamp(null, { message: 'not used' })).toBe(
+        'Invalid Date'
+      );
       expect(formatTimestamp(undefined, 42)).toBe('Invalid Date');
     });
 
@@ -99,7 +105,9 @@ describe('textUtils integration', () => {
 
     it('recovers with the fallback when Date throws during string parsing', () => {
       const RealDate = Date;
-      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (...args) {
+      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (
+        ...args
+      ) {
         if (args[0] === 'explode') {
           throw new TypeError('boom');
         }
@@ -126,7 +134,7 @@ describe('textUtils integration', () => {
         throw new TypeError('boom');
       });
       expect(formatTimestamp(Symbol('bad-input'), 'error-fallback')).toBe(
-        'error-fallback',
+        'error-fallback'
       );
       expect(dateSpy).toHaveBeenCalled();
       dateSpy.mockRestore();
@@ -150,7 +158,7 @@ describe('textUtils integration', () => {
 
       expect(formatTimestamp(timestamp)).toBe(expected);
       expect(formatTimestamp(Number.POSITIVE_INFINITY, 'fallback')).toBe(
-        'fallback',
+        'fallback'
       );
     });
 
@@ -163,7 +171,9 @@ describe('textUtils integration', () => {
 
     it('recovers when Date throws for numeric timestamps', () => {
       const RealDate = Date;
-      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (...args) {
+      const dateSpy = jest.spyOn(global, 'Date').mockImplementation(function (
+        ...args
+      ) {
         if (args[0] === 4242) {
           throw new TypeError('boom');
         }

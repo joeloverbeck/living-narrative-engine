@@ -29,23 +29,15 @@
     }
   ],
   "content": {
-    "scopes": [
-      "throwable_items.scope"
-    ],
-    "actions": [
-      "throw_item_at_target.action.json"
-    ],
-    "conditions": [
-      "event-is-action-throw-item-at-target.condition.json"
-    ],
+    "scopes": ["throwable_items.scope"],
+    "actions": ["throw_item_at_target.action.json"],
+    "conditions": ["event-is-action-throw-item-at-target.condition.json"],
     "macros": [
       "handleThrowCritical.macro.json",
       "handleThrowFumble.macro.json",
       "handleThrowHit.macro.json",
       "handleThrowMiss.macro.json"
     ],
-    "rules": [
-      "handle_throw_item_at_target.rule.json"
-    ]
+    "rules": ["handle_throw_item_at_target.rule.json"]
   }
 }

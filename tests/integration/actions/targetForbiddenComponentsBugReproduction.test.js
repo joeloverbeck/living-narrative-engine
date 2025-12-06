@@ -61,9 +61,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
         .asActor()
         .build();
 
-      const room = new ModEntityBuilder('room1')
-        .asRoom('Test Room')
-        .build();
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is receiving blowjob from TargetGiving
       actor.components['positioning:receiving_blowjob'] = {
@@ -107,7 +105,8 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
           if (!actorEntity) {
             return { success: true, value: new Set() };
           }
-          const closeness = actorEntity.components?.['positioning:closeness']?.partners;
+          const closeness =
+            actorEntity.components?.['positioning:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -145,9 +144,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
         .asActor()
         .build();
 
-      const room = new ModEntityBuilder('room1')
-        .asRoom('Test Room')
-        .build();
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is receiving blowjob from TargetGiving
       actor.components['positioning:receiving_blowjob'] = {
@@ -191,7 +188,8 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
           if (!actorEntity) {
             return { success: true, value: new Set() };
           }
-          const closeness = actorEntity.components?.['positioning:closeness']?.partners;
+          const closeness =
+            actorEntity.components?.['positioning:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }
@@ -221,9 +219,7 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
         .asActor()
         .build();
 
-      const room = new ModEntityBuilder('room1')
-        .asRoom('Test Room')
-        .build();
+      const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
       // Actor is giving blowjob to Target
       actor.components['positioning:giving_blowjob'] = {
@@ -264,7 +260,8 @@ describe('Forbidden Components Bug Reproduction - giving_blowjob on target', () 
           if (!actorEntity) {
             return { success: true, value: new Set() };
           }
-          const closeness = actorEntity.components?.['positioning:closeness']?.partners;
+          const closeness =
+            actorEntity.components?.['positioning:closeness']?.partners;
           if (!Array.isArray(closeness) || closeness.length === 0) {
             return { success: true, value: new Set() };
           }

@@ -26,8 +26,8 @@ jest.mock('../../../src/configuration/utils/traceConfigUtils.js', () => ({
 /**
  * Creates a mock DI container that spies on registrations.
  *
- * @returns A mock container object with `register`, `resolve`, `isRegistered`, 
- * `registerCallback`, and `executeCallbacks` methods, plus a `registrations` 
+ * @returns A mock container object with `register`, `resolve`, `isRegistered`,
+ * `registerCallback`, and `executeCallbacks` methods, plus a `registrations`
  * property to inspect calls.
  */
 const createMockContainer = () => {
@@ -76,7 +76,7 @@ const createMockContainer = () => {
     }),
     // Add executeCallbacks method to match the real AppContainer
     executeCallbacks: jest.fn(() => {
-      callbacks.forEach(callback => {
+      callbacks.forEach((callback) => {
         try {
           callback(container);
         } catch (error) {

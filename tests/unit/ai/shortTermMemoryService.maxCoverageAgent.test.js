@@ -91,15 +91,25 @@ describe('ShortTermMemoryService additional edge coverage', () => {
     const service = new ShortTermMemoryService();
 
     expect(() =>
-      service.emitThoughtAdded('actor:4', 'Nothing happens', '2025-06-03T12:00:00.000Z')
+      service.emitThoughtAdded(
+        'actor:4',
+        'Nothing happens',
+        '2025-06-03T12:00:00.000Z'
+      )
     ).not.toThrow();
   });
 
   it('does not attempt to dispatch when dispatcher lacks a callable function', () => {
-    const service = new ShortTermMemoryService({ eventDispatcher: { dispatch: 'nope' } });
+    const service = new ShortTermMemoryService({
+      eventDispatcher: { dispatch: 'nope' },
+    });
 
     expect(() =>
-      service.emitThoughtAdded('actor:5', 'Still ignored', '2025-06-03T12:30:00.000Z')
+      service.emitThoughtAdded(
+        'actor:5',
+        'Still ignored',
+        '2025-06-03T12:30:00.000Z'
+      )
     ).not.toThrow();
   });
 

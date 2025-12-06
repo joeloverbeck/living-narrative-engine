@@ -5,7 +5,8 @@
 import { LogLevel } from './consoleLogger.js';
 import * as environmentUtils from '../utils/environmentUtils.js';
 
-const { getEnvironmentVariable: importedGetEnvironmentVariable } = environmentUtils;
+const { getEnvironmentVariable: importedGetEnvironmentVariable } =
+  environmentUtils;
 
 /**
  * @description Safely reads an environment variable even when the environment utilities module is partially mocked.
@@ -110,7 +111,10 @@ function normalizeLogLevel(candidate) {
  * @param {number} [options.defaultLevel] - Fallback log level when no override is found.
  * @returns {number} Resolved {@link LogLevel} value.
  */
-export function resolveBootstrapLogLevel({ level, defaultLevel = LogLevel.INFO } = {}) {
+export function resolveBootstrapLogLevel({
+  level,
+  defaultLevel = LogLevel.INFO,
+} = {}) {
   const levelCandidates = [
     level,
     safeGetEnvironmentVariable('DEBUG_LOG_LEVEL', ''),
@@ -222,4 +226,3 @@ export function createBootstrapLogger(options = {}) {
 }
 
 export { LogLevel };
-

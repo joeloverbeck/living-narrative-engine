@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  afterAll,
+} from '@jest/globals';
 import IndexedDBStorageAdapter from '../../../src/storage/indexedDBStorageAdapter.js';
 
 const createLogger = () => ({
@@ -291,13 +298,17 @@ describe('IndexedDBStorageAdapter integration', () => {
       'IndexedDBStorageAdapter: Database connection closed unexpectedly'
     );
 
-    await expect(adapter.getItem('k')).rejects.toThrow('Failed to get item: get failure');
+    await expect(adapter.getItem('k')).rejects.toThrow(
+      'Failed to get item: get failure'
+    );
     nextGetMode = 'throw';
     throwOnNextTransaction = true;
     await expect(adapter.getItem('boom')).rejects.toThrow('transaction boom');
 
     throwOnNextTransaction = true;
-    await expect(adapter.setItem('txn', 'value')).rejects.toThrow('transaction boom');
+    await expect(adapter.setItem('txn', 'value')).rejects.toThrow(
+      'transaction boom'
+    );
     triggerTransactionError = true;
     await expect(adapter.setItem('fail', 'value')).rejects.toThrow(
       'Transaction failed: transaction failure'
@@ -328,7 +339,9 @@ describe('IndexedDBStorageAdapter integration', () => {
       'Failed to clear storage: clear request failure'
     );
 
-    await expect(adapter.count()).rejects.toThrow('Failed to count items: count failure');
+    await expect(adapter.count()).rejects.toThrow(
+      'Failed to count items: count failure'
+    );
     nextCountMode = 'throw';
     await expect(adapter.count()).rejects.toThrow('count throw failure');
 

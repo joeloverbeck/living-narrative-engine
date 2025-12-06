@@ -34,7 +34,10 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
 
   describe('Successfully executes swell_music_on_instrument action', () => {
     it('should dispatch perceptible event with mood-adjective-flavored message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Kael')
@@ -75,7 +78,9 @@ describe('music:swell_music_on_instrument - Rule Execution', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('bold');
       expect(perceptibleEvent.payload.descriptionText).toContain('rise');
       expect(perceptibleEvent.payload.descriptionText).toContain('brass horn');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/swells into a.*rise on/);
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /swells into a.*rise on/
+      );
     });
 
     it('should dispatch action success event', async () => {

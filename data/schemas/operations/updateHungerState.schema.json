@@ -24,10 +24,7 @@
       "properties": {
         "entity_ref": {
           "description": "Reference to the entity with hunger_state and metabolic_store components",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         }
       },
       "required": ["entity_ref"],

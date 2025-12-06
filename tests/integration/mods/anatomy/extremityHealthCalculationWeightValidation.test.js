@@ -133,7 +133,8 @@ describe('HEACALOVE-009: Extremity Entity health_calculation_weight Validation',
       const entitiesWithWeight = HAND_ENTITIES.filter((e) => {
         const entity = loadEntityFile(e.file);
         return (
-          getHealthCalculationWeight(entity) === EXPECTED_EXTREMITY_HEALTH_WEIGHT
+          getHealthCalculationWeight(entity) ===
+          EXPECTED_EXTREMITY_HEALTH_WEIGHT
         );
       });
 
@@ -147,7 +148,8 @@ describe('HEACALOVE-009: Extremity Entity health_calculation_weight Validation',
       const entitiesWithWeight = FOOT_ENTITIES.filter((e) => {
         const entity = loadEntityFile(e.file);
         return (
-          getHealthCalculationWeight(entity) === EXPECTED_EXTREMITY_HEALTH_WEIGHT
+          getHealthCalculationWeight(entity) ===
+          EXPECTED_EXTREMITY_HEALTH_WEIGHT
         );
       });
 

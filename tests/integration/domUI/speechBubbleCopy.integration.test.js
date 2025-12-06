@@ -42,7 +42,10 @@ describe('Speech Bubble Copy Integration', () => {
     it('should copy thoughts with character name when clicking the thoughts button', async () => {
       const thoughts = 'I wonder what will happen next...';
       const speakerName = 'Test Character';
-      const fragment = buildSpeechMeta(document, domFactory, { thoughts, speakerName });
+      const fragment = buildSpeechMeta(document, domFactory, {
+        thoughts,
+        speakerName,
+      });
 
       document.body.appendChild(fragment);
 

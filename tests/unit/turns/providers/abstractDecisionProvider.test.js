@@ -64,7 +64,9 @@ describe('AbstractDecisionProvider base logic', () => {
           logger: mockLogger,
           safeEventDispatcher: {},
         })
-    ).toThrow("Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'.");
+    ).toThrow(
+      "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
+    );
     expect(mockLogger.error).toHaveBeenCalledWith(
       "Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'."
     );
@@ -146,11 +148,9 @@ describe('AbstractDecisionProvider base logic', () => {
       safeEventDispatcher: mockDispatcher,
     });
 
-    const result = await provider.decide(
-      { id: 'actor-1' },
-      { context: true },
-      ['first']
-    );
+    const result = await provider.decide({ id: 'actor-1' }, { context: true }, [
+      'first',
+    ]);
 
     expect(result).toEqual({
       chosenIndex: 1,

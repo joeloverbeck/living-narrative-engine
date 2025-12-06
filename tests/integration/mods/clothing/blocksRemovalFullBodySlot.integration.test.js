@@ -24,12 +24,16 @@ describe('blocks_removal Component - full_body Slot Integration', () => {
           slot: 'full_body',
           layers: ['underwear', 'base'],
           blockType: 'must_remove_first',
-          reason: 'Full-body garment must be removed to access underlying clothing',
+          reason:
+            'Full-body garment must be removed to access underlying clothing',
         },
       ],
     };
 
-    const result = testBed.validateAgainstSchema(componentData, 'clothing:blocks_removal');
+    const result = testBed.validateAgainstSchema(
+      componentData,
+      'clothing:blocks_removal'
+    );
     expect(result.isValid).toBe(true);
   });
 
@@ -50,7 +54,10 @@ describe('blocks_removal Component - full_body Slot Integration', () => {
       ],
     };
 
-    const result = testBed.validateAgainstSchema(componentData, 'clothing:blocks_removal');
+    const result = testBed.validateAgainstSchema(
+      componentData,
+      'clothing:blocks_removal'
+    );
     expect(result.isValid).toBe(true);
   });
 
@@ -99,17 +106,26 @@ describe('blocks_removal Component - full_body Slot Integration', () => {
       ],
     };
 
-    const result = testBed.validateAgainstSchema(componentData, 'clothing:blocks_removal');
+    const result = testBed.validateAgainstSchema(
+      componentData,
+      'clothing:blocks_removal'
+    );
     expect(result.isValid).toBe(true);
   });
 
   it('should support full_body in blocksRemovalOf scenario', () => {
     // Belt or accessory that prevents removal of full_body garment
     const componentData = {
-      blocksRemovalOf: ['clothing:sand_silk_wrap_dress', 'clothing:full_length_black_velvet_gown'],
+      blocksRemovalOf: [
+        'clothing:sand_silk_wrap_dress',
+        'clothing:full_length_black_velvet_gown',
+      ],
     };
 
-    const result = testBed.validateAgainstSchema(componentData, 'clothing:blocks_removal');
+    const result = testBed.validateAgainstSchema(
+      componentData,
+      'clothing:blocks_removal'
+    );
     expect(result.isValid).toBe(true);
   });
 
@@ -137,7 +153,10 @@ describe('blocks_removal Component - full_body Slot Integration', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
   });
@@ -153,7 +172,10 @@ describe('blocks_removal Component - full_body Slot Integration', () => {
       ],
     };
 
-    const result = testBed.validateAgainstSchema(componentData, 'clothing:blocks_removal');
+    const result = testBed.validateAgainstSchema(
+      componentData,
+      'clothing:blocks_removal'
+    );
     expect(result.isValid).toBe(false);
   });
 });

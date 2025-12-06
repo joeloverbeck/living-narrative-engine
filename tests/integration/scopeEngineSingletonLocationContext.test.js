@@ -25,7 +25,10 @@ import DefaultDslParser from '../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../common/mockFactories/actions.js';
 import { createTraceContext } from '../../src/actions/tracing/traceContext.js';
 import { createMockTargetContextBuilder } from '../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../common/actions/multiTargetStageTestUtilities.js';
+import {
+  createMultiTargetResolutionStage,
+  createActionPipelineOrchestrator,
+} from '../common/actions/multiTargetStageTestUtilities.js';
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
@@ -297,7 +300,9 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: guildLocation,
     });
 
-    let followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
+    let followActions = actions.actions.filter(
+      (a) => a.id === 'companionship:follow'
+    );
     expect(followActions).toHaveLength(1);
     expect(followActions[0].command).toBe('follow Ninja');
 
@@ -311,7 +316,9 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
+    followActions = actions.actions.filter(
+      (a) => a.id === 'companionship:follow'
+    );
     expect(followActions).toHaveLength(0); // No one to follow in town
 
     // Move ninja to town as well
@@ -324,7 +331,9 @@ describe('Singleton Scope Engine Location Context', () => {
       currentLocation: townLocation,
     });
 
-    followActions = actions.actions.filter((a) => a.id === 'companionship:follow');
+    followActions = actions.actions.filter(
+      (a) => a.id === 'companionship:follow'
+    );
     expect(followActions).toHaveLength(1);
     expect(followActions[0].command).toBe('follow Ninja');
   });

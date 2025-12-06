@@ -11,8 +11,7 @@ import physicalControlManifest from '../../../../data/mods/physical-control/mod-
 const findIfByOutcome = (actions, outcomeValue) =>
   actions.find(
     (op) =>
-      op.type === 'IF' &&
-      op.parameters?.condition?.['==']?.[1] === outcomeValue
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcomeValue
   );
 
 describe('handle_restrain_target rule', () => {
@@ -104,10 +103,18 @@ describe('handle_restrain_target rule', () => {
     );
 
     expect(ifOps).toHaveLength(4);
-    expect(findIfByOutcome(handleRestrainTargetRule.actions, 'CRITICAL_SUCCESS')).toBeDefined();
-    expect(findIfByOutcome(handleRestrainTargetRule.actions, 'SUCCESS')).toBeDefined();
-    expect(findIfByOutcome(handleRestrainTargetRule.actions, 'FAILURE')).toBeDefined();
-    expect(findIfByOutcome(handleRestrainTargetRule.actions, 'FUMBLE')).toBeDefined();
+    expect(
+      findIfByOutcome(handleRestrainTargetRule.actions, 'CRITICAL_SUCCESS')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleRestrainTargetRule.actions, 'SUCCESS')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleRestrainTargetRule.actions, 'FAILURE')
+    ).toBeDefined();
+    expect(
+      findIfByOutcome(handleRestrainTargetRule.actions, 'FUMBLE')
+    ).toBeDefined();
   });
 
   it('applies restraining effects on SUCCESS/CRITICAL_SUCCESS', () => {
@@ -138,7 +145,8 @@ describe('handle_restrain_target rule', () => {
       );
       const logMessage = actions.find(
         (op) =>
-          op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+          op.type === 'SET_VARIABLE' &&
+          op.parameters.variable_name === 'logMessage'
       );
 
       expect(beingRestrained?.parameters.entity_ref).toBe('target');
@@ -183,7 +191,9 @@ describe('handle_restrain_target rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     const expectedMessage =
@@ -215,14 +225,16 @@ describe('handle_restrain_target rule', () => {
       (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
     );
     const logMessage = actions.find(
-      (op) => op.type === 'SET_VARIABLE' && op.parameters.variable_name === 'logMessage'
+      (op) =>
+        op.type === 'SET_VARIABLE' &&
+        op.parameters.variable_name === 'logMessage'
     );
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
-    expect(actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')).toBe(
-      true
-    );
+    expect(
+      actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')
+    ).toBe(true);
   });
 });

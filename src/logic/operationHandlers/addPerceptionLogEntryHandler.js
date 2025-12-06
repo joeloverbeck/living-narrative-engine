@@ -164,12 +164,15 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       entityIds = new Set(normalizedRecipients);
     } else {
       // All actors in location (existing or new exclusion behavior)
-      const allInLocation = this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
+      const allInLocation =
+        this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
 
       if (usingExclusions) {
         // NEW: Remove excluded actors
         const exclusionSet = new Set(normalizedExclusions);
-        entityIds = new Set([...allInLocation].filter(id => !exclusionSet.has(id)));
+        entityIds = new Set(
+          [...allInLocation].filter((id) => !exclusionSet.has(id))
+        );
       } else {
         // Default: all actors in location
         entityIds = allInLocation;
@@ -181,8 +184,8 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
         usingExplicitRecipients
           ? `ADD_PERCEPTION_LOG_ENTRY: No matching recipients for ${locationId}`
           : usingExclusions
-          ? `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${locationId}`
-          : `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
+            ? `ADD_PERCEPTION_LOG_ENTRY: All actors excluded for ${locationId}`
+            : `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
       );
       return;
     }
@@ -302,11 +305,11 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
           }
         }
 
-          log.debug(
-            `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers ${
-              usingExplicitRecipients ? '(targeted)' : `in ${locationId}`
-            } (fallback mode)`
-          );
+        log.debug(
+          `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers ${
+            usingExplicitRecipients ? '(targeted)' : `in ${locationId}`
+          } (fallback mode)`
+        );
       }
     } else {
       log.debug(

@@ -1,8 +1,21 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 const resetEnv = () => {
   process.env = { ...ORIGINAL_ENV };
@@ -59,7 +72,9 @@ describe('log formatter scalar context integration coverage', () => {
     process.env.LOG_CONTEXT_PRETTY_PRINT = 'true';
     process.env.LOG_ICON_MODE = 'true';
 
-    const { getLogFormatter } = await import('../../src/logging/logFormatter.js');
+    const { getLogFormatter } = await import(
+      '../../src/logging/logFormatter.js'
+    );
     const formatter = getLogFormatter();
 
     const context = {
@@ -81,8 +96,12 @@ describe('log formatter scalar context integration coverage', () => {
     expect(formatted.contextLines).toContain(
       '                    ↳ Details[0]: Symbol(scalar-detail)'
     );
-    expect(formatted.contextLines).toContain('                    ↳ Details[1]: 404');
-    expect(formatted.contextLines).toContain('                    ↳ Details[2]: false');
+    expect(formatted.contextLines).toContain(
+      '                    ↳ Details[1]: 404'
+    );
+    expect(formatted.contextLines).toContain(
+      '                    ↳ Details[2]: false'
+    );
   });
 
   it('suppresses context output while still recording primitive detail payloads when pretty printing is disabled', async () => {
@@ -90,7 +109,9 @@ describe('log formatter scalar context integration coverage', () => {
     process.env.LOG_ENHANCED_FORMATTING = 'true';
     process.env.LOG_CONTEXT_PRETTY_PRINT = 'false';
 
-    const { getLogFormatter } = await import('../../src/logging/logFormatter.js');
+    const { getLogFormatter } = await import(
+      '../../src/logging/logFormatter.js'
+    );
     const formatter = getLogFormatter();
 
     const formatted = formatter.formatMessage(

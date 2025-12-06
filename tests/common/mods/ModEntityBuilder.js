@@ -49,8 +49,7 @@ function normalizeItemDefinition(definition = {}, index = 0, prefix = 'item') {
   return {
     id: normalizedId,
     name: normalizedName,
-    weight:
-      typeof definition.weight === 'number' ? definition.weight : 1,
+    weight: typeof definition.weight === 'number' ? definition.weight : 1,
     itemData: definition.itemData || {},
     portableData: definition.portableData || {},
     weightData: definition.weightData,
@@ -73,7 +72,8 @@ function buildItemEntity(definition, locationId) {
     .withComponent('items:portable', definition.portableData)
     .withComponent('core:weight', {
       weight:
-        definition.weightData && typeof definition.weightData.weight === 'number'
+        definition.weightData &&
+        typeof definition.weightData.weight === 'number'
           ? definition.weightData.weight
           : definition.weight,
     });
@@ -99,8 +99,8 @@ function buildItemEntity(definition, locationId) {
  * @returns {{ entities: Array<object>, normalized: Array<object>, ids: Array<string> }} Object containing the built entities, normalized definitions, and generated IDs
  */
 function buildItemsFromDefinitions(definitions, locationId, prefix = 'item') {
-  const normalized = (Array.isArray(definitions) ? definitions : []).map((definition, index) =>
-    normalizeItemDefinition(definition, index, prefix)
+  const normalized = (Array.isArray(definitions) ? definitions : []).map(
+    (definition, index) => normalizeItemDefinition(definition, index, prefix)
   );
   const entities = normalized.map((item) => buildItemEntity(item, locationId));
   const ids = entities.map((entity) => entity.id);
@@ -167,7 +167,6 @@ function buildInventoryActor(actorOptions, roomId, itemIds, capacity) {
 
   return builder.build();
 }
-
 
 /**
  * Builder class for creating test entities with a fluent API.
@@ -305,8 +304,9 @@ export class ModEntityBuilder {
       'ModEntityBuilder.closeToEntity'
     );
 
-    const existingCloseness =
-      this.entityData.components[closenessComponentId] || { partners: [] };
+    const existingCloseness = this.entityData.components[
+      closenessComponentId
+    ] || { partners: [] };
     const existingPartners = existingCloseness.partners || [];
 
     if (!existingPartners.includes(partnerIds)) {
@@ -372,7 +372,8 @@ export class ModEntityBuilder {
 
     for (let i = 0; i < numHands; i++) {
       const handId = `${this.entityData.id}-hand-${i}`;
-      const handName = i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
+      const handName =
+        i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
       bodyParts[handName] = handId;
 
       this._handEntities.push(
@@ -443,7 +444,12 @@ export class ModEntityBuilder {
    * @returns {ModEntityBuilder} This builder for chaining
    */
   asBodyPart(options = {}) {
-    const { parent = null, children = [], subType, socketId = 'default-socket' } = options;
+    const {
+      parent = null,
+      children = [],
+      subType,
+      socketId = 'default-socket',
+    } = options;
     this.entityData.components['anatomy:part'] = {
       parent,
       children,
@@ -596,7 +602,7 @@ export class ModEntityBuilder {
             `${JSON.stringify(hasPosition, null, 2)}\n` +
             '\n' +
             'Fix using:\n' +
-            "  builder.atLocation(\"location-id\")\n" +
+            '  builder.atLocation("location-id")\n' +
             '\n' +
             'Or manually:\n' +
             '  builder.withComponent("core:position", { locationId: "location-id" })\n'
@@ -757,7 +763,11 @@ export class ModEntityScenarios {
 
       extraEntities.push(
         new ModEntityBuilder(actorRootId)
-          .asBodyPart({ parent: null, children: [actorHandId], subType: 'torso' })
+          .asBodyPart({
+            parent: null,
+            children: [actorHandId],
+            subType: 'torso',
+          })
           .atLocation(location)
           .withLocationComponent(location)
           .build(),
@@ -767,7 +777,11 @@ export class ModEntityScenarios {
           .withLocationComponent(location)
           .build(),
         new ModEntityBuilder(targetRootId)
-          .asBodyPart({ parent: null, children: [targetHandId], subType: 'torso' })
+          .asBodyPart({
+            parent: null,
+            children: [targetHandId],
+            subType: 'torso',
+          })
           .atLocation(location)
           .withLocationComponent(location)
           .build(),
@@ -855,7 +869,13 @@ export class ModEntityScenarios {
 
     const normalizedFurniture = new Map();
     const ensureFurnitureDefinition = (definition) => {
-      const { id, name, locationId: furnitureLocation, allowsSitting, components } = definition;
+      const {
+        id,
+        name,
+        locationId: furnitureLocation,
+        allowsSitting,
+        components,
+      } = definition;
       if (!id) {
         throw new Error(
           'ModEntityScenarios.createSittingArrangement: furniture definitions must include an id'
@@ -941,7 +961,10 @@ export class ModEntityScenarios {
         (maxIndex, actor) => Math.max(maxIndex, actor.spotIndex),
         -1
       );
-      const spots = highestIndex >= 0 ? Array.from({ length: highestIndex + 1 }, () => null) : [];
+      const spots =
+        highestIndex >= 0
+          ? Array.from({ length: highestIndex + 1 }, () => null)
+          : [];
 
       actorsOnFurniture.forEach((actor) => {
         spots[actor.spotIndex] = actor.id;
@@ -952,7 +975,10 @@ export class ModEntityScenarios {
         .atLocation(definition.locationId)
         .withLocationComponent(definition.locationId);
 
-      if (definition.components && Object.keys(definition.components).length > 0) {
+      if (
+        definition.components &&
+        Object.keys(definition.components).length > 0
+      ) {
         builder.withComponents(definition.components);
       }
 
@@ -1074,11 +1100,19 @@ export class ModEntityScenarios {
       entities.push(roomEntity);
     }
 
-    entities.push(...furnitureEntities, ...seatedActorEntities, ...standingActorEntities, ...kneelingActorEntities);
+    entities.push(
+      ...furnitureEntities,
+      ...seatedActorEntities,
+      ...standingActorEntities,
+      ...kneelingActorEntities
+    );
 
     return {
       room: roomEntity,
-      furniture: furnitureEntities.length === 1 ? furnitureEntities[0] : furnitureEntities,
+      furniture:
+        furnitureEntities.length === 1
+          ? furnitureEntities[0]
+          : furnitureEntities,
       furnitureEntities,
       seatedActors: seatedActorEntities,
       standingActors: standingActorEntities,
@@ -1095,10 +1129,13 @@ export class ModEntityScenarios {
   static createSittingPair(options = {}) {
     const { seatedActors = [], closeSeatedActors, ...rest } = options;
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
-      { id: 'actor1', name: 'Alice', spotIndex: 0 },
-      { id: 'actor2', name: 'Bob', spotIndex: 1 },
-    ];
+    const finalSeatedActors =
+      seatedActors.length > 0
+        ? seatedActors
+        : [
+            { id: 'actor1', name: 'Alice', spotIndex: 0 },
+            { id: 'actor2', name: 'Bob', spotIndex: 1 },
+          ];
 
     const finalCloseSetting =
       typeof closeSeatedActors === 'boolean' ? closeSeatedActors : true;
@@ -1118,9 +1155,10 @@ export class ModEntityScenarios {
   static createSoloSitting(options = {}) {
     const { seatedActors = [], closeSeatedActors, ...rest } = options;
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
-      { id: 'actor1', name: 'Alice', spotIndex: 0 },
-    ];
+    const finalSeatedActors =
+      seatedActors.length > 0
+        ? seatedActors
+        : [{ id: 'actor1', name: 'Alice', spotIndex: 0 }];
 
     const finalCloseSetting =
       typeof closeSeatedActors === 'boolean' ? closeSeatedActors : false;
@@ -1145,19 +1183,21 @@ export class ModEntityScenarios {
       ...rest
     } = options;
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
-      { id: 'actor1', name: 'Alice', spotIndex: 0 },
-    ];
+    const finalSeatedActors =
+      seatedActors.length > 0
+        ? seatedActors
+        : [{ id: 'actor1', name: 'Alice', spotIndex: 0 }];
 
-    const defaultStandingActors = standingActors.length > 0
-      ? standingActors
-      : [
-          {
-            id: 'standing1',
-            name: 'Bob',
-            closeTo: [finalSeatedActors[0].id],
-          },
-        ];
+    const defaultStandingActors =
+      standingActors.length > 0
+        ? standingActors
+        : [
+            {
+              id: 'standing1',
+              name: 'Bob',
+              closeTo: [finalSeatedActors[0].id],
+            },
+          ];
 
     const normalizedStandingActors = defaultStandingActors.map(
       (actor, index) => ({
@@ -1208,12 +1248,14 @@ export class ModEntityScenarios {
         id: 'actor2',
         name: 'Bob',
         furnitureId:
-          (additionalFurniture[0] && additionalFurniture[0].id) || 'couch_right',
+          (additionalFurniture[0] && additionalFurniture[0].id) ||
+          'couch_right',
         spotIndex: 0,
       },
     ];
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : defaultSeatedActors;
+    const finalSeatedActors =
+      seatedActors.length > 0 ? seatedActors : defaultSeatedActors;
 
     const defaultAdditionalFurniture =
       additionalFurniture.length > 0
@@ -1251,20 +1293,22 @@ export class ModEntityScenarios {
       ...rest
     } = options;
 
-    const finalSeatedActors = seatedActors.length > 0 ? seatedActors : [
-      { id: 'actor1', name: 'Alice', spotIndex: 0 },
-    ];
+    const finalSeatedActors =
+      seatedActors.length > 0
+        ? seatedActors
+        : [{ id: 'actor1', name: 'Alice', spotIndex: 0 }];
 
-    const defaultKneelingActors = kneelingActors.length > 0
-      ? kneelingActors
-      : [
-          {
-            id: 'kneeling1',
-            name: 'Charlie',
-            targetId: finalSeatedActors[0].id,
-            closeTo: [finalSeatedActors[0].id],
-          },
-        ];
+    const defaultKneelingActors =
+      kneelingActors.length > 0
+        ? kneelingActors
+        : [
+            {
+              id: 'kneeling1',
+              name: 'Charlie',
+              targetId: finalSeatedActors[0].id,
+              closeTo: [finalSeatedActors[0].id],
+            },
+          ];
 
     const normalizedKneelingActors = defaultKneelingActors.map(
       (actor, index) => ({
@@ -1468,14 +1512,18 @@ export class ModEntityScenarios {
     } = options;
 
     const room = this.createRoom(roomId, roomName);
-    const finalCapacity = normalizeCapacity(capacity, DEFAULT_INVENTORY_CAPACITY);
+    const finalCapacity = normalizeCapacity(
+      capacity,
+      DEFAULT_INVENTORY_CAPACITY
+    );
 
-    const finalItems = Array.isArray(items) && items.length > 0
-      ? items
-      : [
-          { id: 'item_primary', name: 'Primary Item', weight: 1 },
-          { id: 'item_secondary', name: 'Secondary Item', weight: 0.5 },
-        ];
+    const finalItems =
+      Array.isArray(items) && items.length > 0
+        ? items
+        : [
+            { id: 'item_primary', name: 'Primary Item', weight: 1 },
+            { id: 'item_secondary', name: 'Secondary Item', weight: 0.5 },
+          ];
 
     const { entities: itemEntities, ids: itemIds } = buildItemsFromDefinitions(
       finalItems,
@@ -1483,7 +1531,12 @@ export class ModEntityScenarios {
       'inventory_item'
     );
 
-    const actorEntity = buildInventoryActor(actor, room.id, itemIds, finalCapacity);
+    const actorEntity = buildInventoryActor(
+      actor,
+      room.id,
+      itemIds,
+      finalCapacity
+    );
 
     return {
       room,
@@ -1515,14 +1568,13 @@ export class ModEntityScenarios {
 
     const room = this.createRoom(roomId, roomName);
 
-    const finalGroundItems = Array.isArray(items) && items.length > 0
-      ? items
-      : [{ id: 'ground_item', name: 'Ground Item', weight: 1 }];
+    const finalGroundItems =
+      Array.isArray(items) && items.length > 0
+        ? items
+        : [{ id: 'ground_item', name: 'Ground Item', weight: 1 }];
 
-    const {
-      entities: groundItems,
-      ids: groundItemIds,
-    } = buildItemsFromDefinitions(finalGroundItems, room.id, 'ground_item');
+    const { entities: groundItems, ids: groundItemIds } =
+      buildItemsFromDefinitions(finalGroundItems, room.id, 'ground_item');
 
     let actorEntity = null;
     let actorInventoryEntities = [];
@@ -1540,14 +1592,12 @@ export class ModEntityScenarios {
         DEFAULT_INVENTORY_CAPACITY
       );
 
-      const {
-        entities: inventoryEntities,
-        ids: inventoryIds,
-      } = buildItemsFromDefinitions(
-        Array.isArray(inventoryItems) ? inventoryItems : [],
-        undefined,
-        `${actorRest.id || 'actor_inventory'}_inventory_item`
-      );
+      const { entities: inventoryEntities, ids: inventoryIds } =
+        buildItemsFromDefinitions(
+          Array.isArray(inventoryItems) ? inventoryItems : [],
+          undefined,
+          `${actorRest.id || 'actor_inventory'}_inventory_item`
+        );
 
       actorEntity = buildInventoryActor(
         {
@@ -1626,15 +1676,15 @@ export class ModEntityScenarios {
       typeof containerOptions.isOpen === 'boolean'
         ? containerOptions.isOpen
         : typeof isOpen === 'boolean'
-        ? isOpen
-        : true;
+          ? isOpen
+          : true;
 
     const resolvedRequiresKey =
       typeof containerOptions.requiresKey === 'boolean'
         ? containerOptions.requiresKey
         : typeof requiresKey === 'boolean'
-        ? requiresKey
-        : false;
+          ? requiresKey
+          : false;
 
     const defaultContents = [
       { id: `${containerId}_item`, name: 'Stored Item', weight: 1 },
@@ -1643,22 +1693,20 @@ export class ModEntityScenarios {
     const finalContents = Array.isArray(providedContents)
       ? providedContents
       : Array.isArray(containerOptions.contents)
-      ? containerOptions.contents
-      : defaultContents;
+        ? containerOptions.contents
+        : defaultContents;
 
     const resolvedKeyItemDefinition =
       providedKeyItem || containerOptions.keyItem || null;
 
     const room = this.createRoom(roomId, roomName);
 
-    const {
-      entities: contentEntities,
-      ids: contentIds,
-    } = buildItemsFromDefinitions(
-      finalContents,
-      containerId,
-      `${containerId}_content`
-    );
+    const { entities: contentEntities, ids: contentIds } =
+      buildItemsFromDefinitions(
+        finalContents,
+        containerId,
+        `${containerId}_content`
+      );
 
     let keyItemEntity = null;
     let keyItemId = null;
@@ -1695,8 +1743,8 @@ export class ModEntityScenarios {
       typeof containerOptions.includePortable === 'boolean'
         ? containerOptions.includePortable
         : typeof includePortable === 'boolean'
-        ? includePortable
-        : false;
+          ? includePortable
+          : false;
     if (portableFlag) {
       containerBuilder.withComponent(
         'items:portable',
@@ -1708,8 +1756,8 @@ export class ModEntityScenarios {
       typeof containerOptions.containerWeight === 'number'
         ? containerOptions.containerWeight
         : typeof containerWeight === 'number'
-        ? containerWeight
-        : undefined;
+          ? containerWeight
+          : undefined;
     const hasWeightOverride =
       containerOptions.weightData &&
       typeof containerOptions.weightData.weight === 'number';
@@ -1717,7 +1765,7 @@ export class ModEntityScenarios {
       containerBuilder.withComponent('core:weight', {
         weight: hasWeightOverride
           ? containerOptions.weightData.weight
-          : weightValue ?? 5,
+          : (weightValue ?? 5),
       });
     }
 
@@ -1794,29 +1842,25 @@ export class ModEntityScenarios {
       components: item.components,
     };
 
-    const {
-      entities: giverInventoryEntities,
-      ids: giverInventoryIds,
-    } = buildItemsFromDefinitions(
-      [
-        transferItemDefinition,
-        ...(Array.isArray(giverItems) ? giverItems : []),
-      ],
-      undefined,
-      `${finalGiverId}_inventory_item`
-    );
+    const { entities: giverInventoryEntities, ids: giverInventoryIds } =
+      buildItemsFromDefinitions(
+        [
+          transferItemDefinition,
+          ...(Array.isArray(giverItems) ? giverItems : []),
+        ],
+        undefined,
+        `${finalGiverId}_inventory_item`
+      );
 
     const transferItem = giverInventoryEntities[0];
     const remainingGiverItems = giverInventoryEntities.slice(1);
 
-    const {
-      entities: receiverInventoryEntities,
-      ids: receiverInventoryIds,
-    } = buildItemsFromDefinitions(
-      Array.isArray(receiverItems) ? receiverItems : [],
-      undefined,
-      `${finalReceiverId}_inventory_item`
-    );
+    const { entities: receiverInventoryEntities, ids: receiverInventoryIds } =
+      buildItemsFromDefinitions(
+        Array.isArray(receiverItems) ? receiverItems : [],
+        undefined,
+        `${finalReceiverId}_inventory_item`
+      );
 
     const giverCapacity = normalizeCapacity(
       giver.capacity,
@@ -1922,19 +1966,17 @@ export class ModEntityScenarios {
       components: item.components,
     };
 
-    const {
-      entities: inventoryEntities,
-      ids: inventoryIds,
-    } = buildItemsFromDefinitions(
-      [
-        dropItemDefinition,
-        ...(Array.isArray(additionalInventoryItems)
-          ? additionalInventoryItems
-          : []),
-      ],
-      undefined,
-      `${finalActorId}_inventory_item`
-    );
+    const { entities: inventoryEntities, ids: inventoryIds } =
+      buildItemsFromDefinitions(
+        [
+          dropItemDefinition,
+          ...(Array.isArray(additionalInventoryItems)
+            ? additionalInventoryItems
+            : []),
+        ],
+        undefined,
+        `${finalActorId}_inventory_item`
+      );
 
     const dropItemEntity = inventoryEntities[0];
     const extraInventoryEntities = inventoryEntities.slice(1);
@@ -1966,7 +2008,8 @@ export class ModEntityScenarios {
       const bodyParts = {};
       for (let i = 0; i < withGrabbingHands; i++) {
         const handId = `${finalActorId}-hand-${i}`;
-        const handName = i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
+        const handName =
+          i === 0 ? 'rightHand' : i === 1 ? 'leftHand' : `hand${i}`;
         bodyParts[handName] = handId;
 
         handEntities.push({
@@ -1986,7 +2029,13 @@ export class ModEntityScenarios {
       };
     }
 
-    const entities = [room, actorEntity, ...handEntities, dropItemEntity, ...extraInventoryEntities];
+    const entities = [
+      room,
+      actorEntity,
+      ...handEntities,
+      dropItemEntity,
+      ...extraInventoryEntities,
+    ];
 
     return {
       room,
@@ -2037,8 +2086,8 @@ export class ModEntityScenarios {
     const baseInventoryDefinitions = Array.isArray(actor.inventoryItems)
       ? actor.inventoryItems
       : Array.isArray(inventoryItems)
-      ? inventoryItems
-      : [];
+        ? inventoryItems
+        : [];
 
     let combinedInventoryDefinitions = [...baseInventoryDefinitions];
 
@@ -2053,33 +2102,29 @@ export class ModEntityScenarios {
       ];
     }
 
-    const {
-      entities: inventoryEntities,
-      ids: inventoryIds,
-    } = buildItemsFromDefinitions(
-      combinedInventoryDefinitions,
-      undefined,
-      `${finalActorId}_inventory_item`
-    );
+    const { entities: inventoryEntities, ids: inventoryIds } =
+      buildItemsFromDefinitions(
+        combinedInventoryDefinitions,
+        undefined,
+        `${finalActorId}_inventory_item`
+      );
 
-    const {
-      entities: groundEntities,
-      ids: groundIds,
-    } = buildItemsFromDefinitions(
-      [
-        {
-          id: item.id || itemId,
-          name: item.name || itemName,
-          weight: typeof item.weight === 'number' ? item.weight : itemWeight,
-          itemData: item.itemData,
-          portableData: item.portableData,
-          weightData: item.weightData,
-          components: item.components,
-        },
-      ],
-      room.id,
-      'pickup_item'
-    );
+    const { entities: groundEntities, ids: groundIds } =
+      buildItemsFromDefinitions(
+        [
+          {
+            id: item.id || itemId,
+            name: item.name || itemName,
+            weight: typeof item.weight === 'number' ? item.weight : itemWeight,
+            itemData: item.itemData,
+            portableData: item.portableData,
+            weightData: item.weightData,
+            components: item.components,
+          },
+        ],
+        room.id,
+        'pickup_item'
+      );
 
     const actorEntity = buildInventoryActor(
       {
@@ -2097,7 +2142,12 @@ export class ModEntityScenarios {
       actorCapacity
     );
 
-    const entities = [room, actorEntity, ...groundEntities, ...inventoryEntities];
+    const entities = [
+      room,
+      actorEntity,
+      ...groundEntities,
+      ...inventoryEntities,
+    ];
 
     return {
       room,
@@ -2141,9 +2191,7 @@ export class ModEntityScenarios {
       container: {
         ...container,
         isOpen:
-          typeof container.isOpen === 'boolean'
-            ? container.isOpen
-            : false,
+          typeof container.isOpen === 'boolean' ? container.isOpen : false,
         requiresKey:
           typeof container.requiresKey === 'boolean'
             ? container.requiresKey
@@ -2158,17 +2206,15 @@ export class ModEntityScenarios {
     const inventoryDefinitions = Array.isArray(actor.inventoryItems)
       ? actor.inventoryItems
       : Array.isArray(actorInventoryItems)
-      ? actorInventoryItems
-      : [];
+        ? actorInventoryItems
+        : [];
 
-    const {
-      entities: actorInventoryEntities,
-      ids: actorInventoryIds,
-    } = buildItemsFromDefinitions(
-      inventoryDefinitions,
-      undefined,
-      `${finalActorId}_inventory_item`
-    );
+    const { entities: actorInventoryEntities, ids: actorInventoryIds } =
+      buildItemsFromDefinitions(
+        inventoryDefinitions,
+        undefined,
+        `${finalActorId}_inventory_item`
+      );
 
     const actorCapacity = normalizeCapacity(
       actor.capacity,
@@ -2242,8 +2288,8 @@ export class ModEntityScenarios {
     const baseContents = Array.isArray(container.contents)
       ? container.contents
       : Array.isArray(containerContents)
-      ? containerContents
-      : [];
+        ? containerContents
+        : [];
 
     let finalContents = [...baseContents];
     if (containerFull) {
@@ -2255,7 +2301,7 @@ export class ModEntityScenarios {
         ...finalContents,
         ...generateFillerItems(
           fillerCount,
-          `${(container.id || 'container_storage')}_filled`
+          `${container.id || 'container_storage'}_filled`
         ),
       ];
     }
@@ -2265,10 +2311,7 @@ export class ModEntityScenarios {
       roomName,
       container: {
         ...container,
-        isOpen:
-          typeof container.isOpen === 'boolean'
-            ? container.isOpen
-            : true,
+        isOpen: typeof container.isOpen === 'boolean' ? container.isOpen : true,
         requiresKey:
           typeof container.requiresKey === 'boolean'
             ? container.requiresKey
@@ -2294,18 +2337,16 @@ export class ModEntityScenarios {
       ...(Array.isArray(actor.inventoryItems)
         ? actor.inventoryItems
         : Array.isArray(actorInventoryItems)
-        ? actorInventoryItems
-        : []),
+          ? actorInventoryItems
+          : []),
     ];
 
-    const {
-      entities: actorInventoryEntities,
-      ids: actorInventoryIds,
-    } = buildItemsFromDefinitions(
-      inventoryDefinitions,
-      undefined,
-      `${finalActorId}_inventory_item`
-    );
+    const { entities: actorInventoryEntities, ids: actorInventoryIds } =
+      buildItemsFromDefinitions(
+        inventoryDefinitions,
+        undefined,
+        `${finalActorId}_inventory_item`
+      );
 
     const heldItem = actorInventoryEntities[0];
     const remainingInventory = actorInventoryEntities.slice(1);

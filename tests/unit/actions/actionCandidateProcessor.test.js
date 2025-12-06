@@ -42,12 +42,7 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const actorEntity = { id: 'actor-null-trace' };
       const context = {};
 
-      const result = bed.service.process(
-        actionDef,
-        actorEntity,
-        context,
-        null
-      );
+      const result = bed.service.process(actionDef, actorEntity, context, null);
 
       expect(result.success).toBe(true);
       expect(
@@ -128,10 +123,19 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         ActionResult.success([])
       );
 
-      const result = bed.service.process(actionDef, actorEntity, context, trace);
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        trace
+      );
 
       expect(result.success).toBe(true);
-      expect(result.value).toEqual({ actions: [], errors: [], cause: 'no-targets' });
+      expect(result.value).toEqual({
+        actions: [],
+        errors: [],
+        cause: 'no-targets',
+      });
       expect(bed.mocks.logger.debug).toHaveBeenCalledWith(
         "Action 'scout' resolved to 0 targets. Skipping."
       );
@@ -264,7 +268,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         }),
       };
 
-      const result = bed.service.process(actionDef, actorEntity, context, trace);
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        trace
+      );
 
       expect(trace.withSpan).toHaveBeenCalledTimes(1);
       expect(trace.withSpan).toHaveBeenCalledWith(
@@ -292,10 +301,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       const traceError = new Error('trace failure');
       const resolutionSpy = jest.fn();
 
-      bed.mocks.targetResolutionService.resolveTargets.mockImplementation(() => {
-        resolutionSpy();
-        return ActionResult.success([]);
-      });
+      bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
+        () => {
+          resolutionSpy();
+          return ActionResult.success([]);
+        }
+      );
 
       const trace = {
         step: jest.fn(),
@@ -409,7 +420,12 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
 
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(false);
 
-      const result = bed.service.process(actionDef, actorEntity, context, trace);
+      const result = bed.service.process(
+        actionDef,
+        actorEntity,
+        context,
+        trace
+      );
 
       expect(result.success).toBe(true);
       expect(result.value).toEqual({
@@ -1071,7 +1087,14 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
         errors: [existingContext, rawError],
       });
       bed.mocks.actionErrorContextBuilder.buildErrorContext.mockImplementation(
-        ({ error, actionDef: def, actorId, phase, trace, additionalContext }) => {
+        ({
+          error,
+          actionDef: def,
+          actorId,
+          phase,
+          trace,
+          additionalContext,
+        }) => {
           expect(error).toBe(rawError);
           expect(def).toBe(actionDef);
           expect(actorId).toBe(actorEntity.id);
@@ -1162,7 +1185,9 @@ describeActionCandidateProcessorSuite('ActionCandidateProcessor', (getBed) => {
       bed.mocks.actionErrorContextBuilder.buildErrorContext.mockImplementation(
         (payload) => {
           expect(payload.targetId).toBe('target-2');
-          expect(payload.additionalContext).toEqual({ formatDetails: undefined });
+          expect(payload.additionalContext).toEqual({
+            formatDetails: undefined,
+          });
           return {
             actionId: actionDef.id,
             targetId: payload.targetId,

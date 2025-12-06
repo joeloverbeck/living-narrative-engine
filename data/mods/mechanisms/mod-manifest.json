@@ -13,9 +13,7 @@
     }
   ],
   "content": {
-    "components": [
-      "openable.component.json"
-    ],
+    "components": ["openable.component.json"],
     "actions": [],
     "rules": [],
     "conditions": [],

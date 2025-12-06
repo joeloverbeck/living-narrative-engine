@@ -179,13 +179,14 @@ describe('actorTypeUtils integration through AwaitingActorDecisionState', () => 
       },
     });
 
-    const { state, handler, dispatcher, turnContext } = await runDecisionWorkflow({
-      actor,
-      extractedData: {
-        thoughts: 'Ready to act',
-        notes: null,
-      },
-    });
+    const { state, handler, dispatcher, turnContext } =
+      await runDecisionWorkflow({
+        actor,
+        extractedData: {
+          thoughts: 'Ready to act',
+          notes: null,
+        },
+      });
 
     try {
       expect(dispatcher.events).toHaveLength(1);
@@ -229,12 +230,13 @@ describe('actorTypeUtils integration through AwaitingActorDecisionState', () => 
       },
     });
 
-    const { state, handler, dispatcher, turnContext } = await runDecisionWorkflow({
-      actor,
-      extractedData: {
-        notes: [{ text: 'remember the objective' }],
-      },
-    });
+    const { state, handler, dispatcher, turnContext } =
+      await runDecisionWorkflow({
+        actor,
+        extractedData: {
+          notes: [{ text: 'remember the objective' }],
+        },
+      });
 
     try {
       const dispatched = dispatcher.events[0];
@@ -374,11 +376,20 @@ describe('actorTypeUtils integration through AwaitingActorDecisionState', () => 
   });
 
   it('uses legacy isAi flag and defaults to human when no indicators exist', async () => {
-    const aiActor = buildActor({ baseComponents: {}, extraProps: { isAi: true } });
+    const aiActor = buildActor({
+      baseComponents: {},
+      extraProps: { isAi: true },
+    });
     const humanActor = buildActor({ baseComponents: {} });
 
-    const aiRun = await runDecisionWorkflow({ actor: aiActor, extractedData: {} });
-    const humanRun = await runDecisionWorkflow({ actor: humanActor, extractedData: {} });
+    const aiRun = await runDecisionWorkflow({
+      actor: aiActor,
+      extractedData: {},
+    });
+    const humanRun = await runDecisionWorkflow({
+      actor: humanActor,
+      extractedData: {},
+    });
 
     try {
       expect(aiRun.dispatcher.events[0].payload.actorType).toBe('ai');

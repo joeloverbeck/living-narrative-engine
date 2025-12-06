@@ -16,6 +16,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ## Files to Touch
 
 ### Modified Files (4 rules)
+
 - `data/mods/items/rules/handle_give_item.rule.json`
 - `data/mods/items/rules/handle_pick_up_item.rule.json`
 - `data/mods/items/rules/handle_put_in_container.rule.json`
@@ -26,11 +27,12 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
 - Any entity files
-- Other items mod rules (handle_drop_item, handle_examine_*, handle_drink_*, etc.)
+- Other items mod rules (handle*drop_item, handle_examine*_, handle*drink*_, etc.)
 - Rules in other mods
 - The VALIDATED_ITEM_TRANSFER handler itself
 - Any DI or schema files
@@ -42,6 +44,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ### 1. handle_give_item.rule.json
 
 **Before (~180 lines)**
+
 ```json
 {
   "actions": [
@@ -59,6 +62,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ```
 
 **After (~15 lines)**
+
 ```json
 {
   "id": "items:handle_give_item",
@@ -86,6 +90,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ### 2. handle_pick_up_item.rule.json
 
 **After (~15 lines)**
+
 ```json
 {
   "id": "items:handle_pick_up_item",
@@ -113,6 +118,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ### 3. handle_put_in_container.rule.json
 
 **After (~15 lines)**
+
 ```json
 {
   "id": "items:handle_put_in_container",
@@ -140,6 +146,7 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ### 4. handle_take_from_container.rule.json
 
 **After (~15 lines)**
+
 ```json
 {
   "id": "items:handle_take_from_container",
@@ -182,11 +189,13 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 ### Tests That Must Pass
 
 1. **All items mod integration tests:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/items/
    ```
 
 2. **Mod validation:**
+
    ```bash
    npm run validate:mod:items
    ```
@@ -232,14 +241,17 @@ npm run test:ci
 Verify the following scenarios work correctly:
 
 ### Give Item
+
 1. **Actor gives item to target with space** → Transfer succeeds, success message
 2. **Actor gives item to target without space** → Transfer fails, failure message, item stays with actor
 
 ### Pick Up Item
+
 1. **Actor picks up item with inventory space** → Transfer succeeds
 2. **Actor picks up item without space** → Transfer fails, item stays on ground
 
 ### Container Operations
+
 1. **Put item in container with space** → Transfer succeeds
 2. **Put item in full container** → Transfer fails, item stays in inventory
 3. **Take item from container with space** → Transfer succeeds

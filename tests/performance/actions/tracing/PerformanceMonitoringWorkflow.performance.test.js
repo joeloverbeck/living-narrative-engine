@@ -755,7 +755,9 @@ describe('Performance Monitoring Workflow - Integration Performance Tests', () =
       expect(executionStage.averageActionDuration).toBeGreaterThan(0);
 
       // Validate total pipeline performance is reasonable for test environment
-      const totalPipelineTime = discoveryStage.averageActionDuration + executionStage.averageActionDuration;
+      const totalPipelineTime =
+        discoveryStage.averageActionDuration +
+        executionStage.averageActionDuration;
       expect(totalPipelineTime).toBeGreaterThan(0);
       expect(totalPipelineTime).toBeLessThan(1000); // Reasonable upper bound for test environment
 

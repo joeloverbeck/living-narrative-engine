@@ -29,7 +29,7 @@ All files in `data/mods/weapons/events/`:
 7. `magazine_inserted.event.json` (spec lines 1186-1222)
    - Payload: actorId, weaponId, magazineId, roundsInMagazine, timestamp
 
-Also create corresponding conditions (event-is-action-*) for each action.
+Also create corresponding conditions (event-is-action-\*) for each action.
 
 ## Acceptance Criteria
 

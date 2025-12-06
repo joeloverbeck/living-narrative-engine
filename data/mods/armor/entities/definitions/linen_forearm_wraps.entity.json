@@ -7,15 +7,9 @@
       "layer": "armor",
       "equipmentSlots": {
         "primary": "left_arm_clothing",
-        "secondary": [
-          "right_arm_clothing"
-        ]
+        "secondary": ["right_arm_clothing"]
       },
-      "allowedLayers": [
-        "base",
-        "armor",
-        "outer"
-      ]
+      "allowedLayers": ["base", "armor", "outer"]
     },
     "core:material": {
       "material": "linen"
@@ -33,10 +27,7 @@
       "texture": "soft"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "left_arm_clothing",
-        "right_arm_clothing"
-      ],
+      "covers": ["left_arm_clothing", "right_arm_clothing"],
       "coveragePriority": "armor"
     },
     "items:item": {},

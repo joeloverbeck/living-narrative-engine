@@ -36,7 +36,7 @@ export class AnatomyVisualizationError extends BaseError {
       metadata: options.metadata,
       severity: options.severity || 'MEDIUM',
       recoverable: options.recoverable !== false,
-      ...options
+      ...options,
     });
     this.name = 'AnatomyVisualizationError';
 
@@ -124,10 +124,10 @@ export class AnatomyVisualizationError extends BaseError {
   getSeverity() {
     // Map existing severity levels to BaseError format
     const severityMap = {
-      'LOW': 'info',
-      'MEDIUM': 'warning',
-      'HIGH': 'error',
-      'CRITICAL': 'critical'
+      LOW: 'info',
+      MEDIUM: 'warning',
+      HIGH: 'error',
+      CRITICAL: 'critical',
     };
     return severityMap[this._severity] || 'warning';
   }

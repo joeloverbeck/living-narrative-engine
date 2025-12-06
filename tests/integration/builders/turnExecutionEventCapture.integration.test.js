@@ -75,7 +75,11 @@ describe('TurnExecutionTestModule - Event Capture Integration', () => {
 
     it('should allow filtering captured events by type', async () => {
       testEnv = await TestModuleBuilder.forTurnExecution()
-        .withEventCapture(['ENTITY_CREATED', 'COMPONENT_UPDATED', 'ENTITY_REMOVED'])
+        .withEventCapture([
+          'ENTITY_CREATED',
+          'COMPONENT_UPDATED',
+          'ENTITY_REMOVED',
+        ])
         .withTestActors(['test-actor'])
         .build();
 

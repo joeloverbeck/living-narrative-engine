@@ -31,7 +31,9 @@ describe('distress:bury_face_in_hands action discovery', () => {
       expect(buryFaceInHandsAction.description).toBe(
         'Collapse inward and hide your face behind your hands, shutting out the world as the weight of it all presses down.'
       );
-      expect(buryFaceInHandsAction.template).toBe('bury your face in your hands');
+      expect(buryFaceInHandsAction.template).toBe(
+        'bury your face in your hands'
+      );
     });
 
     it('should be a self-targeting action', () => {

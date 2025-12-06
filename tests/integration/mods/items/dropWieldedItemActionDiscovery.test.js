@@ -92,7 +92,9 @@ describe('items:drop_wielded_item action definition', () => {
     });
 
     it('should use wielded_items scope for primary target', () => {
-      expect(dropWieldedItemAction.targets.primary.scope).toBe('items:wielded_items');
+      expect(dropWieldedItemAction.targets.primary.scope).toBe(
+        'items:wielded_items'
+      );
     });
 
     it('should use "item" placeholder for primary target', () => {

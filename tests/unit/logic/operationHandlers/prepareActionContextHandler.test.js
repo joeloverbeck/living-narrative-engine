@@ -224,7 +224,8 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:name') return null;
-          if (componentType === 'core:actor') return { name: `Actor-${entityId}` };
+          if (componentType === 'core:actor')
+            return { name: `Actor-${entityId}` };
           if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
@@ -253,8 +254,7 @@ describe('PrepareActionContextHandler', () => {
           if (componentType === 'core:name') return null;
           if (componentType === 'core:actor') return null;
           if (componentType === 'core:item') return { name: 'Sword' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -356,8 +356,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -390,8 +389,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );
@@ -421,8 +419,7 @@ describe('PrepareActionContextHandler', () => {
       mockEntityManager.getComponentData.mockImplementation(
         (entityId, componentType) => {
           if (componentType === 'core:actor') return { name: 'Test' };
-          if (componentType === 'core:position')
-            return { locationId: 'loc-1' };
+          if (componentType === 'core:position') return { locationId: 'loc-1' };
           return null;
         }
       );

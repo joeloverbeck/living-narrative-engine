@@ -14,10 +14,12 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 ## Files to Touch
 
 ### New Files (2)
+
 - `data/mods/metabolism/components/metabolic_store.component.json`
 - `data/mods/metabolism/components/hunger_state.component.json`
 
 ### Modified Files (1)
+
 - `data/mods/metabolism/mod-manifest.json` - add new components to registry
 
 ## Out of Scope
@@ -32,6 +34,7 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 **Location:** `tests/integration/validation/componentValidationRules.integration.test.js`
 
 **Tests to Add:**
+
 - Validation of metabolic_store component data
 - Validation of hunger_state component data
 - Enum value suggestions for typos
@@ -44,6 +47,7 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 **Purpose:** Tracks an actor's energy reserves, burn rate, and metabolic state.
 
 **Key Properties** (camelCase naming per project conventions):
+
 - `currentEnergy`: Current energy level (minimum 0)
 - `maxEnergy`: Maximum energy capacity
 - `baseBurnRate`: Resting energy expenditure per turn (default 1.0)
@@ -51,6 +55,7 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 - `lastUpdateTurn`: Turn number of last energy update (default 0)
 
 **Schema Requirements:**
+
 - Extend from `schema://living-narrative-engine/component.schema.json`
 - Set id as `metabolism:metabolic_store`
 - Include validation rules for:
@@ -64,12 +69,14 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 **Purpose:** Defines threshold-based hunger states and their gameplay effects.
 
 **Key Properties** (camelCase naming per project conventions):
+
 - `state`: Current hunger state enum
 - `energyPercentage`: Current energy as percentage of max (0-100+)
 - `turnsInState`: Consecutive turns in current state (default 0)
 - `starvationDamage`: Cumulative health damage from starvation (default 0)
 
 **State Enum Values:**
+
 - "gluttonous" (>100%)
 - "satiated" (75-100%)
 - "neutral" (30-75%)
@@ -78,6 +85,7 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 - "critical" (≤0%)
 
 **Schema Requirements:**
+
 - Extend from `schema://living-narrative-engine/component.schema.json`
 - Set id as `metabolism:hunger_state`
 - Include validation rules for:
@@ -89,12 +97,14 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] Both component schemas validate against `component.schema.json`
 - [ ] All required properties are properly defined
 - [ ] Enum values for hunger states are correctly specified
 - [ ] Default values are provided for optional properties
 
 ### Data Integrity
+
 - [ ] Current energy cannot exceed max energy (unless gluttonous state)
 - [ ] Energy percentage can exceed 100 (for gluttonous state)
 - [ ] Burn rates must be positive values
@@ -102,6 +112,7 @@ Create component schemas for `metabolism:metabolic_store` and `metabolism:hunger
 - [ ] State enum only accepts valid values
 
 ### Validation Commands
+
 ```bash
 # Run after creating schemas
 npm run validate           # Basic validation
@@ -111,12 +122,14 @@ npm run validate:strict    # Strict validation
 ## Invariants
 
 ### Must Remain True
+
 - Component schemas must be valid JSON
 - Component IDs must follow format `metabolism:component_name`
 - All properties must have clear descriptions
 - Hunger state enum values must match threshold system (spec lines 1300-1378)
 
 ### System Invariants
+
 - Existing component schemas must continue to validate
 - No changes to core component schema structure
 - Component registry must successfully load these schemas
@@ -125,6 +138,7 @@ npm run validate:strict    # Strict validation
 ## Example Component Data
 
 ### Metabolic Store (Normal Actor)
+
 ```json
 {
   "metabolism:metabolic_store": {
@@ -138,6 +152,7 @@ npm run validate:strict    # Strict validation
 ```
 
 ### Hunger State (Hungry Actor)
+
 ```json
 {
   "metabolism:hunger_state": {
@@ -150,6 +165,7 @@ npm run validate:strict    # Strict validation
 ```
 
 ### Hunger State (Starving Actor)
+
 ```json
 {
   "metabolism:hunger_state": {
@@ -165,14 +181,14 @@ npm run validate:strict    # Strict validation
 
 For implementer's reference (from spec):
 
-| State | Energy % | Key Effects |
-|-------|----------|-------------|
-| gluttonous | 100%+ | Movement -10%, Stamina regen -20% |
-| satiated | 75-100% | Health regen +10%, Focus +5% |
-| neutral | 30-75% | No modifiers |
-| hungry | 10-30% | Aim stability -5%, Stomach rumbles |
-| starving | 0.1-10% | Health loss, Carry capacity -30% |
-| critical | ≤0% | Severe health loss, Movement -50% |
+| State      | Energy % | Key Effects                        |
+| ---------- | -------- | ---------------------------------- |
+| gluttonous | 100%+    | Movement -10%, Stamina regen -20%  |
+| satiated   | 75-100%  | Health regen +10%, Focus +5%       |
+| neutral    | 30-75%   | No modifiers                       |
+| hungry     | 10-30%   | Aim stability -5%, Stomach rumbles |
+| starving   | 0.1-10%  | Health loss, Carry capacity -30%   |
+| critical   | ≤0%      | Severe health loss, Movement -50%  |
 
 ## References
 
@@ -185,6 +201,7 @@ For implementer's reference (from spec):
 ## Outcome
 
 **What Changed:**
+
 - ✅ Created `metabolic_store.component.json` with 5 properties (all camelCase)
 - ✅ Created `hunger_state.component.json` with 4 properties and 6 enum states
 - ✅ Updated `mod-manifest.json` to register new components
@@ -193,12 +210,14 @@ For implementer's reference (from spec):
 - ✅ All 12 integration tests pass
 
 **Critical Corrections Made:**
+
 1. **Naming Convention Fix:** Ticket originally specified `snake_case` (e.g., `current_energy`) but corrected to `camelCase` (e.g., `currentEnergy`) per project standards
 2. **Schema Syntax Fix:** Changed `exclusiveMinimum: true` to `exclusiveMinimum: 0` (AJV requires number, not boolean)
 3. **Manifest Update:** Added manifest update requirement (not in original ticket scope)
 4. **Test Addition:** Created integration tests (marked "out of scope" but added for quality assurance)
 
 **Deviations from Plan:**
+
 - Originally estimated no test creation, but added 12 comprehensive integration tests
 - Fixed `exclusiveMinimum` schema syntax issue discovered during testing
 - Updated ticket assumptions before implementation (snake_case → camelCase)

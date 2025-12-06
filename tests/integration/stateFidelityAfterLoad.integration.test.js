@@ -91,7 +91,7 @@ describe('Integration: state fidelity after save/load', () => {
       id: 'room-def1',
       components: {
         'core:name': { text: 'Room1' },
-        "movement:exits": [
+        'movement:exits': [
           { direction: 'north', target: 'room2', blocker: 'door1' },
         ],
       },
@@ -219,7 +219,7 @@ describe('Integration: state fidelity after save/load', () => {
     }
 
     const restoredRoom1 = entityManager.activeEntities.get('room1');
-    const exit = restoredRoom1.componentEntries.get("movement:exits")[0];
+    const exit = restoredRoom1.componentEntries.get('movement:exits')[0];
     expect(exit.blocker).toBe('door1');
     const restoredDoor = entityManager.activeEntities.get('door1');
     expect(restoredDoor.componentEntries.get('core:openable').isOpen).toBe(

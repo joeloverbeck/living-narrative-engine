@@ -47,11 +47,20 @@ const CONTENT_CATEGORIES = {
   libraries: { directory: 'libraries', pattern: /\.json$/i },
   lookups: { directory: 'lookups', pattern: /\.json$/i },
   parts: { directory: 'parts', pattern: /\.json$/i },
-  'structure-templates': { directory: 'structure-templates', pattern: /\.json$/i },
+  'structure-templates': {
+    directory: 'structure-templates',
+    pattern: /\.json$/i,
+  },
   scopes: { directory: 'scopes', pattern: /\.scope$/i },
-  'refinement-methods': { directory: 'refinement-methods', pattern: /\.refinement\.json$/i },
+  'refinement-methods': {
+    directory: 'refinement-methods',
+    pattern: /\.refinement\.json$/i,
+  },
   tasks: { directory: 'tasks', pattern: /\.task\.json$/i },
-  portraits: { directory: 'portraits', pattern: /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i },
+  portraits: {
+    directory: 'portraits',
+    pattern: /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i,
+  },
 };
 
 /**
@@ -87,11 +96,14 @@ class ManifestFileExistenceValidator {
    */
   constructor({ logger, modsBasePath = null }) {
     if (!logger || typeof logger.info !== 'function') {
-      throw new Error('Logger is required with info, warn, error, debug methods');
+      throw new Error(
+        'Logger is required with info, warn, error, debug methods'
+      );
     }
 
     this.#logger = logger;
-    this.#modsBasePath = modsBasePath || path.join(process.cwd(), 'data', 'mods');
+    this.#modsBasePath =
+      modsBasePath || path.join(process.cwd(), 'data', 'mods');
   }
 
   /**
@@ -107,7 +119,14 @@ class ManifestFileExistenceValidator {
     const modPath = path.join(this.#modsBasePath, modId);
 
     const content = manifest.content || {};
-    const categories = ['actions', 'rules', 'conditions', 'components', 'scopes', 'entities'];
+    const categories = [
+      'actions',
+      'rules',
+      'conditions',
+      'components',
+      'scopes',
+      'entities',
+    ];
 
     for (const category of categories) {
       const files = content[category];
@@ -120,13 +139,17 @@ class ManifestFileExistenceValidator {
           await fs.access(filePath);
         } catch {
           // File doesn't exist - check for naming issues
-          const namingIssue = await this.#checkNamingMismatch(modPath, category, file);
+          const namingIssue = await this.#checkNamingMismatch(
+            modPath,
+            category,
+            file
+          );
 
           if (namingIssue) {
             namingIssues.push({
               category,
               manifestRef: file,
-              actualFile: namingIssue
+              actualFile: namingIssue,
             });
           } else {
             missingFiles.push({ category, file });
@@ -138,17 +161,18 @@ class ManifestFileExistenceValidator {
     const isValid = missingFiles.length === 0 && namingIssues.length === 0;
 
     if (!isValid) {
-      this.#logger.warn(
-        `Mod '${modId}' has file reference issues`,
-        { modId, missingCount: missingFiles.length, namingIssueCount: namingIssues.length }
-      );
+      this.#logger.warn(`Mod '${modId}' has file reference issues`, {
+        modId,
+        missingCount: missingFiles.length,
+        namingIssueCount: namingIssues.length,
+      });
     }
 
     return {
       modId,
       isValid,
       missingFiles,
-      namingIssues
+      namingIssues,
     };
   }
 
@@ -213,14 +237,16 @@ class ManifestFileExistenceValidator {
    */
   generateReport(results) {
     const lines = [];
-    const invalidMods = Array.from(results.values()).filter(r => !r.isValid);
+    const invalidMods = Array.from(results.values()).filter((r) => !r.isValid);
 
     if (invalidMods.length === 0) {
       lines.push('✅ All manifest file references are valid');
       return lines.join('\n');
     }
 
-    lines.push(`❌ Found ${invalidMods.length} mod(s) with file reference issues:\n`);
+    lines.push(
+      `❌ Found ${invalidMods.length} mod(s) with file reference issues:\n`
+    );
 
     for (const result of invalidMods) {
       lines.push(`  Mod: ${result.modId}`);
@@ -235,7 +261,9 @@ class ManifestFileExistenceValidator {
       if (result.namingIssues.length > 0) {
         lines.push('    Naming mismatches (underscore vs hyphen):');
         result.namingIssues.forEach(({ category, manifestRef, actualFile }) => {
-          lines.push(`      - ${category}/${manifestRef} (should be ${actualFile})`);
+          lines.push(
+            `      - ${category}/${manifestRef} (should be ${actualFile})`
+          );
         });
       }
 
@@ -263,7 +291,9 @@ class ManifestFileExistenceValidator {
 
     // If manifest is null/undefined, we can't validate - return gracefully
     if (!manifest) {
-      this.#logger.debug(`Mod '${modId}' has no manifest, skipping unregistered files check`);
+      this.#logger.debug(
+        `Mod '${modId}' has no manifest, skipping unregistered files check`
+      );
       return {
         modId,
         isValid: true,
@@ -274,14 +304,22 @@ class ManifestFileExistenceValidator {
     const content = manifest.content || {};
 
     // Check each content category
-    for (const [categoryKey, categoryConfig] of Object.entries(CONTENT_CATEGORIES)) {
+    for (const [categoryKey, categoryConfig] of Object.entries(
+      CONTENT_CATEGORIES
+    )) {
       const categoryDir = path.join(modPath, categoryConfig.directory);
 
       // Get files registered in manifest for this category
-      const registeredFiles = this.#getRegisteredFilesForCategory(content, categoryKey);
+      const registeredFiles = this.#getRegisteredFilesForCategory(
+        content,
+        categoryKey
+      );
 
       // Scan directory for actual files
-      const filesOnDisk = await this.#scanDirectory(categoryDir, categoryConfig.pattern);
+      const filesOnDisk = await this.#scanDirectory(
+        categoryDir,
+        categoryConfig.pattern
+      );
 
       // Find unregistered files
       for (const file of filesOnDisk) {
@@ -295,7 +333,11 @@ class ManifestFileExistenceValidator {
     }
 
     // Handle nested entities structure separately
-    await this.#validateEntitiesUnregistered(modPath, content, unregisteredFiles);
+    await this.#validateEntitiesUnregistered(
+      modPath,
+      content,
+      unregisteredFiles
+    );
 
     const isValid = unregisteredFiles.length === 0;
 
@@ -415,7 +457,8 @@ class ManifestFileExistenceValidator {
     }
 
     // Ignore files starting with . (hidden files) except those we explicitly handle
-    if (filename.startsWith('.') && !IGNORED_FILES.includes(filename)) return true;
+    if (filename.startsWith('.') && !IGNORED_FILES.includes(filename))
+      return true;
 
     // Ignore files ending with ~ (backup files)
     if (filename.endsWith('~')) return true;
@@ -437,7 +480,10 @@ class ManifestFileExistenceValidator {
     // Check definitions
     const definitionsDir = path.join(modPath, 'entities', 'definitions');
     const registeredDefinitions = new Set(entities.definitions || []);
-    const definitionsOnDisk = await this.#scanDirectory(definitionsDir, /\.json$/i);
+    const definitionsOnDisk = await this.#scanDirectory(
+      definitionsDir,
+      /\.json$/i
+    );
 
     for (const file of definitionsOnDisk) {
       if (!registeredDefinitions.has(file)) {
@@ -471,14 +517,16 @@ class ManifestFileExistenceValidator {
    */
   generateUnregisteredReport(results) {
     const lines = [];
-    const invalidMods = Array.from(results.values()).filter(r => !r.isValid);
+    const invalidMods = Array.from(results.values()).filter((r) => !r.isValid);
 
     if (invalidMods.length === 0) {
       lines.push('✅ All content files on disk are registered in manifests');
       return lines.join('\n');
     }
 
-    lines.push(`⚠️ Found ${invalidMods.length} mod(s) with unregistered files:\n`);
+    lines.push(
+      `⚠️ Found ${invalidMods.length} mod(s) with unregistered files:\n`
+    );
 
     for (const result of invalidMods) {
       lines.push(`  Mod: ${result.modId}`);

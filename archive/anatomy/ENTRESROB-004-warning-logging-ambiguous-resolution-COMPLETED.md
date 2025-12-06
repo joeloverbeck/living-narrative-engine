@@ -12,6 +12,7 @@ See `specs/entity-resolution-robustness.md` for full context.
 ## Problem Statement
 
 When `resolveEntityId` encounters multiple entities with the same `subType`, it silently selects one based on the existing priority rules. This makes debugging difficult because developers don't know:
+
 - That multiple candidates existed
 - Which entity was selected and why
 - What the alternatives were

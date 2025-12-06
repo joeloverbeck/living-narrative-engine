@@ -91,9 +91,7 @@ describe('LlmConfigLoader semantic validation integration', () => {
           endpointUrl: 'https://example.com/llm',
           apiType: 'custom',
           jsonOutputStrategy: { method: 'manual_prompting' },
-          promptElements: [
-            { key: 'intro', prefix: '<<', suffix: '>>' },
-          ],
+          promptElements: [{ key: 'intro', prefix: '<<', suffix: '>>' }],
           promptAssemblyOrder: ['intro', 42, 'missing'],
         },
         missingElements: {
@@ -142,7 +140,8 @@ describe('LlmConfigLoader semantic validation integration', () => {
     );
 
     const invalidKeyTypeError = result.semanticErrors.find(
-      (error) => error.errorType === SemanticErrorTypes.INVALID_ASSEMBLY_KEY_TYPE
+      (error) =>
+        error.errorType === SemanticErrorTypes.INVALID_ASSEMBLY_KEY_TYPE
     );
     expect(invalidKeyTypeError?.details.problematic_key_ref).toBe('42');
 
@@ -150,6 +149,8 @@ describe('LlmConfigLoader semantic validation integration', () => {
       (error) => error.errorType === SemanticErrorTypes.MISSING_ASSEMBLY_KEY
     );
     expect(missingKeyError?.details.problematic_key_ref).toBe('missing');
-    expect(missingKeyError?.details.available_prompt_element_keys).toEqual(['intro']);
+    expect(missingKeyError?.details.available_prompt_element_keys).toEqual([
+      'intro',
+    ]);
   });
 });

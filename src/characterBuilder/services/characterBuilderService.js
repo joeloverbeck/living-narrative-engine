@@ -30,13 +30,21 @@ import { CacheKeys, CacheInvalidation } from '../cache/cacheHelpers.js';
 const RETRY_CONFIG = {
   maxRetries: 3,
   baseDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 1 : 1000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 1
+      : 1000,
   maxDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 5 : 5000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 5
+      : 5000,
   directionBaseDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 2 : 2000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 2
+      : 2000,
   directionMaxDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 10 : 10000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 10
+      : 10000,
 };
 
 /**
@@ -180,8 +188,8 @@ export class CharacterBuilderService {
       initialData instanceof Map
         ? initialData.entries()
         : typeof initialData[Symbol.iterator] === 'function'
-        ? initialData
-        : null;
+          ? initialData
+          : null;
 
     if (!entries) {
       return;

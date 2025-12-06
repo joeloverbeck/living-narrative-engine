@@ -100,7 +100,11 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
   /** @type {ActionIndex} */
   let actionIndex;
 
-  const hero = buildActor('hero', ['core:strength', 'core:agility', 'core:focus']);
+  const hero = buildActor('hero', [
+    'core:strength',
+    'core:agility',
+    'core:focus',
+  ]);
   const cursed = buildActor('cursed', ['core:strength', 'core:cursed']);
   const frozen = buildActor('frozen', ['core:strength', 'core:frozen']);
   const agileOnly = buildActor('agileOnly', ['core:agility']);
@@ -123,9 +127,9 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
       'ActionIndex requires a logger dependency'
     );
     const standaloneLogger = new RecordingLogger();
-    expect(() => new ActionIndex({ logger: standaloneLogger, entityManager: null })).toThrow(
-      'ActionIndex requires an entityManager dependency'
-    );
+    expect(
+      () => new ActionIndex({ logger: standaloneLogger, entityManager: null })
+    ).toThrow('ActionIndex requires an entityManager dependency');
   });
 
   it('warns and skips when buildIndex receives a non-array', () => {
@@ -173,8 +177,14 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
         'core:focus-required',
       ]);
       expect(candidateIds).not.toContain('core:trimmed-only');
-      expect(candidateIds.filter((id) => id === 'core:strength-and-agility')).toHaveLength(1);
-      expect(logger.debugLogs.some((entry) => entry[0].includes('Retrieved 7 candidate actions for actor hero.'))).toBe(true);
+      expect(
+        candidateIds.filter((id) => id === 'core:strength-and-agility')
+      ).toHaveLength(1);
+      expect(
+        logger.debugLogs.some((entry) =>
+          entry[0].includes('Retrieved 7 candidate actions for actor hero.')
+        )
+      ).toBe(true);
     });
 
     it('provides detailed trace data when discovering hero actions', () => {
@@ -244,7 +254,10 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
         entry.message.includes('Removed')
       );
       expect(removalLog.data.removedActionIds).toEqual(
-        expect.arrayContaining(['core:forbid-cursed', 'core:secondary-forbid-cursed'])
+        expect.arrayContaining([
+          'core:forbid-cursed',
+          'core:secondary-forbid-cursed',
+        ])
       );
 
       const exclusionLog = trace.logs.find((entry) =>
@@ -257,13 +270,20 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
       const trace = new TraceContext();
       const agileOnlyEntity = entityManager.getEntityInstance('agileOnly');
 
-      const candidates = actionIndex.getCandidateActions(agileOnlyEntity, trace);
+      const candidates = actionIndex.getCandidateActions(
+        agileOnlyEntity,
+        trace
+      );
 
       expect(candidates.map((action) => action.id)).toEqual([
         'core:always',
         'core:secondary-forbid-cursed',
       ]);
-      expect(trace.logs.filter((entry) => entry.message.startsWith('Excluding action '))).toHaveLength(1);
+      expect(
+        trace.logs.filter((entry) =>
+          entry.message.startsWith('Excluding action ')
+        )
+      ).toHaveLength(1);
     });
 
     it('allows forbidden-component actions for actors without matching components', () => {
@@ -282,7 +302,9 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
         'core:strength-forbid-frozen',
         'core:focus-required',
       ]);
-      expect(trace.logs.some((entry) => entry.message.startsWith('Removed'))).toBe(false);
+      expect(
+        trace.logs.some((entry) => entry.message.startsWith('Removed'))
+      ).toBe(false);
     });
 
     it('falls back to empty component lists when the entity manager returns null', () => {
@@ -319,21 +341,26 @@ describe('ActionIndex integration with SimpleEntityManager', () => {
         entry.message.includes("Actor 'null-components' has components.")
       );
       expect(componentLog.data.components).toEqual([]);
-      expect(trace.logs.some((entry) => entry.message.includes('Removed'))).toBe(
-        false
-      );
+      expect(
+        trace.logs.some((entry) => entry.message.includes('Removed'))
+      ).toBe(false);
     });
 
     it('provides default actions for unknown actors and returns empty when id is missing', () => {
       const trace = new TraceContext();
-      const ghostCandidates = actionIndex.getCandidateActions({ id: 'ghost' }, trace);
+      const ghostCandidates = actionIndex.getCandidateActions(
+        { id: 'ghost' },
+        trace
+      );
 
       expect(ghostCandidates.map((action) => action.id)).toEqual([
         'core:always',
         'core:no-req-forbid-agility',
         'core:secondary-forbid-cursed',
       ]);
-      expect(trace.logs.some((entry) => entry.message.includes('Removed'))).toBe(false);
+      expect(
+        trace.logs.some((entry) => entry.message.includes('Removed'))
+      ).toBe(false);
 
       expect(actionIndex.getCandidateActions({})).toEqual([]);
       expect(actionIndex.getCandidateActions(null)).toEqual([]);

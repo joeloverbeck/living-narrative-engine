@@ -11,19 +11,11 @@
     }
   },
   "required_components": {
-    "primary": [
-      "items:drinkable",
-      "items:liquid_container"
-    ]
+    "primary": ["items:drinkable", "items:liquid_container"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:being_restrained",
-      "positioning:restraining"
-    ],
-    "primary": [
-      "items:empty"
-    ]
+    "actor": ["positioning:being_restrained", "positioning:restraining"],
+    "primary": ["items:empty"]
   },
   "prerequisites": [
     {

@@ -1,6 +1,7 @@
 # Implementing the Refinement Engine
 
 ## Purpose and Truth Sources
+
 - **Audience**: contributors wiring new refinement methods or debugging the runtime flow between planning and executable actions.
 - **Use this guide when** you need a high-level architectural map or to trace the invocation path from `GoapController` through the refinement subsystems. For schema specifics (e.g., how to model parameters, conditional contexts, or action references) defer to:
   - [`docs/goap/refinement-parameter-binding.md`](./refinement-parameter-binding.md)
@@ -15,18 +16,20 @@
   - `src/goap/services/contextAssemblyService.js` and `src/goap/services/parameterResolutionService.js`
 
 ## Component and Responsibility Map
-| Component | Location | Responsibilities | Handoffs / Events |
-| --- | --- | --- | --- |
-| `GoapController` | `src/goap/controllers/goapController.js` | Owns the actor decision cycle. After planning, validates current tasks and invokes `#refineTask`, which forwards to `RefinementEngine.refine(taskId, actorId, params)`. | Emits GOAP controller events, forwards `actorId/taskId` context to refinement, logs diagnostics. |
-| `RefinementEngine` | `src/goap/refinement/refinementEngine.js` | Orchestrates refinement: loads tasks, selects methods, executes steps, handles fallbacks, and dispatches lifecycle events (`GOAP_EVENTS.REFINEMENT_*`). | Depends on MethodSelectionService, ContextAssemblyService, Primitive/Conditional executors, `RefinementStateManager`, ParameterResolutionService (transitively), and event bus. |
-| `MethodSelectionService` | `src/goap/refinement/methodSelectionService.js` | Loads the task’s `refinementMethods`, evaluates applicability via JSON Logic, and returns the first applicable method plus diagnostics. | Consumes `ContextAssemblyService` for building condition contexts; returns diagnostics used when no method applies. |
-| `RefinementStateManager` | `src/goap/refinement/refinementStateManager.js` | Maintains per-execution `localState` (initialize → store → snapshot → clear). Guarantees isolation per refinement run. | Resolved through the DI container by both the engine and step executors so cached data flows into condition contexts and parameter bindings. |
-| `ContextAssemblyService` | `src/goap/services/contextAssemblyService.js` | Builds refinement contexts (actor, world, task, localState) and derives flattened condition contexts. | Used by `MethodSelectionService`, `RefinementEngine` (per step), `PrimitiveActionStepExecutor`, and `ConditionalStepExecutor`. |
-| `ParameterResolutionService` | `src/goap/services/parameterResolutionService.js` | Resolves dot-path references used in `targetBindings`/parameters to actual entities or state data; caches lookups per execution. | Called inside `PrimitiveActionStepExecutor` and any helper needing bound values. |
-| `PrimitiveActionStepExecutor` | `src/goap/refinement/steps/primitiveActionStepExecutor.js` | Resolves `storeResultAs` dependencies, binds targets, merges parameters, executes action operations, stores results, and logs per-step outcomes. | Emits structured results consumed by `RefinementEngine`. Stores data via `RefinementStateManager` and may log errors rather than throwing. |
-| `ConditionalStepExecutor` | `src/goap/refinement/steps/conditionalStepExecutor.js` | Evaluates JSON Logic conditions, enforces nesting depth (≤3), selects branches, executes nested steps, and enforces `onFailure` semantics (`fail`, `skip`, `replan`). | Reuses PrimitiveActionStepExecutor for branch steps and can recurse into additional conditionals. Signals replan/skips to `RefinementEngine` through result payloads. |
+
+| Component                     | Location                                                   | Responsibilities                                                                                                                                                        | Handoffs / Events                                                                                                                                                               |
+| ----------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GoapController`              | `src/goap/controllers/goapController.js`                   | Owns the actor decision cycle. After planning, validates current tasks and invokes `#refineTask`, which forwards to `RefinementEngine.refine(taskId, actorId, params)`. | Emits GOAP controller events, forwards `actorId/taskId` context to refinement, logs diagnostics.                                                                                |
+| `RefinementEngine`            | `src/goap/refinement/refinementEngine.js`                  | Orchestrates refinement: loads tasks, selects methods, executes steps, handles fallbacks, and dispatches lifecycle events (`GOAP_EVENTS.REFINEMENT_*`).                 | Depends on MethodSelectionService, ContextAssemblyService, Primitive/Conditional executors, `RefinementStateManager`, ParameterResolutionService (transitively), and event bus. |
+| `MethodSelectionService`      | `src/goap/refinement/methodSelectionService.js`            | Loads the task’s `refinementMethods`, evaluates applicability via JSON Logic, and returns the first applicable method plus diagnostics.                                 | Consumes `ContextAssemblyService` for building condition contexts; returns diagnostics used when no method applies.                                                             |
+| `RefinementStateManager`      | `src/goap/refinement/refinementStateManager.js`            | Maintains per-execution `localState` (initialize → store → snapshot → clear). Guarantees isolation per refinement run.                                                  | Resolved through the DI container by both the engine and step executors so cached data flows into condition contexts and parameter bindings.                                    |
+| `ContextAssemblyService`      | `src/goap/services/contextAssemblyService.js`              | Builds refinement contexts (actor, world, task, localState) and derives flattened condition contexts.                                                                   | Used by `MethodSelectionService`, `RefinementEngine` (per step), `PrimitiveActionStepExecutor`, and `ConditionalStepExecutor`.                                                  |
+| `ParameterResolutionService`  | `src/goap/services/parameterResolutionService.js`          | Resolves dot-path references used in `targetBindings`/parameters to actual entities or state data; caches lookups per execution.                                        | Called inside `PrimitiveActionStepExecutor` and any helper needing bound values.                                                                                                |
+| `PrimitiveActionStepExecutor` | `src/goap/refinement/steps/primitiveActionStepExecutor.js` | Resolves `storeResultAs` dependencies, binds targets, merges parameters, executes action operations, stores results, and logs per-step outcomes.                        | Emits structured results consumed by `RefinementEngine`. Stores data via `RefinementStateManager` and may log errors rather than throwing.                                      |
+| `ConditionalStepExecutor`     | `src/goap/refinement/steps/conditionalStepExecutor.js`     | Evaluates JSON Logic conditions, enforces nesting depth (≤3), selects branches, executes nested steps, and enforces `onFailure` semantics (`fail`, `skip`, `replan`).   | Reuses PrimitiveActionStepExecutor for branch steps and can recurse into additional conditionals. Signals replan/skips to `RefinementEngine` through result payloads.           |
 
 ## Invocation Flow (GoapController → Executors)
+
 1. **Plan Execution**: `GoapController.decideTurn` builds or reuses a plan via `GoapPlanner`, validates tasks, and chooses the next task for the actor.
 2. **Refinement Entry**: `#refineTask` (see `GoapController` lines around 1030+) asserts the plan task and actor, logs the intent, and calls `refinementEngine.refine(task.taskId, actor.id, task.params)`.
 3. **Task Loading**: Inside `RefinementEngine.refine`, the task definition is loaded from the `GameDataRepository`. Missing tasks throw `RefinementError` (`TASK_NOT_FOUND`).
@@ -41,6 +44,7 @@
 7. **Completion & Diagnostics**: When all steps succeed, `RefinementEngine` emits `REFINEMENT_COMPLETED`, logs duration, and returns `{ success: true, stepResults, methodId, taskId, actorId, timestamp }`. Exceptions trigger `REFINEMENT_FAILED` before rethrowing.
 
 ## Sequencing Pseudocode (`RefinementEngine.refine`)
+
 ```pseudo
 function refine(taskId, actorId, taskParams):
   startTime = now()
@@ -62,6 +66,7 @@ catch (error):
 ```
 
 `executeMethodSteps` expands as:
+
 ```pseudo
 resolve tokens.IRefinementStateManager from container
 stateManager.initialize()
@@ -90,36 +95,42 @@ finally:
 ## Public Entry Point Contracts
 
 ### `RefinementEngine.refine(taskId, actorId, taskParams)`
+
 - **Parameters**: string `taskId`, string `actorId`, object `taskParams` (resolved planner params).
 - **Returns**: `Promise<{ success, stepResults[], methodId, taskId, actorId, timestamp, replan?, skipped?, error? }>`.
 - **Side effects**: Emits `GOAP_EVENTS.REFINEMENT_STARTED|METHOD_SELECTED|STEP_*|COMPLETED|FAILED`, logs info/warn/error lines, and may throw `RefinementError` for critical failures.
 - **Notes**: Step results are ordered execution logs that higher layers use to derive action hints; callers should inspect `replan`/`skipped` flags for fallback handling.
 
 ### `MethodSelectionService.selectMethod(taskId, actorId, taskParams, { enableDiagnostics = true })`
+
 - **Parameters**: string IDs plus task params; optional diagnostics flag.
 - **Returns**: `{ selectedMethod: object|null, diagnostics: { methodsEvaluated, evaluationResults[] } }`.
 - **Side effects**: Reads tasks/refinement methods from `GameDataRepository`, uses `ContextAssemblyService` to assemble contexts, and logs warnings when evaluations fail.
 - **Failure modes**: Throws `MethodSelectionError` if task/method definitions are missing or mismatched. Does not throw when no method is applicable.
 
 ### `PrimitiveActionStepExecutor.execute(step, context, stepIndex)`
+
 - **Parameters**: Step schema object (`stepType = 'primitive_action'`, `actionId`, optional `targetBindings`, `parameters`, `storeResultAs`), refinement context (actor/task/localState), numeric index.
 - **Returns**: `Promise<{ success, data, error?, timestamp, actionId }>`; failures return structured result instead of throwing.
 - **Side effects**: Resolves actions via `actionIndex`, binds targets through `ParameterResolutionService`, executes operations, stores results in a fresh `RefinementStateManager`, and logs per-step telemetry.
 - **Notes**: Throws `StepExecutionError` for invalid action IDs/step shapes; still clears/updates state via the manager before returning failure results.
 
 ### `ConditionalStepExecutor.execute(step, context, stepIndex, currentDepth = 0)`
+
 - **Parameters**: Conditional step schema (`condition`, `thenSteps`, optional `elseSteps`, optional `onFailure`, optional `description`), refinement context, step index, recursion depth tracker.
 - **Returns**: `Promise<{ success, data: { branch, branchResults[] }, conditionResult }>` or failure payload with `error` and optional `data.replanRequested`.
 - **Side effects**: Uses `ContextAssemblyService` → `assembleConditionContext`, calls PrimitiveActionStepExecutor/itself for nested steps, and logs depth/branch decisions.
 - **Failure modes**: Throws `StepExecutionError` if nesting exceeds `MAX_NESTING_DEPTH` (3) or schema is invalid; otherwise returns structured failures honoring `onFailure` semantics (e.g., `replan` requests).
 
 ### `ParameterResolutionService.resolve(reference, context, options)`
+
 - **Parameters**: dot-notation string reference (e.g., `task.params.targetId`), context from `ContextAssemblyService`, optional `{ validateEntity = true, contextType, stepIndex }`.
 - **Returns**: The resolved value (primitive/object) pulled from the provided context.
 - **Side effects**: Caches resolved values per reference/contextType/stepIndex combination and logs cache hits/misses. May query the entity manager to ensure entity IDs exist when `validateEntity` is enabled.
 - **Failure modes**: Throws `ParameterResolutionError` when the path is invalid, missing, or points to non-existing entities; failures include partial path metadata to aid debugging.
 
 ## Related References
+
 - [`docs/goap/refinement-parameter-binding.md`](./refinement-parameter-binding.md) explains how `storeResultAs` data flows into later steps and how to model bindings.
 - [`docs/goap/refinement-condition-context.md`](./refinement-condition-context.md) describes the JSON Logic shape assembled by `ContextAssemblyService`.
 - [`docs/goap/refinement-action-references.md`](./refinement-action-references.md) covers action registry expectations referenced by `PrimitiveActionStepExecutor`.
@@ -128,6 +139,7 @@ finally:
 ## Fallback Behaviors and Failure Flow
 
 ### Task-level `fallbackBehavior`
+
 - **Truth source**: `RefinementEngine.#handleNoApplicableMethod` in `src/goap/refinement/refinementEngine.js` and `GoapController.decideTurn/#handleRefinementFailure` in `src/goap/controllers/goapController.js` lines 560-640 & 1384-1520.
 - **When it runs**: triggered when `MethodSelectionService.selectMethod` returns `selectedMethod = null` because no `refinementMethods` were applicable. Diagnostics from method selection are forwarded regardless of fallback.
 - **Behaviors**:
@@ -139,6 +151,7 @@ finally:
   | Unknown value | throws `RefinementError('INVALID_FALLBACK_BEHAVIOR')` | Caller should fix the task definition; controller treats it like any refinement failure and replans. | Unit test `should handle unknown fallback behavior` documents the path.
 
 ### Conditional-step `onFailure`
+
 - **Truth source**: `ConditionalStepExecutor.#handleStepFailure` in `src/goap/refinement/steps/conditionalStepExecutor.js` lines 250-339.
 - **Modes**:
   - `fail`: converts branch failure into a thrown `StepExecutionError`. Because it throws, `RefinementEngine` catches the rejection, emits `REFINEMENT_STEP_FAILED`, and propagates the error to the controller.
@@ -146,6 +159,7 @@ finally:
   - `replan` (default): returns `{ success: false, data.replanRequested: true }`. `RefinementEngine.#executeMethodSteps` inspects `result.data.replanRequested` and throws `RefinementError('STEP_REPLAN_REQUESTED')`, which in turn causes `GoapController` to clear the plan and replan. Covered by `tests/unit/goap/refinement/refinementEngine.test.js` "should handle step requesting replan".
 
 ### Controller retries and diagnostics visibility
+
 - `GoapController.decideTurn` always checks `refinementResult.replan` before inspecting `success` to guarantee replans happen even when a method partially succeeded (`src/goap/controllers/goapController.js:598-608`).
 - When `refinementResult.skipped` is true, the controller advances the plan pointer but keeps refinement diagnostics so tooling can explain why tasks skipped.
 - `GoapController.#handleRefinementFailure` maps downstream fallbacks (`replan`, `continue`, `fail`, `idle`) to retries, recursion limits, and goal tracking. Even though `RefinementEngine` only emits `replan/continue/fail` at the task level, the controller normalizes anything missing by treating unknown values as `replan`.
@@ -153,17 +167,18 @@ finally:
 
 ## Refinement Failure Codes and Emitters
 
-| Code / Error | Raised by | Events dispatched | Caller expectation | Tests / References |
-| --- | --- | --- | --- | --- |
-| `TASK_NOT_FOUND`, `TASK_LOAD_ERROR` (`RefinementError`) | `RefinementEngine.#loadTask` when `GameDataRepository.getTask` misses or throws | `GOAP_EVENTS.REFINEMENT_FAILED` with `reason` message | Controller treats as critical failure and clears plan. Verify task IDs before invoking refine. | `src/goap/refinement/refinementEngine.js` lines 260-314, `tests/e2e/goap/refinementEngine.e2e.test.js` ("missing task" scenario).
-| `NO_APPLICABLE_METHOD` (`RefinementError`) | `#handleNoApplicableMethod` when fallback=`fail` | `REFINEMENT_FAILED` before the exception propagates | Either add an applicable method or change fallback to `continue/replan`. Controller surfaces this to logging via `GoapController.#handleRefinementFailure`. | `tests/unit/goap/refinement/refinementEngine.test.js` fallback cases.
-| `INVALID_FALLBACK_BEHAVIOR` (`RefinementError`) | `#handleNoApplicableMethod` when fallback value is unrecognized | `REFINEMENT_FAILED` | Fix the task definition; controller treats it like `replan`. | `tests/unit/goap/refinement/refinementEngine.test.js` "unknown fallback behavior".
-| `INVALID_STEP_TYPE` (`RefinementError`) | `#executeMethodSteps` when step.stepType is not `primitive_action` or `conditional` | `REFINEMENT_STEP_FAILED` then `REFINEMENT_FAILED` | Update the method schema or register a new executor. Planner halts the task. | `tests/unit/goap/refinement/refinementEngine.test.js` "unknown step type".
-| `STEP_REPLAN_REQUESTED` (`RefinementError`) | `#executeMethodSteps` when a conditional returns `{ replanRequested: true }` | `REFINEMENT_STEP_FAILED`, `REFINEMENT_FAILED` | Controller observes `replan` and clears the active plan. | `tests/unit/goap/refinement/refinementEngine.test.js` "should handle step requesting replan".
-| `GOAP_REFINEMENT_INVALID_STATE_KEY` (`RefinementError`) | `RefinementStateManager.store` when `storeResultAs` is malformed | No GOAP event; exception bubbles up to `RefinementEngine` and triggers `REFINEMENT_FAILED` | Fix the step schema; diagnostics include the invalid key and regex. | `src/goap/refinement/refinementStateManager.js` lines 64-122 plus `tests/unit/goap/refinement/refinementStateManager.test.js`.
-| `StepExecutionError` (various reasons) | `ConditionalStepExecutor` for excessive nesting, invalid schema, or `onFailure=fail`; also used by primitive executors | `REFINEMENT_STEP_FAILED` (caught by engine) followed by controller fallback handling | The controller treats thrown step errors as task failures and routes through `#handleRefinementFailure`. | `src/goap/refinement/steps/conditionalStepExecutor.js`, `tests/unit/goap/refinement/refinementEngine.test.js` (conditional branch tests).
+| Code / Error                                            | Raised by                                                                                                              | Events dispatched                                                                          | Caller expectation                                                                                                                                          | Tests / References                                                                                                                        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `TASK_NOT_FOUND`, `TASK_LOAD_ERROR` (`RefinementError`) | `RefinementEngine.#loadTask` when `GameDataRepository.getTask` misses or throws                                        | `GOAP_EVENTS.REFINEMENT_FAILED` with `reason` message                                      | Controller treats as critical failure and clears plan. Verify task IDs before invoking refine.                                                              | `src/goap/refinement/refinementEngine.js` lines 260-314, `tests/e2e/goap/refinementEngine.e2e.test.js` ("missing task" scenario).         |
+| `NO_APPLICABLE_METHOD` (`RefinementError`)              | `#handleNoApplicableMethod` when fallback=`fail`                                                                       | `REFINEMENT_FAILED` before the exception propagates                                        | Either add an applicable method or change fallback to `continue/replan`. Controller surfaces this to logging via `GoapController.#handleRefinementFailure`. | `tests/unit/goap/refinement/refinementEngine.test.js` fallback cases.                                                                     |
+| `INVALID_FALLBACK_BEHAVIOR` (`RefinementError`)         | `#handleNoApplicableMethod` when fallback value is unrecognized                                                        | `REFINEMENT_FAILED`                                                                        | Fix the task definition; controller treats it like `replan`.                                                                                                | `tests/unit/goap/refinement/refinementEngine.test.js` "unknown fallback behavior".                                                        |
+| `INVALID_STEP_TYPE` (`RefinementError`)                 | `#executeMethodSteps` when step.stepType is not `primitive_action` or `conditional`                                    | `REFINEMENT_STEP_FAILED` then `REFINEMENT_FAILED`                                          | Update the method schema or register a new executor. Planner halts the task.                                                                                | `tests/unit/goap/refinement/refinementEngine.test.js` "unknown step type".                                                                |
+| `STEP_REPLAN_REQUESTED` (`RefinementError`)             | `#executeMethodSteps` when a conditional returns `{ replanRequested: true }`                                           | `REFINEMENT_STEP_FAILED`, `REFINEMENT_FAILED`                                              | Controller observes `replan` and clears the active plan.                                                                                                    | `tests/unit/goap/refinement/refinementEngine.test.js` "should handle step requesting replan".                                             |
+| `GOAP_REFINEMENT_INVALID_STATE_KEY` (`RefinementError`) | `RefinementStateManager.store` when `storeResultAs` is malformed                                                       | No GOAP event; exception bubbles up to `RefinementEngine` and triggers `REFINEMENT_FAILED` | Fix the step schema; diagnostics include the invalid key and regex.                                                                                         | `src/goap/refinement/refinementStateManager.js` lines 64-122 plus `tests/unit/goap/refinement/refinementStateManager.test.js`.            |
+| `StepExecutionError` (various reasons)                  | `ConditionalStepExecutor` for excessive nesting, invalid schema, or `onFailure=fail`; also used by primitive executors | `REFINEMENT_STEP_FAILED` (caught by engine) followed by controller fallback handling       | The controller treats thrown step errors as task failures and routes through `#handleRefinementFailure`.                                                    | `src/goap/refinement/steps/conditionalStepExecutor.js`, `tests/unit/goap/refinement/refinementEngine.test.js` (conditional branch tests). |
 
 ## Diagnostics and Trace Capture
+
 - **Primary tools**: `GOAPDebugger`, `RefinementTracer`, and `PlanInspector` live under `docs/goap/debugging-tools.md` and `docs/goap/debugging-multi-action.md`. Resolve `tokens.IGOAPDebugger` (preferred) or manually instantiate the debugger/plan inspector/refinement tracer stack shown in the multi-action debugging guide. The tracer already subscribes to the same `createGoapEventDispatcher()` instance that `RefinementEngine` resolves, so calling `goapDebugger.startTrace(actorId)` before `GoapController.decideTurn` mirrors the live event stream.
 - **Capture workflow**:
   1. `goapDebugger.startTrace(actorId)` to attach the tracer.
@@ -172,13 +187,13 @@ finally:
   4. When you need structured payloads, use `goapDebugger.getTrace(actorId)` (JSON) or hook `createGoapEventTraceProbe()` directly (see `tests/integration/goap/testFixtures/goapTestSetup.js` for the helper `setup.bootstrapEventTraceProbe()`). The probe surfaces `{ eventType, payload }` exactly as emitted by `RefinementEngine`/`GoapController`.
 - **Event-to-tool map** (truth source: `src/goap/events/goapEvents.js`):
 
-  | Event | Emitted by | Key payload fields | Inspect via |
-  | --- | --- | --- | --- |
-  | `goap:refinement_started` / `goap:method_selected` | `RefinementEngine.refine` (lines 220-320) | `{ actorId, taskId, methodId }` | Refinement Tracer timeline, GOAP event trace probe |
-  | `goap:refinement_step_started/completed/failed` | `#executeMethodSteps` | `{ stepIndex, step, result/error, duration }` | Refinement Tracer, Plan Inspector "Refinement Trace" section |
-  | `goap:refinement_state_updated` | `RefinementStateManager.store` via `RefinementEngine` | `{ key, oldValue, newValue }` | Refinement Tracer (state delta rows) |
-  | `goap:refinement_completed` / `goap:refinement_failed` | `RefinementEngine.refine` catch/finally | `{ success, fallbackBehavior, reason }` | GOAPDebugger failure history, event trace probe |
-  | `goap:task_refined` + `goap:action_hint_*` | `GoapController.decideTurn/#extractActionHint` | `{ stepsGenerated, actionRefs }`, `{ actionId, targetBindings }` | Action executor logs, Plan Inspector pending actions view |
+  | Event                                                  | Emitted by                                            | Key payload fields                                               | Inspect via                                                  |
+  | ------------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+  | `goap:refinement_started` / `goap:method_selected`     | `RefinementEngine.refine` (lines 220-320)             | `{ actorId, taskId, methodId }`                                  | Refinement Tracer timeline, GOAP event trace probe           |
+  | `goap:refinement_step_started/completed/failed`        | `#executeMethodSteps`                                 | `{ stepIndex, step, result/error, duration }`                    | Refinement Tracer, Plan Inspector "Refinement Trace" section |
+  | `goap:refinement_state_updated`                        | `RefinementStateManager.store` via `RefinementEngine` | `{ key, oldValue, newValue }`                                    | Refinement Tracer (state delta rows)                         |
+  | `goap:refinement_completed` / `goap:refinement_failed` | `RefinementEngine.refine` catch/finally               | `{ success, fallbackBehavior, reason }`                          | GOAPDebugger failure history, event trace probe              |
+  | `goap:task_refined` + `goap:action_hint_*`             | `GoapController.decideTurn/#extractActionHint`        | `{ stepsGenerated, actionRefs }`, `{ actionId, targetBindings }` | Action executor logs, Plan Inspector pending actions view    |
 
 - **Planner/event bus/action executor integration**:
   - `GoapController.decideTurn` (`src/goap/controllers/goapController.js:560-720`) dispatches refinement events on the same dispatcher instance that the planner uses (`createGoapEventDispatcher`). Hooking a tracer or probe at the dispatcher level automatically captures planning and refinement events in timestamp order.
@@ -189,16 +204,18 @@ finally:
   - When filing new issues, include trace IDs or snapshots taken from `goapDebugger.generateReportJSON(actorId)`; downstream maintainers can replay event sequences using the probe fixtures in `tests/integration/goap/testFixtures/goapTestSetup.js`.
 
 ## Testing Refinement Changes
+
 - **Canonical suites**:
 
-  | Suite | Focus | Typical command |
-  | --- | --- | --- |
-  | `tests/unit/goap/refinement/refinementEngine.test.js` | Method selection, fallback handling, state lifecycle, replan/skip flows. | `npm run test:unit -- refinement/refinement/refinementEngine.test.js --runInBand` |
-  | `tests/integration/goap/refinementEngine.integration.test.js` | End-to-end refinement through `GoapController` + DI container, verifies GOAP event ordering and Plan Inspector snapshots. | `npm run test:integration -- refinementEngine.integration.test.js --runInBand` |
+  | Suite                                                                 | Focus                                                                                                                                | Typical command                                                                        |
+  | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+  | `tests/unit/goap/refinement/refinementEngine.test.js`                 | Method selection, fallback handling, state lifecycle, replan/skip flows.                                                             | `npm run test:unit -- refinement/refinement/refinementEngine.test.js --runInBand`      |
+  | `tests/integration/goap/refinementEngine.integration.test.js`         | End-to-end refinement through `GoapController` + DI container, verifies GOAP event ordering and Plan Inspector snapshots.            | `npm run test:integration -- refinementEngine.integration.test.js --runInBand`         |
   | `tests/integration/goap/primitiveActionExecution.integration.test.js` | Primitive executor + action registry interactions, including `storeResultAs` serialization and action hint extraction prerequisites. | `npm run test:integration -- primitiveActionExecution.integration.test.js --runInBand` |
-  | `tests/integration/goap/parameterResolution.integration.test.js` | Parameter resolution guarantees, error codes, and entity validation that refinement relies on. | `npm run test:integration -- parameterResolution.integration.test.js --runInBand` |
+  | `tests/integration/goap/parameterResolution.integration.test.js`      | Parameter resolution guarantees, error codes, and entity validation that refinement relies on.                                       | `npm run test:integration -- parameterResolution.integration.test.js --runInBand`      |
 
   Append `--runInBand` (see `AGENTS.md`) to avoid the known Jest worker force-exit issue when running any subset of these suites locally or in CI.
+
 - **When to add/extend tests**:
   - Add/extend **unit tests** when you touch `RefinementEngine`, `RefinementStateManager`, or `MethodSelectionService` contracts. Use `tests/unit/goap/refinement/__mocks__` and `tests/common/mocks/createEventBusMock.js` to isolate dependencies.
   - Prefer **integration tests** when changes involve event ordering, state snapshots, or the controller/refinement handshake. Bootstrap the harness with `tests/integration/goap/testFixtures/goapTestSetup.js#bootstrapEventTraceProbe()` so your suite benefits from the shared dispatcher + trace probe instrumentation.
@@ -207,6 +224,7 @@ finally:
 - **CI expectations**: `npm run lint` and the relevant `test:*` tasks must pass before merging documentation that prescribes new behavior. Include trace samples or Jest output links when referencing new invariants in PRs so reviewers can see how the tests enforce the described behavior.
 
 ## Refinement Local State Management
+
 - **Scope**: Every call to `RefinementEngine.refine` resolves a fresh `RefinementStateManager` via the DI container token `IRefinementStateManager` (`src/goap/refinement/refinementEngine.js` lines 411-437). The manager is initialized before the loop and cleared in a `finally` block to guarantee isolation even on exceptions.
 - **Consumers**: Primitive and conditional executors store step results through `storeResultAs`. `ContextAssemblyService.assembleRefinementContext` receives `refinementStateManager.getSnapshot()` for each step so condition evaluation always sees the most recent immutable snapshot.
 - **Guidelines for new steps / long-running primitives**:
@@ -217,6 +235,7 @@ finally:
 - **Tests**: `tests/unit/goap/refinement/refinementEngine.test.js` (state lifecycle, snapshots) and `tests/unit/goap/refinement/refinementStateManager.test.js` cover initialization, storage validation, and cleanup guarantees.
 
 ## Current Limitations and Assumptions
+
 - `ContextAssemblyService` currently returns placeholder world data (`world.locations`/`world.time` are empty objects) and knowledge limiting defaults to omniscient mode unless the experimental `enableKnowledgeLimitation` flag is set. Contributors should not rely on full world snapshots yet (`src/goap/services/contextAssemblyService.js`).
 - Parameter resolution validates entity existence when `validateEntity` is true, but knowledge-filtered lookups are deferred until GOAPIMPL-023—treat all task parameters as already resolved entity IDs for now (`src/goap/services/parameterResolutionService.js`).
 - Only two step types are supported (`primitive_action`, `conditional`). Adding new types requires updating `RefinementEngine.#executeMethodSteps` and registering executors; until then, schema authors must stick to the supported set.
@@ -224,6 +243,7 @@ finally:
 - Action hint extraction still assumes the first step exposes `actionId`/`targetBindings`; multitask hints are covered by GOARESREFIMPGUI-003, so do not promise hints for conditional-first methods yet.
 
 ## Runtime Invariants
+
 - **One state manager per refinement**: `RefinementEngine` resolves the DI token once per `refine` call and clears it in `finally`. `tests/unit/goap/refinement/refinementEngine.test.js` asserts `initialize` happens before any step executes and `clear` always runs.
 - **Deterministic event ordering**: Events fire in the sequence `REFINEMENT_STARTED → METHOD_SELECTED → REFINEMENT_STEP_* → REFINEMENT_COMPLETED/FAILED`. Both unit and `tests/e2e/goap/refinementEngine.e2e.test.js` cases assert dispatch order for success and failure runs.
 - **Diagnostics enabled by default**: `selectMethod` is always invoked with `{ enableDiagnostics: true }`, so logs and fallback payloads always contain evaluation traces even outside dev builds.

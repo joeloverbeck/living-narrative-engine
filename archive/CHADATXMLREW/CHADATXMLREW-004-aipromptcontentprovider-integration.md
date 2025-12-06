@@ -13,6 +13,7 @@
 Replace the internal instantiation of `CharacterDataFormatter` in `AIPromptContentProvider` with the DI-injected `CharacterDataXmlBuilder`. This is the critical integration point that switches character persona output from Markdown to XML.
 
 Key changes:
+
 1. Add `characterDataXmlBuilder` as a constructor dependency
 2. Replace `#characterDataFormatter` with `#characterDataXmlBuilder`
 3. Update `getCharacterPersonaContent()` to call `buildCharacterDataXml()`
@@ -39,17 +40,18 @@ Key changes:
 
 ## Files to Modify
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/prompting/AIPromptContentProvider.js` | MODIFY | Replace CharacterDataFormatter with CharacterDataXmlBuilder |
+| File                                                       | Action | Description                                                    |
+| ---------------------------------------------------------- | ------ | -------------------------------------------------------------- |
+| `src/prompting/AIPromptContentProvider.js`                 | MODIFY | Replace CharacterDataFormatter with CharacterDataXmlBuilder    |
 | `src/dependencyInjection/registrations/aiRegistrations.js` | MODIFY | Add CharacterDataXmlBuilder to AIPromptContentProvider factory |
-| `tests/unit/prompting/AIPromptContentProvider.test.js` | MODIFY | Update mocks and assertions |
+| `tests/unit/prompting/AIPromptContentProvider.test.js`     | MODIFY | Update mocks and assertions                                    |
 
 ---
 
 ## Out of Scope
 
 **DO NOT modify:**
+
 - `CharacterDataFormatter.js` - handled in CHADATXMLREW-007
 - `XmlElementBuilder.js` or `CharacterDataXmlBuilder.js` - created in prior tickets
 - Tests for the XML builders themselves
@@ -189,14 +191,19 @@ Find the existing `AIPromptContentProvider` registration and add the new depende
 ```javascript
 registrar.singletonFactory(
   tokens.IAIPromptContentProvider,
-  (c) => new AIPromptContentProvider({
-    logger: c.resolve(tokens.ILogger),
-    promptStaticContentService: c.resolve(tokens.IPromptStaticContentService),
-    perceptionLogFormatter: c.resolve(tokens.IPerceptionLogFormatter),
-    gameStateValidationService: c.resolve(tokens.IGameStateValidationServiceForPrompting),
-    actionCategorizationService: c.resolve(tokens.IActionCategorizationService),
-    characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder),  // ADD
-  })
+  (c) =>
+    new AIPromptContentProvider({
+      logger: c.resolve(tokens.ILogger),
+      promptStaticContentService: c.resolve(tokens.IPromptStaticContentService),
+      perceptionLogFormatter: c.resolve(tokens.IPerceptionLogFormatter),
+      gameStateValidationService: c.resolve(
+        tokens.IGameStateValidationServiceForPrompting
+      ),
+      actionCategorizationService: c.resolve(
+        tokens.IActionCategorizationService
+      ),
+      characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder), // ADD
+    })
 );
 ```
 
@@ -209,7 +216,9 @@ Update mock setup:
 ```javascript
 // In mock setup, ADD:
 const mockCharacterDataXmlBuilder = {
-  buildCharacterDataXml: jest.fn().mockReturnValue('<character_data>...</character_data>')
+  buildCharacterDataXml: jest
+    .fn()
+    .mockReturnValue('<character_data>...</character_data>'),
 };
 
 // In constructor calls, ADD:
@@ -219,7 +228,7 @@ const provider = new AIPromptContentProvider({
   perceptionLogFormatter: mockPerceptionLogFormatter,
   gameStateValidationService: mockGameStateValidationService,
   actionCategorizationService: mockActionCategorizationService,
-  characterDataXmlBuilder: mockCharacterDataXmlBuilder,  // ADD
+  characterDataXmlBuilder: mockCharacterDataXmlBuilder, // ADD
 });
 
 // Update assertions to check for XML output instead of Markdown

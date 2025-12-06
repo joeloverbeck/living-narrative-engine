@@ -23,7 +23,7 @@ export class ClothingHealthMonitor {
    */
   constructor(services, logger, checkInterval = 60000) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
 
     this.#services = services;
@@ -32,7 +32,7 @@ export class ClothingHealthMonitor {
     this.#logger = logger;
     this.#checkInterval = checkInterval;
     this.#intervalId = null;
-    
+
     this.#initializeHealthChecks();
   }
 
@@ -43,39 +43,42 @@ export class ClothingHealthMonitor {
    */
   async performHealthCheck() {
     const results = new Map();
-    
+
     for (const [serviceName, healthCheck] of this.#healthChecks) {
       try {
         const startTime = performance.now();
-        const result = await this.#performSingleHealthCheck(serviceName, healthCheck);
+        const result = await this.#performSingleHealthCheck(
+          serviceName,
+          healthCheck
+        );
         const duration = performance.now() - startTime;
-        
+
         const healthResult = {
           ...result,
           duration: `${duration.toFixed(2)}ms`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
-        
+
         results.set(serviceName, healthResult);
         this.#lastChecks.set(serviceName, healthResult);
-        
+
         this.#logger.debug('Health check completed', {
           service: serviceName,
           healthy: result.healthy,
-          duration: healthResult.duration
+          duration: healthResult.duration,
         });
       } catch (error) {
         const failureResult = {
           healthy: false,
           error: error.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
         results.set(serviceName, failureResult);
         this.#lastChecks.set(serviceName, failureResult);
-        
+
         this.#logger.warn('Health check failed', {
           service: serviceName,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -90,11 +93,13 @@ export class ClothingHealthMonitor {
    * @returns {object} Health status
    */
   getServiceHealth(serviceName) {
-    return this.#lastChecks.get(serviceName) || { 
-      healthy: false, 
-      error: 'No health check performed',
-      timestamp: new Date().toISOString()
-    };
+    return (
+      this.#lastChecks.get(serviceName) || {
+        healthy: false,
+        error: 'No health check performed',
+        timestamp: new Date().toISOString(),
+      }
+    );
   }
 
   /**
@@ -104,25 +109,25 @@ export class ClothingHealthMonitor {
    */
   getOverallHealth() {
     const allChecks = Array.from(this.#lastChecks.values());
-    const healthyServices = allChecks.filter(check => check.healthy);
-    const unhealthyServices = allChecks.filter(check => !check.healthy);
-    
+    const healthyServices = allChecks.filter((check) => check.healthy);
+    const unhealthyServices = allChecks.filter((check) => !check.healthy);
+
     return {
-      healthy: healthyServices.length === allChecks.length && allChecks.length > 0,
+      healthy:
+        healthyServices.length === allChecks.length && allChecks.length > 0,
       totalServices: allChecks.length,
       healthyServices: healthyServices.length,
       unhealthyServices: unhealthyServices.length,
       services: {
-        healthy: healthyServices.map((_, index) => 
-          Array.from(this.#lastChecks.keys())[index]
+        healthy: healthyServices.map(
+          (_, index) => Array.from(this.#lastChecks.keys())[index]
         ),
-        unhealthy: unhealthyServices.map((_, index) => 
-          Array.from(this.#lastChecks.keys())[
-            healthyServices.length + index
-          ]
-        )
+        unhealthy: unhealthyServices.map(
+          (_, index) =>
+            Array.from(this.#lastChecks.keys())[healthyServices.length + index]
+        ),
       },
-      lastCheck: new Date().toISOString()
+      lastCheck: new Date().toISOString(),
     };
   }
 
@@ -140,7 +145,7 @@ export class ClothingHealthMonitor {
     }, this.#checkInterval);
 
     this.#logger.info('Health monitoring started', {
-      interval: `${this.#checkInterval}ms`
+      interval: `${this.#checkInterval}ms`,
     });
 
     // Perform initial check
@@ -176,7 +181,7 @@ export class ClothingHealthMonitor {
       services,
       monitoringActive: this.#intervalId !== null,
       checkInterval: this.#checkInterval,
-      reportGeneratedAt: new Date().toISOString()
+      reportGeneratedAt: new Date().toISOString(),
     };
   }
 
@@ -210,20 +215,21 @@ export class ClothingHealthMonitor {
         try {
           // Try a simple operation
           const testEntityId = 'health_check_entity_' + Date.now();
-          const result = this.#services.clothingAccessibilityService.getAccessibleItems(
-            testEntityId, 
-            { mode: 'topmost' }
-          );
-          
-          return { 
-            healthy: true, 
+          const result =
+            this.#services.clothingAccessibilityService.getAccessibleItems(
+              testEntityId,
+              { mode: 'topmost' }
+            );
+
+          return {
+            healthy: true,
             response: 'OK',
-            testOperation: 'getAccessibleItems'
+            testOperation: 'getAccessibleItems',
           };
         } catch (error) {
           return {
             healthy: false,
-            error: error.message
+            error: error.message,
           };
         }
       });
@@ -234,18 +240,18 @@ export class ClothingHealthMonitor {
       this.#healthChecks.set('ClothingPriorityManager', async () => {
         try {
           const priority = this.#services.priorityManager.calculatePriority(
-            'base', 
+            'base',
             'removal'
           );
-          return { 
+          return {
             healthy: typeof priority === 'number',
             response: 'OK',
-            samplePriority: priority
+            samplePriority: priority,
           };
         } catch (error) {
           return {
             healthy: false,
-            error: error.message
+            error: error.message,
           };
         }
       });
@@ -256,19 +262,20 @@ export class ClothingHealthMonitor {
       this.#healthChecks.set('CoverageAnalyzer', async () => {
         try {
           const testEntityId = 'health_check_entity_' + Date.now();
-          const analysis = this.#services.coverageAnalyzer.analyzeCoverageBlocking(
-            {}, 
-            testEntityId
-          );
-          return { 
+          const analysis =
+            this.#services.coverageAnalyzer.analyzeCoverageBlocking(
+              {},
+              testEntityId
+            );
+          return {
             healthy: true,
             response: 'OK',
-            testOperation: 'analyzeCoverageBlocking'
+            testOperation: 'analyzeCoverageBlocking',
           };
         } catch (error) {
           return {
             healthy: false,
-            error: error.message
+            error: error.message,
           };
         }
       });
@@ -279,15 +286,18 @@ export class ClothingHealthMonitor {
       this.#healthChecks.set('ClothingErrorHandler', async () => {
         try {
           const metrics = this.#services.errorHandler.getErrorMetrics();
-          return { 
+          return {
             healthy: true,
             response: 'OK',
-            errorCount: Object.values(metrics).reduce((sum, m) => sum + (m.count || 0), 0)
+            errorCount: Object.values(metrics).reduce(
+              (sum, m) => sum + (m.count || 0),
+              0
+            ),
           };
         } catch (error) {
           return {
             healthy: false,
-            error: error.message
+            error: error.message,
           };
         }
       });
@@ -305,7 +315,7 @@ export class ClothingHealthMonitor {
     const result = await healthCheck();
     return {
       serviceName,
-      ...result
+      ...result,
     };
   }
 

@@ -8,16 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "leather",
-      "properties": [
-        "waterproof"
-      ],
+      "properties": ["waterproof"],
       "durability": 70
     },
     "core:name": {
@@ -33,9 +28,7 @@
       "texture": "glossy"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

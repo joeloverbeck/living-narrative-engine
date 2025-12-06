@@ -114,7 +114,8 @@ describe('persistThoughts integration', () => {
       actor.components[SHORT_TERM_MEMORY_COMPONENT_ID]
     );
 
-    const updatedThoughts = actor.components[SHORT_TERM_MEMORY_COMPONENT_ID].thoughts;
+    const updatedThoughts =
+      actor.components[SHORT_TERM_MEMORY_COMPONENT_ID].thoughts;
     expect(updatedThoughts).toHaveLength(2);
     expect(updatedThoughts[0]).toEqual(initialThoughts[1]);
     expect(updatedThoughts[1]).toEqual({

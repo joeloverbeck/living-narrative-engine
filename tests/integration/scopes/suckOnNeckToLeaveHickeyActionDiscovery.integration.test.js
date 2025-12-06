@@ -32,11 +32,15 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
+import {
+  createMultiTargetResolutionStage,
+  createActionPipelineOrchestrator,
+} from '../../common/actions/multiTargetStageTestUtilities.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 
 // Import the new action
@@ -144,7 +148,6 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     const actionIndex = new ActionIndex({ logger, entityManager });
     actionIndex.buildIndex(gameDataRepository.getAllActionDefinitions());
 
-    
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -154,7 +157,7 @@ describe('Suck On Neck To Leave Hickey Action Discovery Tests', () => {
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex,
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,

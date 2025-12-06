@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 import {
   getAppConfigService,
@@ -155,7 +162,9 @@ describe('AppConfigService string environment logging integration', () => {
       'https://alpha.example',
       'https://beta.example',
     ]);
-    expect(appConfig.getProxyProjectRootPathForApiKeyFiles()).toBe('/project/root');
+    expect(appConfig.getProxyProjectRootPathForApiKeyFiles()).toBe(
+      '/project/root'
+    );
 
     const debugMessages = logger.debug.mock.calls
       .map(([message]) => message)

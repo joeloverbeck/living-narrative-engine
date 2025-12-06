@@ -137,12 +137,13 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         if (typeof handler !== 'function') {
           return;
         }
-        const targetMap = DEFAULT_INITIALIZATION_SEQUENCE.includes(phase) ||
+        const targetMap =
+          DEFAULT_INITIALIZATION_SEQUENCE.includes(phase) ||
           phase === LIFECYCLE_PHASES.INIT_ERROR
-          ? initializationHooks
-          : DEFAULT_DESTRUCTION_SEQUENCE.includes(phase)
-            ? destructionHooks
-            : null;
+            ? initializationHooks
+            : DEFAULT_DESTRUCTION_SEQUENCE.includes(phase)
+              ? destructionHooks
+              : null;
 
         if (!targetMap) {
           return;
@@ -253,9 +254,7 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
         if (byId) {
           return byId;
         }
-        const kebabId = elementId
-          .replace(/([A-Z])/g, '-$1')
-          .toLowerCase();
+        const kebabId = elementId.replace(/([A-Z])/g, '-$1').toLowerCase();
         return documentRef.getElementById(kebabId);
       };
 
@@ -694,7 +693,9 @@ export class BaseCharacterBuilderControllerTestBase extends BaseTestBed {
    */
   buildCharacterConcept(overrides = {}) {
     this._conceptCounter += 1;
-    const timestamp = new Date(Date.now() - this._conceptCounter * 1000).toISOString();
+    const timestamp = new Date(
+      Date.now() - this._conceptCounter * 1000
+    ).toISOString();
 
     const defaults = {
       id: `concept-${this._conceptCounter}`,

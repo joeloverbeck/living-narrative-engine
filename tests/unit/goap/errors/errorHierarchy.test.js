@@ -107,10 +107,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.code).toMatch(/^GOAP_.*_ERROR$/);
       });
     });
@@ -121,14 +121,17 @@ describe('GOAP Error Hierarchy Integration', () => {
       const errors = [
         new GoapError('Test', 'GOAP_ERROR', { field: 'value' }),
         new ContextAssemblyError('Test', { field: 'value' }),
-        new ParameterResolutionError({ reference: 'test', contextType: 'planning' }),
+        new ParameterResolutionError({
+          reference: 'test',
+          contextType: 'planning',
+        }),
         new RefinementError('Test', { field: 'value' }),
         new PlanningError('Test', { field: 'value' }),
         new MethodSelectionError('Test', { field: 'value' }),
-        new StepExecutionError('Test', { field: 'value' })
+        new StepExecutionError('Test', { field: 'value' }),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         const json = error.toJSON();
 
         expect(json).toHaveProperty('name');
@@ -151,10 +154,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(() => JSON.stringify(error.toJSON())).not.toThrow();
       });
     });
@@ -164,7 +167,9 @@ describe('GOAP Error Hierarchy Integration', () => {
     it('should have consistent severity levels', () => {
       expect(new GoapError('Test', 'TEST').severity).toBe('error');
       expect(new ContextAssemblyError('Test').severity).toBe('error');
-      expect(new ParameterResolutionError({ reference: 'test' }).severity).toBe('error');
+      expect(new ParameterResolutionError({ reference: 'test' }).severity).toBe(
+        'error'
+      );
       expect(new RefinementError('Test').severity).toBe('error');
       expect(new PlanningError('Test').severity).toBe('warning'); // Special case
       expect(new MethodSelectionError('Test').severity).toBe('error');
@@ -187,10 +192,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.isRecoverable()).toBe(true);
         expect(error.recoverable).toBe(true);
       });
@@ -207,10 +212,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test', context),
         new PlanningError('Test', context),
         new MethodSelectionError('Test', context),
-        new StepExecutionError('Test', context)
+        new StepExecutionError('Test', context),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.context.actorId).toBe('actor-123');
         expect(error.context.taskId).toBe('test-task');
       });
@@ -235,12 +240,14 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.timestamp).toBeDefined();
-        expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        expect(error.timestamp).toMatch(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+        );
       });
     });
 
@@ -252,10 +259,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.correlationId).toBeDefined();
         expect(typeof error.correlationId).toBe('string');
         expect(error.correlationId.length).toBeGreaterThan(0);
@@ -270,10 +277,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test', {}, { correlationId }),
         new PlanningError('Test', {}, { correlationId }),
         new MethodSelectionError('Test', {}, { correlationId }),
-        new StepExecutionError('Test', {}, { correlationId })
+        new StepExecutionError('Test', {}, { correlationId }),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.correlationId).toBe(correlationId);
       });
     });
@@ -288,10 +295,10 @@ describe('GOAP Error Hierarchy Integration', () => {
         new RefinementError('Test'),
         new PlanningError('Test'),
         new MethodSelectionError('Test'),
-        new StepExecutionError('Test')
+        new StepExecutionError('Test'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         expect(error.stack).toBeDefined();
         expect(typeof error.stack).toBe('string');
         expect(error.stack.length).toBeGreaterThan(0);
@@ -313,7 +320,7 @@ describe('GOAP Error Hierarchy Integration', () => {
         failedStep: 'position',
         availableKeys: ['name', 'id'],
         contextType: 'refinement',
-        stepIndex: 2
+        stepIndex: 2,
       });
 
       expect(error.reference).toBe('actor.position');
@@ -333,7 +340,7 @@ describe('GOAP Error Hierarchy Integration', () => {
         failedStep: 'x',
         availableKeys: ['y', 'z'],
         contextType: 'planning',
-        stepIndex: 0
+        stepIndex: 0,
       });
 
       expect(error.message).toContain('actor.position.x');

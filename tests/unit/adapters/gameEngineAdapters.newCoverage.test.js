@@ -28,7 +28,9 @@ describe('GameEngine adapter coverage boost', () => {
 
   describe('GameEngineSaveAdapter', () => {
     it('forwards save parameters in order', async () => {
-      const engine = { triggerManualSave: jest.fn().mockResolvedValue({ ok: true }) };
+      const engine = {
+        triggerManualSave: jest.fn().mockResolvedValue({ ok: true }),
+      };
       const adapter = new GameEngineSaveAdapter(engine);
 
       expect(adapter).toBeInstanceOf(ISaveService);

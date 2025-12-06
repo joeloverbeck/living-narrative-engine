@@ -4,7 +4,7 @@
   "description": "Solemn mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_solemn_mood_on_instrument"
     ]
   }

@@ -6,7 +6,14 @@
 
 process.env.NODE_ENV = 'test';
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
@@ -129,7 +136,9 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       // Assert: Selector should only have placeholder option
       expect(locationSelect.options.length).toBe(1);
       expect(locationSelect.options[0].value).toBe('');
-      expect(locationSelect.options[0].textContent).toBe('-- Select Location --');
+      expect(locationSelect.options[0].textContent).toBe(
+        '-- Select Location --'
+      );
     });
 
     it('should disable send button when no location selected', async () => {
@@ -341,5 +350,4 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       // The unit tests cover this behavior
     });
   });
-
 });

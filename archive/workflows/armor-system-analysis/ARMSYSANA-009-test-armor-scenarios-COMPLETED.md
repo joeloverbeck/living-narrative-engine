@@ -18,28 +18,28 @@ Successfully created automated integration tests for armor layer scenarios, vali
 
 ### Test Coverage Summary
 
-| # | Test | Archetype | Result |
-|---|------|-----------|--------|
-| 1 | Armor visible over base (cuirass > shirt) | Knight | ✅ PASS |
-| 2 | Armor blocks base shirt removal | Knight | ✅ PASS |
-| 3 | Gauntlets over leather gloves (armor > accessories) | Knight | ✅ PASS |
-| 4 | Robes hide chainmail (outer > armor) | Mage | ✅ PASS |
-| 5 | Chainmail covers torso + arms | Mage | ✅ PASS |
-| 6 | Bracers visible when cloak covers torso only | Rogue | ✅ PASS |
-| 7 | Mixed layers on different slots | Ranger | ✅ PASS |
-| 8 | Hood over helmet (outer > armor) edge case | Knight | ✅ PASS |
+| #   | Test                                                | Archetype | Result  |
+| --- | --------------------------------------------------- | --------- | ------- |
+| 1   | Armor visible over base (cuirass > shirt)           | Knight    | ✅ PASS |
+| 2   | Armor blocks base shirt removal                     | Knight    | ✅ PASS |
+| 3   | Gauntlets over leather gloves (armor > accessories) | Knight    | ✅ PASS |
+| 4   | Robes hide chainmail (outer > armor)                | Mage      | ✅ PASS |
+| 5   | Chainmail covers torso + arms                       | Mage      | ✅ PASS |
+| 6   | Bracers visible when cloak covers torso only        | Rogue     | ✅ PASS |
+| 7   | Mixed layers on different slots                     | Ranger    | ✅ PASS |
+| 8   | Hood over helmet (outer > armor) edge case          | Knight    | ✅ PASS |
 
 ## Ticket Discrepancies Corrected
 
 The original ticket contained several assumptions that did not match the actual codebase:
 
-| Original Assumption | Actual State | Correction Applied |
-|---------------------|--------------|-------------------|
-| Test files in `tests/manual/armor/` | User requested NO manual tests | Created `tests/integration/clothing/armorScenarios.integration.test.js` |
-| Helper functions: `createTestWorld()`, `createCharacter()`, etc. | Don't exist in codebase | Used `ModTestFixture` pattern from existing tests |
-| Armor entities need creation | Already exist in `data/mods/armor/entities/definitions/` | Referenced existing armor entity patterns |
-| 5 separate manual test files per archetype | Single integrated test file preferred | Combined all archetypes into one test file |
-| Manual Testing Procedure section | Unnecessary for automated tests | Removed, replaced with automated assertions |
+| Original Assumption                                              | Actual State                                             | Correction Applied                                                      |
+| ---------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Test files in `tests/manual/armor/`                              | User requested NO manual tests                           | Created `tests/integration/clothing/armorScenarios.integration.test.js` |
+| Helper functions: `createTestWorld()`, `createCharacter()`, etc. | Don't exist in codebase                                  | Used `ModTestFixture` pattern from existing tests                       |
+| Armor entities need creation                                     | Already exist in `data/mods/armor/entities/definitions/` | Referenced existing armor entity patterns                               |
+| 5 separate manual test files per archetype                       | Single integrated test file preferred                    | Combined all archetypes into one test file                              |
+| Manual Testing Procedure section                                 | Unnecessary for automated tests                          | Removed, replaced with automated assertions                             |
 
 ## Test Implementation Details
 
@@ -61,7 +61,9 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
     );
   });
 
-  afterEach(() => { fixture.cleanup(); });
+  afterEach(() => {
+    fixture.cleanup();
+  });
 
   // Helper to get topmost items via scope resolution
   const getTopmostItems = (actorId) => {
@@ -119,10 +121,10 @@ Tests:       285 passed, 285 total
 
 ## Files Modified/Created
 
-| File | Action |
-|------|--------|
-| `tests/integration/clothing/armorScenarios.integration.test.js` | CREATE |
-| `workflows/ARMSYSANA-009-test-armor-scenarios.md` | ARCHIVED (replaced by this file) |
+| File                                                            | Action                           |
+| --------------------------------------------------------------- | -------------------------------- |
+| `tests/integration/clothing/armorScenarios.integration.test.js` | CREATE                           |
+| `workflows/ARMSYSANA-009-test-armor-scenarios.md`               | ARCHIVED (replaced by this file) |
 
 ## Related Tickets
 
@@ -133,6 +135,7 @@ Tests:       285 passed, 285 total
 ## Reference - Original Test Scenarios
 
 The original ticket proposed manual test files for 5 character archetypes:
+
 - Fully Armored Knight (Sir Galahad)
 - Rogue with Light Armor (Shadowblade)
 - Mage with Armor Under Robes (Mordecai)

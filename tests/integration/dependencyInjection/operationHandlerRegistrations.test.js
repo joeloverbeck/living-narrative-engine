@@ -39,7 +39,9 @@ describe('Operation Handler Registration Integration', () => {
   });
 
   it('should resolve PrepareActionContextHandler', () => {
-    expect(() => container.resolve(tokens.PrepareActionContextHandler)).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.PrepareActionContextHandler)
+    ).not.toThrow();
     const handler = container.resolve(tokens.PrepareActionContextHandler);
     expect(handler).toBeInstanceOf(PrepareActionContextHandler);
   });

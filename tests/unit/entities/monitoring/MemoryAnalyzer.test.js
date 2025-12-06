@@ -56,13 +56,19 @@ describe('MemoryAnalyzer', () => {
 
   describe('analyzeTrend', () => {
     it('throws when samples are missing', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 2 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 2 }
+      );
 
       expect(() => analyzer.analyzeTrend(undefined)).toThrow('Memory samples');
     });
 
     it('reports insufficient data when below minimum sample count', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const samples = buildSamples([100, 110, 120]);
 
       const result = analyzer.analyzeTrend(samples);
@@ -77,7 +83,10 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('treats non-progressing timestamps as a stable trend', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 2 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 2 }
+      );
       const samples = [
         { timestamp: 1_000, heapUsed: 100 * MB },
         { timestamp: 1_000, heapUsed: 120 * MB },
@@ -91,9 +100,14 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('detects growing and shrinking trends with correct slope polarity', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
 
-      const growing = analyzer.analyzeTrend(buildSamples([100, 110, 120, 130, 140]));
+      const growing = analyzer.analyzeTrend(
+        buildSamples([100, 110, 120, 130, 140])
+      );
       expect(growing.trend).toBe('growing');
       expect(growing.slope).toBeGreaterThan(0);
       expect(growing.rSquared).toBeGreaterThan(0.9);
@@ -106,7 +120,10 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('flags volatile series when variance dominates the slope', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const noisySamples = buildSamples([100, 160, 40, 150, 50, 140, 60, 130]);
 
       const result = analyzer.analyzeTrend(noisySamples);
@@ -118,13 +135,21 @@ describe('MemoryAnalyzer', () => {
 
   describe('detectPatterns', () => {
     it('returns an empty array when the dataset is too small', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 6 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 6 }
+      );
 
-      expect(analyzer.detectPatterns(buildSamples([100, 110, 120]))).toEqual([]);
+      expect(analyzer.detectPatterns(buildSamples([100, 110, 120]))).toEqual(
+        []
+      );
     });
 
     it('skips pattern detection for stable memory usage', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const patterns = analyzer.detectPatterns(
         buildSamples([120, 119, 121, 120, 119, 121])
       );
@@ -133,24 +158,33 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('detects consistent linear growth', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const patterns = analyzer.detectPatterns(
         buildSamples([100, 110, 120, 130, 140, 150])
       );
 
       expect(patterns).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ type: 'linear', characteristics: expect.any(Object) }),
+          expect.objectContaining({
+            type: 'linear',
+            characteristics: expect.any(Object),
+          }),
         ])
       );
     });
 
     it('detects exponential growth after analysing the log-series', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const originalAnalyze = analyzer.analyzeTrend.bind(analyzer);
 
-      jest.spyOn(analyzer, 'analyzeTrend').mockImplementation(samples => {
-        if (samples.every(sample => sample.heapUsed < 1_000)) {
+      jest.spyOn(analyzer, 'analyzeTrend').mockImplementation((samples) => {
+        if (samples.every((sample) => sample.heapUsed < 1_000)) {
           return {
             trend: 'growing',
             slope: 12,
@@ -170,7 +204,9 @@ describe('MemoryAnalyzer', () => {
         expect.arrayContaining([
           expect.objectContaining({
             type: 'exponential',
-            characteristics: expect.objectContaining({ doublingTime: expect.any(Number) }),
+            characteristics: expect.objectContaining({
+              doublingTime: expect.any(Number),
+            }),
           }),
         ])
       );
@@ -187,20 +223,29 @@ describe('MemoryAnalyzer', () => {
 
       expect(patterns).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ type: 'step', characteristics: expect.any(Object) }),
+          expect.objectContaining({
+            type: 'step',
+            characteristics: expect.any(Object),
+          }),
         ])
       );
     });
 
     it('detects sawtooth patterns with regular peaks and valleys', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const patterns = analyzer.detectPatterns(
         buildSamples([100, 150, 100, 150, 100, 150, 100, 150, 100])
       );
 
       expect(patterns).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ type: 'sawtooth', characteristics: expect.any(Object) }),
+          expect.objectContaining({
+            type: 'sawtooth',
+            characteristics: expect.any(Object),
+          }),
         ])
       );
     });
@@ -208,7 +253,10 @@ describe('MemoryAnalyzer', () => {
 
   describe('generateReport', () => {
     it('returns guidance requesting more samples when insufficient data is provided', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 5 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 5 }
+      );
       const report = analyzer.generateReport(buildSamples([100, 110]));
 
       expect(report).toEqual({
@@ -230,7 +278,10 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('produces a comprehensive report with recommendations and a capped risk score', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 3 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 3 }
+      );
       const trendSummary = {
         trend: 'growing',
         slope: 12,
@@ -239,16 +290,33 @@ describe('MemoryAnalyzer', () => {
         confidence: 0.9,
       };
       const detectedPatterns = [
-        { type: 'linear', severity: 3, description: 'linear', characteristics: {} },
-        { type: 'exponential', severity: 5, description: 'exp', characteristics: {} },
+        {
+          type: 'linear',
+          severity: 3,
+          description: 'linear',
+          characteristics: {},
+        },
+        {
+          type: 'exponential',
+          severity: 5,
+          description: 'exp',
+          characteristics: {},
+        },
         { type: 'step', severity: 4, description: 'step', characteristics: {} },
-        { type: 'sawtooth', severity: 2, description: 'saw', characteristics: {} },
+        {
+          type: 'sawtooth',
+          severity: 2,
+          description: 'saw',
+          characteristics: {},
+        },
       ];
 
       jest.spyOn(analyzer, 'analyzeTrend').mockReturnValue(trendSummary);
       jest.spyOn(analyzer, 'detectPatterns').mockReturnValue(detectedPatterns);
 
-      const report = analyzer.generateReport(buildSamples([100, 150, 200, 230, 250]));
+      const report = analyzer.generateReport(
+        buildSamples([100, 150, 200, 230, 250])
+      );
 
       expect(report.trend).toBe(trendSummary);
       expect(report.patterns).toBe(detectedPatterns);
@@ -276,7 +344,10 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('includes monitoring guidance for moderate growth without escalation', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 3 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 3 }
+      );
       jest.spyOn(analyzer, 'analyzeTrend').mockReturnValue({
         trend: 'growing',
         slope: 7,
@@ -307,7 +378,10 @@ describe('MemoryAnalyzer', () => {
     });
 
     it('flags minor growth and volatile trends with stable recommendations', () => {
-      const analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 3 });
+      const analyzer = new MemoryAnalyzer(
+        { logger },
+        { minSamplesForAnalysis: 3 }
+      );
       const trendSpy = jest
         .spyOn(analyzer, 'analyzeTrend')
         .mockReturnValueOnce({
@@ -324,7 +398,10 @@ describe('MemoryAnalyzer', () => {
           volatility: 40,
           confidence: 0.2,
         });
-      jest.spyOn(analyzer, 'detectPatterns').mockReturnValueOnce([]).mockReturnValueOnce([]);
+      jest
+        .spyOn(analyzer, 'detectPatterns')
+        .mockReturnValueOnce([])
+        .mockReturnValueOnce([]);
 
       const minorGrowthReport = analyzer.generateReport(
         buildSamples([100, 110, 115, 118], 600_000)

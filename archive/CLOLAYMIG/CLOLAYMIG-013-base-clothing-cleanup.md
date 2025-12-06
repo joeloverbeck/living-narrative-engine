@@ -92,6 +92,7 @@ zimmermann_powder_pink_linen_midi_dress.entity.json
 Remove these 68 entries from the `entities.definitions` array.
 
 **Entity count after this ticket:**
+
 - If all previous cleanups complete: 125 - 14 - 10 - 33 - 68 = **0 entities** (clothing mod becomes framework-only)
 - This is the final cleanup - clothing mod retains only components, actions, rules, events, conditions, and scopes
 
@@ -115,10 +116,10 @@ Remove these 68 entries from the `entities.definitions` array.
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/clothing/mod-manifest.json` | Remove 68 entries from definitions |
-| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 68 files |
+| File                                                    | Action                             |
+| ------------------------------------------------------- | ---------------------------------- |
+| `data/mods/clothing/mod-manifest.json`                  | Remove 68 entries from definitions |
+| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 68 files                    |
 
 ## Acceptance Criteria
 
@@ -162,6 +163,7 @@ grep -r '"id": "clothing:charcoal_wool_tshirt"' data/mods/
 ## Post-Completion State
 
 After this ticket:
+
 - **Base-clothing migration is complete**
 - **All entity migrations are complete for public mods**
 - `clothing` mod: 0 entities (framework mod only)
@@ -195,15 +197,18 @@ git checkout data/mods/clothing/mod-manifest.json
 ### What Was Actually Changed vs Originally Planned
 
 **Planned Changes (All Completed)**:
+
 1. ✅ Deleted all 68 base-clothing entity files from `data/mods/clothing/entities/definitions/`
 2. ✅ Updated `data/mods/clothing/mod-manifest.json` to empty the `entities.definitions` array
 3. ✅ Clothing mod now has 0 entities (framework-only mod)
 
 **Additional Changes Made**:
+
 1. ✅ Updated ticket to document "Known Limitation: Private Mod References" section
 2. ✅ Clarified that private mods (`p_erotica*`) require separate migration work
 
 **Test Files Updated** (required to reference new entity locations):
+
 1. `tests/unit/clothing/entities/jon_urena_clothing_entities.test.js`
    - Changed path from `clothing` to `base-clothing`
    - Changed ID pattern from `^clothing:` to `^base-clothing:`
@@ -243,6 +248,7 @@ npm run test:integration tests/integration/clothing/  # 908 tests passed
 ### Migration Complete
 
 The CLOLAYMIG (Clothing Layer Migration) project is now complete for public mods:
+
 - `accessories` mod: 14 entities
 - `outer-clothing` mod: 10 entities
 - `underwear` mod: 33 entities

@@ -14,10 +14,10 @@ Update all recipe files that reference outer-clothing entities to use the new `o
 
 ### Recipe Files to Modify
 
-| Recipe File | Entity References to Update |
-|------------|----------------------------|
+| Recipe File                                                | Entity References to Update     |
+| ---------------------------------------------------------- | ------------------------------- |
 | `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | `battle_scarred_leather_jacket` |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | `leather_work_apron` |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`  | `leather_work_apron`            |
 
 **Note**: `vespera_nightwhisper`, `dylan_crace`, and `len_amezua` recipes do NOT reference any outer-clothing items.
 
@@ -66,11 +66,11 @@ Add to `dependencies` array:
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
+| File                                                       | Action             |
+| ---------------------------------------------------------- | ------------------ |
 | `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | Update 1 reference |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | Update 1 reference |
-| `data/mods/fantasy/mod-manifest.json` | Add dependency |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`  | Update 1 reference |
+| `data/mods/fantasy/mod-manifest.json`                      | Add dependency     |
 
 **Total: 2 references across 2 recipe files, 1 manifest update**
 

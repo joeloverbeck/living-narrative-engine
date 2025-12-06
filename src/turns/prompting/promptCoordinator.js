@@ -85,7 +85,10 @@ class PromptCoordinator extends IPromptCoordinator {
    * @param {{ index: number, descriptor?: string|null }} [options.suggestedAction]
    * @returns {Promise<PlayerPromptResolution>}
    */
-  async prompt(actor, { indexedComposites, cancellationSignal, suggestedAction } = {}) {
+  async prompt(
+    actor,
+    { indexedComposites, cancellationSignal, suggestedAction } = {}
+  ) {
     if (!Array.isArray(indexedComposites) || indexedComposites.length === 0) {
       throw new Error(
         'PromptCoordinator.prompt: indexedComposites array is required and cannot be empty.'

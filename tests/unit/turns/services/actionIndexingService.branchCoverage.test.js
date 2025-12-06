@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 
-const MODULE_UNDER_TEST = '../../../../src/turns/services/actionIndexingService.js';
+const MODULE_UNDER_TEST =
+  '../../../../src/turns/services/actionIndexingService.js';
 const CORE_CONSTANTS_PATH = '../../../../src/constants/core.js';
 
 describe('ActionIndexingService branch coverage enhancements', () => {
@@ -58,7 +59,7 @@ describe('ActionIndexingService branch coverage enhancements', () => {
       ]);
 
       const duplicateLog = logger.info.mock.calls.find(([message]) =>
-        String(message).includes('duplicate actions'),
+        String(message).includes('duplicate actions')
       );
 
       expect(duplicateLog).toBeDefined();
@@ -73,7 +74,7 @@ describe('ActionIndexingService branch coverage enhancements', () => {
       () => ({
         MAX_AVAILABLE_ACTIONS_PER_TURN: 2,
       }),
-      { virtual: true },
+      { virtual: true }
     );
 
     await jest.isolateModulesAsync(async () => {
@@ -93,7 +94,7 @@ describe('ActionIndexingService branch coverage enhancements', () => {
       expect(composites).toHaveLength(2);
       expect(composites.map((c) => c.actionId)).toEqual(['dup', 'visual']);
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('indexed 2 actions for actor-truncation'),
+        expect.stringContaining('indexed 2 actions for actor-truncation')
       );
 
       const resolved = service.resolve('actor-truncation', 1);

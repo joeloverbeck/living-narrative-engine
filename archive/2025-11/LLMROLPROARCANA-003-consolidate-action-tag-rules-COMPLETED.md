@@ -11,12 +11,14 @@
 Action tag rules are currently repeated across 3+ locations in the prompt, creating redundancy and potential conflicts:
 
 **Current Repetition:**
+
 1. `portrayal_guidelines` section (lines 1-15)
 2. `final_instructions` section (lines 1-50)
 3. Implicit in notes section formatting
 4. DIALOGUE FORMATTING sub-section
 
 This repetition:
+
 - Wastes ~300-500 tokens
 - Creates potential for instruction conflicts
 - Suggests historical confusion (progressive emphasis escalation)
@@ -24,6 +26,7 @@ This repetition:
 
 **Evidence of Complexity:**
 The rule has 5+ sub-rules scattered across sections:
+
 1. Only visible actions in asterisks
 2. No internal thoughts in asterisks
 3. Third-person present tense
@@ -37,17 +40,21 @@ Consolidate all action tag rules into a single, authoritative section within `sy
 ## CORRECTED ASSUMPTIONS (2025-11-24)
 
 After code analysis, the actual architecture differs from initial assumptions:
+
 - **Template**: Simple string template with placeholders (not class-based)
 - **Content Source**: `data/prompts/corePromptText.json` contains text sections
 - **Assembly**: `PromptDataFormatter` formats and substitutes content
 - **Current Structure**: Action tag rules are primarily in `characterPortrayalGuidelinesTemplate`
 
 ### Actual Repetition Found:
+
 1. **Primary**: `characterPortrayalGuidelinesTemplate` - Action Tag Rules subsection + DIALOGUE FORMATTING subsection
 2. **Secondary**: `finalLlmInstructionText` - "CRITICAL DISTINCTION - THOUGHTS vs SPEECH" mentions asterisks but focuses on thought/speech distinction (not pure duplication, complimentary content)
 
 ### Corrected Scope:
+
 The consolidation is simpler than originally assumed. We need to:
+
 - Extract action tag rules from `characterPortrayalGuidelinesTemplate`
 - Create new dedicated field in `corePromptText.json`
 - Update template to place this content in `system_constraints`
@@ -135,7 +142,7 @@ export const CHARACTER_PROMPT_TEMPLATE = `<system_constraints>
 {actionTagRulesContent}
 {finalInstructionsContent}
 </system_constraints>
-...`
+...`;
 
 // In promptDataFormatter.js formatPromptData(), add:
 formattedData.actionTagRulesContent = promptData.actionTagRulesContent || '';
@@ -144,6 +151,7 @@ formattedData.actionTagRulesContent = promptData.actionTagRulesContent || '';
 ### Content Migration
 
 **Remove from `portrayal_guidelines`:**
+
 ```
 Action Tag Rules (CRITICAL):
 - Wrap only visible, externally observable actions in single asterisks
@@ -153,6 +161,7 @@ Action Tag Rules (CRITICAL):
 ```
 
 **Remove from `final_instructions`:**
+
 ```
 CRITICAL DISTINCTION - THOUGHTS vs SPEECH vs ACTIONS:
 *asterisks*: Only VISIBLE ACTIONS...
@@ -164,37 +173,43 @@ CRITICAL DISTINCTION - THOUGHTS vs SPEECH vs ACTIONS:
 ## Testing Requirements
 
 ### Unit Tests
+
 - [ ] Test `buildActionTagRules()` returns correct content
 - [ ] Test `buildOutputFormat()` includes action tags only once
 - [ ] Test other sections (portrayal, final_instructions) don't contain action tag rules
 
 ### Integration Tests
+
 - [ ] Test full prompt assembly contains action tag section exactly once
 - [ ] Test action tag section appears in first 1,000 tokens
 - [ ] Verify section appears before character persona
 
 ### E2E Tests
+
 - [ ] Test LLM follows action tag rules correctly
 - [ ] Verify action tag compliance rate (target: >95%)
 - [ ] Compare compliance: before (scattered) vs after (consolidated)
 
 ### Validation Script
+
 ```javascript
 // Test that action tag rules appear exactly once in prompt
 function validateActionTagConsolidation(assembledPrompt) {
   const actionTagMarkers = [
     '*asterisks*',
     'visible physical actions',
-    'DIALOGUE FORMATTING'
+    'DIALOGUE FORMATTING',
   ];
 
-  const occurrences = actionTagMarkers.map(marker =>
-    (assembledPrompt.match(new RegExp(marker, 'g')) || []).length
+  const occurrences = actionTagMarkers.map(
+    (marker) => (assembledPrompt.match(new RegExp(marker, 'g')) || []).length
   );
 
   // Each marker should appear exactly once
-  assert(occurrences.every(count => count === 1),
-    'Action tag rules must appear exactly once in prompt');
+  assert(
+    occurrences.every((count) => count === 1),
+    'Action tag rules must appear exactly once in prompt'
+  );
 }
 ```
 
@@ -208,17 +223,18 @@ function validateActionTagConsolidation(assembledPrompt) {
 
 ## Success Metrics
 
-| Metric | Baseline | Target | Measurement Method |
-|--------|----------|--------|-------------------|
-| Action tag rule occurrences | 3+ locations | 1 location | Grep/search in prompt |
-| Action tag token count | ~500 tokens | ~150 tokens | Section measurement |
-| Token reduction | 0 | ~300 tokens | Before/after diff |
-| Output format compliance | Unknown | >95% | Automated validation |
-| Rule clarity score | Unknown | >8/10 | Human evaluation |
+| Metric                      | Baseline     | Target      | Measurement Method    |
+| --------------------------- | ------------ | ----------- | --------------------- |
+| Action tag rule occurrences | 3+ locations | 1 location  | Grep/search in prompt |
+| Action tag token count      | ~500 tokens  | ~150 tokens | Section measurement   |
+| Token reduction             | 0            | ~300 tokens | Before/after diff     |
+| Output format compliance    | Unknown      | >95%        | Automated validation  |
+| Rule clarity score          | Unknown      | >8/10       | Human evaluation      |
 
 ## Rollback Plan
 
 If LLM compliance degrades:
+
 1. Identify which specific examples/rules are missing
 2. Enhance single consolidated section (don't re-duplicate)
 3. Add clarifying examples within single section only
@@ -233,6 +249,7 @@ If LLM compliance degrades:
 ### Why Repetition Occurred (Historical Analysis)
 
 Report section 3.1 suggests progressive emphasis escalation due to frequent historical violations. The rule is actually complex with multiple sub-rules, leading to:
+
 1. Initial statement in guidelines
 2. Reinforcement in final instructions (after violations observed)
 3. Additional emphasis (CRITICAL, bold, caps) after more violations
@@ -256,6 +273,7 @@ Report section 3.1 suggests progressive emphasis escalation due to frequent hist
 Successfully consolidated action tag rules into a single, authoritative section in the prompt system.
 
 ### Files Changed:
+
 1. **data/prompts/corePromptText.json** - Added `actionTagRulesContent` field and removed action tag rules from `characterPortrayalGuidelinesTemplate`
 2. **src/prompting/templates/characterPromptTemplate.js** - Added `{actionTagRulesContent}` placeholder in `<system_constraints>` section
 3. **src/prompting/promptDataFormatter.js** - Added passthrough for `actionTagRulesContent` field
@@ -265,6 +283,7 @@ Successfully consolidated action tag rules into a single, authoritative section 
 ### Outcome
 
 **What was actually changed vs originally planned:**
+
 - ✅ Successfully extracted and consolidated action tag rules
 - ✅ Created dedicated `actionTagRulesContent` field with clear ✅/❌ examples
 - ✅ Positioned in `<system_constraints>` for early attention
@@ -275,6 +294,7 @@ Successfully consolidated action tag rules into a single, authoritative section 
 **Token Reduction:** Estimated 200-300 tokens saved by removing redundancy from `characterPortrayalGuidelinesTemplate` while maintaining all critical examples and rules in dedicated section.
 
 **Tests Added/Modified:**
+
 - Updated `promptBuilder.test.js` to expect action tag rules in system_constraints
 - Updated `promptBuilder.defaultDependencies.integration.test.js` to match new structure
 - All 65 integration tests passing

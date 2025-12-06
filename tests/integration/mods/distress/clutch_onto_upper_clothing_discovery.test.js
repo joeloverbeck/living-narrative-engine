@@ -3,7 +3,14 @@
  * @description Ensures the pleading clothing clutch action is discoverable only when closeness, facing, and clothing requirements are satisfied.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 // Mock grabbingUtils to ensure prerequisite passes - actor needs at least 1 free grabbing appendage
 jest.mock('../../../../src/utils/grabbingUtils.js', () => ({

@@ -44,20 +44,20 @@ new ActivityDescriptionFacade({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Must implement `info`, `warn`, `error`, `debug` |
-| `entityManager` | `IEntityManager` | Provides `getEntityInstance` for entity access |
-| `anatomyFormattingService` | `AnatomyFormattingService` | Supplies configuration via `getActivityIntegrationConfig()` |
-| `cacheManager` | `IActivityCacheManager` | Cache management with `registerCache`, `get`, `set` |
-| `indexManager` | `IActivityIndexManager` | Index building with `buildIndex` |
-| `metadataCollectionSystem` | `IActivityMetadataCollectionSystem` | Metadata collection with `collectActivityMetadata` |
-| `nlgSystem` | `IActivityNLGSystem` | NLG with `generatePhrase`, `resolvePronoun` |
-| `groupingSystem` | `IActivityGroupingSystem` | Grouping with `groupActivities` |
-| `contextBuildingSystem` | `IActivityContextBuildingSystem` | Context with `buildContext` |
-| `filteringSystem` | `IActivityFilteringSystem` | Filtering with `filterActivities` |
-| `activityIndex` | `ActivityIndex` (optional) | Pre-built index for Phase 3 optimization |
-| `eventBus` | `IEventBus` (optional) | Event dispatching with `dispatch`, `subscribe`, `unsubscribe` |
+| Dependency                 | Interface                           | Description                                                   |
+| -------------------------- | ----------------------------------- | ------------------------------------------------------------- |
+| `logger`                   | `ILogger`                           | Must implement `info`, `warn`, `error`, `debug`               |
+| `entityManager`            | `IEntityManager`                    | Provides `getEntityInstance` for entity access                |
+| `anatomyFormattingService` | `AnatomyFormattingService`          | Supplies configuration via `getActivityIntegrationConfig()`   |
+| `cacheManager`             | `IActivityCacheManager`             | Cache management with `registerCache`, `get`, `set`           |
+| `indexManager`             | `IActivityIndexManager`             | Index building with `buildIndex`                              |
+| `metadataCollectionSystem` | `IActivityMetadataCollectionSystem` | Metadata collection with `collectActivityMetadata`            |
+| `nlgSystem`                | `IActivityNLGSystem`                | NLG with `generatePhrase`, `resolvePronoun`                   |
+| `groupingSystem`           | `IActivityGroupingSystem`           | Grouping with `groupActivities`                               |
+| `contextBuildingSystem`    | `IActivityContextBuildingSystem`    | Context with `buildContext`                                   |
+| `filteringSystem`          | `IActivityFilteringSystem`          | Filtering with `filterActivities`                             |
+| `activityIndex`            | `ActivityIndex` (optional)          | Pre-built index for Phase 3 optimization                      |
+| `eventBus`                 | `IEventBus` (optional)              | Event dispatching with `dispatch`, `subscribe`, `unsubscribe` |
 
 **Note**: All dependencies are validated via `validateDependency` with required methods checked.
 
@@ -68,6 +68,7 @@ new ActivityDescriptionFacade({
 Main entry point for activity description generation.
 
 **Parameters**:
+
 - `entityId` (string, required) - Entity ID to generate description for
 
 **Returns**: `Promise<string>` - Formatted activity description or empty string
@@ -75,6 +76,7 @@ Main entry point for activity description generation.
 **Throws**: `InvalidArgumentError` if `entityId` is not a non-empty string
 
 **Example**:
+
 ```javascript
 const facade = container.resolve('IActivityDescriptionService');
 const description = await facade.generateActivityDescription('actor_123');
@@ -82,6 +84,7 @@ const description = await facade.generateActivityDescription('actor_123');
 ```
 
 **Workflow**:
+
 1. Validate `entityId`
 2. Check cache via `ActivityCacheManager`
 3. Collect metadata via `ActivityMetadataCollectionSystem`
@@ -99,10 +102,12 @@ const description = await facade.generateActivityDescription('actor_123');
 Invalidate caches for a single entity.
 
 **Parameters**:
+
 - `entityId` (string, required) - Entity ID to invalidate
 - `cacheType` (string, optional) - Cache type to invalidate (default: `'all'`)
 
 **Supported cache types**:
+
 - `'name'` - Clear entity name cache
 - `'gender'` - Clear gender cache
 - `'activity'` - Clear activity index cache
@@ -110,6 +115,7 @@ Invalidate caches for a single entity.
 - `'all'` - Clear all caches for entity
 
 **Example**:
+
 ```javascript
 facade.invalidateCache('actor_123', 'name'); // Invalidate only name cache
 facade.invalidateCache('actor_123'); // Invalidate all caches
@@ -122,9 +128,11 @@ facade.invalidateCache('actor_123'); // Invalidate all caches
 Bulk-invalidate caches for multiple entities.
 
 **Parameters**:
+
 - `entityIds` (string[], required) - Array of entity IDs to invalidate
 
 **Example**:
+
 ```javascript
 facade.invalidateEntities(['actor_1', 'actor_2', 'target_5']);
 ```
@@ -140,6 +148,7 @@ Clears all caches (names, genders, activity indexes, closeness).
 **Warning**: Forces the system to rebuild all context - use sparingly.
 
 **Example**:
+
 ```javascript
 facade.clearAllCaches(); // Reset all caches
 ```
@@ -149,6 +158,7 @@ facade.clearAllCaches(); // Reset all caches
 Clean shutdown of the facade and all services.
 
 **Actions**:
+
 1. Unsubscribes all event handlers
 2. Clears all caches
 3. Cancels scheduled cleanup intervals
@@ -157,6 +167,7 @@ Clean shutdown of the facade and all services.
 **Use case**: Tests, container disposal, service reconfiguration.
 
 **Example**:
+
 ```javascript
 facade.destroy(); // Clean shutdown
 ```
@@ -180,12 +191,13 @@ new ActivityCacheManager({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging with `info`, `warn`, `error`, `debug` |
-| `eventBus` | `IEventBus` (optional) | Event subscription for auto-invalidation |
+| Dependency | Interface              | Description                                   |
+| ---------- | ---------------------- | --------------------------------------------- |
+| `logger`   | `ILogger`              | Logging with `info`, `warn`, `error`, `debug` |
+| `eventBus` | `IEventBus` (optional) | Event subscription for auto-invalidation      |
 
 **Event Subscriptions** (when `eventBus` provided):
+
 - `COMPONENT_ADDED` - Invalidate affected entity caches
 - `COMPONENT_REMOVED` - Invalidate affected entity caches
 - `COMPONENTS_BATCH_ADDED` - Bulk invalidation
@@ -198,12 +210,14 @@ new ActivityCacheManager({
 Register a new named cache with configuration.
 
 **Parameters**:
+
 - `cacheName` (string, required) - Unique cache identifier
 - `config` (object, optional) - Cache configuration
   - `ttl` (number) - Time-to-live in milliseconds (default: 60000)
   - `maxSize` (number) - Max entries before LRU pruning (default: 1000)
 
 **Example**:
+
 ```javascript
 cacheManager.registerCache('entityName', { ttl: 120000, maxSize: 500 });
 ```
@@ -215,18 +229,21 @@ cacheManager.registerCache('entityName', { ttl: 120000, maxSize: 500 });
 Retrieve value from cache (respects TTL).
 
 **Parameters**:
+
 - `cacheName` (string, required) - Cache identifier
 - `key` (string, required) - Cache key
 
 **Returns**: Cached value or `null` if not found/expired
 
 **Example**:
+
 ```javascript
 const name = cacheManager.get('entityName', 'actor_123');
 // Returns: "Alice" or null
 ```
 
 **Behavior**:
+
 - Returns `null` if cache doesn't exist
 - Returns `null` if key not found
 - Returns `null` if entry expired (TTL exceeded)
@@ -237,16 +254,19 @@ const name = cacheManager.get('entityName', 'actor_123');
 Store value in cache with TTL.
 
 **Parameters**:
+
 - `cacheName` (string, required) - Cache identifier
 - `key` (string, required) - Cache key
 - `value` (any, required) - Value to cache
 
 **Example**:
+
 ```javascript
 cacheManager.set('entityName', 'actor_123', 'Alice');
 ```
 
 **Behavior**:
+
 - Creates cache if it doesn't exist (with defaults)
 - Sets entry with current timestamp
 - Triggers LRU pruning if cache exceeds `maxSize`
@@ -256,10 +276,12 @@ cacheManager.set('entityName', 'actor_123', 'Alice');
 Remove specific entry from cache.
 
 **Parameters**:
+
 - `cacheName` (string, required) - Cache identifier
 - `key` (string, required) - Cache key to remove
 
 **Example**:
+
 ```javascript
 cacheManager.invalidate('entityName', 'actor_123');
 ```
@@ -269,9 +291,11 @@ cacheManager.invalidate('entityName', 'actor_123');
 Clear all entries from a specific cache.
 
 **Parameters**:
+
 - `cacheName` (string, required) - Cache identifier
 
 **Example**:
+
 ```javascript
 cacheManager.invalidateAll('entityName');
 ```
@@ -281,9 +305,11 @@ cacheManager.invalidateAll('entityName');
 Invalidate all caches for a specific entity.
 
 **Parameters**:
+
 - `entityId` (string, required) - Entity ID
 
 **Example**:
+
 ```javascript
 cacheManager.invalidateEntity('actor_123');
 ```
@@ -295,6 +321,7 @@ cacheManager.invalidateEntity('actor_123');
 Clear all caches completely.
 
 **Example**:
+
 ```javascript
 cacheManager.clearAllCaches();
 ```
@@ -304,12 +331,14 @@ cacheManager.clearAllCaches();
 Shutdown cache manager and cleanup resources.
 
 **Actions**:
+
 1. Cancels cleanup interval
 2. Unsubscribes event handlers
 3. Clears all caches
 4. Logs shutdown
 
 **Example**:
+
 ```javascript
 cacheManager.destroy();
 ```
@@ -347,11 +376,11 @@ new ActivityMetadataCollectionSystem({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `entityManager` | `IEntityManager` | Entity access with `getEntityInstance` |
-| `logger` | `ILogger` | Logging interface |
-| `activityIndex` | `ActivityIndex` (optional) | Pre-built index for Phase 3 |
+| Dependency      | Interface                  | Description                            |
+| --------------- | -------------------------- | -------------------------------------- |
+| `entityManager` | `IEntityManager`           | Entity access with `getEntityInstance` |
+| `logger`        | `ILogger`                  | Logging interface                      |
+| `activityIndex` | `ActivityIndex` (optional) | Pre-built index for Phase 3            |
 
 ### Public Methods
 
@@ -360,12 +389,14 @@ new ActivityMetadataCollectionSystem({
 Collect activity metadata using 3-tier fallback strategy.
 
 **Parameters**:
+
 - `entityId` (string, required) - Entity ID to collect for
 - `entity` (object, optional) - Pre-fetched entity instance (optimization)
 
 **Returns**: `Array<object>` - Deduplicated activity metadata array
 
 **Collection Tiers**:
+
 1. **Tier 1**: Activity index lookup (if provided)
 2. **Tier 2**: Inline component metadata (`activityMetadata` fields)
 3. **Tier 3**: Dedicated metadata components (`activity:description_metadata`)
@@ -373,6 +404,7 @@ Collect activity metadata using 3-tier fallback strategy.
 **Deduplication**: By semantic signature (type, template, source, target, groupKey)
 
 **Example**:
+
 ```javascript
 const activities = collector.collectActivityMetadata('actor_123');
 /* Returns:
@@ -397,6 +429,7 @@ const activities = collector.collectActivityMetadata('actor_123');
 ```
 
 **Metadata Structure**:
+
 ```javascript
 {
   type: 'inline' | 'dedicated' | 'index',
@@ -432,12 +465,12 @@ new ActivityNLGSystem({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging interface |
-| `entityManager` | `IEntityManager` | Entity access for gender components |
-| `cacheManager` | `ActivityCacheManager` | Name/gender caching |
-| `config` | `object` (optional) | NLG configuration (nameResolution) |
+| Dependency      | Interface              | Description                         |
+| --------------- | ---------------------- | ----------------------------------- |
+| `logger`        | `ILogger`              | Logging interface                   |
+| `entityManager` | `IEntityManager`       | Entity access for gender components |
+| `cacheManager`  | `ActivityCacheManager` | Name/gender caching                 |
+| `config`        | `object` (optional)    | NLG configuration (nameResolution)  |
 
 **Important**: NLG system is **self-contained** - does NOT depend on `AnatomyFormattingService` for pronoun resolution.
 
@@ -448,6 +481,7 @@ new ActivityNLGSystem({
 Generate natural language phrase from activity metadata and context.
 
 **Parameters**:
+
 - `activity` (object, required) - Activity metadata
   - `template` (string) - NLG template with placeholders
   - `descriptor` (string, optional) - Softener/adverb
@@ -460,24 +494,26 @@ Generate natural language phrase from activity metadata and context.
 **Returns**: `string` - Generated phrase
 
 **Example**:
+
 ```javascript
 const phrase = nlgSystem.generatePhrase(
   {
     template: '{actor} caresses {targetPossessive} hand',
-    descriptor: 'gently'
+    descriptor: 'gently',
   },
   {
     actorName: 'Alice',
     targetName: 'Bob',
     actorPronoun: 'she',
     targetPronoun: 'he',
-    relationshipTone: 'intimate'
+    relationshipTone: 'intimate',
   }
 );
 // Returns: "Alice gently caresses his hand"
 ```
 
 **Template Placeholders**:
+
 - `{actor}` → Actor name or pronoun
 - `{actorPossessive}` → Actor possessive (Alice's / her / his / their)
 - `{target}` → Target name or pronoun
@@ -489,18 +525,21 @@ const phrase = nlgSystem.generatePhrase(
 Resolve pronoun for entity (self-contained gender detection).
 
 **Parameters**:
+
 - `entityId` (string, required) - Entity ID
 - `type` (string, required) - Pronoun type: 'subject', 'object', 'possessive'
 
 **Returns**: `string` - Resolved pronoun
 
 **Example**:
+
 ```javascript
 const pronoun = nlgSystem.resolvePronoun('actor_123', 'subject');
 // Returns: "she" | "he" | "they"
 ```
 
 **Gender Detection**:
+
 1. Check cache via `ActivityCacheManager`
 2. Query `core:gender` component via `EntityManager`
 3. Extract gender value from component
@@ -508,6 +547,7 @@ const pronoun = nlgSystem.resolvePronoun('actor_123', 'subject');
 5. Cache result for future calls
 
 **Pronoun Map**:
+
 ```javascript
 {
   male: { subject: 'he', object: 'him', possessive: 'his' },
@@ -521,17 +561,20 @@ const pronoun = nlgSystem.resolvePronoun('actor_123', 'subject');
 Sanitize entity name for safe display.
 
 **Parameters**:
+
 - `name` (string, required) - Raw entity name
 
 **Returns**: `string` - Sanitized name
 
 **Example**:
+
 ```javascript
-const clean = nlgSystem.sanitizeEntityName("Alice\u0000\t\n");
+const clean = nlgSystem.sanitizeEntityName('Alice\u0000\t\n');
 // Returns: "Alice"
 ```
 
 **Sanitization**:
+
 - Removes control characters
 - Trims whitespace
 - Normalizes multiple spaces
@@ -542,18 +585,21 @@ const clean = nlgSystem.sanitizeEntityName("Alice\u0000\t\n");
 Merge two adverbs with natural conjunction.
 
 **Parameters**:
+
 - `current` (string) - Current adverb
 - `injected` (string) - Adverb to merge
 
 **Returns**: `string` - Merged adverb phrase
 
 **Example**:
+
 ```javascript
 const merged = nlgSystem.mergeAdverb('softly', 'gently');
 // Returns: "softly and gently"
 ```
 
 **Rules**:
+
 - Empty + X → X
 - X + Empty → X
 - X + X → X (no duplication)
@@ -578,12 +624,13 @@ new ActivityGroupingSystem({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging interface |
-| `config` | `object` (optional) | Grouping configuration |
+| Dependency | Interface           | Description            |
+| ---------- | ------------------- | ---------------------- |
+| `logger`   | `ILogger`           | Logging interface      |
+| `config`   | `object` (optional) | Grouping configuration |
 
 **Configuration**:
+
 ```javascript
 {
   simultaneityThreshold: 10,  // Max priority difference for grouping
@@ -602,6 +649,7 @@ new ActivityGroupingSystem({
 Group activity phrases by target and simultaneity.
 
 **Parameters**:
+
 - `phrases` (Array<object>, required) - Activity phrase objects
   - `target` (string) - Target entity ID
   - `priority` (number) - Activity priority
@@ -611,16 +659,18 @@ Group activity phrases by target and simultaneity.
 **Returns**: `Array<string>` - Grouped phrase strings
 
 **Example**:
+
 ```javascript
 const grouped = groupingSystem.groupActivities([
   { target: 'target_1', priority: 100, phrase: 'kisses her lips' },
   { target: 'target_1', priority: 95, phrase: 'caresses her cheek' },
-  { target: 'target_2', priority: 80, phrase: 'waves to Bob' }
+  { target: 'target_2', priority: 80, phrase: 'waves to Bob' },
 ]);
 // Returns: ["kisses her lips and caresses her cheek", "waves to Bob"]
 ```
 
 **Grouping Logic**:
+
 1. Group activities with same target
 2. Check priority difference ≤ `simultaneityThreshold`
 3. Respect `groupByTarget` flags
@@ -628,6 +678,7 @@ const grouped = groupingSystem.groupActivities([
 5. Join with selected conjunction
 
 **Conjunction Selection**:
+
 - 2 activities → `primary` ("and")
 - 3 activities → `secondary` ("while also")
 - 4+ activities → `tertiary` ("as well as")
@@ -646,17 +697,17 @@ const grouped = groupingSystem.groupActivities([
 new ActivityContextBuildingSystem({
   logger,
   entityManager,
-  cacheManager
-})
+  cacheManager,
+});
 ```
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging interface |
-| `entityManager` | `IEntityManager` | Entity access |
-| `cacheManager` | `ActivityCacheManager` | Name/closeness caching |
+| Dependency      | Interface              | Description            |
+| --------------- | ---------------------- | ---------------------- |
+| `logger`        | `ILogger`              | Logging interface      |
+| `entityManager` | `IEntityManager`       | Entity access          |
+| `cacheManager`  | `ActivityCacheManager` | Name/closeness caching |
 
 ### Public Methods
 
@@ -665,12 +716,14 @@ new ActivityContextBuildingSystem({
 Build context object for NLG generation.
 
 **Parameters**:
+
 - `actorId` (string, required) - Actor entity ID
 - `targetId` (string, required) - Target entity ID
 
 **Returns**: `object` - Context object
 
 **Context Structure**:
+
 ```javascript
 {
   actorName: string,          // Resolved actor name
@@ -683,6 +736,7 @@ Build context object for NLG generation.
 ```
 
 **Example**:
+
 ```javascript
 const context = contextBuilder.buildContext('actor_123', 'target_456');
 /* Returns:
@@ -698,6 +752,7 @@ const context = contextBuilder.buildContext('actor_123', 'target_456');
 ```
 
 **Closeness Detection**:
+
 1. Check cache via `ActivityCacheManager`
 2. Query `positioning:closeness` component via `EntityManager`
 3. Extract partner list and calculate closeness
@@ -705,6 +760,7 @@ const context = contextBuilder.buildContext('actor_123', 'target_456');
 5. Default to 0.0 if not found
 
 **Tone Adjustment**:
+
 - `closeness >= 0.7` → `'intimate'` (use pronouns, softer language)
 - `closeness < 0.7` → `'formal'` (use names, standard language)
 
@@ -728,13 +784,14 @@ new ActivityFilteringSystem({
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging interface |
-| `jsonLogicEvaluationService` | `JsonLogicEvaluationService` | JSON Logic evaluation |
-| `config` | `object` (optional) | Filtering configuration |
+| Dependency                   | Interface                    | Description             |
+| ---------------------------- | ---------------------------- | ----------------------- |
+| `logger`                     | `ILogger`                    | Logging interface       |
+| `jsonLogicEvaluationService` | `JsonLogicEvaluationService` | JSON Logic evaluation   |
+| `config`                     | `object` (optional)          | Filtering configuration |
 
 **Configuration**:
+
 ```javascript
 {
   enableContextAwareness: true,
@@ -749,24 +806,26 @@ new ActivityFilteringSystem({
 Filter activities by conditions and visibility.
 
 **Parameters**:
+
 - `activities` (Array<object>, required) - Activity metadata array
 - `context` (object, required) - Context from `ActivityContextBuildingSystem`
 
 **Returns**: `Array<object>` - Filtered activity array
 
 **Example**:
+
 ```javascript
 const filtered = filteringSystem.filterActivities(
   [
     {
       template: '{actor} kisses {target}',
       condition: { '>=': [{ var: 'closeness' }, 0.7] },
-      visibility: true
+      visibility: true,
     },
     {
       template: '{actor} waves to {target}',
-      visibility: false
-    }
+      visibility: false,
+    },
   ],
   { closeness: 0.85 }
 );
@@ -774,12 +833,14 @@ const filtered = filteringSystem.filterActivities(
 ```
 
 **Filtering Rules**:
+
 1. **Visibility check**: `visibility === false` → filter out
 2. **Condition evaluation**: If `condition` present, evaluate JSON Logic
 3. **Context awareness**: Pass context variables to JSON Logic
 4. **Fail-safe**: Errors in evaluation → filter out activity
 
 **JSON Logic Context Variables**:
+
 - `closeness` - Relationship closeness (0.0 to 1.0)
 - `relationshipTone` - 'intimate' or 'formal'
 - `actorName` - Actor name
@@ -798,15 +859,15 @@ const filtered = filteringSystem.filterActivities(
 
 ```javascript
 new ActivityIndexManager({
-  logger
-})
+  logger,
+});
 ```
 
 #### Dependencies
 
-| Dependency | Interface | Description |
-|------------|-----------|-------------|
-| `logger` | `ILogger` | Logging interface |
+| Dependency | Interface | Description       |
+| ---------- | --------- | ----------------- |
+| `logger`   | `ILogger` | Logging interface |
 
 ### Public Methods
 
@@ -815,11 +876,13 @@ new ActivityIndexManager({
 Build activity index from metadata array.
 
 **Parameters**:
+
 - `activities` (Array<object>, required) - Activity metadata array
 
 **Returns**: `object` - Activity index structure
 
 **Index Structure**:
+
 ```javascript
 {
   byTarget: {
@@ -839,11 +902,12 @@ Build activity index from metadata array.
 ```
 
 **Example**:
+
 ```javascript
 const index = indexManager.buildIndex([
   { target: 'target_1', priority: 100, groupKey: 'kneeling' },
   { target: 'target_1', priority: 95, groupKey: 'kneeling' },
-  { target: 'target_2', priority: 80, groupKey: 'waving' }
+  { target: 'target_2', priority: 80, groupKey: 'waving' },
 ]);
 /* Returns:
 {
@@ -865,6 +929,7 @@ const index = indexManager.buildIndex([
 ```
 
 **Use Cases**:
+
 - Fast target lookup
 - Priority-based filtering
 - Group-based queries
@@ -925,6 +990,7 @@ Returns merged activity configuration:
 Evaluates JSON Logic expressions for activity filtering.
 
 **Example**:
+
 ```javascript
 const result = jsonLogicService.evaluate(
   { '>=': [{ var: 'closeness' }, 0.7] },
@@ -942,9 +1008,11 @@ const result = jsonLogicService.evaluate(
 Orchestrates descriptor generation and embeds activity summary.
 
 **Integration**:
+
 ```javascript
 // Inside composeDescription
-const activityText = await this.#activityDescriptionFacade.generateActivityDescription(entityId);
+const activityText =
+  await this.#activityDescriptionFacade.generateActivityDescription(entityId);
 if (activityText) {
   descriptors.push(activityText);
 }
@@ -961,6 +1029,7 @@ Dispatched whenever `generateActivityDescription` throws an error.
 **Event Type**: `ACTIVITY_DESCRIPTION_ERROR`
 
 **Payload**:
+
 ```json
 {
   "type": "ACTIVITY_DESCRIPTION_ERROR",
@@ -974,6 +1043,7 @@ Dispatched whenever `generateActivityDescription` throws an error.
 ```
 
 **Example Subscription**:
+
 ```javascript
 eventBus.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
   console.error('Activity generation failed:', event.payload);
@@ -988,6 +1058,7 @@ eventBus.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
 #### COMPONENT_ADDED
 
 **Payload**:
+
 ```json
 {
   "type": "COMPONENT_ADDED",
@@ -1003,6 +1074,7 @@ eventBus.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
 #### COMPONENT_REMOVED
 
 **Payload**:
+
 ```json
 {
   "type": "COMPONENT_REMOVED",
@@ -1018,6 +1090,7 @@ eventBus.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
 #### COMPONENTS_BATCH_ADDED
 
 **Payload**:
+
 ```json
 {
   "type": "COMPONENTS_BATCH_ADDED",
@@ -1033,6 +1106,7 @@ eventBus.subscribe('ACTIVITY_DESCRIPTION_ERROR', (event) => {
 #### ENTITY_REMOVED
 
 **Payload**:
+
 ```json
 {
   "type": "ENTITY_REMOVED",
@@ -1170,15 +1244,15 @@ const filtered = filteringSystem.filterActivities(
 
 ### Service Performance
 
-| Operation | Average Time | Optimization |
-|-----------|-------------|--------------|
-| Cache lookup | <0.1ms | Always check cache first |
-| Metadata collection | 2-5ms | Use pre-built index when available |
-| Index building | 1-3ms | Cache index signatures |
-| Filtering | 1-2ms | Early exit on visibility false |
-| Context building | 1-2ms | Cache names and closeness |
-| NLG generation | 2-4ms | Cache pronoun lookups |
-| Grouping | 1-2ms | Minimal overhead |
+| Operation           | Average Time | Optimization                       |
+| ------------------- | ------------ | ---------------------------------- |
+| Cache lookup        | <0.1ms       | Always check cache first           |
+| Metadata collection | 2-5ms        | Use pre-built index when available |
+| Index building      | 1-3ms        | Cache index signatures             |
+| Filtering           | 1-2ms        | Early exit on visibility false     |
+| Context building    | 1-2ms        | Cache names and closeness          |
+| NLG generation      | 2-4ms        | Cache pronoun lookups              |
+| Grouping            | 1-2ms        | Minimal overhead                   |
 
 ### Optimization Tips
 

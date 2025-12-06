@@ -38,7 +38,10 @@ describe('Security validation middleware logging fallbacks - integration', () =>
     const response = await request(app)
       .get('/danger')
       .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'unsafe-eval'")
+      .set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'unsafe-eval'"
+      )
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
@@ -89,11 +92,14 @@ describe('Security validation middleware logging fallbacks - integration', () =>
     const response = await request(app)
       .get('/status')
       .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
+      .set('Content-Security-Policy', "default-src 'self'; script-src 'self'")
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
-      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+      )
       .set('X-Forwarded-For', '198.51.100.2')
       .set('Origin', 'https://client.example.test')
       .set('Referer', '')
@@ -130,20 +136,24 @@ describe('Security validation middleware logging fallbacks - integration', () =>
     const response = await request(app)
       .get('/warn')
       .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'unsafe-inline'")
+      .set(
+        'Content-Security-Policy',
+        "default-src 'self'; script-src 'unsafe-inline'"
+      )
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
-      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+      )
       .set('X-Forwarded-For', '198.51.100.2')
       .set('Origin', 'https://client.example.test')
       .set('User-Agent', 'warn-branch-coverage')
       .expect(200);
 
     expect(response.body.validation.errors).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ type: 'INVALID_CSP' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ type: 'INVALID_CSP' })])
     );
     expect(capturingLogger.warn).toHaveBeenCalledWith(
       'Security validation errors detected',
@@ -176,11 +186,14 @@ describe('Security validation middleware logging fallbacks - integration', () =>
     const response = await request(app)
       .get('/suspicious-only')
       .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
+      .set('Content-Security-Policy', "default-src 'self'; script-src 'self'")
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
-      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+      )
       .set('X-Forwarded-For', '198.51.100.2')
       .set('Origin', 'https://client.example.test')
       .set('X-Injection', '<script>alert(1)</script>')
@@ -221,11 +234,14 @@ describe('Security validation middleware logging fallbacks - integration', () =>
     const response = await request(app)
       .get('/defaults')
       .set('Host', 'proxy.example.test')
-      .set("Content-Security-Policy", "default-src 'self'; script-src 'self'")
+      .set('Content-Security-Policy', "default-src 'self'; script-src 'self'")
       .set('X-Content-Type-Options', 'nosniff')
       .set('X-Frame-Options', 'DENY')
       .set('X-XSS-Protection', '1; mode=block')
-      .set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+      .set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+      )
       .set('X-Forwarded-For', '203.0.113.5')
       .set('Origin', 'https://client.example.test')
       .set('User-Agent', 'defaults-branch-cover')

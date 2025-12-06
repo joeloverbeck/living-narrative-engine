@@ -47,7 +47,9 @@ describe('timeout middleware extended integration coverage', () => {
       call[0].includes('Timeout cannot commit response')
     );
     expect(warnCall).toBeDefined();
-    expect(warnCall?.[1]).toMatchObject({ existingCommitment: 'external-handler' });
+    expect(warnCall?.[1]).toMatchObject({
+      existingCommitment: 'external-handler',
+    });
   });
 
   it('still releases blocked requests without logging when no logger is configured', async () => {
@@ -70,7 +72,9 @@ describe('timeout middleware extended integration coverage', () => {
       }
     );
 
-    const response = await request(app).post('/guarded-timeout-no-logger').send({});
+    const response = await request(app)
+      .post('/guarded-timeout-no-logger')
+      .send({});
 
     expect(response.status).toBe(200);
     expect(response.body.outcome).toBe('handler completed without logger');

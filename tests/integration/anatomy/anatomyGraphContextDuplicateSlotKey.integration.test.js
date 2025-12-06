@@ -54,7 +54,9 @@ describe('AnatomyGraphContext duplicate slot key detection (integration)', () =>
       expect(context.getEntityForSlot('left_arm')).toBe('entity-arm-first');
       expect(context.getCreatedEntities()).toContain('entity-arm-first');
       // The duplicate entity was never added
-      expect(context.getCreatedEntities()).not.toContain('entity-arm-duplicate');
+      expect(context.getCreatedEntities()).not.toContain(
+        'entity-arm-duplicate'
+      );
     });
 
     it('should provide clear error message for debugging duplicate slot issues', () => {

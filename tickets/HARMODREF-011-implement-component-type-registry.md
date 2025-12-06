@@ -19,11 +19,13 @@ Implement the Component Type Registry infrastructure that will enable operation 
 ## Affected Files
 
 ### New Files
+
 1. `src/entities/registries/componentTypeRegistry.js`
 2. `tests/unit/entities/registries/componentTypeRegistry.test.js`
 3. `tests/integration/loaders/componentTypeRegistration.integration.test.js`
 
 ### Modified Files
+
 4. `src/dependencyInjection/tokens/tokens-core.js`
 5. `src/dependencyInjection/registrations/entityRegistrations.js`
 6. `src/loaders/modLoader.js`
@@ -33,16 +35,17 @@ Implement the Component Type Registry infrastructure that will enable operation 
 ### Day 1: Core Implementation
 
 1. **Create ComponentTypeRegistry class** (4 hours)
+
 ```javascript
 // src/entities/registries/componentTypeRegistry.js
 export class ComponentTypeRegistry {
   #categories = new Map(); // category -> [componentIds]
-  #defaults = new Map();   // category -> defaultComponentId
+  #defaults = new Map(); // category -> defaultComponentId
   #logger;
 
   constructor({ logger }) {
     validateDependency(logger, 'ILogger', logger, {
-      requiredMethods: ['info', 'warn', 'error', 'debug']
+      requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
     this.#logger = logger;
   }
@@ -58,12 +61,16 @@ export class ComponentTypeRegistry {
     const components = this.#categories.get(category);
     if (!components.includes(componentId)) {
       components.push(componentId);
-      this.#logger.debug(`Registered component type: ${componentId} in category: ${category}`);
+      this.#logger.debug(
+        `Registered component type: ${componentId} in category: ${category}`
+      );
     }
 
     if (isDefault) {
       this.#defaults.set(category, componentId);
-      this.#logger.debug(`Set default for category ${category}: ${componentId}`);
+      this.#logger.debug(
+        `Set default for category ${category}: ${componentId}`
+      );
     }
   }
 
@@ -76,18 +83,25 @@ export class ComponentTypeRegistry {
 
   hasComponentOfCategory(entityManager, entityId, category) {
     const componentIds = this.#categories.get(category) || [];
-    return componentIds.some(id => entityManager.hasComponent(entityId, id));
+    return componentIds.some((id) => entityManager.hasComponent(entityId, id));
   }
 
-  getComponentOfCategory(entityManager, entityId, category, preferredType = null) {
+  getComponentOfCategory(
+    entityManager,
+    entityId,
+    category,
+    preferredType = null
+  ) {
     const componentId = this.getComponentId(category, preferredType);
-    
+
     if (!componentId) {
       throw new Error(`No component registered for category: ${category}`);
     }
 
     if (!entityManager.hasComponent(entityId, componentId)) {
-      throw new Error(`Entity ${entityId} does not have component in category ${category}`);
+      throw new Error(
+        `Entity ${entityId} does not have component in category ${category}`
+      );
     }
 
     return entityManager.getComponent(entityId, componentId);
@@ -104,6 +118,7 @@ export class ComponentTypeRegistry {
 ```
 
 2. **Add DI Token** (15 minutes)
+
 ```javascript
 // src/dependencyInjection/tokens/tokens-core.js
 export const tokens = {
@@ -113,24 +128,24 @@ export const tokens = {
 ```
 
 3. **Register in DI Container** (15 minutes)
+
 ```javascript
 // src/dependencyInjection/registrations/entityRegistrations.js
 import { ComponentTypeRegistry } from '../../entities/registries/componentTypeRegistry.js';
 
 export function registerEntityServices(container) {
   // ... existing registrations ...
-  
-  container.register(
-    tokens.IComponentTypeRegistry,
-    ComponentTypeRegistry,
-    { lifecycle: 'singleton' }
-  );
+
+  container.register(tokens.IComponentTypeRegistry, ComponentTypeRegistry, {
+    lifecycle: 'singleton',
+  });
 }
 ```
 
 ### Day 2: ModLoader Integration
 
 4. **Integrate with ModLoader** (4 hours)
+
 ```javascript
 // src/loaders/modLoader.js
 class ModLoader {
@@ -150,7 +165,7 @@ class ModLoader {
     // Register component types
     if (modManifest.componentTypeRegistrations) {
       this.#logger.info(`Registering component types for mod: ${modManifest.id}`);
-      
+
       for (const registration of modManifest.componentTypeRegistrations) {
         try {
           this.#componentTypeRegistry.register(
@@ -174,6 +189,7 @@ class ModLoader {
 ### Day 3: Tests
 
 5. **Unit Tests** (3 hours)
+
 ```javascript
 // tests/unit/entities/registries/componentTypeRegistry.test.js
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -189,20 +205,23 @@ describe('ComponentTypeRegistry', () => {
     testBed = createTestBed();
     const mockLogger = testBed.createMockLogger();
     registry = new ComponentTypeRegistry({ logger: mockLogger });
-    mockEntityManager = testBed.createMock('entityManager', ['hasComponent', 'getComponent']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'hasComponent',
+      'getComponent',
+    ]);
   });
 
   describe('register', () => {
     it('should register component in category', () => {
       registry.register('sitting', 'positioning:sitting', true);
-      
+
       const components = registry.getAllComponentsInCategory('sitting');
       expect(components).toContain('positioning:sitting');
     });
 
     it('should set default when isDefault is true', () => {
       registry.register('sitting', 'positioning:sitting', true);
-      
+
       const defaultId = registry.getComponentId('sitting');
       expect(defaultId).toBe('positioning:sitting');
     });
@@ -210,7 +229,7 @@ describe('ComponentTypeRegistry', () => {
     it('should allow multiple components in same category', () => {
       registry.register('sitting', 'positioning:sitting', true);
       registry.register('sitting', 'advanced:sitting', false);
-      
+
       const components = registry.getAllComponentsInCategory('sitting');
       expect(components).toHaveLength(2);
     });
@@ -219,16 +238,17 @@ describe('ComponentTypeRegistry', () => {
   describe('getComponentId', () => {
     it('should return default when no preference given', () => {
       registry.register('sitting', 'positioning:sitting', true);
-      
+
       expect(registry.getComponentId('sitting')).toBe('positioning:sitting');
     });
 
     it('should return preferred type if registered', () => {
       registry.register('sitting', 'positioning:sitting', true);
       registry.register('sitting', 'advanced:sitting', false);
-      
-      expect(registry.getComponentId('sitting', 'advanced:sitting'))
-        .toBe('advanced:sitting');
+
+      expect(registry.getComponentId('sitting', 'advanced:sitting')).toBe(
+        'advanced:sitting'
+      );
     });
   });
 
@@ -236,9 +256,10 @@ describe('ComponentTypeRegistry', () => {
     it('should return true if entity has any component in category', () => {
       registry.register('sitting', 'positioning:sitting', true);
       mockEntityManager.hasComponent.mockReturnValue(true);
-      
-      expect(registry.hasComponentOfCategory(mockEntityManager, 'entity1', 'sitting'))
-        .toBe(true);
+
+      expect(
+        registry.hasComponentOfCategory(mockEntityManager, 'entity1', 'sitting')
+      ).toBe(true);
     });
   });
 
@@ -247,19 +268,23 @@ describe('ComponentTypeRegistry', () => {
       registry.register('sitting', 'positioning:sitting', true);
       mockEntityManager.hasComponent.mockReturnValue(true);
       mockEntityManager.getComponent.mockReturnValue({ targetId: 'chair1' });
-      
+
       const component = registry.getComponentOfCategory(
         mockEntityManager,
         'entity1',
         'sitting'
       );
-      
+
       expect(component).toEqual({ targetId: 'chair1' });
     });
 
     it('should throw if no component registered for category', () => {
       expect(() => {
-        registry.getComponentOfCategory(mockEntityManager, 'entity1', 'unknown');
+        registry.getComponentOfCategory(
+          mockEntityManager,
+          'entity1',
+          'unknown'
+        );
       }).toThrow('No component registered for category: unknown');
     });
   });
@@ -267,6 +292,7 @@ describe('ComponentTypeRegistry', () => {
 ```
 
 6. **Integration Tests** (2 hours)
+
 ```javascript
 // tests/integration/loaders/componentTypeRegistration.integration.test.js
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -284,8 +310,8 @@ describe('Component Type Registration Integration', () => {
       id: 'test_mod',
       version: '1.0.0',
       componentTypeRegistrations: [
-        { category: 'sitting', componentId: 'test_mod:sitting', default: true }
-      ]
+        { category: 'sitting', componentId: 'test_mod:sitting', default: true },
+      ],
     };
 
     // Load mod with registry
@@ -314,9 +340,11 @@ describe('Component Type Registration Integration', () => {
 ## Dependencies
 
 **Required:**
+
 - HARMODREF-010 - Design must be approved
 
 **Blocks:**
+
 - HARMODREF-012 - Cannot update manifests without registry
 - HARMODREF-013 - Proof-of-concept needs registry
 
@@ -347,5 +375,6 @@ npx eslint src/entities/registries/componentTypeRegistry.js \
 ## Next Steps
 
 After completion, proceed to:
+
 1. HARMODREF-012 - Update mod manifests
 2. HARMODREF-013 - Refactor first handler as proof-of-concept

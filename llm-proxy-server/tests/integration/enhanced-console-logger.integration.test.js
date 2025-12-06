@@ -7,8 +7,14 @@
 import { jest } from '@jest/globals';
 
 const ORIGINAL_ENV = process.env;
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
 
 describe('Enhanced console logger integration behaviour', () => {
   beforeEach(() => {
@@ -56,7 +62,9 @@ describe('Enhanced console logger integration behaviour', () => {
 
     const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
 
-    const { getEnhancedConsoleLogger } = await import('../../src/logging/enhancedConsoleLogger.js');
+    const { getEnhancedConsoleLogger } = await import(
+      '../../src/logging/enhancedConsoleLogger.js'
+    );
     const logger = getEnhancedConsoleLogger();
 
     logger.info(
@@ -117,7 +125,9 @@ describe('Enhanced console logger integration behaviour', () => {
 
     logger.testOutput();
 
-    expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('Enhanced Logger Test Output'));
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Enhanced Logger Test Output')
+    );
     expect(debugSpy).toHaveBeenCalled();
     const debugOutput = debugSpy.mock.calls[0][0];
     expect(debugOutput).toContain('ApiKeyService: Debug message with context');
@@ -147,8 +157,10 @@ describe('Enhanced console logger integration behaviour', () => {
     const { default: EnhancedConsoleLogger } = module;
     const freshLogger = new EnhancedConsoleLogger();
     freshLogger.debug('secondary logger activity', { cacheSecret: 'to-hide' });
-    expect(debugSpy.mock.calls.some(([message]) => message.includes('secondary logger activity'))).toBe(
-      true
-    );
+    expect(
+      debugSpy.mock.calls.some(([message]) =>
+        message.includes('secondary logger activity')
+      )
+    ).toBe(true);
   });
 });

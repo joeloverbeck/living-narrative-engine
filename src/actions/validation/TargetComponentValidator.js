@@ -293,7 +293,8 @@ export class TargetComponentValidator {
       if (Array.isArray(rawTarget)) {
         filteredTargets[role] = validCandidates;
       } else {
-        filteredTargets[role] = validCandidates.length > 0 ? validCandidates[0] : null;
+        filteredTargets[role] =
+          validCandidates.length > 0 ? validCandidates[0] : null;
       }
 
       if (validCandidates.length === 0 && targetCandidates.length > 0) {
@@ -313,7 +314,10 @@ export class TargetComponentValidator {
       };
     }
 
-    return { valid: !firstFailureReason, reason: firstFailureReason || undefined };
+    return {
+      valid: !firstFailureReason,
+      reason: firstFailureReason || undefined,
+    };
   }
 }
 

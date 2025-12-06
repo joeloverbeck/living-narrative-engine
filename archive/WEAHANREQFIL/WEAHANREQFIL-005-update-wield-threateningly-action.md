@@ -9,14 +9,15 @@ Update the `wield_threateningly` action to use the new `weapons:grabbable_weapon
 ## Context
 
 This is the final ticket in the WEAHANREQFIL series. With the new scope in place (WEAHANREQFIL-004), the action can now correctly filter weapons based on hand requirements, ensuring:
+
 - A longsword (2 hands) won't appear when actor has only 1 free hand
 - Already-wielded weapons won't appear in the target list
 
 ## Files to Touch
 
-| File | Action | Purpose |
-|------|--------|---------|
-| `data/mods/weapons/actions/wield_threateningly.action.json` | MODIFY | Update target scope |
+| File                                                                       | Action | Purpose                             |
+| -------------------------------------------------------------------------- | ------ | ----------------------------------- |
+| `data/mods/weapons/actions/wield_threateningly.action.json`                | MODIFY | Update target scope                 |
 | `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | MODIFY | Update assertion for new scope name |
 
 ## Assumptions Reassessed
@@ -24,6 +25,7 @@ This is the final ticket in the WEAHANREQFIL series. With the new scope in place
 **Original assumption**: Add ~50 lines of tests for new filtering behavior in `wield_threateningly_prerequisites.test.js`
 
 **Corrected understanding**: The scope filtering behavior is already comprehensively tested in `tests/integration/mods/weapons/grabbable_weapons_scope.integration.test.js` (created in WEAHANREQFIL-004) which covers:
+
 - Hand requirement filtering
 - Already-held item exclusion
 - Edge cases (no hands, default handsRequired, handsRequired: 0)
@@ -42,22 +44,27 @@ The `wield_threateningly_prerequisites.test.js` file tests **prerequisites** (fr
 ## Implementation Details
 
 ### Action File Update
+
 Modify `data/mods/weapons/actions/wield_threateningly.action.json`:
 
 Change (line 22):
+
 ```json
 "scope": "weapons:weapons_in_inventory",
 ```
 
 To:
+
 ```json
 "scope": "weapons:grabbable_weapons_in_inventory",
 ```
 
 ### Test Updates
+
 Update `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`:
 
 Update line 140-141 assertion from:
+
 ```javascript
 expect(wieldThreateninglyAction.targets.primary.scope).toBe(
   'weapons:weapons_in_inventory'
@@ -65,6 +72,7 @@ expect(wieldThreateninglyAction.targets.primary.scope).toBe(
 ```
 
 To:
+
 ```javascript
 expect(wieldThreateninglyAction.targets.primary.scope).toBe(
   'weapons:grabbable_weapons_in_inventory'
@@ -115,25 +123,30 @@ expect(wieldThreateninglyAction.targets.primary.scope).toBe(
 ### What Changed vs Originally Planned
 
 **Originally Planned:**
+
 - 1 line change in action file
 - ~50 lines of new tests for filtering behavior
 
 **Actually Changed:**
+
 - 1 line change in action file (scope name update)
 - 1 line change in test file (scope name assertion update)
 
 **Reason for Difference:**
 The ticket's original assumption that ~50 lines of tests needed to be added was incorrect. Upon code review, it was found that:
+
 1. The `wield_threateningly_prerequisites.test.js` file tests **prerequisite evaluation** (free grabbing appendage check), not target scope resolution
 2. The scope filtering behavior was already comprehensively tested in `grabbable_weapons_scope.integration.test.js` (created in WEAHANREQFIL-004) with 13 test cases covering all scenarios mentioned in the ticket
 
 ### Files Modified
-| File | Change |
-|------|--------|
-| `data/mods/weapons/actions/wield_threateningly.action.json` | Changed `scope` from `weapons:weapons_in_inventory` to `weapons:grabbable_weapons_in_inventory` |
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Updated assertion to expect new scope name |
+
+| File                                                                       | Change                                                                                          |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `data/mods/weapons/actions/wield_threateningly.action.json`                | Changed `scope` from `weapons:weapons_in_inventory` to `weapons:grabbable_weapons_in_inventory` |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Updated assertion to expect new scope name                                                      |
 
 ### Verification
+
 - ✅ All 27 tests pass (13 scope tests + 14 prerequisite tests)
 - ✅ Scope lint passes (103/103 scope files valid)
 - ✅ Action schema validation passes (225/225 action files valid)

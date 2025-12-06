@@ -32,11 +32,17 @@
     },
     {
       "type": "SET_VARIABLE",
-      "parameters": { "variable_name": "perceptionType", "value": "action_target_general" }
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
     },
     {
       "type": "SET_VARIABLE",
-      "parameters": { "variable_name": "targetId", "value": "{event.payload.targetId}" }
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
     },
     {
       "type": "BREAK_CLOSENESS_WITH_TARGET",
@@ -69,8 +75,14 @@
         "item_id": "{event.payload.targetId}"
       }
     },
-    { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "actor" } },
-    { "type": "REGENERATE_DESCRIPTION", "parameters": { "entity_ref": "target" } },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "target" }
+    },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {

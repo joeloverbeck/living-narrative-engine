@@ -94,7 +94,12 @@ class ScopeResolverFactory {
    * @param {object} [options] - Creation options
    * @returns {Promise<object>} Resolver instance
    */
-  static async createResolverFromFile(modId, scopeName, category, options = {}) {
+  static async createResolverFromFile(
+    modId,
+    scopeName,
+    category,
+    options = {}
+  ) {
     const { default: ScopeEngine } = await import(
       '../../../src/scopeDsl/engine.js'
     );
@@ -136,9 +141,7 @@ class ScopeDslResolver extends BaseScopeResolver {
     super({ id, category, name, dependencies: [] });
 
     if (!scopeData || !scopeData.ast) {
-      throw new Error(
-        `Invalid scope data for "${id}": missing AST`
-      );
+      throw new Error(`Invalid scope data for "${id}": missing AST`);
     }
 
     this.#scopeData = scopeData;
@@ -174,9 +177,7 @@ class ScopeDslResolver extends BaseScopeResolver {
       // Ensure result is a Set
       return this._ensureSet(result);
     } catch (err) {
-      throw new Error(
-        `Failed to resolve scope "${this.id}": ${err.message}`
-      );
+      throw new Error(`Failed to resolve scope "${this.id}": ${err.message}`);
     }
   }
 

@@ -35,9 +35,7 @@
     }
   ],
   "content": {
-    "macros": [
-      "handleBeakFumble.macro.json"
-    ],
+    "macros": ["handleBeakFumble.macro.json"],
     "actions": [
       "grab_neck.action.json",
       "peck_target.action.json",
@@ -63,8 +61,6 @@
       "event-is-action-sucker-punch.condition.json",
       "event-is-action-tear-out-throat.condition.json"
     ],
-    "scopes": [
-      "actor_beak_body_parts.scope"
-    ]
+    "scopes": ["actor_beak_body_parts.scope"]
   }
 }

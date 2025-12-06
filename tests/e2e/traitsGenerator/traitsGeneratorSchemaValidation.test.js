@@ -118,7 +118,8 @@ describe('Traits Generator - Schema Validation E2E', () => {
       traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
       uiStateManager: mockUIStateManager,
       // Required services for BaseCharacterBuilderController
-      controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+      controllerLifecycleOrchestrator:
+        testBed.mockControllerLifecycleOrchestrator,
       domElementManager: testBed.mockDOMElementManager,
       eventListenerRegistry: testBed.mockEventListenerRegistry,
       asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,
@@ -1033,7 +1034,8 @@ describe('Traits Generator - Schema Validation E2E', () => {
         uiStateManager: mockUIStateManager,
         traitsDisplayEnhancer: mockTraitsDisplayEnhancer,
         // Required services for BaseCharacterBuilderController
-        controllerLifecycleOrchestrator: testBed.mockControllerLifecycleOrchestrator,
+        controllerLifecycleOrchestrator:
+          testBed.mockControllerLifecycleOrchestrator,
         domElementManager: testBed.mockDOMElementManager,
         eventListenerRegistry: testBed.mockEventListenerRegistry,
         asyncUtilitiesToolkit: testBed.mockAsyncUtilitiesToolkit,

@@ -22,8 +22,8 @@ export function createMockErrorHandler() {
       recoveredErrors: 0,
       errorsByType: {},
       errorsBySeverity: {},
-      recoveryRate: 0
-    })
+      recoveryRate: 0,
+    }),
   };
 }
 
@@ -35,14 +35,22 @@ export function createMockErrorHandler() {
  * @param {string} severity - Error severity level
  * @returns {BaseError} Test error instance
  */
-export function createTestError(type = 'TestError', recoverable = true, severity = 'warning') {
+export function createTestError(
+  type = 'TestError',
+  recoverable = true,
+  severity = 'warning'
+) {
   class TestError extends BaseError {
     constructor(message, code = 'TEST_ERROR', context = {}) {
       super(message, code, context);
       this.name = type;
     }
-    getSeverity() { return severity; }
-    isRecoverable() { return recoverable; }
+    getSeverity() {
+      return severity;
+    }
+    isRecoverable() {
+      return recoverable;
+    }
   }
   return new TestError('Test error message', 'TEST_ERROR', { test: true });
 }
@@ -59,7 +67,7 @@ export function simulateErrorBurst(count = 100, options = {}) {
     errorType = 'TestError',
     recoverable = true,
     severity = 'warning',
-    withDelay = false
+    withDelay = false,
   } = options;
 
   const errors = [];
@@ -82,15 +90,17 @@ export function simulateErrorBurst(count = 100, options = {}) {
  */
 export function createMockRecoveryStrategyManager() {
   return {
-    executeRecovery: jest.fn().mockResolvedValue({ success: true, result: 'recovered' }),
+    executeRecovery: jest
+      .fn()
+      .mockResolvedValue({ success: true, result: 'recovered' }),
     registerStrategy: jest.fn(),
     isRetriable: jest.fn().mockReturnValue(true),
     getMetrics: jest.fn().mockReturnValue({
       totalAttempts: 0,
       successfulRecoveries: 0,
       failedRecoveries: 0,
-      circuitBreakerTrips: 0
-    })
+      circuitBreakerTrips: 0,
+    }),
   };
 }
 
@@ -108,10 +118,10 @@ export function createMockErrorReporter() {
       errorsByType: {},
       errorsBySeverity: {},
       errorsByHour: {},
-      topErrors: []
+      topErrors: [],
     }),
     getTopErrors: jest.fn().mockReturnValue([]),
-    checkAlertThresholds: jest.fn().mockReturnValue([])
+    checkAlertThresholds: jest.fn().mockReturnValue([]),
   };
 }
 
@@ -125,11 +135,9 @@ export function createErrorChain(depth = 3) {
   let currentError = null;
 
   for (let i = depth; i > 0; i--) {
-    const error = new BaseError(
-      `Error at level ${i}`,
-      `ERROR_LEVEL_${i}`,
-      { level: i }
-    );
+    const error = new BaseError(`Error at level ${i}`, `ERROR_LEVEL_${i}`, {
+      level: i,
+    });
 
     if (currentError) {
       error.cause = currentError;
@@ -156,8 +164,12 @@ export function createDomainErrors() {
       this.operation = operation;
       this.name = 'ClothingServiceError';
     }
-    getSeverity() { return 'error'; }
-    isRecoverable() { return true; }
+    getSeverity() {
+      return 'error';
+    }
+    isRecoverable() {
+      return true;
+    }
   }
 
   // Create AnatomyError equivalent
@@ -167,8 +179,12 @@ export function createDomainErrors() {
       this.bodyPart = bodyPart;
       this.name = 'AnatomyError';
     }
-    getSeverity() { return 'warning'; }
-    isRecoverable() { return true; }
+    getSeverity() {
+      return 'warning';
+    }
+    isRecoverable() {
+      return true;
+    }
   }
 
   // Create ValidationError equivalent
@@ -179,17 +195,24 @@ export function createDomainErrors() {
       this.value = value;
       this.name = 'ValidationError';
     }
-    getSeverity() { return 'error'; }
-    isRecoverable() { return false; }
+    getSeverity() {
+      return 'error';
+    }
+    isRecoverable() {
+      return false;
+    }
   }
 
   return {
     ClothingServiceError,
     AnatomyError,
     ValidationError,
-    createClothingError: () => new ClothingServiceError('Service failed', 'test-service', 'fetch'),
-    createAnatomyError: () => new AnatomyError('Invalid body part', 'test-part'),
-    createValidationError: () => new ValidationError('Invalid field', 'test-field', 'bad-value')
+    createClothingError: () =>
+      new ClothingServiceError('Service failed', 'test-service', 'fetch'),
+    createAnatomyError: () =>
+      new AnatomyError('Invalid body part', 'test-part'),
+    createValidationError: () =>
+      new ValidationError('Invalid field', 'test-field', 'bad-value'),
   };
 }
 
@@ -203,7 +226,9 @@ export function verifyErrorContext(error, expectedContext) {
   for (const [key, value] of Object.entries(expectedContext)) {
     const actualValue = error.getContext(key);
     if (actualValue !== value) {
-      throw new Error(`Context mismatch for key '${key}': expected '${value}', got '${actualValue}'`);
+      throw new Error(
+        `Context mismatch for key '${key}': expected '${value}', got '${actualValue}'`
+      );
     }
   }
   return true;
@@ -221,23 +246,23 @@ export function createMockMonitoringCoordinator() {
     getStats: jest.fn().mockReturnValue({
       failures: 0,
       successes: 0,
-      trips: 0
-    })
+      trips: 0,
+    }),
   };
 
   return {
     executeMonitored: jest.fn((name, fn) => fn()),
     getStats: jest.fn().mockReturnValue({
       performance: {},
-      enabled: true
+      enabled: true,
     }),
     getPerformanceMonitor: jest.fn().mockReturnValue({
       startTimer: jest.fn().mockReturnValue({ stop: jest.fn() }),
-      getMetrics: jest.fn().mockReturnValue({})
+      getMetrics: jest.fn().mockReturnValue({}),
     }),
     getCircuitBreaker: jest.fn().mockReturnValue(mockCircuitBreaker),
     incrementValidationPipelineHealth: jest.fn(),
-    getValidationPipelineHealth: jest.fn().mockReturnValue(0)
+    getValidationPipelineHealth: jest.fn().mockReturnValue(0),
   };
 }
 
@@ -248,7 +273,7 @@ export function createMockMonitoringCoordinator() {
  * @returns {Promise} Promise that resolves after delay
  */
 export function waitFor(ms = 0) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -259,11 +284,7 @@ export function waitFor(ms = 0) {
  * @returns {BaseError} Error with specified code
  */
 export function createErrorWithCode(code, context = {}) {
-  return new BaseError(
-    `Error with code ${code}`,
-    code,
-    context
-  );
+  return new BaseError(`Error with code ${code}`, code, context);
 }
 
 /**
@@ -280,7 +301,9 @@ export function verifyMetrics(actual, expected) {
         return false;
       }
     } else if (actual[key] !== value) {
-      console.error(`Metric mismatch for '${key}': expected ${value}, got ${actual[key]}`);
+      console.error(
+        `Metric mismatch for '${key}': expected ${value}, got ${actual[key]}`
+      );
       return false;
     }
   }
@@ -299,5 +322,5 @@ export default {
   createMockMonitoringCoordinator,
   waitFor,
   createErrorWithCode,
-  verifyMetrics
+  verifyMetrics,
 };

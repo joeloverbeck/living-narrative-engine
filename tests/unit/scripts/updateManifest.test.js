@@ -3,7 +3,14 @@
  * @description Tests all new validation features, batch processing, CLI parsing, and error handling
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -22,11 +29,14 @@ const mockUpdateManifest = {
       this.componentTypeId = componentTypeId;
       this.validationErrors = validationErrors;
     }
-  }
+  },
 };
 
 // Mock the required modules
-jest.unstable_mockModule('../../../scripts/updateManifest.js', () => mockUpdateManifest);
+jest.unstable_mockModule(
+  '../../../scripts/updateManifest.js',
+  () => mockUpdateManifest
+);
 
 describe('UpdateManifest - Enhanced with Validation Integration', () => {
   let testBed;
@@ -37,17 +47,17 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
   beforeEach(async () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    
+
     // Mock validation orchestrator
     mockValidationOrchestrator = {
       validateMod: jest.fn(),
     };
-    
+
     // Mock violation reporter
     mockViolationReporter = {
       generateReport: jest.fn(),
     };
-    
+
     // Reset all mocks
     jest.clearAllMocks();
   });
@@ -63,9 +73,9 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         '--validate-references',
         '--fail-on-violations',
         '--format=json',
-        '--output=report.json'
+        '--output=report.json',
       ];
-      
+
       // Mock the parseCommandLineOptions function
       mockUpdateManifest.parseCommandLineOptions.mockReturnValue({
         modName: 'test-mod',
@@ -82,11 +92,11 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         dryRun: false,
         force: false,
         concurrency: 3,
-        batch: false
+        batch: false,
       });
-      
+
       const options = mockUpdateManifest.parseCommandLineOptions(args);
-      
+
       expect(options.modName).toBe('test-mod');
       expect(options.validateReferences).toBe(true);
       expect(options.failOnViolations).toBe(true);
@@ -102,9 +112,9 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         '--no-suggestions',
         '--validation-timeout=60000',
         '--verbose',
-        '--dry-run'
+        '--dry-run',
       ];
-      
+
       mockUpdateManifest.parseCommandLineOptions.mockReturnValue({
         modName: 'test-mod',
         validateReferences: false,
@@ -120,11 +130,11 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         dryRun: true,
         force: false,
         concurrency: 3,
-        batch: false
+        batch: false,
       });
-      
+
       const options = mockUpdateManifest.parseCommandLineOptions(args);
-      
+
       expect(options.preValidation).toBe(true);
       expect(options.validationStrictMode).toBe(true);
       expect(options.showSuggestions).toBe(false);
@@ -138,9 +148,9 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         '--batch',
         '--validate-references',
         '--concurrency=5',
-        '--verbose'
+        '--verbose',
       ];
-      
+
       mockUpdateManifest.parseCommandLineOptions.mockReturnValue({
         modName: null,
         validateReferences: true,
@@ -156,11 +166,11 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         dryRun: false,
         force: false,
         concurrency: 5,
-        batch: true
+        batch: true,
       });
-      
+
       const options = mockUpdateManifest.parseCommandLineOptions(args);
-      
+
       expect(options.batch).toBe(true);
       expect(options.concurrency).toBe(5);
       expect(options.validateReferences).toBe(true);
@@ -168,15 +178,8 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
     });
 
     it('should handle short flag aliases correctly', () => {
-      const args = [
-        'test-mod',
-        '-v',
-        '-s',
-        '-V',
-        '-d',
-        '-f'
-      ];
-      
+      const args = ['test-mod', '-v', '-s', '-V', '-d', '-f'];
+
       mockUpdateManifest.parseCommandLineOptions.mockReturnValue({
         modName: 'test-mod',
         validateReferences: true,
@@ -192,11 +195,11 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         dryRun: true,
         force: true,
         concurrency: 3,
-        batch: false
+        batch: false,
       });
-      
+
       const options = mockUpdateManifest.parseCommandLineOptions(args);
-      
+
       expect(options.validateReferences).toBe(true);
       expect(options.failOnViolations).toBe(true);
       expect(options.verbose).toBe(true);
@@ -206,13 +209,16 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
 
     it('should throw error for invalid validation format', () => {
       const args = ['test-mod', '--format=invalid'];
-      
+
       mockUpdateManifest.parseCommandLineOptions.mockImplementation(() => {
-        throw new Error('Invalid validation format: invalid. Valid options: console, json, html, markdown, none');
+        throw new Error(
+          'Invalid validation format: invalid. Valid options: console, json, html, markdown, none'
+        );
       });
-      
-      expect(() => mockUpdateManifest.parseCommandLineOptions(args))
-        .toThrow('Invalid validation format: invalid');
+
+      expect(() => mockUpdateManifest.parseCommandLineOptions(args)).toThrow(
+        'Invalid validation format: invalid'
+      );
     });
   });
 
@@ -233,34 +239,37 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
             hasViolations: false,
             violations: [],
             violationCount: 0,
-            suggestions: []
+            suggestions: [],
           },
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
             manifestUpdate: 100,
-            postValidation: 50
+            postValidation: 50,
           },
-          totalTime: 150
-        }
+          totalTime: 150,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
-        postValidation: true
+        postValidation: true,
       });
-      
+
       expect(result.validation.performed).toBe(true);
       expect(result.validation.postValidation.hasViolations).toBe(false);
-      expect(mockUpdateManifest.updateModManifest).toHaveBeenCalledWith('test-mod', {
-        validateReferences: true,
-        postValidation: true
-      });
+      expect(mockUpdateManifest.updateModManifest).toHaveBeenCalledWith(
+        'test-mod',
+        {
+          validateReferences: true,
+          postValidation: true,
+        }
+      );
     });
 
     it('should perform pre-validation when enabled', async () => {
@@ -278,36 +287,36 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
             hasViolations: false,
             violations: [],
             violationCount: 0,
-            suggestions: []
+            suggestions: [],
           },
           postValidation: {
             hasViolations: false,
             violations: [],
             violationCount: 0,
-            suggestions: []
+            suggestions: [],
           },
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
             preValidation: 30,
             manifestUpdate: 100,
-            postValidation: 50
+            postValidation: 50,
           },
-          totalTime: 180
-        }
+          totalTime: 180,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
         preValidation: true,
-        postValidation: true
+        postValidation: true,
       });
-      
+
       expect(result.validation.preValidation).toBeTruthy();
       expect(result.validation.postValidation).toBeTruthy();
       expect(result.performance.phases.preValidation).toBe(30);
@@ -320,19 +329,24 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         {
           hasViolations: true,
           violations: [
-            { message: 'Missing component reference', file: 'test.action.json' },
-            { message: 'Invalid entity reference', file: 'test2.action.json' }
+            {
+              message: 'Missing component reference',
+              file: 'test.action.json',
+            },
+            { message: 'Invalid entity reference', file: 'test2.action.json' },
           ],
-          violationCount: 2
+          violationCount: 2,
         }
       );
-      
+
       mockUpdateManifest.updateModManifest.mockRejectedValue(mockError);
-      
-      await expect(mockUpdateManifest.updateModManifest('test-mod', {
-        validateReferences: true,
-        failOnViolations: true
-      })).rejects.toThrow(mockUpdateManifest.ValidationError);
+
+      await expect(
+        mockUpdateManifest.updateModManifest('test-mod', {
+          validateReferences: true,
+          failOnViolations: true,
+        })
+      ).rejects.toThrow(mockUpdateManifest.ValidationError);
     });
 
     it('should generate validation reports in different formats', async () => {
@@ -349,39 +363,35 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: {
             hasViolations: true,
-            violations: [
-              { message: 'Test violation', file: 'test.json' }
-            ],
+            violations: [{ message: 'Test violation', file: 'test.json' }],
             violationCount: 1,
             suggestions: [
-              { description: 'Fix test violation by updating reference' }
-            ]
+              { description: 'Fix test violation by updating reference' },
+            ],
           },
-          violations: [
-            { message: 'Test violation', file: 'test.json' }
-          ],
+          violations: [{ message: 'Test violation', file: 'test.json' }],
           suggestions: [
-            { description: 'Fix test violation by updating reference' }
-          ]
+            { description: 'Fix test violation by updating reference' },
+          ],
         },
         performance: {
           startTime: Date.now(),
           phases: {
             manifestUpdate: 100,
-            postValidation: 50
+            postValidation: 50,
           },
-          totalTime: 150
-        }
+          totalTime: 150,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
         validationFormat: 'json',
-        validationOutput: 'test-report.json'
+        validationOutput: 'test-report.json',
       });
-      
+
       expect(result.validation.performed).toBe(true);
       expect(result.validation.postValidation.hasViolations).toBe(true);
       expect(result.validation.violations).toHaveLength(1);
@@ -391,11 +401,13 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
     it('should handle validation timeout correctly', async () => {
       const mockError = new Error('Validation timeout');
       mockUpdateManifest.updateModManifest.mockRejectedValue(mockError);
-      
-      await expect(mockUpdateManifest.updateModManifest('test-mod', {
-        validateReferences: true,
-        validationTimeout: 1000
-      })).rejects.toThrow('Validation timeout');
+
+      await expect(
+        mockUpdateManifest.updateModManifest('test-mod', {
+          validateReferences: true,
+          validationTimeout: 1000,
+        })
+      ).rejects.toThrow('Validation timeout');
     });
 
     it('should skip validation on dry run when configured', async () => {
@@ -412,25 +424,25 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: null,
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
-            manifestUpdate: 50
+            manifestUpdate: 50,
           },
-          totalTime: 50
-        }
+          totalTime: 50,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
         dryRun: true,
-        skipValidationOnDryRun: true
+        skipValidationOnDryRun: true,
       });
-      
+
       expect(result.manifestUpdated).toBe(false);
       expect(result.validation.performed).toBe(false);
     });
@@ -447,22 +459,22 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           modsWithViolations: 2,
           commonViolations: new Map([
             ['core:missing-component', 2],
-            ['positioning:invalid-entity', 1]
-          ])
+            ['positioning:invalid-entity', 1],
+          ]),
         },
         performance: {
           startTime: Date.now(),
-          totalTime: 5000
-        }
+          totalTime: 5000,
+        },
       };
-      
+
       mockUpdateManifest.updateAllManifests.mockResolvedValue(mockResults);
-      
+
       const results = await mockUpdateManifest.updateAllManifests({
         validateReferences: true,
-        concurrency: 2
+        concurrency: 2,
       });
-      
+
       expect(results.processed).toHaveLength(3);
       expect(results.successful).toHaveLength(2);
       expect(results.failed).toHaveLength(1);
@@ -479,27 +491,27 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         validationSummary: {
           totalViolations: 0,
           modsWithViolations: 0,
-          commonViolations: new Map()
+          commonViolations: new Map(),
         },
         performance: {
           startTime: Date.now(),
-          totalTime: 3000
-        }
+          totalTime: 3000,
+        },
       };
-      
+
       mockUpdateManifest.updateAllManifests.mockResolvedValue(mockResults);
-      
+
       const results = await mockUpdateManifest.updateAllManifests({
         validateReferences: true,
-        concurrency: 3
+        concurrency: 3,
       });
-      
+
       expect(results.processed).toHaveLength(5);
       expect(results.successful).toHaveLength(5);
       expect(results.failed).toHaveLength(0);
       expect(mockUpdateManifest.updateAllManifests).toHaveBeenCalledWith({
         validateReferences: true,
-        concurrency: 3
+        concurrency: 3,
       });
     });
 
@@ -513,24 +525,24 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           modsWithViolations: 2,
           commonViolations: new Map([
             ['core:actor', 3],
-            ['positioning:location', 2]
-          ])
+            ['positioning:location', 2],
+          ]),
         },
         performance: {
           startTime: Date.now(),
-          totalTime: 2000
-        }
+          totalTime: 2000,
+        },
       };
-      
+
       mockUpdateManifest.updateAllManifests.mockResolvedValue(mockResults);
-      
+
       const results = await mockUpdateManifest.updateAllManifests({
-        validateReferences: true
+        validateReferences: true,
       });
-      
+
       expect(results.validationSummary.totalViolations).toBe(5);
       expect(results.validationSummary.modsWithViolations).toBe(2);
-      
+
       // Check common violations tracking
       const commonViolations = results.validationSummary.commonViolations;
       expect(commonViolations.get('core:actor')).toBe(3);
@@ -538,12 +550,16 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
     });
 
     it('should handle batch processing failures gracefully', async () => {
-      const mockError = new Error('Batch processing failed due to file system error');
+      const mockError = new Error(
+        'Batch processing failed due to file system error'
+      );
       mockUpdateManifest.updateAllManifests.mockRejectedValue(mockError);
-      
-      await expect(mockUpdateManifest.updateAllManifests({
-        validateReferences: true
-      })).rejects.toThrow('Batch processing failed due to file system error');
+
+      await expect(
+        mockUpdateManifest.updateAllManifests({
+          validateReferences: true,
+        })
+      ).rejects.toThrow('Batch processing failed due to file system error');
     });
   });
 
@@ -562,26 +578,28 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: null,
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
-            manifestUpdate: 100
+            manifestUpdate: 100,
           },
-          totalTime: 100
-        }
+          totalTime: 100,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
-        validateReferences: true
+        validateReferences: true,
       });
-      
+
       expect(result.success).toBe(true);
       expect(result.validation.performed).toBe(false);
-      expect(result.warnings).toContain('Validation components not available: Mock error');
+      expect(result.warnings).toContain(
+        'Validation components not available: Mock error'
+      );
     });
 
     it('should provide detailed validation error context', async () => {
@@ -592,32 +610,40 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
             file: 'actions/test.action.json',
             line: 15,
             suggestedFixes: [
-              { description: 'Add missing component reference', priority: 'primary' }
-            ]
-          }
+              {
+                description: 'Add missing component reference',
+                priority: 'primary',
+              },
+            ],
+          },
         ],
         hasViolations: true,
-        violationCount: 1
+        violationCount: 1,
       };
-      
+
       const mockError = new mockUpdateManifest.ValidationError(
         'Validation failed with detailed context',
         'test-component',
         validationErrors
       );
-      
+
       mockUpdateManifest.updateModManifest.mockRejectedValue(mockError);
-      
-      await expect(mockUpdateManifest.updateModManifest('test-mod', {
-        validateReferences: true,
-        failOnViolations: true
-      })).rejects.toThrow(mockUpdateManifest.ValidationError);
-      
+
+      await expect(
+        mockUpdateManifest.updateModManifest('test-mod', {
+          validateReferences: true,
+          failOnViolations: true,
+        })
+      ).rejects.toThrow(mockUpdateManifest.ValidationError);
+
       // The mock should be called with correct parameters
-      expect(mockUpdateManifest.updateModManifest).toHaveBeenCalledWith('test-mod', {
-        validateReferences: true,
-        failOnViolations: true
-      });
+      expect(mockUpdateManifest.updateModManifest).toHaveBeenCalledWith(
+        'test-mod',
+        {
+          validateReferences: true,
+          failOnViolations: true,
+        }
+      );
     });
   });
 
@@ -637,36 +663,36 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
             hasViolations: false,
             violations: [],
             violationCount: 0,
-            suggestions: []
+            suggestions: [],
           },
           postValidation: {
             hasViolations: false,
             violations: [],
             violationCount: 0,
-            suggestions: []
+            suggestions: [],
           },
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now() - 1000,
           phases: {
             preValidation: 100,
             manifestUpdate: 300,
-            postValidation: 150
+            postValidation: 150,
           },
-          totalTime: 550
-        }
+          totalTime: 550,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
         preValidation: true,
-        postValidation: true
+        postValidation: true,
       });
-      
+
       expect(result.performance.phases.preValidation).toBe(100);
       expect(result.performance.phases.manifestUpdate).toBe(300);
       expect(result.performance.phases.postValidation).toBe(150);
@@ -681,21 +707,21 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
         validationSummary: {
           totalViolations: 0,
           modsWithViolations: 0,
-          commonViolations: new Map()
+          commonViolations: new Map(),
         },
         performance: {
           startTime: Date.now() - 5000,
-          totalTime: 5000
-        }
+          totalTime: 5000,
+        },
       };
-      
+
       mockUpdateManifest.updateAllManifests.mockResolvedValue(mockResults);
-      
+
       const results = await mockUpdateManifest.updateAllManifests({
         validateReferences: true,
-        concurrency: 2
+        concurrency: 2,
       });
-      
+
       expect(results.performance.totalTime).toBe(5000);
       expect(results.performance.startTime).toBeLessThanOrEqual(Date.now());
     });
@@ -716,21 +742,24 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: null,
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {},
-          totalTime: 50
-        }
+          totalTime: 50,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
-      const result = await mockUpdateManifest.updateModManifest('nonexistent-mod');
-      
+
+      const result =
+        await mockUpdateManifest.updateModManifest('nonexistent-mod');
+
       expect(result.success).toBe(false);
-      expect(result.errors).toContain('Mod path is not a directory: data/mods/nonexistent-mod');
+      expect(result.errors).toContain(
+        'Mod path is not a directory: data/mods/nonexistent-mod'
+      );
     });
 
     it('should handle invalid JSON in manifest file', async () => {
@@ -747,19 +776,19 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: null,
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {},
-          totalTime: 25
-        }
+          totalTime: 25,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('invalid-mod');
-      
+
       expect(result.success).toBe(false);
       expect(result.errors[0]).toContain('Failed to parse JSON');
     });
@@ -778,27 +807,29 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           preValidation: null,
           postValidation: null,
           violations: [],
-          suggestions: []
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
-            manifestUpdate: 100
+            manifestUpdate: 100,
           },
-          totalTime: 100
-        }
+          totalTime: 100,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
         validationTimeout: 1000,
-        failOnViolations: false
+        failOnViolations: false,
       });
-      
+
       expect(result.success).toBe(true);
-      expect(result.warnings).toContain('Post-validation failed: Validation timeout');
+      expect(result.warnings).toContain(
+        'Post-validation failed: Validation timeout'
+      );
     });
   });
 
@@ -819,40 +850,40 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
             hasViolations: true,
             violations: [
               { message: 'Test violation 1', file: 'test1.json' },
-              { message: 'Test violation 2', file: 'test2.json' }
+              { message: 'Test violation 2', file: 'test2.json' },
             ],
             violationCount: 2,
             suggestions: [
               { description: 'Fix violation 1' },
-              { description: 'Fix violation 2' }
-            ]
+              { description: 'Fix violation 2' },
+            ],
           },
           violations: [
             { message: 'Test violation 1', file: 'test1.json' },
-            { message: 'Test violation 2', file: 'test2.json' }
+            { message: 'Test violation 2', file: 'test2.json' },
           ],
           suggestions: [
             { description: 'Fix violation 1' },
-            { description: 'Fix violation 2' }
-          ]
+            { description: 'Fix violation 2' },
+          ],
         },
         performance: {
           startTime: Date.now() - 500,
           phases: {
             manifestUpdate: 200,
-            postValidation: 100
+            postValidation: 100,
           },
-          totalTime: 500
-        }
+          totalTime: 500,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       const result = await mockUpdateManifest.updateModManifest('test-mod', {
         validateReferences: true,
-        verbose: true
+        verbose: true,
       });
-      
+
       expect(result.filesProcessed).toBe(15);
       expect(result.validation.postValidation.violationCount).toBe(2);
       expect(result.validation.suggestions).toHaveLength(2);
@@ -875,41 +906,39 @@ describe('UpdateManifest - Enhanced with Validation Integration', () => {
           postValidation: {
             hasViolations: true,
             violations: [
-              { message: 'Format test violation', file: 'test.json' }
+              { message: 'Format test violation', file: 'test.json' },
             ],
             violationCount: 1,
-            suggestions: []
+            suggestions: [],
           },
-          violations: [
-            { message: 'Format test violation', file: 'test.json' }
-          ],
-          suggestions: []
+          violations: [{ message: 'Format test violation', file: 'test.json' }],
+          suggestions: [],
         },
         performance: {
           startTime: Date.now(),
           phases: {
             manifestUpdate: 100,
-            postValidation: 50
+            postValidation: 50,
           },
-          totalTime: 150
-        }
+          totalTime: 150,
+        },
       };
-      
+
       mockUpdateManifest.updateModManifest.mockResolvedValue(mockResult);
-      
+
       // Test different formats
       const formats = ['console', 'json', 'html', 'markdown'];
-      
+
       for (const format of formats) {
         const result = await mockUpdateManifest.updateModManifest('test-mod', {
           validateReferences: true,
-          validationFormat: format
+          validationFormat: format,
         });
-        
+
         expect(result.validation.performed).toBe(true);
         expect(result.validation.postValidation.hasViolations).toBe(true);
       }
-      
+
       expect(mockUpdateManifest.updateModManifest).toHaveBeenCalledTimes(4);
     });
   });

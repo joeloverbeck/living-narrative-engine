@@ -33,7 +33,9 @@ describe('validateSaveMetadataFields integration', () => {
     expect(result.playtimeSeconds).toBe(0);
 
     expect(logger.warn).toHaveBeenCalledTimes(1);
-    expect(logger.warn.mock.calls[0][0]).toContain('Essential metadata missing or malformed');
+    expect(logger.warn.mock.calls[0][0]).toContain(
+      'Essential metadata missing or malformed'
+    );
     expect(logger.warn.mock.calls[0][0]).toContain(metadata.identifier);
   });
 
@@ -68,7 +70,11 @@ describe('validateSaveMetadataFields integration', () => {
       playtimeSeconds: 5400,
     };
 
-    const result = validateSaveMetadataFields(metadata, buildManualFileName('Afternoon Patrol'), logger);
+    const result = validateSaveMetadataFields(
+      metadata,
+      buildManualFileName('Afternoon Patrol'),
+      logger
+    );
 
     expect(result).toBe(metadata);
     expect(logger.warn).not.toHaveBeenCalled();

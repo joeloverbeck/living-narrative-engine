@@ -100,9 +100,10 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
       );
 
       // Verify the condition was loaded
-      const condition1 = testFixture.testEnv.dataRegistry.getConditionDefinition(
-        'positioning:actor-in-entity-facing-away'
-      );
+      const condition1 =
+        testFixture.testEnv.dataRegistry.getConditionDefinition(
+          'positioning:actor-in-entity-facing-away'
+        );
 
       expect(condition1).toBeDefined();
     });
@@ -274,7 +275,10 @@ describe('ModTestFixture - Auto-Load Conditions Integration', () => {
       );
 
       // Create entities
-      const scenario = testFixture.createStandardActorTarget(['Actor', 'Target']);
+      const scenario = testFixture.createStandardActorTarget([
+        'Actor',
+        'Target',
+      ]);
 
       // Register custom scope
       await testFixture.registerCustomScope(

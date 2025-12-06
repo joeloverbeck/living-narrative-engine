@@ -8,7 +8,10 @@ jest.setTimeout(20000);
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const waitForCondition = async (predicate, { timeoutMs = 2000, stepMs = 25 } = {}) => {
+const waitForCondition = async (
+  predicate,
+  { timeoutMs = 2000, stepMs = 25 } = {}
+) => {
   const start = Date.now();
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -26,10 +29,14 @@ const createTestLogger = ({ debugEnabled = true } = {}) => {
   const entries = [];
   return {
     logger: {
-      info: (message, context) => entries.push({ level: 'info', message, context }),
-      warn: (message, context) => entries.push({ level: 'warn', message, context }),
-      error: (message, context) => entries.push({ level: 'error', message, context }),
-      debug: (message, context) => entries.push({ level: 'debug', message, context }),
+      info: (message, context) =>
+        entries.push({ level: 'info', message, context }),
+      warn: (message, context) =>
+        entries.push({ level: 'warn', message, context }),
+      error: (message, context) =>
+        entries.push({ level: 'error', message, context }),
+      debug: (message, context) =>
+        entries.push({ level: 'debug', message, context }),
       isDebugEnabled: debugEnabled,
     },
     entries,
@@ -75,7 +82,11 @@ const createHoldServer = () => {
   };
 };
 
-const sendRequestThroughService = (service, targetUrl, { method = 'GET', body, headers } = {}) => {
+const sendRequestThroughService = (
+  service,
+  targetUrl,
+  { method = 'GET', body, headers } = {}
+) => {
   const { agent } = service.getFetchOptions(targetUrl);
   const parsed = new URL(targetUrl);
   return new Promise((resolve, reject) => {
@@ -130,7 +141,9 @@ describe('HttpAgentService integration coverage enhancements', () => {
 
     const { server, waitForHold, releaseHold } = createHoldServer();
     await new Promise((resolve) => server.listen(0, resolve));
-    const port = /** @type {import('node:net').AddressInfo} */ (server.address()).port;
+    const port = /** @type {import('node:net').AddressInfo} */ (
+      server.address()
+    ).port;
     const baseUrl = `http://127.0.0.1:${port}`;
 
     try {
@@ -143,15 +156,22 @@ describe('HttpAgentService integration coverage enhancements', () => {
         body: JSON.stringify({ ok: true }),
       });
 
-      await waitForCondition(() => {
-        const stats = service.getStats();
-        const detail = stats.agentDetails[0];
-        return Boolean(detail && detail.activeSockets >= 1 && detail.freeSockets >= 1);
-      }, { timeoutMs: 4000, stepMs: 25 });
+      await waitForCondition(
+        () => {
+          const stats = service.getStats();
+          const detail = stats.agentDetails[0];
+          return Boolean(
+            detail && detail.activeSockets >= 1 && detail.freeSockets >= 1
+          );
+        },
+        { timeoutMs: 4000, stepMs: 25 }
+      );
 
       await delay(50);
       const statsDuring = service.getStats();
-      expect(statsDuring.agentDetails[0].activeSockets).toBeGreaterThanOrEqual(1);
+      expect(statsDuring.agentDetails[0].activeSockets).toBeGreaterThanOrEqual(
+        1
+      );
       expect(statsDuring.agentDetails[0].freeSockets).toBeGreaterThanOrEqual(1);
 
       const enhancedStats = service.getEnhancedStats();
@@ -172,8 +192,12 @@ describe('HttpAgentService integration coverage enhancements', () => {
 
       const postDestroyStats = service.getStats();
       expect(postDestroyStats.agentDetails).toHaveLength(0);
-      expect(entries.some((entry) => entry.message?.includes('Socket created'))).toBe(true);
-      expect(entries.some((entry) => entry.message?.includes('Socket reused'))).toBe(true);
+      expect(
+        entries.some((entry) => entry.message?.includes('Socket created'))
+      ).toBe(true);
+      expect(
+        entries.some((entry) => entry.message?.includes('Socket reused'))
+      ).toBe(true);
     } finally {
       service.cleanup();
       await new Promise((resolve) => server.close(resolve));
@@ -259,7 +283,9 @@ describe('HttpAgentService integration coverage enhancements', () => {
 
       const interval = service.getNextCleanupIntervalPreview();
       expect(interval).toBeLessThan(baseInterval);
-      expect(service.getStats().adaptiveCleanupAdjustments).toBeGreaterThanOrEqual(1);
+      expect(
+        service.getStats().adaptiveCleanupAdjustments
+      ).toBeGreaterThanOrEqual(1);
 
       const overrideInterval = service.getNextCleanupIntervalPreview({
         overrideAdaptiveCleanupEnabled: false,
@@ -296,7 +322,11 @@ describe('HttpAgentService integration coverage enhancements', () => {
         })
       );
 
-      expect(entries.some((entry) => entry.message?.includes('Adaptive cleanup completed'))).toBe(true);
+      expect(
+        entries.some((entry) =>
+          entry.message?.includes('Adaptive cleanup completed')
+        )
+      ).toBe(true);
     } finally {
       service.cleanup();
     }
@@ -348,10 +378,16 @@ describe('HttpAgentService integration coverage enhancements', () => {
 
     try {
       expect(() => service.getAgent('invalid-url')).toThrow();
-      expect(entries.some((entry) => entry.message?.includes('Error getting agent'))).toBe(true);
+      expect(
+        entries.some((entry) => entry.message?.includes('Error getting agent'))
+      ).toBe(true);
 
       expect(service.destroyAgent('invalid-url')).toBe(false);
-      expect(entries.some((entry) => entry.message?.includes('Error destroying agent'))).toBe(true);
+      expect(
+        entries.some((entry) =>
+          entry.message?.includes('Error destroying agent')
+        )
+      ).toBe(true);
 
       const goodUrl = 'http://127.0.0.1:9300/config';
       service.getAgent(goodUrl);

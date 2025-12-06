@@ -19,7 +19,10 @@
  * @augments BaseOperationHandler
  */
 
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
@@ -44,7 +47,11 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'batchAddComponentsOptimized', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'batchAddComponentsOptimized',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -64,14 +71,30 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
    * @private
    */
   #validateParams(params, logger) {
-    if (!assertParamsObject(params, this.#dispatcher, 'PICK_UP_ITEM_FROM_LOCATION')) {
+    if (
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'PICK_UP_ITEM_FROM_LOCATION'
+      )
+    ) {
       return null;
     }
 
     const { actorEntity, itemEntity } = params;
 
-    const validatedActor = validateStringParam(actorEntity, 'actorEntity', logger, this.#dispatcher);
-    const validatedItem = validateStringParam(itemEntity, 'itemEntity', logger, this.#dispatcher);
+    const validatedActor = validateStringParam(
+      actorEntity,
+      'actorEntity',
+      logger,
+      this.#dispatcher
+    );
+    const validatedItem = validateStringParam(
+      itemEntity,
+      'itemEntity',
+      logger,
+      this.#dispatcher
+    );
 
     if (!validatedActor || !validatedItem) {
       return null;
@@ -120,9 +143,9 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
           componentTypeId: INVENTORY_COMPONENT_ID,
           componentData: {
             ...inventory,
-            items: [...inventory.items, itemEntity]
-          }
-        }
+            items: [...inventory.items, itemEntity],
+          },
+        },
       ];
 
       // Apply atomically with batch update
@@ -139,7 +162,6 @@ class PickUpItemFromLocationHandler extends BaseOperationHandler {
 
       log.debug(`Item picked up`, { actorEntity, itemEntity });
       return { success: true };
-
     } catch (error) {
       log.error(`Pick up item failed`, error, { actorEntity, itemEntity });
       return { success: false, error: error.message };

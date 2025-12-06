@@ -8,17 +8,12 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "leather",
       "durability": 35,
-      "careInstructions": [
-        "requires_oiling"
-      ]
+      "careInstructions": ["requires_oiling"]
     },
     "core:name": {
       "text": "old ankle boots"

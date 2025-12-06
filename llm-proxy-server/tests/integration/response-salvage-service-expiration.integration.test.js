@@ -51,7 +51,9 @@ describe('ResponseSalvageService expiration integration flows', () => {
     jest.setTimeout(10_000);
 
     const logger = createLogger();
-    const salvageService = new ResponseSalvageService(logger, { defaultTtl: 500 });
+    const salvageService = new ResponseSalvageService(logger, {
+      defaultTtl: 500,
+    });
     const app = createApp(logger, salvageService);
 
     const requestId = 'repeat-request';
@@ -79,7 +81,9 @@ describe('ResponseSalvageService expiration integration flows', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 80));
 
-    const recovery = await request(app).get(`/api/llm-request/salvage/${requestId}`);
+    const recovery = await request(app).get(
+      `/api/llm-request/salvage/${requestId}`
+    );
 
     expect(recovery.status).toBe(200);
     expect(recovery.body).toMatchObject({
@@ -98,7 +102,11 @@ describe('ResponseSalvageService expiration integration flows', () => {
     );
 
     const stats = salvageService.getStats();
-    expect(stats).toEqual({ salvaged: 1, totalCacheEntries: 2, activeTimers: 1 });
+    expect(stats).toEqual({
+      salvaged: 1,
+      totalCacheEntries: 2,
+      activeTimers: 1,
+    });
 
     salvageService.clear();
   });
@@ -107,7 +115,9 @@ describe('ResponseSalvageService expiration integration flows', () => {
     jest.setTimeout(10_000);
 
     const logger = createLogger();
-    const salvageService = new ResponseSalvageService(logger, { defaultTtl: 200 });
+    const salvageService = new ResponseSalvageService(logger, {
+      defaultTtl: 200,
+    });
     const app = createApp(logger, salvageService);
 
     const llmId = 'integration-llm';
@@ -126,7 +136,9 @@ describe('ResponseSalvageService expiration integration flows', () => {
     const futureNow = originalNow + 250;
     const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => futureNow);
 
-    const staleRecovery = await request(app).get(`/api/llm-request/salvage/${requestId}`);
+    const staleRecovery = await request(app).get(
+      `/api/llm-request/salvage/${requestId}`
+    );
 
     nowSpy.mockRestore();
 
@@ -146,7 +158,11 @@ describe('ResponseSalvageService expiration integration flows', () => {
       expect.objectContaining({ requestId })
     );
 
-    expect(salvageService.getStats()).toEqual({ salvaged: 0, totalCacheEntries: 0, activeTimers: 0 });
+    expect(salvageService.getStats()).toEqual({
+      salvaged: 0,
+      totalCacheEntries: 0,
+      activeTimers: 0,
+    });
 
     await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -162,9 +178,14 @@ describe('ResponseSalvageService expiration integration flows', () => {
     );
 
     const futureSignatureNow = Date.now() + 260;
-    const signatureSpy = jest.spyOn(Date, 'now').mockImplementation(() => futureSignatureNow);
+    const signatureSpy = jest
+      .spyOn(Date, 'now')
+      .mockImplementation(() => futureSignatureNow);
 
-    const signatureLookup = salvageService.retrieveBySignature(llmId, basePayload);
+    const signatureLookup = salvageService.retrieveBySignature(
+      llmId,
+      basePayload
+    );
 
     signatureSpy.mockRestore();
 
@@ -175,7 +196,11 @@ describe('ResponseSalvageService expiration integration flows', () => {
       { requestId: signatureRequestId }
     );
 
-    expect(salvageService.getStats()).toEqual({ salvaged: 0, totalCacheEntries: 0, activeTimers: 0 });
+    expect(salvageService.getStats()).toEqual({
+      salvaged: 0,
+      totalCacheEntries: 0,
+      activeTimers: 0,
+    });
 
     await new Promise((resolve) => setTimeout(resolve, 170));
 

@@ -137,18 +137,21 @@ describe('recovery:push_yourself_to_your_feet action integration', () => {
       actorName: 'Alice',
     });
 
-    const actions = await testFixture.testEnv.getAvailableActions('test:actor1');
+    const actions =
+      await testFixture.testEnv.getAvailableActions('test:actor1');
     const pushAction = actions.find(
       (a) => a.id === 'recovery:push_yourself_to_your_feet'
     );
     expect(pushAction).toBeDefined();
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-    testFixture.entityManager.removeComponent('test:actor1', 'positioning:fallen');
-
-    const actionsWithoutComponent = await testFixture.testEnv.getAvailableActions(
-      'test:actor1'
+    testFixture.entityManager.removeComponent(
+      'test:actor1',
+      'positioning:fallen'
     );
+
+    const actionsWithoutComponent =
+      await testFixture.testEnv.getAvailableActions('test:actor1');
     const pushActionMissing = actionsWithoutComponent.find(
       (a) => a.id === 'recovery:push_yourself_to_your_feet'
     );

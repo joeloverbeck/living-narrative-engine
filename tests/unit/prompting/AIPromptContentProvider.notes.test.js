@@ -38,7 +38,9 @@ describe('AIPromptContentProvider.getPromptData → notesArray', () => {
   };
 
   const stubCharacterDataXmlBuilder = {
-    buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+    buildCharacterDataXml: jest.fn(
+      () => '<character_data>Mock XML</character_data>'
+    ),
   };
 
   const stubModActionMetadataProvider = {

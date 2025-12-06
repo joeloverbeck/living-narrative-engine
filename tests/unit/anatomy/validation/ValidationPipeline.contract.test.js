@@ -30,15 +30,31 @@ describe('ValidationPipeline contract', () => {
   });
 
   it('succeeds when fail-fast validators meet configuration contract', () => {
-    registry.register(createValidator({ name: 'component-existence', priority: 0, failFast: true }));
-    registry.register(createValidator({ name: 'property-schemas', priority: 5, failFast: true }));
+    registry.register(
+      createValidator({
+        name: 'component-existence',
+        priority: 0,
+        failFast: true,
+      })
+    );
+    registry.register(
+      createValidator({ name: 'property-schemas', priority: 5, failFast: true })
+    );
 
     expect(registry.assertRegistered(required)).toBe(true);
   });
 
   it('throws when validator priority does not match contract', () => {
-    registry.register(createValidator({ name: 'component-existence', priority: 10, failFast: true }));
-    registry.register(createValidator({ name: 'property-schemas', priority: 5, failFast: true }));
+    registry.register(
+      createValidator({
+        name: 'component-existence',
+        priority: 10,
+        failFast: true,
+      })
+    );
+    registry.register(
+      createValidator({ name: 'property-schemas', priority: 5, failFast: true })
+    );
 
     expect(() => registry.assertRegistered(required)).toThrow(
       /component-existence:priority/
@@ -46,8 +62,16 @@ describe('ValidationPipeline contract', () => {
   });
 
   it('downgrades to warning in production mode', () => {
-    registry.register(createValidator({ name: 'component-existence', priority: 0, failFast: false }));
-    registry.register(createValidator({ name: 'property-schemas', priority: 5, failFast: true }));
+    registry.register(
+      createValidator({
+        name: 'component-existence',
+        priority: 0,
+        failFast: false,
+      })
+    );
+    registry.register(
+      createValidator({ name: 'property-schemas', priority: 5, failFast: true })
+    );
 
     const onProductionFailure = jest.fn();
     const result = registry.assertRegistered(required, {
@@ -57,7 +81,9 @@ describe('ValidationPipeline contract', () => {
 
     expect(result).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('ValidatorRegistry: Required validators misconfigured'),
+      expect.stringContaining(
+        'ValidatorRegistry: Required validators misconfigured'
+      ),
       expect.objectContaining({ issues: expect.any(Array) })
     );
     expect(onProductionFailure).toHaveBeenCalled();

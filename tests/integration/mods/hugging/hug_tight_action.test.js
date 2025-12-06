@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
 import hugTightRule from '../../../../data/mods/hugging/rules/handle_hug_tight.rule.json';
 import eventIsActionHugTight from '../../../../data/mods/hugging/conditions/event-is-action-hug-tight.condition.json';

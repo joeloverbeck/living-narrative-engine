@@ -83,7 +83,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
 
       // Verify the action executed (check for success event)
       const successEvents = fixture.events.filter(
-        e => e.payload?.success === true || e.type === 'core:action_success'
+        (e) => e.payload?.success === true || e.type === 'core:action_success'
       );
       expect(successEvents.length).toBeGreaterThan(0);
 
@@ -118,7 +118,7 @@ describe('Patrol Dimensional Travel Scenario', () => {
 
       // Verify first travel executed
       const firstTravelEvents = fixture.events.filter(
-        e => e.payload?.success === true || e.type === 'core:action_success'
+        (e) => e.payload?.success === true || e.type === 'core:action_success'
       );
       expect(firstTravelEvents.length).toBeGreaterThan(0);
 
@@ -145,7 +145,10 @@ function createDimensionalLocations(fixture) {
     name: 'perimeter of rip in reality',
     components: [
       { componentId: 'core:location', data: {} },
-      { componentId: 'core:name', data: { text: 'perimeter of rip in reality' } },
+      {
+        componentId: 'core:name',
+        data: { text: 'perimeter of rip in reality' },
+      },
     ],
   });
 
@@ -187,7 +190,10 @@ function createBidirectionalDimensionalLocations(fixture) {
     name: 'perimeter of rip in reality',
     components: [
       { componentId: 'core:location', data: {} },
-      { componentId: 'core:name', data: { text: 'perimeter of rip in reality' } },
+      {
+        componentId: 'core:name',
+        data: { text: 'perimeter of rip in reality' },
+      },
     ],
   });
 

@@ -125,7 +125,13 @@ describe('notesPersistenceHook subject type handling', () => {
       })),
     };
 
-    persistNotes(action, actorWithoutLogger, undefined, undefined, notesService);
+    persistNotes(
+      action,
+      actorWithoutLogger,
+      undefined,
+      undefined,
+      notesService
+    );
 
     expect(notesService.addNotes).toHaveBeenCalledTimes(1);
     const [, notes] = notesService.addNotes.mock.calls[0];

@@ -49,7 +49,7 @@ describe('RefinementError', () => {
         methodId: 'use_item_from_inventory',
         stepIndex: 2,
         actorId: 'actor-123',
-        reason: 'No applicable methods found'
+        reason: 'No applicable methods found',
       };
       const error = new RefinementError('Refinement failed', context);
       expect(error.message).toBe('Refinement failed');
@@ -58,7 +58,11 @@ describe('RefinementError', () => {
 
     it('should create error with correlation ID option', () => {
       const correlationId = 'custom-correlation-id';
-      const error = new RefinementError('Refinement failed', {}, { correlationId });
+      const error = new RefinementError(
+        'Refinement failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -100,7 +104,7 @@ describe('RefinementError', () => {
         methodId: 'use_item_from_inventory',
         stepIndex: 2,
         actorId: 'actor-123',
-        reason: 'Item not found in inventory'
+        reason: 'Item not found in inventory',
       };
       const error = new RefinementError('Refinement failed', context);
       expect(error.context).toEqual(context);
@@ -126,7 +130,7 @@ describe('RefinementError', () => {
       const context = {
         taskId: 'consume_nourishing_item',
         methodId: 'use_item_from_inventory',
-        actorId: 'actor-123'
+        actorId: 'actor-123',
       };
       const error = new RefinementError('Refinement failed', context);
       const json = error.toJSON();
@@ -162,7 +166,9 @@ describe('RefinementError', () => {
     it('should have ISO format timestamp', () => {
       const error = new RefinementError('Refinement failed');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
@@ -174,7 +180,11 @@ describe('RefinementError', () => {
 
     it('should use custom correlation ID if provided', () => {
       const correlationId = 'custom-id-123';
-      const error = new RefinementError('Refinement failed', {}, { correlationId });
+      const error = new RefinementError(
+        'Refinement failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -185,7 +195,7 @@ describe('RefinementError', () => {
         taskId: 'consume_nourishing_item',
         methodId: null,
         actorId: 'actor-player',
-        reason: 'No applicable methods found for task'
+        reason: 'No applicable methods found for task',
       };
       const error = new RefinementError(
         'Failed to refine task "consume_nourishing_item": No applicable methods',
@@ -204,7 +214,7 @@ describe('RefinementError', () => {
         methodId: 'use_item_from_inventory',
         stepIndex: 2,
         actorId: 'actor-player',
-        reason: 'Step preconditions not met'
+        reason: 'Step preconditions not met',
       };
       const error = new RefinementError(
         'Refinement step 2 failed for method "use_item_from_inventory"',
@@ -221,7 +231,7 @@ describe('RefinementError', () => {
         taskId: 'move_to_location',
         methodId: 'walk_to_target',
         actorId: 'actor-npc-01',
-        reason: 'Actor is not standing'
+        reason: 'Actor is not standing',
       };
       const error = new RefinementError(
         'Method "walk_to_target" preconditions not satisfied',
@@ -238,7 +248,7 @@ describe('RefinementError', () => {
         taskId: 'task_a',
         methodId: 'method_circular',
         actorId: 'actor-123',
-        reason: 'Circular dependency detected: task_a -> task_b -> task_a'
+        reason: 'Circular dependency detected: task_a -> task_b -> task_a',
       };
       const error = new RefinementError(
         'Circular task dependency detected during refinement',

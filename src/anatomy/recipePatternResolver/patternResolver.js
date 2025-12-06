@@ -147,7 +147,7 @@ class RecipePatternResolver {
     const orientations = new Set();
     const socketIds = new Set();
 
-    const collect = slots => {
+    const collect = (slots) => {
       if (!slots) return;
       for (const [key, slotDef] of Object.entries(slots)) {
         slotKeys.add(key);
@@ -511,7 +511,9 @@ class RecipePatternResolver {
     const addedSlots =
       Object.keys(expandedSlots).length -
       Object.keys(recipe.slots || {}).length;
-    this.#logger.info(`Pattern resolution added ${addedSlots} slot definitions`);
+    this.#logger.info(
+      `Pattern resolution added ${addedSlots} slot definitions`
+    );
 
     return {
       ...recipe,

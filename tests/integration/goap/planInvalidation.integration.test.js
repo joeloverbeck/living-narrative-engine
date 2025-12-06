@@ -120,7 +120,10 @@ describe('GOAP Plan Invalidation - Integration', () => {
 
         // At least one of these should be true
         expect(
-          invalidationDetected || replanningStarted || newPlanCreated || result2 === null
+          invalidationDetected ||
+            replanningStarted ||
+            newPlanCreated ||
+            result2 === null
         ).toBe(true);
       }
     });

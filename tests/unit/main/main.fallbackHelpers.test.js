@@ -92,7 +92,9 @@ describe('main.js fallback DOM helpers', () => {
 
     const placeholder = document.createElement('div');
     placeholder.id = 'placeholder-node';
-    document.getElementById('outputDiv').insertAdjacentElement('afterend', placeholder);
+    document
+      .getElementById('outputDiv')
+      .insertAdjacentElement('afterend', placeholder);
 
     const stageError = new Error('UI bootstrap failure');
     mockEnsure.mockResolvedValue({ success: false, error: stageError });
@@ -112,7 +114,13 @@ describe('main.js fallback DOM helpers', () => {
     expect(details.errorObject).toBe(stageError);
     expect(receivedLogger).toBeNull();
 
-    const { createElement, insertAfter, setTextContent, setStyle, alert: alertHelper } = helpers;
+    const {
+      createElement,
+      insertAfter,
+      setTextContent,
+      setStyle,
+      alert: alertHelper,
+    } = helpers;
     const newNode = createElement('p');
     setTextContent(newNode, 'Bootstrap failed');
     setStyle(newNode, 'fontWeight', '600');
@@ -147,7 +155,13 @@ describe('main.js fallback DOM helpers', () => {
 
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
     const [, , , helpers] = mockDisplayFatal.mock.calls[0];
-    const { createElement, insertAfter, setTextContent, setStyle, alert: alertHelper } = helpers;
+    const {
+      createElement,
+      insertAfter,
+      setTextContent,
+      setStyle,
+      alert: alertHelper,
+    } = helpers;
 
     const newSection = createElement('section');
     setTextContent(newSection, 'Engine missing');

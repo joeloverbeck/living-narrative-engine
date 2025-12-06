@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -208,18 +215,16 @@ describe('AlertRouter error handling (mock-based)', () => {
 
     warningHandler({ payload: { message: 'Immediate warning' } });
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_WARNING_ID,
-      { message: 'Immediate warning' }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_WARNING_ID, {
+      message: 'Immediate warning',
+    });
 
     errorHandler({ payload: { message: 'Immediate error' } });
 
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(2);
-    expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
-      DISPLAY_ERROR_ID,
-      { message: 'Immediate error' }
-    );
+    expect(dispatcher.dispatch).toHaveBeenLastCalledWith(DISPLAY_ERROR_ID, {
+      message: 'Immediate error',
+    });
 
     router.notifyUIReady();
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
@@ -252,7 +257,9 @@ describe('AlertRouter error handling (mock-based)', () => {
     expect(errorSpy).toHaveBeenCalledWith('System error');
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      expect.objectContaining({ message: 'Missing or invalid `message` in payload' })
+      expect.objectContaining({
+        message: 'Missing or invalid `message` in payload',
+      })
     );
     expect(router.queue).toEqual([]);
     expect(jest.getTimerCount()).toBe(0);
@@ -299,7 +306,9 @@ describe('AlertRouter error handling (mock-based)', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
     router.uiReady = true;
 
-    router.forwardToUI(SYSTEM_WARNING_OCCURRED_ID, { message: 'Broken dispatch' });
+    router.forwardToUI(SYSTEM_WARNING_OCCURRED_ID, {
+      message: 'Broken dispatch',
+    });
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter dispatch error:',
@@ -316,7 +325,9 @@ describe('AlertRouter error handling (mock-based)', () => {
       dispatch: jest.fn(),
     };
 
-    expect(() => new AlertRouter({ safeEventDispatcher: dispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: dispatcher })
+    ).not.toThrow();
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter subscription error:',

@@ -136,9 +136,7 @@ describe('AnatomyInitializationService timeout behaviour', () => {
     });
     await waitForMicrotask();
 
-    await expect(
-      service.waitForEntityGeneration(actorId, 25)
-    ).rejects.toThrow(
+    await expect(service.waitForEntityGeneration(actorId, 25)).rejects.toThrow(
       `AnatomyInitializationService: Timeout waiting for anatomy generation for entity '${actorId}'`
     );
 
@@ -174,9 +172,7 @@ describe('AnatomyInitializationService timeout behaviour', () => {
     };
 
     try {
-      await expect(
-        service.waitForAllGenerationsToComplete(30)
-      ).rejects.toThrow(
+      await expect(service.waitForAllGenerationsToComplete(30)).rejects.toThrow(
         'AnatomyInitializationService: Timeout waiting for anatomy generation to complete.'
       );
     } finally {
@@ -212,9 +208,7 @@ describe('AnatomyInitializationService timeout behaviour', () => {
     };
 
     try {
-      await expect(
-        service.waitForAllGenerationsToComplete(30)
-      ).rejects.toThrow(
+      await expect(service.waitForAllGenerationsToComplete(30)).rejects.toThrow(
         'AnatomyInitializationService: Timeout waiting for anatomy generation to complete.'
       );
     } finally {

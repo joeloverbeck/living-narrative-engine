@@ -70,7 +70,7 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
     const runtimeLogger = { debug };
 
     const node = { type: 'ArrayIterationStep', parent: { type: 'Source' } };
-    const parentResults = new Set([["value:a", "value:b"]]);
+    const parentResults = new Set([['value:a', 'value:b']]);
 
     const result = resolver.resolve(node, {
       actorEntity,
@@ -91,10 +91,19 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
       clothingAccessibilityService: clothingService,
     });
 
-    const trace = { steps: [], addStep(step) { this.steps.push(step); } };
+    const trace = {
+      steps: [],
+      addStep(step) {
+        this.steps.push(step);
+      },
+    };
     const node = { type: 'ArrayIterationStep', parent: { type: 'Source' } };
     const parentResults = new Set([
-      { __isClothingAccessObject: true, entityId: 'entity:trace', mode: 'topmost' },
+      {
+        __isClothingAccessObject: true,
+        entityId: 'entity:trace',
+        mode: 'topmost',
+      },
     ]);
 
     const result = resolver.resolve(node, {
@@ -133,7 +142,10 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
 
   it('passes through values from scope reference parents', () => {
     const resolver = createArrayIterationResolver();
-    const node = { type: 'ArrayIterationStep', parent: { type: 'ScopeReference' } };
+    const node = {
+      type: 'ArrayIterationStep',
+      parent: { type: 'ScopeReference' },
+    };
     const parentResults = new Set(['entity:scope-pass']);
 
     const result = resolver.resolve(node, {
@@ -202,7 +214,9 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
     const result = resolver.resolve(node, {
       actorEntity,
       dispatcher: createDispatcher(
-        new Set([{ __isClothingAccessObject: true, entityId: 'entity:massive' }])
+        new Set([
+          { __isClothingAccessObject: true, entityId: 'entity:massive' },
+        ])
       ),
     });
 
@@ -257,8 +271,9 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
     const resolver = createArrayIterationResolver();
     const node = { type: 'ArrayIterationStep', parent: { type: 'Source' } };
 
-    expect(() => resolver.resolve(node, { dispatcher: createDispatcher(new Set()) }))
-      .toThrow("ArrayIterationResolver: actorEntity is missing from context");
+    expect(() =>
+      resolver.resolve(node, { dispatcher: createDispatcher(new Set()) })
+    ).toThrow('ArrayIterationResolver: actorEntity is missing from context');
   });
 
   it('handles clothing access success without trace instrumentation', () => {
@@ -271,7 +286,9 @@ describe('ArrayIterationResolver integration supplemental coverage', () => {
     const result = resolver.resolve(node, {
       actorEntity,
       dispatcher: createDispatcher(
-        new Set([{ __isClothingAccessObject: true, entityId: 'entity:success' }])
+        new Set([
+          { __isClothingAccessObject: true, entityId: 'entity:success' },
+        ])
       ),
     });
 

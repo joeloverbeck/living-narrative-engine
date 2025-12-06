@@ -50,7 +50,7 @@ describe('FacadeResponses utilities', () => {
           cached: true,
           cacheKey: 'entity-1',
           metadata: { correlationId: 'corr-9' },
-        },
+        }
       );
 
       expect(response).toEqual({
@@ -119,7 +119,7 @@ describe('FacadeResponses utilities', () => {
           details: { part: 'engine' },
           stack: expect.stringContaining('Error: boom'),
           context: [{ step: 'ignite' }],
-        }),
+        })
       );
     });
 
@@ -172,7 +172,7 @@ describe('FacadeResponses utilities', () => {
           sortBy: 'id',
           sortOrder: 'desc',
           metadata: { region: 'us' },
-        },
+        }
       );
 
       expect(result).toEqual({
@@ -201,7 +201,7 @@ describe('FacadeResponses utilities', () => {
         [{ id: 5 }],
         { total: 5 },
         'listThings',
-        { sortBy: 'id' },
+        { sortBy: 'id' }
       );
 
       expect(defaultSorted.sortOrder).toBe('asc');
@@ -233,7 +233,7 @@ describe('FacadeResponses utilities', () => {
           affectedEntities: [{ id: 'linked' }],
           validation: { valid: true },
           rollbackAvailable: true,
-        },
+        }
       );
 
       expect(response).toEqual({
@@ -254,7 +254,7 @@ describe('FacadeResponses utilities', () => {
       const baseline = createModificationResponse(
         { id: 'item-2' },
         { removed: [{ id: 'old' }] },
-        'modifyItem',
+        'modifyItem'
       );
 
       expect(baseline).toMatchObject({
@@ -274,7 +274,7 @@ describe('FacadeResponses utilities', () => {
       const response = createBulkResponse(
         { processed: 10, successful: 8, failed: 2 },
         'bulkOp',
-        { progress: { percent: 80 }, partial: true },
+        { progress: { percent: 80 }, partial: true }
       );
 
       expect(response).toEqual({
@@ -292,7 +292,7 @@ describe('FacadeResponses utilities', () => {
       nowSpy.mockImplementation(() => 1700005555999);
       const baseline = createBulkResponse(
         { processed: 1, successful: 1, failed: 0 },
-        'bulkOp',
+        'bulkOp'
       );
 
       expect(baseline).not.toHaveProperty('progress');
@@ -310,7 +310,7 @@ describe('FacadeResponses utilities', () => {
           suggestions: ['fix'],
           autoFixApplied: false,
           fixedIssues: [{ id: 1 }],
-        },
+        }
       );
 
       expect(response).toEqual({
@@ -327,10 +327,7 @@ describe('FacadeResponses utilities', () => {
       });
 
       nowSpy.mockImplementation(() => 1700006666999);
-      const baseline = createValidationResponse(
-        { valid: true },
-        'validate',
-      );
+      const baseline = createValidationResponse({ valid: true }, 'validate');
 
       expect(baseline).not.toHaveProperty('suggestions');
       expect(baseline).not.toHaveProperty('autoFixApplied');
@@ -341,14 +338,10 @@ describe('FacadeResponses utilities', () => {
   describe('createGraphResponse', () => {
     it('includes analysis and validation information when present', () => {
       nowSpy.mockImplementation(() => 1700007777000);
-      const response = createGraphResponse(
-        { nodes: [], edges: [] },
-        'graph',
-        {
-          analysis: { score: 1 },
-          validation: { valid: true },
-        },
-      );
+      const response = createGraphResponse({ nodes: [], edges: [] }, 'graph', {
+        analysis: { score: 1 },
+        validation: { valid: true },
+      });
 
       expect(response).toEqual({
         success: true,
@@ -376,7 +369,7 @@ describe('FacadeResponses utilities', () => {
       const response = createDescriptionResponse(
         { description: 'text' },
         'describe',
-        { generationMetadata: { engine: 'gpt' } },
+        { generationMetadata: { engine: 'gpt' } }
       );
 
       expect(response).toEqual({
@@ -391,7 +384,10 @@ describe('FacadeResponses utilities', () => {
       });
 
       nowSpy.mockImplementation(() => 1700008888999);
-      const baseline = createDescriptionResponse({ description: 'text' }, 'describe');
+      const baseline = createDescriptionResponse(
+        { description: 'text' },
+        'describe'
+      );
 
       expect(baseline).not.toHaveProperty('generationMetadata');
     });
@@ -411,7 +407,7 @@ describe('FacadeResponses utilities', () => {
       const response = await withTiming(
         async () => ({ value: 42 }),
         'compute',
-        { requestId: 'req-123' },
+        { requestId: 'req-123' }
       );
 
       expect(response.success).toBe(true);
@@ -437,7 +433,7 @@ describe('FacadeResponses utilities', () => {
           metadata: { operationType: 'existing', duration: 0 },
         }),
         'existing',
-        { metadata: { extra: true } },
+        { metadata: { extra: true } }
       );
 
       expect(response).toEqual({
@@ -449,7 +445,7 @@ describe('FacadeResponses utilities', () => {
       nowSpy.mockImplementation(() => 1200);
       const responseWithoutMetadata = await withTiming(
         async () => ({ success: true }),
-        'existing',
+        'existing'
       );
 
       expect(responseWithoutMetadata).toEqual({
@@ -471,7 +467,7 @@ describe('FacadeResponses utilities', () => {
           throw error;
         },
         'failingOp',
-        { requestId: 'req-x' },
+        { requestId: 'req-x' }
       );
 
       expect(response.success).toBe(false);
@@ -479,7 +475,7 @@ describe('FacadeResponses utilities', () => {
         expect.objectContaining({
           message: 'fail',
           type: 'Error',
-        }),
+        })
       );
       expect(response.metadata.operationType).toBe('failingOp');
       expect(response.metadata.duration).toBe(500);

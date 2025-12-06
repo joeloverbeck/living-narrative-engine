@@ -33,7 +33,11 @@ describe('thematic-direction-main initialization flows', () => {
     }
 
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     } else {
       delete document.readyState;
     }
@@ -108,36 +112,32 @@ describe('thematic-direction-main initialization flows', () => {
 
     const singletonFactorySpy = jest.fn();
 
-    const bootstrapMock = jest
-      .fn()
-      .mockImplementation(async (config) => {
-        expect(config.pageName).toBe('Thematic Direction Generator');
-        expect(config.controllerClass).toBe(ThematicDirectionController);
-        expect(config.includeModLoading).toBe(true);
-        expect(config.customSchemas).toEqual([
-          '/data/schemas/llm-configs.schema.json',
-        ]);
-        expect(config.errorDisplay).toEqual({
-          elementId: 'error-display',
-          displayDuration: 5000,
-          dismissible: true,
-        });
-        expect(typeof config.hooks.preContainer).toBe('function');
-
-        await config.hooks.preContainer(mockContainer);
-
-        return {
-          controller: mockControllerInstance,
-          container: mockContainer,
-          bootstrapTime: 123.456,
-        };
+    const bootstrapMock = jest.fn().mockImplementation(async (config) => {
+      expect(config.pageName).toBe('Thematic Direction Generator');
+      expect(config.controllerClass).toBe(ThematicDirectionController);
+      expect(config.includeModLoading).toBe(true);
+      expect(config.customSchemas).toEqual([
+        '/data/schemas/llm-configs.schema.json',
+      ]);
+      expect(config.errorDisplay).toEqual({
+        elementId: 'error-display',
+        displayDuration: 5000,
+        dismissible: true,
       });
+      expect(typeof config.hooks.preContainer).toBe('function');
 
-    const CharacterBuilderBootstrap = jest
-      .fn()
-      .mockImplementation(() => ({
-        bootstrap: bootstrapMock,
-      }));
+      await config.hooks.preContainer(mockContainer);
+
+      return {
+        controller: mockControllerInstance,
+        container: mockContainer,
+        bootstrapTime: 123.456,
+      };
+    });
+
+    const CharacterBuilderBootstrap = jest.fn().mockImplementation(() => ({
+      bootstrap: bootstrapMock,
+    }));
 
     const Registrar = jest.fn().mockImplementation(() => ({
       singletonFactory: singletonFactorySpy,
@@ -152,12 +152,9 @@ describe('thematic-direction-main initialization flows', () => {
 
     jest.doMock('../../src/dependencyInjection/tokens.js', () => ({ tokens }));
 
-    jest.doMock(
-      '../../src/utils/registrarHelpers.js',
-      () => ({
-        Registrar,
-      })
-    );
+    jest.doMock('../../src/utils/registrarHelpers.js', () => ({
+      Registrar,
+    }));
 
     jest.doMock(
       '../../src/thematicDirection/controllers/thematicDirectionController.js',
@@ -253,7 +250,9 @@ describe('thematic-direction-main initialization flows', () => {
         case tokens.LLMAdapter:
           return mockLlmAdapter;
         case tokens.LlmConfigLoader:
-          throw new Error('LlmConfigLoader should not be requested when adapter missing');
+          throw new Error(
+            'LlmConfigLoader should not be requested when adapter missing'
+          );
         default:
           return undefined;
       }
@@ -422,16 +421,14 @@ describe('thematic-direction-main initialization flows', () => {
 
     const mockContainer = { resolve: resolveMock };
 
-    const bootstrapMock = jest
-      .fn()
-      .mockImplementation(async (config) => {
-        await config.hooks.preContainer(mockContainer);
-        return {
-          controller: {},
-          container: mockContainer,
-          bootstrapTime: 5,
-        };
-      });
+    const bootstrapMock = jest.fn().mockImplementation(async (config) => {
+      await config.hooks.preContainer(mockContainer);
+      return {
+        controller: {},
+        container: mockContainer,
+        bootstrapTime: 5,
+      };
+    });
 
     const CharacterBuilderBootstrap = jest
       .fn()

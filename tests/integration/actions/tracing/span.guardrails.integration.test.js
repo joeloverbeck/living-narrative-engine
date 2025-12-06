@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import Span from '../../../../src/actions/tracing/span.js';
 import { StructuredTrace } from '../../../../src/actions/tracing/structuredTrace.js';
 
@@ -26,7 +33,9 @@ describe('Span guardrails integration', () => {
     expect(() => new Span('not-a-number', 'valid-operation')).toThrow(
       'Span id must be a number'
     );
-    expect(() => new Span(1, '   ')).toThrow('Span operation must be a non-empty string');
+    expect(() => new Span(1, '   ')).toThrow(
+      'Span operation must be a non-empty string'
+    );
     expect(() => new Span(2, 'valid-operation', 'parent')).toThrow(
       'Span parentId must be a number or null'
     );
@@ -58,12 +67,18 @@ describe('Span guardrails integration', () => {
     clock.current = 10;
     const span = trace.startSpan('attribute-guarded');
 
-    expect(() => span.setStatus('mystery')).toThrow('Invalid span status: mystery');
+    expect(() => span.setStatus('mystery')).toThrow(
+      'Invalid span status: mystery'
+    );
     span.setStatus('failure');
     expect(span.status).toBe('failure');
 
-    expect(() => span.setAttribute(123, 'value')).toThrow('Attribute key must be a string');
-    expect(() => span.setAttributes(null)).toThrow('Attributes must be an object');
+    expect(() => span.setAttribute(123, 'value')).toThrow(
+      'Attribute key must be a string'
+    );
+    expect(() => span.setAttributes(null)).toThrow(
+      'Attributes must be an object'
+    );
 
     span.setAttribute('first', 'value');
     span.addAttributes({ second: 2 });
@@ -82,7 +97,9 @@ describe('Span guardrails integration', () => {
     clock.current = 50;
     const span = trace.startSpan('error-handling');
 
-    expect(() => span.setError('boom')).toThrow('setError requires an Error instance');
+    expect(() => span.setError('boom')).toThrow(
+      'setError requires an Error instance'
+    );
 
     const primaryError = new Error('primary failure');
     span.setError(primaryError);
@@ -107,7 +124,9 @@ describe('Span guardrails integration', () => {
     clock.current = 200;
     const span = trace.startSpan('eventful');
 
-    expect(() => span.addEvent('   ')).toThrow('Event name must be a non-empty string');
+    expect(() => span.addEvent('   ')).toThrow(
+      'Event name must be a non-empty string'
+    );
 
     clock.current = 210;
     span.addEvent('checkpoint-start', { stage: 'begin' });
@@ -148,7 +167,9 @@ describe('Span guardrails integration', () => {
     trace.endSpan(child);
     trace.endSpan(parent);
 
-    expect(parent.children.map((spanChild) => spanChild.operation)).toEqual(['child']);
+    expect(parent.children.map((spanChild) => spanChild.operation)).toEqual([
+      'child',
+    ]);
   });
 
   it('serializes spans with hierarchical context and captured errors', () => {

@@ -449,13 +449,11 @@ describe('SaveGameUI - Coverage Tests', () => {
         isCorrupted: false,
       };
 
-      jest
-        .spyOn(saveGameUI.saveGameService, 'performSave')
-        .mockResolvedValue({
-          success: true,
-          message: 'Game saved as "TestSave".',
-          returnedIdentifier: 'test-id',
-        });
+      jest.spyOn(saveGameUI.saveGameService, 'performSave').mockResolvedValue({
+        success: true,
+        message: 'Game saved as "TestSave".',
+        returnedIdentifier: 'test-id',
+      });
 
       jest
         .spyOn(saveGameUI, '_populateSaveSlotsList')
@@ -576,13 +574,11 @@ describe('SaveGameUI - Coverage Tests', () => {
         isCorrupted: false,
       };
 
-      jest
-        .spyOn(saveGameUI.saveGameService, 'performSave')
-        .mockResolvedValue({
-          success: false,
-          message: '',
-          returnedIdentifier: null,
-        });
+      jest.spyOn(saveGameUI.saveGameService, 'performSave').mockResolvedValue({
+        success: false,
+        message: '',
+        returnedIdentifier: null,
+      });
 
       jest.spyOn(saveGameUI, '_populateSaveSlotsList').mockResolvedValue();
 

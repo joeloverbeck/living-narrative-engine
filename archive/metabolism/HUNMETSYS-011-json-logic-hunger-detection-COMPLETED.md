@@ -15,6 +15,7 @@ Implement `is_hungry` JSON Logic custom operator to detect hunger states for GOA
 Successfully implemented the `is_hungry` JSON Logic operator with the following changes:
 
 ### Files Created (2)
+
 1. **`src/logic/operators/isHungryOperator.js`** (202 lines)
    - Implemented IsHungryOperator class following established patterns
    - Uses `entityPathResolver.js` for entity reference resolution
@@ -30,6 +31,7 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
    - Tests for error handling and edge cases
 
 ### Files Modified (1)
+
 1. **`src/logic/jsonLogicCustomOperators.js`**
    - Added import for IsHungryOperator
    - Instantiated operator with dependencies
@@ -63,6 +65,7 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
 ## Technical Details
 
 ### Key Behavior (As Implemented)
+
 - Returns `true` if state is "hungry", "starving", or "critical"
 - Returns `false` if state is "satiated", "neutral", or "gluttonous"
 - Returns `false` if entity missing `metabolism:hunger_state` component
@@ -74,6 +77,7 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
   - Entity objects with id: `{ id: "entity_1" }`
 
 ### State Mapping (Verified)
+
 ```javascript
 'hungry'     → true   // Energy 10-30%
 'starving'   → true   // Energy 0.1-10%
@@ -87,6 +91,7 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
 ### Usage Examples
 
 **GOAP Precondition:**
+
 ```json
 {
   "preconditions": {
@@ -96,6 +101,7 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
 ```
 
 **Action Condition:**
+
 ```json
 {
   "logic": {
@@ -105,10 +111,11 @@ Successfully implemented the `is_hungry` JSON Logic operator with the following 
 ```
 
 **Event-Based:**
+
 ```json
 {
   "logic": {
-    "is_hungry": [{"var": "event.payload.entityId"}]
+    "is_hungry": [{ "var": "event.payload.entityId" }]
   }
 }
 ```
@@ -140,6 +147,7 @@ Coverage: 93.33% branches, 100% functions, 93.33% lines
 ## Acceptance Criteria
 
 **All Must-Haves Completed:**
+
 - ✅ IsHungryOperator class implemented
 - ✅ Returns true for hungry/starving/critical states
 - ✅ Returns false for satiated/neutral/gluttonous states
@@ -153,6 +161,7 @@ Coverage: 93.33% branches, 100% functions, 93.33% lines
 - ✅ Comprehensive logging for debugging
 
 **Nice to Have (Future):**
+
 - Hunger severity levels (could return enum instead of boolean)
 - Configurable threshold states
 - Time-since-last-meal tracking
@@ -160,12 +169,14 @@ Coverage: 93.33% branches, 100% functions, 93.33% lines
 ## Integration Points
 
 ### Ready For:
+
 - ✅ HUNMETSYS-012 (Predicted energy operators)
 - ✅ HUNMETSYS-013 (GOAP goal implementation)
 - ✅ Action prerequisite conditions
 - ✅ Rule conditions
 
 ### Dependencies Met:
+
 - ✅ HUNMETSYS-002 (Hunger State component)
 - ✅ Entity component system
 - ✅ JSON Logic evaluation service
@@ -223,16 +234,19 @@ Coverage: 93.33% branches, 100% functions, 93.33% lines
 ## Artifacts
 
 ### Source Code
+
 - `src/logic/operators/isHungryOperator.js`
 - `tests/unit/logic/operators/isHungryOperator.test.js`
 - `src/logic/jsonLogicCustomOperators.js` (modified)
 
 ### Test Command
+
 ```bash
 NODE_ENV=test npx jest tests/unit/logic/operators/isHungryOperator.test.js --coverage
 ```
 
 ### Coverage Report
+
 ```
 File                 | % Stmts | % Branch | % Funcs | % Lines |
 ---------------------|---------|----------|---------|---------|

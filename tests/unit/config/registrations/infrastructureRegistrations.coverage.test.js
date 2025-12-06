@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { actionTracingTokens } from '../../../../src/dependencyInjection/tokens/actionTracingTokens.js';
@@ -101,7 +108,9 @@ jest.mock('../../../../src/data/gameDataRepository.js', () => ({
 }));
 
 jest.mock('../../../../src/events/eventBus.js', () => {
-  const ctor = jest.fn().mockImplementation((deps) => ({ type: 'EventBus', deps }));
+  const ctor = jest
+    .fn()
+    .mockImplementation((deps) => ({ type: 'EventBus', deps }));
   return { __esModule: true, default: ctor };
 });
 
@@ -195,16 +204,34 @@ describe('registerInfrastructure extended coverage', () => {
     }));
     container.register(tokens.IDocumentContext, createDocumentContextStub);
 
-    container.register(tokens.ClothingManagementService, () => ({ type: 'ClothingManagementService' }));
-    container.register(tokens.EquipmentOrchestrator, () => ({ type: 'EquipmentOrchestrator' }));
-    container.register(tokens.LayerCompatibilityService, () => ({ type: 'LayerCompatibilityService' }));
-    container.register(tokens.ClothingSlotValidator, () => ({ type: 'ClothingSlotValidator' }));
+    container.register(tokens.ClothingManagementService, () => ({
+      type: 'ClothingManagementService',
+    }));
+    container.register(tokens.EquipmentOrchestrator, () => ({
+      type: 'EquipmentOrchestrator',
+    }));
+    container.register(tokens.LayerCompatibilityService, () => ({
+      type: 'LayerCompatibilityService',
+    }));
+    container.register(tokens.ClothingSlotValidator, () => ({
+      type: 'ClothingSlotValidator',
+    }));
 
-    container.register(tokens.BodyGraphService, () => ({ type: 'BodyGraphService' }));
-    container.register(tokens.AnatomyDescriptionService, () => ({ type: 'AnatomyDescriptionService' }));
-    container.register(tokens.GraphIntegrityValidator, () => ({ type: 'GraphIntegrityValidator' }));
-    container.register(tokens.AnatomyGenerationService, () => ({ type: 'AnatomyGenerationService' }));
-    container.register(tokens.BodyBlueprintFactory, () => ({ type: 'BodyBlueprintFactory' }));
+    container.register(tokens.BodyGraphService, () => ({
+      type: 'BodyGraphService',
+    }));
+    container.register(tokens.AnatomyDescriptionService, () => ({
+      type: 'AnatomyDescriptionService',
+    }));
+    container.register(tokens.GraphIntegrityValidator, () => ({
+      type: 'GraphIntegrityValidator',
+    }));
+    container.register(tokens.AnatomyGenerationService, () => ({
+      type: 'AnatomyGenerationService',
+    }));
+    container.register(tokens.BodyBlueprintFactory, () => ({
+      type: 'BodyBlueprintFactory',
+    }));
   });
 
   afterEach(() => {
@@ -242,7 +269,9 @@ describe('registerInfrastructure extended coverage', () => {
     );
     expect(container.resolve(tokens.UnifiedCache)).toBe(unifiedCache);
 
-    const invalidationManager = container.resolve(tokens.ICacheInvalidationManager);
+    const invalidationManager = container.resolve(
+      tokens.ICacheInvalidationManager
+    );
     expect(CacheInvalidationManager).toHaveBeenCalledWith(
       expect.objectContaining({ logger })
     );
@@ -251,7 +280,9 @@ describe('registerInfrastructure extended coverage', () => {
     );
 
     const cacheMetrics = container.resolve(tokens.ICacheMetrics);
-    expect(CacheMetrics).toHaveBeenCalledWith(expect.objectContaining({ logger }));
+    expect(CacheMetrics).toHaveBeenCalledWith(
+      expect.objectContaining({ logger })
+    );
     expect(container.resolve(tokens.CacheMetrics)).toBe(cacheMetrics);
 
     const clothingFacade = container.resolve(tokens.IClothingSystemFacade);

@@ -110,9 +110,7 @@
                     "perception_type": "connection_unlock_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
-                    "involved_entities": [
-                      "{event.payload.secondaryId}"
-                    ],
+                    "involved_entities": ["{event.payload.secondaryId}"],
                     "contextual_data": {
                       "reason": "missing_or_wrong_key"
                     }
@@ -145,10 +143,7 @@
                   "comment": "Guard against already unlocked state.",
                   "parameters": {
                     "condition": {
-                      "==": [
-                        { "var": "context.openable.isLocked" },
-                        false
-                      ]
+                      "==": [{ "var": "context.openable.isLocked" }, false]
                     },
                     "then_actions": [
                       {
@@ -167,9 +162,7 @@
                           "perception_type": "connection_unlock_failed",
                           "actor_id": "{event.payload.actorId}",
                           "target_id": "{event.payload.targetId}",
-                          "involved_entities": [
-                            "{event.payload.secondaryId}"
-                          ],
+                          "involved_entities": ["{event.payload.secondaryId}"],
                           "contextual_data": {
                             "reason": "already_unlocked"
                           }

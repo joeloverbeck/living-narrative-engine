@@ -53,7 +53,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
   describe('Knight Archetype - Heavy Armor Visibility', () => {
     it('should show cuirass as topmost when no outer layer (warrior visible armor)', async () => {
       // Arrange: Knight with cuirass over shirt, no cloak/robe
-      const { actor } = fixture.createStandardActorTarget(['Sir Galahad', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Sir Galahad',
+        'Unused',
+      ]);
 
       const shirt = fixture.createEntity({
         id: 'knight_shirt',
@@ -104,7 +107,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
 
     it('should block base shirt removal when cuirass equipped', async () => {
       // Arrange: Knight with cuirass blocking shirt removal
-      const { actor } = fixture.createStandardActorTarget(['Sir Lancelot', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Sir Lancelot',
+        'Unused',
+      ]);
 
       const shirt = fixture.createEntity({
         id: 'blocked_shirt',
@@ -164,7 +170,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
 
     it('should show gauntlets over leather gloves (armor > accessories)', async () => {
       // Arrange: Knight with gauntlets over gloves
-      const { actor } = fixture.createStandardActorTarget(['Sir Percival', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Sir Percival',
+        'Unused',
+      ]);
 
       const gloves = fixture.createEntity({
         id: 'leather_gloves',
@@ -218,7 +227,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
   describe('Mage Archetype - Hidden Armor Under Robes', () => {
     it('should hide chainmail under magical robes (outer > armor)', async () => {
       // Arrange: Mage with chainmail hidden under robes
-      const { actor } = fixture.createStandardActorTarget(['Gandalf', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Gandalf',
+        'Unused',
+      ]);
 
       const chainmail = fixture.createEntity({
         id: 'mage_chainmail',
@@ -283,7 +295,12 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
             },
           },
           'clothing:coverage_mapping': {
-            covers: ['torso_upper', 'torso_lower', 'left_arm_clothing', 'right_arm_clothing'],
+            covers: [
+              'torso_upper',
+              'torso_lower',
+              'left_arm_clothing',
+              'right_arm_clothing',
+            ],
             coveragePriority: 'armor',
           },
         },
@@ -376,7 +393,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
   describe('Ranger Archetype - Mixed Layers Across Slots', () => {
     it('should correctly resolve different layers on different slots', async () => {
       // Arrange: Ranger with cloak on torso, bracers on arms, pants on legs
-      const { actor } = fixture.createStandardActorTarget(['Strider', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Strider',
+        'Unused',
+      ]);
 
       const cloak = fixture.createEntity({
         id: 'ranger_cloak',
@@ -456,7 +476,10 @@ describe('Armor Layer Scenarios - ARMSYSANA-009', () => {
   describe('Edge Cases', () => {
     it('should handle armor with coverage_mapping component correctly', async () => {
       // Arrange: Armor entity with full coverage_mapping setup
-      const { actor } = fixture.createStandardActorTarget(['Test Knight', 'Unused']);
+      const { actor } = fixture.createStandardActorTarget([
+        'Test Knight',
+        'Unused',
+      ]);
 
       const helmet = fixture.createEntity({
         id: 'iron_helmet',

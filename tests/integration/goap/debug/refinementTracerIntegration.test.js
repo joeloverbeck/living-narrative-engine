@@ -74,7 +74,10 @@ describe('RefinementTracer - Integration', () => {
           taskId: 'consume_nourishing_item',
           methodId: 'eating_nearby_food',
           stepIndex: 0,
-          step: { stepType: 'primitive_action', actionId: 'items:pick_up_item' },
+          step: {
+            stepType: 'primitive_action',
+            actionId: 'items:pick_up_item',
+          },
           timestamp: baseTime + 5,
         },
       });
@@ -112,7 +115,10 @@ describe('RefinementTracer - Integration', () => {
           actorId: 'actor-123',
           taskId: 'consume_nourishing_item',
           stepIndex: 1,
-          step: { stepType: 'primitive_action', actionId: 'items:consume_item' },
+          step: {
+            stepType: 'primitive_action',
+            actionId: 'items:consume_item',
+          },
           timestamp: baseTime + 20,
         },
       });
@@ -141,13 +147,9 @@ describe('RefinementTracer - Integration', () => {
       expect(trace.events[0].type).toBe(GOAP_EVENTS.TASK_REFINED);
       expect(trace.events[1].type).toBe(GOAP_EVENTS.REFINEMENT_STEP_STARTED);
       expect(trace.events[2].type).toBe(GOAP_EVENTS.REFINEMENT_STATE_UPDATED);
-      expect(trace.events[3].type).toBe(
-        GOAP_EVENTS.REFINEMENT_STEP_COMPLETED
-      );
+      expect(trace.events[3].type).toBe(GOAP_EVENTS.REFINEMENT_STEP_COMPLETED);
       expect(trace.events[4].type).toBe(GOAP_EVENTS.REFINEMENT_STEP_STARTED);
-      expect(trace.events[5].type).toBe(
-        GOAP_EVENTS.REFINEMENT_STEP_COMPLETED
-      );
+      expect(trace.events[5].type).toBe(GOAP_EVENTS.REFINEMENT_STEP_COMPLETED);
     });
 
     it('should format complete trace correctly', () => {

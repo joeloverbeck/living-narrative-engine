@@ -12,7 +12,8 @@ import handleMeleeFumble from '../../../../data/mods/weapons/macros/handleMeleeF
 
 const findOutcomeBranch = (outcome) =>
   swingAtTargetRule.actions.find(
-    (op) => op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
+    (op) =>
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
   );
 
 describe('handle_swing_at_target damage application', () => {
@@ -23,7 +24,8 @@ describe('handle_swing_at_target damage application', () => {
         (op) =>
           op.type === 'QUERY_COMPONENT' &&
           op.parameters?.entity_ref === 'primary' &&
-          op.parameters?.component_type === 'damage-types:damage_capabilities' &&
+          op.parameters?.component_type ===
+            'damage-types:damage_capabilities' &&
           op.parameters?.result_variable === 'weaponDamage'
       );
 
@@ -94,7 +96,9 @@ describe('handle_swing_at_target damage application', () => {
       );
 
       expect(forEachOp).toBeDefined();
-      expect(forEachOp.parameters.collection).toBe('context.weaponDamage.entries');
+      expect(forEachOp.parameters.collection).toBe(
+        'context.weaponDamage.entries'
+      );
       expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
     });
 
@@ -109,7 +113,9 @@ describe('handle_swing_at_target damage application', () => {
 
       expect(applyDamage).toBeDefined();
       expect(applyDamage.parameters.entity_ref).toBe('secondary');
-      expect(applyDamage.parameters.damage_entry).toEqual({ var: 'context.dmgEntry' });
+      expect(applyDamage.parameters.damage_entry).toEqual({
+        var: 'context.dmgEntry',
+      });
       expect(applyDamage.parameters.amount).toBeUndefined();
       expect(applyDamage.parameters.damage_type).toBeUndefined();
     });
@@ -160,7 +166,9 @@ describe('handle_swing_at_target damage application', () => {
       );
 
       expect(applyDamage).toBeDefined();
-      expect(applyDamage.parameters.damage_entry).toEqual({ var: 'context.dmgEntry' });
+      expect(applyDamage.parameters.damage_entry).toEqual({
+        var: 'context.dmgEntry',
+      });
       expect(applyDamage.parameters.damage_multiplier).toBe(1.5);
     });
 

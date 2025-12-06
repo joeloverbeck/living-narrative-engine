@@ -110,7 +110,7 @@ const arrangeSuccessfulStages = () => {
         return mockOperationRegistry;
       }
       return undefined;
-    })
+    }),
   };
   const logger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
   const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
@@ -179,12 +179,8 @@ describe('main.js bootstrap orchestration', () => {
     global.alert = jest.fn();
     global.fetch = jest.fn();
 
-    consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
-    consoleDebugSpy = jest
-      .spyOn(console, 'debug')
-      .mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleDebugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -198,7 +194,8 @@ describe('main.js bootstrap orchestration', () => {
 
   it('bootstraps and begins the game using configured world data', async () => {
     const stages = getStageModule();
-    const { uiElements, container, logger, gameEngine } = arrangeSuccessfulStages();
+    const { uiElements, container, logger, gameEngine } =
+      arrangeSuccessfulStages();
     const { displayFatalStartupError } = getErrorUtilsModule();
     const { default: MockAppContainer } = getAppContainerModule();
 
@@ -411,7 +408,9 @@ describe('main.js bootstrap orchestration', () => {
 
     await mainModule.bootstrapApp();
 
-    await expect(mainModule.beginGame(true)).rejects.toThrow('Start stage failed');
+    await expect(mainModule.beginGame(true)).rejects.toThrow(
+      'Start stage failed'
+    );
 
     expect(stages.startGameStage).toHaveBeenCalledWith(
       gameEngine,

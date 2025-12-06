@@ -164,9 +164,9 @@ describe('FnLoadOrderResolverAdapter integration', () => {
 
     // Ensure diagnostic logging captured the pipeline flow without errors.
     expect(messages.error).toHaveLength(0);
-    expect(messages.debug.some(([msg]) => msg.includes('Final mod order'))).toBe(
-      true
-    );
+    expect(
+      messages.debug.some(([msg]) => msg.includes('Final mod order'))
+    ).toBe(true);
   });
 
   it('throws when constructed without a function', () => {

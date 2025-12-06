@@ -108,14 +108,16 @@ describe('AnatomyInitializationService failure propagation integration', () => {
       anatomyGenerationService: testBed.anatomyGenerationService,
     });
 
-    originalGenerate = testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
-      testBed.anatomyGenerationService
-    );
+    originalGenerate =
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded.bind(
+        testBed.anatomyGenerationService
+      );
   });
 
   afterEach(async () => {
     if (testBed?.anatomyGenerationService && originalGenerate) {
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = originalGenerate;
+      testBed.anatomyGenerationService.generateAnatomyIfNeeded =
+        originalGenerate;
     }
 
     anatomyInitializationService?.destroy();
@@ -125,14 +127,14 @@ describe('AnatomyInitializationService failure propagation integration', () => {
   it('rejects queued waiters and clears state when anatomy generation fails', async () => {
     anatomyInitializationService.initialize();
 
-    const failingActor = await testBed.entityManager.createEntityInstance('core:actor');
+    const failingActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(failingActor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
 
-    const unobservedFailureActor = await testBed.entityManager.createEntityInstance(
-      'core:actor'
-    );
+    const unobservedFailureActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(
       unobservedFailureActor.id,
       'anatomy:body',
@@ -141,7 +143,8 @@ describe('AnatomyInitializationService failure propagation integration', () => {
       }
     );
 
-    const recoveryActor = await testBed.entityManager.createEntityInstance('core:actor');
+    const recoveryActor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(recoveryActor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -155,7 +158,9 @@ describe('AnatomyInitializationService failure propagation integration', () => {
       [recoveryActor.id, 'succeed'],
     ]);
 
-    testBed.anatomyGenerationService.generateAnatomyIfNeeded = async (entityId) => {
+    testBed.anatomyGenerationService.generateAnatomyIfNeeded = async (
+      entityId
+    ) => {
       await new Promise((resolve) => setTimeout(resolve, 20));
       const behavior = generationPlan.get(entityId);
 
@@ -181,7 +186,7 @@ describe('AnatomyInitializationService failure propagation integration', () => {
     });
 
     // Wait for event to be processed before creating waiters
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
 
     const firstWaiter = anatomyInitializationService.waitForEntityGeneration(
       failingActor.id,
@@ -200,7 +205,9 @@ describe('AnatomyInitializationService failure propagation integration', () => {
     expect(anatomyInitializationService.getPendingGenerationCount()).toBe(0);
     expect(
       logger.calls.error.some(([message]) =>
-        message.includes(`Failed to generate anatomy for entity '${failingActor.id}'`)
+        message.includes(
+          `Failed to generate anatomy for entity '${failingActor.id}'`
+        )
       )
     ).toBe(true);
 
@@ -228,10 +235,13 @@ describe('AnatomyInitializationService failure propagation integration', () => {
     });
 
     // Wait for event to be processed before creating waiter
-    await new Promise(resolve => process.nextTick(resolve));
+    await new Promise((resolve) => process.nextTick(resolve));
 
     await expect(
-      anatomyInitializationService.waitForEntityGeneration(recoveryActor.id, 500)
+      anatomyInitializationService.waitForEntityGeneration(
+        recoveryActor.id,
+        500
+      )
     ).resolves.toBe(true);
     await expect(recoveryDispatch).resolves.toBe(true);
     expect(

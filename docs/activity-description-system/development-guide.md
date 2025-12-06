@@ -278,10 +278,13 @@ describe('Emotional State Activity Metadata', () => {
       activityMetadata: {
         template: '{actor} looks happy',
         priority: 50,
-      }
+      },
     });
 
-    const activities = metadataSystem.collectActivityMetadata(entity.id, entity);
+    const activities = metadataSystem.collectActivityMetadata(
+      entity.id,
+      entity
+    );
 
     expect(activities).toContainEqual(
       expect.objectContaining({
@@ -310,7 +313,12 @@ class EmotionalNLGSystem extends ActivityNLGSystem {
     }
 
     // Delegate to parent for other activities
-    return super.generateActivityPhrase(actorReference, activity, useActorPronoun, context);
+    return super.generateActivityPhrase(
+      actorReference,
+      activity,
+      useActorPronoun,
+      context
+    );
   }
 }
 
@@ -342,7 +350,7 @@ class EmotionalActivityGroupingSystem extends ActivityGroupingSystem {
     // Group by emotion metadata
     const emotionGroups = new Map();
 
-    activities.forEach(activity => {
+    activities.forEach((activity) => {
       const emotion = activity.metadata?.emotion || 'neutral';
       if (!emotionGroups.has(emotion)) {
         emotionGroups.set(emotion, []);
@@ -359,7 +367,7 @@ class EmotionalActivityGroupingSystem extends ActivityGroupingSystem {
 
       groups.push({
         primaryActivity: primary,
-        relatedActivities: related.map(activity => ({
+        relatedActivities: related.map((activity) => ({
           activity,
           conjunction: 'and', // All in same emotion group use "and"
         })),
@@ -379,11 +387,15 @@ export default EmotionalActivityGroupingSystem;
 // src/dependencyInjection/registrations/anatomyRegistrations.js
 import EmotionalActivityGroupingSystem from '../../anatomy/services/grouping/emotionalActivityGroupingSystem.js';
 
-container.registerSingleton('IActivityGroupingSystem', EmotionalActivityGroupingSystem, {
-  dependencies: {
-    logger: 'ILogger',
+container.registerSingleton(
+  'IActivityGroupingSystem',
+  EmotionalActivityGroupingSystem,
+  {
+    dependencies: {
+      logger: 'ILogger',
+    },
   }
-});
+);
 ```
 
 #### Step 3: Test
@@ -413,11 +425,13 @@ describe('EmotionalActivityGroupingSystem', () => {
 ### When to Extend vs. Configure
 
 **Configure** (preferred):
+
 - Adjusting existing behavior parameters
 - Changing thresholds or limits
 - Enabling/disabling features
 
 **Extend** (when necessary):
+
 - Adding completely new functionality
 - Changing core algorithms
 - Integrating external systems
@@ -453,7 +467,8 @@ class CustomCacheManager extends ActivityCacheManager {
 
 // ❌ Bad: Change interface
 class BadCacheManager extends ActivityCacheManager {
-  get(cacheName, key, extraParam) { // ❌ Changed signature
+  get(cacheName, key, extraParam) {
+    // ❌ Changed signature
     return { data: super.get(cacheName, key), cached: true }; // ❌ Changed return type
   }
 }
@@ -587,7 +602,7 @@ describe('Activity Description Integration', () => {
     const entity = await entityManager.createEntity(actorId, 'core:actor');
 
     await entity.addComponent('positioning:kneeling', {
-      target: 'target_npc'
+      target: 'target_npc',
     });
 
     // Generate description
@@ -656,7 +671,12 @@ class OptimizedNLGSystem extends ActivityNLGSystem {
     }
 
     // Generate phrase
-    const phrase = super.generateActivityPhrase(actorReference, activity, useActorPronoun, context);
+    const phrase = super.generateActivityPhrase(
+      actorReference,
+      activity,
+      useActorPronoun,
+      context
+    );
 
     // Cache result
     this.#phraseCache.set(cacheKey, phrase);
@@ -783,7 +803,8 @@ class AdvancedActivitySystem {
   async generateWithAnalytics(entityId) {
     const start = Date.now();
 
-    const description = await this.#facade.generateActivityDescription(entityId);
+    const description =
+      await this.#facade.generateActivityDescription(entityId);
 
     const analytics = {
       duration: Date.now() - start,
@@ -818,9 +839,15 @@ class LoggingCacheManager {
   }
 
   // Delegate all other methods
-  registerCache(...args) { return this.#cacheManager.registerCache(...args); }
-  invalidate(...args) { return this.#cacheManager.invalidate(...args); }
-  destroy(...args) { return this.#cacheManager.destroy(...args); }
+  registerCache(...args) {
+    return this.#cacheManager.registerCache(...args);
+  }
+  invalidate(...args) {
+    return this.#cacheManager.invalidate(...args);
+  }
+  destroy(...args) {
+    return this.#cacheManager.destroy(...args);
+  }
 }
 ```
 

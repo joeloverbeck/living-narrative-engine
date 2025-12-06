@@ -31,20 +31,28 @@ const whitelistTypes = extractWhitelistTypes();
 console.log(`  Found ${whitelistTypes.length} types in whitelist\n`);
 
 // Step 2: Extract registered types from interpreterRegistrations.js
-console.log('📋 Step 2: Reading registered handlers from interpreterRegistrations.js...');
+console.log(
+  '📋 Step 2: Reading registered handlers from interpreterRegistrations.js...'
+);
 const registeredTypes = extractRegisteredTypes();
 console.log(`  Found ${registeredTypes.length} registered handlers\n`);
 
 // Step 3: Check whitelist completeness
 console.log('📋 Step 3: Checking synchronization...');
-const missingFromWhitelist = checkMissingFromWhitelist(registeredTypes, whitelistTypes);
-const orphanedInWhitelist = checkOrphanedInWhitelist(whitelistTypes, registeredTypes);
+const missingFromWhitelist = checkMissingFromWhitelist(
+  registeredTypes,
+  whitelistTypes
+);
+const orphanedInWhitelist = checkOrphanedInWhitelist(
+  whitelistTypes,
+  registeredTypes
+);
 
 if (missingFromWhitelist.length > 0) {
   errors.push(
     `❌ Missing from whitelist (${missingFromWhitelist.length}):\n` +
-    `   ${missingFromWhitelist.join(', ')}\n` +
-    `   Fix: Add these types to KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
+      `   ${missingFromWhitelist.join(', ')}\n` +
+      `   Fix: Add these types to KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
   );
 } else {
   console.log('  ✓ All registered handlers are in whitelist');
@@ -53,8 +61,8 @@ if (missingFromWhitelist.length > 0) {
 if (orphanedInWhitelist.length > 0) {
   errors.push(
     `❌ Whitelisted but no handler (${orphanedInWhitelist.length}):\n` +
-    `   ${orphanedInWhitelist.join(', ')}\n` +
-    `   Fix: Either remove from KNOWN_OPERATION_TYPES or register handler in interpreterRegistrations.js`
+      `   ${orphanedInWhitelist.join(', ')}\n` +
+      `   Fix: Either remove from KNOWN_OPERATION_TYPES or register handler in interpreterRegistrations.js`
   );
 } else {
   console.log('  ✓ All whitelist entries have registered handlers');
@@ -67,8 +75,8 @@ const sortingIssue = checkAlphabeticalOrder(whitelistTypes);
 if (sortingIssue) {
   errors.push(
     `❌ Whitelist not alphabetically sorted\n` +
-    `   Fix: Sort KNOWN_OPERATION_TYPES array in src/utils/preValidationUtils.js\n` +
-    `   Expected order:\n${sortingIssue.expected.map(t => `     '${t}',`).join('\n')}`
+      `   Fix: Sort KNOWN_OPERATION_TYPES array in src/utils/preValidationUtils.js\n` +
+      `   Expected order:\n${sortingIssue.expected.map((t) => `     '${t}',`).join('\n')}`
   );
 } else {
   console.log('  ✓ Whitelist is alphabetically sorted');
@@ -106,10 +114,15 @@ if (errors.length > 0) {
  */
 function extractWhitelistTypes() {
   try {
-    const preValidationPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+    const preValidationPath = path.join(
+      projectRoot,
+      'src/utils/preValidationUtils.js'
+    );
     const content = fs.readFileSync(preValidationPath, 'utf8');
 
-    const whitelistMatch = content.match(/export const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+    const whitelistMatch = content.match(
+      /export const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
+    );
     const types = [];
 
     if (whitelistMatch) {
@@ -143,7 +156,7 @@ function extractRegisteredTypes() {
     // Remove comment lines first
     const withoutComments = content
       .split('\n')
-      .filter(line => !line.trim().startsWith('//'))
+      .filter((line) => !line.trim().startsWith('//'))
       .join('\n');
 
     const types = [];
@@ -173,7 +186,7 @@ function extractRegisteredTypes() {
  */
 function checkMissingFromWhitelist(registered, whitelist) {
   const whitelistSet = new Set(whitelist);
-  return registered.filter(type => !whitelistSet.has(type));
+  return registered.filter((type) => !whitelistSet.has(type));
 }
 
 /**
@@ -185,7 +198,7 @@ function checkMissingFromWhitelist(registered, whitelist) {
  */
 function checkOrphanedInWhitelist(whitelist, registered) {
   const registeredSet = new Set(registered);
-  return whitelist.filter(type => !registeredSet.has(type));
+  return whitelist.filter((type) => !registeredSet.has(type));
 }
 
 /**
@@ -202,6 +215,6 @@ function checkAlphabeticalOrder(whitelist) {
 
   return {
     current: whitelist,
-    expected: sorted
+    expected: sorted,
   };
 }

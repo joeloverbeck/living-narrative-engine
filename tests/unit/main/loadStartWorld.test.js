@@ -48,8 +48,16 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
  */
 function setupStageMocks(uiElements) {
   mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-  mockSetupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
-  const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
+  mockSetupDI.mockResolvedValue({
+    success: true,
+    payload: createMainBootstrapContainerMock(),
+  });
+  const logger = {
+    info: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+  };
   mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
   mockInitGlobalConfig.mockResolvedValue({ success: true });
   mockInitEngine.mockResolvedValue({ success: true, payload: {} });

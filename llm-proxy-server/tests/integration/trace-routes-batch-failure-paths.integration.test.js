@@ -100,9 +100,7 @@ describe('traceRoutes batch failure mode integration coverage', () => {
       .post('/api/traces/write-batch')
       .send({
         outputDirectory: '../../outside-of-project',
-        traces: [
-          { traceData: { alpha: true }, fileName: 'alpha.json' },
-        ],
+        traces: [{ traceData: { alpha: true }, fileName: 'alpha.json' }],
       });
 
     expect(response.status).toBe(403);

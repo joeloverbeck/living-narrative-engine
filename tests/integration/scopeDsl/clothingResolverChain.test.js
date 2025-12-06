@@ -48,25 +48,28 @@ describe('Clothing Resolver Chain Integration', () => {
     const mockClothingAccessibilityService = {
       getAccessibleItems: jest.fn((entityId, options = {}) => {
         const { mode = 'topmost' } = options;
-        
+
         // Get equipment data from current mock state (dynamic)
-        const equipmentData = mockRuntimeContext.entityManager.getComponentData(entityId, 'clothing:equipment');
+        const equipmentData = mockRuntimeContext.entityManager.getComponentData(
+          entityId,
+          'clothing:equipment'
+        );
         if (!equipmentData?.equipped) {
           return []; // Return empty array if no equipment data
         }
-        
+
         const equipment = equipmentData.equipped;
         const items = [];
-        
+
         // Simulate service behavior based on mode
         for (const [slotName, slotData] of Object.entries(equipment)) {
           if (!slotData || typeof slotData !== 'object') {
             continue; // Skip malformed slot data
           }
-          
+
           if (mode === 'all') {
             // Return all items from all layers
-            Object.values(slotData).forEach(item => {
+            Object.values(slotData).forEach((item) => {
               if (item && typeof item === 'string') items.push(item);
             });
           } else if (mode === 'topmost') {
@@ -79,14 +82,17 @@ describe('Clothing Resolver Chain Integration', () => {
               }
             }
           } else if (mode === 'outer') {
-            if (slotData.outer && typeof slotData.outer === 'string') items.push(slotData.outer);
+            if (slotData.outer && typeof slotData.outer === 'string')
+              items.push(slotData.outer);
           } else if (mode === 'base') {
-            if (slotData.base && typeof slotData.base === 'string') items.push(slotData.base);
+            if (slotData.base && typeof slotData.base === 'string')
+              items.push(slotData.base);
           } else if (mode === 'underwear') {
-            if (slotData.underwear && typeof slotData.underwear === 'string') items.push(slotData.underwear);
+            if (slotData.underwear && typeof slotData.underwear === 'string')
+              items.push(slotData.underwear);
           }
         }
-        
+
         return items;
       }),
     };

@@ -17,10 +17,14 @@ describe('ErrorContext - Utility Functions', () => {
 
   describe('extract', () => {
     it('should extract context from BaseError instances', () => {
-      const baseError = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC, {
-        field: 'email',
-        value: 'invalid@'
-      });
+      const baseError = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {
+          field: 'email',
+          value: 'invalid@',
+        }
+      );
 
       const context = ErrorContext.extract(baseError);
 
@@ -33,10 +37,10 @@ describe('ErrorContext - Utility Functions', () => {
         timestamp: expect.any(Number),
         originalContext: {
           field: 'email',
-          value: 'invalid@'
+          value: 'invalid@',
         },
         correlationId: expect.any(String),
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
     });
 
@@ -49,7 +53,7 @@ describe('ErrorContext - Utility Functions', () => {
         errorType: 'Error',
         message: 'Regular error',
         timestamp: expect.any(Number),
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
     });
 
@@ -58,18 +62,21 @@ describe('ErrorContext - Utility Functions', () => {
       const middleError = new Error('Middle error');
       middleError.cause = rootCause;
 
-      const topError = new BaseError('Top error', ErrorCodes.INVALID_DATA_GENERIC);
+      const topError = new BaseError(
+        'Top error',
+        ErrorCodes.INVALID_DATA_GENERIC
+      );
       topError.cause = middleError;
 
       const context = ErrorContext.extract(topError);
 
       expect(context.cause).toMatchObject({
         errorType: 'Error',
-        message: 'Middle error'
+        message: 'Middle error',
       });
       expect(context.cause.cause).toMatchObject({
         errorType: 'Error',
-        message: 'Root cause'
+        message: 'Root cause',
       });
     });
 
@@ -81,13 +88,17 @@ describe('ErrorContext - Utility Functions', () => {
 
   describe('enhance', () => {
     it('should enhance BaseError instances using addContext', () => {
-      const baseError = new BaseError('Test error', ErrorCodes.INVALID_DATA_GENERIC, {
-        original: 'context'
-      });
+      const baseError = new BaseError(
+        'Test error',
+        ErrorCodes.INVALID_DATA_GENERIC,
+        {
+          original: 'context',
+        }
+      );
 
       const additionalContext = {
         userId: 'user123',
-        sessionId: 'session456'
+        sessionId: 'session456',
       };
 
       const enhanced = ErrorContext.enhance(baseError, additionalContext);
@@ -102,7 +113,7 @@ describe('ErrorContext - Utility Functions', () => {
       const error = new Error('Regular error');
       const additionalContext = {
         userId: 'user123',
-        operation: 'test'
+        operation: 'test',
       };
 
       const enhanced = ErrorContext.enhance(error, additionalContext);
@@ -155,8 +166,12 @@ describe('ErrorContext - Utility Functions', () => {
     });
 
     it('should handle invalid prefix by using default', () => {
-      expect(ErrorContext.generateCorrelationId('')).toMatch(/^err_\d+_[a-z0-9]+$/);
-      expect(ErrorContext.generateCorrelationId(null)).toMatch(/^err_\d+_[a-z0-9]+$/);
+      expect(ErrorContext.generateCorrelationId('')).toMatch(
+        /^err_\d+_[a-z0-9]+$/
+      );
+      expect(ErrorContext.generateCorrelationId(null)).toMatch(
+        /^err_\d+_[a-z0-9]+$/
+      );
     });
   });
 
@@ -165,7 +180,7 @@ describe('ErrorContext - Utility Functions', () => {
       const context = {
         message: 'test message',
         timestamp: Date.now(),
-        userId: 'user123'
+        userId: 'user123',
       };
 
       const sanitized = ErrorContext.sanitize(context);
@@ -178,7 +193,7 @@ describe('ErrorContext - Utility Functions', () => {
         callback: () => {},
         undefinedValue: undefined,
         nullValue: null,
-        number: 42
+        number: 42,
       };
 
       const sanitized = ErrorContext.sanitize(context);
@@ -186,7 +201,7 @@ describe('ErrorContext - Utility Functions', () => {
       expect(sanitized).toEqual({
         message: 'test',
         nullValue: null,
-        number: 42
+        number: 42,
       });
     });
 
@@ -197,7 +212,7 @@ describe('ErrorContext - Utility Functions', () => {
         apiKey: 'key123',
         authToken: 'token123',
         sessionCookie: 'cookie123',
-        normalField: 'safe'
+        normalField: 'safe',
       };
 
       const sanitized = ErrorContext.sanitize(context);
@@ -208,7 +223,7 @@ describe('ErrorContext - Utility Functions', () => {
         apiKey: '[REDACTED]',
         authToken: '[REDACTED]',
         sessionCookie: '[REDACTED]',
-        normalField: 'safe'
+        normalField: 'safe',
       });
     });
 
@@ -219,12 +234,12 @@ describe('ErrorContext - Utility Functions', () => {
             level3: {
               level4: {
                 level5: {
-                  level6: 'too deep'
-                }
-              }
-            }
-          }
-        }
+                  level6: 'too deep',
+                },
+              },
+            },
+          },
+        },
       };
 
       const sanitized = ErrorContext.sanitize(deeplyNested, 3);
@@ -245,7 +260,7 @@ describe('ErrorContext - Utility Functions', () => {
     it('should handle arrays properly', () => {
       const context = {
         items: ['item1', 'item2', { nested: 'value' }],
-        numbers: [1, 2, 3]
+        numbers: [1, 2, 3],
       };
 
       const sanitized = ErrorContext.sanitize(context);
@@ -272,7 +287,7 @@ describe('ErrorContext - Utility Functions', () => {
       expect(sanitized.error).toEqual({
         name: 'Error',
         message: 'Test error',
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
     });
 
@@ -296,7 +311,7 @@ describe('ErrorContext - Utility Functions', () => {
         operation: 'create',
         sessionId: 'session456',
         timestamp: 12345,
-        component: 'validator'
+        component: 'validator',
       });
     });
 
@@ -309,7 +324,7 @@ describe('ErrorContext - Utility Functions', () => {
       expect(merged).toEqual({
         key: 'value2',
         unique1: 'a',
-        unique2: 'b'
+        unique2: 'b',
       });
     });
 
@@ -330,13 +345,13 @@ describe('ErrorContext - Utility Functions', () => {
     it('should ignore non-string keys', () => {
       const context = {
         validKey: 'valid',
-        '': 'empty key should be ignored' // Empty string should be ignored by isNonBlankString
+        '': 'empty key should be ignored', // Empty string should be ignored by isNonBlankString
       };
 
       const merged = ErrorContext.merge(context);
 
       expect(merged).toEqual({
-        validKey: 'valid'
+        validKey: 'valid',
         // Empty string key should be excluded by isNonBlankString
       });
     });
@@ -346,7 +361,7 @@ describe('ErrorContext - Utility Functions', () => {
     it('should create context snapshot with operation', () => {
       const snapshot = ErrorContext.createSnapshot('userLogin', {
         userId: 'user123',
-        ip: '192.168.1.1'
+        ip: '192.168.1.1',
       });
 
       expect(snapshot).toMatchObject({
@@ -356,27 +371,34 @@ describe('ErrorContext - Utility Functions', () => {
         snapshotId: expect.stringMatching(/^snapshot_\d+_[a-z0-9]+$/),
         timestamp: expect.any(Number),
         userAgent: expect.any(String), // In jsdom environment, will have a value
-        url: expect.any(String) // In jsdom environment, will have a value
+        url: expect.any(String), // In jsdom environment, will have a value
       });
     });
 
     it('should require operation parameter', () => {
       expect(() => {
         ErrorContext.createSnapshot('', {});
-      }).toThrow('ErrorContext.createSnapshot: operation parameter is required');
+      }).toThrow(
+        'ErrorContext.createSnapshot: operation parameter is required'
+      );
 
       expect(() => {
         ErrorContext.createSnapshot(null);
-      }).toThrow('ErrorContext.createSnapshot: operation parameter is required');
+      }).toThrow(
+        'ErrorContext.createSnapshot: operation parameter is required'
+      );
     });
 
     it('should merge additional context', () => {
       const additionalContext = {
         userId: 'user123',
-        sessionId: 'session456'
+        sessionId: 'session456',
       };
 
-      const snapshot = ErrorContext.createSnapshot('testOperation', additionalContext);
+      const snapshot = ErrorContext.createSnapshot(
+        'testOperation',
+        additionalContext
+      );
 
       expect(snapshot.operation).toBe('testOperation');
       expect(snapshot.userId).toBe('user123');

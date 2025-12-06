@@ -135,15 +135,17 @@ describe('BurningTickSystem', () => {
     it('should apply tick damage to burning part', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 3, tickDamage: 4, stackedCount: 2 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 3, tickDamage: 4, stackedCount: 2 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -167,15 +169,17 @@ describe('BurningTickSystem', () => {
     it('should remove burning and emit stopped event when duration expires', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 1, tickDamage: 2, stackedCount: 3 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 1, tickDamage: 2, stackedCount: 3 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -199,15 +203,17 @@ describe('BurningTickSystem', () => {
     it('should remove burning when part is destroyed', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 5, tickDamage: 5, stackedCount: 2 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 5, tickDamage: 5, stackedCount: 2 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 0, maxHealth: 100 }; // Destroyed
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 0, maxHealth: 100 }; // Destroyed
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'anatomy:part_health';
       });
@@ -231,12 +237,14 @@ describe('BurningTickSystem', () => {
     it('should handle part with no health component as destroyed', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       await system.processTick();
@@ -256,15 +264,17 @@ describe('BurningTickSystem', () => {
     it('should process multiple burning parts in one tick', async () => {
       const parts = ['part:arm', 'part:leg'];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(parts);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       await system.processTick();
@@ -287,15 +297,17 @@ describe('BurningTickSystem', () => {
     it('should clamp health to 0 minimum', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 10, stackedCount: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 10, stackedCount: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 5, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 5, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       await system.processTick();
@@ -310,15 +322,17 @@ describe('BurningTickSystem', () => {
     it('should default stackedCount to 1 when not provided', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 1, tickDamage: 2 }; // No stackedCount
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 1, tickDamage: 2 }; // No stackedCount
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       await system.processTick();
@@ -337,15 +351,17 @@ describe('BurningTickSystem', () => {
     it('should process tick when turn ended event fires', async () => {
       const partId = 'part:arm';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === BURNING_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === BURNING_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1, stackedCount: 1 };
+          }
+          if (componentId === 'anatomy:part_health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(true);
 
       // Trigger the turn ended callback

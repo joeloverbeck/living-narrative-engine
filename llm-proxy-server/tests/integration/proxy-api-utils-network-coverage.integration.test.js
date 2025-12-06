@@ -45,15 +45,16 @@ describe('proxyApiUtils RetryManager additional network coverage', () => {
     const logger = createLogger();
     randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
 
-    const failingResponse = new Response('upstream temporary failure: plain text payload', {
-      status: 502,
-      headers: { 'Content-Type': 'text/plain' },
+    const failingResponse = new Response(
+      'upstream temporary failure: plain text payload',
+      {
+        status: 502,
+        headers: { 'Content-Type': 'text/plain' },
+      }
+    );
+    jest.spyOn(failingResponse, 'json').mockImplementation(async () => {
+      throw new SyntaxError('synthetic json failure');
     });
-    jest
-      .spyOn(failingResponse, 'json')
-      .mockImplementation(async () => {
-        throw new SyntaxError('synthetic json failure');
-      });
 
     const recoveryPayload = { recovered: true };
     const recoveryResponse = new Response(JSON.stringify(recoveryPayload), {
@@ -79,11 +80,14 @@ describe('proxyApiUtils RetryManager additional network coverage', () => {
     expect(result).toEqual(recoveryPayload);
 
     const debugMessages = logger.debug.mock.calls.map(([message]) => message);
-    expect(debugMessages.some((message) => message.includes('Fetching GET'))).toBe(true);
     expect(
-      debugMessages.some((message) =>
-        message.includes('Error response body (Text):') &&
-        message.includes('plain text payload')
+      debugMessages.some((message) => message.includes('Fetching GET'))
+    ).toBe(true);
+    expect(
+      debugMessages.some(
+        (message) =>
+          message.includes('Error response body (Text):') &&
+          message.includes('plain text payload')
       )
     ).toBe(true);
   });
@@ -91,9 +95,11 @@ describe('proxyApiUtils RetryManager additional network coverage', () => {
   it('treats extended TypeError network signatures as persistent network errors', async () => {
     for (const pattern of patternsToCover) {
       const logger = createLogger();
-      fetchSpy = jest.spyOn(global, 'fetch').mockImplementationOnce(async () => {
-        throw new TypeError(pattern);
-      });
+      fetchSpy = jest
+        .spyOn(global, 'fetch')
+        .mockImplementationOnce(async () => {
+          throw new TypeError(pattern);
+        });
 
       const retryManager = new RetryManager(
         'http://unreachable.integration.test/resource',

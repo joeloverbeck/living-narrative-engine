@@ -16,10 +16,7 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction(
-      'hand-holding',
-      ACTION_ID
-    );
+    testFixture = await ModTestFixture.forAction('hand-holding', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -80,17 +77,17 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
             }
 
             const actorHoldingPartner =
-              actorEntity.components?.['hand-holding:holding_hand']?.held_entity_id ===
-              partnerId;
+              actorEntity.components?.['hand-holding:holding_hand']
+                ?.held_entity_id === partnerId;
             const actorHandHeldByPartner =
-              actorEntity.components?.['hand-holding:hand_held']?.holding_entity_id ===
-              partnerId;
+              actorEntity.components?.['hand-holding:hand_held']
+                ?.holding_entity_id === partnerId;
             const partnerHoldingActor =
-              partner.components?.['hand-holding:holding_hand']?.held_entity_id ===
-              actorId;
+              partner.components?.['hand-holding:holding_hand']
+                ?.held_entity_id === actorId;
             const partnerHandHeldByActor =
-              partner.components?.['hand-holding:hand_held']?.holding_entity_id ===
-              actorId;
+              partner.components?.['hand-holding:hand_held']
+                ?.holding_entity_id === actorId;
 
             if (
               !actorHoldingPartner &&
@@ -134,7 +131,9 @@ describe('hand-holding:warm_hands_between_yours action discovery', () => {
     it('matches the expected affection action schema', () => {
       expect(warmHandsAction).toBeDefined();
       expect(warmHandsAction.id).toBe(ACTION_ID);
-      expect(warmHandsAction.template).toBe("warm {target}'s hands between yours");
+      expect(warmHandsAction.template).toBe(
+        "warm {target}'s hands between yours"
+      );
       expect(warmHandsAction.targets).toBe(
         'positioning:close_actors_facing_each_other_or_behind_target'
       );

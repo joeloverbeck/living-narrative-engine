@@ -40,8 +40,11 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Register the grabbing prerequisite condition needed by pick_up_item action
     // This is necessary because we're using forAction with drop_item, not pick_up_item
     if (testFixture.testEnv && testFixture.testEnv.dataRegistry) {
-      const originalGetCondition = testFixture.testEnv.dataRegistry.getConditionDefinition;
-      testFixture.testEnv.dataRegistry.getConditionDefinition = (conditionId) => {
+      const originalGetCondition =
+        testFixture.testEnv.dataRegistry.getConditionDefinition;
+      testFixture.testEnv.dataRegistry.getConditionDefinition = (
+        conditionId
+      ) => {
         if (conditionId === 'anatomy:actor-has-free-grabbing-appendage') {
           return actorHasFreeGrabbingCondition;
         }
@@ -93,7 +96,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     testFixture.reset([room, actor, item, handEntity]);
 
     // Execute drop action
-    const dropResult = await testFixture.executeAction('test:actor1', 'letter-1');
+    const dropResult = await testFixture.executeAction(
+      'test:actor1',
+      'letter-1'
+    );
     expect(dropResult).toBeDefined();
 
     // CRITICAL: Clear cache to force fresh reads
@@ -103,9 +109,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const actions = await testFixture.discoverActions('test:actor1');
 
     // Verify pickup action is available
-    const pickupAction = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
+    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
 
     expect(pickupAction).toBeDefined();
     expect(pickupAction.id).toBe('items:pick_up_item');
@@ -158,7 +162,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Execute drop action
     // This updates entity manager storage but does NOT invalidate cache
-    const dropResult = await testFixture.executeAction('test:actor1', 'letter-1');
+    const dropResult = await testFixture.executeAction(
+      'test:actor1',
+      'letter-1'
+    );
     expect(dropResult).toBeDefined();
 
     // Verify drop was successful (direct entity manager query)
@@ -231,9 +238,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Action discovery succeeds because cache was automatically invalidated
     const actions = await testFixture.discoverActions('test:actor1');
-    const pickupAction = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
+    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
 
     // Bug is fixed: entity data is correct and cache invalidation allows discovery
     expect(pickupAction).toBeDefined();
@@ -284,9 +289,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const actions = await testFixture.discoverActions('test:actor1');
 
     // With cleared cache, pickup action should be available
-    const pickupAction = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
+    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
 
     expect(pickupAction).toBeDefined();
     expect(pickupAction.id).toBe('items:pick_up_item');
@@ -336,9 +339,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify letter can be picked up
     let actions = await testFixture.discoverActions('test:actor1');
-    let letterPickup = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
+    let letterPickup = actions.find((a) => a.id === 'items:pick_up_item');
     expect(letterPickup).toBeDefined();
 
     // Drop gun
@@ -347,12 +348,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify both items can be picked up
     actions = await testFixture.discoverActions('test:actor1');
-    letterPickup = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
-    const gunPickup = actions.find(
-      (a) => a.id === 'items:pick_up_item'
-    );
+    letterPickup = actions.find((a) => a.id === 'items:pick_up_item');
+    const gunPickup = actions.find((a) => a.id === 'items:pick_up_item');
 
     expect(letterPickup).toBeDefined();
     expect(gunPickup).toBeDefined();

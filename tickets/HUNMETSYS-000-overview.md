@@ -22,31 +22,37 @@ Implementation of a comprehensive hunger and metabolism system that transforms f
 ## Implementation Phases
 
 ### Phase 1: Foundation (Tickets 001-005)
+
 - Component schemas and operation handlers
 - Core business logic for metabolism
 - Schema validation and DI setup
 
 ### Phase 2: Mod Structure (Tickets 006-010)
+
 - Complete metabolism mod structure
 - Turn-based processing rules
 - Action definitions and handlers
 
 ### Phase 3: GOAP Integration (Tickets 011-013)
+
 - Custom JSON Logic operators
 - Hunger-driven AI behavior
 - Energy-based action costs
 
 ### Phase 4: Visual Integration (Tickets 014-015)
+
 - Body composition updates
 - State change events
 - UI/audio feedback
 
 ### Phase 5: Action Energy Costs (Tickets 016-017)
+
 - Energy cost integration for existing actions
 - Gameplay balancing
 - Performance validation
 
 ### Phase 6: Polish & Documentation (Tickets 018-020)
+
 - Edge case handling
 - Complete test coverage
 - Documentation and examples

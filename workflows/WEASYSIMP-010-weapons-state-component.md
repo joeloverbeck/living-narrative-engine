@@ -17,6 +17,7 @@ Create `weapons:jammed` state component for tracking weapon jam conditions.
 Spec reference: Lines 498-527
 
 Properties:
+
 - `jamType`: enum ["stovepipe", "double_feed", "failure_to_extract", "squib_load"]
 - `timestamp`: number
 

@@ -15,7 +15,10 @@ describe('Default Validation Configuration', () => {
 
   beforeEach(async () => {
     // Load configuration
-    const configPath = path.join(process.cwd(), 'config/validation-config.json');
+    const configPath = path.join(
+      process.cwd(),
+      'config/validation-config.json'
+    );
     const configContent = await fs.readFile(configPath, 'utf-8');
     config = JSON.parse(configContent);
 
@@ -36,7 +39,10 @@ describe('Default Validation Configuration', () => {
       const valid = validate(config);
 
       if (!valid) {
-        console.error('Validation errors:', JSON.stringify(validate.errors, null, 2));
+        console.error(
+          'Validation errors:',
+          JSON.stringify(validate.errors, null, 2)
+        );
       }
 
       expect(valid).toBe(true);
@@ -96,8 +102,12 @@ describe('Default Validation Configuration', () => {
     });
 
     it('should not fail-fast for lower priority validators (priorities 4-10)', () => {
-      const nonFailFastValidators = config.validators.filter((v) => !v.failFast);
-      const nonFailFastPriorities = nonFailFastValidators.map((v) => v.priority);
+      const nonFailFastValidators = config.validators.filter(
+        (v) => !v.failFast
+      );
+      const nonFailFastPriorities = nonFailFastValidators.map(
+        (v) => v.priority
+      );
 
       expect(nonFailFastValidators).toHaveLength(7);
       expect(nonFailFastPriorities).toEqual([4, 5, 6, 7, 8, 9, 10]);
@@ -106,7 +116,9 @@ describe('Default Validation Configuration', () => {
 
   describe('Pattern Matching Configuration', () => {
     it('should have skipIfDisabled config for pattern_matching validator', () => {
-      const patternValidator = config.validators.find((v) => v.name === 'pattern_matching');
+      const patternValidator = config.validators.find(
+        (v) => v.name === 'pattern_matching'
+      );
 
       expect(patternValidator).toBeDefined();
       expect(patternValidator.config).toBeDefined();
@@ -114,7 +126,9 @@ describe('Default Validation Configuration', () => {
     });
 
     it('should be the only validator with config option', () => {
-      const validatorsWithConfig = config.validators.filter((v) => v.config !== undefined);
+      const validatorsWithConfig = config.validators.filter(
+        (v) => v.config !== undefined
+      );
 
       expect(validatorsWithConfig).toHaveLength(1);
       expect(validatorsWithConfig[0].name).toBe('pattern_matching');
@@ -172,7 +186,9 @@ describe('Default Validation Configuration', () => {
     });
 
     it('should only override severity for non-fail-fast validators', () => {
-      const overriddenNames = Object.keys(config.errorHandling.severityOverrides);
+      const overriddenNames = Object.keys(
+        config.errorHandling.severityOverrides
+      );
 
       for (const name of overriddenNames) {
         const validator = config.validators.find((v) => v.name === name);

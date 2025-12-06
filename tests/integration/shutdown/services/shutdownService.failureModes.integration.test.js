@@ -135,11 +135,10 @@ class NonShutdownSystem {
  */
 function registerShutdownSystems(container, systems) {
   systems.forEach((system, index) => {
-    container.register(
-      `shutdownable-system-${index}`,
-      () => system,
-      { lifecycle: 'singleton', tags: SHUTDOWNABLE }
-    );
+    container.register(`shutdownable-system-${index}`, () => system, {
+      lifecycle: 'singleton',
+      tags: SHUTDOWNABLE,
+    });
   });
 }
 
@@ -148,11 +147,12 @@ describe('ShutdownService constructor validation integration', () => {
     const logger = new RecordingLogger();
     const dispatcher = new RecordingDispatcher();
 
-    expect(() =>
-      new ShutdownService({
-        logger,
-        validatedEventDispatcher: dispatcher,
-      })
+    expect(
+      () =>
+        new ShutdownService({
+          logger,
+          validatedEventDispatcher: dispatcher,
+        })
     ).toThrow("ShutdownService: Missing required dependency 'container'.");
   });
 
@@ -162,12 +162,13 @@ describe('ShutdownService constructor validation integration', () => {
     container.register('ILogger', fallbackLogger, { lifecycle: 'singleton' });
     const dispatcher = new RecordingDispatcher();
 
-    expect(() =>
-      new ShutdownService({
-        container,
-        logger: { debug: () => {} },
-        validatedEventDispatcher: dispatcher,
-      })
+    expect(
+      () =>
+        new ShutdownService({
+          container,
+          logger: { debug: () => {} },
+          validatedEventDispatcher: dispatcher,
+        })
     ).toThrow(
       "ShutdownService: Missing or invalid required dependency 'logger'."
     );
@@ -181,15 +182,20 @@ describe('ShutdownService constructor validation integration', () => {
 
   it('falls back gracefully when container logger lacks error method', () => {
     const container = new AppContainer();
-    container.register('ILogger', { warn: () => {} }, { lifecycle: 'singleton' });
+    container.register(
+      'ILogger',
+      { warn: () => {} },
+      { lifecycle: 'singleton' }
+    );
     const dispatcher = new RecordingDispatcher();
 
-    expect(() =>
-      new ShutdownService({
-        container,
-        logger: { debug: () => {} },
-        validatedEventDispatcher: dispatcher,
-      })
+    expect(
+      () =>
+        new ShutdownService({
+          container,
+          logger: { debug: () => {} },
+          validatedEventDispatcher: dispatcher,
+        })
     ).toThrow(
       "ShutdownService: Missing or invalid required dependency 'logger'."
     );
@@ -200,12 +206,13 @@ describe('ShutdownService constructor validation integration', () => {
     const logger = new RecordingLogger();
     container.register('ILogger', logger, { lifecycle: 'singleton' });
 
-    expect(() =>
-      new ShutdownService({
-        container,
-        logger,
-        validatedEventDispatcher: {},
-      })
+    expect(
+      () =>
+        new ShutdownService({
+          container,
+          logger,
+          validatedEventDispatcher: {},
+        })
     ).toThrow(
       "ShutdownService: Missing or invalid required dependency 'validatedEventDispatcher'."
     );
@@ -252,7 +259,14 @@ function createServiceHarness({
     validatedEventDispatcher: dispatcher,
   });
 
-  return { shutdownService, container, logger, dispatcher, turnManager, systems };
+  return {
+    shutdownService,
+    container,
+    logger,
+    dispatcher,
+    turnManager,
+    systems,
+  };
 }
 
 describe('ShutdownService failure mode integration', () => {
@@ -284,9 +298,13 @@ describe('ShutdownService failure mode integration', () => {
         'ShutdownService: CRITICAL ERROR resolving SHUTDOWNABLE systems. Cannot proceed with tagged system shutdown.'
       )
     ).toBeTruthy();
-    expect(dispatcher.getCall('shutdown:shutdown_service:completed')).toBeDefined();
+    expect(
+      dispatcher.getCall('shutdown:shutdown_service:completed')
+    ).toBeDefined();
     // ensure container override was invoked (no systems registered)
-    expect(() => container.resolveByTag(SHUTDOWNABLE[0])).toThrow('resolveByTag failure');
+    expect(() => container.resolveByTag(SHUTDOWNABLE[0])).toThrow(
+      'resolveByTag failure'
+    );
   });
 
   it('handles mixed shutdownable systems and records individual failures', async () => {
@@ -324,14 +342,18 @@ describe('ShutdownService failure mode integration', () => {
         'ShutdownService: System tagged SHUTDOWNABLE (UnknownSystem) does not have a valid shutdown() method.'
       )
     ).toBeTruthy();
-    expect(dispatcher.getCall('shutdown:shutdown_service:completed')).toBeDefined();
+    expect(
+      dispatcher.getCall('shutdown:shutdown_service:completed')
+    ).toBeDefined();
   });
 
   it('recovers when singleton disposal and completion dispatch fail', async () => {
     const logger = new RecordingLogger();
     const dispatcher = new RecordingDispatcher({
       failures: {
-        'shutdown:shutdown_service:completed': new Error('completed dispatch failure'),
+        'shutdown:shutdown_service:completed': new Error(
+          'completed dispatch failure'
+        ),
       },
     });
 
@@ -359,12 +381,16 @@ describe('ShutdownService failure mode integration', () => {
         "Failed to dispatch 'shutdown:shutdown_service:completed' event"
       )
     ).toBeTruthy();
-    expect(dispatcher.getCall('shutdown:shutdown_service:completed')).toBeDefined();
+    expect(
+      dispatcher.getCall('shutdown:shutdown_service:completed')
+    ).toBeDefined();
     expect(container.resolve(tokens.ITurnManager)).toBeDefined();
   });
 
   it('dispatches failure payload with unknown error details when logger throws object without message', async () => {
-    const logger = new ObjectThrowingLogger('Resolving and stopping TurnManager');
+    const logger = new ObjectThrowingLogger(
+      'Resolving and stopping TurnManager'
+    );
     const dispatcher = new RecordingDispatcher();
     const systems = [new ShutdownableSystem('Gamma')];
 

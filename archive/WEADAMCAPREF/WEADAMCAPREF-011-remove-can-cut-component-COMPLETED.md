@@ -23,13 +23,13 @@ Remove the deprecated `damage-types:can_cut` marker component from the codebase.
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `data/mods/damage-types/components/can_cut.component.json` | DELETE | Deprecated component |
-| `data/mods/damage-types/mod-manifest.json` | UPDATE | Remove can_cut reference |
-| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json` | UPDATE | Remove can_cut component |
-| `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` | UPDATE | Remove can_cut component |
-| `tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js` | UPDATE | Remove can_cut tests, strengthen damage_capabilities tests |
+| File                                                                              | Action | Description                                                |
+| --------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| `data/mods/damage-types/components/can_cut.component.json`                        | DELETE | Deprecated component                                       |
+| `data/mods/damage-types/mod-manifest.json`                                        | UPDATE | Remove can_cut reference                                   |
+| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json`               | UPDATE | Remove can_cut component                                   |
+| `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` | UPDATE | Remove can_cut component                                   |
+| `tests/integration/mods/weapons/weaponCanCutComponentValidation.test.js`          | UPDATE | Remove can_cut tests, strengthen damage_capabilities tests |
 
 ## Out of Scope
 
@@ -49,6 +49,7 @@ Remove `data/mods/damage-types/components/can_cut.component.json`.
 In `data/mods/damage-types/mod-manifest.json`, remove can_cut from components array:
 
 **Before**:
+
 ```json
 {
   "components": [
@@ -59,11 +60,10 @@ In `data/mods/damage-types/mod-manifest.json`, remove can_cut from components ar
 ```
 
 **After**:
+
 ```json
 {
-  "components": [
-    "components/damage_capabilities.component.json"
-  ]
+  "components": ["components/damage_capabilities.component.json"]
 }
 ```
 
@@ -72,6 +72,7 @@ In `data/mods/damage-types/mod-manifest.json`, remove can_cut from components ar
 Remove `"damage-types:can_cut": {}` from each weapon entity file.
 
 **Before**:
+
 ```json
 {
   "components": {
@@ -83,6 +84,7 @@ Remove `"damage-types:can_cut": {}` from each weapon entity file.
 ```
 
 **After**:
+
 ```json
 {
   "components": {
@@ -117,6 +119,7 @@ Remove `"damage-types:can_cut": {}` from each weapon entity file.
 ## Risk Assessment
 
 **Low Risk**: This removal is safe because:
+
 1. All consumers (action, scope) were already migrated to use `damage_capabilities`
 2. Weapons already have `damage_capabilities` component
 3. This is purely cleanup of unused code
@@ -133,11 +136,13 @@ Remove `"damage-types:can_cut": {}` from each weapon entity file.
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Delete `can_cut.component.json` ✅
 - Update manifest ✅
 - Update 4 entity files (rapier, main-gauche, practice stick, longsword)
 
 **Actually Changed:**
+
 - Delete `can_cut.component.json` ✅
 - Update manifest ✅
 - Update 2 entity files (rapier, longsword) - main-gauche and practice stick already had no can_cut
@@ -145,11 +150,13 @@ Remove `"damage-types:can_cut": {}` from each weapon entity file.
 
 **Key Discovery:**
 The original ticket did not account for the test file `weaponCanCutComponentValidation.test.js` which had 20+ tests explicitly validating `can_cut` presence. This test file was refactored to:
+
 1. Remove tests that validated `can_cut` presence/absence
 2. Add new tests validating weapon type classification via `damage_capabilities` entries (slashing, piercing, blunt)
 3. Strengthen coverage of the new `has_damage_capability` operator-based classification
 
 **Verification:**
+
 - `npm run validate` passes (0 violations)
 - All 18 weapon test suites pass (242 tests)
 - No remaining `can_cut` references in code or data files

@@ -23,11 +23,13 @@ This guide helps migrate tests from direct `SimpleEntityManager` usage to `TestE
 ### Step 1: Update Test File Imports
 
 **Find files using SimpleEntityManager:**
+
 ```bash
 grep -r "SimpleEntityManager" tests/
 ```
 
 **Before:**
+
 ```javascript
 import SimpleEntityManager from '../../common/engine/SimpleEntityManager.js';
 
@@ -41,6 +43,7 @@ describe('My Test', () => {
 ```
 
 **After:**
+
 ```javascript
 import { createEntityManagerAdapter } from '../../common/engine/entityManagerTestFactory.js';
 
@@ -72,9 +75,9 @@ Take advantage of new production API methods:
 
 ```javascript
 // Before - manual filtering
-const actors = entityManager.getEntities().filter(e =>
-  entityManager.hasComponent(e.id, 'core:actor')
-);
+const actors = entityManager
+  .getEntities()
+  .filter((e) => entityManager.hasComponent(e.id, 'core:actor'));
 
 // After - production API
 const actors = entityManager.getEntitiesWithComponent('core:actor');

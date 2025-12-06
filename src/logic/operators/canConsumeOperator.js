@@ -4,7 +4,10 @@
  * @description Validates if consumer can safely consume an item (fuel tags + buffer capacity)
  */
 
-import { resolveEntityPath, hasValidEntityId } from '../utils/entityPathResolver.js';
+import {
+  resolveEntityPath,
+  hasValidEntityId,
+} from '../utils/entityPathResolver.js';
 import jsonLogic from 'json-logic-js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -116,10 +119,17 @@ export class CanConsumeOperator {
 
       if (!resolved.isValid) {
         // Check if this looks like a context path
-        const commonContextKeys = ['entity', 'actor', 'location', 'target', 'targets', 'event', 'self'];
+        const commonContextKeys = [
+          'entity',
+          'actor',
+          'location',
+          'target',
+          'targets',
+          'event',
+          'self',
+        ];
         const looksLikeContextPath =
-          commonContextKeys.includes(entityPath) ||
-          entityPath.includes('.');
+          commonContextKeys.includes(entityPath) || entityPath.includes('.');
 
         if (looksLikeContextPath) {
           this.#logger.warn(
@@ -135,7 +145,10 @@ export class CanConsumeOperator {
         }
       } else {
         // Check if resolved to object without id
-        if (typeof resolved.entity === 'object' && !hasValidEntityId(resolved.entity)) {
+        if (
+          typeof resolved.entity === 'object' &&
+          !hasValidEntityId(resolved.entity)
+        ) {
           this.#logger.debug(
             `${this.#operatorName}: Resolved "${entityPath}" to object without id, treating original path as ${role} entity ID`
           );
@@ -213,7 +226,7 @@ export class CanConsumeOperator {
 
     // Check fuel tags compatibility
     const fuelTags = fuelSource.fuel_tags || [];
-    const hasMatchingTag = fuelTags.some(tag =>
+    const hasMatchingTag = fuelTags.some((tag) =>
       converter.accepted_fuel_tags.includes(tag)
     );
 

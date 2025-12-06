@@ -782,7 +782,10 @@ describe('ErrorReporter', () => {
 
     it('should track statistics after reporting errors', async () => {
       const error = new Error('Test error');
-      await errorReporter.report(error, { operation: 'test', component: 'test' });
+      await errorReporter.report(error, {
+        operation: 'test',
+        component: 'test',
+      });
 
       const stats = errorReporter.getStatistics();
 
@@ -978,7 +981,9 @@ describe('ErrorReporter', () => {
     });
 
     it('should expose unknown URL when browser location is unavailable', async () => {
-      const urlSpy = jest.spyOn(ErrorReporter, 'resolveCurrentUrl').mockReturnValue(undefined);
+      const urlSpy = jest
+        .spyOn(ErrorReporter, 'resolveCurrentUrl')
+        .mockReturnValue(undefined);
 
       errorReporter = new ErrorReporter({
         logger: mockLogger,
@@ -1010,19 +1015,26 @@ describe('ErrorReporter', () => {
 
     it('should resolve current url from window when provided globals include location', () => {
       expect(
-        ErrorReporter.resolveCurrentUrl({ window: { location: { href: 'https://example.app/' } } })
+        ErrorReporter.resolveCurrentUrl({
+          window: { location: { href: 'https://example.app/' } },
+        })
       ).toBe('https://example.app/');
     });
 
     it('should fall back to global location when window is unavailable', () => {
       expect(
-        ErrorReporter.resolveCurrentUrl({ location: { href: 'https://fallback.example/' } })
+        ErrorReporter.resolveCurrentUrl({
+          location: { href: 'https://fallback.example/' },
+        })
       ).toBe('https://fallback.example/');
     });
 
     it('should return undefined when no location information exists', () => {
       expect(
-        ErrorReporter.resolveCurrentUrl({ window: { location: {} }, location: {} })
+        ErrorReporter.resolveCurrentUrl({
+          window: { location: {} },
+          location: {},
+        })
       ).toBeUndefined();
     });
 

@@ -63,7 +63,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       expect(turnEndedEvent.payload.success).toBe(true);
 
       // Verify wielding component was created with the weapon
-      const actorInstance = fixture.entityManager.getEntityInstance('test-actor');
+      const actorInstance =
+        fixture.entityManager.getEntityInstance('test-actor');
       expect(actorInstance).toHaveComponentData('positioning:wielding', {
         wielded_item_ids: ['dagger'],
       });
@@ -100,7 +101,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       expect(turnEndedEvent.payload.success).toBe(true);
 
       // Verify wielding component was created with the weapon
-      const actorInstance = fixture.entityManager.getEntityInstance('test-actor');
+      const actorInstance =
+        fixture.entityManager.getEntityInstance('test-actor');
       expect(actorInstance).toHaveComponentData('positioning:wielding', {
         wielded_item_ids: ['greatsword'],
       });
@@ -138,7 +140,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       expect(turnEndedEvent.payload.success).toBe(true);
 
       // Verify wielding component was created with the weapon
-      const actorInstance = fixture.entityManager.getEntityInstance('test-actor');
+      const actorInstance =
+        fixture.entityManager.getEntityInstance('test-actor');
       expect(actorInstance).toHaveComponentData('positioning:wielding', {
         wielded_item_ids: ['revolver'],
       });
@@ -177,7 +180,8 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
       // Verify wielding component exists with the specific weapon
       // The item_id association is critical for UNLOCK_GRABBING to work correctly
       // when unwielding specific items
-      const actorInstance = fixture.entityManager.getEntityInstance('test-actor');
+      const actorInstance =
+        fixture.entityManager.getEntityInstance('test-actor');
       expect(actorInstance).toHaveComponentData('positioning:wielding', {
         wielded_item_ids: ['sword'],
       });
@@ -192,8 +196,12 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
           action.parameters?.component_type === 'anatomy:requires_grabbing'
       );
       expect(queryGrabbingOp).toBeDefined();
-      expect(queryGrabbingOp.parameters.result_variable).toBe('targetGrabbingReqs');
-      expect(queryGrabbingOp.parameters.missing_value).toEqual({ handsRequired: 1 });
+      expect(queryGrabbingOp.parameters.result_variable).toBe(
+        'targetGrabbingReqs'
+      );
+      expect(queryGrabbingOp.parameters.missing_value).toEqual({
+        handsRequired: 1,
+      });
     });
 
     it('should have LOCK_GRABBING operation in rule', () => {
@@ -201,9 +209,15 @@ describe('wield_threateningly action - Grabbing Appendage Locking', () => {
         (action) => action.type === 'LOCK_GRABBING'
       );
       expect(lockGrabbingOp).toBeDefined();
-      expect(lockGrabbingOp.parameters.actor_id).toBe('{event.payload.actorId}');
-      expect(lockGrabbingOp.parameters.count).toBe('{context.targetGrabbingReqs.handsRequired}');
-      expect(lockGrabbingOp.parameters.item_id).toBe('{event.payload.targetId}');
+      expect(lockGrabbingOp.parameters.actor_id).toBe(
+        '{event.payload.actorId}'
+      );
+      expect(lockGrabbingOp.parameters.count).toBe(
+        '{context.targetGrabbingReqs.handsRequired}'
+      );
+      expect(lockGrabbingOp.parameters.item_id).toBe(
+        '{event.payload.targetId}'
+      );
     });
 
     it('should query grabbing requirements before locking', () => {

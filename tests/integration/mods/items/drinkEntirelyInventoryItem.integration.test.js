@@ -200,9 +200,9 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       fixture.entityManager.removeComponent(bottle.id, 'core:position');
 
       // Act & Assert - Should throw validation error
-      await expect(
-        fixture.executeAction(actor.id, bottle.id)
-      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
+      await expect(fixture.executeAction(actor.id, bottle.id)).rejects.toThrow(
+        'ACTION EXECUTION VALIDATION FAILED'
+      );
     });
   });
 });

@@ -3,7 +3,14 @@
  * @description Validates action availability for close, front-facing partners where the actor has breasts.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import {
   PRESS_AGAINST_CHEST_ACTION_ID as ACTION_ID,
@@ -60,7 +67,9 @@ describe('sex-breastplay:press_against_chest action discovery', () => {
       ]);
 
       expect(pressAgainstChestAction.targets.primary.scope).toBe(SCOPE_ID);
-      expect(pressAgainstChestAction.targets.primary.placeholder).toBe('target');
+      expect(pressAgainstChestAction.targets.primary.placeholder).toBe(
+        'target'
+      );
       expect(pressAgainstChestAction.targets.primary.description).toBe(
         'Partner facing you up close'
       );
@@ -88,7 +97,9 @@ describe('sex-breastplay:press_against_chest action discovery', () => {
       const discovered = actions.find((action) => action.id === ACTION_ID);
 
       expect(discovered).toBeDefined();
-      expect(discovered.template).toBe("press yourself against {target}'s chest");
+      expect(discovered.template).toBe(
+        "press yourself against {target}'s chest"
+      );
     });
 
     it('does not appear when closeness is missing', () => {

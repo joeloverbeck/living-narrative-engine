@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   ensureValidLogger,
   createPrefixedLogger,
@@ -35,7 +42,10 @@ describe('loggerUtils additional coverage', () => {
 
     fallback.info('default message');
 
-    expect(consoleInfoSpy).toHaveBeenCalledWith('FallbackLogger: ', 'default message');
+    expect(consoleInfoSpy).toHaveBeenCalledWith(
+      'FallbackLogger: ',
+      'default message'
+    );
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -60,7 +70,10 @@ describe('loggerUtils additional coverage', () => {
 
     prefixed.error('failed to start', sampleError);
 
-    expect(baseLogger.error).toHaveBeenCalledWith('failed to start', sampleError);
+    expect(baseLogger.error).toHaveBeenCalledWith(
+      'failed to start',
+      sampleError
+    );
     expect(baseLogger.info).not.toHaveBeenCalled();
   });
 
@@ -115,6 +128,9 @@ describe('loggerUtils additional coverage', () => {
 
     logError(logger, 'sync pipeline', err);
 
-    expect(logger.error).toHaveBeenCalledWith('❌ sync pipeline: network offline', err);
+    expect(logger.error).toHaveBeenCalledWith(
+      '❌ sync pipeline: network offline',
+      err
+    );
   });
 });

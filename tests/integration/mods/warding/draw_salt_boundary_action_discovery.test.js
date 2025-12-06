@@ -291,9 +291,10 @@ describe('warding:draw_salt_boundary action discovery', () => {
     });
 
     it('has modifier for unrestrained target (-15 penalty)', () => {
-      const unrestrainedModifier = drawSaltBoundaryAction.chanceBased.modifiers.find(
-        (m) => m.tag === 'target unrestrained'
-      );
+      const unrestrainedModifier =
+        drawSaltBoundaryAction.chanceBased.modifiers.find(
+          (m) => m.tag === 'target unrestrained'
+        );
       expect(unrestrainedModifier).toBeDefined();
       expect(unrestrainedModifier.type).toBe('flat');
       expect(unrestrainedModifier.value).toBe(-15);
@@ -301,9 +302,10 @@ describe('warding:draw_salt_boundary action discovery', () => {
     });
 
     it('has modifier for restrained target (+15 bonus)', () => {
-      const restrainedModifier = drawSaltBoundaryAction.chanceBased.modifiers.find(
-        (m) => m.tag === 'target restrained'
-      );
+      const restrainedModifier =
+        drawSaltBoundaryAction.chanceBased.modifiers.find(
+          (m) => m.tag === 'target restrained'
+        );
       expect(restrainedModifier).toBeDefined();
       expect(restrainedModifier.type).toBe('flat');
       expect(restrainedModifier.value).toBe(15);

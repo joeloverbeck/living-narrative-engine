@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import getUpFromLyingAction from '../../../../data/mods/positioning/actions/get_up_from_lying.action.json';
 
@@ -31,7 +34,9 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
   describe('Action structure validation', () => {
     it('should have forbidden_components defined for actor', () => {
       expect(getUpFromLyingAction.forbidden_components).toBeDefined();
-      expect(getUpFromLyingAction.forbidden_components.actor).toBeInstanceOf(Array);
+      expect(getUpFromLyingAction.forbidden_components.actor).toBeInstanceOf(
+        Array
+      );
     });
   });
 
@@ -51,20 +56,24 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       // Actor is lying down on the furniture
       scenario.actor.components['positioning:lying_down'] = {
         furniture_id: 'bed1',
-        spot_index: 0
+        spot_index: 0,
       };
 
       // Actor is being fucked vaginally
       scenario.actor.components['positioning:being_fucked_vaginally'] = {
-        actorId: 'other_entity'
+        actorId: 'other_entity',
       };
 
       // Actor in same room
-      scenario.actor.components['positioning:at_location'] = { location_id: room.id };
+      scenario.actor.components['positioning:at_location'] = {
+        location_id: room.id,
+      };
 
       testFixture.reset([room, furniture, scenario.actor]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has being_fucked_vaginally component
@@ -86,15 +95,19 @@ describe('positioning:get_up_from_lying - Forbidden components validation', () =
       // Actor is lying down on the furniture
       scenario.actor.components['positioning:lying_down'] = {
         furniture_id: 'bed1',
-        spot_index: 0
+        spot_index: 0,
       };
 
       // Actor in same room (no being_fucked_vaginally component)
-      scenario.actor.components['positioning:at_location'] = { location_id: room.id };
+      scenario.actor.components['positioning:at_location'] = {
+        location_id: room.id,
+      };
 
       testFixture.reset([room, furniture, scenario.actor]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const actionIds = actions.map((action) => action.id);
 
       // Without the forbidden component, action should be available

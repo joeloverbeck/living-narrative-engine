@@ -93,7 +93,10 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       // Debug: Check events after execution
       console.log('\n=== POST-EXECUTION DEBUG ===');
       console.log('Total events:', testFixture.events.length);
-      console.log('Event types:', testFixture.events.map(e => e.eventType));
+      console.log(
+        'Event types:',
+        testFixture.events.map((e) => e.eventType)
+      );
       console.log('=== END POST-EXECUTION DEBUG ===\n');
 
       // Assert: Verify actor is sitting at correct spot (occupant index + 2)
@@ -280,7 +283,11 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       // Manually fill the target seat to simulate race condition
       const bench = testFixture.entityManager.getEntityInstance('bench1');
-      bench.components['positioning:allows_sitting'].spots = ['bob1', null, 'interloper1'];
+      bench.components['positioning:allows_sitting'].spots = [
+        'bob1',
+        null,
+        'interloper1',
+      ];
 
       // Try to execute action
       await testFixture.executeAction('actor1', 'bench1', {
@@ -321,7 +328,11 @@ describe('personal-space:sit_down_at_distance action integration', () => {
 
       // Manually fill the buffer seat to simulate race condition
       const bench = testFixture.entityManager.getEntityInstance('bench1');
-      bench.components['positioning:allows_sitting'].spots = ['bob1', 'interloper1', null];
+      bench.components['positioning:allows_sitting'].spots = [
+        'bob1',
+        'interloper1',
+        null,
+      ];
 
       await testFixture.executeAction('actor1', 'bench1', {
         additionalPayload: {
@@ -658,7 +669,14 @@ describe('personal-space:sit_down_at_distance action integration', () => {
         facing_away: false,
       };
 
-      testFixture.reset([room, actor, furniture, occupant, chair, straddledTarget]);
+      testFixture.reset([
+        room,
+        actor,
+        furniture,
+        occupant,
+        chair,
+        straddledTarget,
+      ]);
 
       // Verify initial state
       expect(actor.components['positioning:straddling_waist']).toEqual({
@@ -692,7 +710,8 @@ describe('personal-space:sit_down_at_distance action integration', () => {
       }
 
       // Actor should still retain straddling component as rule doesn't remove it
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:straddling_waist']).toEqual({
         target_id: 'straddled1',
         facing_away: false,

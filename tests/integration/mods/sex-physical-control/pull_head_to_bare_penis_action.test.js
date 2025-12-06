@@ -33,7 +33,8 @@ function installActorsSittingCloseScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!Array.isArray(closenessPartners) || closenessPartners.length === 0) {
         return { success: true, value: new Set() };
@@ -161,7 +162,15 @@ function buildPullHeadToBarePenisScenario(options = {}) {
     .build();
 
   const actor = actorBuilder.build();
-  const entities = [room, furniture, actor, primary, actorTorso, actorGroin, actorPenis];
+  const entities = [
+    room,
+    furniture,
+    actor,
+    primary,
+    actorTorso,
+    actorGroin,
+    actorPenis,
+  ];
 
   if (coverActorPenis) {
     const actorClothing = new ModEntityBuilder(actorClothingId)
@@ -194,7 +203,10 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-physical-control', ACTION_ID);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-physical-control',
+      ACTION_ID
+    );
     restoreScopeResolver = installActorsSittingCloseScopeOverride(testFixture);
   });
 
@@ -212,7 +224,8 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
 
   // eslint-disable-next-line jest/expect-expect -- Uses ModAssertionHelpers which internally uses expect
   it('dispatches correct narration and perceptible event', async () => {
-    const { entities, actorId, primaryId, roomId } = buildPullHeadToBarePenisScenario();
+    const { entities, actorId, primaryId, roomId } =
+      buildPullHeadToBarePenisScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -220,10 +233,14 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,

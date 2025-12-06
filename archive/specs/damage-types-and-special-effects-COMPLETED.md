@@ -15,13 +15,13 @@
 
 This specification has been fully implemented through the DAMTYPANDSPEEFF ticket series:
 
-| Ticket | Description | Status |
-|--------|-------------|--------|
-| DAMTYPANDSPEEFF-001 | Damage type schema and content | ✅ Complete |
+| Ticket              | Description                              | Status      |
+| ------------------- | ---------------------------------------- | ----------- |
+| DAMTYPANDSPEEFF-001 | Damage type schema and content           | ✅ Complete |
 | DAMTYPANDSPEEFF-002 | Status components and effect application | ✅ Complete |
 | DAMTYPANDSPEEFF-003 | Tick systems (Bleeding, Burning, Poison) | ✅ Complete |
-| DAMTYPANDSPEEFF-004 | Event and propagation integration | ✅ Complete |
-| DAMTYPANDSPEEFF-005 | Testing and performance coverage | ✅ Complete |
+| DAMTYPANDSPEEFF-004 | Event and propagation integration        | ✅ Complete |
+| DAMTYPANDSPEEFF-005 | Testing and performance coverage         | ✅ Complete |
 
 ---
 
@@ -81,7 +81,7 @@ Effects are represented via components to keep processing modular:
 2. **Lookup Damage Type**: fetch definition by `damage_type` id; if missing, treat as neutral (no special effects) but still log a warning.
 3. **Immediate Effects**:
    - Dismemberment check before bleeding/burning; if triggered, emit destroy events and skip ongoing components for that part.
-   - Fracture check (if enabled and damage amount ≥ thresholdFraction * maxHealth and part is bone-bearing or flagged). Set `anatomy:fractured`, optionally roll stunChance to set `anatomy:stunned`.
+   - Fracture check (if enabled and damage amount ≥ thresholdFraction \* maxHealth and part is bone-bearing or flagged). Set `anatomy:fractured`, optionally roll stunChance to set `anatomy:stunned`.
    - Bleed attach: add/refresh `anatomy:bleeding` with severity mapped to tickDamage per severity table.
    - Burn attach: add/refresh `anatomy:burning` with stacking rules.
    - Poison attach: add to part or root entity based on scope; refresh duration on reapplication.
@@ -151,15 +151,15 @@ Events integrate with narrative/UI and allow mods to hook custom reactions.
 
 ## Test Coverage Summary
 
-| Test Suite | Tests | Status |
-|------------|-------|--------|
-| `tests/unit/anatomy/services/damageTypeEffectsService.test.js` | 745 lines | ✅ |
-| `tests/unit/anatomy/services/bleedingTickSystem.test.js` | 367 lines | ✅ |
-| `tests/unit/anatomy/services/burningTickSystem.test.js` | 393 lines | ✅ |
-| `tests/unit/anatomy/services/poisonTickSystem.test.js` | 479 lines | ✅ |
-| `tests/integration/anatomy/damage-type-events.integration.test.js` | - | ✅ |
-| `tests/integration/anatomy/damage-application.integration.test.js` | - | ✅ |
-| `tests/property/anatomy/damage-types.property.test.js` | 12 tests | ✅ |
-| `tests/performance/anatomy/damage-effects.performance.test.js` | 15 tests | ✅ |
+| Test Suite                                                         | Tests     | Status |
+| ------------------------------------------------------------------ | --------- | ------ |
+| `tests/unit/anatomy/services/damageTypeEffectsService.test.js`     | 745 lines | ✅     |
+| `tests/unit/anatomy/services/bleedingTickSystem.test.js`           | 367 lines | ✅     |
+| `tests/unit/anatomy/services/burningTickSystem.test.js`            | 393 lines | ✅     |
+| `tests/unit/anatomy/services/poisonTickSystem.test.js`             | 479 lines | ✅     |
+| `tests/integration/anatomy/damage-type-events.integration.test.js` | -         | ✅     |
+| `tests/integration/anatomy/damage-application.integration.test.js` | -         | ✅     |
+| `tests/property/anatomy/damage-types.property.test.js`             | 12 tests  | ✅     |
+| `tests/performance/anatomy/damage-effects.performance.test.js`     | 15 tests  | ✅     |
 
 **Total:** 143 tests passing

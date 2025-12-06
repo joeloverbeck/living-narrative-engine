@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
@@ -30,17 +37,24 @@ describe('AlertRouter error handling edge cases', () => {
     jest.spyOn(router, 'forwardToUI').mockImplementation(() => {
       throw failure;
     });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     router.handleEvent(SYSTEM_ERROR_OCCURRED_ID, { message: 'ignored' });
 
-    expect(consoleSpy.mock.calls).toContainEqual(['AlertRouter error:', failure]);
+    expect(consoleSpy.mock.calls).toContainEqual([
+      'AlertRouter error:',
+      failure,
+    ]);
   });
 
   it('logs flush errors for malformed queued payloads', () => {
     jest.useFakeTimers();
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     router.queue.push({
       name: SYSTEM_WARNING_OCCURRED_ID,
@@ -63,7 +77,9 @@ describe('AlertRouter error handling edge cases', () => {
   it('logs outer flush errors when queue iteration throws', () => {
     jest.useFakeTimers();
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const flushFailure = new Error('outer flush failure');
 
     router.queue = {
@@ -75,13 +91,18 @@ describe('AlertRouter error handling edge cases', () => {
     router.startFlushTimer();
     jest.runOnlyPendingTimers();
 
-    expect(consoleSpy.mock.calls).toContainEqual(['AlertRouter flush error:', flushFailure]);
+    expect(consoleSpy.mock.calls).toContainEqual([
+      'AlertRouter flush error:',
+      flushFailure,
+    ]);
   });
 
   it('logs when forwarding queued events fails during notifyUIReady', () => {
     jest.useFakeTimers();
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const forwardFailure = new Error('queued forward failure');
 
     jest.spyOn(router, 'forwardToUI').mockImplementation(() => {
@@ -106,7 +127,9 @@ describe('AlertRouter error handling edge cases', () => {
     dispatcher.dispatch.mockImplementation(() => {
       throw dispatchFailure;
     });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
     router.forwardToUI(SYSTEM_WARNING_OCCURRED_ID, { message: 'boom' });
@@ -199,9 +222,13 @@ describe('AlertRouter error handling edge cases', () => {
     dispatcher.subscribe = jest.fn(() => {
       throw subscribeError;
     });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
-    expect(() => new AlertRouter({ safeEventDispatcher: dispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: dispatcher })
+    ).not.toThrow();
     expect(consoleSpy.mock.calls).toContainEqual([
       'AlertRouter subscription error:',
       subscribeError,
@@ -222,7 +249,10 @@ describe('AlertRouter error handling edge cases', () => {
   it('does not restart the flush timer when additional events are queued', () => {
     jest.useFakeTimers();
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    router.queue.push({ name: SYSTEM_WARNING_OCCURRED_ID, payload: { message: 'first' } });
+    router.queue.push({
+      name: SYSTEM_WARNING_OCCURRED_ID,
+      payload: { message: 'first' },
+    });
     const startSpy = jest.spyOn(router, 'startFlushTimer');
 
     router.handleEvent(SYSTEM_WARNING_OCCURRED_ID, { message: 'second' });
@@ -232,7 +262,9 @@ describe('AlertRouter error handling edge cases', () => {
   });
 
   it('forwards error events to the UI dispatcher without errors', () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
 
     router.forwardToUI(SYSTEM_ERROR_OCCURRED_ID, { message: 'critical' });
@@ -245,7 +277,9 @@ describe('AlertRouter error handling edge cases', () => {
 
   it('handles notifyUIReady when no flush timer is active', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     router.notifyUIReady();
 

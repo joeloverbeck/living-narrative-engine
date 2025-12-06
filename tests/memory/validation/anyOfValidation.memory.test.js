@@ -28,14 +28,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           properties: {
             entity_ref: { type: 'string' },
             component_id: { type: 'string' },
-            output_var: { type: 'string' }
+            output_var: { type: 'string' },
           },
           required: ['entity_ref', 'component_id', 'output_var'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     },
     {
       type: 'object',
@@ -46,14 +46,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           properties: {
             entity_ref: { type: 'string' },
             component_id: { type: 'string' },
-            updates: { type: 'object' }
+            updates: { type: 'object' },
           },
           required: ['entity_ref', 'component_id', 'updates'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     },
     {
       type: 'object',
@@ -63,14 +63,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           type: 'object',
           properties: {
             message: { type: 'string' },
-            level: { enum: ['debug', 'info', 'warn', 'error'] }
+            level: { enum: ['debug', 'info', 'warn', 'error'] },
           },
           required: ['message', 'level'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     }
   );
 
@@ -80,10 +80,10 @@ function createSimplifiedOperationSchema(operationCount = 59) {
       type: 'object',
       properties: {
         type: { const: `OPERATION_${i}` },
-        parameters: { type: 'object', additionalProperties: true }
+        parameters: { type: 'object', additionalProperties: true },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     });
   }
 
@@ -93,15 +93,15 @@ function createSimplifiedOperationSchema(operationCount = 59) {
       {
         type: 'object',
         properties: {
-          macro: { type: 'string', pattern: '^[a-z0-9_]+:[a-z0-9_]+$' }
+          macro: { type: 'string', pattern: '^[a-z0-9_]+:[a-z0-9_]+$' },
         },
         required: ['macro'],
-        additionalProperties: false
+        additionalProperties: false,
       },
       {
-        anyOf: operations
-      }
-    ]
+        anyOf: operations,
+      },
+    ],
   };
 }
 

@@ -263,16 +263,27 @@ export default function createFilterResolver({
             // Capture detailed evaluation data for tracing
             if (trace) {
               const itemEntity =
-                typeof item === 'string' ? entitiesGateway.getEntityInstance(item) : item;
+                typeof item === 'string'
+                  ? entitiesGateway.getEntityInstance(item)
+                  : item;
               filterEvaluations.push({
                 entityId: typeof item === 'string' ? item : item?.id,
                 passedFilter: evalResult,
                 evaluationContext: {
-                  hasItemMarker: itemEntity?.componentTypeIds?.includes('items:item') || false,
-                  hasPortableMarker: itemEntity?.componentTypeIds?.includes('items:portable') || false,
-                  entityLocationId: evalCtx.entity?.components?.['core:position']?.locationId,
-                  actorLocationId: evalCtx.actor?.components?.['core:position']?.locationId,
-                  locationMatch: evalCtx.entity?.components?.['core:position']?.locationId === evalCtx.actor?.components?.['core:position']?.locationId,
+                  hasItemMarker:
+                    itemEntity?.componentTypeIds?.includes('items:item') ||
+                    false,
+                  hasPortableMarker:
+                    itemEntity?.componentTypeIds?.includes('items:portable') ||
+                    false,
+                  entityLocationId:
+                    evalCtx.entity?.components?.['core:position']?.locationId,
+                  actorLocationId:
+                    evalCtx.actor?.components?.['core:position']?.locationId,
+                  locationMatch:
+                    evalCtx.entity?.components?.['core:position']
+                      ?.locationId ===
+                    evalCtx.actor?.components?.['core:position']?.locationId,
                 },
               });
             }
@@ -346,7 +357,7 @@ export default function createFilterResolver({
         initialSize,
         finalSize: result.size,
         logic: JSON.stringify(node.logic),
-        filterEvaluations: filterEvaluations.map(e => ({
+        filterEvaluations: filterEvaluations.map((e) => ({
           entityId: e.entityId,
           passed: e.passedFilter,
         })),

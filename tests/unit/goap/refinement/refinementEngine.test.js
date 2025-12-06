@@ -54,12 +54,14 @@ describe('RefinementEngine', () => {
     };
 
     mockContextAssemblyService = {
-      assembleRefinementContext: jest.fn(() => Promise.resolve({
-        actor: { id: 'actor_1' },
-        world: {},
-        task: { id: 'task_1', params: {} },
-        refinement: { localState: {} },
-      })),
+      assembleRefinementContext: jest.fn(() =>
+        Promise.resolve({
+          actor: { id: 'actor_1' },
+          world: {},
+          task: { id: 'task_1', params: {} },
+          refinement: { localState: {} },
+        })
+      ),
     };
 
     mockGameDataRepository = {
@@ -237,11 +239,15 @@ describe('RefinementEngine', () => {
         // Assert
         expect(result.success).toBe(true);
         expect(result.stepResults).toHaveLength(2);
-        expect(mockPrimitiveActionStepExecutor.execute).toHaveBeenCalledTimes(2);
+        expect(mockPrimitiveActionStepExecutor.execute).toHaveBeenCalledTimes(
+          2
+        );
 
         // Verify each step was executed
-        const firstCallContext = mockPrimitiveActionStepExecutor.execute.mock.calls[0][1];
-        const secondCallContext = mockPrimitiveActionStepExecutor.execute.mock.calls[1][1];
+        const firstCallContext =
+          mockPrimitiveActionStepExecutor.execute.mock.calls[0][1];
+        const secondCallContext =
+          mockPrimitiveActionStepExecutor.execute.mock.calls[1][1];
 
         expect(firstCallContext.task.id).toBe('task_1');
         expect(secondCallContext.task.id).toBe('task_1');
@@ -310,7 +316,9 @@ describe('RefinementEngine', () => {
         expect(result.success).toBe(true);
         expect(result.stepResults).toHaveLength(2);
         expect(mockConditionalStepExecutor.execute).toHaveBeenCalledTimes(1);
-        expect(mockPrimitiveActionStepExecutor.execute).toHaveBeenCalledTimes(1);
+        expect(mockPrimitiveActionStepExecutor.execute).toHaveBeenCalledTimes(
+          1
+        );
       });
     });
 
@@ -396,9 +404,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -428,9 +434,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -458,9 +462,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -486,9 +488,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         const stateSnapshot = { step1Result: 'data' };
@@ -512,7 +512,9 @@ describe('RefinementEngine', () => {
 
         // Assert
         expect(mockRefinementStateManager.getSnapshot).toHaveBeenCalled();
-        expect(mockContextAssemblyService.assembleRefinementContext).toHaveBeenCalledWith(
+        expect(
+          mockContextAssemblyService.assembleRefinementContext
+        ).toHaveBeenCalledWith(
           'actor_1',
           expect.objectContaining({ id: 'task_1' }),
           stateSnapshot
@@ -526,9 +528,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -565,9 +565,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'primitive_action', actionRef: 'action_1' },
-          ],
+          steps: [{ stepType: 'primitive_action', actionRef: 'action_1' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -659,7 +657,12 @@ describe('RefinementEngine', () => {
         const selectedMethod = {
           id: 'method_1',
           steps: [
-            { stepType: 'conditional', condition: {}, thenSteps: [], elseSteps: [] },
+            {
+              stepType: 'conditional',
+              condition: {},
+              thenSteps: [],
+              elseSteps: [],
+            },
           ],
         };
 
@@ -690,9 +693,7 @@ describe('RefinementEngine', () => {
         const task = { id: 'task_1', fallbackBehavior: 'fail' };
         const selectedMethod = {
           id: 'method_1',
-          steps: [
-            { stepType: 'unknown_type' },
-          ],
+          steps: [{ stepType: 'unknown_type' }],
         };
 
         mockGameDataRepository.getTask.mockReturnValue(task);
@@ -949,7 +950,9 @@ describe('RefinementEngine', () => {
       // Assert
       const allEvents = mockEventBus.dispatch.mock.calls.map((call) => call[0]);
       const startedIndex = allEvents.indexOf('goap:refinement_step_started');
-      const completedIndex = allEvents.indexOf('goap:refinement_step_completed');
+      const completedIndex = allEvents.indexOf(
+        'goap:refinement_step_completed'
+      );
 
       expect(startedIndex).toBeGreaterThanOrEqual(0);
       expect(completedIndex).toBeGreaterThan(startedIndex);

@@ -41,7 +41,10 @@ describe('AbstractLoader', () => {
       'AbstractLoader: ',
       'An invalid logger instance was provided. Falling back to console logging with prefix "AbstractLoader".'
     );
-    expect(debugSpy).toHaveBeenCalledWith('AbstractLoader: ', 'AbstractLoader: Initialized.');
+    expect(debugSpy).toHaveBeenCalledWith(
+      'AbstractLoader: ',
+      'AbstractLoader: Initialized.'
+    );
   });
 
   it('creates a fallback logger when no logger is supplied', () => {
@@ -52,6 +55,9 @@ describe('AbstractLoader', () => {
 
     expect(typeof loader._logger.info).toBe('function');
     expect(warnSpy).not.toHaveBeenCalled();
-    expect(debugSpy).toHaveBeenCalledWith('AbstractLoader: ', 'AbstractLoader: Initialized.');
+    expect(debugSpy).toHaveBeenCalledWith(
+      'AbstractLoader: ',
+      'AbstractLoader: Initialized.'
+    );
   });
 });

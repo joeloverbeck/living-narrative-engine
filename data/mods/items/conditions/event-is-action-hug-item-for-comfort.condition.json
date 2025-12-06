@@ -3,9 +3,6 @@
   "id": "items:event-is-action-hug-item-for-comfort",
   "description": "Checks if the event represents the hug item for comfort action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:hug_item_for_comfort"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:hug_item_for_comfort"]
   }
 }

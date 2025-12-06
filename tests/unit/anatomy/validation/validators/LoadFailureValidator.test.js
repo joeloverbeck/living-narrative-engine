@@ -109,7 +109,9 @@ describe('LoadFailureValidator', () => {
 
       expect(result.errors).toHaveLength(1);
       const issue = result.errors[0];
-      expect(issue.message).toBe("Entity definition 'core:entity' failed to load");
+      expect(issue.message).toBe(
+        "Entity definition 'core:entity' failed to load"
+      );
       expect(issue.details).toEqual({
         file: 'core:entity.entity.json',
         error: 'Unable to parse entity definition',
@@ -122,7 +124,9 @@ describe('LoadFailureValidator', () => {
     it('handles failed component parsing without enum details', async () => {
       const validator = createValidator();
       const recipe = createRecipe();
-      const error = new Error('Invalid components: [anatomy:body]\nGeneral failure');
+      const error = new Error(
+        'Invalid components: [anatomy:body]\nGeneral failure'
+      );
 
       const result = await validator.validate(recipe, {
         loadFailures: {

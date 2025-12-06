@@ -120,9 +120,10 @@ export class ActionFormattingCoordinator {
     this.#context = context;
     this.#instrumentation = instrumentation ?? null;
     this.#decider = decider;
-    this.#accumulatorFactory = typeof accumulatorFactory === 'function'
-      ? accumulatorFactory
-      : () => new FormattingAccumulator();
+    this.#accumulatorFactory =
+      typeof accumulatorFactory === 'function'
+        ? accumulatorFactory
+        : () => new FormattingAccumulator();
     this.#errorFactory = errorFactory;
     this.#fallbackFormatter = fallbackFormatter;
     this.#targetNormalizationService = targetNormalizationService;
@@ -144,8 +145,13 @@ export class ActionFormattingCoordinator {
    * @returns {Promise<PipelineResult>} Pipeline result containing formatted actions and accumulated errors.
    */
   async run() {
-    const { actor, actionsWithTargets = [], resolvedTargets, targetDefinitions, trace } =
-      this.#context ?? {};
+    const {
+      actor,
+      actionsWithTargets = [],
+      resolvedTargets,
+      targetDefinitions,
+      trace,
+    } = this.#context ?? {};
 
     const accumulator = this.#accumulatorFactory();
     const formatterOptions = this.#buildFormatterOptions();
@@ -251,7 +257,10 @@ export class ActionFormattingCoordinator {
    * @returns {object} Formatter options derived from the provided dependencies.
    */
   #buildFormatterOptions() {
-    if (this.#providedFormatterOptions && typeof this.#providedFormatterOptions === 'object') {
+    if (
+      this.#providedFormatterOptions &&
+      typeof this.#providedFormatterOptions === 'object'
+    ) {
       return this.#providedFormatterOptions;
     }
 
@@ -306,7 +315,12 @@ export class ActionFormattingCoordinator {
    * @returns {Promise<void>} Resolves once formatting completes.
    */
   async #formatLegacyFallbackTask({ task, accumulator, createError, trace }) {
-    const { actionDef: originalActionDef, targetContexts = [], actor, formattedTemplate } = task;
+    const {
+      actionDef: originalActionDef,
+      targetContexts = [],
+      actor,
+      formattedTemplate,
+    } = task;
     // Use a shallow clone with the formattedTemplate if available to avoid mutating cached definitions
     const actionDef = formattedTemplate
       ? { ...originalActionDef, template: formattedTemplate }
@@ -336,7 +350,9 @@ export class ActionFormattingCoordinator {
     if (!Array.isArray(targetContexts) || targetContexts.length === 0) {
       const structured = createError({
         errorOrResult: {
-          error: new Error('No target contexts available for action formatting'),
+          error: new Error(
+            'No target contexts available for action formatting'
+          ),
           details: {
             code: 'legacy_missing_target_contexts',
             metadataSource: task.metadata?.source,
@@ -383,10 +399,9 @@ export class ActionFormattingCoordinator {
         } else {
           failureCount += 1;
           const structured = createError({
-            errorOrResult:
-              formatResult ?? {
-                error: 'Legacy formatter returned no result',
-              },
+            errorOrResult: formatResult ?? {
+              error: 'Legacy formatter returned no result',
+            },
             actionDef,
             actorId: actor.id,
             trace,
@@ -424,8 +439,8 @@ export class ActionFormattingCoordinator {
         failureCount > 0 && successCount > 0
           ? 'partial'
           : failureCount > 0
-          ? 'failed'
-          : 'completed',
+            ? 'failed'
+            : 'completed',
     };
 
     if (failureCount > 0 && successCount === 0) {

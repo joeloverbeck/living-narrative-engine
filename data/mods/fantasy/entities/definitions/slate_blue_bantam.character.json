@@ -1,40 +1,40 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:slate_blue_bantam",
-    "components": {
-        "core:name": {
-            "text": "slate-blue bantam"
-        },
-        "core:gender": {
-            "value": "male"
-        },
-        "core:portrait": {
-            "imagePath": "portraits/slate_blue_bantam.png",
-            "altText": "Slate-blue bantam"
-        },
-        "anatomy:body": {
-            "recipeId": "fantasy:slate_blue_bantam_recipe"
-        },
-        "core:actor": {},
-        "core:player_type": {
-            "type": "human"
-        },
-        "core:perception_log": {
-            "maxEntries": 50,
-            "logEntries": []
-        },
-        "warding:corrupted": {},
-        "skills:melee_skill": {
-            "value": 33
-        },
-        "skills:defense_skill": {
-            "value": 36
-        },
-        "skills:grappling_skill": {
-            "value": 27
-        },
-        "skills:resolve_skill": {
-            "value": 43
-        }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:slate_blue_bantam",
+  "components": {
+    "core:name": {
+      "text": "slate-blue bantam"
+    },
+    "core:gender": {
+      "value": "male"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/slate_blue_bantam.png",
+      "altText": "Slate-blue bantam"
+    },
+    "anatomy:body": {
+      "recipeId": "fantasy:slate_blue_bantam_recipe"
+    },
+    "core:actor": {},
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "warding:corrupted": {},
+    "skills:melee_skill": {
+      "value": 33
+    },
+    "skills:defense_skill": {
+      "value": 36
+    },
+    "skills:grappling_skill": {
+      "value": 27
+    },
+    "skills:resolve_skill": {
+      "value": 43
     }
+  }
 }

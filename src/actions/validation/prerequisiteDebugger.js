@@ -40,7 +40,13 @@ export class PrerequisiteDebugger {
    * @param {object} params.context - Evaluation context with actor, target, etc.
    * @returns {object} Result object with success flag, result value, and optional error
    */
-  evaluate({ actionId, prerequisiteIndex, prerequisiteLogic, evaluator, context }) {
+  evaluate({
+    actionId,
+    prerequisiteIndex,
+    prerequisiteLogic,
+    evaluator,
+    context,
+  }) {
     try {
       const result = evaluator(prerequisiteLogic, context);
 
@@ -65,7 +71,10 @@ export class PrerequisiteDebugger {
       });
 
       if (this.#debugLevel >= DebugLevel.ERROR) {
-        this.#logger.error('Prerequisite evaluation failed', enrichedError.toJSON());
+        this.#logger.error(
+          'Prerequisite evaluation failed',
+          enrichedError.toJSON()
+        );
       }
 
       return { success: false, error: enrichedError };
@@ -83,7 +92,13 @@ export class PrerequisiteDebugger {
    * @param {object} params.context - Evaluation context
    * @returns {PrerequisiteEvaluationError} Enriched error with entity state and hints
    */
-  #enrichError({ actionId, prerequisiteIndex, prerequisiteLogic, originalError, context }) {
+  #enrichError({
+    actionId,
+    prerequisiteIndex,
+    prerequisiteLogic,
+    originalError,
+    context,
+  }) {
     const entityState = this.#extractEntityState(prerequisiteLogic, context);
     const hint = this.#generateHint(prerequisiteLogic, entityState);
 
@@ -131,7 +146,9 @@ export class PrerequisiteDebugger {
         break;
 
       case 'hasOtherActorsAtLocation':
-        state.entitiesAtLocation = this.#getEntitiesAtLocation(context.actor.id);
+        state.entitiesAtLocation = this.#getEntitiesAtLocation(
+          context.actor.id
+        );
         break;
 
       case 'hasClothingInSlot':
@@ -193,7 +210,10 @@ export class PrerequisiteDebugger {
    * @returns {string|null} Location ID
    */
   #getEntityLocation(entityId) {
-    const positionData = this.#entityManager.getComponentData(entityId, 'core:position');
+    const positionData = this.#entityManager.getComponentData(
+      entityId,
+      'core:position'
+    );
     return positionData?.locationId || null;
   }
 
@@ -208,12 +228,19 @@ export class PrerequisiteDebugger {
     const entity = context[entityRef];
     if (!entity) return [];
 
-    const bodyComponent = this.#entityManager.getComponentData(entity.id, 'anatomy:body');
-    if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.parts) return [];
+    const bodyComponent = this.#entityManager.getComponentData(
+      entity.id,
+      'anatomy:body'
+    );
+    if (!bodyComponent || !bodyComponent.body || !bodyComponent.body.parts)
+      return [];
 
     return Object.values(bodyComponent.body.parts)
       .map((partId) => {
-        const partComponent = this.#entityManager.getComponentData(partId, 'anatomy:part');
+        const partComponent = this.#entityManager.getComponentData(
+          partId,
+          'anatomy:part'
+        );
         return partComponent?.subType;
       })
       .filter(Boolean);
@@ -247,7 +274,10 @@ export class PrerequisiteDebugger {
     const entity = context[entityRef];
     if (!entity) return [];
 
-    const clothingData = this.#entityManager.getComponentData(entity.id, 'clothing:worn_items');
+    const clothingData = this.#entityManager.getComponentData(
+      entity.id,
+      'clothing:worn_items'
+    );
     if (!clothingData || !clothingData.slots) return [];
 
     return Object.keys(clothingData.slots);

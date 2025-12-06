@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { ClicheFilterService } from '../../../src/clichesGenerator/services/ClicheFilterService.js';
 import { ClicheExporter } from '../../../src/clichesGenerator/services/ClicheExporter.js';
 
@@ -11,11 +18,11 @@ const readBlob = async (blob) => {
 
 describe('ClicheExporter integration', () => {
   let exporter;
-let filterService;
-let sampleData;
-let clipboardWriteMock;
-let originalClipboardDescriptor;
-let OriginalBlob;
+  let filterService;
+  let sampleData;
+  let clipboardWriteMock;
+  let originalClipboardDescriptor;
+  let OriginalBlob;
 
   beforeEach(() => {
     exporter = new ClicheExporter();
@@ -83,7 +90,11 @@ let OriginalBlob;
       global.Blob = OriginalBlob;
     }
     if (originalClipboardDescriptor) {
-      Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+      Object.defineProperty(
+        navigator,
+        'clipboard',
+        originalClipboardDescriptor
+      );
     } else {
       delete navigator.clipboard;
     }
@@ -94,17 +105,22 @@ let OriginalBlob;
     jest.useFakeTimers();
 
     const createUrlSpy = jest.spyOn(URL, 'createObjectURL');
-    const revokeSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const revokeSpy = jest
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => undefined);
     const appendSpy = jest.spyOn(document.body, 'appendChild');
     const removeSpy = jest.spyOn(document.body, 'removeChild');
 
-    const filtered = filterService.applyFilters(
-      sampleData,
-      'mysterious',
-      ['mystery', 'romance']
-    );
+    const filtered = filterService.applyFilters(sampleData, 'mysterious', [
+      'mystery',
+      'romance',
+    ]);
     const stats = filterService.getStatistics(filtered);
-    expect(stats).toEqual({ totalCategories: 1, totalItems: 1, totalTropes: 1 });
+    expect(stats).toEqual({
+      totalCategories: 1,
+      totalItems: 1,
+      totalTropes: 1,
+    });
 
     const capturedBlobs = [];
     createUrlSpy.mockImplementation((blob) => {
@@ -127,7 +143,9 @@ let OriginalBlob;
         'cliches.json',
         'cliches.txt',
       ]);
-      expect(removeSpy.mock.calls.map(([anchor]) => anchor)).toEqual(appendedAnchors);
+      expect(removeSpy.mock.calls.map(([anchor]) => anchor)).toEqual(
+        appendedAnchors
+      );
 
       const [markdownBlob, jsonBlob, textBlob] = capturedBlobs;
       expect(markdownBlob.type).toBe('text/markdown');
@@ -136,7 +154,9 @@ let OriginalBlob;
 
       const markdownContent = await readBlob(markdownBlob);
       expect(markdownContent).toContain('### Mysterious Traits (1)');
-      expect(markdownContent).toContain('⚠️ Mysterious loner who avoids attachments');
+      expect(markdownContent).toContain(
+        '⚠️ Mysterious loner who avoids attachments'
+      );
 
       const jsonContent = await readBlob(jsonBlob);
       expect(jsonContent).toContain('"exportDate"');
@@ -155,22 +175,32 @@ let OriginalBlob;
   });
 
   it('throws helpful errors when export inputs are invalid', () => {
-    const filtered = filterService.applyFilters(sampleData, 'mysterious', ['mystery']);
+    const filtered = filterService.applyFilters(sampleData, 'mysterious', [
+      'mystery',
+    ]);
 
-    expect(() => exporter.export(null, 'markdown')).toThrow('No data to export');
+    expect(() => exporter.export(null, 'markdown')).toThrow(
+      'No data to export'
+    );
     expect(() => exporter.export(filtered, 'binary')).toThrow(
       'Unsupported export format: binary'
     );
   });
 
   it('copies filtered results to the clipboard for each supported format', async () => {
-    const filtered = filterService.applyFilters(sampleData, 'mysterious', ['mystery']);
+    const filtered = filterService.applyFilters(sampleData, 'mysterious', [
+      'mystery',
+    ]);
 
     await exporter.copyToClipboard(filtered, 'markdown');
     await exporter.copyToClipboard(filtered, 'json');
     await exporter.copyToClipboard(filtered);
 
-    const emptyFiltered = filterService.applyFilters(sampleData, 'nonexistent', ['romance']);
+    const emptyFiltered = filterService.applyFilters(
+      sampleData,
+      'nonexistent',
+      ['romance']
+    );
     const minimalStructure = {
       ...emptyFiltered,
       metadata: { createdAt: '2025-01-02T00:00:00Z', totalCount: 0 },
@@ -182,10 +212,16 @@ let OriginalBlob;
     await exporter.copyToClipboard(minimalStructure);
 
     expect(clipboardWriteMock).toHaveBeenCalledTimes(5);
-    expect(clipboardWriteMock.mock.calls[0][0]).toContain('# Character Clichés Analysis');
+    expect(clipboardWriteMock.mock.calls[0][0]).toContain(
+      '# Character Clichés Analysis'
+    );
     expect(clipboardWriteMock.mock.calls[1][0]).toContain('"categories"');
-    expect(clipboardWriteMock.mock.calls[2][0]).toContain('OVERALL TROPES & STEREOTYPES');
+    expect(clipboardWriteMock.mock.calls[2][0]).toContain(
+      'OVERALL TROPES & STEREOTYPES'
+    );
     expect(clipboardWriteMock.mock.calls[3][0]).not.toContain('### ');
-    expect(clipboardWriteMock.mock.calls[4][0]).not.toContain('OVERALL TROPES & STEREOTYPES');
+    expect(clipboardWriteMock.mock.calls[4][0]).not.toContain(
+      'OVERALL TROPES & STEREOTYPES'
+    );
   });
 });

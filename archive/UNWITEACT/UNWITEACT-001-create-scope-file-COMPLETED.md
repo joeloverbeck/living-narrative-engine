@@ -19,6 +19,7 @@ weapons:wielded_items := actor.components.positioning:wielding.wielded_item_ids[
 ```
 
 This scope:
+
 - Accesses the actor's `positioning:wielding` component
 - Retrieves the `wielded_item_ids` array
 - Uses the `[]` operator to iterate and return all entity IDs in the array
@@ -74,23 +75,26 @@ npm run test:integration -- --testPathPattern="weapons"  # ✅ All 95 tests pass
 ### What Was Actually Changed vs Originally Planned
 
 **Planned:**
+
 - Create `data/mods/weapons/scopes/wielded_items.scope`
 
 **Actual:**
+
 - ✅ Created `data/mods/weapons/scopes/wielded_items.scope` (exactly as specified)
 - ✅ Created `tests/integration/mods/weapons/wielded_items_scope.integration.test.js` (7 tests added to ensure comprehensive coverage)
 
 ### Assumption Verification
 
 The ticket's assumptions were **verified correct**:
+
 - ✅ `positioning:wielding` component exists at `data/mods/positioning/components/wielding.component.json`
 - ✅ `wielded_item_ids` field exists as an array of entity IDs (namespaced IDs, uniqueItems: true)
 
 ### Tests Added
 
-| Test File | Tests | Rationale |
-|-----------|-------|-----------|
-| `tests/integration/mods/weapons/wielded_items_scope.integration.test.js` | 7 | Validates scope correctly returns wielded item IDs, handles edge cases (empty array, missing component), and preserves order |
+| Test File                                                                | Tests | Rationale                                                                                                                    |
+| ------------------------------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `tests/integration/mods/weapons/wielded_items_scope.integration.test.js` | 7     | Validates scope correctly returns wielded item IDs, handles edge cases (empty array, missing component), and preserves order |
 
 ### Validation Results
 

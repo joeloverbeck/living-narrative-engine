@@ -41,7 +41,12 @@ describe('TargetResolutionService', () => {
 
   it('validates dependencies and uses provided service setup for logging', () => {
     const validateSpy = jest.spyOn(dependencyUtils, 'validateDependency');
-    const wrappedLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const wrappedLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const serviceSetup = {
       setupService: jest.fn().mockReturnValue(wrappedLogger),
     };
@@ -208,7 +213,11 @@ describe('TargetResolutionService', () => {
     const actor = { id: 'actor-9' };
     const discoveryContext = { currentLocation: 'deck' };
 
-    const result = service.resolveTargets('other-scope', actor, discoveryContext);
+    const result = service.resolveTargets(
+      'other-scope',
+      actor,
+      discoveryContext
+    );
 
     expect(result).toBe(failureResult);
     expect(failureResult.map).not.toHaveBeenCalled();
@@ -228,7 +237,12 @@ describe('TargetResolutionService', () => {
     const actor = { id: 'actor-11' };
     const discoveryContext = { currentLocation: 'atrium' };
 
-    const result = service.resolveTargets('none', actor, discoveryContext, trace);
+    const result = service.resolveTargets(
+      'none',
+      actor,
+      discoveryContext,
+      trace
+    );
 
     expect(successfulResult.map).toHaveBeenCalledTimes(1);
     expect(result.value).toEqual([ActionTargetContext.noTarget()]);

@@ -13,7 +13,11 @@ describe('APPLY_DAMAGE operation schema', () => {
   let validate;
 
   beforeAll(() => {
-    const ajv = new Ajv({ strict: false, allErrors: true, allowUnionTypes: true });
+    const ajv = new Ajv({
+      strict: false,
+      allErrors: true,
+      allowUnionTypes: true,
+    });
     addFormats(ajv);
     ajv.addSchema(commonSchema, commonSchema.$id);
     ajv.addSchema(jsonLogicSchema, jsonLogicSchema.$id);

@@ -53,14 +53,13 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor123' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(true);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('has 2 empty spots to right and is rightmost occupant')
+        expect.stringContaining(
+          'has 2 empty spots to right and is rightmost occupant'
+        )
       );
     });
 
@@ -80,10 +79,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor456' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 1],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 1], mockContext);
 
       expect(result).toBe(true);
     });
@@ -104,10 +100,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor789' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 0],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 0], mockContext);
 
       expect(result).toBe(true);
     });
@@ -128,10 +121,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor111' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(true);
     });
@@ -154,10 +144,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor222' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
@@ -181,10 +168,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor333' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
     });
@@ -205,10 +189,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor444' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
@@ -232,10 +213,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor666' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
@@ -244,16 +222,12 @@ describe('HasSittingSpaceToRightOperator', () => {
     });
 
     test('should return false when entity is not sitting', () => {
-      mockDependencies.entityManager.getComponentData
-        .mockReturnValueOnce(null); // No sitting_on component
+      mockDependencies.entityManager.getComponentData.mockReturnValueOnce(null); // No sitting_on component
 
       mockContext.entity = { id: 'actor888' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
@@ -267,20 +241,20 @@ describe('HasSittingSpaceToRightOperator', () => {
         spot_index: 0,
       };
 
-      mockDependencies.entityManager.getComponentData
-        .mockReturnValueOnce(sittingOnData);
+      mockDependencies.entityManager.getComponentData.mockReturnValueOnce(
+        sittingOnData
+      );
 
       mockContext.entity = { id: 'actor000' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('is sitting on furniture999, not target furniture123')
+        expect.stringContaining(
+          'is sitting on furniture999, not target furniture123'
+        )
       );
     });
 
@@ -297,10 +271,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor100' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
     });
@@ -321,10 +292,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor200' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
@@ -338,16 +306,14 @@ describe('HasSittingSpaceToRightOperator', () => {
         spot_index: null,
       };
 
-      mockDependencies.entityManager.getComponentData
-        .mockReturnValueOnce(sittingOnData);
+      mockDependencies.entityManager.getComponentData.mockReturnValueOnce(
+        sittingOnData
+      );
 
       mockContext.entity = { id: 'actor300' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
@@ -371,10 +337,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor400' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
@@ -435,7 +398,10 @@ describe('HasSittingSpaceToRightOperator', () => {
     test('should return false with missing entity path', () => {
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(['nonexistent', 'target', 2], mockContext);
+      const result = operator.evaluate(
+        ['nonexistent', 'target', 2],
+        mockContext
+      );
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
@@ -495,10 +461,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor900' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
     });
@@ -519,10 +482,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor001' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false); // Not rightmost
     });
@@ -533,16 +493,14 @@ describe('HasSittingSpaceToRightOperator', () => {
         spot_index: -1,
       };
 
-      mockDependencies.entityManager.getComponentData
-        .mockReturnValueOnce(sittingOnData);
+      mockDependencies.entityManager.getComponentData.mockReturnValueOnce(
+        sittingOnData
+      );
 
       mockContext.entity = { id: 'actor002' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
     });
@@ -563,10 +521,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor003' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
     });
@@ -587,10 +542,7 @@ describe('HasSittingSpaceToRightOperator', () => {
       mockContext.entity = { id: 'actor004' };
       mockContext.target = { id: 'furniture123' };
 
-      const result = operator.evaluate(
-        ['entity', 'target', 2],
-        mockContext
-      );
+      const result = operator.evaluate(['entity', 'target', 2], mockContext);
 
       expect(result).toBe(false);
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(

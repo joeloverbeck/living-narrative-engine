@@ -8,8 +8,8 @@ Replace the 5 discrete unwielding operations in `handle_unwield_item.rule.json` 
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                                  | Change                                        |
+| ----------------------------------------------------- | --------------------------------------------- |
 | `data/mods/items/rules/handle_unwield_item.rule.json` | Replace 5 operations with single UNWIELD_ITEM |
 
 ## Implementation Details
@@ -270,34 +270,37 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/items/rules/handle_drop_item.rule.json` | Related rule being updated |
+| File                                                  | Purpose                       |
+| ----------------------------------------------------- | ----------------------------- |
+| `data/mods/items/rules/handle_drop_item.rule.json`    | Related rule being updated    |
 | `data/mods/items/rules/handle_wield_weapon.rule.json` | Similar wielding rule pattern |
-| `data/schemas/operations/unwieldItem.schema.json` | Operation schema definition |
+| `data/schemas/operations/unwieldItem.schema.json`     | Operation schema definition   |
 
 ## Benefits of Simplification
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Operations | 14 | 10 |
-| Lines of JSON | ~130 | ~80 |
-| Logic duplication | With drop_item | None |
-| Error points | 5 (for unwield logic) | 1 |
-| Maintainability | Complex conditional | Simple encapsulated |
+| Metric            | Before                | After               |
+| ----------------- | --------------------- | ------------------- |
+| Operations        | 14                    | 10                  |
+| Lines of JSON     | ~130                  | ~80                 |
+| Logic duplication | With drop_item        | None                |
+| Error points      | 5 (for unwield logic) | 1                   |
+| Maintainability   | Complex conditional   | Simple encapsulated |
 
 ## Outcome
 
 ### What Changed vs. Originally Planned
 
 **Planned Changes:**
+
 - Replace 5 discrete unwielding operations with single `UNWIELD_ITEM` operation
 
 **Actual Changes:**
+
 - ✅ Replaced 5 operations (QUERY_COMPONENT, UNLOCK_GRABBING, MODIFY_ARRAY_FIELD, QUERY_COMPONENT, IF/REMOVE_COMPONENT) with single `UNWIELD_ITEM` operation
 - ✅ Rule simplified from 14 operations to 10 operations
 
 **Discrepancies Corrected:**
+
 - **Parameter naming**: Ticket originally specified `actor_id` and `item_id`, but the actual schema uses `actorEntity` and `itemEntity`. Ticket updated to reflect correct parameter names matching the handler and schema.
 
 ### Verification
@@ -309,9 +312,10 @@ npm run test:ci
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                                  | Change                                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
 | `data/mods/items/rules/handle_unwield_item.rule.json` | Replaced 5 discrete unwielding operations with single `UNWIELD_ITEM` operation |
 
 ### Completion Date
+
 2025-11-27

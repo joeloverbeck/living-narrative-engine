@@ -13,6 +13,7 @@
 While playtesting in `game.html`, the following situation revealed a gap in the component management system:
 
 **Setup**:
+
 - Actor A is standing behind Actor B
 - Actor B has two components:
   - `facing_away.component.json` (facing away from Actor A)
@@ -20,6 +21,7 @@ While playtesting in `game.html`, the following situation revealed a gap in the 
 
 **Problem**:
 Actor A sees these available actions:
+
 - `bend_over.action.json` ❌ (illogical - Actor B is already bending over in front of them)
 - `lie_down.action.json` ❌ (illogical - Actor B is bending over, this breaks the spatial context)
 - `step_back.action.json` ✅ (this makes sense)
@@ -39,6 +41,7 @@ When Actor B straightens up or changes position, the `facing_away` component bec
 The Living Narrative Engine uses a centralized **ComponentMutationService** for all component operations:
 
 **Adding Components**:
+
 ```javascript
 addComponent(instanceId, componentTypeId, componentData)
   → Validates against schema
@@ -48,6 +51,7 @@ addComponent(instanceId, componentTypeId, componentData)
 ```
 
 **Removing Components**:
+
 ```javascript
 removeComponent(instanceId, componentTypeId)
   → Validates entity exists
@@ -62,6 +66,7 @@ removeComponent(instanceId, componentTypeId)
 ### Event-Driven Architecture
 
 The **EventBus** is the central communication hub:
+
 - Subscribers can listen to component lifecycle events
 - Multiple systems already use this pattern:
   - `SpatialIndexSynchronizer`: Updates spatial index on component changes
@@ -69,6 +74,7 @@ The **EventBus** is the central communication hub:
   - `EntityLifecycleMonitor`: UI monitoring
 
 **Event Flow Pattern**:
+
 ```
 Action → REMOVE_COMPONENT operation →
 ComponentMutationService.removeComponent() →
@@ -79,6 +85,7 @@ All Subscribers React
 ### Component Relationship Examples
 
 **facing_away Component** (`positioning:facing_away`):
+
 ```json
 {
   "facing_away_from": ["entity_id_1", "entity_id_2"],
@@ -87,6 +94,7 @@ All Subscribers React
 ```
 
 **bending_over Component** (`positioning:bending_over`):
+
 ```json
 {
   "surface_id": "entity_id",
@@ -100,12 +108,14 @@ All Subscribers React
 ### Action Discovery & Filtering
 
 The **ActionPipelineOrchestrator** coordinates action discovery through stages:
+
 1. **Target Resolution**: Resolves scope queries for targets
 2. **Component Validation**: Checks `required_components` and `forbidden_components`
 3. **Prerequisite Evaluation**: Evaluates JSON Logic conditions
 4. **Multi-Target Support**: Handles batch operations
 
 **Current Prevention Pattern**:
+
 ```json
 {
   "required_components": {
@@ -170,6 +180,7 @@ The **ActionPipelineOrchestrator** coordinates action discovery through stages:
 #### Specific Scenario Resolution
 
 For the discovered scenario:
+
 1. Actor B straightens up: `REMOVE_COMPONENT(actor_b, "positioning:bending_over")`
 2. Event dispatched: `core:component_removed` with `oldComponentData`
 3. Invalidation rule triggers
@@ -179,12 +190,14 @@ For the discovered scenario:
 #### Architectural Alignment
 
 ✅ **Strong Alignment**:
+
 - Uses existing event infrastructure
 - Follows pattern of `SpatialIndexSynchronizer` and `AnatomyCacheCoordinator`
 - Maintains ECS principles (decoupled, event-driven)
 - Declarative relationship definitions
 
 ✅ **Advantages**:
+
 - **Separation of Concerns**: Component relationships separate from actions
 - **Maintainability**: Add rules without modifying actions
 - **Reusability**: Works for any component removal scenario
@@ -193,6 +206,7 @@ For the discovered scenario:
 - **Performance**: EventBus already optimized with batching
 
 ⚠️ **Considerations**:
+
 - Need `REMOVE_COMPONENT_IF_EXISTS` operation (idempotent version)
 - EventBus has recursion depth limits (configurable, currently robust)
 - Component dependency relationships need documentation
@@ -224,7 +238,12 @@ For the discovered scenario:
             { "var": "context.nearby_actors" },
             {
               "and": [
-                { "in": [{ "var": "id" }, { "var": "context.actor.facing_away_from" }] },
+                {
+                  "in": [
+                    { "var": "id" },
+                    { "var": "context.actor.facing_away_from" }
+                  ]
+                },
                 { "has": [{ "var": "" }, "positioning:bending_over"] }
               ]
             }
@@ -240,11 +259,13 @@ For the discovered scenario:
 #### Architectural Alignment
 
 ⚠️ **Partial Alignment**:
+
 - Uses existing prerequisite system
 - Doesn't leverage event-driven architecture for cleanup
 - Requires modifying every potentially conflicting action
 
 ❌ **Disadvantages**:
+
 - **Manual Intervention**: User must explicitly fix conflicts
 - **Repetitive**: Must add to every relevant action
 - **Fragile**: Easy to miss action combinations
@@ -252,6 +273,7 @@ For the discovered scenario:
 - **User Experience**: Blocked actions without automatic resolution
 
 ✅ **Advantages**:
+
 - **Explicit Feedback**: User knows why actions are blocked
 - **Predictable**: No automatic state changes
 - **No Cascading**: Simpler reasoning about state
@@ -265,16 +287,19 @@ For the discovered scenario:
 #### Three-Tier Strategy
 
 **Tier 1: Automatic Invalidation** (Event-Driven)
+
 - For logically incompatible components that should never coexist
 - Example: `facing_away` from someone who is `bending_over`
 - Implementation: Event-driven rules with `core:component_removed`
 
 **Tier 2: Prerequisite Blocking** (Action-Level)
+
 - For contextual restrictions requiring user awareness
 - Example: Cannot start bending over if already sitting
 - Implementation: `forbidden_components` with clear error messages
 
 **Tier 3: Explicit Cleanup** (Rule-Level)
+
 - For intentional state transitions
 - Example: `straighten_up` explicitly removes `bending_over`
 - Implementation: Current pattern with `REMOVE_COMPONENT` in rules
@@ -307,6 +332,7 @@ User Selection → Rule Execution → Explicit Cleanup → New State
 **Purpose**: Idempotent component removal for cleanup scenarios
 
 **Behavior**:
+
 - Remove component if it exists
 - No warnings/errors if component doesn't exist
 - Still dispatches `core:component_removed` event if removed
@@ -336,6 +362,7 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 **Location**: `data/mods/positioning/rules/component_invalidation.rule.json`
 
 **Pattern**:
+
 ```json
 {
   "rule_id": "positioning:component_invalidation",
@@ -361,7 +388,9 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
             "remove_from_others": [
               {
                 "component": "positioning:facing_away",
-                "where": { "contains": ["facing_away_from", { "var": "entity_id" }] }
+                "where": {
+                  "contains": ["facing_away_from", { "var": "entity_id" }]
+                }
               }
             ]
           }
@@ -377,6 +406,7 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 **Location**: `docs/architecture/component-dependencies.md`
 
 **Content**:
+
 - Graph of component relationships
 - Which components invalidate others
 - Rationale for each invalidation
@@ -386,11 +416,13 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 ### Recursion Protection
 
 **Already Exists**: EventBus has built-in recursion detection
+
 - Maximum depth: Configurable (default handles complex scenarios)
 - Cycle detection: Prevents infinite loops
 - Batch processing: Optimizes event dispatching
 
 **Testing Strategy**:
+
 - Test single-level invalidation
 - Test cascading chains (A → B → C)
 - Test circular dependencies (should be blocked by design)
@@ -399,11 +431,13 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 ### Performance Considerations
 
 **Event Dispatching**:
+
 - Already optimized with batching
 - Component removal is infrequent (not a hot path)
 - Invalidation adds negligible overhead
 
 **Component Queries**:
+
 - Need efficient lookup of entities with specific components
 - Component index already supports this
 - May need optimization for large entity counts
@@ -412,16 +446,16 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 
 ## 📊 Solution Comparison Matrix
 
-| Criteria | Event-Driven (A) | Prerequisites (B) | Hybrid (C) |
-|----------|------------------|-------------------|------------|
-| **Architecture Alignment** | ✅ Excellent | ⚠️ Partial | ✅ Excellent |
-| **Maintenance** | ✅ Low | ❌ High | ⚠️ Medium |
-| **User Experience** | ✅ Automatic | ❌ Manual | ✅ Balanced |
-| **Implementation Complexity** | ⚠️ Medium | ✅ Low | ❌ High |
-| **Flexibility** | ✅ High | ⚠️ Medium | ✅ Very High |
-| **Testability** | ✅ Excellent | ✅ Good | ✅ Excellent |
-| **Performance** | ✅ Good | ✅ Excellent | ✅ Good |
-| **Predictability** | ⚠️ Cascading | ✅ Explicit | ⚠️ Layered |
+| Criteria                      | Event-Driven (A) | Prerequisites (B) | Hybrid (C)   |
+| ----------------------------- | ---------------- | ----------------- | ------------ |
+| **Architecture Alignment**    | ✅ Excellent     | ⚠️ Partial        | ✅ Excellent |
+| **Maintenance**               | ✅ Low           | ❌ High           | ⚠️ Medium    |
+| **User Experience**           | ✅ Automatic     | ❌ Manual         | ✅ Balanced  |
+| **Implementation Complexity** | ⚠️ Medium        | ✅ Low            | ❌ High      |
+| **Flexibility**               | ✅ High          | ⚠️ Medium         | ✅ Very High |
+| **Testability**               | ✅ Excellent     | ✅ Good           | ✅ Excellent |
+| **Performance**               | ✅ Good          | ✅ Excellent      | ✅ Good      |
+| **Predictability**            | ⚠️ Cascading     | ✅ Explicit       | ⚠️ Layered   |
 
 ---
 
@@ -430,12 +464,14 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 ### Primary Recommendation: Solution A (Event-Driven)
 
 **Why**:
+
 1. **Best Architectural Fit**: Leverages existing event system patterns
 2. **Maintenance**: Add rules without touching actions
 3. **User Experience**: Automatic cleanup, no manual intervention
 4. **Extensibility**: Easy to add new component relationships
 
 **Implementation Path**:
+
 1. Create `REMOVE_COMPONENT_IF_EXISTS` operation
 2. Define component dependency rules
 3. Implement invalidation logic in rules
@@ -443,6 +479,7 @@ class RemoveComponentIfExistsHandler extends BaseOperationHandler {
 5. Document component relationships
 
 **Incremental Rollout**:
+
 - Phase 1: Handle `facing_away` + `bending_over` scenario
 - Phase 2: Add other positioning component relationships
 - Phase 3: Extend to other mod categories
@@ -475,6 +512,7 @@ Actor A's Available Actions:
 ### Solution A: Event-Driven Resolution
 
 **Step 1**: Actor B straightens up
+
 ```javascript
 // User selects "straighten_up" action for Actor B
 executeAction("positioning:straighten_up", actor_b_id)
@@ -487,6 +525,7 @@ executeAction("positioning:straighten_up", actor_b_id)
 ```
 
 **Step 2**: Invalidation rule triggers
+
 ```javascript
 // Rule: positioning:component_invalidation
 // Condition: event.payload.componentTypeId == "positioning:bending_over"
@@ -503,6 +542,7 @@ executeAction("positioning:straighten_up", actor_b_id)
 ```
 
 **Step 3**: Final state
+
 ```
 Actor A (standing, no facing_away component)
 Actor B (standing, no bending_over component)
@@ -517,6 +557,7 @@ Actor A's Available Actions:
 ### Solution B: Prerequisite Resolution
 
 **Step 1**: Add prerequisites to prevent illogical actions
+
 ```json
 {
   "id": "positioning:bend_over",
@@ -528,7 +569,9 @@ Actor A's Available Actions:
             { "var": "nearby_actors" },
             {
               "and": [
-                { "in": [{ "var": "id" }, { "var": "actor.facing_away_from" }] },
+                {
+                  "in": [{ "var": "id" }, { "var": "actor.facing_away_from" }]
+                },
                 { "has": [{ "var": "" }, "positioning:bending_over"] }
               ]
             }
@@ -542,6 +585,7 @@ Actor A's Available Actions:
 ```
 
 **Step 2**: User sees blocked actions
+
 ```
 Actor A's Available Actions:
   ❌ bend_over (blocked: "Cannot bend over while facing away...")
@@ -551,6 +595,7 @@ Actor A's Available Actions:
 ```
 
 **Step 3**: User must manually resolve
+
 ```
 User must:
 1. Select "turn_to_face" to remove facing_away
@@ -589,24 +634,28 @@ Then bend_over becomes available
 ### Proposed Implementation Sequence
 
 **Phase 1: Foundation** (1-2 days)
+
 - [ ] Create `REMOVE_COMPONENT_IF_EXISTS` operation
 - [ ] Add operation to DI system
 - [ ] Write unit tests for operation
 - [ ] Write integration tests
 
 **Phase 2: First Invalidation Rule** (2-3 days)
+
 - [ ] Implement `facing_away` invalidation for positioning mod
 - [ ] Test with discovered scenario
 - [ ] Document invalidation behavior
 - [ ] Add to mod testing suite
 
 **Phase 3: Generalization** (3-5 days)
+
 - [ ] Define component dependency schema
 - [ ] Create invalidation rule DSL
 - [ ] Implement generic invalidation handler
 - [ ] Add comprehensive test coverage
 
 **Phase 4: Documentation & Rollout** (1-2 days)
+
 - [ ] Document component dependencies
 - [ ] Create mod development guide for invalidation
 - [ ] Update architecture docs
@@ -615,15 +664,19 @@ Then bend_over becomes available
 ### Risk Mitigation
 
 **Risk**: Cascading removals cause performance issues
+
 - **Mitigation**: Add depth limits, comprehensive testing
 
 **Risk**: Unexpected component removals confuse users
+
 - **Mitigation**: Add logging, clear activity descriptions
 
 **Risk**: Circular dependencies cause infinite loops
+
 - **Mitigation**: EventBus recursion protection, validation
 
 **Risk**: Hard to debug invalidation chains
+
 - **Mitigation**: Detailed event logging, visualization tools
 
 ---
@@ -742,6 +795,7 @@ The component invalidation system is needed to maintain consistency between game
 **Key Takeaway**: This isn't just about fixing one scenario - it's about creating a robust, extensible system for managing component dependencies that will scale as the game grows.
 
 **Decision Point**: Choose between:
+
 1. **Pure Event-Driven** (A): Automatic, maintainable, aligned with architecture
 2. **Pure Prerequisites** (B): Explicit, predictable, more user friction
 3. **Hybrid** (C): Maximum control, more complex implementation

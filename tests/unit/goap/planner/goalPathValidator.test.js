@@ -19,7 +19,10 @@ describe('goalPathValidator', () => {
       '==': [{ var: 'state.actor.components.core.hp' }, 10],
     });
     expect(rewrites).toEqual([
-      { original: 'actor.core.hp', normalized: 'state.actor.components.core.hp' },
+      {
+        original: 'actor.core.hp',
+        normalized: 'state.actor.components.core.hp',
+      },
     ]);
     expect(goalState).toEqual({
       '==': [{ var: 'actor.core.hp' }, 10],
@@ -81,7 +84,10 @@ describe('goalPathValidator', () => {
     expect(result.isValid).toBe(false);
     expect(result.violations).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ reason: 'literal-actor-id', path: 'actor_1' }),
+        expect.objectContaining({
+          reason: 'literal-actor-id',
+          path: 'actor_1',
+        }),
       ])
     );
   });
@@ -146,7 +152,9 @@ describe('goalPathValidator', () => {
       ],
     };
 
-    const result = validateGoalPaths(goalState, { goalId: 'test:actor-aliases' });
+    const result = validateGoalPaths(goalState, {
+      goalId: 'test:actor-aliases',
+    });
 
     expect(result.isValid).toBe(true);
     expect(result.violations).toHaveLength(0);

@@ -45,10 +45,7 @@ Create a `GET_DAMAGE_CAPABILITIES` operation handler that:
       "properties": {
         "entity_ref": {
           "description": "Reference to the entity. Supports entity ID string, keywords (actor/target/primary/secondary/tertiary), or JSON Logic expression.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "output_variable": {
           "type": "string",
@@ -68,12 +65,12 @@ Create a `GET_DAMAGE_CAPABILITIES` operation handler that:
 
 #### Dependencies
 
-| Dependency | Purpose |
-|------------|---------|
-| `entityManager` | Retrieve entity components |
-| `logger` | Contextual logging |
-| `safeEventDispatcher` | Error event dispatching |
-| `jsonLogicService` | Resolve JSON Logic expressions |
+| Dependency            | Purpose                        |
+| --------------------- | ------------------------------ |
+| `entityManager`       | Retrieve entity components     |
+| `logger`              | Contextual logging             |
+| `safeEventDispatcher` | Error event dispatching        |
+| `jsonLogicService`    | Resolve JSON Logic expressions |
 
 #### Algorithm
 
@@ -91,11 +88,11 @@ Create a `GET_DAMAGE_CAPABILITIES` operation handler that:
 
 Based on observed weapon weights and damage values:
 
-| Entity | Weight (kg) | Blunt Damage |
-|--------|-------------|--------------|
-| Practice stick | 0.9 | 5 |
-| Rapier | 1.2 | (piercing weapon, N/A) |
-| Longsword | 1.8 | (slashing weapon, N/A) |
+| Entity         | Weight (kg) | Blunt Damage           |
+| -------------- | ----------- | ---------------------- |
+| Practice stick | 0.9         | 5                      |
+| Rapier         | 1.2         | (piercing weapon, N/A) |
+| Longsword      | 1.8         | (slashing weapon, N/A) |
 
 **Proposed Formula**:
 
@@ -108,6 +105,7 @@ function calculateBluntDamage(weightKg) {
 ```
 
 **Rationale**:
+
 - Very light objects (0.1kg book) → 1 damage
 - Light objects (0.5kg bottle) → 3 damage
 - Medium objects (1kg rock) → 5 damage
@@ -124,8 +122,8 @@ function calculateFracture(weightKg) {
   // Heavier objects more likely to cause fractures
   return {
     enabled: true,
-    thresholdFraction: Math.max(0.3, 1.0 - (weightKg * 0.1)), // Lower threshold for heavier
-    stunChance: Math.min(0.5, weightKg * 0.05) // Higher stun for heavier
+    thresholdFraction: Math.max(0.3, 1.0 - weightKg * 0.1), // Lower threshold for heavier
+    stunChance: Math.min(0.5, weightKg * 0.05), // Higher stun for heavier
   };
 }
 ```
@@ -209,7 +207,9 @@ Per CLAUDE.md "Adding New Operations" checklist:
             "parameters": {
               "entity_ref": "target",
               "damage_entry": { "var": "damage_entry" },
-              "damage_multiplier": { "var": "event.parameters.throw_multiplier" }
+              "damage_multiplier": {
+                "var": "event.parameters.throw_multiplier"
+              }
             }
           }
         ]
@@ -227,12 +227,12 @@ The operation stores results in the execution context under the specified `outpu
 // After GET_DAMAGE_CAPABILITIES executes with output_variable: "damage_entries"
 executionContext.variables.damage_entries = [
   {
-    name: "blunt",
+    name: 'blunt',
     amount: 5,
     penetration: 0,
     fracture: { enabled: true, thresholdFraction: 0.8, stunChance: 0.1 },
-    flags: ["improvised"]
-  }
+    flags: ['improvised'],
+  },
 ];
 ```
 
@@ -242,29 +242,29 @@ executionContext.variables.damage_entries = [
 
 **File**: `tests/unit/logic/operationHandlers/getDamageCapabilitiesHandler.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Returns existing damage capabilities unchanged | Entity with `damage-types:damage_capabilities` |
-| Generates blunt damage from weight | Entity with `core:weight` but no damage capabilities |
-| Generates minimal fallback for weightless entities | Entity with neither component |
-| Calculates correct damage for various weights | Test conversion formula |
-| Enables fracture for heavy objects | Weight >= 1.0kg |
-| Disables fracture for light objects | Weight < 1.0kg |
-| Resolves JSON Logic entity references | Using JSON Logic expressions |
-| Resolves keyword entity references | actor, target, primary, secondary, tertiary |
-| Dispatches error for invalid entity | Non-existent entity ID |
-| Stores result in output_variable | Verify context variable storage |
+| Test Case                                          | Description                                          |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| Returns existing damage capabilities unchanged     | Entity with `damage-types:damage_capabilities`       |
+| Generates blunt damage from weight                 | Entity with `core:weight` but no damage capabilities |
+| Generates minimal fallback for weightless entities | Entity with neither component                        |
+| Calculates correct damage for various weights      | Test conversion formula                              |
+| Enables fracture for heavy objects                 | Weight >= 1.0kg                                      |
+| Disables fracture for light objects                | Weight < 1.0kg                                       |
+| Resolves JSON Logic entity references              | Using JSON Logic expressions                         |
+| Resolves keyword entity references                 | actor, target, primary, secondary, tertiary          |
+| Dispatches error for invalid entity                | Non-existent entity ID                               |
+| Stores result in output_variable                   | Verify context variable storage                      |
 
 ### Integration Tests
 
 **File**: `tests/integration/mods/weapons/getDamageCapabilities.integration.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Works with real weapon entity | Test with vespera_rapier (existing capabilities) |
-| Works with non-weapon portable item | Test with coffee_cup or similar |
-| Integrates with APPLY_DAMAGE in rule | Full throw action pipeline |
-| Handles entities loaded from mods | Real mod loading context |
+| Test Case                            | Description                                      |
+| ------------------------------------ | ------------------------------------------------ |
+| Works with real weapon entity        | Test with vespera_rapier (existing capabilities) |
+| Works with non-weapon portable item  | Test with coffee_cup or similar                  |
+| Integrates with APPLY_DAMAGE in rule | Full throw action pipeline                       |
+| Handles entities loaded from mods    | Real mod loading context                         |
 
 ## Dependencies & Affected Files
 
@@ -302,6 +302,6 @@ This operation handler is a prerequisite for the "throw portable objects" featur
 
 ## Revision History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-04 | Claude | Initial specification |
+| Version | Date       | Author | Changes               |
+| ------- | ---------- | ------ | --------------------- |
+| 1.0     | 2025-12-04 | Claude | Initial specification |

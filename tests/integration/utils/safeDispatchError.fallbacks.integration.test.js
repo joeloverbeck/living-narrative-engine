@@ -25,7 +25,11 @@ const createTestLogger = () => ({
 async function createDispatcherHarness() {
   const logger = createTestLogger();
   const registry = new InMemoryDataRegistry({ logger });
-  registry.store('events', systemErrorEventDefinition.id, systemErrorEventDefinition);
+  registry.store(
+    'events',
+    systemErrorEventDefinition.id,
+    systemErrorEventDefinition
+  );
 
   const repository = new GameDataRepository(registry, logger);
   const schemaValidator = new AjvSchemaValidator({ logger });

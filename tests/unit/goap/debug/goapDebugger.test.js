@@ -270,15 +270,29 @@ describe('GOAPDebugger', () => {
         {
           goalId: 'goal-1',
           failures: [
-            { reason: 'precondition failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1000 },
-            { reason: 'no valid tasks', code: 'NO_VALID_PLAN', timestamp: 2000 },
+            {
+              reason: 'precondition failed',
+              code: 'NO_APPLICABLE_TASKS',
+              timestamp: 1000,
+            },
+            {
+              reason: 'no valid tasks',
+              code: 'NO_VALID_PLAN',
+              timestamp: 2000,
+            },
           ],
         },
       ];
       const failedTasks = [
         {
           taskId: 'task-1',
-          failures: [{ reason: 'refinement failed', code: 'TASK_FAILURE', timestamp: 3000 }],
+          failures: [
+            {
+              reason: 'refinement failed',
+              code: 'TASK_FAILURE',
+              timestamp: 3000,
+            },
+          ],
         },
       ];
 
@@ -512,15 +526,29 @@ describe('GOAPDebugger', () => {
         {
           goalId: 'goal-1',
           failures: [
-            { reason: 'precondition failed', code: 'NO_APPLICABLE_TASKS', timestamp: 1000 },
-            { reason: 'no valid tasks', code: 'NO_VALID_PLAN', timestamp: 2000 },
+            {
+              reason: 'precondition failed',
+              code: 'NO_APPLICABLE_TASKS',
+              timestamp: 1000,
+            },
+            {
+              reason: 'no valid tasks',
+              code: 'NO_VALID_PLAN',
+              timestamp: 2000,
+            },
           ],
         },
       ]);
       mockController.getFailedTasks.mockReturnValue([
         {
           taskId: 'task-1',
-          failures: [{ reason: 'refinement failed', code: 'TASK_FAILURE', timestamp: 3000 }],
+          failures: [
+            {
+              reason: 'refinement failed',
+              code: 'TASK_FAILURE',
+              timestamp: 3000,
+            },
+          ],
         },
       ]);
       mockController.getDependencyDiagnostics.mockReturnValue([
@@ -663,7 +691,9 @@ describe('GOAPDebugger', () => {
             }),
           },
           goalPathDiagnostics: expect.objectContaining({ actorId: 'actor-1' }),
-          effectFailureTelemetry: expect.objectContaining({ actorId: 'actor-1' }),
+          effectFailureTelemetry: expect.objectContaining({
+            actorId: 'actor-1',
+          }),
           eventStream: expect.objectContaining({
             actorId: 'actor-1',
             events: expect.any(Array),
@@ -678,8 +708,12 @@ describe('GOAPDebugger', () => {
               available: true,
               stale: true,
             }),
-            goalPathViolations: expect.objectContaining({ sectionId: 'goalPathViolations' }),
-            effectFailureTelemetry: expect.objectContaining({ sectionId: 'effectFailureTelemetry' }),
+            goalPathViolations: expect.objectContaining({
+              sectionId: 'goalPathViolations',
+            }),
+            effectFailureTelemetry: expect.objectContaining({
+              sectionId: 'effectFailureTelemetry',
+            }),
           }),
           trace,
         })
@@ -749,10 +783,11 @@ describe('GOAPDebugger', () => {
         totalFallbacks: 3,
         recent: [],
       });
-      const diagnostics = goapDebugger.getNumericConstraintDiagnostics('actor-n');
-      expect(mockController.getNumericConstraintDiagnostics).toHaveBeenCalledWith(
-        'actor-n'
-      );
+      const diagnostics =
+        goapDebugger.getNumericConstraintDiagnostics('actor-n');
+      expect(
+        mockController.getNumericConstraintDiagnostics
+      ).toHaveBeenCalledWith('actor-n');
       expect(diagnostics.totalFallbacks).toBe(3);
     });
   });
@@ -769,7 +804,9 @@ describe('GOAPDebugger', () => {
 
       const json = goapDebugger.generateReportJSON('actor-1');
 
-      expect(json.diagnosticsMeta.goalPathViolations.lastUpdated).toBe(isoString);
+      expect(json.diagnosticsMeta.goalPathViolations.lastUpdated).toBe(
+        isoString
+      );
       expect(json.diagnosticsMeta.goalPathViolations.stale).toBe(true);
     });
 
@@ -809,7 +846,9 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('No task library diagnostics captured');
-      expect(report).toContain('see docs/goap/debugging-tools.md#diagnostics-contract');
+      expect(report).toContain(
+        'see docs/goap/debugging-tools.md#diagnostics-contract'
+      );
     });
 
     it('shows last updated timestamp and namespace counts when fresh', () => {
@@ -855,7 +894,9 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('No planning-state diagnostics captured');
-      expect(report).toContain('see docs/goap/debugging-tools.md#planning-state-assertions');
+      expect(report).toContain(
+        'see docs/goap/debugging-tools.md#planning-state-assertions'
+      );
     });
 
     it('shows recent misses and last updated when data is fresh', () => {
@@ -973,7 +1014,9 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('⚠️ Event Contract Violations detected');
-      expect(report).toContain('docs/goap/debugging-tools.md#Planner Contract Checklist');
+      expect(report).toContain(
+        'docs/goap/debugging-tools.md#Planner Contract Checklist'
+      );
     });
 
     it('shows stale warning when last violation is old', () => {
@@ -1023,7 +1066,9 @@ describe('GOAPDebugger', () => {
 
       const report = goapDebugger.generateReport('actor-1');
 
-      expect(report).toContain('Event payload contract satisfied for this actor');
+      expect(report).toContain(
+        'Event payload contract satisfied for this actor'
+      );
     });
   });
 
@@ -1056,7 +1101,9 @@ describe('GOAPDebugger', () => {
           {
             timestamp: oldTimestamp,
             goalId: 'rest',
-            violations: [{ path: 'actor.fatigue', expected: 'actor.components.fatigue' }],
+            violations: [
+              { path: 'actor.fatigue', expected: 'actor.components.fatigue' },
+            ],
           },
         ],
         lastViolationAt: oldTimestamp,
@@ -1072,7 +1119,9 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('paths=actor.hunger, actor.energy');
       expect(report).toContain('goal=rest');
       expect(report).toContain('paths=actor.fatigue');
-      expect(report).toContain('docs/goap/debugging-tools.md#Planner Contract Checklist');
+      expect(report).toContain(
+        'docs/goap/debugging-tools.md#Planner Contract Checklist'
+      );
     });
 
     it('shows empty violations message when no entries', () => {
@@ -1098,7 +1147,9 @@ describe('GOAPDebugger', () => {
           {
             timestamp: recentTimestamp,
             goalId: 'explore',
-            violations: [{ path: 'actor.location', expected: 'actor.components.location' }],
+            violations: [
+              { path: 'actor.location', expected: 'actor.components.location' },
+            ],
           },
         ],
         lastViolationAt: recentTimestamp,
@@ -1139,7 +1190,9 @@ describe('GOAPDebugger', () => {
         entries: [
           {
             timestamp: recentTimestamp,
-            violations: [{ path: 'actor.missing', expected: 'actor.components.missing' }],
+            violations: [
+              { path: 'actor.missing', expected: 'actor.components.missing' },
+            ],
           },
         ],
         lastViolationAt: recentTimestamp,
@@ -1159,7 +1212,9 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('No planning-effect telemetry captured');
-      expect(report).toContain('Ensure planner emits INVALID_EFFECT_DEFINITION');
+      expect(report).toContain(
+        'Ensure planner emits INVALID_EFFECT_DEFINITION'
+      );
     });
 
     it('shows stale warning and failure entries when present', () => {
@@ -1202,11 +1257,17 @@ describe('GOAPDebugger', () => {
       expect(report).toContain('task=eat_food');
       expect(report).toContain('phase=simulation');
       expect(report).toContain('goal=satisfy_hunger');
-      expect(report).toContain('reason=Cannot access undefined path actor.inventory');
+      expect(report).toContain(
+        'reason=Cannot access undefined path actor.inventory'
+      );
       expect(report).toContain('task=drink_water');
       expect(report).toContain('task=sleep');
-      expect(report).toContain('INVALID_EFFECT_DEFINITION failures halt planning');
-      expect(report).toContain('confirm task.preconditions gate simulator usage');
+      expect(report).toContain(
+        'INVALID_EFFECT_DEFINITION failures halt planning'
+      );
+      expect(report).toContain(
+        'confirm task.preconditions gate simulator usage'
+      );
     });
 
     it('shows empty failures message when no failures', () => {
@@ -1294,7 +1355,9 @@ describe('GOAPDebugger', () => {
       const report = goapDebugger.generateReport('actor-1');
 
       expect(report).toContain('Event stream capture unavailable');
-      expect(report).toContain('Call GOAPDebugger.startTrace(actorId) before running scenarios');
+      expect(report).toContain(
+        'Call GOAPDebugger.startTrace(actorId) before running scenarios'
+      );
     });
 
     it('formats detailed event information when events present', () => {
@@ -1459,7 +1522,8 @@ describe('GOAPDebugger', () => {
       goapDebugger.startTrace('actor-2');
 
       const diagnosticsErrors = mockLogger.warn.mock.calls.filter(
-        ([, meta]) => meta && meta.code === 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED'
+        ([, meta]) =>
+          meta && meta.code === 'GOAP_DEBUGGER_TRACE_PROBE_DIAGNOSTICS_FAILED'
       );
       expect(diagnosticsErrors).toHaveLength(1);
       expect(diagnosticsErrors[0][0]).toContain(
@@ -1480,7 +1544,9 @@ describe('GOAPDebugger', () => {
       });
 
       goapDebugger.startTrace('actor-1');
-      expect(goapDebugger.getEventStream('actor-1').captureDisabled).toBeUndefined();
+      expect(
+        goapDebugger.getEventStream('actor-1').captureDisabled
+      ).toBeUndefined();
     });
   });
 

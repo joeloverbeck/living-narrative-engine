@@ -2,7 +2,14 @@
  * @file Integration test ensuring fatal initial heuristic failures emit telemetry once
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createGoapTestSetup } from './testFixtures/goapTestSetup.js';
 import { createTestGoal } from './testFixtures/testGoalFactory.js';
 import { GOAP_EVENTS } from '../../../src/goap/events/goapEvents.js';
@@ -46,7 +53,9 @@ describe('GOAP planner failure telemetry', () => {
 
     const goal = createTestGoal({
       id: 'test:fatal_initial_heuristic_goal',
-      goalState: { '==': [{ var: 'actor.components.test_goal_complete' }, true] },
+      goalState: {
+        '==': [{ var: 'actor.components.test_goal_complete' }, true],
+      },
     });
     setup.registerGoal(goal);
 
@@ -59,12 +68,15 @@ describe('GOAP planner failure telemetry', () => {
     });
 
     try {
-      const result = await setup.controller.decideTurn(actor, { state: planningState });
+      const result = await setup.controller.decideTurn(actor, {
+        state: planningState,
+      });
 
       expect(result).toBeNull();
 
-      const planningFailedEvents =
-        setup.eventBus.getEvents(GOAP_EVENTS.PLANNING_FAILED);
+      const planningFailedEvents = setup.eventBus.getEvents(
+        GOAP_EVENTS.PLANNING_FAILED
+      );
       expect(planningFailedEvents).toHaveLength(1);
       expect(planningFailedEvents[0].payload).toEqual(
         expect.objectContaining({

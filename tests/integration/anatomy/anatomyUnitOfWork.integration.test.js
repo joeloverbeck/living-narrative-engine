@@ -2,7 +2,14 @@
  * @file Integration tests for AnatomyUnitOfWork covering transactional rollback scenarios.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyUnitOfWork } from '../../../src/anatomy/orchestration/anatomyUnitOfWork.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
@@ -99,9 +106,9 @@ describe('AnatomyUnitOfWork integration coverage', () => {
       InvalidArgumentError
     );
 
-    expect(() => new AnatomyUnitOfWork({ entityManager: testBed.entityManager })).toThrow(
-      InvalidArgumentError
-    );
+    expect(
+      () => new AnatomyUnitOfWork({ entityManager: testBed.entityManager })
+    ).toThrow(InvalidArgumentError);
   });
 
   it('validates tracked entity identifiers', () => {
@@ -111,7 +118,9 @@ describe('AnatomyUnitOfWork integration coverage', () => {
     });
 
     expect(() => unitOfWork.trackEntity('')).toThrow(InvalidArgumentError);
-    expect(() => unitOfWork.trackEntities('not-an-array')).toThrow(InvalidArgumentError);
+    expect(() => unitOfWork.trackEntities('not-an-array')).toThrow(
+      InvalidArgumentError
+    );
   });
 
   it('logs warning when rollback is invoked multiple times and prevents rollback after commit', async () => {
@@ -144,7 +153,8 @@ describe('AnatomyUnitOfWork integration coverage', () => {
       logger: testBed.logger,
     });
 
-    const bodyPart = await testBed.entityManager.createEntityInstance('anatomy:body_part');
+    const bodyPart =
+      await testBed.entityManager.createEntityInstance('anatomy:body_part');
     unitOfWork.trackEntity(bodyPart.id);
 
     expect(unitOfWork.trackedEntityCount).toBe(1);
@@ -190,13 +200,12 @@ describe('AnatomyUnitOfWork integration coverage', () => {
       logger: testBed.logger,
     });
 
-    const survivingEntity = await testBed.entityManager.createEntityInstance(
-      'anatomy:body_part'
-    );
-    const preRemovedEntity = await testBed.entityManager.createEntityInstance(
-      'anatomy:body_part'
-    );
-    const failingEntity = await testBed.entityManager.createEntityInstance('anatomy:body_part');
+    const survivingEntity =
+      await testBed.entityManager.createEntityInstance('anatomy:body_part');
+    const preRemovedEntity =
+      await testBed.entityManager.createEntityInstance('anatomy:body_part');
+    const failingEntity =
+      await testBed.entityManager.createEntityInstance('anatomy:body_part');
 
     unitOfWork.trackEntities([
       survivingEntity.id,
@@ -219,12 +228,16 @@ describe('AnatomyUnitOfWork integration coverage', () => {
       });
 
     try {
-      await expect(unitOfWork.rollback()).rejects.toBeInstanceOf(AnatomyGenerationError);
+      await expect(unitOfWork.rollback()).rejects.toBeInstanceOf(
+        AnatomyGenerationError
+      );
     } finally {
       removeSpy.mockRestore();
     }
 
-    const debugMessages = testBed.logger.debug.mock.calls.map(([message]) => message);
+    const debugMessages = testBed.logger.debug.mock.calls.map(
+      ([message]) => message
+    );
     expect(
       debugMessages.some((message) =>
         message.includes(`Successfully deleted entity '${survivingEntity.id}'`)
@@ -236,10 +249,14 @@ describe('AnatomyUnitOfWork integration coverage', () => {
       )
     ).toBe(true);
 
-    const errorCalls = testBed.logger.error.mock.calls.map(([message]) => message);
+    const errorCalls = testBed.logger.error.mock.calls.map(
+      ([message]) => message
+    );
     expect(
       errorCalls.some((message) =>
-        message.includes(`Failed to delete entity '${failingEntity.id}' during rollback`)
+        message.includes(
+          `Failed to delete entity '${failingEntity.id}' during rollback`
+        )
       )
     ).toBe(true);
 

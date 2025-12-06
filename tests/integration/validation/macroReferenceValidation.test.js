@@ -1,7 +1,7 @@
 /**
  * @file macroReferenceValidation.test.js
  * @description Regression tests for anyOf macro validation to prevent error cascades
- * 
+ *
  * This test suite ensures that the schema's anyOf pattern (not oneOf) prevents
  * massive error cascades when validating macro references. Previously, using oneOf
  * caused 322 errors for a single invalid macro reference. With anyOf, we expect
@@ -48,8 +48,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
           description: 'Either a macro reference or an operation',
           anyOf: [
             { $ref: '#/$defs/MacroReference' },
-            { $ref: '#/$defs/Operation' }
-          ]
+            { $ref: '#/$defs/Operation' },
+          ],
         },
         MacroReference: {
           type: 'object',
@@ -58,15 +58,15 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
             macro: {
               type: 'string',
               pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$',
-              description: 'Namespaced macro ID'
+              description: 'Namespaced macro ID',
             },
             comment: {
               type: 'string',
-              description: 'Optional comment'
-            }
+              description: 'Optional comment',
+            },
           },
           required: ['macro'],
-          additionalProperties: false
+          additionalProperties: false,
         },
         Operation: {
           description: 'A concrete operation',
@@ -79,14 +79,17 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
                   type: 'object',
                   properties: {
                     message: { type: 'string' },
-                    level: { type: 'string', enum: ['info', 'warn', 'error', 'debug'] }
+                    level: {
+                      type: 'string',
+                      enum: ['info', 'warn', 'error', 'debug'],
+                    },
                   },
                   required: ['message', 'level'],
-                  additionalProperties: false
-                }
+                  additionalProperties: false,
+                },
               },
               required: ['type', 'parameters'],
-              additionalProperties: false
+              additionalProperties: false,
             },
             {
               type: 'object',
@@ -96,18 +99,18 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
                   type: 'object',
                   properties: {
                     variable_name: { type: 'string' },
-                    value: {}
+                    value: {},
                   },
                   required: ['variable_name', 'value'],
-                  additionalProperties: false
-                }
+                  additionalProperties: false,
+                },
               },
               required: ['type', 'parameters'],
-              additionalProperties: false
-            }
-          ]
-        }
-      }
+              additionalProperties: false,
+            },
+          ],
+        },
+      },
     };
 
     // Create a minimal rule schema
@@ -121,16 +124,16 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: { type: 'string' },
         event_type: {
           type: 'string',
-          pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$'
+          pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$',
         },
         actions: {
           type: 'array',
           minItems: 1,
-          items: { $ref: operationSchemaId + '#/$defs/Action' }
-        }
+          items: { $ref: operationSchemaId + '#/$defs/Action' },
+        },
       },
       required: ['event_type', 'actions'],
-      additionalProperties: false
+      additionalProperties: false,
     };
 
     // Add schemas to validator
@@ -147,9 +150,7 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
       const rule = {
         rule_id: 'test_macro_validation',
         event_type: 'core:test_event',
-        actions: [
-          { macro: 'core:logSuccessAndEndTurn' }
-        ]
+        actions: [{ macro: 'core:logSuccessAndEndTurn' }],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -166,9 +167,9 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         actions: [
           {
             macro: 'core:logSuccessAndEndTurn',
-            comment: 'This logs success and ends the turn'
-          }
-        ]
+            comment: 'This logs success and ends the turn',
+          },
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -183,8 +184,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         event_type: 'core:test_event',
         actions: [
           { macro: 'core:logSuccessAndEndTurn' },
-          { macro: 'core:displaySuccessAndEndTurn' }
-        ]
+          { macro: 'core:displaySuccessAndEndTurn' },
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -200,8 +201,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: 'test_invalid_macro',
         event_type: 'core:test_event',
         actions: [
-          { macro: '' } // Invalid: empty string
-        ]
+          { macro: '' }, // Invalid: empty string
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -209,7 +210,7 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
       // Should fail validation
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
-      
+
       // PASS CONDITION: Error count < 10 (not 322 like in oneOf)
       // anyOf should fail gracefully without cascading to all operation branches
       expect(result.errors.length).toBeLessThan(10);
@@ -220,15 +221,15 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: 'test_missing_macro_field',
         event_type: 'core:test_event',
         actions: [
-          { comment: 'Missing macro field' } // Invalid: no macro or type
-        ]
+          { comment: 'Missing macro field' }, // Invalid: no macro or type
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
-      
+
       // Should have limited errors, not hundreds
       expect(result.errors.length).toBeLessThan(10);
     });
@@ -240,9 +241,9 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         actions: [
           {
             macro: 'core:logSuccessAndEndTurn',
-            invalidField: 'should not be here' // Invalid: additional property
-          }
-        ]
+            invalidField: 'should not be here', // Invalid: additional property
+          },
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -263,8 +264,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         event_type: 'core:test_event',
         actions: [
           { type: 'LOG', parameters: { message: 'test', level: 'info' } },
-          { macro: 'core:logSuccessAndEndTurn' }
-        ]
+          { macro: 'core:logSuccessAndEndTurn' },
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -279,11 +280,17 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: 'test_complex_mixed',
         event_type: 'core:test_event',
         actions: [
-          { type: 'LOG', parameters: { message: 'Starting action', level: 'info' } },
+          {
+            type: 'LOG',
+            parameters: { message: 'Starting action', level: 'info' },
+          },
           { macro: 'core:logSuccessAndEndTurn' },
-          { type: 'SET_VARIABLE', parameters: { variable_name: 'test', value: 'value' } },
-          { macro: 'core:displaySuccessAndEndTurn' }
-        ]
+          {
+            type: 'SET_VARIABLE',
+            parameters: { variable_name: 'test', value: 'value' },
+          },
+          { macro: 'core:displaySuccessAndEndTurn' },
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -299,20 +306,20 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         actions: [
           { type: 'LOG', parameters: { message: 'valid', level: 'info' } },
           { macro: '' }, // Invalid: empty macro
-          { macro: 'core:logSuccessAndEndTurn' } // Valid
-        ]
+          { macro: 'core:logSuccessAndEndTurn' }, // Valid
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
-      
+
       // Should have limited errors focused on the invalid action
       expect(result.errors.length).toBeLessThan(10);
-      
+
       // Errors should point to the specific invalid action (index 1)
-      const invalidActionErrors = result.errors.filter(err => 
+      const invalidActionErrors = result.errors.filter((err) =>
         err.instancePath.includes('/actions/1')
       );
       expect(invalidActionErrors.length).toBeGreaterThan(0);
@@ -323,13 +330,13 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
     it('should confirm operation schema uses anyOf pattern', () => {
       // Verify the schema is loaded
       expect(validator.isSchemaLoaded(operationSchemaId)).toBe(true);
-      
+
       // Validate a simple operation to confirm anyOf is working
       const operation = {
         type: 'LOG',
-        parameters: { message: 'test', level: 'info' }
+        parameters: { message: 'test', level: 'info' },
       };
-      
+
       const result = validator.validate(operationSchemaId, operation);
       expect(result.isValid).toBe(true);
     });
@@ -337,9 +344,9 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
     it('should confirm macro reference schema is accessible via anyOf', () => {
       // Validate a macro reference directly against operation schema
       const macroRef = {
-        macro: 'core:logSuccessAndEndTurn'
+        macro: 'core:logSuccessAndEndTurn',
       };
-      
+
       const result = validator.validate(operationSchemaId, macroRef);
       expect(result.isValid).toBe(true);
     });
@@ -351,18 +358,18 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: 'test_invalid_namespace',
         event_type: 'core:test_event',
         actions: [
-          { macro: 'invalidformat' } // Missing colon separator
-        ]
+          { macro: 'invalidformat' }, // Missing colon separator
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
-      
+
       // Should have limited errors
       expect(result.errors.length).toBeLessThan(10);
-      
+
       // Format the errors to check message quality
       const formattedError = validator.formatAjvErrors(result.errors, rule);
       expect(formattedError).toBeTruthy();
@@ -373,8 +380,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         rule_id: 'test_wrong_type',
         event_type: 'core:test_event',
         actions: [
-          { macro: 123 } // Should be string
-        ]
+          { macro: 123 }, // Should be string
+        ],
       };
 
       const result = validator.validate(ruleSchemaId, rule);
@@ -397,21 +404,22 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
         $defs: {
           Action: {
             description: 'Either a macro reference or an operation',
-            oneOf: [ // Using oneOf instead of anyOf
+            oneOf: [
+              // Using oneOf instead of anyOf
               { $ref: '#/$defs/MacroReference' },
-              { $ref: '#/$defs/Operation' }
-            ]
+              { $ref: '#/$defs/Operation' },
+            ],
           },
           MacroReference: {
             type: 'object',
             properties: {
               macro: {
                 type: 'string',
-                pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$'
-              }
+                pattern: '^[a-zA-Z0-9_]+:[a-zA-Z0-9_]+$',
+              },
             },
             required: ['macro'],
-            additionalProperties: false
+            additionalProperties: false,
           },
           Operation: {
             anyOf: [
@@ -423,16 +431,16 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
                     type: 'object',
                     properties: {
                       message: { type: 'string' },
-                      level: { type: 'string' }
+                      level: { type: 'string' },
                     },
-                    required: ['message', 'level']
-                  }
+                    required: ['message', 'level'],
+                  },
                 },
-                required: ['type', 'parameters']
-              }
-            ]
-          }
-        }
+                required: ['type', 'parameters'],
+              },
+            ],
+          },
+        },
       };
 
       await validator.addSchema(oneOfSchema, oneOfSchemaId);

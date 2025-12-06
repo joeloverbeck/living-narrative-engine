@@ -17,7 +17,7 @@
 
 ### Character Purpose
 
-Bertram represents a fascinating contrast to complex characters like Vespera Nightwhisper. Where Vespera has layers, contradictions, and performed identity, Bertram simply *is* - a skilled craftsman who knows who he is, processed his grief healthily, and addresses his needs with the same practical approach he applies to leatherwork. His "reciprocal services" posting is meant literally, with zero hidden meaning or romantic subtext.
+Bertram represents a fascinating contrast to complex characters like Vespera Nightwhisper. Where Vespera has layers, contradictions, and performed identity, Bertram simply _is_ - a skilled craftsman who knows who he is, processed his grief healthily, and addresses his needs with the same practical approach he applies to leatherwork. His "reciprocal services" posting is meant literally, with zero hidden meaning or romantic subtext.
 
 ---
 
@@ -31,25 +31,25 @@ Bertram represents a fascinating contrast to complex characters like Vespera Nig
 
 ### Body Descriptors
 
-| Descriptor | Value | Rationale |
-|------------|-------|-----------|
-| **height** | `average` | 5'8" - typical working-class height, neither tall nor short |
-| **build** | `stocky` | Thick-bodied working-man's build - solid from decades of physical labor, strong forearms and hands from leatherwork, slight belly from contentment (not fat, not muscular, just solid) |
-| **composition** | `soft` | Slight belly from contentment and age, but not overweight - healthy working man in his 50s |
-| **hairDensity** | `moderate` | Practical grooming, clean but not polished, body hair present but not excessive |
-| **skinColor** | `"weathered tan with brown tannery staining"` | **CRITICAL DISTINCTIVE FEATURE**: Permanent tan-brown discoloration from decades of exposure to tanning chemicals and leather dyes - this staining never washes out and is his defining physical marker |
-| **smell** | `"leather oils and curing agents"` | Faint chemical smell from professional work - not unpleasant, just persistently present. Smells like leather, oils, and tanning agents even after bathing |
+| Descriptor      | Value                                         | Rationale                                                                                                                                                                                               |
+| --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **height**      | `average`                                     | 5'8" - typical working-class height, neither tall nor short                                                                                                                                             |
+| **build**       | `stocky`                                      | Thick-bodied working-man's build - solid from decades of physical labor, strong forearms and hands from leatherwork, slight belly from contentment (not fat, not muscular, just solid)                  |
+| **composition** | `soft`                                        | Slight belly from contentment and age, but not overweight - healthy working man in his 50s                                                                                                              |
+| **hairDensity** | `moderate`                                    | Practical grooming, clean but not polished, body hair present but not excessive                                                                                                                         |
+| **skinColor**   | `"weathered tan with brown tannery staining"` | **CRITICAL DISTINCTIVE FEATURE**: Permanent tan-brown discoloration from decades of exposure to tanning chemicals and leather dyes - this staining never washes out and is his defining physical marker |
+| **smell**       | `"leather oils and curing agents"`            | Faint chemical smell from professional work - not unpleasant, just persistently present. Smells like leather, oils, and tanning agents even after bathing                                               |
 
 ### Descriptor Components Usage
 
-| Component | Value | Notes |
-|-----------|-------|-------|
-| `descriptors:facial_hair` | `full-beard` | Neatly trimmed full beard, brown going grey |
-| `descriptors:body_hair` | `moderate` | Present but practical, not excessive |
-| `descriptors:hair_style` | `straight` | Short, practical, brown going grey |
-| `descriptors:color_extended` (hair) | `brown` | Brown hair transitioning to grey at 53 |
-| `descriptors:color_extended` (beard) | `brown` | Brown beard with grey throughout |
-| `descriptors:color_basic` (eyes) | `brown` | Warm brown eyes with smile-lines |
+| Component                            | Value        | Notes                                       |
+| ------------------------------------ | ------------ | ------------------------------------------- |
+| `descriptors:facial_hair`            | `full-beard` | Neatly trimmed full beard, brown going grey |
+| `descriptors:body_hair`              | `moderate`   | Present but practical, not excessive        |
+| `descriptors:hair_style`             | `straight`   | Short, practical, brown going grey          |
+| `descriptors:color_extended` (hair)  | `brown`      | Brown hair transitioning to grey at 53      |
+| `descriptors:color_extended` (beard) | `brown`      | Brown beard with grey throughout            |
+| `descriptors:color_basic` (eyes)     | `brown`      | Warm brown eyes with smile-lines            |
 
 **New Enum Values Required**: **NONE** - All existing descriptor enums are sufficient for Bertram's appearance.
 
@@ -59,26 +59,27 @@ Bertram represents a fascinating contrast to complex characters like Vespera Nig
 
 ### Slot Assignment Table
 
-| Slot | Part Entity | Status | Rationale |
-|------|-------------|--------|-----------|
-| **head** | `humanoid_head_weathered` | Existing | Weathered, unremarkable face of a 53-year-old working man, warm brown eyes with smile-lines from easy smiling |
-| **hair** | `human_hair_brown_grey_short_practical` | **NEW** | Brown hair going grey, kept short and practical for work, may have trace sawdust/dye |
-| **face** | `humanoid_face_bearded_full_trimmed` | **NEW** | Full beard neatly trimmed, brown with grey throughout, no dramatic features - just warm and unremarkable |
-| **torso_upper** | `human_male_torso_working_build` | **NEW** | Thick-bodied build, strong shoulders and chest from decades of physical labor, no six-pack but solid |
-| **torso_lower** | `human_male_torso_lower` | Existing | Standard male blueprint anatomy including penis and testicles (blueprint-defined sockets) |
-| **left_arm** | `humanoid_arm_weathered_tannery_stained` | **NEW** | Strong forearms from working leather, permanent tan-brown staining from chemicals, practical strength |
-| **right_arm** | `humanoid_arm_weathered_tannery_stained` | **NEW** | Mirror of left arm - same staining and working strength |
-| **left_hand** | `humanoid_hand_craftsman_stained` | **NEW** | **CRITICAL**: Broad, strong hands with specific callus patterns from leatherwork, dark crescents under fingernails from embedded dyes/tannins, short practical nails, "all digits functional" |
-| **right_hand** | `humanoid_hand_craftsman_stained` | **NEW** | Mirror of left hand - same craftsman markers |
-| **left_leg** | `humanoid_leg_average` | Existing | Average height, functional working legs |
-| **right_leg** | `humanoid_leg_average` | Existing | Mirror of left leg |
-| **left_foot** | `humanoid_foot_average` | Existing | Standard feet, practical and functional |
-| **right_foot** | `humanoid_foot_average` | Existing | Mirror of left foot |
+| Slot            | Part Entity                              | Status   | Rationale                                                                                                                                                                                     |
+| --------------- | ---------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **head**        | `humanoid_head_weathered`                | Existing | Weathered, unremarkable face of a 53-year-old working man, warm brown eyes with smile-lines from easy smiling                                                                                 |
+| **hair**        | `human_hair_brown_grey_short_practical`  | **NEW**  | Brown hair going grey, kept short and practical for work, may have trace sawdust/dye                                                                                                          |
+| **face**        | `humanoid_face_bearded_full_trimmed`     | **NEW**  | Full beard neatly trimmed, brown with grey throughout, no dramatic features - just warm and unremarkable                                                                                      |
+| **torso_upper** | `human_male_torso_working_build`         | **NEW**  | Thick-bodied build, strong shoulders and chest from decades of physical labor, no six-pack but solid                                                                                          |
+| **torso_lower** | `human_male_torso_lower`                 | Existing | Standard male blueprint anatomy including penis and testicles (blueprint-defined sockets)                                                                                                     |
+| **left_arm**    | `humanoid_arm_weathered_tannery_stained` | **NEW**  | Strong forearms from working leather, permanent tan-brown staining from chemicals, practical strength                                                                                         |
+| **right_arm**   | `humanoid_arm_weathered_tannery_stained` | **NEW**  | Mirror of left arm - same staining and working strength                                                                                                                                       |
+| **left_hand**   | `humanoid_hand_craftsman_stained`        | **NEW**  | **CRITICAL**: Broad, strong hands with specific callus patterns from leatherwork, dark crescents under fingernails from embedded dyes/tannins, short practical nails, "all digits functional" |
+| **right_hand**  | `humanoid_hand_craftsman_stained`        | **NEW**  | Mirror of left hand - same craftsman markers                                                                                                                                                  |
+| **left_leg**    | `humanoid_leg_average`                   | Existing | Average height, functional working legs                                                                                                                                                       |
+| **right_leg**   | `humanoid_leg_average`                   | Existing | Mirror of left leg                                                                                                                                                                            |
+| **left_foot**   | `humanoid_foot_average`                  | Existing | Standard feet, practical and functional                                                                                                                                                       |
+| **right_foot**  | `humanoid_foot_average`                  | Existing | Mirror of left foot                                                                                                                                                                           |
 
 ### Male Anatomy Blueprint Notes
 
 **Blueprint**: `anatomy:human_male`
 **Additional Slots** (defined by blueprint):
+
 - `penis` - Standard male anatomy
 - `left_testicle` - Standard male anatomy
 - `right_testicle` - Standard male anatomy
@@ -129,18 +130,19 @@ The following anatomy part entities need to be created to accurately represent B
 ## 4. Clothing Requirements
 
 ### Strategy
+
 **Mix of Existing and New**: Reuse existing clothing where appropriate, create new items only where necessary for character authenticity (specifically the iconic leather apron).
 
 ### Existing Clothing to Reuse (6 items)
 
-| Item Entity ID | Slot | Layer | Purpose |
-|----------------|------|-------|---------|
-| `graphite_wool_briefs` | groin | base | Simple, practical underwear |
-| `shale_gray_nylon_field_pants` | legs | base | Practical work trousers (stained but clean) |
-| `charcoal_wool_tshirt` | torso_upper | base | Simple work shirt under apron |
-| `dark_brown_leather_belt` | waist | base | Self-made belt (perfect for leatherworker), has tool loops |
-| `dark_gray_wool_boot_socks` | feet | base | Practical work socks |
-| `black_leather_duty_boots` | feet | outer | Good boots (check if these exist, otherwise Bertram made his own) |
+| Item Entity ID                 | Slot        | Layer | Purpose                                                           |
+| ------------------------------ | ----------- | ----- | ----------------------------------------------------------------- |
+| `graphite_wool_briefs`         | groin       | base  | Simple, practical underwear                                       |
+| `shale_gray_nylon_field_pants` | legs        | base  | Practical work trousers (stained but clean)                       |
+| `charcoal_wool_tshirt`         | torso_upper | base  | Simple work shirt under apron                                     |
+| `dark_brown_leather_belt`      | waist       | base  | Self-made belt (perfect for leatherworker), has tool loops        |
+| `dark_gray_wool_boot_socks`    | feet        | base  | Practical work socks                                              |
+| `black_leather_duty_boots`     | feet        | outer | Good boots (check if these exist, otherwise Bertram made his own) |
 
 **Alternative Boot Check**: Search for `brown_leather_work_boots` or similar. If not available, use `black_leather_duty_boots` as closest match.
 
@@ -153,6 +155,7 @@ The following anatomy part entities need to be created to accurately represent B
 **Entity ID**: `clothing:leather_work_apron`
 
 **Specifications**:
+
 - **Slot**: `torso_upper`
 - **Layer**: `outer`
 - **Material**: Thick tanned leather
@@ -162,6 +165,7 @@ The following anatomy part entities need to be created to accurately represent B
 - **Significance**: **ICONIC** - This is Bertram's professional uniform and defining visual marker. He might go back to work at any moment.
 
 **Components**:
+
 ```json
 {
   "clothing:garment": {
@@ -195,6 +199,7 @@ The following anatomy part entities need to be created to accurately represent B
 ### Clothing Inventory Notes
 
 **Starting Inventory**:
+
 - All 7 items equipped (underwear, pants, shirt, apron, belt, socks, boots)
 - No additional clothing items in inventory
 - Bertram dresses functionally, not fashionably
@@ -215,6 +220,7 @@ The following anatomy part entities need to be created to accurately represent B
 #### 5.1 Core Identity Components
 
 ##### core:name
+
 ```json
 {
   "core:name": {
@@ -226,6 +232,7 @@ The following anatomy part entities need to be created to accurately represent B
 **Note**: No surname used - known as "Bertram the Muddy" in the community due to permanent tannery staining.
 
 ##### core:apparent_age
+
 ```json
 {
   "core:apparent_age": {
@@ -237,6 +244,7 @@ The following anatomy part entities need to be created to accurately represent B
 **Rationale**: Age 53, looks every year without apology - no attempt to appear younger.
 
 ##### core:profile
+
 ```json
 {
   "core:profile": {
@@ -248,6 +256,7 @@ The following anatomy part entities need to be created to accurately represent B
 #### 5.2 Personality & Behavior Components
 
 ##### core:personality
+
 ```json
 {
   "core:personality": {
@@ -266,6 +275,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:speech_patterns
+
 ```json
 {
   "core:speech_patterns": {
@@ -284,6 +294,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:strengths
+
 ```json
 {
   "core:strengths": {
@@ -301,6 +312,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:weaknesses
+
 ```json
 {
   "core:weaknesses": {
@@ -317,6 +329,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:likes
+
 ```json
 {
   "core:likes": {
@@ -336,6 +349,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:dislikes
+
 ```json
 {
   "core:dislikes": {
@@ -353,6 +367,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:fears
+
 ```json
 {
   "core:fears": {
@@ -363,6 +378,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:goals
+
 ```json
 {
   "core:goals": {
@@ -382,6 +398,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:secrets
+
 ```json
 {
   "core:secrets": {
@@ -392,6 +409,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:internal_tensions
+
 ```json
 {
   "core:internal_tensions": {
@@ -406,6 +424,7 @@ The following anatomy part entities need to be created to accurately represent B
 #### 5.3 Physical & Anatomical Components
 
 ##### anatomy:body
+
 ```json
 {
   "anatomy:body": {
@@ -417,6 +436,7 @@ The following anatomy part entities need to be created to accurately represent B
 #### 5.4 Knowledge & Notes Components
 
 ##### core:notes
+
 ```json
 {
   "core:notes": {
@@ -453,6 +473,7 @@ The following anatomy part entities need to be created to accurately represent B
 #### 5.5 System Components
 
 ##### core:actor
+
 ```json
 {
   "core:actor": {}
@@ -460,6 +481,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:player_type
+
 ```json
 {
   "core:player_type": {
@@ -469,6 +491,7 @@ The following anatomy part entities need to be created to accurately represent B
 ```
 
 ##### core:perception_log
+
 ```json
 {
   "core:perception_log": {
@@ -488,6 +511,7 @@ The following anatomy part entities need to be created to accurately represent B
 **Schema**: `data/schemas/anatomy.recipe.schema.json`
 
 **Requirements**:
+
 - ✅ Recipe file must have valid `recipeId` in format `modId:identifier`
 - ✅ Must reference valid `blueprintId`: `anatomy:human_male`
 - ✅ All descriptor values must match enum constraints
@@ -496,6 +520,7 @@ The following anatomy part entities need to be created to accurately represent B
 - ✅ Recipe structure must conform to schema
 
 **Expected Validation Success**:
+
 ```bash
 npm run validate:recipe
 # Should output: "Recipe validation passed for bertram_the_muddy.recipe.json"
@@ -505,6 +530,7 @@ npm run validate:recipe
 
 **Schema**: Character schema (check `data/schemas/` for specific character schema)
 **Requirements**:
+
 - ✅ All component IDs must be valid registered components
 - ✅ Component data must conform to component schemas
 - ✅ Reference to recipe must resolve: `fantasy:bertram_the_muddy_recipe`
@@ -514,6 +540,7 @@ npm run validate:recipe
 
 **Schema**: Clothing schemas for garment components
 **Requirements**:
+
 - ✅ `clothing:garment` must specify valid slot and layer
 - ✅ `clothing:material` must have valid material types
 - ✅ `clothing:condition` must have valid condition states
@@ -522,12 +549,14 @@ npm run validate:recipe
 ### Testing Requirements
 
 **Per User Request**:
+
 - ✅ **Recipe validation ONLY**: Must pass `npm run validate:recipe`
 - ❌ **NO comprehensive character testing required**
 - ❌ **NO comprehensive clothing testing required**
 - ❌ **Portrait creation handled externally** (not in scope)
 
 **Minimal Validation Approach**:
+
 1. Validate recipe structure and blueprint reference
 2. Ensure mod manifests are updated correctly
 3. Verify all file references resolve
@@ -640,14 +669,14 @@ npm run validate:recipe
 
 Bertram is designed as a fascinating contrast to complex characters like Vespera:
 
-| Aspect | Vespera | Bertram |
-|--------|---------|---------|
-| **Identity** | Layers, contradictions, performed | Transparent, no layers, just IS |
-| **Complexity** | Hidden depths, secrets, tensions | What you see is what you get |
-| **Approach** | Artistic, symbolic, mysterious | Practical, literal, straightforward |
-| **Sexuality** | Complex, intertwined with identity | Matter-of-fact, a need to be met |
-| **Grief** | Ongoing, shapes identity | Processed, moved forward healthily |
-| **Self-Awareness** | Constant questioning of self | Zero questioning - knows who he is |
+| Aspect             | Vespera                            | Bertram                             |
+| ------------------ | ---------------------------------- | ----------------------------------- |
+| **Identity**       | Layers, contradictions, performed  | Transparent, no layers, just IS     |
+| **Complexity**     | Hidden depths, secrets, tensions   | What you see is what you get        |
+| **Approach**       | Artistic, symbolic, mysterious     | Practical, literal, straightforward |
+| **Sexuality**      | Complex, intertwined with identity | Matter-of-fact, a need to be met    |
+| **Grief**          | Ongoing, shapes identity           | Processed, moved forward healthily  |
+| **Self-Awareness** | Constant questioning of self       | Zero questioning - knows who he is  |
 
 This contrast makes Bertram fascinating - he represents radical authenticity without performance.
 
@@ -665,17 +694,20 @@ This contrast makes Bertram fascinating - he represents radical authenticity wit
 ### Male Blueprint Reference
 
 **Primary Reference**: `data/mods/patrol/recipes/dylan_crace.recipe.json`
+
 - Uses `anatomy:human_male` blueprint correctly
 - Shows proper male anatomy slot configuration
 - Includes penis and testicles via blueprint-defined sockets
 
 **Incorrect Example**: `data/mods/patrol/recipes/len_amezua.recipe.json`
+
 - Uses `anatomy:human_female` blueprint (appears to be an error)
 - Do NOT follow this pattern
 
 ### Character Specification Template
 
 **Primary Template**: `archive/THRMELCHASPE/threadscar-melissa-character-spec.md`
+
 - Shows complete specification format
 - Includes rationale tables for all decisions
 - Documents anatomy slots, clothing, validation
@@ -684,11 +716,13 @@ This contrast makes Bertram fascinating - he represents radical authenticity wit
 ### Female Character References
 
 **Vespera Nightwhisper**: `data/mods/fantasy/entities/definitions/vespera_nightwhisper.character.json`
+
 - Complex character with layers and secrets
 - Multiple internal tensions
 - Rich speech patterns and personality
 
 **Threadscar Melissa**: `data/mods/fantasy/entities/definitions/threadscar_melissa.character.json`
+
 - Combat-focused character
 - Practical approach similar to Bertram
 - Good reference for straightforward personality
@@ -767,4 +801,4 @@ npm run validate:strict
 
 ---
 
-*End of Specification Document*
+_End of Specification Document_

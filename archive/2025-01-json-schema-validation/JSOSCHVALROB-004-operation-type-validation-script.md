@@ -1,20 +1,24 @@
 # JSOSCHVALROB-004: Create Operation Type Validation Script
 
 ## Status
+
 ✅ **COMPLETED**
 
 ## Objective
+
 Create npm script and validation tool to ensure `KNOWN_OPERATION_TYPES` whitelist remains synchronized with registered operation handlers, preventing "Unknown operation type" errors.
 
 ## Corrected Assumptions
 
 ### Initial Assumptions (Incorrect)
+
 - ❌ Assumed `createContainer()` function exists and can be directly called
 - ❌ Assumed DI container could be used in script context
 - ❌ Assumed `registry.getAllTypes()` method exists
 - ❌ Assumed container provides direct access to OperationRegistry
 
 ### Actual Implementation (Correct)
+
 - ✅ No `createContainer()` - container is configured via `configureContainer()` with UI dependencies
 - ✅ `OperationRegistry.getRegisteredTypes()` method exists (not `getAllTypes()`)
 - ✅ Script must parse source files directly using regex/AST
@@ -23,6 +27,7 @@ Create npm script and validation tool to ensure `KNOWN_OPERATION_TYPES` whitelis
 ## Ticket Scope
 
 ### What This Ticket WILL Do
+
 - Create new validation script `scripts/validateOperationTypes.js`
 - Add npm script `npm run validate:operation-types`
 - Verify all registered handlers have whitelist entries
@@ -32,6 +37,7 @@ Create npm script and validation tool to ensure `KNOWN_OPERATION_TYPES` whitelis
 - Parse source files directly (no DI container usage)
 
 ### What This Ticket WILL NOT Do
+
 - Modify `KNOWN_OPERATION_TYPES` array in `preValidationUtils.js`
 - Change operation handler registration logic
 - Update operation handler implementations
@@ -42,12 +48,15 @@ Create npm script and validation tool to ensure `KNOWN_OPERATION_TYPES` whitelis
 ## Files to Touch
 
 ### New Files (1)
+
 - `scripts/validateOperationTypes.js` - NEW validation script
 
 ### Modified Files (1)
+
 - `package.json` - Add `validate:operation-types` script
 
 ### Files to Read (for context)
+
 - `src/utils/preValidationUtils.js` - Read `KNOWN_OPERATION_TYPES` array
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Parse registered handlers
 - `scripts/validateOperations.js` - Reference implementation pattern
@@ -55,6 +64,7 @@ Create npm script and validation tool to ensure `KNOWN_OPERATION_TYPES` whitelis
 ## Implementation Approach
 
 ### Corrected Script Structure
+
 ```javascript
 #!/usr/bin/env node
 /**
@@ -75,40 +85,57 @@ async function main() {
 
   // 1. Extract KNOWN_OPERATION_TYPES from preValidationUtils.js
   const whitelistTypes = extractWhitelistTypes();
-  
+
   // 2. Extract registered types from interpreterRegistrations.js
   const registeredTypes = extractRegisteredTypes();
-  
+
   // 3. Check whitelist completeness
-  const missingFromWhitelist = checkMissingFromWhitelist(registeredTypes, whitelistTypes);
-  const orphanedInWhitelist = checkOrphanedInWhitelist(whitelistTypes, registeredTypes);
-  
+  const missingFromWhitelist = checkMissingFromWhitelist(
+    registeredTypes,
+    whitelistTypes
+  );
+  const orphanedInWhitelist = checkOrphanedInWhitelist(
+    whitelistTypes,
+    registeredTypes
+  );
+
   // 4. Check alphabetical order
   const sortingIssue = checkAlphabeticalOrder(whitelistTypes);
-  
+
   // 5. Report results
-  reportResults(missingFromWhitelist, orphanedInWhitelist, sortingIssue, 
-                whitelistTypes.length, registeredTypes.length);
+  reportResults(
+    missingFromWhitelist,
+    orphanedInWhitelist,
+    sortingIssue,
+    whitelistTypes.length,
+    registeredTypes.length
+  );
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Script error:', err);
   process.exit(1);
 });
 ```
 
 ### File Parsing Functions
+
 ```javascript
 /**
  * Extract KNOWN_OPERATION_TYPES from preValidationUtils.js
  */
 function extractWhitelistTypes() {
-  const preValidationPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+  const preValidationPath = path.join(
+    projectRoot,
+    'src/utils/preValidationUtils.js'
+  );
   const content = fs.readFileSync(preValidationPath, 'utf8');
-  
-  const whitelistMatch = content.match(/export const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+
+  const whitelistMatch = content.match(
+    /export const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
+  );
   const types = [];
-  
+
   if (whitelistMatch) {
     const whitelistBody = whitelistMatch[1];
     const matches = whitelistBody.matchAll(/'([^']+)'/g);
@@ -116,7 +143,7 @@ function extractWhitelistTypes() {
       types.push(match[1]);
     }
   }
-  
+
   return types;
 }
 
@@ -129,16 +156,16 @@ function extractRegisteredTypes() {
     'src/dependencyInjection/registrations/interpreterRegistrations.js'
   );
   const content = fs.readFileSync(interpreterPath, 'utf8');
-  
+
   const types = [];
   const mappingMatches = content.matchAll(
     /registry\.register\(\s*['"]([A-Z_]+)['"]\s*,\s*bind\(tokens\.\w+\)/gs
   );
-  
+
   for (const match of mappingMatches) {
     types.push(match[1]);
   }
-  
+
   return types.sort();
 }
 ```
@@ -148,6 +175,7 @@ function extractRegisteredTypes() {
 ### Script Must Detect
 
 #### Issue 1: Missing Whitelist Entry
+
 ```javascript
 // Scenario: Handler registered but not in KNOWN_OPERATION_TYPES
 // Expected Output:
@@ -156,6 +184,7 @@ function extractRegisteredTypes() {
 ```
 
 #### Issue 2: Orphaned Whitelist Entry
+
 ```javascript
 // Scenario: Type in whitelist but no handler registered
 // Expected Output:
@@ -164,6 +193,7 @@ function extractRegisteredTypes() {
 ```
 
 #### Issue 3: Unsorted Whitelist
+
 ```javascript
 // Scenario: Whitelist not in alphabetical order
 // Expected Output:
@@ -178,6 +208,7 @@ Expected order:
 ### Script Must Pass
 
 #### Success Case: All Synchronized
+
 ```javascript
 // Expected Output:
 ✅ All 62 operation types validated
@@ -203,6 +234,7 @@ Expected order:
 ### What Was Actually Changed vs Originally Planned
 
 **Changes Made:**
+
 1. ✅ Created `scripts/validateOperationTypes.js` with file parsing approach (not DI container)
 2. ✅ Added `validate:operation-types` npm script to package.json
 3. ✅ Script validates whitelist-handler synchronization
@@ -210,11 +242,13 @@ Expected order:
 5. ✅ Script provides clear, actionable error messages
 
 **Deviations from Original Plan:**
+
 1. **Architecture**: Used file parsing instead of DI container (DI requires UI context)
 2. **Method Name**: Used actual method name `getRegisteredTypes()` (not `getAllTypes()`)
 3. **Pattern**: Followed existing `validateOperations.js` pattern for consistency
 
 **Why Changes Were Necessary:**
+
 - DI container cannot be instantiated in script context (requires UI dependencies)
 - File parsing is simpler, faster, and doesn't require runtime dependencies
 - Maintains consistency with existing validation scripts in the project
@@ -233,6 +267,7 @@ git diff src/
 ```
 
 ## Related Documentation
+
 - Spec: `specs/json-schema-validation-robustness.md` (lines 1351-1466)
 - CLAUDE.md: Operation registration checklist (lines 421-504)
 - Pre-validation: `src/utils/preValidationUtils.js` (lines 32-94)

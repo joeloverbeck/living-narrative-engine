@@ -208,8 +208,6 @@
       "white_faced_buff_hen.png",
       "yard_and_coop.png"
     ],
-    "worlds": [
-      "vespera.world.json"
-    ]
+    "worlds": ["vespera.world.json"]
   }
 }

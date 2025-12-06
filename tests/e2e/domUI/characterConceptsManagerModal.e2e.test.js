@@ -289,11 +289,17 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       tokens.ControllerLifecycleOrchestrator
     );
     const domElementManager = container.resolve(tokens.DOMElementManager);
-    const eventListenerRegistry = container.resolve(tokens.EventListenerRegistry);
-    const asyncUtilitiesToolkit = container.resolve(tokens.AsyncUtilitiesToolkit);
+    const eventListenerRegistry = container.resolve(
+      tokens.EventListenerRegistry
+    );
+    const asyncUtilitiesToolkit = container.resolve(
+      tokens.AsyncUtilitiesToolkit
+    );
     const performanceMonitor = container.resolve(tokens.PerformanceMonitor);
     const memoryManager = container.resolve(tokens.MemoryManager);
-    const errorHandlingStrategy = container.resolve(tokens.ErrorHandlingStrategy);
+    const errorHandlingStrategy = container.resolve(
+      tokens.ErrorHandlingStrategy
+    );
     const validationService = container.resolve(tokens.ValidationService);
     const schemaValidator = container.resolve(tokens.ISchemaValidator);
 

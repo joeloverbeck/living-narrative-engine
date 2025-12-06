@@ -154,7 +154,12 @@ describe('PartSelectionService additional branch coverage', () => {
     const rng = jest.fn().mockReturnValue(0.3);
     const requirements = { properties: { stat: { locked: true } } };
 
-    const result = await service.selectPart(requirements, ['arm'], undefined, rng);
+    const result = await service.selectPart(
+      requirements,
+      ['arm'],
+      undefined,
+      rng
+    );
 
     expect(result).toBe('matches-properties');
     expect(rng).toHaveBeenCalled();

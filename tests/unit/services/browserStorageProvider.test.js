@@ -301,10 +301,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
       removeEntry: jest.fn(),
     };
 
-    const tempFileHandleMock = createMockFileHandle(
-      tempFileName,
-      tempFilePath
-    );
+    const tempFileHandleMock = createMockFileHandle(tempFileName, tempFilePath);
     const finalFileHandleMock = createMockFileHandle(
       'dottedGame.sav',
       finalFilePath
@@ -328,7 +325,9 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
       async (name, options) => {
         if (name === 'manual_saves') {
           if (options?.create && !mockFileSystemState['saves/manual_saves']) {
-            mockFileSystemState['saves/manual_saves'] = { __isDirectoryMock: true };
+            mockFileSystemState['saves/manual_saves'] = {
+              __isDirectoryMock: true,
+            };
           }
           if (mockFileSystemState['saves/manual_saves']?.__isDirectoryMock) {
             return manualDirHandleMock;
@@ -371,9 +370,10 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     expect(result.success).toBe(true);
     expect(mockFileSystemState[finalFilePath]).toEqual(data);
 
-    const rootDirCalls = rootDirHandleMockInstance.getDirectoryHandle.mock.calls.map(
-      ([requested]) => requested
-    );
+    const rootDirCalls =
+      rootDirHandleMockInstance.getDirectoryHandle.mock.calls.map(
+        ([requested]) => requested
+      );
     expect(rootDirCalls).toEqual(expect.arrayContaining(['saves']));
     expect(rootDirCalls).not.toContain('.');
     expect(rootDirCalls).not.toContain('./saves');

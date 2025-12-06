@@ -24,7 +24,10 @@ import {
  * @param pathToResponse
  * @param ManagerClass
  */
-function buildContentPhaseEnv(pathToResponse, ManagerClass = ContentLoadManager) {
+function buildContentPhaseEnv(
+  pathToResponse,
+  ManagerClass = ContentLoadManager
+) {
   const logger = createMockLogger();
   const configuration = createMockConfiguration();
   const pathResolver = createMockPathResolver();
@@ -174,7 +177,10 @@ describe('ContentPhase integration', () => {
       }
     }
 
-    const { phase } = buildContentPhaseEnv(pathToResponse, ExplodingContentLoadManager);
+    const { phase } = buildContentPhaseEnv(
+      pathToResponse,
+      ExplodingContentLoadManager
+    );
 
     const ctx = Object.freeze({
       worldName: 'integrationWorld',

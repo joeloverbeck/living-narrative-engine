@@ -77,7 +77,9 @@ describe('TraitsRewriter Integration', () => {
         },
         'core:likes': { text: 'Comprehensive testing and quality validation' },
         'core:fears': { text: 'System failures and integration issues' },
-        'movement:goals': { text: 'Successful completion of all workflow stages' },
+        'movement:goals': {
+          text: 'Successful completion of all workflow stages',
+        },
       };
 
       // Step 1: Generate rewritten traits

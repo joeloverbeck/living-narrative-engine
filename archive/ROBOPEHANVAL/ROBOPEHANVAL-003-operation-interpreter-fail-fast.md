@@ -14,7 +14,7 @@ Current behavior at `src/logic/operationInterpreter.js:418-425`:
 const handler = this.#registry.getHandler(opType);
 if (!handler) {
   this.#logger.error(`---> HANDLER NOT FOUND for operation type: "${opType}".`);
-  return;  // SILENT FAILURE
+  return; // SILENT FAILURE
 }
 ```
 
@@ -31,9 +31,9 @@ if (!handler) {
 
 ### Modify
 
-| File | Change |
-|------|--------|
-| `src/logic/operationInterpreter.js` | Import `MissingHandlerError`, throw instead of return |
+| File                                            | Change                                                                   |
+| ----------------------------------------------- | ------------------------------------------------------------------------ |
+| `src/logic/operationInterpreter.js`             | Import `MissingHandlerError`, throw instead of return                    |
 | `tests/unit/logic/operationInterpreter.test.js` | Add fail-fast tests to existing file (756 lines, comprehensive coverage) |
 
 ### Note (Resolved)
@@ -113,6 +113,7 @@ if (!handler) {
 ## Risk Assessment
 
 **HIGH IMPACT CHANGE**: This will likely cause many existing tests to fail because they:
+
 1. Set up incomplete handler registrations
 2. Expect operations to silently not execute
 
@@ -133,12 +134,12 @@ These failures are EXPECTED and DESIRABLE - they reveal the exact places that we
 
 ### What Was Planned vs What Changed
 
-| Aspect | Originally Planned | Actually Implemented |
-|--------|-------------------|----------------------|
-| Import location | Line ~10 | Line 10 ✅ |
-| Code change location | Lines 418-425 | Lines 420-422 ✅ |
-| ruleId parameter | `this.#currentRuleId` | `null` (no context tracking exists) ✅ |
-| Test file | Create new `operationInterpreter.missingHandler.test.js` | Added to existing `operationInterpreter.test.js` ✅ |
+| Aspect               | Originally Planned                                       | Actually Implemented                                |
+| -------------------- | -------------------------------------------------------- | --------------------------------------------------- |
+| Import location      | Line ~10                                                 | Line 10 ✅                                          |
+| Code change location | Lines 418-425                                            | Lines 420-422 ✅                                    |
+| ruleId parameter     | `this.#currentRuleId`                                    | `null` (no context tracking exists) ✅              |
+| Test file            | Create new `operationInterpreter.missingHandler.test.js` | Added to existing `operationInterpreter.test.js` ✅ |
 
 ### Corrected Assumptions
 
@@ -148,14 +149,14 @@ These failures are EXPECTED and DESIRABLE - they reveal the exact places that we
 
 ### Tests Modified/Added
 
-| Test | Change | Rationale |
-|------|--------|-----------|
-| `execute should call registry.getHandler with trimmed operation type` (line 225) | Changed from expecting `logger.error` to expecting `MissingHandlerError` | Core behavior change |
-| `execute should throw MissingHandlerError when handler not found` (line 587) | Renamed from "log error", changed assertion | Core behavior change |
-| `MissingHandlerError contains correct operation type` (line 597) | NEW | Verify error contains useful context |
-| `MissingHandlerError has null ruleId` (line 610) | NEW | Document current limitation |
-| `MissingHandlerError propagates up the call stack` (line 623) | NEW | Verify error isn't swallowed |
-| `execute should treat IF like any other type` (line 648) | Changed from expecting `logger.error` to expecting `MissingHandlerError` | Core behavior change |
+| Test                                                                             | Change                                                                   | Rationale                            |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------ |
+| `execute should call registry.getHandler with trimmed operation type` (line 225) | Changed from expecting `logger.error` to expecting `MissingHandlerError` | Core behavior change                 |
+| `execute should throw MissingHandlerError when handler not found` (line 587)     | Renamed from "log error", changed assertion                              | Core behavior change                 |
+| `MissingHandlerError contains correct operation type` (line 597)                 | NEW                                                                      | Verify error contains useful context |
+| `MissingHandlerError has null ruleId` (line 610)                                 | NEW                                                                      | Document current limitation          |
+| `MissingHandlerError propagates up the call stack` (line 623)                    | NEW                                                                      | Verify error isn't swallowed         |
+| `execute should treat IF like any other type` (line 648)                         | Changed from expecting `logger.error` to expecting `MissingHandlerError` | Core behavior change                 |
 
 ### Lines of Code Changed
 
@@ -169,6 +170,7 @@ All 33 tests in `operationInterpreter.test.js` pass.
 ### Impact Assessment
 
 The predicted "HIGH IMPACT" test failures across the codebase did NOT materialize in the immediate test suite. This is because:
+
 1. Most tests properly register handlers through mock registries
 2. Tests that used `UNKNOWN_OP` already expected failure behavior (just now via throw instead of return)
 

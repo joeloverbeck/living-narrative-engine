@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -51,7 +58,8 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const container = {
       resolve: jest.fn((token) => {
-        if (!resolved.has(token)) throw new Error(`Unknown token: ${String(token)}`);
+        if (!resolved.has(token))
+          throw new Error(`Unknown token: ${String(token)}`);
         return resolved.get(token);
       }),
     };
@@ -68,7 +76,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(
       document,
-      'readyState',
+      'readyState'
     );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -81,7 +89,6 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
     document.body.appendChild(backButton);
     const addEventListenerSpy = jest.spyOn(backButton, 'addEventListener');
 
-
     await jest.isolateModulesAsync(async () => {
       jest.doMock('../../src/bootstrapper/CommonBootstrapper.js', () => ({
         CommonBootstrapper,
@@ -91,7 +98,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -127,7 +134,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'click',
-      expect.any(Function),
+      expect.any(Function)
     );
     const clickHandler = addEventListenerSpy.mock.calls[0][1];
     expect(() => clickHandler()).not.toThrow();
@@ -135,7 +142,11 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
     addEventListenerSpy.mockRestore();
     document.body.innerHTML = '';
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     }
   });
 
@@ -176,7 +187,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(
       document,
-      'readyState',
+      'readyState'
     );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -199,7 +210,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -221,7 +232,11 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     addEventListenerSpy.mockRestore();
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     }
   });
 
@@ -272,7 +287,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const readyStateDescriptor = Object.getOwnPropertyDescriptor(
       document,
-      'readyState',
+      'readyState'
     );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -289,7 +304,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -302,13 +317,13 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
     await flushMicrotasks();
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'ClothingManagementService not available - equipment panel will be disabled',
+      'ClothingManagementService not available - equipment panel will be disabled'
     );
     expect(container.resolve).toHaveBeenCalledWith(
-      tokens.ClothingManagementService,
+      tokens.ClothingManagementService
     );
     expect(AnatomyVisualizerUI).toHaveBeenCalledWith(
-      expect.objectContaining({ clothingManagementService: null }),
+      expect.objectContaining({ clothingManagementService: null })
     );
     expect(uiInitialize).toHaveBeenCalledTimes(1);
 
@@ -341,7 +356,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const readyStateDescriptor = Object.getOwnPropertyDescriptor(
       document,
-      'readyState',
+      'readyState'
     );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -358,7 +373,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -373,7 +388,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
     expect(CommonBootstrapper).toHaveBeenCalledTimes(1);
     expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
       'Failed to initialize anatomy visualizer: bootstrap failed',
-      bootstrapError,
+      bootstrapError
     );
     expect(registerVisualizerComponents).not.toHaveBeenCalled();
 
@@ -419,7 +434,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
 
     const readyStateDescriptor = Object.getOwnPropertyDescriptor(
       document,
-      'readyState',
+      'readyState'
     );
     Object.defineProperty(document, 'readyState', {
       configurable: true,
@@ -436,7 +451,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
       }));
       jest.doMock(
         '../../src/dependencyInjection/registrations/visualizerRegistrations.js',
-        () => ({ registerVisualizerComponents }),
+        () => ({ registerVisualizerComponents })
       );
       jest.doMock('../../src/domUI/AnatomyVisualizerUI.js', () => ({
         __esModule: true,
@@ -453,7 +468,7 @@ describe('anatomy-visualizer.js bootstrap orchestration', () => {
     expect(uiInitialize).toHaveBeenCalledTimes(1);
     expect(bootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
       'Failed to initialize anatomy visualizer: UI initialization failed',
-      postInitError,
+      postInitError
     );
 
     if (readyStateDescriptor) {

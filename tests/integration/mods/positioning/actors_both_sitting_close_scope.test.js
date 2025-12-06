@@ -46,10 +46,13 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
         }
 
         // Filter partners where BOTH actor and partner have sitting_on
-        const bothSittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
-          const partnerHasSittingOn = !!partner?.components?.['positioning:sitting_on'];
-          const actorHasSittingOn = !!actor?.components?.['positioning:sitting_on'];
+        const bothSittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
+          const partnerHasSittingOn =
+            !!partner?.components?.['positioning:sitting_on'];
+          const actorHasSittingOn =
+            !!actor?.components?.['positioning:sitting_on'];
           return partnerHasSittingOn && actorHasSittingOn;
         });
 
@@ -57,7 +60,11 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
       }
 
       // Fall back to original resolution for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
   });
 
@@ -110,7 +117,14 @@ describe('actors_both_sitting_close scope - Integration Tests', () => {
         .asActor()
         .build();
 
-      testFixture.reset([room, chair1, chair2, actor, sittingPartner, standingPartner]);
+      testFixture.reset([
+        room,
+        chair1,
+        chair2,
+        actor,
+        sittingPartner,
+        standingPartner,
+      ]);
 
       // Execute: Resolve scope
       const result = testFixture.testEnv.unifiedScopeResolver.resolveSync(

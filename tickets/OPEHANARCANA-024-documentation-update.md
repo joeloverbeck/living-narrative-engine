@@ -16,10 +16,12 @@ Update project documentation to reflect the new composite operation handlers and
 ## Files to Touch
 
 ### Modified Files
+
 - `CLAUDE.md` - Add new handlers to "Adding New Operations" section
 - `docs/modding/` - Update modding guides (if applicable)
 
 ### New Files (Optional)
+
 - `docs/operations/composite-handlers.md` - Guide for using PREPARE_ACTION_CONTEXT, ESTABLISH/BREAK_BIDIRECTIONAL_CLOSENESS, VALIDATED_ITEM_TRANSFER
 
 ---
@@ -27,6 +29,7 @@ Update project documentation to reflect the new composite operation handlers and
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any source code files
 - Any test files
 - Any schema files
@@ -41,26 +44,31 @@ Update project documentation to reflect the new composite operation handlers and
 
 Add to the "Adding New Operations" section or create new section:
 
-```markdown
+````markdown
 ### Composite Operation Handlers
 
 The project includes several composite handlers that consolidate common patterns:
 
 #### PREPARE_ACTION_CONTEXT
+
 Consolidates the common "simple action" pattern (82% of rules):
+
 - Queries actor/target components
 - Resolves entity names
 - Sets up locationId from actor position
 - Populates context for downstream operations
 
 **Usage:**
+
 ```json
 {
   "type": "PREPARE_ACTION_CONTEXT"
 }
 ```
+````
 
 **Context populated:**
+
 - `context.actorId`, `context.targetId`
 - `context.actorName`, `context.targetName`
 - `context.locationId`
@@ -68,9 +76,11 @@ Consolidates the common "simple action" pattern (82% of rules):
 - `context.target` (full component data)
 
 #### ESTABLISH_BIDIRECTIONAL_CLOSENESS
+
 Handles relationship establishment with automatic third-party cleanup:
 
 **Usage:**
+
 ```json
 {
   "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
@@ -79,15 +89,20 @@ Handles relationship establishment with automatic third-party cleanup:
     "target_component_type": "mod:passive_component",
     "actor_data": { "partner_id": "{event.payload.targetId}" },
     "target_data": { "partner_id": "{event.payload.actorId}" },
-    "existing_component_types_to_clean": ["mod:active_component", "mod:passive_component"]
+    "existing_component_types_to_clean": [
+      "mod:active_component",
+      "mod:passive_component"
+    ]
   }
 }
 ```
 
 #### BREAK_BIDIRECTIONAL_CLOSENESS
+
 Handles relationship removal with automatic cleanup:
 
 **Usage:**
+
 ```json
 {
   "type": "BREAK_BIDIRECTIONAL_CLOSENESS",
@@ -99,9 +114,11 @@ Handles relationship removal with automatic cleanup:
 ```
 
 #### VALIDATED_ITEM_TRANSFER
+
 Handles inventory operations with validation and dual success/failure paths:
 
 **Usage:**
+
 ```json
 {
   "type": "VALIDATED_ITEM_TRANSFER",
@@ -116,7 +133,8 @@ Handles inventory operations with validation and dual success/failure paths:
   }
 }
 ```
-```
+
+````
 
 ### 2. New Documentation File
 
@@ -164,7 +182,7 @@ When migrating existing rules:
 ## Examples
 
 [Before/after examples for each handler type...]
-```
+````
 
 ---
 

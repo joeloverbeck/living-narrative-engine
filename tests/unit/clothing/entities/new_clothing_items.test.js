@@ -18,7 +18,8 @@ describe('New Clothing Items Unit Tests', () => {
   let underwearEntitySchema;
 
   // Entity paths after migration (CLOLAYMIG-013)
-  const baseClothingEntitiesPath = 'data/mods/base-clothing/entities/definitions';
+  const baseClothingEntitiesPath =
+    'data/mods/base-clothing/entities/definitions';
   const underwearEntitiesPath = 'data/mods/underwear/entities/definitions';
 
   beforeEach(() => {
@@ -64,7 +65,13 @@ describe('New Clothing Items Unit Tests', () => {
                   type: 'array',
                   items: {
                     type: 'string',
-                    enum: ['underwear', 'base', 'outer', 'accessories', 'armor'],
+                    enum: [
+                      'underwear',
+                      'base',
+                      'outer',
+                      'accessories',
+                      'armor',
+                    ],
                   },
                 },
               },
@@ -481,7 +488,11 @@ describe('New Clothing Items Unit Tests', () => {
       ];
 
       const baseClothingEntities = baseClothingFiles.map((filename) => {
-        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
+        const filePath = join(
+          process.cwd(),
+          baseClothingEntitiesPath,
+          filename
+        );
         const fileContent = readFileSync(filePath, 'utf8');
         return JSON.parse(fileContent);
       });
@@ -628,7 +639,11 @@ describe('New Clothing Items Unit Tests', () => {
       ];
 
       for (const filename of baseClothingFiles) {
-        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
+        const filePath = join(
+          process.cwd(),
+          baseClothingEntitiesPath,
+          filename
+        );
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
 
@@ -638,7 +653,10 @@ describe('New Clothing Items Unit Tests', () => {
 
       // Underwear entities
       const underwearFiles = [
-        { file: 'white_thigh_high_socks_pink_hearts.entity.json', hasPattern: true },
+        {
+          file: 'white_thigh_high_socks_pink_hearts.entity.json',
+          hasPattern: true,
+        },
         { file: 'white_cotton_panties.entity.json', hasPattern: false },
       ];
 
@@ -649,7 +667,9 @@ describe('New Clothing Items Unit Tests', () => {
 
         if (hasPattern) {
           expect(entity.components['descriptors:pattern']).toBeDefined();
-          expect(entity.components['descriptors:pattern'].pattern).toBe('heart');
+          expect(entity.components['descriptors:pattern'].pattern).toBe(
+            'heart'
+          );
         } else {
           expect(entity.components['descriptors:pattern']).toBeUndefined();
         }
@@ -665,7 +685,11 @@ describe('New Clothing Items Unit Tests', () => {
       ];
 
       for (const filename of entityFiles) {
-        const filePath = join(process.cwd(), baseClothingEntitiesPath, filename);
+        const filePath = join(
+          process.cwd(),
+          baseClothingEntitiesPath,
+          filename
+        );
         const fileContent = readFileSync(filePath, 'utf8');
         const entity = JSON.parse(fileContent);
 

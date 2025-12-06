@@ -28,7 +28,8 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action discovery', () 
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installLyingCloseUncoveredPenisScopeOverride(testFixture);
+    restoreScopeResolver =
+      installLyingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {

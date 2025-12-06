@@ -14,15 +14,16 @@ Add or update tests to verify that the `wield_threateningly` action now correctl
 
 ### Original Ticket Assumptions vs Actual API
 
-| Issue | Original (Incorrect) | Corrected |
-|-------|---------------------|-----------|
-| Entity access | `fixture.entityManager.getEntity()` | `fixture.entityManager.getEntityInstance()` |
-| Component access | `entity.components.get('...')` (Map) | `entity.components['...']` (plain object) |
-| Preferred assertion | Manual `expect(component).toBeDefined()` | `toHaveComponentData()` matcher |
+| Issue               | Original (Incorrect)                     | Corrected                                   |
+| ------------------- | ---------------------------------------- | ------------------------------------------- |
+| Entity access       | `fixture.entityManager.getEntity()`      | `fixture.entityManager.getEntityInstance()` |
+| Component access    | `entity.components.get('...')` (Map)     | `entity.components['...']` (plain object)   |
+| Preferred assertion | Manual `expect(component).toBeDefined()` | `toHaveComponentData()` matcher             |
 
 ### Rule File Status
 
 The ticket originally assumed UNWITEACT-005 was pending. At implementation time, the rule file `handle_wield_threateningly.rule.json` already contains:
+
 - `QUERY_COMPONENT` for `anatomy:requires_grabbing` with `missing_value: { handsRequired: 1 }`
 - `LOCK_GRABBING` with `actor_id`, `count`, and `item_id` parameters
 
@@ -35,12 +36,14 @@ See the file for the complete implementation with corrected API usage.
 ## Test Categories
 
 ### LOCK_GRABBING Operation Tests
+
 - ✅ Verify single-handed weapons complete action successfully and create wielding component
 - ✅ Verify two-handed weapons complete action successfully and create wielding component
 - ✅ Verify default to 1 hand when `anatomy:requires_grabbing` is missing
 - ✅ Verify `item_id` is passed to associate appendages with specific item
 
 ### Rule Structure Validation Tests
+
 - ✅ Verify `QUERY_COMPONENT` for `anatomy:requires_grabbing` exists in rule
 - ✅ Verify `LOCK_GRABBING` operation exists with correct parameters
 - ✅ Verify operations are in correct order (query before lock)
@@ -83,9 +86,11 @@ npm run test:ci
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create new test file `wield_threateningly_grabbing.test.js` with test code from the ticket
 
 **Actual Changes:**
+
 1. **Created**: `tests/integration/mods/weapons/wield_threateningly_grabbing.test.js` with 7 test cases
 2. **Corrected ticket assumptions**: Updated API usage patterns in test code:
    - Changed `fixture.entityManager.getEntity()` → `fixture.entityManager.getEntityInstance()`
@@ -95,6 +100,7 @@ npm run test:ci
 **No Production Code Changes**: The ticket correctly identified that no production code changes were needed (UNWITEACT-005 was already completed).
 
 ### Test Results
+
 - All 7 new tests pass
 - All 133 existing weapons tests continue to pass
 - No regressions introduced

@@ -79,7 +79,10 @@ describe('Request Tracking Middleware', () => {
       to: REQUEST_STATE.PROCESSING,
     });
     expect(typeof mockReq.transitionState).toBe('function');
-    expect(mockRes.setHeader).toHaveBeenCalledWith('X-Request-ID', 'test-request-id');
+    expect(mockRes.setHeader).toHaveBeenCalledWith(
+      'X-Request-ID',
+      'test-request-id'
+    );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       'Request test-request-id: Started POST /proxy/llm',
       expect.objectContaining({
@@ -107,7 +110,10 @@ describe('Request Tracking Middleware', () => {
     });
     expect(mockLogger.debug).toHaveBeenCalledWith(
       "Request test-request-id: Response committed to 'success'",
-      expect.objectContaining({ requestId: 'test-request-id', source: 'success' })
+      expect.objectContaining({
+        requestId: 'test-request-id',
+        source: 'success',
+      })
     );
 
     const secondCommit = mockRes.commitResponse('error');
@@ -247,7 +253,10 @@ describe('createResponseGuard', () => {
     expect(result).toBe(true);
     expect(mockRes.commitResponse).toHaveBeenCalledWith('success');
     expect(mockRes.status).toHaveBeenCalledWith(200);
-    expect(mockRes.set).toHaveBeenCalledWith('Content-Type', 'application/json');
+    expect(mockRes.set).toHaveBeenCalledWith(
+      'Content-Type',
+      'application/json'
+    );
     expect(mockRes.json).toHaveBeenCalledWith(payload);
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -291,7 +300,12 @@ describe('createResponseGuard', () => {
     const guard = createGuard();
     const details = { context: 'llm-call' };
 
-    const result = guard.sendError(504, 'llm.timeout', 'Gateway timeout', details);
+    const result = guard.sendError(
+      504,
+      'llm.timeout',
+      'Gateway timeout',
+      details
+    );
 
     expect(result).toBe(true);
     expect(mockRes.commitResponse).toHaveBeenCalledWith('timeout');

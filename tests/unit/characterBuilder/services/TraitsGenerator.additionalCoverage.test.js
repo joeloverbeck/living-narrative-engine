@@ -63,12 +63,16 @@ describe('TraitsGenerator additional coverage', () => {
         justification: 'A carefully chosen name reflecting hidden resilience.',
       },
     ],
-    physicalDescription: 'Tall silhouette cloaked in weathered fabrics, eyes bright with unspoken plans.'
-      .padEnd(140, ' '),
+    physicalDescription:
+      'Tall silhouette cloaked in weathered fabrics, eyes bright with unspoken plans.'.padEnd(
+        140,
+        ' '
+      ),
     personality: [
       {
         trait: 'Observant',
-        explanation: 'Spends long hours watching others to learn how to belong.',
+        explanation:
+          'Spends long hours watching others to learn how to belong.',
       },
     ],
     strengths: ['Quick thinking'],
@@ -78,14 +82,14 @@ describe('TraitsGenerator additional coverage', () => {
     fears: ['Losing newfound trust'],
     goals: {
       shortTerm: ['Find allies willing to believe in them'],
-      longTerm: 'Establish a sanctuary where misfits can heal?'
-        .padEnd(55, '!'),
+      longTerm: 'Establish a sanctuary where misfits can heal?'.padEnd(55, '!'),
     },
     notes: ['Writes letters never sent'],
-    profile: 'A winding path from exile to belonging unfolds in deliberate steps.'.padEnd(
-      220,
-      ' '
-    ),
+    profile:
+      'A winding path from exile to belonging unfolds in deliberate steps.'.padEnd(
+        220,
+        ' '
+      ),
     secrets: ['Carries a token from an abandoned past life'],
   };
 

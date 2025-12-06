@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
   SYSTEM_WARNING_OCCURRED_ID,
@@ -66,7 +73,7 @@ describe('AlertRouter additional coverage', () => {
     };
 
     expect(() =>
-      harness.emit(SYSTEM_WARNING_OCCURRED_ID, { message: 'ignored' }),
+      harness.emit(SYSTEM_WARNING_OCCURRED_ID, { message: 'ignored' })
     ).not.toThrow();
 
     expect(consoleErrorSpy).toHaveBeenCalledWith('AlertRouter error:', failure);
@@ -78,10 +85,12 @@ describe('AlertRouter additional coverage', () => {
       throw subscribeFailure;
     });
 
-    expect(() => new AlertRouter({ safeEventDispatcher: dispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: dispatcher })
+    ).not.toThrow();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter subscription error:',
-      subscribeFailure,
+      subscribeFailure
     );
   });
 
@@ -125,7 +134,7 @@ describe('AlertRouter additional coverage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      flushFailure,
+      flushFailure
     );
     expect(Array.isArray(router.queue)).toBe(true);
     expect(router.flushTimer).toBeNull();
@@ -148,7 +157,7 @@ describe('AlertRouter additional coverage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter error forwarding queued event:',
-      forwardFailure,
+      forwardFailure
     );
     expect(router.queue).toEqual([]);
     expect(router.flushTimer).toBeNull();
@@ -166,7 +175,7 @@ describe('AlertRouter additional coverage', () => {
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'AlertRouter dispatch error:',
-      dispatchFailure,
+      dispatchFailure
     );
   });
 
@@ -201,7 +210,10 @@ describe('AlertRouter additional coverage', () => {
     consoleWarnSpy.mockClear();
     consoleErrorSpy.mockClear();
 
-    router.queue.push({ name: 'unexpected:event', payload: { message: 'noop' } });
+    router.queue.push({
+      name: 'unexpected:event',
+      payload: { message: 'noop' },
+    });
     router.startFlushTimer();
 
     jest.runOnlyPendingTimers();
@@ -217,10 +229,9 @@ describe('AlertRouter additional coverage', () => {
 
     harness.emit(SYSTEM_WARNING_OCCURRED_ID, { message: 'direct forward' });
 
-    expect(forwardSpy).toHaveBeenCalledWith(
-      SYSTEM_WARNING_OCCURRED_ID,
-      { message: 'direct forward' },
-    );
+    expect(forwardSpy).toHaveBeenCalledWith(SYSTEM_WARNING_OCCURRED_ID, {
+      message: 'direct forward',
+    });
   });
 
   it('warns when queued warning events flush successfully', () => {
@@ -246,7 +257,7 @@ describe('AlertRouter additional coverage', () => {
       ([label, err]) =>
         label === 'AlertRouter flush error:' &&
         err instanceof Error &&
-        err.message.includes('Missing or invalid `message`'),
+        err.message.includes('Missing or invalid `message`')
     );
 
     expect(flushErrorCall).toBeDefined();

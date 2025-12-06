@@ -323,7 +323,9 @@ class ActivityCacheManager {
     }
 
     if (totalCleaned > 0) {
-      this.#logger.info(`Cache cleanup: removed ${totalCleaned} expired entries`);
+      this.#logger.info(
+        `Cache cleanup: removed ${totalCleaned} expired entries`
+      );
     }
   }
 

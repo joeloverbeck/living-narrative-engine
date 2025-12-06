@@ -1,5 +1,15 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
-import { TimerService, TestTimerService } from '../../../../src/actions/tracing/timerService.js';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import {
+  TimerService,
+  TestTimerService,
+} from '../../../../src/actions/tracing/timerService.js';
 
 /**
  * Integration tests for the timer service implementations. These tests exercise the
@@ -84,7 +94,10 @@ describe('Timer service integration behaviour', () => {
       await timerService.triggerAll();
 
       expect(executionOrder).toEqual(['first', 'failing', 'second']);
-      expect(errorSpy).toHaveBeenCalledWith('Timer callback error:', expect.any(Error));
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Timer callback error:',
+        expect.any(Error)
+      );
       expect(timerService.getPendingCount()).toBe(0);
       expect(timerService.hasPending()).toBe(false);
     });
@@ -119,7 +132,7 @@ describe('Timer service integration behaviour', () => {
                 resolve('async-complete');
               }, 30);
             }),
-          0,
+          0
         );
 
         const triggerPromise = timerService.triggerAll();
@@ -149,7 +162,7 @@ describe('Timer service integration behaviour', () => {
 
         expect(iterations).toBeGreaterThanOrEqual(100);
         expect(warnSpy).toHaveBeenCalledWith(
-          'TestTimerService: Maximum trigger iterations reached, may have pending operations',
+          'TestTimerService: Maximum trigger iterations reached, may have pending operations'
         );
       } finally {
         warnSpy.mockRestore();
@@ -226,7 +239,9 @@ describe('Timer service integration behaviour', () => {
       try {
         await stubbornService.waitForCompletion();
         expect(warnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('TestTimerService waitForCompletion: Max attempts reached'),
+          expect.stringContaining(
+            'TestTimerService waitForCompletion: Max attempts reached'
+          )
         );
       } finally {
         warnSpy.mockRestore();

@@ -1,9 +1,9 @@
 /**
  * @file Integration test for anatomy cache unique part ownership invariant
- * 
+ *
  * Tests Invariant 1: For any two distinct actors, their anatomy parts must be
  * disjoint sets (no shared part UUIDs).
- * 
+ *
  * This test validates the fix for the concurrent processing bug (commit 1c07662fc)
  * that caused multiple characters to share body part instances from the first-generated
  * character.
@@ -31,8 +31,16 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
         ],
       },
       'test:character_female_1': {
@@ -43,32 +51,62 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg_shapely' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely',
+          },
         ],
       },
       'test:character_male_2': {
         recipeId: 'test:character_male_2',
         blueprintId: 'anatomy:human_male',
         slots: {
-          torso: { partType: 'torso', preferId: 'anatomy:human_male_torso_muscular' },
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_male_torso_muscular',
+          },
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg',
+          },
         ],
       },
       'test:character_female_2': {
         recipeId: 'test:character_female_2',
         blueprintId: 'anatomy:human_female',
         slots: {
-          torso: { partType: 'torso', preferId: 'anatomy:human_female_torso_slim' },
+          torso: {
+            partType: 'torso',
+            preferId: 'anatomy:human_female_torso_slim',
+          },
           head: { partType: 'head', preferId: 'anatomy:humanoid_head' },
         },
         patterns: [
-          { matches: ['left_arm', 'right_arm'], partType: 'arm', preferId: 'anatomy:humanoid_arm' },
-          { matches: ['left_leg', 'right_leg'], partType: 'leg', preferId: 'anatomy:human_leg_shapely' },
+          {
+            matches: ['left_arm', 'right_arm'],
+            partType: 'arm',
+            preferId: 'anatomy:humanoid_arm',
+          },
+          {
+            matches: ['left_leg', 'right_leg'],
+            partType: 'leg',
+            preferId: 'anatomy:human_leg_shapely',
+          },
         ],
       },
     });
@@ -97,11 +135,14 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
     // Get parts for each character using correct method signature
     const partSets = [];
     for (const actorId of actorIds) {
-      const anatomyBody = testBed.entityManager.getComponentData(actorId, 'anatomy:body');
-      
+      const anatomyBody = testBed.entityManager.getComponentData(
+        actorId,
+        'anatomy:body'
+      );
+
       // BodyGraphService.getAllParts expects (bodyComponent, actorEntityId)
       const parts = testBed.bodyGraphService.getAllParts(anatomyBody, actorId);
-      
+
       partSets.push({ actorId, parts });
     }
 
@@ -142,7 +183,7 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
   it('should maintain unique part ownership with concurrent generation', async () => {
     // This test specifically validates that concurrent character generation
     // (as happens during world loading) doesn't cause part sharing
-    
+
     const recipeIds = [
       'test:character_male_1',
       'test:character_female_1',
@@ -157,7 +198,10 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
 
     // Collect part sets for each actor
     const partSets = actorIds.map((actorId) => {
-      const anatomyBody = testBed.entityManager.getComponentData(actorId, 'anatomy:body');
+      const anatomyBody = testBed.entityManager.getComponentData(
+        actorId,
+        'anatomy:body'
+      );
       const parts = testBed.bodyGraphService.getAllParts(anatomyBody, actorId);
       return { actorId, parts };
     });
@@ -195,7 +239,7 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
     // Verify each actor has a reasonable number of parts
     for (const { actorId, parts } of partSets) {
       expect(parts.length).toBeGreaterThan(1);
-      
+
       // Log part counts for diagnostic purposes
       testBed.logger.debug(
         `Actor ${actorId} has ${parts.length} anatomy parts`
@@ -206,7 +250,7 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
   it('should maintain unique part ownership when generating same blueprint multiple times', async () => {
     // Test edge case: multiple actors from the same blueprint should still
     // have distinct part instances
-    
+
     const recipeId = 'test:character_female_1';
     const actorCount = 3;
 
@@ -219,7 +263,10 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
 
     // Collect part sets
     const partSets = actorIds.map((actorId) => {
-      const anatomyBody = testBed.entityManager.getComponentData(actorId, 'anatomy:body');
+      const anatomyBody = testBed.entityManager.getComponentData(
+        actorId,
+        'anatomy:body'
+      );
       const parts = testBed.bodyGraphService.getAllParts(anatomyBody, actorId);
       return { actorId, parts };
     });
@@ -235,9 +282,7 @@ describe('AnatomyCacheManager - Unique Part Ownership', () => {
         const actorA = partSets[i];
         const actorB = partSets[j];
 
-        const overlap = actorA.parts.filter((id) =>
-          actorB.parts.includes(id)
-        );
+        const overlap = actorA.parts.filter((id) => actorB.parts.includes(id));
 
         expect(overlap).toEqual([]);
 

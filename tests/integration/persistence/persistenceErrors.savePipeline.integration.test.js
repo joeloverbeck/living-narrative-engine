@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import createSaveLoadService from '../../../src/persistence/createSaveLoadService.js';
 import PersistenceErrorCodes, {
   PersistenceError,
@@ -22,9 +29,9 @@ function createLogger() {
 function createBaseStorageProvider() {
   return {
     ensureDirectoryExists: jest.fn().mockResolvedValue({ success: true }),
-    writeFileAtomically: jest.fn().mockRejectedValue(
-      new Error('write should not be reached'),
-    ),
+    writeFileAtomically: jest
+      .fn()
+      .mockRejectedValue(new Error('write should not be reached')),
     listFiles: jest.fn().mockResolvedValue([]),
     readFile: jest.fn(),
     deleteFile: jest.fn().mockResolvedValue({ success: true }),
@@ -39,9 +46,9 @@ function createBaseStorageProvider() {
 function createFailingCrypto(message) {
   return {
     subtle: {
-      digest: jest.fn().mockImplementation(() =>
-        Promise.reject(new Error(message)),
-      ),
+      digest: jest
+        .fn()
+        .mockImplementation(() => Promise.reject(new Error(message))),
     },
   };
 }
@@ -97,7 +104,7 @@ describe('persistenceErrors integration through save pipeline', () => {
 
     const result = await saveLoadService.saveManualGame(
       'BrokenSlot',
-      buildGameState(),
+      buildGameState()
     );
 
     expect(result.success).toBe(false);
@@ -105,18 +112,18 @@ describe('persistenceErrors integration through save pipeline', () => {
     expect(result.error).toBeInstanceOf(PersistenceError);
     expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     expect(result.error.message).toBe(
-      'Checksum generation failed: crypto subtle digest failed',
+      'Checksum generation failed: crypto subtle digest failed'
     );
 
     expect(captureSpy).toHaveBeenCalledWith(result.error, PersistenceError);
     expect(storageProvider.writeFileAtomically).not.toHaveBeenCalled();
 
     const loggedError = logger.error.mock.calls.find((call) =>
-      call.some((arg) => arg instanceof PersistenceError),
+      call.some((arg) => arg instanceof PersistenceError)
     );
     expect(loggedError).toBeDefined();
     expect(loggedError[1].code).toBe(
-      PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
+      PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED
     );
   });
 
@@ -135,25 +142,25 @@ describe('persistenceErrors integration through save pipeline', () => {
 
     const result = await saveLoadService.saveManualGame(
       'LegacySlot',
-      buildGameState(),
+      buildGameState()
     );
 
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(PersistenceError);
     expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     expect(result.error.message).toBe(
-      'Checksum generation failed: legacy runtime digest failure',
+      'Checksum generation failed: legacy runtime digest failure'
     );
     expect(result.error.stack).toEqual(expect.any(String));
 
     expect(storageProvider.writeFileAtomically).not.toHaveBeenCalled();
 
     const loggedError = logger.error.mock.calls.find((call) =>
-      call.some((arg) => arg instanceof PersistenceError),
+      call.some((arg) => arg instanceof PersistenceError)
     );
     expect(loggedError).toBeDefined();
     expect(loggedError[1].code).toBe(
-      PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
+      PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED
     );
   });
 });

@@ -29,11 +29,9 @@ describe('travel_through_dimensions Rule Execution', () => {
     it('should successfully execute dimensional travel', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       // Verify location changed
       const position = fixture.getComponent(
@@ -46,11 +44,9 @@ describe('travel_through_dimensions Rule Execution', () => {
     it('should dispatch departure perception at origin', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const departureEvent = fixture.events.find(
         (e) =>
@@ -59,17 +55,17 @@ describe('travel_through_dimensions Rule Execution', () => {
       );
       expect(departureEvent).toBeDefined();
       expect(departureEvent.payload.locationId).toBe(scenario.perimeterId);
-      expect(departureEvent.payload.descriptionText).toContain('ripples and distorts');
+      expect(departureEvent.payload.descriptionText).toContain(
+        'ripples and distorts'
+      );
     });
 
     it('should dispatch arrival perception at destination', async () => {
       const scenario = await createDimensionalScenario(fixture);
 
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
       const arrivalEvent = fixture.events.find(
         (e) =>
@@ -87,29 +83,19 @@ describe('travel_through_dimensions Rule Execution', () => {
       const scenario = await createBidirectionalScenario(fixture);
 
       // Travel to dimension
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.dimensionId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.dimensionId, {
+        skipDiscovery: true,
+      });
 
-      let position = fixture.getComponent(
-        scenario.observerId,
-        'core:position'
-      );
+      let position = fixture.getComponent(scenario.observerId, 'core:position');
       expect(position.locationId).toBe(scenario.dimensionId);
 
       // Travel back to reality
-      await fixture.executeAction(
-        scenario.observerId,
-        scenario.perimeterId,
-        { skipDiscovery: true }
-      );
+      await fixture.executeAction(scenario.observerId, scenario.perimeterId, {
+        skipDiscovery: true,
+      });
 
-      position = fixture.getComponent(
-        scenario.observerId,
-        'core:position'
-      );
+      position = fixture.getComponent(scenario.observerId, 'core:position');
       expect(position.locationId).toBe(scenario.perimeterId);
     });
   });

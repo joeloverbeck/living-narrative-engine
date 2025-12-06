@@ -5,6 +5,7 @@
 This report provides a comprehensive analysis and migration plan for extracting movement-related functionality from the `core` mod into the dedicated `movement` mod. The migration involves transferring 6 files containing movement-specific actions, rules, conditions, and scopes while maintaining system integrity and updating visual properties to align with the mod's thematic identity.
 
 **Key Objectives:**
+
 - Achieve clean separation of movement mechanics from core functionality
 - Update visual styling to use Explorer Cyan color scheme
 - Maintain backward compatibility and system stability
@@ -19,18 +20,21 @@ This report provides a comprehensive analysis and migration plan for extracting 
 The following files should be migrated from `data/mods/core/` to `data/mods/movement/`:
 
 #### 1. Actions (1 file)
+
 - **`actions/go.action.json`**
   - Current location: `data/mods/core/actions/go.action.json`
   - Target location: `data/mods/movement/actions/go.action.json`
   - Modifications required: Update color scheme to Explorer Cyan
 
 #### 2. Rules (1 file)
+
 - **`rules/go.rule.json`**
   - Current location: `data/mods/core/rules/go.rule.json`
   - Target location: `data/mods/movement/rules/go.rule.json`
   - Modifications required: Update all ID references from `core:` to `movement:`
 
 #### 3. Conditions (3 files)
+
 - **`conditions/event-is-action-go.condition.json`**
   - Current location: `data/mods/core/conditions/event-is-action-go.condition.json`
   - Target location: `data/mods/movement/conditions/event-is-action-go.condition.json`
@@ -47,6 +51,7 @@ The following files should be migrated from `data/mods/core/` to `data/mods/move
   - Modifications required: Update ID from `core:exit-is-unblocked` to `movement:exit-is-unblocked`
 
 #### 4. Scopes (1 file)
+
 - **`scopes/clear_directions.scope`**
   - Current location: `data/mods/core/scopes/clear_directions.scope`
   - Target location: `data/mods/movement/scopes/clear_directions.scope`
@@ -55,6 +60,7 @@ The following files should be migrated from `data/mods/core/` to `data/mods/move
 ### Files Explicitly NOT Migrated
 
 The following files remain in the core mod as per requirements:
+
 - `actions/follow.action.json` - Following is not strictly movement-based
 - `actions/wait.action.json` - Not movement-related
 - `actions/dismiss.action.json` - Not movement-related
@@ -63,6 +69,7 @@ The following files remain in the core mod as per requirements:
 ## Color Scheme Update
 
 ### Current Visual Configuration (Classic Blue-Grey)
+
 ```json
 {
   "backgroundColor": "#455a64",
@@ -73,6 +80,7 @@ The following files remain in the core mod as per requirements:
 ```
 
 ### New Visual Configuration (Explorer Cyan)
+
 ```json
 {
   "backgroundColor": "#006064",
@@ -83,6 +91,7 @@ The following files remain in the core mod as per requirements:
 ```
 
 **Contrast Ratios:**
+
 - Normal: 12.3:1 (AAA compliant)
 - Hover: 5.8:1 (AA compliant)
 - Theme: Exploration, discovery, spatial awareness
@@ -92,6 +101,7 @@ The following files remain in the core mod as per requirements:
 ### Phase 1: Preparation
 
 1. **Create Directory Structure**
+
    ```bash
    mkdir -p data/mods/movement/actions
    mkdir -p data/mods/movement/rules
@@ -109,7 +119,9 @@ The following files remain in the core mod as per requirements:
 ### Phase 2: File Migration and Modification
 
 #### Step 1: Migrate go.action.json
+
 1. Copy file to movement mod:
+
    ```bash
    cp data/mods/core/actions/go.action.json data/mods/movement/actions/
    ```
@@ -121,7 +133,9 @@ The following files remain in the core mod as per requirements:
    - Replace entire visual section with Explorer Cyan colors
 
 #### Step 2: Migrate go.rule.json
+
 1. Copy file to movement mod:
+
    ```bash
    cp data/mods/core/rules/go.rule.json data/mods/movement/rules/
    ```
@@ -131,7 +145,9 @@ The following files remain in the core mod as per requirements:
    - Update all internal references to use `movement:` namespace
 
 #### Step 3: Migrate Conditions
+
 1. Copy all condition files:
+
    ```bash
    cp data/mods/core/conditions/event-is-action-go.condition.json data/mods/movement/conditions/
    cp data/mods/core/conditions/actor-can-move.condition.json data/mods/movement/conditions/
@@ -143,7 +159,9 @@ The following files remain in the core mod as per requirements:
    - In `event-is-action-go.condition.json`, update the logic to check for `"movement:go"` instead of `"movement:go"`
 
 #### Step 4: Migrate Scope
+
 1. Copy scope file:
+
    ```bash
    cp data/mods/core/scopes/clear_directions.scope data/mods/movement/scopes/
    ```
@@ -155,6 +173,7 @@ The following files remain in the core mod as per requirements:
 ### Phase 3: Update Manifests
 
 #### Update movement/mod-manifest.json
+
 ```json
 {
   "$schema": "http://example.com/schemas/mod-manifest.schema.json",
@@ -166,25 +185,20 @@ The following files remain in the core mod as per requirements:
   "gameVersion": ">=0.0.1",
   "dependencies": ["core"],
   "content": {
-    "actions": [
-      "movement:go"
-    ],
-    "rules": [
-      "handle_go_action"
-    ],
+    "actions": ["movement:go"],
+    "rules": ["handle_go_action"],
     "conditions": [
       "movement:event-is-action-go",
       "movement:actor-can-move",
       "movement:exit-is-unblocked"
     ],
-    "scopes": [
-      "movement:clear_directions"
-    ]
+    "scopes": ["movement:clear_directions"]
   }
 }
 ```
 
 #### Update core/mod-manifest.json
+
 Remove the migrated content from the core manifest's content section.
 
 ### Phase 4: Update Cross-References
@@ -202,6 +216,7 @@ Remove the migrated content from the core manifest's content section.
 ### Phase 5: Cleanup
 
 1. **Remove Original Files from Core**
+
    ```bash
    rm data/mods/core/actions/go.action.json
    rm data/mods/core/rules/go.rule.json
@@ -222,11 +237,13 @@ Remove the migrated content from the core manifest's content section.
 ### Direct Dependencies
 
 #### Files That Reference Movement Components
+
 - **`core/actions/follow.action.json`**
   - References: `core:actor-can-move`
   - Action Required: Update to `movement:actor-can-move`
 
 #### Additional Mod Dependencies
+
 - **`positioning/actions/turn_around.action.json`**
   - References: `core:actor-can-move`
   - Action Required: Update to `movement:actor-can-move`
@@ -236,6 +253,7 @@ Remove the migrated content from the core manifest's content section.
   - Action Required: Update to `movement:actor-can-move`
 
 #### Mod Dependencies
+
 - **Movement mod depends on:**
   - `core` (for basic entities, components, and events)
 
@@ -246,14 +264,17 @@ Remove the migrated content from the core manifest's content section.
 ### Impact Assessment
 
 #### Low Risk
+
 - Scope migration (self-contained)
 - Condition migrations (clear references)
 
 #### Medium Risk
+
 - Action migration (UI visibility changes due to color update)
 - Rule migration (event handling chain)
 
 #### Mitigation Strategies
+
 - Maintain backward compatibility aliases during transition
 - Implement comprehensive testing before removal
 - Document all changes in changelog
@@ -261,6 +282,7 @@ Remove the migrated content from the core manifest's content section.
 ## Testing Requirements
 
 ### Unit Tests
+
 1. **Action Tests**
    - Verify go action appears in UI with correct colors
    - Test prerequisite validation
@@ -277,6 +299,7 @@ Remove the migrated content from the core manifest's content section.
    - Validate event-is-action-go detection
 
 ### Integration Tests
+
 1. **Cross-Mod Communication**
    - Test core mod's follow action with movement:actor-can-move
    - Verify event bus handles namespaced events correctly
@@ -292,6 +315,7 @@ Remove the migrated content from the core manifest's content section.
    - Ensure no runtime errors from missing dependencies
 
 ### End-to-End Tests
+
 1. **Movement Flow**
    - Player selects go action
    - System validates prerequisites
@@ -300,6 +324,7 @@ Remove the migrated content from the core manifest's content section.
    - UI updates appropriately
 
 ### Visual Verification
+
 1. **Color Contrast**
    - Verify Explorer Cyan meets WCAG AA standards
    - Test in different lighting conditions
@@ -308,11 +333,13 @@ Remove the migrated content from the core manifest's content section.
 ## Implementation Checklist
 
 ### Pre-Migration
+
 - [ ] Backup all affected files
 - [ ] Document current state
 - [ ] Notify team of upcoming changes
 
 ### Migration Execution
+
 - [ ] Create movement mod directory structure
 - [ ] Copy and modify go.action.json with Explorer Cyan colors
 - [ ] Copy and modify go.rule.json with namespace updates
@@ -325,6 +352,7 @@ Remove the migrated content from the core manifest's content section.
 - [ ] Update positioning/actions/get_close.action.json references
 
 ### Post-Migration
+
 - [ ] Run all unit tests
 - [ ] Run integration tests
 - [ ] Perform visual verification
@@ -334,6 +362,7 @@ Remove the migrated content from the core manifest's content section.
 - [ ] Clean up backup files
 
 ### Validation
+
 - [ ] Verify game loads without errors
 - [ ] Confirm movement actions appear in UI
 - [ ] Test actual movement in game
@@ -343,6 +372,7 @@ Remove the migrated content from the core manifest's content section.
 ## Risk Mitigation
 
 ### Rollback Plan
+
 1. Keep backup files for at least one release cycle
 2. Maintain compatibility layer if needed:
    ```json
@@ -354,11 +384,13 @@ Remove the migrated content from the core manifest's content section.
 3. Document all changes in release notes
 
 ### Compatibility Considerations
+
 - Consider implementing a deprecation period
 - Log warnings for old namespace usage
 - Provide migration guide for mod developers
 
 ### Cross-Mod Compatibility
+
 - The positioning mod depends on `core:actor-can-move`
 - Must be updated alongside the migration or immediately after
 - Consider temporary compatibility aliases during transition period to prevent breaking changes
@@ -367,6 +399,7 @@ Remove the migrated content from the core manifest's content section.
 ## Future Considerations
 
 ### Potential Movement Mod Enhancements
+
 1. **Advanced Navigation**
    - Pathfinding algorithms
    - Movement costs
@@ -383,6 +416,7 @@ Remove the migrated content from the core manifest's content section.
    - Area of effect movements
 
 ### Related Mod Opportunities
+
 - **positioning** - Already exists, could integrate
 - **vehicles** - Future mod for mounted/vehicle movement
 - **teleportation** - Magical movement systems
@@ -390,6 +424,7 @@ Remove the migrated content from the core manifest's content section.
 ## Recommendations for Migration
 
 ### Phased Migration Approach
+
 1. **Phase 1: Parallel Implementation**
    - Deploy movement mod with new namespace
    - Keep core mod components temporarily
@@ -406,16 +441,19 @@ Remove the migrated content from the core manifest's content section.
    - Update documentation
 
 ### Version Management
+
 - Movement mod should specify version 1.0.0 for initial migration
 - Core mod should bump to next minor version
 - Positioning mod should update dependencies to require movement >=1.0.0
 
 ### Migration Tooling
+
 - Create automated migration script to update all references
 - Include positioning mod updates in the script
 - Provide rollback capability for safety
 
 ### Developer Communication
+
 - Announce migration plan in advance
 - Provide migration guide for custom mod developers
 - Document breaking changes clearly in changelog
@@ -437,11 +475,11 @@ The use of Explorer Cyan color scheme reinforces the thematic identity of explor
 
 ### Appendix A: Complete File Contents After Migration
 
-*Note: Full file contents would be included here in production, showing the exact state of each file after all modifications.*
+_Note: Full file contents would be included here in production, showing the exact state of each file after all modifications._
 
 ### Appendix B: Testing Scripts
 
-*Note: Automated testing scripts for validation would be provided here.*
+_Note: Automated testing scripts for validation would be provided here._
 
 ### Appendix C: Migration Script
 
@@ -461,6 +499,6 @@ mkdir -p data/mods/movement/{actions,rules,conditions,scopes}
 
 ---
 
-*Report Generated: [Current Date]*
-*Author: Architecture Analysis System*
-*Version: 1.0.0*
+_Report Generated: [Current Date]_
+_Author: Architecture Analysis System_
+_Version: 1.0.0_

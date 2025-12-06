@@ -29,15 +29,16 @@ class RecordingLogger {
 
   has(level, text) {
     return this.messages[level].some((entry) =>
-      entry.some(
-        (value) => typeof value === 'string' && value.includes(text)
-      )
+      entry.some((value) => typeof value === 'string' && value.includes(text))
     );
   }
 }
 
 class StubConfigLoader {
-  constructor({ data = { defaultConfigId: 'test' }, throwOnLoad = false } = {}) {
+  constructor({
+    data = { defaultConfigId: 'test' },
+    throwOnLoad = false,
+  } = {}) {
     this.data = data;
     this.throwOnLoad = throwOnLoad;
     this.loadCalls = 0;
@@ -79,7 +80,10 @@ function createAdapter({
     state,
     async init({ llmConfigLoader }) {
       state.initCalls += 1;
-      if (llmConfigLoader && typeof llmConfigLoader.loadConfigs === 'function') {
+      if (
+        llmConfigLoader &&
+        typeof llmConfigLoader.loadConfigs === 'function'
+      ) {
         state.loadedConfigs = await llmConfigLoader.loadConfigs();
       }
       if (initThrows) {
@@ -138,7 +142,10 @@ describe('LlmAdapterInitializer integration', () => {
     expect(result).toBe(true);
     expect(adapter.state.initCalls).toBe(0);
     expect(
-      logger.has('debug', 'ConfigurableLLMAdapter already initialized. Skipping')
+      logger.has(
+        'debug',
+        'ConfigurableLLMAdapter already initialized. Skipping'
+      )
     ).toBe(true);
   });
 
@@ -153,9 +160,9 @@ describe('LlmAdapterInitializer integration', () => {
     const result = await initializer.initialize(adapter, loader, logger);
 
     expect(result).toBe(false);
-    expect(
-      logger.has('warn', 'already initialized but not operational')
-    ).toBe(true);
+    expect(logger.has('warn', 'already initialized but not operational')).toBe(
+      true
+    );
   });
 
   it('acknowledges pre-initialized adapters that lack an operational check', async () => {
@@ -170,7 +177,10 @@ describe('LlmAdapterInitializer integration', () => {
     expect(result).toBe(true);
     expect(adapter.state.initCalls).toBe(0);
     expect(
-      logger.has('debug', 'already initialized (no operational check available)')
+      logger.has(
+        'debug',
+        'already initialized (no operational check available)'
+      )
     ).toBe(true);
   });
 
@@ -181,9 +191,9 @@ describe('LlmAdapterInitializer integration', () => {
 
     expect(result).toBe(false);
     expect(adapter.state.initCalls).toBe(0);
-    expect(
-      logger.has('error', 'LlmConfigLoader missing or invalid')
-    ).toBe(true);
+    expect(logger.has('error', 'LlmConfigLoader missing or invalid')).toBe(
+      true
+    );
   });
 
   it('initializes the adapter with configuration data when dependencies are valid', async () => {

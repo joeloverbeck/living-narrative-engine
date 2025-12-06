@@ -10,36 +10,48 @@ import BaseError from '../../../../src/errors/baseError.js';
 describe('ParameterResolutionError', () => {
   describe('Inheritance Chain', () => {
     it('should extend GoapError', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error).toBeInstanceOf(GoapError);
     });
 
     it('should extend BaseError', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error).toBeInstanceOf(BaseError);
     });
 
     it('should extend Error', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error).toBeInstanceOf(Error);
     });
 
     it('should have correct name property', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.name).toBe('ParameterResolutionError');
     });
   });
 
   describe('Error Code', () => {
     it('should have GOAP_PARAMETER_RESOLUTION_ERROR code', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.code).toBe('GOAP_PARAMETER_RESOLUTION_ERROR');
     });
   });
 
   describe('Constructor - Basic Usage', () => {
     it('should create error with reference only', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.reference).toBe('actor.position');
       expect(error.message).toContain('actor.position');
       expect(error.message).toContain('not found in context');
@@ -52,7 +64,7 @@ describe('ParameterResolutionError', () => {
         failedStep: 'x',
         availableKeys: ['y', 'z'],
         contextType: 'planning',
-        stepIndex: 0
+        stepIndex: 0,
       });
 
       expect(error.reference).toBe('actor.position.x');
@@ -82,7 +94,7 @@ describe('ParameterResolutionError', () => {
     it('should provide partialPath property', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.inventory.items',
-        partialPath: 'actor.inventory'
+        partialPath: 'actor.inventory',
       });
       expect(error.partialPath).toBe('actor.inventory');
     });
@@ -90,7 +102,7 @@ describe('ParameterResolutionError', () => {
     it('should provide failedStep property', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.stats.strength',
-        failedStep: 'strength'
+        failedStep: 'strength',
       });
       expect(error.failedStep).toBe('strength');
     });
@@ -98,7 +110,7 @@ describe('ParameterResolutionError', () => {
     it('should provide availableKeys property', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.data.field',
-        availableKeys: ['name', 'type', 'id']
+        availableKeys: ['name', 'type', 'id'],
       });
       expect(error.availableKeys).toEqual(['name', 'type', 'id']);
     });
@@ -106,7 +118,7 @@ describe('ParameterResolutionError', () => {
     it('should provide contextType property', () => {
       const error = new ParameterResolutionError({
         reference: 'target.position',
-        contextType: 'refinement'
+        contextType: 'refinement',
       });
       expect(error.contextType).toBe('refinement');
     });
@@ -114,7 +126,7 @@ describe('ParameterResolutionError', () => {
     it('should provide stepIndex property', () => {
       const error = new ParameterResolutionError({
         reference: 'binding.target',
-        stepIndex: 2
+        stepIndex: 2,
       });
       expect(error.stepIndex).toBe(2);
     });
@@ -122,14 +134,18 @@ describe('ParameterResolutionError', () => {
 
   describe('Message Formatting', () => {
     it('should format message with reference only', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
-      expect(error.message).toBe("Parameter 'actor.position' not found in context");
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
+      expect(error.message).toBe(
+        "Parameter 'actor.position' not found in context"
+      );
     });
 
     it('should format message with partialPath', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.position.x',
-        partialPath: 'actor.position'
+        partialPath: 'actor.position',
       });
       expect(error.message).toContain('actor.position.x');
       expect(error.message).toContain('Resolved: actor.position');
@@ -138,7 +154,7 @@ describe('ParameterResolutionError', () => {
     it('should format message with failedStep', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.stats.strength',
-        failedStep: 'strength'
+        failedStep: 'strength',
       });
       expect(error.message).toContain('Failed at: strength');
     });
@@ -146,7 +162,7 @@ describe('ParameterResolutionError', () => {
     it('should format message with availableKeys', () => {
       const error = new ParameterResolutionError({
         reference: 'actor.data.field',
-        availableKeys: ['name', 'type', 'id']
+        availableKeys: ['name', 'type', 'id'],
       });
       expect(error.message).toContain('Available keys: ["name", "type", "id"]');
     });
@@ -154,7 +170,7 @@ describe('ParameterResolutionError', () => {
     it('should format message with contextType', () => {
       const error = new ParameterResolutionError({
         reference: 'target.position',
-        contextType: 'planning'
+        contextType: 'planning',
       });
       expect(error.message).toContain('Context: planning');
     });
@@ -163,7 +179,7 @@ describe('ParameterResolutionError', () => {
       const error = new ParameterResolutionError({
         reference: 'binding.target',
         contextType: 'refinement',
-        stepIndex: 3
+        stepIndex: 3,
       });
       expect(error.message).toContain('Context: refinement step 3');
     });
@@ -175,11 +191,13 @@ describe('ParameterResolutionError', () => {
         failedStep: 'name',
         availableKeys: ['id', 'type', 'quantity'],
         contextType: 'refinement',
-        stepIndex: 2
+        stepIndex: 2,
       });
 
       const message = error.message;
-      expect(message).toContain("Parameter 'actor.inventory.items[0].name' not found in context");
+      expect(message).toContain(
+        "Parameter 'actor.inventory.items[0].name' not found in context"
+      );
       expect(message).toContain('Resolved: actor.inventory.items[0]');
       expect(message).toContain('Failed at: name');
       expect(message).toContain('Available keys: ["id", "type", "quantity"]');
@@ -195,7 +213,7 @@ describe('ParameterResolutionError', () => {
         failedStep: 'x',
         availableKeys: ['y', 'z'],
         contextType: 'planning',
-        stepIndex: 0
+        stepIndex: 0,
       });
 
       const context = error.context;
@@ -210,13 +228,17 @@ describe('ParameterResolutionError', () => {
 
   describe('Severity and Recoverability', () => {
     it('should inherit error severity from GoapError', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.getSeverity()).toBe('error');
       expect(error.severity).toBe('error');
     });
 
     it('should be recoverable (inherited from GoapError)', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.isRecoverable()).toBe(true);
       expect(error.recoverable).toBe(true);
     });
@@ -229,7 +251,7 @@ describe('ParameterResolutionError', () => {
         partialPath: 'actor',
         failedStep: 'position',
         availableKeys: ['name', 'id'],
-        contextType: 'planning'
+        contextType: 'planning',
       });
       const json = error.toJSON();
 
@@ -246,14 +268,18 @@ describe('ParameterResolutionError', () => {
     });
 
     it('should be JSON-safe (no circular references)', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(() => JSON.stringify(error.toJSON())).not.toThrow();
     });
   });
 
   describe('Stack Trace', () => {
     it('should capture stack trace', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.stack).toBeDefined();
       expect(typeof error.stack).toBe('string');
       expect(error.stack).toContain('ParameterResolutionError');
@@ -262,13 +288,19 @@ describe('ParameterResolutionError', () => {
 
   describe('Timestamp and Correlation', () => {
     it('should have ISO format timestamp', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
-      const error = new ParameterResolutionError({ reference: 'actor.position' });
+      const error = new ParameterResolutionError({
+        reference: 'actor.position',
+      });
       expect(error.correlationId).toBeDefined();
       expect(typeof error.correlationId).toBe('string');
       expect(error.correlationId.length).toBeGreaterThan(0);
@@ -282,12 +314,14 @@ describe('ParameterResolutionError', () => {
         partialPath: 'actor',
         failedStep: 'positioning:position',
         availableKeys: ['core:actor', 'core:name'],
-        contextType: 'planning'
+        contextType: 'planning',
       });
 
       expect(error.reference).toBe('actor.positioning:position');
       expect(error.message).toContain('positioning:position');
-      expect(error.message).toContain('Available keys: ["core:actor", "core:name"]');
+      expect(error.message).toContain(
+        'Available keys: ["core:actor", "core:name"]'
+      );
       expect(error.contextType).toBe('planning');
     });
 
@@ -298,7 +332,7 @@ describe('ParameterResolutionError', () => {
         failedStep: 'clothing:upper_body_covering',
         availableKeys: ['core:actor', 'positioning:position'],
         contextType: 'refinement',
-        stepIndex: 5
+        stepIndex: 5,
       });
 
       expect(error.stepIndex).toBe(5);
@@ -313,12 +347,14 @@ describe('ParameterResolutionError', () => {
         failedStep: 'weight',
         availableKeys: ['name', 'type', 'durability'],
         contextType: 'refinement',
-        stepIndex: 2
+        stepIndex: 2,
       });
 
       expect(error.partialPath).toBe('actor.inventory.items[0].properties');
       expect(error.failedStep).toBe('weight');
-      expect(error.message).toContain('Resolved: actor.inventory.items[0].properties');
+      expect(error.message).toContain(
+        'Resolved: actor.inventory.items[0].properties'
+      );
       expect(error.message).toContain('Failed at: weight');
     });
   });

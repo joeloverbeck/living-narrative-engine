@@ -179,7 +179,9 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
         return JSON.stringify(conditionContent);
       }
 
-      throw new Error(`Unexpected file read during performance test: ${filePath}`);
+      throw new Error(
+        `Unexpected file read during performance test: ${filePath}`
+      );
     });
   }
 
@@ -259,7 +261,12 @@ describe('Infrastructure Performance Baseline Tests (TSTAIMIG-002)', () => {
             categories[Math.floor(Math.random() * categories.length)];
           const factoryMethod =
             ModTestHandlerFactory.getHandlerFactoryForCategory(randomCategory);
-          return factoryMethod(entityManager, eventBus, logger, mockDataRegistry);
+          return factoryMethod(
+            entityManager,
+            eventBus,
+            logger,
+            mockDataRegistry
+          );
         },
         {
           operation: 'categoryBasedHandlerCreation',

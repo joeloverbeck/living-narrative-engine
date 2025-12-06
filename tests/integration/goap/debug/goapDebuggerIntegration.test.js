@@ -86,19 +86,25 @@ describe('GOAPDebugger Integration', () => {
     });
 
     stateDiffViewer = new StateDiffViewer({ logger });
-    
+
     // Mock event bus for RefinementTracer
-    const mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe', 'unsubscribe', 'on', 'off']);
-    
+    const mockEventBus = testBed.createMock('eventBus', [
+      'dispatch',
+      'subscribe',
+      'unsubscribe',
+      'on',
+      'off',
+    ]);
+
     // Mock game data repository for RefinementTracer
     const mockGameDataRepository = {
       get: jest.fn().mockReturnValue(new Map()),
     };
-    
-    refinementTracer = new RefinementTracer({ 
-      eventBus: mockEventBus, 
+
+    refinementTracer = new RefinementTracer({
+      eventBus: mockEventBus,
       gameDataRepository: mockGameDataRepository,
-      logger 
+      logger,
     });
 
     mockGoapEventDispatcher = {
@@ -237,40 +243,70 @@ describe('GOAPDebugger Integration', () => {
     debuggerWithRealProbe.startTrace('test-actor');
     const context = { actorId: 'test-actor', taskId: 'test-task' };
 
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STARTED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-    }, context);
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.METHOD_SELECTED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-      methodId: 'method-1',
-    }, context);
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STEP_STARTED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-      stepIndex: 0,
-      step: { stepType: 'primitive_action' },
-    }, context);
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STATE_UPDATED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-      key: 'step0',
-      newValue: 'ok',
-    }, context);
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_STEP_COMPLETED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-      stepIndex: 0,
-      result: { success: true },
-    }, context);
-    emitGoapEvent(goapDispatcher, GOAP_EVENTS.REFINEMENT_COMPLETED, {
-      actorId: 'test-actor',
-      taskId: 'test-task',
-      methodId: 'method-1',
-      stepsExecuted: 1,
-      success: true,
-    }, context);
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.REFINEMENT_STARTED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+      },
+      context
+    );
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.METHOD_SELECTED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+        methodId: 'method-1',
+      },
+      context
+    );
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.REFINEMENT_STEP_STARTED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+        stepIndex: 0,
+        step: { stepType: 'primitive_action' },
+      },
+      context
+    );
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.REFINEMENT_STATE_UPDATED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+        key: 'step0',
+        newValue: 'ok',
+      },
+      context
+    );
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.REFINEMENT_STEP_COMPLETED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+        stepIndex: 0,
+        result: { success: true },
+      },
+      context
+    );
+    emitGoapEvent(
+      goapDispatcher,
+      GOAP_EVENTS.REFINEMENT_COMPLETED,
+      {
+        actorId: 'test-actor',
+        taskId: 'test-task',
+        methodId: 'method-1',
+        stepsExecuted: 1,
+        success: true,
+      },
+      context
+    );
 
     const eventStream = debuggerWithRealProbe.getEventStream('test-actor');
     expect(eventStream.events.length).toBeGreaterThanOrEqual(5);

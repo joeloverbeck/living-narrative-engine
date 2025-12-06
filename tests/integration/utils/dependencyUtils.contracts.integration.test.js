@@ -58,7 +58,7 @@ class IntegrationHarness {
       repository,
       'IntegrationHarness requires a repository instance.',
       InvalidArgumentError,
-      logger,
+      logger
     );
 
     assertFunction(
@@ -66,7 +66,7 @@ class IntegrationHarness {
       'serialize',
       'IntegrationHarness requires an adapter with serialize().',
       InvalidArgumentError,
-      logger,
+      logger
     );
 
     assertMethods(
@@ -74,7 +74,7 @@ class IntegrationHarness {
       ['add', 'get', 'remove', 'has', 'clear'],
       'IntegrationHarness repository must implement basic map operations.',
       InvalidArgumentError,
-      logger,
+      logger
     );
 
     this.repository = repository;
@@ -93,7 +93,7 @@ class IntegrationHarness {
           methods: ['serialize'],
         },
       ],
-      logger,
+      logger
     );
   }
 
@@ -103,7 +103,7 @@ class IntegrationHarness {
       record.type,
       'type',
       'IntegrationHarness.registerRecord',
-      this.logger,
+      this.logger
     );
 
     validateDependency(record, 'IntegrationHarness: record', this.logger, {
@@ -116,12 +116,9 @@ class IntegrationHarness {
   }
 
   executeCallable(callable) {
-    validateDependency(
-      callable,
-      'IntegrationHarness: callable',
-      this.logger,
-      { isFunction: true },
-    );
+    validateDependency(callable, 'IntegrationHarness: callable', this.logger, {
+      isFunction: true,
+    });
     return callable();
   }
 }
@@ -167,11 +164,11 @@ describe('dependencyUtils integration contracts', () => {
           repository: null,
           adapter,
           logger,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain(
-      'IntegrationHarness requires a repository instance.',
+      'IntegrationHarness requires a repository instance.'
     );
   });
 
@@ -184,11 +181,11 @@ describe('dependencyUtils integration contracts', () => {
           repository: brokenRepository,
           adapter,
           logger,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain(
-      'IntegrationHarness repository must implement basic map operations.',
+      'IntegrationHarness repository must implement basic map operations.'
     );
   });
 
@@ -201,11 +198,11 @@ describe('dependencyUtils integration contracts', () => {
           repository,
           adapter: brokenAdapter,
           logger,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain(
-      'IntegrationHarness requires an adapter with serialize().',
+      'IntegrationHarness requires an adapter with serialize().'
     );
   });
 
@@ -219,7 +216,7 @@ describe('dependencyUtils integration contracts', () => {
         serialize() {
           return { type: this.type };
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain('Invalid ID');
@@ -235,7 +232,7 @@ describe('dependencyUtils integration contracts', () => {
         serialize() {
           return { type: this.type };
         },
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain('Invalid type');
@@ -248,11 +245,11 @@ describe('dependencyUtils integration contracts', () => {
       harness.registerRecord('entity-3', {
         type: 'npc',
         payload: {},
-      }),
+      })
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain(
-      "Invalid or missing method 'serialize'",
+      "Invalid or missing method 'serialize'"
     );
   });
 
@@ -261,14 +258,14 @@ describe('dependencyUtils integration contracts', () => {
 
     expect(() => harness.executeCallable(null)).toThrow(InvalidArgumentError);
     expect(logger.getErrorMessages()[0]).toContain(
-      'Missing required dependency: IntegrationHarness: callable.',
+      'Missing required dependency: IntegrationHarness: callable.'
     );
 
     logger.records = [];
 
     expect(() => harness.executeCallable({})).toThrow(InvalidArgumentError);
     expect(logger.getErrorMessages()[0]).toContain(
-      "Dependency 'IntegrationHarness: callable' must be a function",
+      "Dependency 'IntegrationHarness: callable' must be a function"
     );
   });
 
@@ -283,12 +280,12 @@ describe('dependencyUtils integration contracts', () => {
         { broken: true },
         'Fallback dependency',
         fallbackLogger,
-        { requiredMethods: ['serialize'] },
-      ),
+        { requiredMethods: ['serialize'] }
+      )
     ).toThrow(InvalidArgumentError);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Invalid or missing method 'serialize'"),
+      expect.stringContaining("Invalid or missing method 'serialize'")
     );
 
     consoleSpy.mockRestore();
@@ -304,12 +301,12 @@ describe('dependencyUtils integration contracts', () => {
             methods: ['add', 'nonexistent'],
           },
         ],
-        logger,
-      ),
+        logger
+      )
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain(
-      "Invalid or missing method 'nonexistent'",
+      "Invalid or missing method 'nonexistent'"
     );
   });
 
@@ -324,8 +321,8 @@ describe('dependencyUtils integration contracts', () => {
         'entity-4',
         '',
         logger,
-        'idValidationScenario',
-      ),
+        'idValidationScenario'
+      )
     ).toThrow(InvalidArgumentError);
 
     expect(logger.getErrorMessages()[0]).toContain('Invalid ID');

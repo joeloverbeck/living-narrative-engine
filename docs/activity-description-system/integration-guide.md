@@ -88,16 +88,18 @@ invoke the service directly (for diagnostics or previews) resolve it from the co
 
 ```javascript
 const activityService = container.resolve(tokens.ActivityDescriptionService);
-const summary = await activityService.generateActivityDescription(bodyEntity.getId());
+const summary = await activityService.generateActivityDescription(
+  bodyEntity.getId()
+);
 ```
 
 ## 5. Data Requirements
 
-* **Actor state** – the entity must expose `anatomy:body` (required by the composer) and any
+- **Actor state** – the entity must expose `anatomy:body` (required by the composer) and any
   components that define activity metadata.
-* **Target resolution** – ensure referenced target IDs exist in the entity manager so that
+- **Target resolution** – ensure referenced target IDs exist in the entity manager so that
   pronoun/label lookups succeed.
-* **Formatting config** – mods that override description order should keep the `activity`
+- **Formatting config** – mods that override description order should keep the `activity`
   slot present. Removing it prevents the composer from rendering activities.
 
 ## 6. Event Bus Integration
@@ -120,8 +122,8 @@ Most integrations can rely on automatic invalidation (component add/remove event
 mutate entity state outside of the normal component lifecycle, call:
 
 ```javascript
-service.invalidateCache(entityId);           // Clear caches for the actor
-service.invalidateCache(entityId, 'name');   // Clear only the name cache
+service.invalidateCache(entityId); // Clear caches for the actor
+service.invalidateCache(entityId, 'name'); // Clear only the name cache
 service.invalidateEntities([actorId, targetId]);
 ```
 

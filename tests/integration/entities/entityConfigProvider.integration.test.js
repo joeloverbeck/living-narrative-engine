@@ -2,7 +2,14 @@
  * @file Integration tests for EntityConfigProvider using real configuration modules.
  * @jest-environment node
  */
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import EntityConfigProvider from '../../../src/entities/config/EntityConfigProvider.js';
 import { ProcessEnvironmentProvider } from '../../../src/configuration/ProcessEnvironmentProvider.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
@@ -80,12 +87,20 @@ describe('EntityConfigProvider integration', () => {
     expect(provider.getLimits().MAX_ENTITIES).toBe(777);
     expect(provider.getCacheSettings().ENABLE_DEFINITION_CACHE).toBe(false);
     expect(provider.getValidationSettings().STRICT_MODE).toBe(true);
-    expect(provider.getPerformanceSettings().ENABLE_OPERATION_TRACING).toBe(false);
+    expect(provider.getPerformanceSettings().ENABLE_OPERATION_TRACING).toBe(
+      false
+    );
     expect(provider.getLoggingSettings().ENABLE_DEBUG_LOGGING).toBe(false);
-    expect(provider.getErrorHandlingSettings().ENABLE_ERROR_RECOVERY).toBe(true);
+    expect(provider.getErrorHandlingSettings().ENABLE_ERROR_RECOVERY).toBe(
+      true
+    );
     expect(provider.getDefaultsSettings().ENABLE_DEFAULT_COMPONENTS).toBe(true);
-    expect(provider.getEntityCreationSettings().ENABLE_ID_VALIDATION).toBe(true);
-    expect(provider.getSpatialIndexSettings().ENABLE_SPATIAL_INDEXING).toBe(true);
+    expect(provider.getEntityCreationSettings().ENABLE_ID_VALIDATION).toBe(
+      true
+    );
+    expect(provider.getSpatialIndexSettings().ENABLE_SPATIAL_INDEXING).toBe(
+      true
+    );
   });
 
   it('reloads configuration when environment changes and exposes summary + feature helpers', () => {
@@ -117,8 +132,12 @@ describe('EntityConfigProvider integration', () => {
     expect(reloadedConfig.performance.ENABLE_OPERATION_TRACING).toBe(true);
     expect(reloadedConfig.logging.ENABLE_DEBUG_LOGGING).toBe(true);
 
-    expect(provider.isFeatureEnabled('performance.ENABLE_OPERATION_TRACING')).toBe(true);
-    expect(provider.isFeatureEnabled('cache.ENABLE_DEFINITION_CACHE')).toBe(reloadedConfig.cache.ENABLE_DEFINITION_CACHE);
+    expect(
+      provider.isFeatureEnabled('performance.ENABLE_OPERATION_TRACING')
+    ).toBe(true);
+    expect(provider.isFeatureEnabled('cache.ENABLE_DEFINITION_CACHE')).toBe(
+      reloadedConfig.cache.ENABLE_DEFINITION_CACHE
+    );
     expect(provider.isFeatureEnabled('unknown.section.flag')).toBe(false);
 
     expect(provider.getConfigSummary()).toMatchObject({
@@ -134,7 +153,9 @@ describe('EntityConfigProvider integration', () => {
     const provider = createProvider();
 
     expect(provider.getSection('nonexistent')).toBeNull();
-    expect(provider.isFeatureEnabled('logging.ENABLE_DEBUG_LOGGING')).toBe(false);
+    expect(provider.isFeatureEnabled('logging.ENABLE_DEBUG_LOGGING')).toBe(
+      false
+    );
     expect(provider.getValue('missing.section')).toBeUndefined();
 
     provider.setValue('custom.feature.enabled', true);
@@ -159,7 +180,9 @@ describe('EntityConfigProvider integration', () => {
     const inheritedOverrides = Object.create({ inheritedFlag: true });
     inheritedOverrides.defaults = { ENABLE_DEFAULT_COMPONENTS: false };
     provider.reload(inheritedOverrides);
-    expect(provider.getDefaultsSettings().ENABLE_DEFAULT_COMPONENTS).toBe(false);
+    expect(provider.getDefaultsSettings().ENABLE_DEFAULT_COMPONENTS).toBe(
+      false
+    );
 
     provider.reload();
 

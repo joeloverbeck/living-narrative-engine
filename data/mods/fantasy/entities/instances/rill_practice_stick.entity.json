@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:rill_practice_stick_instance",
-    "definitionId": "fantasy:rill_practice_stick"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:rill_practice_stick_instance",
+  "definitionId": "fantasy:rill_practice_stick"
 }

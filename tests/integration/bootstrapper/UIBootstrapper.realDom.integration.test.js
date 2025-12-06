@@ -5,7 +5,14 @@
  *              menu button listeners are wired without mocks.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { UIBootstrapper } from '../../../src/bootstrapper/UIBootstrapper.js';
 import {
   ensureCriticalDOMElementsStage,

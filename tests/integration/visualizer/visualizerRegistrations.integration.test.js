@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
@@ -50,9 +44,13 @@ describe('registerVisualizerComponents integration', () => {
     container.register(tokens.ILogger, () => logger, {
       lifecycle: 'singletonFactory',
     });
-    container.register(tokens.IValidatedEventDispatcher, () => eventDispatcher, {
-      lifecycle: 'singletonFactory',
-    });
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      () => eventDispatcher,
+      {
+        lifecycle: 'singletonFactory',
+      }
+    );
     container.register(tokens.IEntityManager, () => entityManager, {
       lifecycle: 'singletonFactory',
     });
@@ -61,7 +59,9 @@ describe('registerVisualizerComponents integration', () => {
   });
 
   it('registers visualizer components that resolve to functioning instances', () => {
-    expect(logger.debug).toHaveBeenCalledWith('Visualizer Registrations: Starting...');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Visualizer Registrations: Starting...'
+    );
 
     const documentContext = container.resolve(tokens.IDocumentContext);
     expect(documentContext).toBeInstanceOf(DocumentContext);
@@ -85,7 +85,9 @@ describe('registerVisualizerComponents integration', () => {
     const svgRenderer = container.resolve(tokens.SVGRenderer);
     expect(svgRenderer).toBeInstanceOf(SVGRenderer);
 
-    const interactionController = container.resolve(tokens.InteractionController);
+    const interactionController = container.resolve(
+      tokens.InteractionController
+    );
     expect(interactionController).toBeInstanceOf(InteractionController);
 
     const viewportManager = container.resolve(tokens.ViewportManager);
@@ -94,7 +96,9 @@ describe('registerVisualizerComponents integration', () => {
     const composer = container.resolve(tokens.VisualizationComposer);
     expect(composer).toBeInstanceOf(VisualizationComposer);
 
-    expect(logger.debug).toHaveBeenCalledWith('Visualizer Registrations: Complete.');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Visualizer Registrations: Complete.'
+    );
   });
 
   it('applies the expected lifecycles to each registration', () => {

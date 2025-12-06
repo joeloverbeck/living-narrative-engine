@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import createSafeErrorLogger from '../../../src/utils/safeErrorLogger.js';
 
 describe('SafeErrorLogger additional coverage', () => {
@@ -115,7 +122,10 @@ describe('SafeErrorLogger additional coverage', () => {
     });
     expect(dispatcher.setBatchMode).toHaveBeenLastCalledWith(
       true,
-      expect.objectContaining({ context: 'non-finite-number', timeoutMs: 60000 })
+      expect.objectContaining({
+        context: 'non-finite-number',
+        timeoutMs: 60000,
+      })
     );
     safeErrorLogger.disableGameLoadingMode({ force: true, reason: 'case-6' });
   });
@@ -216,7 +226,10 @@ describe('SafeErrorLogger additional coverage', () => {
       expect.objectContaining({ context: 'outer' })
     );
 
-    safeErrorLogger.disableGameLoadingMode({ force: true, reason: 'nested-failure' });
+    safeErrorLogger.disableGameLoadingMode({
+      force: true,
+      reason: 'nested-failure',
+    });
   });
 
   it('falls back to console.warn when the logger warn method throws', () => {
@@ -306,7 +319,9 @@ describe('SafeErrorLogger additional coverage', () => {
     );
 
     const errorCalls = logger.error.mock.calls.filter(([message]) =>
-      message.includes('Forced disable of game loading mode failed during cleanup')
+      message.includes(
+        'Forced disable of game loading mode failed during cleanup'
+      )
     );
 
     expect(errorCalls).toHaveLength(1);
@@ -363,7 +378,9 @@ describe('SafeErrorLogger additional coverage', () => {
     );
 
     const errorCalls = logger.error.mock.calls.filter(([message]) =>
-      message.includes('Forced disable of game loading mode failed during cleanup')
+      message.includes(
+        'Forced disable of game loading mode failed during cleanup'
+      )
     );
     expect(errorCalls).toHaveLength(1);
     expect(errorCalls[0][1]).toBe(forcedFailure);
@@ -409,10 +426,15 @@ describe('SafeErrorLogger additional coverage', () => {
     } finally {
       Array.prototype.push = originalPush;
       Array.prototype.pop = originalPop;
-      safeErrorLogger.disableGameLoadingMode({ force: true, reason: 'cleanup' });
+      safeErrorLogger.disableGameLoadingMode({
+        force: true,
+        reason: 'cleanup',
+      });
     }
 
-    expect(dispatcher.setBatchMode.mock.calls.length).toBe(callCountBeforeCleanup + 1);
+    expect(dispatcher.setBatchMode.mock.calls.length).toBe(
+      callCountBeforeCleanup + 1
+    );
     const cleanupCall = dispatcher.setBatchMode.mock.calls.at(-1);
     expect(cleanupCall[0]).toBe(false);
   });

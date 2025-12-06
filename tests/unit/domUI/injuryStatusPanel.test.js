@@ -98,7 +98,8 @@ describe('InjuryStatusPanel', () => {
       documentContext: createMockDocumentContext(),
       validatedEventDispatcher: createMockVed(),
       injuryAggregationService: createMockInjuryAggregationService(),
-      injuryNarrativeFormatterService: createMockInjuryNarrativeFormatterService(),
+      injuryNarrativeFormatterService:
+        createMockInjuryNarrativeFormatterService(),
     };
   });
 
@@ -157,7 +158,9 @@ describe('InjuryStatusPanel', () => {
         '[InjuryStatusPanel] InjuryAggregationService dependency is missing.'
       );
       expect(deps.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('InjuryAggregationService dependency is missing')
+        expect.stringContaining(
+          'InjuryAggregationService dependency is missing'
+        )
       );
     });
 
@@ -195,7 +198,9 @@ describe('InjuryStatusPanel', () => {
     });
 
     it('throws when injuryNarrativeFormatterService.formatFirstPerson is not a function', () => {
-      deps.injuryNarrativeFormatterService = { formatFirstPerson: 'not-a-function' };
+      deps.injuryNarrativeFormatterService = {
+        formatFirstPerson: 'not-a-function',
+      };
       expect(() => new InjuryStatusPanel(deps)).toThrow(
         '[InjuryStatusPanel] InjuryNarrativeFormatterService must have formatFirstPerson method.'
       );
@@ -213,9 +218,7 @@ describe('InjuryStatusPanel', () => {
       new InjuryStatusPanel(deps);
 
       expect(deps.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'One or more required DOM elements not bound'
-        )
+        expect.stringContaining('One or more required DOM elements not bound')
       );
     });
 
@@ -244,28 +247,30 @@ describe('InjuryStatusPanel', () => {
       new InjuryStatusPanel(deps);
 
       // Get the subscription callback and call it
-      const subscribeCall = deps.validatedEventDispatcher.subscribe.mock.calls.find(
-        (call) => call[0] === TURN_STARTED_ID
-      );
+      const subscribeCall =
+        deps.validatedEventDispatcher.subscribe.mock.calls.find(
+          (call) => call[0] === TURN_STARTED_ID
+        );
       const handler = subscribeCall[1];
 
       handler({ payload: { entityId: 'test-entity' } });
 
-      expect(deps.injuryAggregationService.aggregateInjuries).toHaveBeenCalledWith(
-        'test-entity'
-      );
-      expect(deps.injuryNarrativeFormatterService.formatFirstPerson).toHaveBeenCalledWith(
-        summary
-      );
+      expect(
+        deps.injuryAggregationService.aggregateInjuries
+      ).toHaveBeenCalledWith('test-entity');
+      expect(
+        deps.injuryNarrativeFormatterService.formatFirstPerson
+      ).toHaveBeenCalledWith(summary);
       expect(getNarrativeElement().textContent).toBe('My arm hurts.');
     });
 
     it('renders healthy state when payload is null', () => {
       new InjuryStatusPanel(deps);
 
-      const subscribeCall = deps.validatedEventDispatcher.subscribe.mock.calls.find(
-        (call) => call[0] === TURN_STARTED_ID
-      );
+      const subscribeCall =
+        deps.validatedEventDispatcher.subscribe.mock.calls.find(
+          (call) => call[0] === TURN_STARTED_ID
+        );
       const handler = subscribeCall[1];
 
       handler({ payload: null });
@@ -282,9 +287,10 @@ describe('InjuryStatusPanel', () => {
     it('renders healthy state when payload is empty object', () => {
       new InjuryStatusPanel(deps);
 
-      const subscribeCall = deps.validatedEventDispatcher.subscribe.mock.calls.find(
-        (call) => call[0] === TURN_STARTED_ID
-      );
+      const subscribeCall =
+        deps.validatedEventDispatcher.subscribe.mock.calls.find(
+          (call) => call[0] === TURN_STARTED_ID
+        );
       const handler = subscribeCall[1];
 
       handler({ payload: {} });
@@ -296,9 +302,10 @@ describe('InjuryStatusPanel', () => {
     it('renders healthy state when entityId is empty string', () => {
       new InjuryStatusPanel(deps);
 
-      const subscribeCall = deps.validatedEventDispatcher.subscribe.mock.calls.find(
-        (call) => call[0] === TURN_STARTED_ID
-      );
+      const subscribeCall =
+        deps.validatedEventDispatcher.subscribe.mock.calls.find(
+          (call) => call[0] === TURN_STARTED_ID
+        );
       const handler = subscribeCall[1];
 
       handler({ payload: { entityId: '' } });
@@ -314,9 +321,10 @@ describe('InjuryStatusPanel', () => {
     it('renders healthy state when entityId is not a string', () => {
       new InjuryStatusPanel(deps);
 
-      const subscribeCall = deps.validatedEventDispatcher.subscribe.mock.calls.find(
-        (call) => call[0] === TURN_STARTED_ID
-      );
+      const subscribeCall =
+        deps.validatedEventDispatcher.subscribe.mock.calls.find(
+          (call) => call[0] === TURN_STARTED_ID
+        );
       const handler = subscribeCall[1];
 
       handler({ payload: { entityId: 123 } });
@@ -337,9 +345,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('hero-123');
 
-      expect(deps.injuryAggregationService.aggregateInjuries).toHaveBeenCalledWith(
-        'hero-123'
-      );
+      expect(
+        deps.injuryAggregationService.aggregateInjuries
+      ).toHaveBeenCalledWith('hero-123');
       expect(getNarrativeElement().textContent).toBe('My arm is wounded.');
     });
 
@@ -465,7 +473,9 @@ describe('InjuryStatusPanel', () => {
         dyingTurnsRemaining: 1,
       });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        ''
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dying-entity');
@@ -481,7 +491,9 @@ describe('InjuryStatusPanel', () => {
         dyingTurnsRemaining: 2,
       });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        ''
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('dying-entity');
@@ -599,7 +611,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('bleeding-entity');
 
-      expect(getNarrativeElement().textContent).toBe('I am bleeding from my arm.');
+      expect(getNarrativeElement().textContent).toBe(
+        'I am bleeding from my arm.'
+      );
     });
 
     it('renders healthy when only burning parts exist', () => {
@@ -656,7 +670,9 @@ describe('InjuryStatusPanel', () => {
       panel.updateForActor('test-entity');
 
       expect(deps.logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cannot render: narrative element not available')
+        expect.stringContaining(
+          'Cannot render: narrative element not available'
+        )
       );
     });
   });
@@ -665,7 +681,9 @@ describe('InjuryStatusPanel', () => {
     it('clears existing CSS classes when rendering new state', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 70 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('First injury');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'First injury'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity-1');
@@ -674,7 +692,9 @@ describe('InjuryStatusPanel', () => {
       expect(narrativeEl.classList.contains('severity-wounded')).toBe(true);
 
       // Now update with healthy state
-      deps.injuryAggregationService.aggregateInjuries.mockReturnValue(createHealthySummary());
+      deps.injuryAggregationService.aggregateInjuries.mockReturnValue(
+        createHealthySummary()
+      );
       panel.updateForActor('entity-2');
 
       narrativeEl = getNarrativeElement();
@@ -685,7 +705,9 @@ describe('InjuryStatusPanel', () => {
     it('handles empty severity class gracefully', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 95 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Minor');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Minor'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -701,7 +723,10 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.elements.narrativeElement = null;
 
-      const summary = createInjuredSummary({ isDying: true, dyingTurnsRemaining: 2 });
+      const summary = createInjuredSummary({
+        isDying: true,
+        dyingTurnsRemaining: 2,
+      });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
 
       // Should not throw
@@ -723,7 +748,9 @@ describe('InjuryStatusPanel', () => {
       const panel = new InjuryStatusPanel(deps);
       panel.elements.narrativeElement = null;
 
-      deps.injuryAggregationService.aggregateInjuries.mockReturnValue(createHealthySummary());
+      deps.injuryAggregationService.aggregateInjuries.mockReturnValue(
+        createHealthySummary()
+      );
 
       // Should not throw
       expect(() => panel.updateForActor('healthy-entity')).not.toThrow();
@@ -753,7 +780,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-healthy at exactly 90%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 90 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Minimal');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Minimal'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -766,7 +795,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-scratched at exactly 75%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 75 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Light');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Light'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -779,7 +810,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-wounded at exactly 50%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 50 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Moderate');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Moderate'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -792,7 +825,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-injured at exactly 25%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 25 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Severe');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Severe'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -805,7 +840,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-critical at exactly 24%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 24 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Critical');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Critical'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');
@@ -818,7 +855,9 @@ describe('InjuryStatusPanel', () => {
     it('returns severity-critical at 0%', () => {
       const summary = createInjuredSummary({ overallHealthPercentage: 0 });
       deps.injuryAggregationService.aggregateInjuries.mockReturnValue(summary);
-      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue('Near death');
+      deps.injuryNarrativeFormatterService.formatFirstPerson.mockReturnValue(
+        'Near death'
+      );
 
       const panel = new InjuryStatusPanel(deps);
       panel.updateForActor('entity');

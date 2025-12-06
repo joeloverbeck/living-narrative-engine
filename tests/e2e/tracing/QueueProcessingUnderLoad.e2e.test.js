@@ -16,7 +16,14 @@
  * 4. Memory efficiency validation under sustained load
  */
 
-import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+  jest,
+} from '@jest/globals';
 
 import { TraceQueueProcessor } from '../../../src/actions/tracing/traceQueueProcessor.js';
 import { TracePriority } from '../../../src/actions/tracing/tracePriority.js';

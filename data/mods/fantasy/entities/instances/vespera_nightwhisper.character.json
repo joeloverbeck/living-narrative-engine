@@ -1,22 +1,22 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:vespera_nightwhisper_instance",
-    "definitionId": "fantasy:vespera_nightwhisper",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        "items:inventory": {
-            "items": [
-                "fantasy:notice_possessed_chickens_instance",
-                "fantasy:vespera_hybrid_lute_viol_instance",
-                "fantasy:vespera_rapier_instance",
-                "fantasy:vespera_main_gauche_instance"
-            ],
-            "capacity": {
-                "maxWeight": 50.0,
-                "maxItems": 20
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:vespera_nightwhisper_instance",
+  "definitionId": "fantasy:vespera_nightwhisper",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    "items:inventory": {
+      "items": [
+        "fantasy:notice_possessed_chickens_instance",
+        "fantasy:vespera_hybrid_lute_viol_instance",
+        "fantasy:vespera_rapier_instance",
+        "fantasy:vespera_main_gauche_instance"
+      ],
+      "capacity": {
+        "maxWeight": 50.0,
+        "maxItems": 20
+      }
     }
+  }
 }

@@ -203,7 +203,8 @@ class PrimitiveActionStepExecutor {
       const failureResult = {
         success: false,
         data: {},
-        error: error.message || 'Unknown error during primitive action execution',
+        error:
+          error.message || 'Unknown error during primitive action execution',
         timestamp: Date.now(),
         actionId: step.actionId,
       };
@@ -326,7 +327,7 @@ class PrimitiveActionStepExecutor {
   #mergeParameters(actionParameters, stepParameters) {
     return {
       ...actionParameters, // Action defaults
-      ...stepParameters,   // Step overrides
+      ...stepParameters, // Step overrides
     };
   }
 
@@ -340,17 +341,12 @@ class PrimitiveActionStepExecutor {
    * @param {string} actionId - Action ID for reference
    * @returns {object} Operation execution context
    */
-  #buildOperationContext(
-    context,
-    resolvedTargets,
-    mergedParameters,
-    actionId
-  ) {
+  #buildOperationContext(context, resolvedTargets, mergedParameters, actionId) {
     return {
-      ...context,                // task, refinement, actor
-      targets: resolvedTargets,  // Resolved entity IDs
+      ...context, // task, refinement, actor
+      targets: resolvedTargets, // Resolved entity IDs
       parameters: mergedParameters, // Merged parameters
-      actionId,                  // For debugging/logging
+      actionId, // For debugging/logging
     };
   }
 

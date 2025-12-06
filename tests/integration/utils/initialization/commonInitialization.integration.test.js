@@ -116,8 +116,14 @@ describe('commonInitialization integration', () => {
     container.register(tokens.IEntityManager, entityManager);
     container.register(tokens.SystemInitializer, systemInitializer);
     container.register(tokens.ISafeEventDispatcher, eventDispatcher);
-    container.register(tokens.AnatomyFormattingService, anatomyFormattingService);
-    container.register(tokens.AnatomyDescriptionService, anatomyDescriptionService);
+    container.register(
+      tokens.AnatomyFormattingService,
+      anatomyFormattingService
+    );
+    container.register(
+      tokens.AnatomyDescriptionService,
+      anatomyDescriptionService
+    );
   });
 
   it('wires the initialization workflow through the container and services', async () => {
@@ -130,7 +136,9 @@ describe('commonInitialization integration', () => {
     expect(coreServices.systemInitializer).toBe(systemInitializer);
     expect(coreServices.eventDispatcher).toBe(eventDispatcher);
 
-    expect(logger.messagesFor('debug')).toContain('Core services resolved successfully');
+    expect(logger.messagesFor('debug')).toContain(
+      'Core services resolved successfully'
+    );
 
     const anatomyServices = await initializeAnatomyServices(
       container,

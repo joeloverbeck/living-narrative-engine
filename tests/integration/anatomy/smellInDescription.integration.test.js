@@ -49,9 +49,8 @@ describe('Smell in Body Description - Integration', () => {
     const entity = entityManager.getEntityInstance(actorId);
 
     // Compose the description
-    const description = await bodyDescriptionComposer.composeDescription(
-      entity
-    );
+    const description =
+      await bodyDescriptionComposer.composeDescription(entity);
 
     // Verify smell appears in description
     expect(description).toContain('Smell: musky');
@@ -86,9 +85,8 @@ describe('Smell in Body Description - Integration', () => {
       });
 
       const entity = entityManager.getEntityInstance(actorId);
-      const description = await bodyDescriptionComposer.composeDescription(
-        entity
-      );
+      const description =
+        await bodyDescriptionComposer.composeDescription(entity);
 
       expect(description).toContain(`Smell: ${smellValue}`);
     }
@@ -114,9 +112,8 @@ describe('Smell in Body Description - Integration', () => {
     });
 
     const entity = entityManager.getEntityInstance(actorId);
-    const description = await bodyDescriptionComposer.composeDescription(
-      entity
-    );
+    const description =
+      await bodyDescriptionComposer.composeDescription(entity);
 
     expect(description).not.toContain('Smell:');
     expect(description).toContain('Build: slim');

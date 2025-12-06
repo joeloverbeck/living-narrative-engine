@@ -58,10 +58,7 @@ describe('conditionReferenceResolver integration', () => {
       ],
     });
     storeCondition('core:can_enter', {
-      or: [
-        { var: 'actor.is_invited' },
-        { condition_ref: 'core:is_allied' },
-      ],
+      or: [{ var: 'actor.is_invited' }, { condition_ref: 'core:is_allied' }],
     });
 
     const resolved = resolveReferences(
@@ -120,11 +117,9 @@ describe('conditionReferenceResolver integration', () => {
     });
 
     expect(() =>
-      resolveReferences(
-        { condition_ref: 'core:a' },
-        repository,
-        logger
-      )
-    ).toThrow("Circular condition_ref detected. Path: core:a -> core:b -> core:c -> core:a");
+      resolveReferences({ condition_ref: 'core:a' }, repository, logger)
+    ).toThrow(
+      'Circular condition_ref detected. Path: core:a -> core:b -> core:c -> core:a'
+    );
   });
 });

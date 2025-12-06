@@ -3,9 +3,6 @@
   "id": "warding:event-is-action-draw-salt-boundary",
   "description": "True when the event is an attempt to execute the draw_salt_boundary action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "warding:draw_salt_boundary"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "warding:draw_salt_boundary"]
   }
 }

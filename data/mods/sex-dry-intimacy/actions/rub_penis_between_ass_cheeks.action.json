@@ -11,9 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "actor": ["positioning:fucking_anally"]
@@ -22,10 +20,7 @@
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "penis"
-        ]
+        "hasPartOfType": ["actor", "penis"]
       },
       "failure_message": "You need a penis to perform this action."
     }

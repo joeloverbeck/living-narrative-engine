@@ -5,7 +5,14 @@
  *              previously exercised by other integration suites.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import { RetryManager } from '../../src/utils/proxyApiUtils.js';
 
@@ -76,7 +83,9 @@ describe('RetryManager fallback behaviours', () => {
     const debugMessages = records.debug.map(([message]) => message);
     expect(
       debugMessages.some((message) =>
-        message.includes('Error response body (Text): plain text failure payload')
+        message.includes(
+          'Error response body (Text): plain text failure payload'
+        )
       )
     ).toBe(true);
   });

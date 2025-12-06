@@ -25,7 +25,8 @@ const buildNonObjectDetailsApp = () => {
   app.get('/non-object-details', (req, res) => {
     const variant = req.query.variant || 'string';
 
-    const rawError = variant === 'number' ? 42 : new Error(`non-object variant: ${variant}`);
+    const rawError =
+      variant === 'number' ? 42 : new Error(`non-object variant: ${variant}`);
     const sanitized = sanitizeErrorForClient(rawError, 'non_object_details');
 
     let detailPayload;
@@ -42,7 +43,9 @@ const buildNonObjectDetailsApp = () => {
     }
 
     const originalError =
-      rawError instanceof Error ? rawError : new Error(`non-error payload: ${rawError}`);
+      rawError instanceof Error
+        ? rawError
+        : new Error(`non-error payload: ${rawError}`);
 
     const secureResponse = createSecureHttpErrorResponse(
       502,

@@ -3,7 +3,14 @@
  * @description Integration tests validating AppConfigService initialization guard rails.
  */
 
-import { afterEach, beforeEach, describe, expect, test, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  jest,
+} from '@jest/globals';
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import {
   getAppConfigService,

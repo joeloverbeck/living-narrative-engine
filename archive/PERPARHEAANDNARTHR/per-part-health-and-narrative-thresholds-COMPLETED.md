@@ -54,6 +54,7 @@ Future features (bleeding, damage types, armor) will add **new components** rath
 ### 3. Event Separation: Health Changed vs State Changed
 
 Two separate events:
+
 - `anatomy:part_health_changed` - Fires on ANY health value change
 - `anatomy:part_state_changed` - Fires ONLY when crossing threshold boundaries
 
@@ -87,14 +88,15 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 
 **Required Fields**:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `currentHealth` | number (>= 0) | Current health points |
-| `maxHealth` | number (>= 1) | Maximum health capacity |
-| `state` | enum | Narrative health state |
-| `turnsInState` | integer (>= 0) | Consecutive turns in current state |
+| Field           | Type           | Description                        |
+| --------------- | -------------- | ---------------------------------- |
+| `currentHealth` | number (>= 0)  | Current health points              |
+| `maxHealth`     | number (>= 1)  | Maximum health capacity            |
+| `state`         | enum           | Narrative health state             |
+| `turnsInState`  | integer (>= 0) | Consecutive turns in current state |
 
 **Health States** (enum values):
+
 - `healthy` - 76-100% of max health
 - `bruised` - 51-75% of max health
 - `wounded` - 26-50% of max health
@@ -102,6 +104,7 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 - `destroyed` - 0% (exactly zero)
 
 **Behavior**:
+
 - Component can be added to any entity with `anatomy:part` component
 - `currentHealth` must not exceed `maxHealth`
 - `currentHealth` must not be negative (clamped to 0)
@@ -130,6 +133,7 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 ```
 
 **Extension Points**:
+
 - `partTypeOverrides` object for future per-part-type thresholds
 - `creatureTypeOverrides` for creature-specific thresholds
 
@@ -143,18 +147,19 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 
 **Required Parameters**:
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `part_entity_ref` | string or object | Reference to part entity |
-| `delta` | number | Health change (negative = damage, positive = healing) |
+| Parameter         | Type             | Description                                           |
+| ----------------- | ---------------- | ----------------------------------------------------- |
+| `part_entity_ref` | string or object | Reference to part entity                              |
+| `delta`           | number           | Health change (negative = damage, positive = healing) |
 
 **Optional Parameters**:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `clamp_to_bounds` | boolean | true | Clamp result to [0, maxHealth] |
+| Parameter         | Type    | Default | Description                    |
+| ----------------- | ------- | ------- | ------------------------------ |
+| `clamp_to_bounds` | boolean | true    | Clamp result to [0, maxHealth] |
 
 **Behavior**:
+
 1. Resolve `part_entity_ref` to entity ID
 2. Get current `anatomy:part_health` component
 3. Calculate new health: `newHealth = currentHealth + delta`
@@ -164,6 +169,7 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 7. Call UPDATE_PART_HEALTH_STATE to recalculate state
 
 **Error Conditions**:
+
 - Entity not found
 - Entity missing `anatomy:part_health` component
 - Invalid delta (non-numeric)
@@ -178,11 +184,12 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 
 **Required Parameters**:
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter         | Type             | Description              |
+| ----------------- | ---------------- | ------------------------ |
 | `part_entity_ref` | string or object | Reference to part entity |
 
 **Behavior**:
+
 1. Resolve `part_entity_ref` to entity ID
 2. Get current `anatomy:part_health` component
 3. Calculate percentage: `(currentHealth / maxHealth) * 100`
@@ -195,6 +202,7 @@ Event schemas use `additionalProperties: true` to allow future iterations to add
 7. Update component
 
 **State Calculation Logic**:
+
 ```
 if percentage > 75: return "healthy"
 if percentage > 50: return "bruised"
@@ -215,17 +223,17 @@ return "destroyed"
 
 **Required Payload Fields**:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `partEntityId` | string | Entity ID of the affected part |
-| `ownerEntityId` | string | Entity ID of the character (if determinable) |
-| `partType` | string | The subType of the part (e.g., "arm", "head") |
-| `previousHealth` | number | Health before change |
-| `newHealth` | number | Health after change |
-| `maxHealth` | number | Maximum health of the part |
-| `healthPercentage` | number | Current percentage (0-100) |
-| `delta` | number | Amount changed |
-| `timestamp` | integer | Game turn or timestamp |
+| Field              | Type    | Description                                   |
+| ------------------ | ------- | --------------------------------------------- |
+| `partEntityId`     | string  | Entity ID of the affected part                |
+| `ownerEntityId`    | string  | Entity ID of the character (if determinable)  |
+| `partType`         | string  | The subType of the part (e.g., "arm", "head") |
+| `previousHealth`   | number  | Health before change                          |
+| `newHealth`        | number  | Health after change                           |
+| `maxHealth`        | number  | Maximum health of the part                    |
+| `healthPercentage` | number  | Current percentage (0-100)                    |
+| `delta`            | number  | Amount changed                                |
+| `timestamp`        | integer | Game turn or timestamp                        |
 
 **Extensibility**: Schema should allow additional properties for future fields like `damageType`, `source`.
 
@@ -241,17 +249,17 @@ return "destroyed"
 
 **Required Payload Fields**:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `partEntityId` | string | Entity ID of the affected part |
-| `ownerEntityId` | string | Entity ID of the character |
-| `partType` | string | The subType of the part |
-| `previousState` | string | State before transition |
-| `newState` | string | State after transition |
-| `turnsInPreviousState` | integer | Duration in previous state |
-| `healthPercentage` | number | Current percentage |
-| `isDeterioration` | boolean | True if moving to worse state |
-| `timestamp` | integer | Game turn or timestamp |
+| Field                  | Type    | Description                    |
+| ---------------------- | ------- | ------------------------------ |
+| `partEntityId`         | string  | Entity ID of the affected part |
+| `ownerEntityId`        | string  | Entity ID of the character     |
+| `partType`             | string  | The subType of the part        |
+| `previousState`        | string  | State before transition        |
+| `newState`             | string  | State after transition         |
+| `turnsInPreviousState` | integer | Duration in previous state     |
+| `healthPercentage`     | number  | Current percentage             |
+| `isDeterioration`      | boolean | True if moving to worse state  |
+| `timestamp`            | integer | Game turn or timestamp         |
 
 **Extensibility**: Schema should allow additional properties.
 
@@ -261,22 +269,22 @@ return "destroyed"
 
 ### Existing System Dependencies
 
-| System | Integration |
-|--------|-------------|
-| Anatomy System | Parts are entities with `anatomy:part` component |
-| Entity Manager | Component CRUD via `batchAddComponentsOptimized` |
-| Event System | Dispatch via `SafeEventDispatcher` |
-| Operation Registry | Follow standard operation registration pattern |
+| System             | Integration                                      |
+| ------------------ | ------------------------------------------------ |
+| Anatomy System     | Parts are entities with `anatomy:part` component |
+| Entity Manager     | Component CRUD via `batchAddComponentsOptimized` |
+| Event System       | Dispatch via `SafeEventDispatcher`               |
+| Operation Registry | Follow standard operation registration pattern   |
 
 ### Files to Reference
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/updateHungerStateHandler.js` | Pattern for state update handler |
-| `data/mods/metabolism/components/hunger_state.component.json` | Pattern for component schema |
-| `data/mods/metabolism/lookups/hunger_thresholds.json` | Pattern for threshold lookup |
-| `data/mods/anatomy/events/limb_detached.event.json` | Pattern for anatomy events |
-| `src/utils/preValidationUtils.js` | Operation type whitelist |
+| File                                                          | Purpose                          |
+| ------------------------------------------------------------- | -------------------------------- |
+| `src/logic/operationHandlers/updateHungerStateHandler.js`     | Pattern for state update handler |
+| `data/mods/metabolism/components/hunger_state.component.json` | Pattern for component schema     |
+| `data/mods/metabolism/lookups/hunger_thresholds.json`         | Pattern for threshold lookup     |
+| `data/mods/anatomy/events/limb_detached.event.json`           | Pattern for anatomy events       |
+| `src/utils/preValidationUtils.js`                             | Operation type whitelist         |
 
 ### Registration Checklist
 
@@ -296,25 +304,25 @@ Per CLAUDE.md "Adding New Operations" section:
 
 ### Unit Tests
 
-| Handler | Test Cases |
-|---------|------------|
+| Handler                      | Test Cases                                   |
+| ---------------------------- | -------------------------------------------- |
 | UpdatePartHealthStateHandler | State calculation at each threshold boundary |
-| UpdatePartHealthStateHandler | turnsInState increment/reset logic |
-| UpdatePartHealthStateHandler | Event dispatch only on state change |
-| UpdatePartHealthStateHandler | Error handling for missing components |
-| ModifyPartHealthHandler | Positive delta (healing) |
-| ModifyPartHealthHandler | Negative delta (damage) |
-| ModifyPartHealthHandler | Clamping to [0, maxHealth] |
-| ModifyPartHealthHandler | Event dispatch with correct payload |
+| UpdatePartHealthStateHandler | turnsInState increment/reset logic           |
+| UpdatePartHealthStateHandler | Event dispatch only on state change          |
+| UpdatePartHealthStateHandler | Error handling for missing components        |
+| ModifyPartHealthHandler      | Positive delta (healing)                     |
+| ModifyPartHealthHandler      | Negative delta (damage)                      |
+| ModifyPartHealthHandler      | Clamping to [0, maxHealth]                   |
+| ModifyPartHealthHandler      | Event dispatch with correct payload          |
 
 ### Integration Tests
 
-| Scenario | Validation |
-|----------|------------|
-| Full lifecycle | Create part, add health, modify, verify state |
-| State transitions | Damage through all states, verify events |
-| Multiple parts | Verify operations work on different parts |
-| Edge cases | 0%, 100%, exact threshold boundaries |
+| Scenario          | Validation                                    |
+| ----------------- | --------------------------------------------- |
+| Full lifecycle    | Create part, add health, modify, verify state |
+| State transitions | Damage through all states, verify events      |
+| Multiple parts    | Verify operations work on different parts     |
+| Edge cases        | 0%, 100%, exact threshold boundaries          |
 
 ---
 
@@ -322,14 +330,14 @@ Per CLAUDE.md "Adding New Operations" section:
 
 This iteration establishes extension points for future features:
 
-| Future Feature | Extension Mechanism |
-|----------------|---------------------|
-| Damage types | Add optional `damageType` param to MODIFY_PART_HEALTH |
-| Bleeding | New `anatomy:bleeding` component + rules |
-| Healing | New healing actions using MODIFY_PART_HEALTH |
-| Death logic | Rules listening to `part_state_changed` on vital parts |
-| Armor | Check armor component before MODIFY_PART_HEALTH |
-| Limb detachment | Rules triggered by `destroyed` state |
+| Future Feature  | Extension Mechanism                                    |
+| --------------- | ------------------------------------------------------ |
+| Damage types    | Add optional `damageType` param to MODIFY_PART_HEALTH  |
+| Bleeding        | New `anatomy:bleeding` component + rules               |
+| Healing         | New healing actions using MODIFY_PART_HEALTH           |
+| Death logic     | Rules listening to `part_state_changed` on vital parts |
+| Armor           | Check armor component before MODIFY_PART_HEALTH        |
+| Limb detachment | Rules triggered by `destroyed` state                   |
 
 ---
 

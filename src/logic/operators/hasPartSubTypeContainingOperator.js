@@ -36,9 +36,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     const options = this.#normalizeOptions(rawOptions);
 
     if (!substring || typeof substring !== 'string') {
-      this.logger.warn(
-        `hasPartSubTypeContaining: Invalid substring parameter`
-      );
+      this.logger.warn(`hasPartSubTypeContaining: Invalid substring parameter`);
       return false;
     }
 
@@ -55,7 +53,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     const allParts = this.bodyGraphService.getAllParts(bodyComponent, entityId);
 
     // Look up each part in the cache to get its partType (subType)
-    const matchingParts = allParts.filter(partId => {
+    const matchingParts = allParts.filter((partId) => {
       const node = this.bodyGraphService.getCacheNode(partId);
       if (!node) return false;
 

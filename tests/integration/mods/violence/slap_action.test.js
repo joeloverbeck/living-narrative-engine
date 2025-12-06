@@ -40,9 +40,12 @@ describe('Violence Mod: Slap Action Integration', () => {
     });
 
     it('rejects the action when the actor is hugging someone', async () => {
-      const scenario = testFixture.createStandardActorTarget(['Maya', 'Nolan'], {
-        includeRoom: false,
-      });
+      const scenario = testFixture.createStandardActorTarget(
+        ['Maya', 'Nolan'],
+        {
+          includeRoom: false,
+        }
+      );
 
       scenario.actor.components['positioning:hugging'] = {
         embraced_entity_id: scenario.target.id,

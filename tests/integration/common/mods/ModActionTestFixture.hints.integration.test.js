@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
 describe('ModTestFixture - Error Hints', () => {
@@ -16,7 +23,12 @@ describe('ModTestFixture - Error Hints', () => {
 
   describe('scope registration hints', () => {
     it('should provide hint when known scope not registered', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Act - discover actions without registering scopes
@@ -30,9 +42,15 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should not provide hint when scopes registered', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null, {
-        autoRegisterScopes: true,
-      });
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null,
+        {
+          autoRegisterScopes: true,
+        }
+      );
 
       // Create sitting scenario with furniture to make action discoverable
       const scenario = testFixture.createSittingPair({
@@ -43,7 +61,9 @@ describe('ModTestFixture - Error Hints', () => {
       });
 
       // Act
-      const availableActions = testFixture.discoverActions(scenario.seatedActors[0].id);
+      const availableActions = testFixture.discoverActions(
+        scenario.seatedActors[0].id
+      );
 
       // Assert - should not have warned (actions were found)
       expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -52,7 +72,12 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should provide custom resolver hint for unknown scopes', async () => {
       // Create a test fixture for an action with custom scope
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
 
       // Mock the action definition to use unknown scope
       testFixture._actionDefinition = {
@@ -73,7 +98,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should allow suppressing hints', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
       testFixture.suppressHints(); // Suppress hints
 
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
@@ -86,7 +116,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should re-enable hints after suppression', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
       testFixture.suppressHints();
       testFixture.enableHints(); // Re-enable hints
 
@@ -100,9 +135,15 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should not provide hint when actions are discovered', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null, {
-        autoRegisterScopes: true,
-      });
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null,
+        {
+          autoRegisterScopes: true,
+        }
+      );
 
       // Create sitting scenario with furniture to make sit_down action discoverable
       const scenario = testFixture.createSittingPair({
@@ -113,7 +154,9 @@ describe('ModTestFixture - Error Hints', () => {
       });
 
       // Act
-      const availableActions = testFixture.discoverActions(scenario.seatedActors[0].id);
+      const availableActions = testFixture.discoverActions(
+        scenario.seatedActors[0].id
+      );
 
       // Assert - should not have warned (actions were found)
       expect(consoleWarnSpy).not.toHaveBeenCalled();
@@ -121,7 +164,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should handle missing action definition gracefully', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
 
       // Clear the action definition
       testFixture._actionDefinition = null;
@@ -137,7 +185,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should handle action without targets field', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
 
       // Mock action definition without targets
       testFixture._actionDefinition = {
@@ -156,7 +209,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should detect positioning category correctly', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
 
       // Mock action definition with positioning scope
       testFixture._actionDefinition = {
@@ -176,7 +234,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should detect inventory category correctly', async () => {
-      testFixture = await ModTestFixture.forAction('items', 'pick_up_item', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'items',
+        'pick_up_item',
+        null,
+        null
+      );
 
       // Mock action definition with inventory scope
       testFixture._actionDefinition = {
@@ -196,7 +259,12 @@ describe('ModTestFixture - Error Hints', () => {
     });
 
     it('should detect anatomy category correctly', async () => {
-      testFixture = await ModTestFixture.forAction('positioning', 'sit_down', null, null);
+      testFixture = await ModTestFixture.forAction(
+        'positioning',
+        'sit_down',
+        null,
+        null
+      );
 
       // Mock action definition with anatomy scope
       testFixture._actionDefinition = {

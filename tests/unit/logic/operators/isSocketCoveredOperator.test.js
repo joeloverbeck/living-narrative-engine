@@ -677,11 +677,14 @@ describe('IsSocketCoveredOperator', () => {
 
   describe('hasItemsInSlotExcludingAccessories', () => {
     it('should return false when equipment data lacks equipped property', () => {
-      const result = operator.hasItemsInSlotExcludingAccessories({}, 'torso_lower');
+      const result = operator.hasItemsInSlotExcludingAccessories(
+        {},
+        'torso_lower'
+      );
 
       expect(result).toBe(false);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        "isSocketCovered: hasItemsInSlotExcludingAccessories - No equipped property in equipment data"
+        'isSocketCovered: hasItemsInSlotExcludingAccessories - No equipped property in equipment data'
       );
     });
 
@@ -857,37 +860,42 @@ describe('IsSocketCoveredOperator', () => {
         },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, type) => {
-        if (type === 'clothing:equipment') {
-          return equipmentByEntity[entityId];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, type) => {
+          if (type === 'clothing:equipment') {
+            return equipmentByEntity[entityId];
+          }
+          if (type === 'clothing:slot_metadata') {
+            return slotMetadata;
+          }
+          return null;
         }
-        if (type === 'clothing:slot_metadata') {
-          return slotMetadata;
-        }
-        return null;
-      });
+      );
 
       operator.evaluateInternal('entity1', ['vagina'], mockContext);
       operator.evaluateInternal('entity2', ['vagina'], mockContext);
 
       mockEntityManager.getComponentData.mockClear();
-      mockEntityManager.getComponentData.mockImplementation((entityId, type) => {
-        if (type === 'clothing:equipment') {
-          return equipmentByEntity[entityId];
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, type) => {
+          if (type === 'clothing:equipment') {
+            return equipmentByEntity[entityId];
+          }
+          if (type === 'clothing:slot_metadata') {
+            return slotMetadata;
+          }
+          return null;
         }
-        if (type === 'clothing:slot_metadata') {
-          return slotMetadata;
-        }
-        return null;
-      });
+      );
 
       operator.clearCache('entity1');
       operator.evaluateInternal('entity1', ['vagina'], mockContext);
       operator.evaluateInternal('entity2', ['vagina'], mockContext);
 
-      const slotMetadataCalls = mockEntityManager.getComponentData.mock.calls.filter(
-        ([, type]) => type === 'clothing:slot_metadata'
-      );
+      const slotMetadataCalls =
+        mockEntityManager.getComponentData.mock.calls.filter(
+          ([, type]) => type === 'clothing:slot_metadata'
+        );
 
       expect(slotMetadataCalls).toHaveLength(1);
     });

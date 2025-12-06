@@ -67,7 +67,11 @@ export class CanActorGrabItemOperator {
       const [actorPath, itemPath] = params;
 
       // Resolve actor
-      const actorId = this.#resolveEntityIdFromPath(actorPath, context, 'actor');
+      const actorId = this.#resolveEntityIdFromPath(
+        actorPath,
+        context,
+        'actor'
+      );
       if (actorId === null) {
         return false;
       }

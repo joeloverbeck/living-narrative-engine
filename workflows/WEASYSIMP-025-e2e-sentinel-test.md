@@ -17,6 +17,7 @@ Create end-to-end test for the complete sentinel patrol scenario: patrol, detect
 **File:** `sentinelPatrol.e2e.test.js`
 
 Test scenario (from spec lines 1986-1996):
+
 1. Create two sentinels (Alpha with pistol, Beta with rifle)
 2. Create hostile entities
 3. Place all at same location

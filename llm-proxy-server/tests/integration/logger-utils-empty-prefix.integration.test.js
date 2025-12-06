@@ -1,8 +1,18 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
-import { createSecureLogger, ensureValidLogger } from '../../src/utils/loggerUtils.js';
+import {
+  createSecureLogger,
+  ensureValidLogger,
+} from '../../src/utils/loggerUtils.js';
 import { sendProxyError } from '../../src/utils/responseUtils.js';
 
 const ORIGINAL_ENV = { ...process.env };
@@ -29,8 +39,10 @@ describe('logger utils empty prefix fallback integration', () => {
     expect(typeof fallbackLogger.error).toBe('function');
     expect(typeof fallbackLogger.debug).toBe('function');
 
-    const initializationWarning = warnSpy.mock.calls.find(([, message]) =>
-      typeof message === 'string' && message.includes('invalid logger instance')
+    const initializationWarning = warnSpy.mock.calls.find(
+      ([, message]) =>
+        typeof message === 'string' &&
+        message.includes('invalid logger instance')
     );
     expect(initializationWarning).toBeDefined();
     expect(initializationWarning?.[0]).toBe('');
@@ -73,7 +85,9 @@ describe('logger utils empty prefix fallback integration', () => {
     expect(response.status).toBe(401);
     expect(response.body.details.nested.chain).toHaveLength(3);
 
-    const sanitizedWarnCall = warnSpy.mock.calls.find(([, message]) => message === 'observability-branch');
+    const sanitizedWarnCall = warnSpy.mock.calls.find(
+      ([, message]) => message === 'observability-branch'
+    );
     expect(sanitizedWarnCall).toBeDefined();
     expect(sanitizedWarnCall?.[0]).toBe('');
     const sanitizedWarnContext = sanitizedWarnCall?.[2];
@@ -86,8 +100,10 @@ describe('logger utils empty prefix fallback integration', () => {
     expect(sanitizedWarnContext.nested.api_key).toBe('p***');
     expect(sanitizedWarnContext.nested.token).toBe('*');
 
-    const errorCall = errorSpy.mock.calls.find(([, message]) =>
-      typeof message === 'string' && message.includes('LLM Proxy Server: Sending error to client')
+    const errorCall = errorSpy.mock.calls.find(
+      ([, message]) =>
+        typeof message === 'string' &&
+        message.includes('LLM Proxy Server: Sending error to client')
     );
     expect(errorCall).toBeDefined();
     expect(errorCall?.[0]).toBe('');

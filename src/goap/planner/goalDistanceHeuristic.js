@@ -91,13 +91,21 @@ class GoalDistanceHeuristic {
     planningEffectsSimulator,
     logger,
   }) {
-    this.#logger = ensureValidLogger(logger, 'GoalDistanceHeuristic.constructor');
+    this.#logger = ensureValidLogger(
+      logger,
+      'GoalDistanceHeuristic.constructor'
+    );
 
     const logicEvaluator = jsonLogicEvaluator ?? jsonLogicEvaluationService;
 
-    validateDependency(logicEvaluator, 'JsonLogicEvaluationService', this.#logger, {
-      requiredMethods: ['evaluate'],
-    });
+    validateDependency(
+      logicEvaluator,
+      'JsonLogicEvaluationService',
+      this.#logger,
+      {
+        requiredMethods: ['evaluate'],
+      }
+    );
 
     validateDependency(
       numericConstraintEvaluator,
@@ -144,11 +152,12 @@ class GoalDistanceHeuristic {
       // Check if this is a numeric constraint
       if (this.#numericConstraintEvaluator.isNumericConstraint(goalState)) {
         // Try to calculate numeric distance
-        const numericDistance = this.#numericConstraintEvaluator.calculateDistance(
-          goalState,
-          evaluationContext,
-          { stateView, metadata: mergedMetadata }
-        );
+        const numericDistance =
+          this.#numericConstraintEvaluator.calculateDistance(
+            goalState,
+            evaluationContext,
+            { stateView, metadata: mergedMetadata }
+          );
 
         // If numeric distance is successfully calculated, use it
         if (numericDistance !== null && numericDistance !== undefined) {
@@ -196,7 +205,11 @@ class GoalDistanceHeuristic {
    */
   #calculateDistanceForGoalStateEnhanced(adapter, goalState, tasks, goal) {
     const metadata = { goalId: goal?.id, origin: 'GoalDistanceHeuristic' };
-    const baseDistance = this.#calculateDistanceForGoalState(adapter, goalState, metadata);
+    const baseDistance = this.#calculateDistanceForGoalState(
+      adapter,
+      goalState,
+      metadata
+    );
     const stateView = adapter.getStateView();
 
     // If goal already satisfied or no tasks available, return base distance
@@ -216,7 +229,12 @@ class GoalDistanceHeuristic {
       return baseDistance;
     }
 
-    const taskEffect = this.#estimateTaskEffect(bestTask, stateView, goal, adapter);
+    const taskEffect = this.#estimateTaskEffect(
+      bestTask,
+      stateView,
+      goal,
+      adapter
+    );
 
     if (taskEffect === 0) {
       return baseDistance;
@@ -289,7 +307,9 @@ class GoalDistanceHeuristic {
 
     if (!actorId) {
       // Try to extract from first flat hash key
-      const flatKeys = Object.keys(stateView.getState()).filter((key) => key.includes(':'));
+      const flatKeys = Object.keys(stateView.getState()).filter((key) =>
+        key.includes(':')
+      );
       if (flatKeys.length > 0) {
         actorId = flatKeys[0].split(':')[0]; // Extract "entityId" from "entityId:componentId"
         this.#logger.debug('Extracted actor ID from flat hash key', {
@@ -298,10 +318,13 @@ class GoalDistanceHeuristic {
           flatKey: flatKeys[0],
         });
       } else {
-        this.#logger.warn('Task effect estimation failed: actor ID not found in state', {
-          taskId: task.id,
-          stateKeys: Object.keys(stateView.getState()).slice(0, 5),
-        });
+        this.#logger.warn(
+          'Task effect estimation failed: actor ID not found in state',
+          {
+            taskId: task.id,
+            stateKeys: Object.keys(stateView.getState()).slice(0, 5),
+          }
+        );
         return 0;
       }
     }
@@ -463,7 +486,9 @@ class GoalDistanceHeuristic {
   calculate(state, goal, tasks = []) {
     // Validate inputs
     if (!state || typeof state !== 'object') {
-      this.#logger.warn('GoalDistanceHeuristic.calculate: Invalid state, returning Infinity');
+      this.#logger.warn(
+        'GoalDistanceHeuristic.calculate: Invalid state, returning Infinity'
+      );
       return Infinity;
     }
 
@@ -483,11 +508,19 @@ class GoalDistanceHeuristic {
     });
 
     if (goal.goalState) {
-      return this.#calculateDistanceForGoalStateEnhanced(adapter, goal.goalState, tasks, goal);
+      return this.#calculateDistanceForGoalStateEnhanced(
+        adapter,
+        goal.goalState,
+        tasks,
+        goal
+      );
     }
 
     if (Array.isArray(goal.conditions)) {
-      return this.#calculateDistanceForConditions(adapter.getStateView(), goal.conditions);
+      return this.#calculateDistanceForConditions(
+        adapter.getStateView(),
+        goal.conditions
+      );
     }
 
     // Neither format present
@@ -496,7 +529,6 @@ class GoalDistanceHeuristic {
     );
     return Infinity;
   }
-
 }
 
 export default GoalDistanceHeuristic;

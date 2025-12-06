@@ -12,7 +12,14 @@
  * @see src/anatomy/services/injuryNarrativeFormatterService.js - shared narrative formatting
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 import CharacterDataXmlBuilder from '../../../src/prompting/characterDataXmlBuilder.js';
 import XmlElementBuilder from '../../../src/prompting/xmlElementBuilder.js';
@@ -132,7 +139,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
       // Step 1: Get the narrative from InjuryNarrativeFormatterService
       // (This is what game.html Physical Condition panel uses)
       const summary = injuryAggregationService.aggregateInjuries(entityId);
-      const gameHtmlNarrative = narrativeFormatterService.formatFirstPerson(summary);
+      const gameHtmlNarrative =
+        narrativeFormatterService.formatFirstPerson(summary);
 
       // Step 2: Generate the LLM prompt XML
       const characterData = {
@@ -154,7 +162,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Step 3: Extract the injuries element content from the XML
       const injuriesMatch = xmlResult.match(/<injuries>(.*?)<\/injuries>/s);
@@ -180,16 +189,24 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
           overallHealthPercentage: 45,
           overallStatus: 'wounded',
           injuries: [
-            { partName: 'left arm', partType: 'arm', state: 'wounded', healthPercent: 30, effects: ['bleeding'] },
+            {
+              partName: 'left arm',
+              partType: 'arm',
+              state: 'wounded',
+              healthPercent: 30,
+              effects: ['bleeding'],
+            },
           ],
           activeEffects: ['bleeding'],
           isDying: false,
           turnsUntilDeath: null,
-          firstPersonNarrative: 'My left arm throbs painfully. Blood flows steadily from my left arm.',
+          firstPersonNarrative:
+            'My left arm throbs painfully. Blood flows steadily from my left arm.',
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Should NOT contain old technical format
       expect(xmlResult).not.toContain('<injury part=');
@@ -215,7 +232,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Should NOT contain active_effects element (info is in narrative)
       expect(xmlResult).not.toContain('<active_effects>');
@@ -236,7 +254,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Should NOT contain first_person_experience element (moved to injuries)
       expect(xmlResult).not.toContain('<first_person_experience>');
@@ -344,7 +363,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
 
       // Get game.html narrative
       const summary = injuryAggregationService.aggregateInjuries(entityId);
-      const gameHtmlNarrative = narrativeFormatterService.formatFirstPerson(summary);
+      const gameHtmlNarrative =
+        narrativeFormatterService.formatFirstPerson(summary);
 
       // Build LLM prompt
       const characterData = {
@@ -366,14 +386,16 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Extract and verify
       const injuriesMatch = xmlResult.match(/<injuries>(.*?)<\/injuries>/s);
       expect(injuriesMatch).not.toBeNull();
 
       // The exact expected narrative
-      const expectedNarrative = 'My right ear is missing. My torso screams with agony. My upper head throbs painfully. My brain stings slightly. Blood flows steadily from my torso and upper head.';
+      const expectedNarrative =
+        'My right ear is missing. My torso screams with agony. My upper head throbs painfully. My brain stings slightly. Blood flows steadily from my torso and upper head.';
 
       expect(gameHtmlNarrative).toBe(expectedNarrative);
 
@@ -402,7 +424,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Should include critical warning
       expect(xmlResult).toContain('<critical_warning>');
@@ -427,7 +450,8 @@ describe('LLM Prompt Injuries Narrative Consistency', () => {
         },
       };
 
-      const xmlResult = characterDataXmlBuilder.buildCharacterDataXml(characterData);
+      const xmlResult =
+        characterDataXmlBuilder.buildCharacterDataXml(characterData);
 
       // Should have escaped characters in injuries element
       expect(xmlResult).toContain('<injuries>');

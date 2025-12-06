@@ -68,10 +68,12 @@ describe('Death Check Integration', () => {
       getAllDescendants: jest.fn().mockReturnValue([]),
     };
     damageTypeEffectsService = { applyEffectsForDamage: jest.fn() };
-    damagePropagationService = { propagateDamage: jest.fn().mockReturnValue([]) };
+    damagePropagationService = {
+      propagateDamage: jest.fn().mockReturnValue([]),
+    };
     // Default to no destroyed parts
     injuryAggregationService = {
-      aggregateInjuries: jest.fn().mockReturnValue({ destroyedParts: [] })
+      aggregateInjuries: jest.fn().mockReturnValue({ destroyedParts: [] }),
     };
 
     // Use the real DeathCheckService
@@ -149,7 +151,8 @@ describe('Death Check Integration', () => {
 
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'heart-part') return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'heart-part')
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -206,7 +209,7 @@ describe('Death Check Integration', () => {
         entity1: {
           [BODY_COMPONENT_ID]: { bodyId: 'body1' },
           [OVERALL_HEALTH_COMPONENT_ID]: {
-            currentHealth: 5,  // 5% health - critically low
+            currentHealth: 5, // 5% health - critically low
             maxHealth: 100,
           },
         },
@@ -278,7 +281,8 @@ describe('Death Check Integration', () => {
 
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part') return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'brain-part')
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -335,7 +339,7 @@ describe('Death Check Integration', () => {
         entity1: {
           [BODY_COMPONENT_ID]: { bodyId: 'body1' },
           [OVERALL_HEALTH_COMPONENT_ID]: {
-            currentHealth: 8,  // 8% health - critically low
+            currentHealth: 8, // 8% health - critically low
             maxHealth: 100,
           },
         },
@@ -425,7 +429,8 @@ describe('Death Check Integration', () => {
 
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'heart-part') return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === 'heart-part')
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -436,11 +441,18 @@ describe('Death Check Integration', () => {
       // Mock propagation: parent damage propagates to heart
       damagePropagationService.propagateDamage
         .mockReturnValueOnce([
-          { childPartId: 'heart-part', damageApplied: 50, damageTypeId: 'piercing' },
+          {
+            childPartId: 'heart-part',
+            damageApplied: 50,
+            damageTypeId: 'piercing',
+          },
         ])
         .mockReturnValue([]);
 
-      bodyGraphService.getAllParts.mockReturnValue(['torso-part', 'heart-part']);
+      bodyGraphService.getAllParts.mockReturnValue([
+        'torso-part',
+        'heart-part',
+      ]);
 
       // Mock injury aggregation to report destroyed vital organ after propagation
       injuryAggregationService.aggregateInjuries.mockReturnValue({
@@ -540,13 +552,20 @@ describe('Death Check Integration', () => {
 
       entityManager.getComponentData.mockImplementation((id, comp) => {
         if (comp === PART_HEALTH_COMPONENT_ID && id === 'part1') {
-          return { currentHealth: 100, maxHealth: 100, state: 'healthy', turnsInState: 0 };
+          return {
+            currentHealth: 100,
+            maxHealth: 100,
+            state: 'healthy',
+            turnsInState: 0,
+          };
         }
         return null;
       });
 
       // Should not throw error
-      await expect(handler.execute(params, executionContext)).resolves.not.toThrow();
+      await expect(
+        handler.execute(params, executionContext)
+      ).resolves.not.toThrow();
 
       // Should complete damage application
       expect(entityManager.addComponent).toHaveBeenCalledWith(
@@ -734,8 +753,13 @@ describe('Death Check Integration', () => {
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
         if (comp === DYING_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId) return true;
-        if (comp === PART_HEALTH_COMPONENT_ID && (id === headPartId || id === brainPartId)) return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId)
+          return true;
+        if (
+          comp === PART_HEALTH_COMPONENT_ID &&
+          (id === headPartId || id === brainPartId)
+        )
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -812,8 +836,13 @@ describe('Death Check Integration', () => {
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
         if (comp === DYING_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId) return true;
-        if (comp === PART_HEALTH_COMPONENT_ID && (id === headPartId || id === brainPartId)) return true;
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === brainPartId)
+          return true;
+        if (
+          comp === PART_HEALTH_COMPONENT_ID &&
+          (id === headPartId || id === brainPartId)
+        )
+          return true;
         return Boolean(components[id]?.[comp]);
       });
 
@@ -833,7 +862,10 @@ describe('Death Check Integration', () => {
         overallHealthPercentage: 50,
       });
 
-      const result = deathCheckService.checkDeathConditions(entityId, 'attacker-id');
+      const result = deathCheckService.checkDeathConditions(
+        entityId,
+        'attacker-id'
+      );
 
       // Should be dead - brain is destroyed
       expect(result.isDead).toBe(true);
@@ -907,8 +939,10 @@ describe('Death Check Integration', () => {
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
         if (comp === DYING_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === spinePartId) return true;
-        if (comp === PART_HEALTH_COMPONENT_ID) return Boolean(components[id]?.[comp]);
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === spinePartId)
+          return true;
+        if (comp === PART_HEALTH_COMPONENT_ID)
+          return Boolean(components[id]?.[comp]);
         return Boolean(components[id]?.[comp]);
       });
 
@@ -977,8 +1011,10 @@ describe('Death Check Integration', () => {
       entityManager.hasComponent.mockImplementation((id, comp) => {
         if (comp === DEAD_COMPONENT_ID) return false;
         if (comp === DYING_COMPONENT_ID) return false;
-        if (comp === VITAL_ORGAN_COMPONENT_ID && id === heartPartId) return true;
-        if (comp === PART_HEALTH_COMPONENT_ID) return Boolean(components[id]?.[comp]);
+        if (comp === VITAL_ORGAN_COMPONENT_ID && id === heartPartId)
+          return true;
+        if (comp === PART_HEALTH_COMPONENT_ID)
+          return Boolean(components[id]?.[comp]);
         return Boolean(components[id]?.[comp]);
       });
 

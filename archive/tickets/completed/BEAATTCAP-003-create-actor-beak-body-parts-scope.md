@@ -19,21 +19,22 @@ The peck action needs to select which beak to attack with (for creatures with mu
 **Approach Used**: Option B - BodyPartStepResolver (dedicated resolver following ClothingStepResolver pattern)
 
 The implementation extends the ScopeDSL system with:
+
 1. A new `BodyPartStepResolver` that intercepts `body_parts` and `all_body_parts` field accesses
 2. Returns access objects that `ArrayIterationResolver` recognizes and processes via `BodyGraphService`
 3. Standard JSON Logic filtering with `{"in": [...]}` for substring matching
 
 ## Files Modified/Created
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/scopeDsl/nodes/bodyPartStepResolver.js` | **Created** | New resolver following ClothingStepResolver pattern |
-| `src/scopeDsl/engine.js` | Modified | Registered resolver, passed BodyGraphService to ArrayIterationResolver |
-| `src/scopeDsl/nodes/arrayIterationResolver.js` | Modified | Added handling for body part access objects |
-| `data/mods/violence/scopes/actor_beak_body_parts.scope` | **Created** | Scope file with JSON Logic filter |
-| `data/mods/violence/mod-manifest.json` | Modified | Added scopes array |
-| `tests/unit/scopeDsl/nodes/bodyPartStepResolver.test.js` | **Created** | 29 unit tests |
-| `tests/integration/scopes/violence/actorBeakBodyParts.integration.test.js` | **Created** | 10 integration tests |
+| File                                                                       | Change Type | Description                                                            |
+| -------------------------------------------------------------------------- | ----------- | ---------------------------------------------------------------------- |
+| `src/scopeDsl/nodes/bodyPartStepResolver.js`                               | **Created** | New resolver following ClothingStepResolver pattern                    |
+| `src/scopeDsl/engine.js`                                                   | Modified    | Registered resolver, passed BodyGraphService to ArrayIterationResolver |
+| `src/scopeDsl/nodes/arrayIterationResolver.js`                             | Modified    | Added handling for body part access objects                            |
+| `data/mods/violence/scopes/actor_beak_body_parts.scope`                    | **Created** | Scope file with JSON Logic filter                                      |
+| `data/mods/violence/mod-manifest.json`                                     | Modified    | Added scopes array                                                     |
+| `tests/unit/scopeDsl/nodes/bodyPartStepResolver.test.js`                   | **Created** | 29 unit tests                                                          |
+| `tests/integration/scopes/violence/actorBeakBodyParts.integration.test.js` | **Created** | 10 integration tests                                                   |
 
 ## Out of Scope
 
@@ -47,12 +48,14 @@ The implementation extends the ScopeDSL system with:
 ### Approach Chosen: BodyPartStepResolver (Option B - Recommended)
 
 Following the established `ClothingStepResolver` pattern, a dedicated resolver was created that:
+
 1. Intercepts `body_parts` field access on Step nodes
 2. Returns body part access objects with `__isBodyPartAccessObject: true` marker
 3. `ArrayIterationResolver` recognizes these objects and calls `BodyGraphService.getAllParts()`
 4. Standard JSON Logic filtering applies to the resolved body part entity IDs
 
 **Architecture Flow**:
+
 ```
 actor.body_parts[]                      Resolution Flow:
      ↓                                  1. BodyPartStepResolver intercepts "body_parts"
@@ -68,6 +71,7 @@ actor.body_parts[]                      Resolution Flow:
 **Original Option A was incorrect** - `stringContains` operator does not exist. Standard JSON Logic uses `{"in": [substring, string]}` for substring matching.
 
 **Correct Syntax**:
+
 ```
 violence:actor_beak_body_parts := actor.body_parts[][{
   "and": [
@@ -113,6 +117,7 @@ violence:actor_beak_body_parts := actor.body_parts[][{
 ### Tests That Must Pass
 
 1. **Unit Test for Resolver** (if using Option B/C):
+
    ```javascript
    describe('BodyPartsResolver or resolveBeakParts', () => {
      it('should return beak entity ID when actor has beak body part', () => {});
@@ -125,6 +130,7 @@ violence:actor_beak_body_parts := actor.body_parts[][{
    ```
 
 2. **Integration Test**:
+
    ```javascript
    describe('violence:actor_beak_body_parts scope', () => {
      it('should resolve to beak entity for kraken', async () => {
@@ -186,12 +192,14 @@ npm run test:integration -- --testPathPattern="actorBeakBodyParts" --verbose
 ## Notes
 
 This implementation establishes a **pattern for future body-part-based scopes**:
+
 - Use `actor.body_parts[]` to iterate over all body parts
 - Apply JSON Logic filters with `entity.components.*` access pattern
 - Substring matching uses `{"in": [substring, {"var": "path.to.string"}]}`
 - Component existence checks use `{"!=": [{"var": "component.path"}, null]}`
 
 **Key Files for Reference**:
+
 - Pattern reference: `src/scopeDsl/nodes/clothingStepResolver.js`
 - New resolver: `src/scopeDsl/nodes/bodyPartStepResolver.js`
 - Integration: `src/scopeDsl/engine.js` (resolver registration)

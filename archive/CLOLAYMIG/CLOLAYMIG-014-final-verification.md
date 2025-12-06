@@ -9,6 +9,7 @@
 **Originally Planned**: Verification-only ticket with no code changes expected.
 
 **Actually Changed**:
+
 1. **Fixed outdated integration test** in `tests/integration/mods/base-clothing/baseClothingEntityMigration.integration.test.js`:
    - The test file had a describe block "Coexistence with Clothing Mod (Pre-Cleanup)" that was testing for an intermediate migration state where entities existed in BOTH the clothing mod and base-clothing mod
    - Since the migration is now complete, entities exist ONLY in base-clothing mod
@@ -21,20 +22,21 @@
 
 All verification checks passed:
 
-| Check | Result |
-|-------|--------|
-| Clothing entities | 0 ✅ |
-| Underwear entities | 33 ✅ |
-| Base-clothing entities | 68 ✅ |
-| Outer-clothing entities | 10 ✅ |
-| Accessories entities | 14 ✅ |
-| **Total** | **125** ✅ |
-| `clothing:*` references in recipes | 0 ✅ |
-| Duplicate entity IDs | 0 ✅ |
-| `npm run validate` | PASSED ✅ |
-| Clothing integration tests (512 tests) | PASSED ✅ |
+| Check                                  | Result     |
+| -------------------------------------- | ---------- |
+| Clothing entities                      | 0 ✅       |
+| Underwear entities                     | 33 ✅      |
+| Base-clothing entities                 | 68 ✅      |
+| Outer-clothing entities                | 10 ✅      |
+| Accessories entities                   | 14 ✅      |
+| **Total**                              | **125** ✅ |
+| `clothing:*` references in recipes     | 0 ✅       |
+| Duplicate entity IDs                   | 0 ✅       |
+| `npm run validate`                     | PASSED ✅  |
+| Clothing integration tests (512 tests) | PASSED ✅  |
 
 ### Clothing mod non-entity content verified:
+
 - 5 components ✅
 - 2 actions ✅
 - 2 rules ✅
@@ -56,14 +58,14 @@ Perform comprehensive verification of the clothing layer migration to confirm al
 
 ### Entity Count Verification
 
-| Mod | Expected Count |
-|-----|---------------|
-| `clothing` | 0 entities |
-| `underwear` | 33 entities |
-| `base-clothing` | 68 entities |
-| `outer-clothing` | 10 entities |
-| `accessories` | 14 entities |
-| **Total** | **125 entities** |
+| Mod              | Expected Count   |
+| ---------------- | ---------------- |
+| `clothing`       | 0 entities       |
+| `underwear`      | 33 entities      |
+| `base-clothing`  | 68 entities      |
+| `outer-clothing` | 10 entities      |
+| `accessories`    | 14 entities      |
+| **Total**        | **125 entities** |
 
 ### Files to Inspect (NOT modify)
 
@@ -97,13 +99,13 @@ Perform comprehensive verification of the clothing layer migration to confirm al
 
 Verify no `clothing:*` entity references remain in recipe files:
 
-| Recipe File | Expected `clothing:*` References |
-|-------------|--------------------------------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | 0 |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | 0 |
-| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | 0 |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | 0 |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | 0 |
+| Recipe File                                                  | Expected `clothing:*` References |
+| ------------------------------------------------------------ | -------------------------------- |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | 0                                |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | 0                                |
+| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | 0                                |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | 0                                |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | 0                                |
 
 ## Out of Scope
 
@@ -114,8 +116,8 @@ Verify no `clothing:*` entity references remain in recipe files:
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
+| File                   | Action                         |
+| ---------------------- | ------------------------------ |
 | All files listed above | Inspect only, no modifications |
 
 ## Acceptance Criteria
@@ -201,11 +203,13 @@ grep -r '"id": "accessories:' data/mods/ | cut -d: -f3 | sort | uniq -d | wc -l
 ## Post-Verification Actions
 
 If verification passes:
+
 1. Update any project documentation that references clothing entity IDs
 2. Notify team that migration is complete
 3. Consider archiving the migration spec (`specs/clothing-layer-migration.md`)
 
 If verification fails:
+
 1. Document which checks failed
 2. Create follow-up tickets to address issues
 3. Do NOT mark this ticket complete until all checks pass
@@ -218,18 +222,19 @@ Not applicable - this is a verification-only ticket. If verification fails, prev
 
 Upon successful completion of this ticket:
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Total mods | clothing only | clothing + 4 layer mods |
-| Clothing mod entities | 125 | 0 |
-| Underwear mod entities | - | 33 |
-| Base-clothing mod entities | - | 68 |
-| Outer-clothing mod entities | - | 10 |
-| Accessories mod entities | - | 14 |
-| Recipe references updated | 0 | 32 |
-| Mod dependencies added | 0 | 6 (fantasy: 4, patrol: 3, minus shared) |
+| Metric                      | Before        | After                                   |
+| --------------------------- | ------------- | --------------------------------------- |
+| Total mods                  | clothing only | clothing + 4 layer mods                 |
+| Clothing mod entities       | 125           | 0                                       |
+| Underwear mod entities      | -             | 33                                      |
+| Base-clothing mod entities  | -             | 68                                      |
+| Outer-clothing mod entities | -             | 10                                      |
+| Accessories mod entities    | -             | 14                                      |
+| Recipe references updated   | 0             | 32                                      |
+| Mod dependencies added      | 0             | 6 (fantasy: 4, patrol: 3, minus shared) |
 
 The `clothing` mod is now a pure framework mod providing:
+
 - Component definitions for wearable items
 - Actions for clothing management
 - Rules for clothing behavior

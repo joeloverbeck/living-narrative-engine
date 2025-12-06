@@ -49,9 +49,13 @@ describe('Enhanced console logger truncation and context integration', () => {
 
     expect(mainLine).toContain('CacheService');
     expect(mainLine).toContain('...');
-    expect(contextLines.some((line) => line.includes('↳ Context: {'))).toBe(true);
+    expect(contextLines.some((line) => line.includes('↳ Context: {'))).toBe(
+      true
+    );
     expect(contextLines.some((line) => line.includes('metadata'))).toBe(true);
-    expect(contextLines.some((line) => line.includes('↳ Details[0]:'))).toBe(true);
+    expect(contextLines.some((line) => line.includes('↳ Details[0]:'))).toBe(
+      true
+    );
   });
 
   it('avoids truncation for warn level messages and reports context serialization issues', () => {

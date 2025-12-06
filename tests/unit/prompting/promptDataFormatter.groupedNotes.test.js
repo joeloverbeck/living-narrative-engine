@@ -295,7 +295,9 @@ describe('PromptDataFormatter - Grouped Notes Functionality (Simplified Taxonomy
       const result = formatter.formatNotes(notes, { groupBySubject: true });
 
       expect(result).toContain('- Valid');
-      expect(result.split('\n').filter((line) => line.startsWith('-'))).toHaveLength(1);
+      expect(
+        result.split('\n').filter((line) => line.startsWith('-'))
+      ).toHaveLength(1);
     });
 
     test('should fallback to simple formatting on error', () => {

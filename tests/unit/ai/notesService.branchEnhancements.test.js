@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 
 describe('normalizeNoteText additional branches', () => {
   it('handles notes without subjects by normalizing plain text', () => {
@@ -31,7 +33,9 @@ describe('NotesService.addNotes additional scenarios', () => {
     expect(() => service.addNotes(null, [])).toThrow(
       'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
     );
-    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(TypeError);
+    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(
+      TypeError
+    );
   });
 
   it('skips duplicates and invalid note entries while adding valid notes', () => {
@@ -43,7 +47,11 @@ describe('NotesService.addNotes additional scenarios', () => {
       notesComp,
       [
         // Duplicate of the existing entry - should be ignored
-        { text: 'existing insight', subject: 'Alliance', subjectType: 'concept' },
+        {
+          text: 'existing insight',
+          subject: 'Alliance',
+          subjectType: 'concept',
+        },
         // Invalid formats that should be ignored without throwing
         'just a string',
         { text: 'Missing subject only' },
@@ -111,7 +119,11 @@ describe('NotesService.addNotes additional scenarios', () => {
     service.addNotes(
       notesComp,
       [
-        { text: 'Shared intelligence', subject: 'Report', subjectType: 'intel' },
+        {
+          text: 'Shared intelligence',
+          subject: 'Report',
+          subjectType: 'intel',
+        },
       ],
       now
     );
@@ -119,7 +131,11 @@ describe('NotesService.addNotes additional scenarios', () => {
     const duplicateAttempt = service.addNotes(
       notesComp,
       [
-        { text: 'shared intelligence', subject: 'Report', subjectType: 'intel' },
+        {
+          text: 'shared intelligence',
+          subject: 'Report',
+          subjectType: 'intel',
+        },
       ],
       now
     );

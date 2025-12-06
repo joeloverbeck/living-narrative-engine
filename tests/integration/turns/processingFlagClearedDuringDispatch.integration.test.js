@@ -256,10 +256,11 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
 
     // Assert: Warning should be logged
     const debugMessages = logger.calls.debug.flat();
-    const flagDebug = debugMessages.find((msg) =>
-      typeof msg === 'string' &&
-      msg.includes('processing flag became false after dispatch') &&
-      msg.includes(actor.id)
+    const flagDebug = debugMessages.find(
+      (msg) =>
+        typeof msg === 'string' &&
+        msg.includes('processing flag became false after dispatch') &&
+        msg.includes(actor.id)
     );
 
     expect(flagDebug).toBeTruthy();
@@ -313,8 +314,9 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
 
     // Assert: Warning should appear
     const debugMessages = logger.calls.debug.flat();
-    const flagDebug = debugMessages.find((msg) =>
-      typeof msg === 'string' && msg.includes('processing flag became false')
+    const flagDebug = debugMessages.find(
+      (msg) =>
+        typeof msg === 'string' && msg.includes('processing flag became false')
     );
 
     expect(flagDebug).toBeTruthy();
@@ -345,8 +347,9 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
 
     // Assert: Warning logged
     const debugMessages = logger.calls.debug.flat();
-    const flagDebugs = debugMessages.filter((msg) =>
-      typeof msg === 'string' && msg.includes('processing flag became false')
+    const flagDebugs = debugMessages.filter(
+      (msg) =>
+        typeof msg === 'string' && msg.includes('processing flag became false')
     );
 
     expect(flagDebugs.length).toBeGreaterThan(0);
@@ -384,7 +387,9 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
     );
 
     expect(exactWarning).toBeTruthy();
-    expect(exactWarning).toMatch(/processing flag became false after dispatch.*test-actor/);
+    expect(exactWarning).toMatch(
+      /processing flag became false after dispatch.*test-actor/
+    );
     expect(eventHandlerCalled).toBe(true);
     expect(state.isProcessing).toBe(false);
   });
@@ -411,8 +416,9 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
     // Assert: Debug message MAY appear for fast operations - this is expected
     // The workflow can complete synchronously, clearing the flag before the check runs
     const debugMessages = logger.calls.debug.flat();
-    const flagDebug = debugMessages.find((msg) =>
-      typeof msg === 'string' && msg.includes('processing flag became false')
+    const flagDebug = debugMessages.find(
+      (msg) =>
+        typeof msg === 'string' && msg.includes('processing flag became false')
     );
 
     // This is acceptable - fast operations are handled correctly either way
@@ -453,8 +459,9 @@ describe('ProcessingCommandState - Flag Cleared During Dispatch', () => {
     // Assert: System should handle gracefully
     expect(state.isProcessing).toBe(false);
     const debugMessages = logger.calls.debug.flat();
-    const hasDebug = debugMessages.some((msg) =>
-      typeof msg === 'string' && msg.includes('processing flag became false')
+    const hasDebug = debugMessages.some(
+      (msg) =>
+        typeof msg === 'string' && msg.includes('processing flag became false')
     );
     // Warning may or may not appear depending on timing, but no errors should occur
     expect(hasDebug).toBeDefined(); // Test passes regardless of warning presence

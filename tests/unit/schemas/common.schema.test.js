@@ -194,7 +194,10 @@ describe('common.schema.json - Template Definitions', () => {
 
     test('✓ should accept valid template string', () => {
       expect(
-        validateDefinition('positiveIntegerOrTemplate', '{context.handsRequired}')
+        validateDefinition(
+          'positiveIntegerOrTemplate',
+          '{context.handsRequired}'
+        )
       ).toBe(true);
     });
 
@@ -207,7 +210,9 @@ describe('common.schema.json - Template Definitions', () => {
     });
 
     test('✗ should reject plain string', () => {
-      expect(validateDefinition('positiveIntegerOrTemplate', 'one')).toBe(false);
+      expect(validateDefinition('positiveIntegerOrTemplate', 'one')).toBe(
+        false
+      );
     });
 
     test('✗ should reject decimal', () => {
@@ -332,11 +337,15 @@ describe('common.schema.json - Template Definitions', () => {
     });
 
     test('✗ should reject ID with uppercase (modId)', () => {
-      expect(validateDefinition('entityIdOrTemplate', 'Core:actor')).toBe(false);
+      expect(validateDefinition('entityIdOrTemplate', 'Core:actor')).toBe(
+        false
+      );
     });
 
     test('✗ should reject ID with uppercase (identifier)', () => {
-      expect(validateDefinition('entityIdOrTemplate', 'core:Actor')).toBe(false);
+      expect(validateDefinition('entityIdOrTemplate', 'core:Actor')).toBe(
+        false
+      );
     });
 
     test('✗ should reject ID starting with number', () => {

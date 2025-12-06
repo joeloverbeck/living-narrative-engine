@@ -196,9 +196,10 @@ describe('FixSuggestionEngine combined detector integration', () => {
     ).toBe(true);
 
     expect(
-      logger.entries.some((entry) =>
-        entry.level === 'debug' &&
-        entry.message.includes('Analyzing error for fixes')
+      logger.entries.some(
+        (entry) =>
+          entry.level === 'debug' &&
+          entry.message.includes('Analyzing error for fixes')
       )
     ).toBe(true);
   });

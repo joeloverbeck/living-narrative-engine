@@ -8,11 +8,7 @@
       "equipmentSlots": {
         "primary": "full_body"
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:material": {
       "material": "velvet"
@@ -33,10 +29,7 @@
       "length": "very-long"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper",
-        "torso_lower"
-      ],
+      "covers": ["torso_upper", "torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import handleScootCloserRule from '../../../../data/mods/personal-space/rules/handle_scoot_closer.rule.json' assert { type: 'json' };
 import eventIsActionScootCloser from '../../../../data/mods/personal-space/conditions/event-is-action-scoot-closer.condition.json' assert { type: 'json' };

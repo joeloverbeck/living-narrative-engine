@@ -52,19 +52,22 @@ class TestLogger {
 
   hasWarnContaining(substring) {
     return this.entries.warn.some(
-      ({ message }) => typeof message === 'string' && message.includes(substring)
+      ({ message }) =>
+        typeof message === 'string' && message.includes(substring)
     );
   }
 
   hasErrorContaining(substring) {
     return this.entries.error.some(
-      ({ message }) => typeof message === 'string' && message.includes(substring)
+      ({ message }) =>
+        typeof message === 'string' && message.includes(substring)
     );
   }
 
   hasInfoContaining(substring) {
     return this.entries.info.some(
-      ({ message }) => typeof message === 'string' && message.includes(substring)
+      ({ message }) =>
+        typeof message === 'string' && message.includes(substring)
     );
   }
 
@@ -191,7 +194,9 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     const result = await processor.dispatchAction(actor, turnAction);
 
     expect(result.success).toBe(true);
-    expect(logger.hasWarnContaining('Failed to create execution trace')).toBe(true);
+    expect(logger.hasWarnContaining('Failed to create execution trace')).toBe(
+      true
+    );
   });
 
   it('captures warnings when trace payload and result capture fail', async () => {
@@ -200,7 +205,10 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     const processor = createCommandProcessor({
       actionExecutionTraceFactory: {
         createFromTurnAction: (turnAction, actorId) => {
-          const trace = originalFactory.createFromTurnAction(turnAction, actorId);
+          const trace = originalFactory.createFromTurnAction(
+            turnAction,
+            actorId
+          );
           trace.captureEventPayload = () => {
             throw new Error('payload capture failure');
           };
@@ -228,8 +236,8 @@ describe('CommandProcessor integration error and fallback coverage', () => {
   });
 
   it('handles dispatch failure path and records trace output', async () => {
-    schemaValidator.isSchemaLoaded.mockImplementation((schemaId) =>
-      schemaId === `${ATTEMPT_ACTION_ID}#payload`
+    schemaValidator.isSchemaLoaded.mockImplementation(
+      (schemaId) => schemaId === `${ATTEMPT_ACTION_ID}#payload`
     );
     schemaValidator.validate.mockReturnValue({
       isValid: false,
@@ -246,8 +254,9 @@ describe('CommandProcessor integration error and fallback coverage', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Internal error: Failed to initiate action.');
-    expect(logger.hasErrorContaining('CRITICAL: Failed to dispatch pre-resolved'))
-      .toBe(true);
+    expect(
+      logger.hasErrorContaining('CRITICAL: Failed to dispatch pre-resolved')
+    ).toBe(true);
     expect(writtenTraces.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -256,7 +265,10 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     const processor = createCommandProcessor({
       actionExecutionTraceFactory: {
         createFromTurnAction: (turnAction, actorId) => {
-          const trace = originalFactory.createFromTurnAction(turnAction, actorId);
+          const trace = originalFactory.createFromTurnAction(
+            turnAction,
+            actorId
+          );
           trace.captureError = () => {
             throw new Error('error capture failure');
           };
@@ -277,9 +289,9 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     await flushMicrotasks();
 
     expect(result.success).toBe(false);
-    expect(
-      logger.hasWarnContaining('Failed to capture error in trace')
-    ).toBe(true);
+    expect(logger.hasWarnContaining('Failed to capture error in trace')).toBe(
+      true
+    );
     expect(writtenTraces.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -347,7 +359,9 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     expect(result.success).toBe(true);
     expect(buildSpy).toHaveBeenCalled();
     expect(
-      logger.hasErrorContaining('Enhanced payload creation failed, using fallback')
+      logger.hasErrorContaining(
+        'Enhanced payload creation failed, using fallback'
+      )
     ).toBe(true);
     expect(logger.hasWarnContaining('Creating fallback payload')).toBe(true);
     expect(capturedPayloads).toHaveLength(1);
@@ -373,8 +387,9 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
-    expect(logger.hasWarnContaining('Payload creation took longer than expected'))
-      .toBe(true);
+    expect(
+      logger.hasWarnContaining('Payload creation took longer than expected')
+    ).toBe(true);
 
     nowSpy.mockRestore();
   });
@@ -395,8 +410,12 @@ describe('CommandProcessor integration error and fallback coverage', () => {
       expect(result.success).toBe(true);
     }
 
-    expect(logger.hasInfoContaining('Payload creation metrics update')).toBe(true);
-    expect(processor.getPayloadCreationStatistics().totalPayloadsCreated).toBe(100);
+    expect(logger.hasInfoContaining('Payload creation metrics update')).toBe(
+      true
+    );
+    expect(processor.getPayloadCreationStatistics().totalPayloadsCreated).toBe(
+      100
+    );
   });
 
   it('logs trace write failures when output service rejects', async () => {
@@ -413,6 +432,8 @@ describe('CommandProcessor integration error and fallback coverage', () => {
     await flushMicrotasks();
 
     expect(result.success).toBe(true);
-    expect(logger.hasWarnContaining('Failed to write execution trace')).toBe(true);
+    expect(logger.hasWarnContaining('Failed to write execution trace')).toBe(
+      true
+    );
   });
 });

@@ -27,7 +27,7 @@ describe('discoveryErrorUtils integration', () => {
       const context = { ...buildBaseContext(), actionId: undefined };
 
       expect(() => createActionErrorContext(context)).toThrow(
-        'ActionErrorContext must have actionId',
+        'ActionErrorContext must have actionId'
       );
     });
 
@@ -36,7 +36,7 @@ describe('discoveryErrorUtils integration', () => {
       delete context.error;
 
       expect(() => createActionErrorContext(context)).toThrow(
-        'ActionErrorContext must have error',
+        'ActionErrorContext must have error'
       );
     });
 
@@ -45,7 +45,7 @@ describe('discoveryErrorUtils integration', () => {
       delete context.phase;
 
       expect(() => createActionErrorContext(context)).toThrow(
-        'ActionErrorContext must have phase',
+        'ActionErrorContext must have phase'
       );
     });
   });

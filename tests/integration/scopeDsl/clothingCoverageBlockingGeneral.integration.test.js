@@ -60,7 +60,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
 
     entityManager = new SimpleEntityManager([]);
     jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
-    
+
     // Create entities gateway for coverage analyzer
     entitiesGateway = {
       getComponentData: (entityId, componentType) => {
@@ -71,10 +71,10 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
 
     // Create coverage analyzer
     coverageAnalyzer = createCoverageAnalyzer({ entitiesGateway });
-    
+
     // Parse and register scopes
     const parsedScopes = new Map();
-    
+
     // Parse torso lower scope
     const torsoLowerScopes = parseScopeDefinitions(
       targetTopMostTorsoLowerNoAccessoriesScopeContent,
@@ -92,14 +92,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
     Array.from(torsoUpperScopes.entries()).forEach(([name, scopeData]) => {
       parsedScopes.set(name, scopeData);
     });
-    
+
     scopeRegistry = new ScopeRegistry();
     const scopeDefinitions = {};
     Array.from(parsedScopes.entries()).forEach(([name, scopeData]) => {
       scopeDefinitions[name] = scopeData;
     });
     scopeRegistry.initialize(scopeDefinitions);
-    
+
     scopeEngine = new ScopeEngine({ scopeRegistry });
   });
 
@@ -120,7 +120,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
             base: 'test:jeans',
             underwear: 'test:underwear',
           },
-        }
+        },
       });
 
       // Create jeans with coverage mapping
@@ -142,10 +142,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
         slot: 'torso_lower',
         layer: 'underwear',
       });
-      entityManager.addComponent('test:underwear', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'test:underwear',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Create player (actor) entity
       const player = entityManager.createEntity('player');
@@ -164,7 +168,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry and resolve
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const result = scopeEngine.resolve(scopeAst, player, runtimeCtx);
 
       // Convert Set to Array for testing
@@ -189,7 +195,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
             base: 'test:shirt',
             underwear: 'test:undershirt',
           },
-        }
+        },
       });
 
       // Create coat with coverage mapping
@@ -223,10 +229,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
         slot: 'torso_upper',
         layer: 'underwear',
       });
-      entityManager.addComponent('test:undershirt', 'clothing:coverage_mapping', {
-        covers: ['torso_upper'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'test:undershirt',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_upper'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Create player entity
       const player = entityManager.createEntity('player_multi');
@@ -245,7 +255,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry and resolve
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_upper_clothing');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_upper_clothing'
+      );
       const result = scopeEngine.resolve(scopeAst, player, runtimeCtx);
 
       // Convert Set to Array for testing
@@ -276,7 +288,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
           feet: {
             base: 'test:shoes',
           },
-        }
+        },
       });
 
       // Create hat with coverage mapping
@@ -316,11 +328,19 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       });
 
       // Coverage analysis should show all items as accessible (different body areas)
-      const equipment = entityManager.getComponentData('test_cross_area', 'clothing:equipment').equipped;
-      const analysis = coverageAnalyzer.analyzeCoverageBlocking(equipment, 'test_cross_area');
-      
+      const equipment = entityManager.getComponentData(
+        'test_cross_area',
+        'clothing:equipment'
+      ).equipped;
+      const analysis = coverageAnalyzer.analyzeCoverageBlocking(
+        equipment,
+        'test_cross_area'
+      );
+
       expect(analysis.isAccessible('test:hat', 'head', 'base')).toBe(true);
-      expect(analysis.isAccessible('test:pants', 'torso_lower', 'base')).toBe(true);
+      expect(analysis.isAccessible('test:pants', 'torso_lower', 'base')).toBe(
+        true
+      );
       expect(analysis.isAccessible('test:shoes', 'feet', 'base')).toBe(true);
     });
   });
@@ -337,7 +357,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
           torso_lower: {
             base: 'test:item_no_coverage',
           },
-        }
+        },
       });
 
       // Create item WITHOUT coverage mapping
@@ -366,7 +386,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry and resolve
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const result = scopeEngine.resolve(scopeAst, player, runtimeCtx);
 
       // Convert Set to Array for testing
@@ -404,7 +426,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry and resolve
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const result = scopeEngine.resolve(scopeAst, player, runtimeCtx);
 
       // Should return empty set
@@ -441,7 +465,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry and resolve
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       const result = scopeEngine.resolve(scopeAst, player, runtimeCtx);
 
       // Should handle gracefully and return empty set
@@ -472,7 +498,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
           underwear: 'perf:underwear',
         },
         hands: { base: 'perf:gloves' },
-        feet: { 
+        feet: {
           base: 'perf:socks',
           outer: 'perf:shoes',
         },
@@ -488,12 +514,42 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       // Create all clothing items with coverage
       const items = [
         { id: 'perf:hat', slot: 'head', layer: 'base', covers: ['head'] },
-        { id: 'perf:jacket', slot: 'torso_upper', layer: 'outer', covers: ['torso_upper'] },
-        { id: 'perf:shirt', slot: 'torso_upper', layer: 'base', covers: ['torso_upper'] },
-        { id: 'perf:undershirt', slot: 'torso_upper', layer: 'underwear', covers: ['torso_upper'] },
-        { id: 'perf:coat_tails', slot: 'torso_lower', layer: 'outer', covers: ['torso_lower'] },
-        { id: 'perf:pants', slot: 'torso_lower', layer: 'base', covers: ['torso_lower'] },
-        { id: 'perf:underwear', slot: 'torso_lower', layer: 'underwear', covers: ['torso_lower'] },
+        {
+          id: 'perf:jacket',
+          slot: 'torso_upper',
+          layer: 'outer',
+          covers: ['torso_upper'],
+        },
+        {
+          id: 'perf:shirt',
+          slot: 'torso_upper',
+          layer: 'base',
+          covers: ['torso_upper'],
+        },
+        {
+          id: 'perf:undershirt',
+          slot: 'torso_upper',
+          layer: 'underwear',
+          covers: ['torso_upper'],
+        },
+        {
+          id: 'perf:coat_tails',
+          slot: 'torso_lower',
+          layer: 'outer',
+          covers: ['torso_lower'],
+        },
+        {
+          id: 'perf:pants',
+          slot: 'torso_lower',
+          layer: 'base',
+          covers: ['torso_lower'],
+        },
+        {
+          id: 'perf:underwear',
+          slot: 'torso_lower',
+          layer: 'underwear',
+          covers: ['torso_lower'],
+        },
         { id: 'perf:gloves', slot: 'hands', layer: 'base', covers: ['hands'] },
         { id: 'perf:socks', slot: 'feet', layer: 'base', covers: ['feet'] },
         { id: 'perf:shoes', slot: 'feet', layer: 'outer', covers: ['feet'] },
@@ -502,7 +558,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
         { id: 'perf:watch', slot: 'wrists', layer: 'base', covers: ['wrists'] },
       ];
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const entity = entityManager.createEntity(item.id);
         entityManager.addComponent(item.id, 'clothing:item', {
           name: item.id,
@@ -532,7 +588,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
 
       // Measure performance
       const startTime = performance.now();
@@ -562,7 +620,7 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
             base: 'repeated:pants',
             underwear: 'repeated:underwear',
           },
-        }
+        },
       });
 
       // Create items
@@ -596,7 +654,9 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
 
       // Perform multiple queries and measure average time
       const iterations = 100;
@@ -611,14 +671,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
 
       // Calculate average time
       const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
-      
+
       // Average time should be very low (< 5ms)
       expect(avgTime).toBeLessThan(5);
-      
+
       // Performance should not degrade (last queries should not be significantly slower)
       const firstHalfAvg = times.slice(0, 50).reduce((a, b) => a + b, 0) / 50;
       const secondHalfAvg = times.slice(50).reduce((a, b) => a + b, 0) / 50;
-      
+
       // After the multi-target resolution refactor, scope resolution performs additional
       // bookkeeping work on later iterations. Ensure the second half remains within a
       // reasonable bound relative to the first half instead of enforcing a strict 2x cap.
@@ -647,18 +707,33 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
           feet: {
             base: 'complex:shoes',
           },
-        }
+        },
       });
 
       // Create items with various coverage configurations
       const items = [
-        { id: 'complex:shirt', slot: 'torso_upper', layer: 'base', covers: ['torso_upper', 'arms'] },
-        { id: 'complex:pants', slot: 'torso_lower', layer: 'base', covers: ['torso_lower', 'legs'] },
-        { id: 'complex:underwear', slot: 'torso_lower', layer: 'underwear', covers: ['torso_lower'] },
+        {
+          id: 'complex:shirt',
+          slot: 'torso_upper',
+          layer: 'base',
+          covers: ['torso_upper', 'arms'],
+        },
+        {
+          id: 'complex:pants',
+          slot: 'torso_lower',
+          layer: 'base',
+          covers: ['torso_lower', 'legs'],
+        },
+        {
+          id: 'complex:underwear',
+          slot: 'torso_lower',
+          layer: 'underwear',
+          covers: ['torso_lower'],
+        },
         { id: 'complex:shoes', slot: 'feet', layer: 'base', covers: ['feet'] },
       ];
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const entity = entityManager.createEntity(item.id);
         entityManager.addComponent(item.id, 'clothing:item', {
           name: item.id,
@@ -688,8 +763,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       };
 
       // Test torso lower scope
-      const torsoLowerScopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
-      const torsoLowerResult = scopeEngine.resolve(torsoLowerScopeAst, player, runtimeCtx);
+      const torsoLowerScopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
+      const torsoLowerResult = scopeEngine.resolve(
+        torsoLowerScopeAst,
+        player,
+        runtimeCtx
+      );
 
       // Convert Set to Array for testing
       const torsoLowerArray = Array.from(torsoLowerResult);
@@ -699,8 +780,14 @@ describe('Clothing Coverage Blocking - General Integration Tests', () => {
       expect(torsoLowerArray).toContain('complex:pants');
 
       // Test torso upper scope
-      const torsoUpperScopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_upper_clothing');
-      const torsoUpperResult = scopeEngine.resolve(torsoUpperScopeAst, player, runtimeCtx);
+      const torsoUpperScopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_upper_clothing'
+      );
+      const torsoUpperResult = scopeEngine.resolve(
+        torsoUpperScopeAst,
+        player,
+        runtimeCtx
+      );
 
       // Convert Set to Array for testing
       const torsoUpperArray = Array.from(torsoUpperResult);

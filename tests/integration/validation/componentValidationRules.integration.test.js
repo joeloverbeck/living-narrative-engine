@@ -23,7 +23,10 @@ describe('Component ValidationRules Integration', () => {
 
     // Create real dependencies
     const similarityCalculator = new StringSimilarityCalculator({ logger });
-    const validatorGenerator = new ValidatorGenerator({ logger, similarityCalculator });
+    const validatorGenerator = new ValidatorGenerator({
+      logger,
+      similarityCalculator,
+    });
     dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Create validator with enhanced validation enabled
@@ -57,7 +60,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -68,7 +72,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const invalidData = { layer: 'invalid-layer' };
       const result = validator.validate('clothing:wearable', invalidData);
@@ -77,12 +84,16 @@ describe('Component ValidationRules Integration', () => {
       expect(result.errors.length).toBeGreaterThanOrEqual(1);
 
       // Find the enhanced error (has custom message format)
-      const enhancedError = result.errors.find(err => err.type === 'invalidEnum' && err.suggestion !== undefined);
+      const enhancedError = result.errors.find(
+        (err) => err.type === 'invalidEnum' && err.suggestion !== undefined
+      );
       expect(enhancedError).toBeDefined();
       expect(enhancedError.message).toContain('Invalid');
       expect(enhancedError.message).toContain('invalid-layer');
       expect(enhancedError.message).toContain('Valid options');
-      expect(enhancedError.message).toMatch(/underwear|base|outer|accessories|armor/);
+      expect(enhancedError.message).toMatch(
+        /underwear|base|outer|accessories|armor/
+      );
     });
 
     it('should provide enhanced error for descriptors:build enum violation', async () => {
@@ -94,7 +105,28 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             build: {
               type: 'string',
-              enum: ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky', 'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'],
+              enum: [
+                'skinny',
+                'slim',
+                'lissom',
+                'toned',
+                'athletic',
+                'shapely',
+                'hourglass',
+                'thick',
+                'muscular',
+                'hulking',
+                'stocky',
+                'frail',
+                'gaunt',
+                'skeletal',
+                'atrophied',
+                'cadaverous',
+                'massive',
+                'willowy',
+                'barrel-chested',
+                'lanky',
+              ],
             },
           },
           required: ['build'],
@@ -103,7 +135,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid build: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid build: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -114,7 +147,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'descriptors:build', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'descriptors:build');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'descriptors:build'
+      );
 
       const invalidData = { build: 'super-muscular' };
       const result = validator.validate('descriptors:build', invalidData);
@@ -144,7 +180,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid gender: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid gender: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -185,7 +222,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -196,7 +234,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const invalidData = { layer: 'outter' }; // Typo of "outer"
       const result = validator.validate('clothing:wearable', invalidData);
@@ -205,7 +246,9 @@ describe('Component ValidationRules Integration', () => {
       expect(result.errors.length).toBeGreaterThanOrEqual(1);
 
       // Find the enhanced error (has suggestion property)
-      const enhancedError = result.errors.find(err => err.type === 'invalidEnum');
+      const enhancedError = result.errors.find(
+        (err) => err.type === 'invalidEnum'
+      );
       expect(enhancedError).toBeDefined();
       // NOTE: Property is "suggestion" (singular), not "suggestions" (plural)
       expect(enhancedError.suggestion).toBeDefined();
@@ -220,7 +263,19 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             height: {
               type: 'string',
-              enum: ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'],
+              enum: [
+                'microscopic',
+                'minuscule',
+                'tiny',
+                'petite',
+                'short',
+                'average',
+                'tall',
+                'very-tall',
+                'gigantic',
+                'colossal',
+                'titanic',
+              ],
             },
           },
           required: ['height'],
@@ -229,7 +284,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid height: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid height: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -240,7 +296,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'descriptors:height', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'descriptors:height');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'descriptors:height'
+      );
 
       const invalidData = { height: 'tallll' }; // Typo of "tall"
       const result = validator.validate('descriptors:height', invalidData);
@@ -268,7 +327,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
+            invalidEnum:
+              'Invalid {propertyName}: {{value}}. Valid options: {{validValues}}',
           },
           suggestions: {
             enableSimilarity: true,
@@ -279,7 +339,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const invalidData = { layer: 'xyz123' };
       const result = validator.validate('clothing:wearable', invalidData);
@@ -316,7 +379,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const invalidData = {}; // Missing 'layer' which is required
       const result = validator.validate('clothing:wearable', invalidData);
@@ -337,7 +403,28 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             build: {
               type: 'string',
-              enum: ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky', 'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'],
+              enum: [
+                'skinny',
+                'slim',
+                'lissom',
+                'toned',
+                'athletic',
+                'shapely',
+                'hourglass',
+                'thick',
+                'muscular',
+                'hulking',
+                'stocky',
+                'frail',
+                'gaunt',
+                'skeletal',
+                'atrophied',
+                'cadaverous',
+                'massive',
+                'willowy',
+                'barrel-chested',
+                'lanky',
+              ],
             },
           },
           required: ['build'],
@@ -352,7 +439,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'descriptors:build', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'descriptors:build');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'descriptors:build'
+      );
 
       const invalidData = {};
       const result = validator.validate('descriptors:build', invalidData);
@@ -381,13 +471,17 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidType: 'Invalid type for {propertyName}: expected {{expected}}, got {{actual}}',
+            invalidType:
+              'Invalid type for {propertyName}: expected {{expected}}, got {{actual}}',
           },
         },
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const invalidData = { layer: 123 };
       const result = validator.validate('clothing:wearable', invalidData);
@@ -395,11 +489,11 @@ describe('Component ValidationRules Integration', () => {
       expect(result.isValid).toBe(false);
       // Type mismatch will be caught by AJV standard validation
       // Enhanced error may be for enum or type depending on validation order
-      const hasTypeError = result.errors.some(err =>
-        err.keyword === 'type' || err.message?.includes('type')
+      const hasTypeError = result.errors.some(
+        (err) => err.keyword === 'type' || err.message?.includes('type')
       );
-      const hasEnumError = result.errors.some(err =>
-        err.keyword === 'enum' || err.type === 'invalidEnum'
+      const hasEnumError = result.errors.some(
+        (err) => err.keyword === 'enum' || err.type === 'invalidEnum'
       );
       // Should have at least one type-related or enum error
       expect(hasTypeError || hasEnumError).toBe(true);
@@ -413,7 +507,19 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             height: {
               type: 'string',
-              enum: ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'],
+              enum: [
+                'microscopic',
+                'minuscule',
+                'tiny',
+                'petite',
+                'short',
+                'average',
+                'tall',
+                'very-tall',
+                'gigantic',
+                'colossal',
+                'titanic',
+              ],
             },
           },
           required: ['height'],
@@ -422,24 +528,28 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidType: 'Invalid type for height: expected {{expected}}, got {{actual}}',
+            invalidType:
+              'Invalid type for height: expected {{expected}}, got {{actual}}',
           },
         },
       };
 
       dataRegistry.store('components', 'descriptors:height', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'descriptors:height');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'descriptors:height'
+      );
 
       const invalidData = { height: true }; // Boolean instead of string
       const result = validator.validate('descriptors:height', invalidData);
 
       expect(result.isValid).toBe(false);
       // Type mismatch will be caught by validation
-      const hasTypeError = result.errors.some(err =>
-        err.keyword === 'type' || err.message?.includes('type')
+      const hasTypeError = result.errors.some(
+        (err) => err.keyword === 'type' || err.message?.includes('type')
       );
-      const hasEnumError = result.errors.some(err =>
-        err.keyword === 'enum' || err.type === 'invalidEnum'
+      const hasEnumError = result.errors.some(
+        (err) => err.keyword === 'enum' || err.type === 'invalidEnum'
       );
       // Should have at least one type-related or enum error
       expect(hasTypeError || hasEnumError).toBe(true);
@@ -462,8 +572,15 @@ describe('Component ValidationRules Integration', () => {
         // No validationRules - should fall back to AJV only
       };
 
-      dataRegistry.store('components', 'test:no-validation-rules', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'test:no-validation-rules');
+      dataRegistry.store(
+        'components',
+        'test:no-validation-rules',
+        componentSchema
+      );
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'test:no-validation-rules'
+      );
 
       const validData = { someProperty: 'someValue' };
       const result = validator.validate('test:no-validation-rules', validData);
@@ -491,11 +608,21 @@ describe('Component ValidationRules Integration', () => {
         // No validationRules
       };
 
-      dataRegistry.store('components', 'test:no-validation-rules', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'test:no-validation-rules');
+      dataRegistry.store(
+        'components',
+        'test:no-validation-rules',
+        componentSchema
+      );
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'test:no-validation-rules'
+      );
 
       const invalidData = { someEnum: 'invalid-value' };
-      const result = validator.validate('test:no-validation-rules', invalidData);
+      const result = validator.validate(
+        'test:no-validation-rules',
+        invalidData
+      );
 
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
@@ -527,7 +654,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {{property}}: {{value}}. Valid: {{validValues}}',
+            invalidEnum:
+              'Invalid {{property}}: {{value}}. Valid: {{validValues}}',
           },
         },
       };
@@ -544,8 +672,9 @@ describe('Component ValidationRules Integration', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors.length).toBeGreaterThanOrEqual(1);
       // Find error related to property1
-      const property1Error = result.errors.find(err =>
-        err.property === 'property1' || err.instancePath === '/property1'
+      const property1Error = result.errors.find(
+        (err) =>
+          err.property === 'property1' || err.instancePath === '/property1'
       );
       expect(property1Error).toBeDefined();
       expect(property1Error.property || 'property1').toBe('property1');
@@ -572,7 +701,8 @@ describe('Component ValidationRules Integration', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid {{property}}: {{value}}. Valid: {{validValues}}',
+            invalidEnum:
+              'Invalid {{property}}: {{value}}. Valid: {{validValues}}',
           },
         },
       };
@@ -612,7 +742,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const validData = { layer: 'outer' };
       const result = validator.validate('clothing:wearable', validData);
@@ -641,7 +774,10 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'clothing:wearable', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'clothing:wearable');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'clothing:wearable'
+      );
 
       const validData = { layer: 'armor' };
       const result = validator.validate('clothing:wearable', validData);
@@ -658,7 +794,19 @@ describe('Component ValidationRules Integration', () => {
           properties: {
             height: {
               type: 'string',
-              enum: ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'],
+              enum: [
+                'microscopic',
+                'minuscule',
+                'tiny',
+                'petite',
+                'short',
+                'average',
+                'tall',
+                'very-tall',
+                'gigantic',
+                'colossal',
+                'titanic',
+              ],
             },
           },
           required: ['height'],
@@ -670,11 +818,23 @@ describe('Component ValidationRules Integration', () => {
       };
 
       dataRegistry.store('components', 'descriptors:height', componentSchema);
-      await validator.addSchema(componentSchema.dataSchema, 'descriptors:height');
+      await validator.addSchema(
+        componentSchema.dataSchema,
+        'descriptors:height'
+      );
 
       const validHeights = [
-        'microscopic', 'minuscule', 'tiny', 'petite', 'short',
-        'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic',
+        'microscopic',
+        'minuscule',
+        'tiny',
+        'petite',
+        'short',
+        'average',
+        'tall',
+        'very-tall',
+        'gigantic',
+        'colossal',
+        'titanic',
       ];
 
       validHeights.forEach((height) => {
@@ -723,8 +883,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+        dataRegistry.store(
+          'components',
+          'metabolism:metabolic_store',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:metabolic_store'
+        );
 
         const validData = {
           currentEnergy: 800,
@@ -734,7 +901,10 @@ describe('Component ValidationRules Integration', () => {
           lastUpdateTurn: 42,
         };
 
-        const result = validator.validate('metabolism:metabolic_store', validData);
+        const result = validator.validate(
+          'metabolism:metabolic_store',
+          validData
+        );
         expect(result.isValid).toBe(true);
         expect(result.errors).toBeNull();
       });
@@ -766,8 +936,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+        dataRegistry.store(
+          'components',
+          'metabolism:metabolic_store',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:metabolic_store'
+        );
 
         const invalidData = {
           currentEnergy: -10,
@@ -775,7 +952,10 @@ describe('Component ValidationRules Integration', () => {
           baseBurnRate: 1.0,
         };
 
-        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        const result = validator.validate(
+          'metabolism:metabolic_store',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });
@@ -807,8 +987,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+        dataRegistry.store(
+          'components',
+          'metabolism:metabolic_store',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:metabolic_store'
+        );
 
         const invalidData = {
           currentEnergy: 800,
@@ -816,7 +1003,10 @@ describe('Component ValidationRules Integration', () => {
           baseBurnRate: 0,
         };
 
-        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        const result = validator.validate(
+          'metabolism:metabolic_store',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });
@@ -848,15 +1038,25 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+        dataRegistry.store(
+          'components',
+          'metabolism:metabolic_store',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:metabolic_store'
+        );
 
         const invalidData = {
           currentEnergy: 800,
           // missing maxEnergy and baseBurnRate
         };
 
-        const result = validator.validate('metabolism:metabolic_store', invalidData);
+        const result = validator.validate(
+          'metabolism:metabolic_store',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });
@@ -888,8 +1088,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:metabolic_store', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:metabolic_store');
+        dataRegistry.store(
+          'components',
+          'metabolism:metabolic_store',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:metabolic_store'
+        );
 
         const validData = {
           currentEnergy: 1200,
@@ -897,7 +1104,10 @@ describe('Component ValidationRules Integration', () => {
           baseBurnRate: 1.0,
         };
 
-        const result = validator.validate('metabolism:metabolic_store', validData);
+        const result = validator.validate(
+          'metabolism:metabolic_store',
+          validData
+        );
         expect(result.isValid).toBe(true);
         expect(result.errors).toBeNull();
       });
@@ -912,7 +1122,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -935,7 +1152,8 @@ describe('Component ValidationRules Integration', () => {
           validationRules: {
             generateValidator: true,
             errorMessages: {
-              invalidEnum: 'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
+              invalidEnum:
+                'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
             },
             suggestions: {
               enableSimilarity: true,
@@ -945,8 +1163,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const validData = {
           state: 'hungry',
@@ -968,7 +1193,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -981,7 +1213,8 @@ describe('Component ValidationRules Integration', () => {
           validationRules: {
             generateValidator: true,
             errorMessages: {
-              invalidEnum: 'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
+              invalidEnum:
+                'Invalid hunger state: {{value}}. Valid states: gluttonous, satiated, neutral, hungry, starving, critical',
             },
             suggestions: {
               enableSimilarity: true,
@@ -991,19 +1224,31 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const invalidData = {
           state: 'hungrey', // Typo of "hungry"
           energyPercentage: 25.5,
         };
 
-        const result = validator.validate('metabolism:hunger_state', invalidData);
+        const result = validator.validate(
+          'metabolism:hunger_state',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
 
-        const enhancedError = result.errors.find(err => err.type === 'invalidEnum');
+        const enhancedError = result.errors.find(
+          (err) => err.type === 'invalidEnum'
+        );
         expect(enhancedError).toBeDefined();
         expect(enhancedError.suggestion).toBeDefined();
         expect(enhancedError.suggestion).toBe('hungry');
@@ -1017,7 +1262,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -1032,10 +1284,24 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
-        const validStates = ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'];
+        const validStates = [
+          'gluttonous',
+          'satiated',
+          'neutral',
+          'hungry',
+          'starving',
+          'critical',
+        ];
 
         validStates.forEach((state) => {
           const result = validator.validate('metabolism:hunger_state', {
@@ -1054,7 +1320,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -1069,15 +1342,25 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const invalidData = {
           state: 'hungry',
           energyPercentage: -5,
         };
 
-        const result = validator.validate('metabolism:hunger_state', invalidData);
+        const result = validator.validate(
+          'metabolism:hunger_state',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });
@@ -1090,7 +1373,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -1105,8 +1395,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const validData = {
           state: 'gluttonous',
@@ -1126,7 +1423,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -1145,8 +1449,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const invalidData = {
           state: 'hungry',
@@ -1154,7 +1465,10 @@ describe('Component ValidationRules Integration', () => {
           turnsInState: -1,
         };
 
-        const result = validator.validate('metabolism:hunger_state', invalidData);
+        const result = validator.validate(
+          'metabolism:hunger_state',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });
@@ -1167,7 +1481,14 @@ describe('Component ValidationRules Integration', () => {
             properties: {
               state: {
                 type: 'string',
-                enum: ['gluttonous', 'satiated', 'neutral', 'hungry', 'starving', 'critical'],
+                enum: [
+                  'gluttonous',
+                  'satiated',
+                  'neutral',
+                  'hungry',
+                  'starving',
+                  'critical',
+                ],
               },
               energyPercentage: {
                 type: 'number',
@@ -1186,8 +1507,15 @@ describe('Component ValidationRules Integration', () => {
           },
         };
 
-        dataRegistry.store('components', 'metabolism:hunger_state', componentSchema);
-        await validator.addSchema(componentSchema.dataSchema, 'metabolism:hunger_state');
+        dataRegistry.store(
+          'components',
+          'metabolism:hunger_state',
+          componentSchema
+        );
+        await validator.addSchema(
+          componentSchema.dataSchema,
+          'metabolism:hunger_state'
+        );
 
         const invalidData = {
           state: 'starving',
@@ -1195,7 +1523,10 @@ describe('Component ValidationRules Integration', () => {
           starvationDamage: -10,
         };
 
-        const result = validator.validate('metabolism:hunger_state', invalidData);
+        const result = validator.validate(
+          'metabolism:hunger_state',
+          invalidData
+        );
         expect(result.isValid).toBe(false);
         expect(result.errors.length).toBeGreaterThan(0);
       });

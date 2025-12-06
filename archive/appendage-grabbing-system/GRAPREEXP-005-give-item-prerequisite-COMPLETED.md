@@ -24,14 +24,16 @@ Add a prerequisite to the `items:give_item` action requiring the actor to have a
 3. **`tests/integration/mods/items/giveItemActionDiscovery.test.js`** - Updated existing test that incorrectly asserted `prerequisites` should be undefined. Changed to verify the new prerequisite is correctly defined (GRAPREEXP-005 reference added in comment).
 
 ### Files Modified
-| File | Change |
-|------|--------|
-| `data/mods/items/actions/give_item.action.json` | Added `prerequisites` array after `forbidden_components` |
+
+| File                                                           | Change                                                                                                       |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `data/mods/items/actions/give_item.action.json`                | Added `prerequisites` array after `forbidden_components`                                                     |
 | `tests/integration/mods/items/giveItemActionDiscovery.test.js` | Updated test from "should not have prerequisites" to "should have prerequisites for free grabbing appendage" |
 
 ### Files Created
-| File | Purpose |
-|------|---------|
+
+| File                                                           | Purpose                                                  |
+| -------------------------------------------------------------- | -------------------------------------------------------- |
 | `tests/integration/mods/items/give_item_prerequisites.test.js` | Integration tests for prerequisite evaluation (14 tests) |
 
 ## Verification
@@ -57,6 +59,7 @@ npx eslint tests/integration/mods/items/give_item_prerequisites.test.js tests/in
 ```
 
 ### Invariants Verified
+
 - [x] Action ID remains `items:give_item`
 - [x] `generateCombinations` remains `true`
 - [x] Template remains `give {item} to {recipient}`
@@ -76,11 +79,11 @@ npx eslint tests/integration/mods/items/give_item_prerequisites.test.js tests/in
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern template (followed exactly) |
-| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition to reference |
-| `specs/grabbing-prerequisites-expansion.md` | Full specification |
+| File                                                                            | Purpose                                  |
+| ------------------------------------------------------------------------------- | ---------------------------------------- |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js`      | Test pattern template (followed exactly) |
+| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition to reference                   |
+| `specs/grabbing-prerequisites-expansion.md`                                     | Full specification                       |
 
 ---
 
@@ -91,6 +94,7 @@ npx eslint tests/integration/mods/items/give_item_prerequisites.test.js tests/in
 #### give_item.action.json
 
 **Current State (lines 10-13)**:
+
 ```json
   "forbidden_components": {
     "actor": ["positioning:bending_over"]
@@ -99,6 +103,7 @@ npx eslint tests/integration/mods/items/give_item_prerequisites.test.js tests/in
 ```
 
 **New State**:
+
 ```json
   "forbidden_components": {
     "actor": ["positioning:bending_over"]
@@ -142,24 +147,29 @@ Follow the pattern from `tests/integration/mods/weapons/wield_threateningly_prer
 ### Required Test Suites
 
 #### 1. Action Definition Structure
+
 - `should have prerequisites array defined`
 - `should reference anatomy:actor-has-free-grabbing-appendage condition`
 - `should have failure_message for user feedback`
 - `should preserve other action properties` (id, generateCombinations, targets, required_components, forbidden_components, visual)
 
 #### 2. Prerequisite Evaluation - Pass Cases
+
 - `should pass when actor has exactly one free grabbing appendage`
 - `should pass when actor has multiple free grabbing appendages`
 - `should pass for actor with two hands both free`
 
 #### 3. Prerequisite Evaluation - Fail Cases
+
 - `should fail when actor has zero free grabbing appendages`
 - `should fail when all appendages are locked (holding items)`
 
 #### 4. Edge Cases
+
 - `should handle missing actor gracefully`
 - `should handle actor with no grabbing appendages`
 
 #### 5. Condition Definition Validation
+
 - `should use hasFreeGrabbingAppendages operator with parameter 1`
 - `condition ID should match what the action references`

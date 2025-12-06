@@ -60,7 +60,9 @@ describe('entityFetchHelpers integration', () => {
   });
 
   it('resolves entities by id using the shared entityAccessService', () => {
-    const hero = new TestEntity('hero-1', { 'core:name': { displayName: 'Hero' } });
+    const hero = new TestEntity('hero-1', {
+      'core:name': { displayName: 'Hero' },
+    });
     entityManager.addEntity(hero);
 
     const resolved = fetchEntity(entityManager, 'hero-1');
@@ -72,7 +74,9 @@ describe('entityFetchHelpers integration', () => {
   });
 
   it('resolves direct entity references without consulting the entity manager', () => {
-    const npc = new TestEntity('npc-2', { 'core:name': { displayName: 'Guide' } });
+    const npc = new TestEntity('npc-2', {
+      'core:name': { displayName: 'Guide' },
+    });
 
     const resolved = fetchEntity(entityManager, npc);
 

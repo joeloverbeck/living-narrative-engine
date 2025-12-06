@@ -5,7 +5,14 @@
  * Target: <100ms for 100 entities
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { TURN_STARTED_ID } from '../../../../src/constants/eventIds.js';
 import { createPerformanceTestBed } from '../../../common/performanceTestBed.js';
@@ -168,9 +175,12 @@ describe('metabolism turn processing performance', () => {
 
       testEnv.reset([room, actor]);
 
-      const benchmark = performanceTracker.startBenchmark('Single Entity Turn', {
-        trackMemory: false,
-      });
+      const benchmark = performanceTracker.startBenchmark(
+        'Single Entity Turn',
+        {
+          trackMemory: false,
+        }
+      );
 
       const startTime = performance.now();
       await dispatchTurnStarted('test:actor1');
@@ -182,7 +192,9 @@ describe('metabolism turn processing performance', () => {
 
       expect(processingTimeMs).toBeLessThan(50); // Allow some margin
 
-      console.log(`Single entity turn processing: ${processingTimeMs.toFixed(2)}ms`);
+      console.log(
+        `Single entity turn processing: ${processingTimeMs.toFixed(2)}ms`
+      );
     });
 
     it('should process entity with full buffer under 10ms', async () => {
@@ -208,7 +220,9 @@ describe('metabolism turn processing performance', () => {
 
       expect(processingTimeMs).toBeLessThan(50);
 
-      console.log(`Full buffer turn processing: ${processingTimeMs.toFixed(2)}ms`);
+      console.log(
+        `Full buffer turn processing: ${processingTimeMs.toFixed(2)}ms`
+      );
     });
   });
 
@@ -221,8 +235,7 @@ describe('metabolism turn processing performance', () => {
         entities.push(
           createMetabolismActor(`test:actor${i}`, `Actor${i}`, {
             currentEnergy: 50 + i * 5,
-            bufferStorage:
-              i % 2 === 0 ? [{ bulk: 2, energy_content: 20 }] : [],
+            bufferStorage: i % 2 === 0 ? [{ bulk: 2, energy_content: 20 }] : [],
           })
         );
       }
@@ -248,7 +261,9 @@ describe('metabolism turn processing performance', () => {
 
       expect(processingTimeMs).toBeLessThan(500); // Allow some margin
 
-      console.log(`${entityCount} entities: ${processingTimeMs.toFixed(2)}ms total, ${avgTimePerEntity.toFixed(2)}ms/entity`);
+      console.log(
+        `${entityCount} entities: ${processingTimeMs.toFixed(2)}ms total, ${avgTimePerEntity.toFixed(2)}ms/entity`
+      );
 
       if (metrics.memoryUsage) {
         const memoryGrowthMB = metrics.memoryUsage.growth / (1024 * 1024);
@@ -290,7 +305,9 @@ describe('metabolism turn processing performance', () => {
 
       expect(processingTimeMs).toBeLessThan(2500);
 
-      console.log(`${entityCount} entities: ${processingTimeMs.toFixed(2)}ms total, ${avgTimePerEntity.toFixed(2)}ms/entity`);
+      console.log(
+        `${entityCount} entities: ${processingTimeMs.toFixed(2)}ms total, ${avgTimePerEntity.toFixed(2)}ms/entity`
+      );
     });
 
     it('should process 100 entities under 1000ms (target: <100ms ideal)', async () => {
@@ -304,9 +321,7 @@ describe('metabolism turn processing performance', () => {
           createMetabolismActor(`test:actor${i}`, `Actor${i}`, {
             currentEnergy: isHungry ? 15 : 60 + (i % 30),
             hungerState: isHungry ? 'hungry' : 'neutral',
-            bufferStorage: hasBuffer
-              ? [{ bulk: 2, energy_content: 25 }]
-              : [],
+            bufferStorage: hasBuffer ? [{ bulk: 2, energy_content: 25 }] : [],
           })
         );
       }
@@ -339,8 +354,12 @@ describe('metabolism turn processing performance', () => {
       console.log(`\n=== 100 Entity Benchmark Results ===`);
       console.log(`Total time: ${processingTimeMs.toFixed(2)}ms`);
       console.log(`Per entity: ${avgTimePerEntity.toFixed(2)}ms`);
-      console.log(`Meets ideal target (<100ms): ${meetsIdealTarget ? 'YES' : 'NO'}`);
-      console.log(`Meets realistic target (<1000ms): ${meetsRealisticTarget ? 'YES' : 'NO'}`);
+      console.log(
+        `Meets ideal target (<100ms): ${meetsIdealTarget ? 'YES' : 'NO'}`
+      );
+      console.log(
+        `Meets realistic target (<1000ms): ${meetsRealisticTarget ? 'YES' : 'NO'}`
+      );
 
       if (metrics.memoryUsage) {
         const memoryGrowthMB = metrics.memoryUsage.growth / (1024 * 1024);
@@ -379,9 +398,13 @@ describe('metabolism turn processing performance', () => {
 
       // Verify burn happened
       const actor0 = testEnv.entityManager.getEntityInstance('test:actor0');
-      expect(actor0.components['metabolism:metabolic_store'].current_energy).toBe(95);
+      expect(
+        actor0.components['metabolism:metabolic_store'].current_energy
+      ).toBe(95);
 
-      console.log(`BURN_ENERGY (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms`);
+      console.log(
+        `BURN_ENERGY (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms`
+      );
     });
 
     it('should measure DIGEST_FOOD performance under load', async () => {
@@ -416,9 +439,13 @@ describe('metabolism turn processing performance', () => {
 
       // Verify digestion occurred
       const actor0 = testEnv.entityManager.getEntityInstance('test:actor0');
-      expect(actor0.components['metabolism:metabolic_store'].current_energy).toBeGreaterThan(30);
+      expect(
+        actor0.components['metabolism:metabolic_store'].current_energy
+      ).toBeGreaterThan(30);
 
-      console.log(`DIGEST_FOOD (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms`);
+      console.log(
+        `DIGEST_FOOD (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms`
+      );
     });
 
     it('should measure UPDATE_HUNGER_STATE transitions', async () => {
@@ -458,7 +485,9 @@ describe('metabolism turn processing performance', () => {
         (e) => e.eventType === 'metabolism:hunger_state_changed'
       );
 
-      console.log(`UPDATE_HUNGER_STATE (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms, ${stateChanges.length} state changes`);
+      console.log(
+        `UPDATE_HUNGER_STATE (${entityCount} entities): ${processingTimeMs.toFixed(2)}ms, ${stateChanges.length} state changes`
+      );
     });
   });
 
@@ -495,7 +524,9 @@ describe('metabolism turn processing performance', () => {
       console.log(`\n=== Throughput Metrics ===`);
       console.log(`Entities/second: ${operationsPerSecond.toFixed(0)}`);
       console.log(`Rules/second: ${rulesPerSecond.toFixed(0)}`);
-      console.log(`Time per entity: ${(processingTimeMs / entityCount).toFixed(2)}ms`);
+      console.log(
+        `Time per entity: ${(processingTimeMs / entityCount).toFixed(2)}ms`
+      );
 
       // Target: At least 100 entities/second
       expect(operationsPerSecond).toBeGreaterThan(10);

@@ -115,10 +115,7 @@ describe('PickUpItemFromLocationHandler', () => {
       em.getComponentData.mockReturnValue(existingInventory);
       em.batchAddComponentsOptimized.mockResolvedValue(undefined);
 
-      const result = await handler.execute(
-        { actorEntity, itemEntity },
-        ctx
-      );
+      const result = await handler.execute({ actorEntity, itemEntity }, ctx);
 
       expect(result.success).toBe(true);
       expect(em.getComponentData).toHaveBeenCalledWith(
@@ -161,10 +158,10 @@ describe('PickUpItemFromLocationHandler', () => {
 
       await handler.execute({ actorEntity, itemEntity }, ctx);
 
-      expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        ITEM_PICKED_UP_EVENT,
-        { actorEntity, itemEntity }
-      );
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(ITEM_PICKED_UP_EVENT, {
+        actorEntity,
+        itemEntity,
+      });
     });
 
     test('logs debug message on successful pickup', async () => {
@@ -213,20 +210,14 @@ describe('PickUpItemFromLocationHandler', () => {
     });
 
     test('returns failure when actorEntity is missing', async () => {
-      const result = await handler.execute(
-        { itemEntity: 'item-1' },
-        ctx
-      );
+      const result = await handler.execute({ itemEntity: 'item-1' }, ctx);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('validation_failed');
     });
 
     test('returns failure when itemEntity is missing', async () => {
-      const result = await handler.execute(
-        { actorEntity: 'actor-1' },
-        ctx
-      );
+      const result = await handler.execute({ actorEntity: 'actor-1' }, ctx);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('validation_failed');

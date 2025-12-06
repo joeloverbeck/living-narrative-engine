@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const baseDom = `
   <div id="outputDiv"></div>
@@ -102,10 +109,9 @@ describe('main.js fallback and override coverage', () => {
       .spyOn(console, 'error')
       .mockImplementation(() => {});
 
-    const {
-      bootstrapApp,
-      __TEST_ONLY__setCurrentPhaseForError,
-    } = await import('../../../src/main.js');
+    const { bootstrapApp, __TEST_ONLY__setCurrentPhaseForError } = await import(
+      '../../../src/main.js'
+    );
 
     __TEST_ONLY__setCurrentPhaseForError('Preflight Phase');
 
@@ -135,25 +141,34 @@ describe('main.js fallback and override coverage', () => {
         const uiElements = bootstrapper.gatherEssentialElements();
         return { success: true, payload: uiElements };
       }),
-      setupDIContainerStage: jest.fn(async (_ui, _configureContainer, { createAppContainer }) => {
-        const container = createAppContainer();
-        container.resolve.mockImplementation((token) => {
-          if (token === tokens.ILogger) {
-            return logger;
-          }
-          return undefined;
-        });
-        return { success: true, payload: container };
-      }),
-      resolveLoggerStage: jest.fn(async () => ({ success: true, payload: { logger } })),
+      setupDIContainerStage: jest.fn(
+        async (_ui, _configureContainer, { createAppContainer }) => {
+          const container = createAppContainer();
+          container.resolve.mockImplementation((token) => {
+            if (token === tokens.ILogger) {
+              return logger;
+            }
+            return undefined;
+          });
+          return { success: true, payload: container };
+        }
+      ),
+      resolveLoggerStage: jest.fn(async () => ({
+        success: true,
+        payload: { logger },
+      })),
       initializeGlobalConfigStage: jest.fn(async () => ({ success: true })),
-      initializeGameEngineStage: jest.fn(async (_container, resolvedLogger, { createGameEngine }) => {
-        expect(resolvedLogger).toBe(logger);
-        const engine = createGameEngine({ createdFromStage: true });
-        createdGameEngines.push(engine);
-        return { success: true, payload: engine };
-      }),
-      initializeAuxiliaryServicesStage: jest.fn(async () => ({ success: true })),
+      initializeGameEngineStage: jest.fn(
+        async (_container, resolvedLogger, { createGameEngine }) => {
+          expect(resolvedLogger).toBe(logger);
+          const engine = createGameEngine({ createdFromStage: true });
+          createdGameEngines.push(engine);
+          return { success: true, payload: engine };
+        }
+      ),
+      initializeAuxiliaryServicesStage: jest.fn(async () => ({
+        success: true,
+      })),
       setupMenuButtonListenersStage: jest.fn(async () => ({ success: true })),
       setupGlobalEventListenersStage: jest.fn(async () => ({ success: true })),
       startGameStage: jest.fn(async () => ({ success: true })),
@@ -204,11 +219,8 @@ describe('main.js fallback and override coverage', () => {
       json: async () => ({ startWorld: 'alpha' }),
     });
 
-    const {
-      bootstrapApp,
-      beginGame,
-      __TEST_ONLY__setStartWorld,
-    } = await import('../../../src/main.js');
+    const { bootstrapApp, beginGame, __TEST_ONLY__setStartWorld } =
+      await import('../../../src/main.js');
 
     await bootstrapApp();
 
@@ -225,9 +237,7 @@ describe('main.js fallback and override coverage', () => {
       'beta',
       logger
     );
-    expect(logger.debug).toHaveBeenCalledWith(
-      'Starting game with world: beta'
-    );
+    expect(logger.debug).toHaveBeenCalledWith('Starting game with world: beta');
   });
 
   it('displays fatal error output when startGameStage fails after bootstrap', async () => {
@@ -239,29 +249,41 @@ describe('main.js fallback and override coverage', () => {
         const uiElements = bootstrapper.gatherEssentialElements();
         return { success: true, payload: uiElements };
       }),
-      setupDIContainerStage: jest.fn(async (_ui, _configureContainer, { createAppContainer }) => {
-        const container = createAppContainer();
-        container.resolve.mockImplementation((token) => {
-          if (token === tokens.ILogger) {
-            return logger;
-          }
-          return undefined;
-        });
-        return { success: true, payload: container };
-      }),
-      resolveLoggerStage: jest.fn(async () => ({ success: true, payload: { logger } })),
+      setupDIContainerStage: jest.fn(
+        async (_ui, _configureContainer, { createAppContainer }) => {
+          const container = createAppContainer();
+          container.resolve.mockImplementation((token) => {
+            if (token === tokens.ILogger) {
+              return logger;
+            }
+            return undefined;
+          });
+          return { success: true, payload: container };
+        }
+      ),
+      resolveLoggerStage: jest.fn(async () => ({
+        success: true,
+        payload: { logger },
+      })),
       initializeGlobalConfigStage: jest.fn(async () => ({ success: true })),
-      initializeGameEngineStage: jest.fn(async (_container, resolvedLogger, { createGameEngine }) => {
-        expect(resolvedLogger).toBe(logger);
-        const engine = createGameEngine({ createdFromStage: true });
-        return { success: true, payload: engine };
-      }),
-      initializeAuxiliaryServicesStage: jest.fn(async () => ({ success: true })),
+      initializeGameEngineStage: jest.fn(
+        async (_container, resolvedLogger, { createGameEngine }) => {
+          expect(resolvedLogger).toBe(logger);
+          const engine = createGameEngine({ createdFromStage: true });
+          return { success: true, payload: engine };
+        }
+      ),
+      initializeAuxiliaryServicesStage: jest.fn(async () => ({
+        success: true,
+      })),
       setupMenuButtonListenersStage: jest.fn(async () => ({ success: true })),
       setupGlobalEventListenersStage: jest.fn(async () => ({ success: true })),
       startGameStage: jest
         .fn()
-        .mockResolvedValueOnce({ success: false, error: new Error('start failure') }),
+        .mockResolvedValueOnce({
+          success: false,
+          error: new Error('start failure'),
+        }),
     };
 
     jest.doMock('../../../src/bootstrapper/stages/index.js', () => stageMocks);
@@ -336,17 +358,22 @@ describe('main.js fallback and override coverage', () => {
         };
         return { success: true, payload: uiElements };
       }),
-      setupDIContainerStage: jest.fn(async (_ui, _configureContainer, { createAppContainer }) => {
-        const container = createAppContainer();
-        container.resolve.mockImplementation((token) => {
-          if (token === tokens.ILogger) {
-            return logger;
-          }
-          return undefined;
-        });
-        return { success: true, payload: container };
-      }),
-      resolveLoggerStage: jest.fn(async () => ({ success: true, payload: { logger } })),
+      setupDIContainerStage: jest.fn(
+        async (_ui, _configureContainer, { createAppContainer }) => {
+          const container = createAppContainer();
+          container.resolve.mockImplementation((token) => {
+            if (token === tokens.ILogger) {
+              return logger;
+            }
+            return undefined;
+          });
+          return { success: true, payload: container };
+        }
+      ),
+      resolveLoggerStage: jest.fn(async () => ({
+        success: true,
+        payload: { logger },
+      })),
       initializeGlobalConfigStage: jest.fn(async () => ({ success: true })),
       initializeGameEngineStage: jest.fn(async () => {
         const error = new Error('engine init failure');

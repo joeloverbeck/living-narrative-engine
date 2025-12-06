@@ -30,8 +30,12 @@ describe('Error Formatting Integration', () => {
       expect(str).toContain("Recipe 'human_female'");
       expect(str).toContain("slot 'torso'");
       expect(str).toContain("Component 'anatomy:scaled_skin' does not exist");
-      expect(str).toContain('slot cannot be processed, anatomy generation will fail');
-      expect(str).toContain('Create component at: data/mods/*/components/scaled_skin.component.json');
+      expect(str).toContain(
+        'slot cannot be processed, anatomy generation will fail'
+      );
+      expect(str).toContain(
+        'Create component at: data/mods/*/components/scaled_skin.component.json'
+      );
       expect(str).toContain('Example Component Structure:');
       expect(str).toContain('docs/anatomy/anatomy-system-guide.md');
 
@@ -78,12 +82,18 @@ describe('Error Formatting Integration', () => {
       expect(str).toContain('[InvalidPropertyError]');
       expect(str).toContain("Recipe 'human_female'");
       expect(str).toContain("Component 'anatomy:body'");
-      expect(str).toContain("Property 'build' has invalid value 'super_muscular'");
-      expect(str).toContain('Valid Values: ["slim", "average", "muscular", "heavy"]');
+      expect(str).toContain(
+        "Property 'build' has invalid value 'super_muscular'"
+      );
+      expect(str).toContain(
+        'Valid Values: ["slim", "average", "muscular", "heavy"]'
+      );
       expect(str).toContain('Suggested Fix:');
       expect(str).toContain('"build": "muscular"');
       expect(str).toContain('// Changed from "super_muscular"');
-      expect(str).toContain('Component Schema: data/mods/anatomy/components/body.component.json');
+      expect(str).toContain(
+        'Component Schema: data/mods/anatomy/components/body.component.json'
+      );
 
       // Verify JSON serialization
       expect(json.name).toBe('InvalidPropertyError');
@@ -116,7 +126,8 @@ describe('Error Formatting Integration', () => {
         socketId: 'left_wrist',
         rootEntityId: 'humanoid_arm',
         availableSockets: ['left_elbow', 'left_shoulder'],
-        entityPath: 'data/mods/anatomy/entities/definitions/humanoid_arm.entity.json',
+        entityPath:
+          'data/mods/anatomy/entities/definitions/humanoid_arm.entity.json',
       });
 
       const str = error.toString();
@@ -126,10 +137,16 @@ describe('Error Formatting Integration', () => {
       expect(str).toContain('[SocketNotFoundError]');
       expect(str).toContain("Blueprint 'human_female'");
       expect(str).toContain("Slot 'left_arm'");
-      expect(str).toContain("Socket 'left_wrist' not found on root entity 'humanoid_arm'");
-      expect(str).toContain('Slot processing will fail during anatomy generation');
+      expect(str).toContain(
+        "Socket 'left_wrist' not found on root entity 'humanoid_arm'"
+      );
+      expect(str).toContain(
+        'Slot processing will fail during anatomy generation'
+      );
       expect(str).toContain('Option 1: Add socket to root entity');
-      expect(str).toContain('File: data/mods/anatomy/entities/definitions/humanoid_arm.entity.json');
+      expect(str).toContain(
+        'File: data/mods/anatomy/entities/definitions/humanoid_arm.entity.json'
+      );
       expect(str).toContain('"id": "left_wrist"');
       expect(str).toContain('"allowedTypes": ["part_type_here"]');
       expect(str).toContain('Option 2: Use existing socket');
@@ -187,10 +204,14 @@ describe('Error Formatting Integration', () => {
       expect(str).toContain('[RecipeValidationError]');
       expect(str).toContain('Recipe Validation: human_female');
       expect(str).toContain('Recipe validation failed with 3 errors');
-      expect(str).toContain('Recipe cannot be loaded due to 3 validation error(s)');
+      expect(str).toContain(
+        'Recipe cannot be loaded due to 3 validation error(s)'
+      );
       expect(str).toContain('Errors: 3');
       expect(str).toContain('Warnings: 2');
-      expect(str).toContain('Check RecipeValidationRunner for validation pipeline logic');
+      expect(str).toContain(
+        'Check RecipeValidationRunner for validation pipeline logic'
+      );
       expect(str).toContain('docs/anatomy/troubleshooting.md');
       expect(str).toContain('src/anatomy/validation/RecipeValidationRunner.js');
 
@@ -205,9 +226,7 @@ describe('Error Formatting Integration', () => {
         summary: {
           recipeId: 'simple_recipe',
         },
-        errors: [
-          { message: 'Single error' },
-        ],
+        errors: [{ message: 'Single error' }],
         warnings: [],
       };
 
@@ -294,15 +313,15 @@ describe('Error Formatting Integration', () => {
       const lines = str.split('\n');
 
       // Should have clear section separators
-      const separatorLines = lines.filter(line => line.includes('==='));
+      const separatorLines = lines.filter((line) => line.includes('==='));
       expect(separatorLines.length).toBeGreaterThanOrEqual(2);
 
       // Should have consistent indentation for fix steps
-      const fixLines = lines.filter(line => line.startsWith('  '));
+      const fixLines = lines.filter((line) => line.startsWith('  '));
       expect(fixLines.length).toBeGreaterThan(0);
 
       // Should have proper spacing between sections
-      const emptyLines = lines.filter(line => line === '');
+      const emptyLines = lines.filter((line) => line === '');
       expect(emptyLines.length).toBeGreaterThan(0);
     });
   });

@@ -3,7 +3,14 @@
  * @description Validates action availability for close partners with exposed breasts and forbidden state handling.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import {
   LICK_BREASTS_ACTION_ID as ACTION_ID,

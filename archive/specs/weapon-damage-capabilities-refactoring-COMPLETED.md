@@ -66,15 +66,15 @@
 
 ### Key Changes
 
-| Area | Change |
-|------|--------|
-| Components | Create `damage-types:damage_capabilities` with full damage data |
-| Services | `DamageTypeEffectsService` accepts damage entry object directly |
-| Operations | `APPLY_DAMAGE` accepts `damage_entry` object parameter |
-| Operators | Create `has_damage_capability` for filtering |
-| Actions | Gate by component presence + damage type name check |
-| Rules | Fix `handle_swing_at_target` to actually call `APPLY_DAMAGE` |
-| Infrastructure | Remove `DamageTypeLoader`, registry storage, and `can_cut` |
+| Area           | Change                                                          |
+| -------------- | --------------------------------------------------------------- |
+| Components     | Create `damage-types:damage_capabilities` with full damage data |
+| Services       | `DamageTypeEffectsService` accepts damage entry object directly |
+| Operations     | `APPLY_DAMAGE` accepts `damage_entry` object parameter          |
+| Operators      | Create `has_damage_capability` for filtering                    |
+| Actions        | Gate by component presence + damage type name check             |
+| Rules          | Fix `handle_swing_at_target` to actually call `APPLY_DAMAGE`    |
+| Infrastructure | Remove `DamageTypeLoader`, registry storage, and `can_cut`      |
 
 ---
 
@@ -112,12 +112,12 @@
 
 ### Files Involved
 
-| File | Purpose | Status |
-|------|---------|--------|
-| `src/loaders/damageTypeLoader.js` | Loads damage types into registry | TO REMOVE |
-| `data/mods/anatomy/damage-types/*.json` | Global damage definitions | TO REMOVE |
-| `data/mods/damage-types/components/can_cut.component.json` | Marker component | TO REMOVE |
-| `src/anatomy/services/damageTypeEffectsService.js` | Applies effects from registry | TO MODIFY |
+| File                                                       | Purpose                          | Status    |
+| ---------------------------------------------------------- | -------------------------------- | --------- |
+| `src/loaders/damageTypeLoader.js`                          | Loads damage types into registry | TO REMOVE |
+| `data/mods/anatomy/damage-types/*.json`                    | Global damage definitions        | TO REMOVE |
+| `data/mods/damage-types/components/can_cut.component.json` | Marker component                 | TO REMOVE |
+| `src/anatomy/services/damageTypeEffectsService.js`         | Applies effects from registry    | TO MODIFY |
 
 ---
 
@@ -343,7 +343,9 @@ Add `damage_entry` parameter:
     "damage_entry": {
       "description": "Full damage entry object from weapon's damage_capabilities component",
       "oneOf": [
-        { "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json" },
+        {
+          "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json"
+        },
         { "$ref": "#/$defs/JSONLogic" }
       ]
     },
@@ -360,6 +362,7 @@ Add `damage_entry` parameter:
 ```
 
 **Behavior**:
+
 - If `damage_entry` provided: use it directly
 - If `damage_type` + `amount` provided: legacy mode (emit deprecation warning)
 
@@ -374,16 +377,19 @@ Add `damage_entry` parameter:
 #### Method Signature Change
 
 **Before**:
+
 ```javascript
 async applyEffectsForDamage({ entityId, partId, amount, damageType, maxHealth, currentHealth })
 ```
 
 **After**:
+
 ```javascript
 async applyEffectsForDamage({ entityId, partId, damageEntry, maxHealth, currentHealth })
 ```
 
 Where `damageEntry` is the complete damage capability entry object:
+
 ```javascript
 {
   name: "slashing",
@@ -397,6 +403,7 @@ Where `damageEntry` is the complete damage capability entry object:
 #### Remove Registry Lookup
 
 **Before**:
+
 ```javascript
 const damageTypeDef = this.#dataRegistry.get('damageTypes', damageType);
 if (!damageTypeDef) {
@@ -406,6 +413,7 @@ if (!damageTypeDef) {
 ```
 
 **After**:
+
 ```javascript
 // damageEntry is passed directly - no lookup needed
 if (!damageEntry) {
@@ -515,7 +523,7 @@ class HasDamageCapabilityOperator extends BaseOperator {
 
     if (!capabilities?.entries) return false;
 
-    return capabilities.entries.some(entry => entry.name === damageTypeName);
+    return capabilities.entries.some((entry) => entry.name === damageTypeName);
   }
 }
 
@@ -523,6 +531,7 @@ export default HasDamageCapabilityOperator;
 ```
 
 **Usage in JSON Logic**:
+
 ```json
 { "has_damage_capability": ["primary", "slashing"] }
 ```
@@ -538,6 +547,7 @@ export default HasDamageCapabilityOperator;
 **File**: `data/mods/weapons/actions/swing_at_target.action.json`
 
 **Before**:
+
 ```json
 {
   "required_components": {
@@ -548,6 +558,7 @@ export default HasDamageCapabilityOperator;
 ```
 
 **After**:
+
 ```json
 {
   "required_components": {
@@ -568,6 +579,7 @@ export default HasDamageCapabilityOperator;
 **File**: `data/mods/weapons/scopes/wielded_cutting_weapons.scope`
 
 **Before**:
+
 ```
 weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded_item_ids[][{
   "and": [
@@ -578,6 +590,7 @@ weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded
 ```
 
 **After**:
+
 ```
 weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded_item_ids[][{
   "and": [
@@ -599,6 +612,7 @@ weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded
 The rule currently does NOT call `APPLY_DAMAGE`. This must be fixed.
 
 **Add to SUCCESS branch**:
+
 ```json
 {
   "type": "QUERY_COMPONENT",
@@ -627,6 +641,7 @@ The rule currently does NOT call `APPLY_DAMAGE`. This must be fixed.
 ```
 
 **Add to CRITICAL_SUCCESS branch** (with multiplier):
+
 ```json
 {
   "type": "FOR_EACH",
@@ -664,12 +679,12 @@ The rule currently does NOT call `APPLY_DAMAGE`. This must be fixed.
 
 ### Files to Delete
 
-| File | Reason |
-|------|--------|
-| `src/loaders/damageTypeLoader.js` | No longer loading from registry |
-| `data/mods/anatomy/damage-types/slashing.json` | Data now on weapons |
-| `data/mods/anatomy/damage-types/piercing.json` | Data now on weapons |
-| `data/mods/anatomy/damage-types/blunt.json` | Data now on weapons |
+| File                                                       | Reason                          |
+| ---------------------------------------------------------- | ------------------------------- |
+| `src/loaders/damageTypeLoader.js`                          | No longer loading from registry |
+| `data/mods/anatomy/damage-types/slashing.json`             | Data now on weapons             |
+| `data/mods/anatomy/damage-types/piercing.json`             | Data now on weapons             |
+| `data/mods/anatomy/damage-types/blunt.json`                | Data now on weapons             |
 | `data/mods/damage-types/components/can_cut.component.json` | Replaced by damage_capabilities |
 
 ### DI Registrations to Remove
@@ -677,6 +692,7 @@ The rule currently does NOT call `APPLY_DAMAGE`. This must be fixed.
 **File**: `src/dependencyInjection/registrations/loadersRegistrations.js`
 
 Remove:
+
 ```javascript
 registerLoader(tokens.DamageTypeLoader, DamageTypeLoader);
 ```
@@ -684,6 +700,7 @@ registerLoader(tokens.DamageTypeLoader, DamageTypeLoader);
 **File**: `src/dependencyInjection/tokens/tokens-core.js`
 
 Remove:
+
 ```javascript
 DamageTypeLoader: 'DamageTypeLoader',
 ```
@@ -693,6 +710,7 @@ DamageTypeLoader: 'DamageTypeLoader',
 **File**: `data/mods/anatomy/mod-manifest.json`
 
 Remove `damage-types` from content:
+
 ```json
 {
   "content": {
@@ -708,6 +726,7 @@ Remove `damage-types` from content:
 ### Migrating Weapon Entities
 
 **Before** (with marker):
+
 ```json
 {
   "id": "fantasy:vespera_rapier",
@@ -719,6 +738,7 @@ Remove `damage-types` from content:
 ```
 
 **After** (with full damage data):
+
 ```json
 {
   "id": "fantasy:vespera_rapier",
@@ -748,11 +768,11 @@ Remove `damage-types` from content:
 
 ### Weapon Migration Reference
 
-| Weapon | Damage Configuration |
-|--------|---------------------|
-| Vespera Rapier | slashing: 3, bleed: moderate |
-| Vespera Main-Gauche | piercing: 2, bleed: minor, penetration: 0.8 |
-| Rill Practice Stick | blunt: 1, fracture: disabled |
+| Weapon                       | Damage Configuration                         |
+| ---------------------------- | -------------------------------------------- |
+| Vespera Rapier               | slashing: 3, bleed: moderate                 |
+| Vespera Main-Gauche          | piercing: 2, bleed: minor, penetration: 0.8  |
+| Rill Practice Stick          | blunt: 1, fracture: disabled                 |
 | Threadscar Melissa Longsword | slashing: 4, bleed: moderate, dismember: 0.7 |
 
 ---
@@ -762,18 +782,21 @@ Remove `damage-types` from content:
 ### Unit Tests
 
 #### DamageTypeEffectsService Tests
+
 - Test with full damage entry object
 - Test each effect type (bleed, fracture, burn, poison, dismember)
 - Test with missing optional fields (uses defaults)
 - Test with disabled effects
 
 #### HasDamageCapabilityOperator Tests
+
 - Entity has matching damage type → returns true
 - Entity has different damage type → returns false
 - Entity has no damage_capabilities → returns false
 - Entity has multiple entries → finds correct one
 
 #### ApplyDamageHandler Tests
+
 - Test with `damage_entry` parameter
 - Test legacy `damage_type` + `amount` (deprecation warning)
 - Test missing required parameters
@@ -781,6 +804,7 @@ Remove `damage-types` from content:
 ### Integration Tests
 
 #### Multi-Damage Weapon Test
+
 ```javascript
 describe('Multi-damage weapon', () => {
   it('should apply all damage types on hit', async () => {
@@ -793,6 +817,7 @@ describe('Multi-damage weapon', () => {
 ```
 
 #### Action Discovery Test
+
 ```javascript
 describe('swing_at_target discovery', () => {
   it('should only show for weapons with slashing capability', async () => {
@@ -805,6 +830,7 @@ describe('swing_at_target discovery', () => {
 ### E2E Tests
 
 #### Complete Combat Flow
+
 1. Create attacker with weapon
 2. Create target with anatomy
 3. Execute swing_at_target
@@ -817,6 +843,7 @@ describe('swing_at_target discovery', () => {
 ## Appendix: Example Weapon Configurations
 
 ### Standard Longsword
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -825,7 +852,11 @@ describe('swing_at_target discovery', () => {
         "name": "slashing",
         "amount": 4,
         "penetration": 0.3,
-        "bleed": { "enabled": true, "severity": "moderate", "baseDurationTurns": 3 },
+        "bleed": {
+          "enabled": true,
+          "severity": "moderate",
+          "baseDurationTurns": 3
+        },
         "dismember": { "enabled": true, "thresholdFraction": 0.8 }
       }
     ]
@@ -834,6 +865,7 @@ describe('swing_at_target discovery', () => {
 ```
 
 ### Flaming Sword
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -841,12 +873,21 @@ describe('swing_at_target discovery', () => {
       {
         "name": "slashing",
         "amount": 3,
-        "bleed": { "enabled": true, "severity": "minor", "baseDurationTurns": 2 }
+        "bleed": {
+          "enabled": true,
+          "severity": "minor",
+          "baseDurationTurns": 2
+        }
       },
       {
         "name": "fire",
         "amount": 2,
-        "burn": { "enabled": true, "dps": 1.5, "durationTurns": 3, "canStack": false }
+        "burn": {
+          "enabled": true,
+          "dps": 1.5,
+          "durationTurns": 3,
+          "canStack": false
+        }
       }
     ]
   }
@@ -854,6 +895,7 @@ describe('swing_at_target discovery', () => {
 ```
 
 ### War Hammer
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -862,7 +904,11 @@ describe('swing_at_target discovery', () => {
         "name": "blunt",
         "amount": 5,
         "penetration": 0.1,
-        "fracture": { "enabled": true, "thresholdFraction": 0.4, "stunChance": 0.3 }
+        "fracture": {
+          "enabled": true,
+          "thresholdFraction": 0.4,
+          "stunChance": 0.3
+        }
       }
     ]
   }
@@ -870,6 +916,7 @@ describe('swing_at_target discovery', () => {
 ```
 
 ### Assassin's Dagger
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -878,12 +925,21 @@ describe('swing_at_target discovery', () => {
         "name": "piercing",
         "amount": 2,
         "penetration": 0.9,
-        "bleed": { "enabled": true, "severity": "minor", "baseDurationTurns": 2 }
+        "bleed": {
+          "enabled": true,
+          "severity": "minor",
+          "baseDurationTurns": 2
+        }
       },
       {
         "name": "poison",
         "amount": 0,
-        "poison": { "enabled": true, "tickDamage": 2, "durationTurns": 5, "scope": "entity" }
+        "poison": {
+          "enabled": true,
+          "tickDamage": 2,
+          "durationTurns": 5,
+          "scope": "entity"
+        }
       }
     ]
   }
@@ -891,6 +947,7 @@ describe('swing_at_target discovery', () => {
 ```
 
 ### Executioner's Axe
+
 ```json
 {
   "damage-types:damage_capabilities": {
@@ -899,7 +956,11 @@ describe('swing_at_target discovery', () => {
         "name": "slashing",
         "amount": 6,
         "penetration": 0.2,
-        "bleed": { "enabled": true, "severity": "severe", "baseDurationTurns": 4 },
+        "bleed": {
+          "enabled": true,
+          "severity": "severe",
+          "baseDurationTurns": 4
+        },
         "dismember": { "enabled": true, "thresholdFraction": 0.5 }
       }
     ]

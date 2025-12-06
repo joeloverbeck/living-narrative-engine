@@ -32,6 +32,7 @@ The original ticket had some incorrect assumptions about the codebase:
 ### Scope Adjustment
 
 Given the existing coverage, this ticket creates a CONSOLIDATED regression suite that:
+
 1. Documents all regression-preventing tests in one place
 2. Adds template string pattern validation tests (edge cases)
 3. Verifies ModTestFixture validation integration is working
@@ -41,16 +42,16 @@ Given the existing coverage, this ticket creates a CONSOLIDATED regression suite
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                              | Purpose                            |
+| ----------------------------------------------------------------- | ---------------------------------- |
 | `tests/integration/validation/schemaValidationRegression.test.js` | Consolidated regression test suite |
 
 ### Files Referenced (for context, NOT duplicated)
 
-| File | Purpose |
-|------|---------|
+| File                                                                      | Purpose                                      |
+| ------------------------------------------------------------------------- | -------------------------------------------- |
 | `tests/integration/mods/weapons/wield_grabbing_schema_validation.test.js` | Existing LOCK_GRABBING/UNLOCK_GRABBING tests |
-| `tests/integration/validation/corePromptTextValidation.test.js` | Existing corePromptText.json tests |
+| `tests/integration/validation/corePromptTextValidation.test.js`           | Existing corePromptText.json tests           |
 
 ---
 
@@ -132,8 +133,8 @@ describe('Schema Validation Regression Prevention', () => {
         parameters: {
           actor_id: '{context.deeply.nested.path.value}',
           count: 1,
-          item_id: 'test:item'
-        }
+          item_id: 'test:item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -150,8 +151,8 @@ describe('Schema Validation Regression Prevention', () => {
         parameters: {
           actor_id: '{actor_stats.strength_modifier}',
           count: '{context.hands_required}',
-          item_id: 'test:item'
-        }
+          item_id: 'test:item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -165,7 +166,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject empty template {}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -179,7 +180,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template with spaces { context.value }', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{ context.value }', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{ context.value }',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -193,7 +198,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject double braces {{context.value}}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{{context.value}}', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{{context.value}}',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -207,7 +216,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject trailing dot {context.}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{context.}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{context.}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -221,7 +230,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject leading dot {.value}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{.value}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{.value}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -235,7 +244,7 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template starting with number {123abc}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{123abc}', item_id: 'item' }
+        parameters: { actor_id: 'test', count: '{123abc}', item_id: 'item' },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -249,7 +258,11 @@ describe('Schema Validation Regression Prevention', () => {
     it('should reject template with hyphen {context-value}', () => {
       const operation = {
         type: 'LOCK_GRABBING',
-        parameters: { actor_id: 'test', count: '{context-value}', item_id: 'item' }
+        parameters: {
+          actor_id: 'test',
+          count: '{context-value}',
+          item_id: 'item',
+        },
       };
 
       const isValid = schemaValidator.validateAgainstSchema(
@@ -270,14 +283,20 @@ describe('ModTestFixture Schema Integration - Regression Prevention', () => {
   describe('schema validation is enabled', () => {
     it('should successfully load valid weapon rule files', async () => {
       // Test that valid rules pass validation
-      const fixture = await ModTestFixture.forAction('weapons', 'weapons:wield_threateningly');
+      const fixture = await ModTestFixture.forAction(
+        'weapons',
+        'weapons:wield_threateningly'
+      );
       expect(fixture).toBeDefined();
       await fixture.cleanup();
     });
 
     it('should successfully load valid positioning rule files', async () => {
       // Test another valid mod to ensure validation works across mods
-      const fixture = await ModTestFixture.forAction('positioning', 'positioning:sit_down');
+      const fixture = await ModTestFixture.forAction(
+        'positioning',
+        'positioning:sit_down'
+      );
       expect(fixture).toBeDefined();
       await fixture.cleanup();
     });
@@ -341,17 +360,18 @@ describe('Regression Test Cross-Reference Documentation', () => {
 
 ### Regression Coverage
 
-| Original Issue | Test Coverage | Location |
-|----------------|---------------|----------|
-| LOCK_GRABBING template string rejection | Comprehensive | `wield_grabbing_schema_validation.test.js` |
+| Original Issue                            | Test Coverage | Location                                   |
+| ----------------------------------------- | ------------- | ------------------------------------------ |
+| LOCK_GRABBING template string rejection   | Comprehensive | `wield_grabbing_schema_validation.test.js` |
 | UNLOCK_GRABBING template string rejection | Comprehensive | `wield_grabbing_schema_validation.test.js` |
-| corePromptText field drift | Comprehensive | `corePromptTextValidation.test.js` |
-| Invalid template formats | Edge cases | `schemaValidationRegression.test.js` (NEW) |
-| ModTestFixture bypassing validation | Integration | `schemaValidationRegression.test.js` (NEW) |
+| corePromptText field drift                | Comprehensive | `corePromptTextValidation.test.js`         |
+| Invalid template formats                  | Edge cases    | `schemaValidationRegression.test.js` (NEW) |
+| ModTestFixture bypassing validation       | Integration   | `schemaValidationRegression.test.js` (NEW) |
 
 ### Manual Verification Steps
 
 1. **Run regression suite**:
+
    ```bash
    NODE_ENV=test npx jest tests/integration/validation/schemaValidationRegression.test.js --no-coverage --verbose
    ```
@@ -409,11 +429,11 @@ This ticket was successfully implemented with scope adjustments based on codebas
 
 ### Test Coverage Added
 
-| Test Category | Count | Description |
-|---------------|-------|-------------|
-| Template Edge Cases | 9 | Valid/invalid template pattern variations |
-| ModTestFixture Integration | 3 | Schema validation enabled verification |
-| Documentation Tests | 2 | Cross-reference to existing test locations |
+| Test Category              | Count | Description                                |
+| -------------------------- | ----- | ------------------------------------------ |
+| Template Edge Cases        | 9     | Valid/invalid template pattern variations  |
+| ModTestFixture Integration | 3     | Schema validation enabled verification     |
+| Documentation Tests        | 2     | Cross-reference to existing test locations |
 
 ### Verification Commands
 

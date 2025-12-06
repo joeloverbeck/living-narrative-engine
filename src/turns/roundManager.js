@@ -79,9 +79,8 @@ export default class RoundManager {
       strategy = strategy.trim().toLowerCase();
     }
 
-    const hasInitiativeCandidate = this.#hasCandidateInitiativeData(
-      initiativeData
-    );
+    const hasInitiativeCandidate =
+      this.#hasCandidateInitiativeData(initiativeData);
     if (strategy !== 'initiative' && strategy !== 'round-robin') {
       const fallbackStrategy = hasInitiativeCandidate
         ? 'initiative'

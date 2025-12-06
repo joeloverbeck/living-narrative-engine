@@ -8,8 +8,8 @@ Add the `UNWIELD_ITEM` operation to the drop item rule, ensuring wielded items a
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                               | Change                                                  |
+| -------------------------------------------------- | ------------------------------------------------------- |
 | `data/mods/items/rules/handle_drop_item.rule.json` | Add UNWIELD_ITEM operation before DROP_ITEM_AT_LOCATION |
 
 ## Implementation Details
@@ -17,6 +17,7 @@ Add the `UNWIELD_ITEM` operation to the drop item rule, ensuring wielded items a
 ### Current Rule Structure
 
 The current rule executes:
+
 1. `QUERY_COMPONENT` - Get actor's current position
 2. `DROP_ITEM_AT_LOCATION` - Remove from inventory and place at location
 3. `GET_NAME` (actor) - Get actor name
@@ -112,21 +113,21 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
+| File                                                  | Purpose                       |
+| ----------------------------------------------------- | ----------------------------- |
 | `data/mods/items/rules/handle_unwield_item.rule.json` | Related rule being simplified |
-| `data/mods/items/rules/handle_give_item.rule.json` | Similar item operation rule |
-| `data/schemas/operations/unwieldItem.schema.json` | Operation schema definition |
+| `data/mods/items/rules/handle_give_item.rule.json`    | Similar item operation rule   |
+| `data/schemas/operations/unwieldItem.schema.json`     | Operation schema definition   |
 
 ## Testing Scenarios
 
 After this change, the following scenarios should work:
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| Drop non-wielded item | UNWIELD_ITEM returns success (no-op), item dropped normally |
-| Drop wielded item | UNWIELD_ITEM unwields first, then item dropped |
-| Drop two-handed wielded item | UNWIELD_ITEM releases both hands, item dropped |
+| Scenario                     | Expected Behavior                                           |
+| ---------------------------- | ----------------------------------------------------------- |
+| Drop non-wielded item        | UNWIELD_ITEM returns success (no-op), item dropped normally |
+| Drop wielded item            | UNWIELD_ITEM unwields first, then item dropped              |
+| Drop two-handed wielded item | UNWIELD_ITEM releases both hands, item dropped              |
 
 ---
 
@@ -136,11 +137,11 @@ After this change, the following scenarios should work:
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `data/mods/items/rules/handle_drop_item.rule.json` | Added UNWIELD_ITEM operation after QUERY_COMPONENT, before DROP_ITEM_AT_LOCATION |
-| `tests/common/mods/ModTestHandlerFactory.js` | Added UnwieldItemHandler import and registration in createHandlersWithItemsSupport() |
-| `tests/integration/mods/items/dropItemRuleExecution.test.js` | Added 3 new tests for wielded item scenarios |
+| File                                                         | Changes                                                                              |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `data/mods/items/rules/handle_drop_item.rule.json`           | Added UNWIELD_ITEM operation after QUERY_COMPONENT, before DROP_ITEM_AT_LOCATION     |
+| `tests/common/mods/ModTestHandlerFactory.js`                 | Added UnwieldItemHandler import and registration in createHandlersWithItemsSupport() |
+| `tests/integration/mods/items/dropItemRuleExecution.test.js` | Added 3 new tests for wielded item scenarios                                         |
 
 ### Ticket Corrections
 
@@ -157,6 +158,7 @@ Three new integration tests added to verify wielded item handling:
 ### Additional Changes Required (not in original ticket)
 
 The `UNWIELD_ITEM` handler was not registered in `ModTestHandlerFactory.createHandlersWithItemsSupport()`, causing integration tests to silently skip the operation. This was fixed by:
+
 1. Adding `import UnwieldItemHandler from '../../../src/logic/operationHandlers/unwieldItemHandler.js';`
 2. Adding `UNWIELD_ITEM: new UnwieldItemHandler({...})` to the handlers object
 

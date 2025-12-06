@@ -35,7 +35,10 @@ import {
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
-import { createMultiTargetResolutionStage, createActionPipelineOrchestrator } from '../../common/actions/multiTargetStageTestUtilities.js';
+import {
+  createMultiTargetResolutionStage,
+  createActionPipelineOrchestrator,
+} from '../../common/actions/multiTargetStageTestUtilities.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -94,7 +97,10 @@ describe('Core Action Target Resolution Integration', () => {
     const conditionFiles = [
       // Core conditions
       {
-        path: path.resolve(__dirname, '../../../data/mods/core/conditions/entity-at-location.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/core/conditions/entity-at-location.condition.json'
+        ),
         fallback: {
           id: 'core:entity-at-location',
           logic: {
@@ -103,25 +109,34 @@ describe('Core Action Target Resolution Integration', () => {
               { var: 'location.id' },
             ],
           },
-        }
+        },
       },
       {
-        path: path.resolve(__dirname, '../../../data/mods/core/conditions/entity-is-not-current-actor.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/core/conditions/entity-is-not-current-actor.condition.json'
+        ),
         fallback: {
           id: 'core:entity-is-not-current-actor',
           logic: { '!=': [{ var: 'entity.id' }, { var: 'actor.id' }] },
-        }
+        },
       },
       {
-        path: path.resolve(__dirname, '../../../data/mods/core/conditions/entity-has-actor-component.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/core/conditions/entity-has-actor-component.condition.json'
+        ),
         fallback: {
           id: 'core:entity-has-actor-component',
           logic: { '!!': { var: 'entity.components.core:actor' } },
-        }
+        },
       },
       // Companionship conditions
       {
-        path: path.resolve(__dirname, '../../../data/mods/companionship/conditions/entity-is-following-actor.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/companionship/conditions/entity-is-following-actor.condition.json'
+        ),
         fallback: {
           id: 'companionship:entity-is-following-actor',
           logic: {
@@ -130,34 +145,48 @@ describe('Core Action Target Resolution Integration', () => {
               { var: 'actor.id' },
             ],
           },
-        }
+        },
       },
       {
-        path: path.resolve(__dirname, '../../../data/mods/companionship/conditions/actor-is-following.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/companionship/conditions/actor-is-following.condition.json'
+        ),
         fallback: {
           id: 'companionship:actor-is-following',
           logic: {
             '!!': { var: 'actor.components.companionship:following' },
           },
-        }
+        },
       },
       // Movement conditions
       {
-        path: path.resolve(__dirname, '../../../data/mods/movement/conditions/exit-is-unblocked.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/movement/conditions/exit-is-unblocked.condition.json'
+        ),
         fallback: {
           id: 'movement:exit-is-unblocked',
           logic: { '!': { var: 'entity.blocker' } },
-        }
+        },
       },
       {
-        path: path.resolve(__dirname, '../../../data/mods/movement/conditions/actor-can-move.condition.json'),
+        path: path.resolve(
+          __dirname,
+          '../../../data/mods/movement/conditions/actor-can-move.condition.json'
+        ),
         fallback: {
           id: 'movement:actor-can-move',
           logic: {
-            'hasPartWithComponentValue': ['actor', 'core:movement', 'locked', false]
+            hasPartWithComponentValue: [
+              'actor',
+              'core:movement',
+              'locked',
+              false,
+            ],
           },
-        }
-      }
+        },
+      },
     ];
 
     // Load each condition, using fallback if file doesn't exist
@@ -171,7 +200,10 @@ describe('Core Action Target Resolution Integration', () => {
           condition = conditionInfo.fallback;
         }
       } catch (error) {
-        logger.warn(`Failed to load condition from ${conditionInfo.path}, using fallback`, error);
+        logger.warn(
+          `Failed to load condition from ${conditionInfo.path}, using fallback`,
+          error
+        );
         condition = conditionInfo.fallback;
       }
       dataRegistry.store('conditions', condition.id, condition);
@@ -182,16 +214,12 @@ describe('Core Action Target Resolution Integration', () => {
     scopeRegistry.clear();
 
     // Load and parse scope definitions from actual files
-    const coreScopeFiles = [
-      'environment.scope',
-    ];
+    const coreScopeFiles = ['environment.scope'];
     const companionshipScopeFiles = [
       'potential_leaders.scope',
       'followers.scope',
     ];
-    const movementScopeFiles = [
-      'clear_directions.scope',
-    ];
+    const movementScopeFiles = ['clear_directions.scope'];
 
     const scopeDefinitions = {};
 
@@ -210,7 +238,11 @@ describe('Core Action Target Resolution Integration', () => {
     // Load companionship scopes
     for (const filename of companionshipScopeFiles) {
       const scopeContent = fs.readFileSync(
-        path.resolve(__dirname, '../../../data/mods/companionship/scopes', filename),
+        path.resolve(
+          __dirname,
+          '../../../data/mods/companionship/scopes',
+          filename
+        ),
         'utf8'
       );
       const defs = parseScopeDefinitions(scopeContent, filename);
@@ -447,7 +479,9 @@ describe('Core Action Target Resolution Integration', () => {
       actionsByType['companionship:follow'].params
     );
     expect(followTargets).toContain('test-actor-2');
-    expect(actionsByType['companionship:follow'].command).toContain('Actor Two');
+    expect(actionsByType['companionship:follow'].command).toContain(
+      'Actor Two'
+    );
 
     // Validate wait action
     expect(actionsByType['core:wait']).toBeDefined();

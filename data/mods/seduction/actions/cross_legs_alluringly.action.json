@@ -5,9 +5,7 @@
   "description": "Cross your legs in a slow, deliberate motion that draws attention and creates an alluring pose. This gesture emphasizes grace and confidence while seated.",
   "targets": "none",
   "required_components": {
-    "actor": [
-      "positioning:sitting_on"
-    ]
+    "actor": ["positioning:sitting_on"]
   },
   "forbidden_components": {
     "actor": [
@@ -20,18 +18,13 @@
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "leg"
-        ]
+        "hasPartOfType": ["actor", "leg"]
       },
       "failure_message": "You need legs to cross them."
     },
     {
       "logic": {
-        "hasOtherActorsAtLocation": [
-          "actor"
-        ]
+        "hasOtherActorsAtLocation": ["actor"]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

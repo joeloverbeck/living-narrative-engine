@@ -250,9 +250,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(
-      testBed.mocks.dispatcher.dispatch
-    ).toHaveBeenCalledWith(
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${ai1.id}`,

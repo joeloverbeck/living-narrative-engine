@@ -118,7 +118,9 @@ describe('Rule Schema Additional Properties Validation', () => {
 
       // Check that error mentions the unexpected property
       const errorMessage = JSON.stringify(result.errors);
-      expect(errorMessage.toLowerCase()).toMatch(/priority|additional|unexpected/);
+      expect(errorMessage.toLowerCase()).toMatch(
+        /priority|additional|unexpected/
+      );
     });
 
     it('should reject rule with multiple unexpected properties', () => {

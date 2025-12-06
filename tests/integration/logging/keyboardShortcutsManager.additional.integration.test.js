@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import KeyboardShortcutsManager from '../../../src/logging/keyboardShortcutsManager.js';
 import NoOpLogger from '../../../src/logging/noOpLogger.js';
 
@@ -138,7 +145,9 @@ describe('KeyboardShortcutsManager integration edge coverage', () => {
     manager.enable();
 
     let previousCalls = actionCallback.mock.calls.length;
-    const navEventNoPanel = createKeydownEvent(document.body, { key: 'ArrowUp' });
+    const navEventNoPanel = createKeydownEvent(document.body, {
+      key: 'ArrowUp',
+    });
     document.dispatchEvent(navEventNoPanel);
     expect(actionCallback.mock.calls.length).toBe(previousCalls);
 
@@ -155,7 +164,9 @@ describe('KeyboardShortcutsManager integration edge coverage', () => {
     document.dispatchEvent(inputEvent);
     expect(actionCallback.mock.calls.length).toBe(previousCalls);
 
-    const editableEvent = createKeydownEvent(document.body, { key: 'ArrowDown' });
+    const editableEvent = createKeydownEvent(document.body, {
+      key: 'ArrowDown',
+    });
     Object.defineProperty(editableEvent, 'target', {
       value: { tagName: 'DIV', isContentEditable: true },
       configurable: true,
@@ -164,8 +175,13 @@ describe('KeyboardShortcutsManager integration edge coverage', () => {
     document.dispatchEvent(editableEvent);
     expect(actionCallback.mock.calls.length).toBe(previousCalls);
 
-    const nullTargetEvent = createKeydownEvent(document.body, { key: 'ArrowDown' });
-    Object.defineProperty(nullTargetEvent, 'target', { value: null, configurable: true });
+    const nullTargetEvent = createKeydownEvent(document.body, {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(nullTargetEvent, 'target', {
+      value: null,
+      configurable: true,
+    });
     previousCalls = actionCallback.mock.calls.length;
     document.dispatchEvent(nullTargetEvent);
     expect(actionCallback.mock.calls.length).toBe(previousCalls);
@@ -201,7 +217,10 @@ describe('KeyboardShortcutsManager integration edge coverage', () => {
   });
 
   it('short-circuits lifecycle when document context is absent', () => {
-    const manager = new KeyboardShortcutsManager({ logger, documentContext: null });
+    const manager = new KeyboardShortcutsManager({
+      logger,
+      documentContext: null,
+    });
     expect(() => manager.enable()).not.toThrow();
     expect(() => manager.disable()).not.toThrow();
     expect(() => manager.destroy()).not.toThrow();

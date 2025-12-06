@@ -83,13 +83,17 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
           type: 'missing_required_slot',
           severity: 'error',
           slot: 'arm_left',
-          message: expect.stringContaining("Required slot 'arm_left' not populated"),
+          message: expect.stringContaining(
+            "Required slot 'arm_left' not populated"
+          ),
         });
         expect(issues[1]).toMatchObject({
           type: 'missing_required_slot',
           severity: 'error',
           slot: 'arm_right',
-          message: expect.stringContaining("Required slot 'arm_right' not populated"),
+          message: expect.stringContaining(
+            "Required slot 'arm_right' not populated"
+          ),
         });
       });
 
@@ -251,10 +255,9 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
           logger: mockLogger,
         });
 
-        expect(mockRecipePatternResolver.resolveRecipePatterns).toHaveBeenCalledWith(
-          recipe,
-          blueprint
-        );
+        expect(
+          mockRecipePatternResolver.resolveRecipePatterns
+        ).toHaveBeenCalledWith(recipe, blueprint);
         expect(issues).toEqual([]);
       });
 
@@ -283,9 +286,11 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
         };
 
         // Mock pattern resolution to throw error
-        mockRecipePatternResolver.resolveRecipePatterns.mockImplementation(() => {
-          throw new Error('Pattern resolution failed');
-        });
+        mockRecipePatternResolver.resolveRecipePatterns.mockImplementation(
+          () => {
+            throw new Error('Pattern resolution failed');
+          }
+        );
 
         const issues = checkBlueprintRecipeCompatibility(blueprint, recipe, {
           recipePatternResolver: mockRecipePatternResolver,
@@ -397,7 +402,9 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
           logger: mockLogger,
         });
 
-        expect(issues.some((i) => i.type === 'missing_required_slot')).toBe(true);
+        expect(issues.some((i) => i.type === 'missing_required_slot')).toBe(
+          true
+        );
       });
 
       it('should handle missing slots property in blueprint', () => {
@@ -435,7 +442,9 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
           logger: mockLogger,
         });
 
-        expect(issues.some((i) => i.type === 'missing_required_slot')).toBe(true);
+        expect(issues.some((i) => i.type === 'missing_required_slot')).toBe(
+          true
+        );
       });
     });
 
@@ -555,7 +564,9 @@ describe('Blueprint/Recipe Compatibility Checker', () => {
       }).not.toThrow();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Recipe slot 'wing_left' not defined in blueprint")
+        expect.stringContaining(
+          "Recipe slot 'wing_left' not defined in blueprint"
+        )
       );
     });
 

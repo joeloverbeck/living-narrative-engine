@@ -71,7 +71,7 @@ describe('AnatomyInitializationService', () => {
     service.initialize();
     expect(dispatcher.subscribe).toHaveBeenCalledWith(
       ENTITY_CREATED_ID,
-      expect.any(Function),
+      expect.any(Function)
     );
     return dispatcher.__handler;
   };
@@ -82,7 +82,7 @@ describe('AnatomyInitializationService', () => {
         new AnatomyInitializationService({
           logger,
           anatomyGenerationService: generationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -90,7 +90,7 @@ describe('AnatomyInitializationService', () => {
         new AnatomyInitializationService({
           eventDispatcher: dispatcher,
           anatomyGenerationService: generationService,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
 
     expect(
@@ -98,7 +98,7 @@ describe('AnatomyInitializationService', () => {
         new AnatomyInitializationService({
           eventDispatcher: dispatcher,
           logger,
-        }),
+        })
     ).toThrow(InvalidArgumentError);
   });
 
@@ -106,18 +106,20 @@ describe('AnatomyInitializationService', () => {
     const handler = getHandler();
     expect(typeof handler).toBe('function');
     expect(logger.info).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Initialized',
+      'AnatomyInitializationService: Initialized'
     );
-    expect(logger.debug.mock.calls.some(([message]) =>
-      message.includes('Registering event listeners'),
-    )).toBe(true);
+    expect(
+      logger.debug.mock.calls.some(([message]) =>
+        message.includes('Registering event listeners')
+      )
+    ).toBe(true);
 
     logger.warn.mockClear();
     dispatcher.subscribe.mockClear();
     service.initialize();
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Already initialized',
+      'AnatomyInitializationService: Already initialized'
     );
     expect(dispatcher.subscribe).not.toHaveBeenCalled();
   });
@@ -125,20 +127,24 @@ describe('AnatomyInitializationService', () => {
   it('ignores reconstructed entities and missing identifiers', async () => {
     const handler = getHandler();
 
-    await handler({ payload: { instanceId: 'reconstructed', wasReconstructed: true } });
+    await handler({
+      payload: { instanceId: 'reconstructed', wasReconstructed: true },
+    });
     expect(generationService.generateAnatomyIfNeeded).not.toHaveBeenCalled();
 
     logger.warn.mockClear();
     await handler({ payload: {} });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      'AnatomyInitializationService: Entity created event missing instanceId',
+      'AnatomyInitializationService: Entity created event missing instanceId'
     );
   });
 
   it('treats the incoming event as payload when no payload wrapper is provided', async () => {
     const deferred = createDeferred();
-    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(deferred.promise);
+    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(
+      deferred.promise
+    );
     const handler = getHandler();
 
     await handler({ instanceId: 'raw-event' });
@@ -165,7 +171,10 @@ describe('AnatomyInitializationService', () => {
     await Promise.all(queueResult);
 
     expect(generationService.generateAnatomyIfNeeded).toHaveBeenCalledTimes(1);
-    expect(generationService.generateAnatomyIfNeeded).toHaveBeenNthCalledWith(1, 'entity-one');
+    expect(generationService.generateAnatomyIfNeeded).toHaveBeenNthCalledWith(
+      1,
+      'entity-one'
+    );
 
     const waitForOne = service.waitForEntityGeneration('entity-one');
     deferreds.get('entity-one').resolve(true);
@@ -174,7 +183,10 @@ describe('AnatomyInitializationService', () => {
     await Promise.resolve();
 
     expect(generationService.generateAnatomyIfNeeded).toHaveBeenCalledTimes(2);
-    expect(generationService.generateAnatomyIfNeeded).toHaveBeenNthCalledWith(2, 'entity-two');
+    expect(generationService.generateAnatomyIfNeeded).toHaveBeenNthCalledWith(
+      2,
+      'entity-two'
+    );
 
     const waitForTwo = service.waitForEntityGeneration('entity-two');
     deferreds.get('entity-two').resolve(false);
@@ -183,12 +195,12 @@ describe('AnatomyInitializationService', () => {
     await service.waitForAllGenerationsToComplete();
 
     expect(logger.info).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Generated anatomy for entity 'entity-one'",
+      "AnatomyInitializationService: Generated anatomy for entity 'entity-one'"
     );
     expect(
       logger.info.mock.calls.some(([message]) =>
-        message.includes("entity 'entity-two'"),
-      ),
+        message.includes("entity 'entity-two'")
+      )
     ).toBe(false);
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
@@ -196,7 +208,9 @@ describe('AnatomyInitializationService', () => {
 
   it('resolves waitForAllGenerationsToComplete when the queue drains before the deadline', async () => {
     const deferred = createDeferred();
-    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(deferred.promise);
+    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(
+      deferred.promise
+    );
 
     const handler = getHandler();
     const handlePromise = handler({ payload: { instanceId: 'timely' } });
@@ -220,13 +234,13 @@ describe('AnatomyInitializationService', () => {
     await service.__TEST_ONLY__processQueue({ ensureProcessingFlag: true });
 
     expect(generationService.generateAnatomyIfNeeded).toHaveBeenCalledWith(
-      'direct-process',
+      'direct-process'
     );
     expect(service.hasPendingGenerations()).toBe(false);
     expect(
       logger.debug.mock.calls.some(([message]) =>
-        message.includes('Finished processing anatomy generation queue'),
-      ),
+        message.includes('Finished processing anatomy generation queue')
+      )
     ).toBe(true);
   });
 
@@ -244,17 +258,19 @@ describe('AnatomyInitializationService', () => {
     const handler = getHandler();
 
     // Trigger the generation - this adds to queue and starts processing (deferred)
-    const invokePromise = handler({ payload: { instanceId: 'failing-entity' } });
+    const invokePromise = handler({
+      payload: { instanceId: 'failing-entity' },
+    });
 
     // Wait one tick for entity to be added to pending generations
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     // Now register waiter after entity is pending
     const waitPromise = service.waitForEntityGeneration('failing-entity');
 
     // Wait for queue processing to actually call generateAnatomyIfNeeded
     while (!generationStarted) {
-      await new Promise(resolve => setImmediate(resolve));
+      await new Promise((resolve) => setImmediate(resolve));
     }
 
     // Now reject after generation has actually started
@@ -265,7 +281,7 @@ describe('AnatomyInitializationService', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       "AnatomyInitializationService: Failed to generate anatomy for entity 'failing-entity'",
-      { error: failure },
+      { error: failure }
     );
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
@@ -273,7 +289,9 @@ describe('AnatomyInitializationService', () => {
 
   it('supports multiple waiters for the same pending entity', async () => {
     const deferred = createDeferred();
-    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(deferred.promise);
+    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(
+      deferred.promise
+    );
 
     const handler = getHandler();
     await handler({ payload: { instanceId: 'shared' } });
@@ -291,7 +309,9 @@ describe('AnatomyInitializationService', () => {
     jest.useFakeTimers();
 
     const deferred = createDeferred();
-    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(deferred.promise);
+    generationService.generateAnatomyIfNeeded.mockReturnValueOnce(
+      deferred.promise
+    );
 
     const handler = getHandler();
     await handler({ payload: { instanceId: 'timely' } });
@@ -328,14 +348,16 @@ describe('AnatomyInitializationService', () => {
 
     expect(logger.error).toHaveBeenCalledWith(
       "AnatomyInitializationService: Failed to generate anatomy for entity 'no-waiters'",
-      { error: failure },
+      { error: failure }
     );
     expect(await service.waitForEntityGeneration('no-waiters')).toBe(false);
   });
 
   it('returns false immediately when waiting for non-pending entities', async () => {
     getHandler();
-    await expect(service.waitForEntityGeneration('missing')).resolves.toBe(false);
+    await expect(service.waitForEntityGeneration('missing')).resolves.toBe(
+      false
+    );
   });
 
   it('times out when waiting for entity generation that never resolves', async () => {
@@ -348,17 +370,20 @@ describe('AnatomyInitializationService', () => {
 
     jest.advanceTimersByTime(5);
     await expect(waitPromise).rejects.toThrow(
-      "AnatomyInitializationService: Timeout waiting for anatomy generation for entity 'stuck-entity'",
+      "AnatomyInitializationService: Timeout waiting for anatomy generation for entity 'stuck-entity'"
     );
   });
 
   it('throws when waiting for all generations but the queue never drains', async () => {
     getHandler();
     const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1000);
-    service.__TEST_ONLY__setInternalState({ queue: ['stalled'], processing: true });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['stalled'],
+      processing: true,
+    });
 
     await expect(service.waitForAllGenerationsToComplete(0)).rejects.toThrow(
-      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0',
+      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0'
     );
     nowSpy.mockRestore();
   });
@@ -370,10 +395,13 @@ describe('AnatomyInitializationService', () => {
       .spyOn(Date, 'now')
       .mockImplementation(() => timeValues.shift() ?? 205);
 
-    service.__TEST_ONLY__setInternalState({ queue: ['late'], processing: true });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['late'],
+      processing: true,
+    });
 
     await expect(service.waitForAllGenerationsToComplete(100)).rejects.toThrow(
-      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0',
+      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0'
     );
 
     nowSpy.mockRestore();
@@ -387,14 +415,17 @@ describe('AnatomyInitializationService', () => {
       .spyOn(Date, 'now')
       .mockImplementation(() => timeValues.shift() ?? 150);
 
-    service.__TEST_ONLY__setInternalState({ queue: ['linger'], processing: true });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['linger'],
+      processing: true,
+    });
 
     const waitPromise = service.waitForAllGenerationsToComplete(100);
 
     jest.advanceTimersByTime(50);
 
     await expect(waitPromise).rejects.toThrow(
-      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0',
+      'AnatomyInitializationService: Timeout waiting for anatomy generation to complete. Queue: 1, Pending: 0'
     );
 
     nowSpy.mockRestore();
@@ -404,7 +435,9 @@ describe('AnatomyInitializationService', () => {
     service.destroy();
 
     expect(unsubscribe).not.toHaveBeenCalled();
-    expect(logger.info).toHaveBeenCalledWith('AnatomyInitializationService: Destroyed');
+    expect(logger.info).toHaveBeenCalledWith(
+      'AnatomyInitializationService: Destroyed'
+    );
   });
 
   it('cleans up subscriptions and state when destroyed', () => {
@@ -421,7 +454,9 @@ describe('AnatomyInitializationService', () => {
     expect(unsubscribe).toHaveBeenCalledTimes(1);
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
-    expect(logger.info).toHaveBeenCalledWith('AnatomyInitializationService: Destroyed');
+    expect(logger.info).toHaveBeenCalledWith(
+      'AnatomyInitializationService: Destroyed'
+    );
   });
 
   it('supports invoking the state helper without overrides', () => {
@@ -434,26 +469,26 @@ describe('AnatomyInitializationService', () => {
     getHandler();
 
     generationService.generateAnatomyIfNeeded.mockResolvedValueOnce(true);
-    await expect(
-      service.generateAnatomy('entity-x', 'bp-1'),
-    ).resolves.toBe(true);
+    await expect(service.generateAnatomy('entity-x', 'bp-1')).resolves.toBe(
+      true
+    );
     expect(logger.info).toHaveBeenCalledWith(
-      "AnatomyInitializationService: Successfully generated anatomy for entity 'entity-x' with blueprint 'bp-1'",
+      "AnatomyInitializationService: Successfully generated anatomy for entity 'entity-x' with blueprint 'bp-1'"
     );
 
     generationService.generateAnatomyIfNeeded.mockResolvedValueOnce(false);
-    await expect(
-      service.generateAnatomy('entity-y', 'bp-2'),
-    ).resolves.toBe(false);
+    await expect(service.generateAnatomy('entity-y', 'bp-2')).resolves.toBe(
+      false
+    );
 
     const error = new Error('boom');
     generationService.generateAnatomyIfNeeded.mockRejectedValueOnce(error);
-    await expect(
-      service.generateAnatomy('entity-z', 'bp-3'),
-    ).rejects.toBe(error);
+    await expect(service.generateAnatomy('entity-z', 'bp-3')).rejects.toBe(
+      error
+    );
     expect(logger.error).toHaveBeenCalledWith(
       "AnatomyInitializationService: Failed to generate anatomy for entity 'entity-z' with blueprint 'bp-3'",
-      { error },
+      { error }
     );
   });
 
@@ -461,12 +496,15 @@ describe('AnatomyInitializationService', () => {
     getHandler();
     generationService.generateAnatomyIfNeeded.mockResolvedValueOnce(false);
 
-    service.__TEST_ONLY__setInternalState({ queue: ['default-option'], processing: true });
+    service.__TEST_ONLY__setInternalState({
+      queue: ['default-option'],
+      processing: true,
+    });
 
     await service.__TEST_ONLY__processQueue();
 
     expect(generationService.generateAnatomyIfNeeded).toHaveBeenCalledWith(
-      'default-option',
+      'default-option'
     );
     expect(service.hasPendingGenerations()).toBe(false);
   });

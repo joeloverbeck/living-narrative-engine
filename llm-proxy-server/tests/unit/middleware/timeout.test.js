@@ -374,14 +374,18 @@ describe('timeout middleware', () => {
       // Capture the grace period timer id from the setTimeout spy
       const graceTimerId = setTimeout.mock.results
         .slice(1)
-        .find((call, index) => setTimeout.mock.calls[index + 1]?.[1] === 250)?.value;
+        .find(
+          (call, index) => setTimeout.mock.calls[index + 1]?.[1] === 250
+        )?.value;
 
       expect(graceTimerId).toBeDefined();
 
       // Reset clearTimeout calls to focus on the finish handler behaviour
       clearTimeout.mockClear();
 
-      const finishHandler = res.on.mock.calls.find((call) => call[0] === 'finish')[1];
+      const finishHandler = res.on.mock.calls.find(
+        (call) => call[0] === 'finish'
+      )[1];
       finishHandler();
 
       expect(clearTimeout).toHaveBeenCalledWith(graceTimerId);
@@ -431,13 +435,17 @@ describe('timeout middleware', () => {
 
       const graceTimerId = setTimeout.mock.results
         .slice(1)
-        .find((call, index) => setTimeout.mock.calls[index + 1]?.[1] === 200)?.value;
+        .find(
+          (call, index) => setTimeout.mock.calls[index + 1]?.[1] === 200
+        )?.value;
 
       expect(graceTimerId).toBeDefined();
 
       clearTimeout.mockClear();
 
-      const closeHandler = res.on.mock.calls.find((call) => call[0] === 'close')[1];
+      const closeHandler = res.on.mock.calls.find(
+        (call) => call[0] === 'close'
+      )[1];
       closeHandler();
 
       expect(logger.debug).toHaveBeenCalledWith(
@@ -688,7 +696,9 @@ describe('timeout middleware', () => {
       jest.advanceTimersByTime(100);
 
       expect(res.status).toHaveBeenCalledWith(503);
-      expect(req.transitionState).toHaveBeenCalledWith('timeout', { timeoutMs: 1000 });
+      expect(req.transitionState).toHaveBeenCalledWith('timeout', {
+        timeoutMs: 1000,
+      });
     });
   });
 

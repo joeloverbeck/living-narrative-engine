@@ -11,6 +11,7 @@
 The current template lacks strategic markers to guide LLM attention and processing priorities. All content is presented with equal emphasis, making it difficult for the LLM to distinguish critical identity elements from reference material.
 
 **Missing Guidance:**
+
 - No markers indicating which sections are identity-defining vs reference
 - No processing priority indicators
 - No usage guidance (when to use mechanically vs naturally)
@@ -161,16 +162,19 @@ Add strategic HTML comment markers and usage guidance throughout the template to
 ### Strategic Comment Types
 
 **CRITICAL Markers:**
+
 - Identity-defining content (core psychology)
 - Mandatory constraints (output format, thought vs speech)
 - Task execution instructions
 
 **REFERENCE Markers:**
+
 - Supporting data (traits, patterns)
 - Environmental context (world state, entities)
 - Available options (actions, goals)
 
 **USAGE GUIDANCE:**
+
 - How to use patterns naturally vs mechanically
 - When to prioritize certain behaviors
 - Flexibility and variation expectations
@@ -255,21 +259,25 @@ class CharacterPromptTemplate {
 ### Marker Guidelines
 
 **When to use CRITICAL:**
+
 - Content that defines character identity
 - Rules that MUST be followed for valid output
 - Instructions that govern core behavior
 
 **When to use REFERENCE:**
+
 - Supporting information for decision-making
 - Environmental context
 - Optional guidance (patterns, tendencies)
 
 **When to use USAGE GUIDANCE:**
+
 - How to interpret reference material
 - Flexibility expectations
 - Anti-rigidity reminders
 
 **When to use REMINDER:**
+
 - Reinforcement of key concepts
 - Encouragement for authentic portrayal
 - Emphasis on character immersion
@@ -281,11 +289,20 @@ class CharacterPromptTemplate {
 ```javascript
 describe('LLM Processing Hints Effectiveness', () => {
   it('should reduce off-character responses', async () => {
-    const withMarkersOutputs = await generateMultipleTurns(templateWithMarkers, 20);
-    const withoutMarkersOutputs = await generateMultipleTurns(templateWithoutMarkers, 20);
+    const withMarkersOutputs = await generateMultipleTurns(
+      templateWithMarkers,
+      20
+    );
+    const withoutMarkersOutputs = await generateMultipleTurns(
+      templateWithoutMarkers,
+      20
+    );
 
-    const withMarkersScore = await evaluateCharacterConsistency(withMarkersOutputs);
-    const withoutMarkersScore = await evaluateCharacterConsistency(withoutMarkersOutputs);
+    const withMarkersScore =
+      await evaluateCharacterConsistency(withMarkersOutputs);
+    const withoutMarkersScore = await evaluateCharacterConsistency(
+      withoutMarkersOutputs
+    );
 
     // With markers should have higher consistency
     expect(withMarkersScore).toBeGreaterThan(withoutMarkersScore);
@@ -315,16 +332,19 @@ describe('LLM Processing Hints Effectiveness', () => {
 ```
 
 ### Unit Tests
+
 - [ ] Test marker injection doesn't break template parsing
 - [ ] Test strategic comments appear in correct locations
 - [ ] Test usage guidance formatting
 
 ### Integration Tests
+
 - [ ] Test full template with all markers
 - [ ] Verify markers don't interfere with LLM processing
 - [ ] Test that LLM attention focuses on CRITICAL sections
 
 ### E2E Tests
+
 - [ ] Compare character consistency: with vs without markers
 - [ ] Measure off-character response rate
 - [ ] Validate constraint adherence improvement
@@ -339,17 +359,18 @@ describe('LLM Processing Hints Effectiveness', () => {
 
 ## Success Metrics
 
-| Metric | Baseline | Target | Measurement Method |
-|--------|----------|--------|-------------------|
-| Off-character responses | Unknown | -10% | Human evaluation |
-| Character voice consistency | Unknown | >8/10 | Human evaluation |
-| Constraint adherence | Unknown | >95% | Automated validation |
-| Mechanical pattern usage | Unknown | 0 incidents | Pattern analysis |
-| Attention focus on identity | Unknown | >90% | Attention tracking |
+| Metric                      | Baseline | Target      | Measurement Method   |
+| --------------------------- | -------- | ----------- | -------------------- |
+| Off-character responses     | Unknown  | -10%        | Human evaluation     |
+| Character voice consistency | Unknown  | >8/10       | Human evaluation     |
+| Constraint adherence        | Unknown  | >95%        | Automated validation |
+| Mechanical pattern usage    | Unknown  | 0 incidents | Pattern analysis     |
+| Attention focus on identity | Unknown  | >90%        | Attention tracking   |
 
 ## Rollback Plan
 
 If markers confuse LLM or degrade quality:
+
 1. Remove usage guidance markers first
 2. Keep only CRITICAL markers for essential content
 3. Simplify comment language if too verbose
@@ -382,16 +403,19 @@ If markers confuse LLM or degrade quality:
 ### Comment Placement Strategy
 
 **Before Sections:**
+
 - Sets expectation for how to process content
 - Guides attention before information deluge
 - Primes LLM for correct interpretation
 
 **Within Sections:**
+
 - Clarifies specific elements
 - Provides context for sub-sections
 - Maintains focus during processing
 
 **After Sections:**
+
 - Reinforces key concepts
 - Provides usage reminders
 - Emphasizes flexibility
@@ -444,14 +468,14 @@ The ticket's original assumptions were based on a template architecture that doe
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
-| `src/prompting/xmlElementBuilder.js` | Added `critical` and `reference` styles to `decoratedComment()` |
-| `src/prompting/promptDataFormatter.js` | Added `wrapWithProcessingHint()`, updated `formatPromptData()` |
-| `src/prompting/characterDataXmlBuilder.js` | Enhanced `#buildSpeechPatternsSection()` with usage guidance |
-| `tests/unit/prompting/xmlElementBuilder.test.js` | Added tests for new decoration styles |
-| `tests/unit/prompting/promptDataFormatter.test.js` | Added tests for `wrapWithProcessingHint()` and integration tests |
-| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Added tests for usage guidance and anti-rigidity reminders |
+| File                                                   | Changes                                                          |
+| ------------------------------------------------------ | ---------------------------------------------------------------- |
+| `src/prompting/xmlElementBuilder.js`                   | Added `critical` and `reference` styles to `decoratedComment()`  |
+| `src/prompting/promptDataFormatter.js`                 | Added `wrapWithProcessingHint()`, updated `formatPromptData()`   |
+| `src/prompting/characterDataXmlBuilder.js`             | Enhanced `#buildSpeechPatternsSection()` with usage guidance     |
+| `tests/unit/prompting/xmlElementBuilder.test.js`       | Added tests for new decoration styles                            |
+| `tests/unit/prompting/promptDataFormatter.test.js`     | Added tests for `wrapWithProcessingHint()` and integration tests |
+| `tests/unit/prompting/characterDataXmlBuilder.test.js` | Added tests for usage guidance and anti-rigidity reminders       |
 
 ### Test Results
 
@@ -471,11 +495,12 @@ The ticket's original assumptions were based on a template architecture that doe
 - [x] Usage guidance added for speech patterns and other pattern-based content
 - [x] Processing hints added at section boundaries
 - [x] Tests verify markers don't interfere with parsing
-- [ ] Character voice consistency improves (target: >8/10) - *Requires live testing*
+- [ ] Character voice consistency improves (target: >8/10) - _Requires live testing_
 
 ### Deviations from Ticket
 
 The ticket proposed a `CharacterPromptTemplate` class that doesn't exist. Instead:
+
 - Extended existing `XmlElementBuilder` for decorated comment styles
 - Extended existing `PromptDataFormatter` for processing hints
 - Extended existing `CharacterDataXmlBuilder` for speech pattern guidance

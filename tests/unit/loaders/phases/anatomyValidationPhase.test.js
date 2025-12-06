@@ -214,7 +214,6 @@ describe('AnatomyValidationPhase', () => {
         'Anatomy validation found 1 error(s) and 1 warning(s)'
       );
     });
-
   });
 
   describe('execute - mixed severity issues', () => {
@@ -263,8 +262,7 @@ describe('AnatomyValidationPhase', () => {
 
       // Validation rule should be called with context containing all blueprints
       expect(mockValidationRule.validate).toHaveBeenCalled();
-      const validationContext =
-        mockValidationRule.validate.mock.calls[0][0];
+      const validationContext = mockValidationRule.validate.mock.calls[0][0];
       expect(validationContext).toBeInstanceOf(LoadTimeValidationContext);
       expect(validationContext.getBlueprints()).toMatchObject({
         bp1: blueprints[0],
@@ -289,8 +287,7 @@ describe('AnatomyValidationPhase', () => {
 
       await validationPhase.execute(ctx);
 
-      const validationContext =
-        mockValidationRule.validate.mock.calls[0][0];
+      const validationContext = mockValidationRule.validate.mock.calls[0][0];
       expect(validationContext.getRecipes()).toMatchObject({
         recipe1: recipes[0],
         recipe2: recipes[1],
@@ -312,8 +309,7 @@ describe('AnatomyValidationPhase', () => {
 
       await validationPhase.execute(ctx);
 
-      const validationContext =
-        mockValidationRule.validate.mock.calls[0][0];
+      const validationContext = mockValidationRule.validate.mock.calls[0][0];
       const blueprints = validationContext.getBlueprints();
 
       // Should only include blueprints with valid IDs
@@ -335,8 +331,7 @@ describe('AnatomyValidationPhase', () => {
 
       await validationPhase.execute(ctx);
 
-      const validationContext =
-        mockValidationRule.validate.mock.calls[0][0];
+      const validationContext = mockValidationRule.validate.mock.calls[0][0];
       const recipes = validationContext.getRecipes();
 
       expect(Object.keys(recipes)).toEqual(['recipe1', 'recipe2']);

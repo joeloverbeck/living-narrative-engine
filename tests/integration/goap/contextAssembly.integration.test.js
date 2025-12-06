@@ -29,10 +29,23 @@ describe('ContextAssemblyService - Integration', () => {
       // Create actor with multiple components
       const actorId = 'hero-123';
       entityManager.createEntity(actorId);
-      entityManager.addComponent(actorId, 'core:actor', { name: 'Hero', level: 5 });
-      entityManager.addComponent(actorId, 'core:position', { location: 'tavern-1', x: 10, y: 20 });
-      entityManager.addComponent(actorId, 'core:health', { current: 80, max: 100 });
-      entityManager.addComponent(actorId, 'core:inventory', { items: ['sword-1', 'potion-1'], maxWeight: 50 });
+      entityManager.addComponent(actorId, 'core:actor', {
+        name: 'Hero',
+        level: 5,
+      });
+      entityManager.addComponent(actorId, 'core:position', {
+        location: 'tavern-1',
+        x: 10,
+        y: 20,
+      });
+      entityManager.addComponent(actorId, 'core:health', {
+        current: 80,
+        max: 100,
+      });
+      entityManager.addComponent(actorId, 'core:inventory', {
+        items: ['sword-1', 'potion-1'],
+        maxWeight: 50,
+      });
 
       const context = service.assemblePlanningContext(actorId);
 
@@ -53,7 +66,9 @@ describe('ContextAssemblyService - Integration', () => {
     it('should not mutate entity data when assembling context', () => {
       const actorId = 'actor-456';
       entityManager.createEntity(actorId);
-      entityManager.addComponent(actorId, 'core:actor', { name: 'Original Name' });
+      entityManager.addComponent(actorId, 'core:actor', {
+        name: 'Original Name',
+      });
 
       const context = service.assemblePlanningContext(actorId);
 
@@ -161,11 +176,17 @@ describe('ContextAssemblyService - Integration', () => {
     it('should transform planning context for JSON Logic evaluation', () => {
       const actorId = 'actor-logic-1';
       entityManager.createEntity(actorId);
-      entityManager.addComponent(actorId, 'core:actor', { name: 'Test Actor', level: 10 });
-      entityManager.addComponent(actorId, 'core:position', { location: 'dungeon-1' });
+      entityManager.addComponent(actorId, 'core:actor', {
+        name: 'Test Actor',
+        level: 10,
+      });
+      entityManager.addComponent(actorId, 'core:position', {
+        location: 'dungeon-1',
+      });
 
       const planningContext = service.assemblePlanningContext(actorId);
-      const conditionContext = service.assembleConditionContext(planningContext);
+      const conditionContext =
+        service.assembleConditionContext(planningContext);
 
       // Verify structure suitable for JSON Logic
       expect(conditionContext.actor).toBeDefined();
@@ -203,7 +224,9 @@ describe('ContextAssemblyService - Integration', () => {
       expect(conditionContext.task).toBeDefined();
       expect(conditionContext.task.id).toBe('core:test_task');
       expect(conditionContext.refinement).toBeDefined();
-      expect(conditionContext.refinement.localState.stepResults).toHaveLength(2);
+      expect(conditionContext.refinement.localState.stepResults).toHaveLength(
+        2
+      );
     });
   });
 
@@ -254,7 +277,9 @@ describe('ContextAssemblyService - Integration', () => {
     it('should return minimal knowledge when core:known_to component is missing', () => {
       const actorId = 'actor-without-knowledge-component';
       entityManager.createEntity(actorId);
-      entityManager.addComponent(actorId, 'core:actor', { name: 'Actor Without Knowledge' });
+      entityManager.addComponent(actorId, 'core:actor', {
+        name: 'Actor Without Knowledge',
+      });
       // Note: NOT adding core:known_to component
 
       const serviceWithKnowledge = new ContextAssemblyService({
@@ -278,7 +303,9 @@ describe('ContextAssemblyService - Integration', () => {
     it('should throw ContextAssemblyError when actor is deleted during assembly', () => {
       const actorId = 'temp-actor';
       entityManager.createEntity(actorId);
-      entityManager.addComponent(actorId, 'core:actor', { name: 'Temporary Actor' });
+      entityManager.addComponent(actorId, 'core:actor', {
+        name: 'Temporary Actor',
+      });
 
       // Delete entity
       entityManager.deleteEntity(actorId);
@@ -359,7 +386,8 @@ describe('ContextAssemblyService - Integration', () => {
       entityManager.addComponent(actorId, 'core:actor', { name: 'Test' });
 
       const planningContext = service.assemblePlanningContext(actorId);
-      const conditionContext = service.assembleConditionContext(planningContext);
+      const conditionContext =
+        service.assembleConditionContext(planningContext);
 
       // Validate structure
       expect(conditionContext).toHaveProperty('actor');

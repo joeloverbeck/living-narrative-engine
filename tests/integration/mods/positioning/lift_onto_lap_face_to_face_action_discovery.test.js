@@ -48,8 +48,9 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
         }
 
         // Filter partners where BOTH actor and partner have sitting_on
-        const bothSittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
+        const bothSittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
           const partnerHasSittingOn =
             !!partner?.components?.['positioning:sitting_on'];
           const actorHasSittingOn =
@@ -70,7 +71,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
     const originalGetCondition =
       testEnv.dataRegistry.getConditionDefinition.getMockImplementation?.();
     testEnv.dataRegistry.getConditionDefinition.mockImplementation(
-      conditionId => {
+      (conditionId) => {
         if (conditionId === 'core:actor-mouth-available') {
           return mouthAvailableCondition;
         }
@@ -130,7 +131,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       expect(actions).toBeDefined();
       expect(actions.length).toBeGreaterThan(0);
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeDefined();
     });
@@ -183,7 +184,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeDefined();
     });
@@ -224,7 +225,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeDefined();
     });
@@ -281,7 +282,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeDefined();
     });
@@ -320,7 +321,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeUndefined();
     });
@@ -357,7 +358,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeUndefined();
     });
@@ -401,7 +402,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeUndefined();
     });
@@ -448,7 +449,7 @@ describe('lift_onto_lap_face_to_face action discovery - Integration Tests', () =
       const actions = await testFixture.discoverActions('actor1');
 
       const liftAction = actions.find(
-        a => a.id === 'positioning:lift_onto_lap_face_to_face'
+        (a) => a.id === 'positioning:lift_onto_lap_face_to_face'
       );
       expect(liftAction).toBeUndefined();
     });

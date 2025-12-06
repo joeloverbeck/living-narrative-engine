@@ -2,7 +2,14 @@
  * @file Unit tests for buildSpeechMeta helper.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { buildSpeechMeta } from '../../../../src/domUI/helpers/buildSpeechMeta.js';
 
 jest.mock('../../../../src/domUI/icons.js', () => ({
@@ -14,7 +21,9 @@ jest.mock('../../../../src/domUI/helpers/noteTooltipFormatter.js', () => ({
 }));
 
 const { getIcon } = jest.requireMock('../../../../src/domUI/icons.js');
-const { formatNotesAsRichHtml } = jest.requireMock('../../../../src/domUI/helpers/noteTooltipFormatter.js');
+const { formatNotesAsRichHtml } = jest.requireMock(
+  '../../../../src/domUI/helpers/noteTooltipFormatter.js'
+);
 
 describe('buildSpeechMeta', () => {
   let doc;
@@ -47,7 +56,9 @@ describe('buildSpeechMeta', () => {
     domFactory = createDomFactory(doc);
 
     getIcon.mockImplementation((name) => `<svg data-icon="${name}"></svg>`);
-    formatNotesAsRichHtml.mockImplementation((notes) => `<div class="rich">${notes.subject}</div>`);
+    formatNotesAsRichHtml.mockImplementation(
+      (notes) => `<div class="rich">${notes.subject}</div>`
+    );
   });
 
   afterEach(() => {
@@ -63,7 +74,9 @@ describe('buildSpeechMeta', () => {
   });
 
   it('creates only the thoughts button when thoughts text is present', () => {
-    const fragment = buildSpeechMeta(doc, domFactory, { thoughts: 'Quiet reflection' });
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      thoughts: 'Quiet reflection',
+    });
 
     expect(fragment).not.toBeNull();
     doc.body.appendChild(fragment);
@@ -73,8 +86,12 @@ describe('buildSpeechMeta', () => {
 
     const thoughtsButton = container.querySelector('.meta-btn.thoughts');
     expect(thoughtsButton).not.toBeNull();
-    expect(thoughtsButton.getAttribute('aria-label')).toBe('Click to copy thoughts to clipboard');
-    expect(thoughtsButton.style.getPropertyValue('--clr')).toBe('var(--thoughts-icon-color)');
+    expect(thoughtsButton.getAttribute('aria-label')).toBe(
+      'Click to copy thoughts to clipboard'
+    );
+    expect(thoughtsButton.style.getPropertyValue('--clr')).toBe(
+      'var(--thoughts-icon-color)'
+    );
     expect(thoughtsButton.innerHTML).toContain('data-icon="thoughts"');
 
     const tooltip = thoughtsButton.querySelector('.meta-tooltip');
@@ -87,7 +104,11 @@ describe('buildSpeechMeta', () => {
   });
 
   it('creates only the notes button when notes metadata is provided', () => {
-    const notes = { text: 'Hidden note', subject: 'Agent', subjectType: 'observation' };
+    const notes = {
+      text: 'Hidden note',
+      subject: 'Agent',
+      subjectType: 'observation',
+    };
     const fragment = buildSpeechMeta(doc, domFactory, { notes });
 
     expect(fragment).not.toBeNull();
@@ -98,11 +119,17 @@ describe('buildSpeechMeta', () => {
 
     const notesButton = container.querySelector('.meta-btn.notes');
     expect(notesButton).not.toBeNull();
-    expect(notesButton.getAttribute('aria-label')).toBe('Click to copy notes to clipboard');
-    expect(notesButton.style.getPropertyValue('--clr')).toBe('var(--notes-icon-color)');
+    expect(notesButton.getAttribute('aria-label')).toBe(
+      'Click to copy notes to clipboard'
+    );
+    expect(notesButton.style.getPropertyValue('--clr')).toBe(
+      'var(--notes-icon-color)'
+    );
     expect(notesButton.innerHTML).toContain('data-icon="notes"');
 
-    const tooltip = notesButton.querySelector('.meta-tooltip.meta-tooltip--notes');
+    const tooltip = notesButton.querySelector(
+      '.meta-tooltip.meta-tooltip--notes'
+    );
     expect(tooltip).not.toBeNull();
     expect(tooltip.innerHTML).toBe(`<div class="rich">${notes.subject}</div>`);
 
@@ -113,7 +140,10 @@ describe('buildSpeechMeta', () => {
 
   it('renders both buttons when both thoughts and notes are provided', () => {
     const notes = { text: 'Strategy', subject: 'Team', subjectType: 'goal' };
-    const fragment = buildSpeechMeta(doc, domFactory, { thoughts: 'Plan ahead', notes });
+    const fragment = buildSpeechMeta(doc, domFactory, {
+      thoughts: 'Plan ahead',
+      notes,
+    });
 
     doc.body.appendChild(fragment);
 
@@ -124,7 +154,9 @@ describe('buildSpeechMeta', () => {
     expect(thoughtsButton.classList.contains('thoughts')).toBe(true);
     expect(notesButton.classList.contains('notes')).toBe(true);
 
-    expect(thoughtsButton.querySelector('.meta-tooltip').textContent).toBe('Plan ahead');
+    expect(thoughtsButton.querySelector('.meta-tooltip').textContent).toBe(
+      'Plan ahead'
+    );
     expect(notesButton.querySelector('.meta-tooltip').innerHTML).toBe(
       `<div class="rich">${notes.subject}</div>`
     );
@@ -143,14 +175,15 @@ describe('buildSpeechMeta', () => {
 
     doc.body.appendChild(fragment);
     const container = doc.body.querySelector('.speech-meta');
-    const buttons = Array.from(container.querySelectorAll('.meta-btn')).map((btn) =>
-      btn.classList.contains('notes')
-        ? 'notes'
-        : btn.classList.contains('copy-all')
-          ? 'copy-all'
-          : btn.classList.contains('thoughts')
-            ? 'thoughts'
-            : 'other'
+    const buttons = Array.from(container.querySelectorAll('.meta-btn')).map(
+      (btn) =>
+        btn.classList.contains('notes')
+          ? 'notes'
+          : btn.classList.contains('copy-all')
+            ? 'copy-all'
+            : btn.classList.contains('thoughts')
+              ? 'thoughts'
+              : 'other'
     );
 
     expect(buttons).toEqual(['notes', 'copy-all']);
@@ -199,7 +232,9 @@ describe('buildSpeechMeta', () => {
 
     doc.body.appendChild(fragment);
 
-    const buttons = Array.from(doc.body.querySelectorAll('.speech-meta .meta-btn'));
+    const buttons = Array.from(
+      doc.body.querySelectorAll('.speech-meta .meta-btn')
+    );
     expect(buttons).toHaveLength(3);
     expect(buttons[0].classList.contains('thoughts')).toBe(true);
     expect(buttons[1].classList.contains('notes')).toBe(true);

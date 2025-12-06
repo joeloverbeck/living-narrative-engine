@@ -17,23 +17,23 @@ Create a linting script that detects operation schemas using local `oneOf` patte
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
-| `scripts/lintSchemaPatterns.js` | Schema pattern linting script |
+| File                                            | Purpose                                  |
+| ----------------------------------------------- | ---------------------------------------- |
+| `scripts/lintSchemaPatterns.js`                 | Schema pattern linting script            |
 | `tests/unit/scripts/lintSchemaPatterns.test.js` | Unit tests for linting script (18 tests) |
 
 ### Files Modified
 
-| File | Change Type |
-|------|-------------|
+| File           | Change Type                             |
+| -------------- | --------------------------------------- |
 | `package.json` | Added `lint:schema-patterns` npm script |
 
 ### Files Read (for reference)
 
-| File | Purpose |
-|------|---------|
+| File                                    | Purpose                       |
+| --------------------------------------- | ----------------------------- |
 | `data/schemas/operations/*.schema.json` | All operation schemas to lint |
-| `data/schemas/common.schema.json` | Expected $ref target |
+| `data/schemas/common.schema.json`       | Expected $ref target          |
 
 ---
 
@@ -123,6 +123,7 @@ The script detects schemas that:
 ### Script Behavior ✅
 
 1. **After SCHVALTESINT-007/008**:
+
    ```bash
    npm run lint:schema-patterns
    # Output: ✅ All operation schemas use $ref patterns correctly
@@ -165,23 +166,27 @@ The script detects schemas that:
 ### What Was Changed vs Originally Planned
 
 **Aligned with Plan:**
+
 - Created `scripts/lintSchemaPatterns.js` with full detection logic
 - Added 18 comprehensive unit tests covering all edge cases
 - Added `lint:schema-patterns` npm script to package.json
 - Script correctly reports clean state after SCHVALTESINT-007/008 migrations
 
 **Minor Implementation Differences:**
+
 - Used CommonJS (`require`) instead of ESM (`import`) to match project conventions for scripts
 - Added dependency injection for `fs` and `path` modules to enable unit testing
 - Used separate JSDoc comment blocks to avoid linting warning about `@jest-environment` directive
 - Added additional exports (`getSchemaFiles`, `lintSchemaFile`) for granular unit testing
 
 **Test Coverage:**
+
 - 18 tests covering regex matching, file discovery, pattern detection, CLI behavior
 - Tests verify both positive detection (violations) and negative detection (clean schemas)
 - Error handling for invalid JSON and missing files verified
 
 **Verified Working:**
+
 ```bash
 $ npm run lint:schema-patterns
 ✅ All operation schemas use $ref patterns correctly

@@ -1,7 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 import * as moduleNamespace from '../../../../src/actions/formatters/formatActionTypedefs.js';
 
-const MODULE_PATH = '../../../../src/actions/formatters/formatActionTypedefs.js';
+const MODULE_PATH =
+  '../../../../src/actions/formatters/formatActionTypedefs.js';
 const MODULE_SUFFIX = 'src/actions/formatters/formatActionTypedefs.js';
 
 describe('formatActionTypedefs namespace integrity', () => {
@@ -9,9 +10,7 @@ describe('formatActionTypedefs namespace integrity', () => {
     expect(Object.keys(moduleNamespace)).toEqual(['__formatActionTypedefs']);
 
     const ownKeys = Reflect.ownKeys(moduleNamespace);
-    expect(ownKeys).toEqual(
-      expect.arrayContaining(['__formatActionTypedefs'])
-    );
+    expect(ownKeys).toEqual(expect.arrayContaining(['__formatActionTypedefs']));
     const stringKeys = ownKeys.filter(
       (key) => typeof key === 'string' && key !== '__esModule'
     );
@@ -19,14 +18,14 @@ describe('formatActionTypedefs namespace integrity', () => {
 
     const descriptor = Object.getOwnPropertyDescriptor(
       moduleNamespace,
-      '__formatActionTypedefs',
+      '__formatActionTypedefs'
     );
 
     expect(descriptor).toEqual(
       expect.objectContaining({
         enumerable: true,
         value: true,
-      }),
+      })
     );
   });
 
@@ -47,7 +46,7 @@ describe('formatActionTypedefs namespace integrity', () => {
 
     const coverageEntries = Object.entries(globalThis.__coverage__ ?? {});
     const coverageTuple = coverageEntries.find(([file]) =>
-      file.endsWith(MODULE_SUFFIX),
+      file.endsWith(MODULE_SUFFIX)
     );
 
     if (coverageTuple) {

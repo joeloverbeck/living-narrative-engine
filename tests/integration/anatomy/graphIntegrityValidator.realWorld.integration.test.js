@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 
 /**
@@ -24,7 +18,9 @@ function buildValidationInputs(testBed, actorId) {
   const entityIds = new Set([rootId]);
   const socketOccupancy = new Set();
 
-  const parts = (bodyGraphService.getAllParts(bodyComponent, actorId) || []).filter(Boolean);
+  const parts = (
+    bodyGraphService.getAllParts(bodyComponent, actorId) || []
+  ).filter(Boolean);
   for (const partId of parts) {
     entityIds.add(partId);
     const joint = entityManager.getComponentData(partId, 'anatomy:joint');
@@ -62,7 +58,9 @@ describe('GraphIntegrityValidator real-world integration', () => {
   });
 
   it('accepts the anatomy graph generated for a human recipe', async () => {
-    const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+    const actor = await testBed.createActor({
+      recipeId: 'anatomy:human_female',
+    });
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
     const { entityIds, recipe, socketOccupancy } = buildValidationInputs(
@@ -80,7 +78,9 @@ describe('GraphIntegrityValidator real-world integration', () => {
   });
 
   it('emits a warning when multiple roots are present in the graph inputs', async () => {
-    const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+    const actor = await testBed.createActor({
+      recipeId: 'anatomy:human_female',
+    });
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
     const { entityIds, recipe, socketOccupancy } = buildValidationInputs(
@@ -105,13 +105,13 @@ describe('GraphIntegrityValidator real-world integration', () => {
   });
 
   it('reports errors when a part references a missing parent socket', async () => {
-    const actor = await testBed.createActor({ recipeId: 'anatomy:human_female' });
+    const actor = await testBed.createActor({
+      recipeId: 'anatomy:human_female',
+    });
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
-    const { entityIds, recipe, socketOccupancy, rootId } = buildValidationInputs(
-      testBed,
-      actor.id
-    );
+    const { entityIds, recipe, socketOccupancy, rootId } =
+      buildValidationInputs(testBed, actor.id);
 
     const firstPartId = entityIds.find((id) => id !== rootId);
     expect(firstPartId).toBeDefined();
@@ -130,9 +130,9 @@ describe('GraphIntegrityValidator real-world integration', () => {
     );
 
     expect(result.valid).toBe(false);
-    expect(result.errors.some((message) => message.includes('missing-parent'))).toBe(
-      true
-    );
+    expect(
+      result.errors.some((message) => message.includes('missing-parent'))
+    ).toBe(true);
     expect(
       result.errors.some((message) => message.includes('phantom-socket'))
     ).toBe(true);

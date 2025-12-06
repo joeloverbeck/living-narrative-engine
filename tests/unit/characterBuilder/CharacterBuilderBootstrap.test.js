@@ -539,14 +539,18 @@ describe('CharacterBuilderBootstrap', () => {
 
     it('propagates CharacterStorageService initialization failures', async () => {
       const storageError = new Error('storage init failed');
-      mockCharacterStorageService.initialize.mockRejectedValueOnce(storageError);
+      mockCharacterStorageService.initialize.mockRejectedValueOnce(
+        storageError
+      );
 
       const config = {
         pageName: 'test-page',
         controllerClass: MockController,
       };
 
-      await expect(bootstrap.bootstrap(config)).rejects.toThrow('storage init failed');
+      await expect(bootstrap.bootstrap(config)).rejects.toThrow(
+        'storage init failed'
+      );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         '[CharacterBuilderBootstrap] Failed to initialize CharacterStorageService: storage init failed',
@@ -664,7 +668,9 @@ describe('CharacterBuilderBootstrap', () => {
       const result = await bootstrap.bootstrap(config);
 
       expect(result.controller.deps.displayEnhancer).toBe(enhancerInstance);
-      expect(result.controller.deps.coreMotivationsGenerator).toBe(generatorInstance);
+      expect(result.controller.deps.coreMotivationsGenerator).toBe(
+        generatorInstance
+      );
       expect(mockContainer.resolve).toHaveBeenCalledWith(
         tokens.CoreMotivationsDisplayEnhancer
       );

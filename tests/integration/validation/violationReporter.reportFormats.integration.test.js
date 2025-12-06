@@ -224,7 +224,9 @@ describe('ViolationReporter multi-format integration', () => {
     );
     expect(jsonReport.type).toBe('single-mod');
     expect(jsonReport.mod.modId).toBe('positioning');
-    expect(jsonReport.mod.summary.violationCount).toBe(report.violations.length);
+    expect(jsonReport.mod.summary.violationCount).toBe(
+      report.violations.length
+    );
 
     const htmlReport = reporter.generateReport(report, 'html', {
       title: 'Single Mod Report',
@@ -347,7 +349,9 @@ describe('ViolationReporter multi-format integration', () => {
     ]);
 
     const consoleClean = reporter.generateReport(cleanMap, 'console');
-    expect(consoleClean).toContain('✅ No cross-reference violations detected in ecosystem');
+    expect(consoleClean).toContain(
+      '✅ No cross-reference violations detected in ecosystem'
+    );
 
     const htmlClean = reporter.generateReport(cleanMap, 'html', {
       title: 'Clean Report',
@@ -378,9 +382,13 @@ describe('ViolationReporter multi-format integration', () => {
     };
 
     const consoleReport = reporter.generateReport(cleanReport, 'console');
-    expect(consoleReport).toContain('✅ No cross-reference violations detected');
+    expect(consoleReport).toContain(
+      '✅ No cross-reference violations detected'
+    );
     expect(consoleReport).toContain('References to 1 mods');
-    expect(consoleReport).toContain('  - All references properly declared as dependencies');
+    expect(consoleReport).toContain(
+      '  - All references properly declared as dependencies'
+    );
 
     const htmlReport = reporter.generateReport(cleanReport, 'html', {
       title: 'Clean Report',

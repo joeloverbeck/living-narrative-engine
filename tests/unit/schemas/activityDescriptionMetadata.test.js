@@ -44,7 +44,9 @@ describe('Activity Description Metadata Schema', () => {
   describe('Schema Loading', () => {
     it('should load the schema without errors', () => {
       expect(descriptionMetadataSchema).toBeDefined();
-      expect(descriptionMetadataSchema.id).toBe('activity:description_metadata');
+      expect(descriptionMetadataSchema.id).toBe(
+        'activity:description_metadata'
+      );
     });
 
     it('should have correct $schema reference', () => {
@@ -81,7 +83,9 @@ describe('Activity Description Metadata Schema', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           keyword: 'required',
-          params: expect.objectContaining({ missingProperty: 'sourceComponent' }),
+          params: expect.objectContaining({
+            missingProperty: 'sourceComponent',
+          }),
         })
       );
     });
@@ -96,7 +100,9 @@ describe('Activity Description Metadata Schema', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           keyword: 'required',
-          params: expect.objectContaining({ missingProperty: 'descriptionType' }),
+          params: expect.objectContaining({
+            missingProperty: 'descriptionType',
+          }),
         })
       );
     });

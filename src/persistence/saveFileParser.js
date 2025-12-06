@@ -146,11 +146,7 @@ export default class SaveFileParser extends BaseService {
 
     if (!isValidName) {
       this.#logger.error(`Invalid manual save file name: ${originalName}`);
-      return this.#corruptedResult(
-        filePath,
-        originalName,
-        ' (Invalid Name)'
-      );
+      return this.#corruptedResult(filePath, originalName, ' (Invalid Name)');
     }
 
     this.#logger.debug(`Processing file: ${filePath}`);

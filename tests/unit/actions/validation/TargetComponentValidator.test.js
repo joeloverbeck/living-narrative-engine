@@ -16,18 +16,18 @@ describe('TargetComponentValidator', () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     mockEntityManager = {
       getEntityInstance: jest.fn(),
       hasComponent: jest.fn(),
-      getAllComponentTypesForEntity: jest.fn()
+      getAllComponentTypesForEntity: jest.fn(),
     };
 
     validator = new TargetComponentValidator({
       logger: mockLogger,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
   });
 
@@ -40,7 +40,7 @@ describe('TargetComponentValidator', () => {
       expect(() => {
         new TargetComponentValidator({
           logger: null,
-          entityManager: mockEntityManager
+          entityManager: mockEntityManager,
         });
       }).toThrow('Missing required dependency: ILogger');
     });
@@ -49,7 +49,7 @@ describe('TargetComponentValidator', () => {
       expect(() => {
         new TargetComponentValidator({
           logger: mockLogger,
-          entityManager: null
+          entityManager: null,
         });
       }).toThrow('Missing required dependency: IEntityManager');
     });
@@ -58,7 +58,7 @@ describe('TargetComponentValidator', () => {
       expect(() => {
         new TargetComponentValidator({
           logger: { info: jest.fn() }, // Missing other methods
-          entityManager: mockEntityManager
+          entityManager: mockEntityManager,
         });
       }).toThrow("Invalid or missing method 'warn' on dependency 'ILogger'");
     });
@@ -67,9 +67,11 @@ describe('TargetComponentValidator', () => {
       expect(() => {
         new TargetComponentValidator({
           logger: mockLogger,
-          entityManager: { getEntityInstance: jest.fn() } // Missing other methods
+          entityManager: { getEntityInstance: jest.fn() }, // Missing other methods
         });
-      }).toThrow("Invalid or missing method 'hasComponent' on dependency 'IEntityManager'");
+      }).toThrow(
+        "Invalid or missing method 'hasComponent' on dependency 'IEntityManager'"
+      );
     });
   });
 
@@ -79,7 +81,10 @@ describe('TargetComponentValidator', () => {
         const actionDef = { id: 'test-action' };
         const targetEntities = { target: { id: 'entity-1' } };
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
       });
@@ -87,11 +92,14 @@ describe('TargetComponentValidator', () => {
       it('should allow action when forbidden_components is null', () => {
         const actionDef = {
           id: 'test-action',
-          forbidden_components: null
+          forbidden_components: null,
         };
         const targetEntities = { target: { id: 'entity-1' } };
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
       });
@@ -102,8 +110,8 @@ describe('TargetComponentValidator', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            target: ['core:forbidden']
-          }
+            target: ['core:forbidden'],
+          },
         };
 
         const result = validator.validateTargetComponents(actionDef, null);
@@ -118,8 +126,8 @@ describe('TargetComponentValidator', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            target: ['core:forbidden']
-          }
+            target: ['core:forbidden'],
+          },
         };
 
         const result = validator.validateTargetComponents(actionDef, undefined);
@@ -141,10 +149,15 @@ describe('TargetComponentValidator', () => {
           target: { id: 'target-entity' },
         };
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
-        expect(mockEntityManager.getAllComponentTypesForEntity).not.toHaveBeenCalled();
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -153,60 +166,73 @@ describe('TargetComponentValidator', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            target: ['core:forbidden', 'core:restricted']
-          }
+            target: ['core:forbidden', 'core:restricted'],
+          },
         };
 
         const targetEntities = {
-          target: { id: 'entity-1' }
+          target: { id: 'entity-1' },
         };
 
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:actor',
-          'core:position'
+          'core:position',
         ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('entity-1');
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).toHaveBeenCalledWith('entity-1');
       });
 
       it('should reject action when target has forbidden component', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            target: ['core:forbidden', 'core:restricted']
-          }
+            target: ['core:forbidden', 'core:restricted'],
+          },
         };
 
         const targetEntities = {
-          target: { id: 'entity-1' }
+          target: { id: 'entity-1' },
         };
 
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
           'core:actor',
           'core:forbidden',
-          'core:position'
+          'core:position',
         ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain("target entity 'entity-1' has forbidden component 'core:forbidden'");
+        expect(result.reason).toContain(
+          "target entity 'entity-1' has forbidden component 'core:forbidden'"
+        );
       });
 
       it('should handle missing target entity in legacy format', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            target: ['core:forbidden']
-          }
+            target: ['core:forbidden'],
+          },
         };
 
         const targetEntities = {}; // No target property
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
       });
@@ -217,90 +243,107 @@ describe('TargetComponentValidator', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            primary: ['core:forbidden']
-          }
+            primary: ['core:forbidden'],
+          },
         };
 
         const targetEntities = {
-          primary: { id: 'primary-entity' }
+          primary: { id: 'primary-entity' },
         };
 
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
-          'core:forbidden'
+          'core:forbidden',
         ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain("primary target 'primary-entity' has forbidden component");
+        expect(result.reason).toContain(
+          "primary target 'primary-entity' has forbidden component"
+        );
       });
 
       it('should validate secondary target correctly', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            secondary: ['core:restricted']
-          }
+            secondary: ['core:restricted'],
+          },
         };
 
         const targetEntities = {
           primary: { id: 'primary-entity' },
-          secondary: { id: 'secondary-entity' }
+          secondary: { id: 'secondary-entity' },
         };
 
         // Only secondary will be checked since only secondary has forbidden components
-        mockEntityManager.getAllComponentTypesForEntity
-          .mockReturnValue(['core:restricted']); // Secondary has forbidden
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:restricted',
+        ]); // Secondary has forbidden
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain("secondary target 'secondary-entity' has forbidden component");
+        expect(result.reason).toContain(
+          "secondary target 'secondary-entity' has forbidden component"
+        );
       });
 
       it('should validate tertiary target correctly', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            tertiary: ['core:blocked']
-          }
+            tertiary: ['core:blocked'],
+          },
         };
 
         const targetEntities = {
           primary: { id: 'primary-entity' },
           secondary: { id: 'secondary-entity' },
-          tertiary: { id: 'tertiary-entity' }
+          tertiary: { id: 'tertiary-entity' },
         };
 
-        mockEntityManager.getAllComponentTypesForEntity
-          .mockReturnValue(['core:blocked']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:blocked',
+        ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(false);
-        expect(result.reason).toContain("tertiary target 'tertiary-entity' has forbidden component");
+        expect(result.reason).toContain(
+          "tertiary target 'tertiary-entity' has forbidden component"
+        );
       });
 
       it('filters forbidden candidates in arrays while keeping valid ones', () => {
         const actionDef = {
           id: 'test-action',
           forbidden_components: {
-            primary: ['core:forbidden']
-          }
+            primary: ['core:forbidden'],
+          },
         };
 
         const targetEntities = {
-          primary: [
-            { id: 'safe-entity' },
-            { id: 'forbidden-entity' }
-          ]
+          primary: [{ id: 'safe-entity' }, { id: 'forbidden-entity' }],
         };
 
         mockEntityManager.getAllComponentTypesForEntity
           .mockReturnValueOnce(['core:allowed'])
           .mockReturnValueOnce(['core:forbidden']);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(true);
         expect(result.filteredTargets.primary).toEqual([{ id: 'safe-entity' }]);
@@ -312,7 +355,9 @@ describe('TargetComponentValidator', () => {
           },
         ]);
         expect(result.reason).toBeUndefined();
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(2);
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).toHaveBeenCalledTimes(2);
       });
 
       it('marks the action invalid when all candidates are filtered out', () => {
@@ -321,14 +366,14 @@ describe('TargetComponentValidator', () => {
           forbidden_components: {
             primary: ['core:forbidden'],
             secondary: ['core:restricted'],
-            tertiary: ['core:blocked']
-          }
+            tertiary: ['core:blocked'],
+          },
         };
 
         const targetEntities = {
           primary: { id: 'primary-entity' },
           secondary: { id: 'secondary-entity' },
-          tertiary: { id: 'tertiary-entity' }
+          tertiary: { id: 'tertiary-entity' },
         };
 
         mockEntityManager.getAllComponentTypesForEntity
@@ -336,12 +381,17 @@ describe('TargetComponentValidator', () => {
           .mockReturnValueOnce(['core:restricted'])
           .mockReturnValueOnce(['core:blocked']);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result.valid).toBe(false);
         expect(result.filteredTargets.primary).toBeNull();
         expect(result.removedTargets).toHaveLength(3);
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(3);
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).toHaveBeenCalledTimes(3);
       });
 
       it('should handle mixed legacy and modern formats', () => {
@@ -349,19 +399,21 @@ describe('TargetComponentValidator', () => {
           id: 'test-action',
           forbidden_components: {
             primary: ['core:forbidden'],
-            secondary: ['core:restricted']
-          }
+            secondary: ['core:restricted'],
+          },
         };
 
         const targetEntities = {
           primary: { id: 'primary-entity' },
-          secondary: { id: 'secondary-entity' }
+          secondary: { id: 'secondary-entity' },
         };
 
-        mockEntityManager.getAllComponentTypesForEntity
-          .mockReturnValue([]);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
       });
@@ -372,20 +424,25 @@ describe('TargetComponentValidator', () => {
           forbidden_components: {
             primary: ['core:forbidden'],
             secondary: ['core:restricted'],
-            tertiary: ['core:blocked']
-          }
+            tertiary: ['core:blocked'],
+          },
         };
 
         const targetEntities = {
           primary: { id: 'primary-entity' },
           secondary: { id: 'secondary-entity' },
-          tertiary: { id: 'tertiary-entity' }
+          tertiary: { id: 'tertiary-entity' },
         };
 
-        mockEntityManager.getAllComponentTypesForEntity
-          .mockReturnValue(['core:safe', 'core:allowed']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:safe',
+          'core:allowed',
+        ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
       });
@@ -403,15 +460,22 @@ describe('TargetComponentValidator', () => {
           primary: { id: 'primary-entity' },
         };
 
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:safe',
+        ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
         expect(mockLogger.debug).toHaveBeenCalledWith(
           "Action 'legacy-fallback-action': Using primary targets for legacy 'target' role validation"
         );
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('primary-entity');
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).toHaveBeenCalledWith('primary-entity');
       });
 
       it('should continue when no entities exist for a role with forbidden components', () => {
@@ -429,9 +493,14 @@ describe('TargetComponentValidator', () => {
 
         const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
 
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:safe',
+        ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
         expect(validateSpy).toHaveBeenCalledTimes(1);
@@ -451,7 +520,10 @@ describe('TargetComponentValidator', () => {
 
         const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
         expect(validateSpy).not.toHaveBeenCalled();
@@ -471,31 +543,39 @@ describe('TargetComponentValidator', () => {
 
         const validateSpy = jest.spyOn(validator, 'validateEntityComponents');
 
-        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(['core:safe']);
+        mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+          'core:safe',
+        ]);
 
-        const result = validator.validateTargetComponents(actionDef, targetEntities);
+        const result = validator.validateTargetComponents(
+          actionDef,
+          targetEntities
+        );
 
         expect(result).toEqual({ valid: true });
         expect(validateSpy).toHaveBeenCalledTimes(1);
-        expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledWith('valid-entity');
+        expect(
+          mockEntityManager.getAllComponentTypesForEntity
+        ).toHaveBeenCalledWith('valid-entity');
       });
     });
 
     describe('performance', () => {
       it('should log warning when validation takes too long', () => {
-        jest.spyOn(performance, 'now')
-          .mockReturnValueOnce(0)    // Start time
-          .mockReturnValueOnce(10);  // End time (10ms)
+        jest
+          .spyOn(performance, 'now')
+          .mockReturnValueOnce(0) // Start time
+          .mockReturnValueOnce(10); // End time (10ms)
 
         const actionDef = {
           id: 'slow-action',
           forbidden_components: {
-            target: ['core:forbidden']
-          }
+            target: ['core:forbidden'],
+          },
         };
 
         const targetEntities = {
-          target: { id: 'entity-1' }
+          target: { id: 'entity-1' },
         };
 
         mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -503,7 +583,9 @@ describe('TargetComponentValidator', () => {
         validator.validateTargetComponents(actionDef, targetEntities);
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Target validation for action 'slow-action' took 10.00ms")
+          expect.stringContaining(
+            "Target validation for action 'slow-action' took 10.00ms"
+          )
         );
       });
 
@@ -513,18 +595,19 @@ describe('TargetComponentValidator', () => {
         const actionDef = {
           id: 'bulk-action',
           forbidden_components: {
-            primary: ['core:forbidden']
-          }
+            primary: ['core:forbidden'],
+          },
         };
 
         // Simulate validating 100 times
         for (let i = 0; i < 100; i++) {
           const targetEntities = {
-            primary: { id: `entity-${i}` }
+            primary: { id: `entity-${i}` },
           };
 
-          mockEntityManager.getAllComponentTypesForEntity
-            .mockReturnValue(['core:allowed']);
+          mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
+            'core:allowed',
+          ]);
 
           validator.validateTargetComponents(actionDef, targetEntities);
         }
@@ -542,10 +625,13 @@ describe('TargetComponentValidator', () => {
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:actor',
-        'core:position'
+        'core:position',
       ]);
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -557,14 +643,17 @@ describe('TargetComponentValidator', () => {
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:actor',
         'core:forbidden',
-        'core:position'
+        'core:position',
       ]);
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({
         valid: false,
-        component: 'core:forbidden'
+        component: 'core:forbidden',
       });
     });
 
@@ -572,7 +661,10 @@ describe('TargetComponentValidator', () => {
       const entity = { id: 'entity-1' };
       const forbiddenComponents = [];
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -581,7 +673,10 @@ describe('TargetComponentValidator', () => {
       const entity = { id: 'entity-1' };
       const forbiddenComponents = null;
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -590,7 +685,10 @@ describe('TargetComponentValidator', () => {
       const entity = null;
       const forbiddenComponents = ['core:forbidden'];
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -599,7 +697,10 @@ describe('TargetComponentValidator', () => {
       const entity = undefined;
       const forbiddenComponents = ['core:forbidden'];
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -608,7 +709,10 @@ describe('TargetComponentValidator', () => {
       const entity = { components: ['core:actor'] };
       const forbiddenComponents = ['core:forbidden'];
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -616,7 +720,7 @@ describe('TargetComponentValidator', () => {
     it('should fallback to entity components property when manager fails', () => {
       const entity = {
         id: 'entity-1',
-        components: ['core:actor', 'core:forbidden']
+        components: ['core:actor', 'core:forbidden'],
       };
       const forbiddenComponents = ['core:forbidden'];
 
@@ -624,11 +728,14 @@ describe('TargetComponentValidator', () => {
         throw new Error('Entity manager error');
       });
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({
         valid: false,
-        component: 'core:forbidden'
+        component: 'core:forbidden',
       });
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to get components for entity validation: Entity manager error'
@@ -640,35 +747,44 @@ describe('TargetComponentValidator', () => {
       const forbiddenComponents = [
         'core:forbidden1',
         'core:forbidden2',
-        'core:forbidden3'
+        'core:forbidden3',
       ];
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:actor',
         'core:forbidden2',
-        'core:position'
+        'core:position',
       ]);
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({
         valid: false,
-        component: 'core:forbidden2'
+        component: 'core:forbidden2',
       });
     });
 
     it('should use O(1) lookups for component checking', () => {
       const entity = { id: 'entity-1' };
       // Large list of forbidden components
-      const forbiddenComponents = Array.from({ length: 1000 }, (_, i) => `core:forbidden${i}`);
+      const forbiddenComponents = Array.from(
+        { length: 1000 },
+        (_, i) => `core:forbidden${i}`
+      );
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
         'core:actor',
-        'core:position'
+        'core:position',
       ]);
 
       const startTime = performance.now();
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
       const duration = performance.now() - startTime;
 
       expect(result).toEqual({ valid: true });
@@ -683,7 +799,10 @@ describe('TargetComponentValidator', () => {
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue(null);
 
-      const result = validator.validateEntityComponents(entity, forbiddenComponents);
+      const result = validator.validateEntityComponents(
+        entity,
+        forbiddenComponents
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -692,19 +811,22 @@ describe('TargetComponentValidator', () => {
       const actionDef = {
         id: 'test-action',
         forbidden_components: {
-          target: Array.from({ length: 1000 }, (_, i) => `core:forbidden${i}`)
-        }
+          target: Array.from({ length: 1000 }, (_, i) => `core:forbidden${i}`),
+        },
       };
 
       const targetEntities = {
-        target: { id: 'entity-1' }
+        target: { id: 'entity-1' },
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([
-        'core:actor'
+        'core:actor',
       ]);
 
-      const result = validator.validateTargetComponents(actionDef, targetEntities);
+      const result = validator.validateTargetComponents(
+        actionDef,
+        targetEntities
+      );
 
       expect(result).toEqual({ valid: true });
     });
@@ -713,20 +835,25 @@ describe('TargetComponentValidator', () => {
       const actionDef = {
         id: 'test-action',
         forbidden_components: {
-          target: ['core:forbidden']
-        }
+          target: ['core:forbidden'],
+        },
       };
 
       const targetEntities = {
-        target: { components: ['core:forbidden'] } // No id property
+        target: { components: ['core:forbidden'] }, // No id property
       };
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
 
-      const result = validator.validateTargetComponents(actionDef, targetEntities);
+      const result = validator.validateTargetComponents(
+        actionDef,
+        targetEntities
+      );
 
       expect(result.valid).toBe(false);
-      expect(result.reason).toContain("target entity 'unknown' has forbidden component");
+      expect(result.reason).toContain(
+        "target entity 'unknown' has forbidden component"
+      );
     });
   });
 });

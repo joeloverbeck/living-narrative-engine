@@ -75,7 +75,10 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
       // Arrange - Load actual static content from JSON file
       const fs = await import('fs/promises');
       const path = await import('path');
-      const jsonPath = path.join(process.cwd(), 'data/prompts/corePromptText.json');
+      const jsonPath = path.join(
+        process.cwd(),
+        'data/prompts/corePromptText.json'
+      );
       const jsonContent = await fs.readFile(jsonPath, 'utf-8');
       const corePromptText = JSON.parse(jsonContent);
 
@@ -120,15 +123,21 @@ describe('Prompt Redundancy Tests (LLMROLPROARCANA-004)', () => {
     });
 
     it('should include the same guidance regardless of previous thoughts', () => {
-      const noThoughtsFormatted = formatter.formatPromptData({ thoughtsArray: [] });
+      const noThoughtsFormatted = formatter.formatPromptData({
+        thoughtsArray: [],
+      });
       const withThoughtsFormatted = formatter.formatPromptData({
         thoughtsArray: [{ text: 'Previous thought' }],
       });
 
       expect(noThoughtsFormatted.thoughtsVoiceGuidance).toBe('');
       expect(withThoughtsFormatted.thoughtsVoiceGuidance).toBe('');
-      expect(noThoughtsFormatted.thoughtsSection).toContain('INNER VOICE GUIDANCE');
-      expect(withThoughtsFormatted.thoughtsSection).toContain('INNER VOICE GUIDANCE');
+      expect(noThoughtsFormatted.thoughtsSection).toContain(
+        'INNER VOICE GUIDANCE'
+      );
+      expect(withThoughtsFormatted.thoughtsSection).toContain(
+        'INNER VOICE GUIDANCE'
+      );
     });
   });
 });

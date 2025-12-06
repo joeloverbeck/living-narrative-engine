@@ -3,9 +3,6 @@
   "id": "kissing:event-is-action-lean-in-for-deep-kiss",
   "description": "Checks if event is lean in for deep kiss action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "kissing:lean_in_for_deep_kiss"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "kissing:lean_in_for_deep_kiss"]
   }
 }

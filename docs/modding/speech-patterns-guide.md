@@ -43,14 +43,14 @@ Speech patterns are defined in character entity files within the `components` se
 
 The system supports two formats for defining speech patterns:
 
-| Feature | Legacy String Format | Structured Object Format |
-|---------|---------------------|-------------------------|
-| Organization | Flat list | Grouped by category |
-| Context Info | Inline (manual) | Dedicated `contexts` field |
-| Examples | Single per entry | Multiple per category |
-| Readability | Lower | Higher |
-| Maintainability | Harder to update | Easier to update |
-| LLM Guidance | Basic | Rich context |
+| Feature         | Legacy String Format | Structured Object Format   |
+| --------------- | -------------------- | -------------------------- |
+| Organization    | Flat list            | Grouped by category        |
+| Context Info    | Inline (manual)      | Dedicated `contexts` field |
+| Examples        | Single per entry     | Multiple per category      |
+| Readability     | Lower                | Higher                     |
+| Maintainability | Harder to update     | Easier to update           |
+| LLM Guidance    | Basic                | Rich context               |
 
 ### Legacy String Format
 
@@ -101,6 +101,7 @@ Each structured pattern object has three fields:
 A descriptive category name for the speech pattern group.
 
 **Good type names**:
+
 - "Feline Verbal Tics"
 - "Nervous Deflections"
 - "Formal Register"
@@ -108,6 +109,7 @@ A descriptive category name for the speech pattern group.
 - "Tonal Shifts"
 
 **Avoid**:
+
 - Generic names like "Pattern 1" or "Speech Type A"
 - Overly long descriptions
 - Names that don't clearly describe the pattern
@@ -135,6 +137,7 @@ An array of concrete dialogue examples (minimum 1, recommended 2-5).
 ```
 
 **Tips for examples**:
+
 - Include actual dialogue, not descriptions
 - Show variety within the pattern category
 - Capture the character's authentic voice
@@ -145,6 +148,7 @@ An array of concrete dialogue examples (minimum 1, recommended 2-5).
 Use lowercase, consistent context tags. Here are recommended categories:
 
 ### Emotional States
+
 - `casual` - Relaxed, everyday conversation
 - `formal` - Official or respectful situations
 - `vulnerable` - Emotionally exposed moments
@@ -153,18 +157,21 @@ Use lowercase, consistent context tags. Here are recommended categories:
 - `aggressive` - Confrontational moments
 
 ### Social Contexts
+
 - `manipulative` - When attempting to influence others
 - `intimate` - Close personal conversations
 - `public` - Performing for an audience
 - `professional` - Work or business settings
 
 ### Situational Contexts
+
 - `combat` - During or after fights
 - `storytelling` - When narrating or explaining
 - `evasive` - Avoiding direct answers
 - `confessional` - Rare honest moments
 
 ### Character-Specific
+
 - `revealing moments` - When masks slip
 - `power dynamics` - Hierarchy-aware speech
 - `identity crisis` - Uncertainty about self
@@ -192,11 +199,13 @@ Use lowercase, consistent context tags. Here are recommended categories:
 The goal is **natural speech**, not robotic pattern matching. Good patterns help the LLM understand tendencies, not rules.
 
 **Do**:
+
 - Show patterns that emerge organically
-- Include examples of when patterns *don't* appear (via contexts)
+- Include examples of when patterns _don't_ appear (via contexts)
 - Let examples demonstrate flexibility
 
 **Don't**:
+
 - Create patterns that must appear in every sentence
 - Make patterns so unique they feel forced
 - Forget that silence/normalcy is also valid
@@ -359,12 +368,12 @@ Speech patterns are validated against the `core:speech_patterns` component schem
 
 ### Validation Rules
 
-| Field | Type | Required | Constraints |
-|-------|------|----------|-------------|
-| `patterns` | array | Yes | Contains strings or objects |
-| `type` | string | Yes (for objects) | Non-empty |
-| `contexts` | array of strings | No | Defaults to empty array |
-| `examples` | array of strings | Yes (for objects) | Minimum 1 item |
+| Field      | Type             | Required          | Constraints                 |
+| ---------- | ---------------- | ----------------- | --------------------------- |
+| `patterns` | array            | Yes               | Contains strings or objects |
+| `type`     | string           | Yes (for objects) | Non-empty                   |
+| `contexts` | array of strings | No                | Defaults to empty array     |
+| `examples` | array of strings | Yes (for objects) | Minimum 1 item              |
 
 ### Mixed Format Support
 
@@ -374,7 +383,7 @@ You can mix legacy strings and structured objects in the same array (backward co
 {
   "patterns": [
     { "type": "Formal", "examples": ["Good day."] },
-    "(casual) 'Hey there!'"  // Legacy string - avoid mixing
+    "(casual) 'Hey there!'" // Legacy string - avoid mixing
   ]
 }
 ```
@@ -397,6 +406,7 @@ The engine validates speech patterns against the component schema during mod loa
 ### 3. Manual Review
 
 Check that:
+
 - [ ] Categories are distinct and meaningful
 - [ ] Context tags are lowercase and consistent
 - [ ] Examples feel authentic to the character
@@ -406,6 +416,7 @@ Check that:
 ### 4. In-Game Testing
 
 Test with the LLM to verify:
+
 - Patterns appear naturally in dialogue
 - Context-appropriate usage
 - No mechanical cycling through patterns
@@ -440,6 +451,7 @@ Your object pattern needs at least one example:
 ### "items must match exactly one schema in oneOf"
 
 Your pattern is neither a valid string nor a valid object. Check for:
+
 - Objects with invalid field names
 - Arrays where strings/objects expected
 - Null values
@@ -447,14 +459,16 @@ Your pattern is neither a valid string nor a valid object. Check for:
 ### Patterns Feel Mechanical in Dialogue
 
 If the LLM cycles through patterns robotically:
+
 1. Reduce the number of patterns
 2. Add more diverse examples per category
 3. Include context tags that limit when patterns apply
-4. Remember: the LLM should use patterns *naturally*, not constantly
+4. Remember: the LLM should use patterns _naturally_, not constantly
 
 ### Character Voice Feels Inconsistent
 
 If the character doesn't sound cohesive:
+
 1. Review examples for voice consistency
 2. Ensure categories don't contradict each other
 3. Check that examples all feel like the same character
@@ -463,5 +477,6 @@ If the character doesn't sound cohesive:
 ---
 
 **Related Documentation**:
+
 - [Speech Patterns Migration Guide](./speech-patterns-migration.md) - Converting legacy patterns to structured format
 - [Component Schema](../../data/mods/core/components/speech_patterns.component.json) - Technical schema definition

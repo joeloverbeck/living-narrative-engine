@@ -90,9 +90,11 @@ describe('main.js fallback DOM helper coverage', () => {
       mockDisplayFatal.mock.calls[0];
 
     expect(fallbackElements.outputDiv).toBe(
-      document.getElementById('outputDiv'),
+      document.getElementById('outputDiv')
     );
-    expect(errorDetails.phase).toBe('Bootstrap Orchestration - UI Element Validation');
+    expect(errorDetails.phase).toBe(
+      'Bootstrap Orchestration - UI Element Validation'
+    );
     expect(passedLogger).toBeNull();
 
     const referenceNode = document.getElementById('reference');
@@ -114,7 +116,7 @@ describe('main.js fallback DOM helper coverage', () => {
     });
 
     await expect(main.beginGame()).rejects.toThrow(
-      'Critical: GameEngine not initialized before attempting Start Game stage.',
+      'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
     expect(console.error).toHaveBeenCalledTimes(1);

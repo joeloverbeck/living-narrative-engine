@@ -382,7 +382,11 @@ export class ClothingInstantiationService extends BaseService {
 
       // Create resolver function for the validator
       const resolveAttachmentPoints = async (entityId, slotId) => {
-        return await this.#slotResolver.resolveClothingSlot(entityId, slotId, slotEntityMappings);
+        return await this.#slotResolver.resolveClothingSlot(
+          entityId,
+          slotId,
+          slotEntityMappings
+        );
       };
 
       // Perform validation
@@ -622,9 +626,8 @@ export class ClothingInstantiationService extends BaseService {
     } else {
       // No property overrides - use entity definition completely
       // This preserves all required fields like equipmentSlots
-      clothingEntity = await this.#entityManager.createEntityInstance(
-        entityDefId
-      );
+      clothingEntity =
+        await this.#entityManager.createEntityInstance(entityDefId);
     }
 
     // Return the entity ID string, not the Entity object

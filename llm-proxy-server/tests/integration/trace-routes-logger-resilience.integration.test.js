@@ -59,7 +59,9 @@ async function buildAppWithLogger(overrides = {}) {
     logger.error.mockImplementation(overrides.error);
   }
 
-  const { default: traceRoutes } = await import('../../src/routes/traceRoutes.js');
+  const { default: traceRoutes } = await import(
+    '../../src/routes/traceRoutes.js'
+  );
 
   const app = express();
   app.use(express.json({ limit: '1mb' }));

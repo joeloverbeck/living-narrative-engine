@@ -62,7 +62,9 @@ describe('ModLoadOrderResolver integration – graph utils deep coverage', () =>
     expect(order).not.toContain('OptionalHelper');
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Mod load order adjusted to satisfy dependencies.')
+      expect.stringContaining(
+        'Mod load order adjusted to satisfy dependencies.'
+      )
     );
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('modLoadOrderResolver: Resolved load order')

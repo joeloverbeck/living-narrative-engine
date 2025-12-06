@@ -8,8 +8,8 @@ Create the `ranged:throwable_items` scope that returns all portable items that c
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                            | Purpose                              |
+| ----------------------------------------------- | ------------------------------------ |
 | `data/mods/ranged/scopes/throwable_items.scope` | Scope definition for throwable items |
 
 ## Implementation Details
@@ -80,6 +80,7 @@ npm run validate
 ## Reference Files
 
 For understanding existing scope patterns:
+
 - `data/mods/items/scopes/wielded_items.scope` - Wielded items scope pattern
 - `data/mods/items/scopes/non_wielded_inventory_items.scope` - Inventory items scope pattern
 

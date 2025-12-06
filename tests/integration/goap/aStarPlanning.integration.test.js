@@ -59,15 +59,24 @@ describe('GOAP A* Planner - Integration', () => {
     });
 
     // Register has_component operator (required for structural gates and planning conditions)
-    const { HasComponentOperator } = await import('../../../src/logic/operators/hasComponentOperator.js');
+    const { HasComponentOperator } = await import(
+      '../../../src/logic/operators/hasComponentOperator.js'
+    );
     const hasComponentOp = new HasComponentOperator({
       entityManager,
       logger: testBed.createMockLogger(),
     });
-    baseJsonLogicService.addOperation('has_component', function(entityPath, componentId) {
-      console.log('[TEST] has_component wrapper called with:', { entityPath, componentId, contextKeys: Object.keys(this || {}) });
-      return hasComponentOp.evaluate([entityPath, componentId], this);
-    });
+    baseJsonLogicService.addOperation(
+      'has_component',
+      function (entityPath, componentId) {
+        console.log('[TEST] has_component wrapper called with:', {
+          entityPath,
+          componentId,
+          contextKeys: Object.keys(this || {}),
+        });
+        return hasComponentOp.evaluate([entityPath, componentId], this);
+      }
+    );
     console.log('[TEST] has_component operator registered');
 
     // Test operator works
@@ -80,7 +89,8 @@ describe('GOAP A* Planner - Integration', () => {
     // Wrap to provide evaluateCondition method (GOAP expects this method name)
     jsonLogicService = {
       evaluate: (logic, data) => baseJsonLogicService.evaluate(logic, data),
-      evaluateCondition: (logic, data) => baseJsonLogicService.evaluate(logic, data),
+      evaluateCondition: (logic, data) =>
+        baseJsonLogicService.evaluate(logic, data),
     };
 
     // Create scope system
@@ -311,7 +321,11 @@ describe('GOAP A* Planner - Integration', () => {
         return filter;
       })(),
       'test:medical_items': (() => {
-        const source = { type: 'Source', kind: 'entities', param: 'test:medical' };
+        const source = {
+          type: 'Source',
+          kind: 'entities',
+          param: 'test:medical',
+        };
         const filter = {
           type: 'Filter',
           parent: source,

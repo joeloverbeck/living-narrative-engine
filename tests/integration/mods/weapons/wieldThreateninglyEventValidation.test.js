@@ -197,6 +197,8 @@ describe('wield_threateningly event validation', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toContain('John Smith');
-    expect(perceptibleEvent.payload.descriptionText).toContain('Silver Revolver');
+    expect(perceptibleEvent.payload.descriptionText).toContain(
+      'Silver Revolver'
+    );
   });
 });

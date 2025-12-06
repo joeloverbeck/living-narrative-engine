@@ -126,9 +126,11 @@ describe('BodyDescriptionComposer health line integration', () => {
       bodyGraphService,
     });
 
-    const injuryNarrativeFormatterService = new InjuryNarrativeFormatterService({
-      logger,
-    });
+    const injuryNarrativeFormatterService = new InjuryNarrativeFormatterService(
+      {
+        logger,
+      }
+    );
 
     const equipmentDescriptionService = {
       generateEquipmentDescription: jest

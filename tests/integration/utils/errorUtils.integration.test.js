@@ -3,7 +3,14 @@
  * @description Ensures fatal error display wiring works with real DOM manipulation helpers
  */
 
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import { DomAdapter } from '../../../src/interfaces/DomAdapter.js';
 import { displayFatalStartupError } from '../../../src/utils/errorUtils.js';
@@ -89,7 +96,12 @@ describe('displayFatalStartupError integration', () => {
       phase: 'Container Setup',
     };
 
-    const result = displayFatalStartupError(uiElements, details, logger, domAdapter);
+    const result = displayFatalStartupError(
+      uiElements,
+      details,
+      logger,
+      domAdapter
+    );
 
     expect(result.displayed).toBe(true);
     expect(uiElements.errorDiv?.textContent).toBe(details.userMessage);
@@ -121,7 +133,12 @@ describe('displayFatalStartupError integration', () => {
       phase: 'UI Check',
     };
 
-    const result = displayFatalStartupError(uiElements, details, logger, domAdapter);
+    const result = displayFatalStartupError(
+      uiElements,
+      details,
+      logger,
+      domAdapter
+    );
 
     expect(result.displayed).toBe(false);
     expect(domAdapter.alertMessages).toEqual([details.userMessage]);

@@ -230,9 +230,7 @@ describe('ActionFormattingStage - adjust_clothing bug integration', () => {
       const secondaryTargets = extractTargetIds(adjustAction.params, {
         placeholder: 'secondary',
       });
-      expect(secondaryTargets).toEqual([
-        'p_erotica:iker_aguirre_instance',
-      ]);
+      expect(secondaryTargets).toEqual(['p_erotica:iker_aguirre_instance']);
     });
 
     it('should handle malformed target contexts gracefully', async () => {

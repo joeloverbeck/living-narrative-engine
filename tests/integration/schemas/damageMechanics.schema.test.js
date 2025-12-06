@@ -14,13 +14,22 @@ describe('Damage Mechanics Schemas', () => {
     addFormats(ajv);
     ajv.addSchema(commonSchema, commonSchema.$id);
 
-    const healthPath = path.resolve(__dirname, '../../../data/mods/anatomy/components/part_health.component.json');
-    const partPath = path.resolve(__dirname, '../../../data/mods/anatomy/components/part.component.json');
+    const healthPath = path.resolve(
+      __dirname,
+      '../../../data/mods/anatomy/components/part_health.component.json'
+    );
+    const partPath = path.resolve(
+      __dirname,
+      '../../../data/mods/anatomy/components/part.component.json'
+    );
 
     const healthComp = JSON.parse(fs.readFileSync(healthPath, 'utf8'));
     const partComp = JSON.parse(fs.readFileSync(partPath, 'utf8'));
 
-    validateHealth = ajv.compile({ ...healthComp.dataSchema, $id: healthComp.id });
+    validateHealth = ajv.compile({
+      ...healthComp.dataSchema,
+      $id: healthComp.id,
+    });
     validatePart = ajv.compile({ ...partComp.dataSchema, $id: partComp.id });
   });
 
@@ -30,7 +39,7 @@ describe('Damage Mechanics Schemas', () => {
         currentHealth: 50,
         maxHealth: 100,
         state: 'wounded',
-        turnsInState: 0
+        turnsInState: 0,
       };
       expect(validateHealth(payload)).toBe(true);
     });
@@ -39,14 +48,14 @@ describe('Damage Mechanics Schemas', () => {
       const payload = {
         currentHealth: 50,
         maxHealth: 100,
-        state: 'Healthy' // Capitalized not allowed in existing schema
+        state: 'Healthy', // Capitalized not allowed in existing schema
       };
       expect(validateHealth(payload)).toBe(false);
     });
 
     test('rejects missing required fields', () => {
       const payload = {
-        state: 'healthy'
+        state: 'healthy',
       };
       expect(validateHealth(payload)).toBe(false);
     });
@@ -55,7 +64,7 @@ describe('Damage Mechanics Schemas', () => {
   describe('anatomy:part (Extended)', () => {
     test('validates legacy payload (backward compatibility)', () => {
       const payload = {
-        subType: 'arm'
+        subType: 'arm',
       };
       expect(validatePart(payload)).toBe(true);
     });
@@ -63,10 +72,9 @@ describe('Damage Mechanics Schemas', () => {
     test('validates new hit_probability_weight', () => {
       const payload = {
         subType: 'arm',
-        hit_probability_weight: 1.5
+        hit_probability_weight: 1.5,
       };
       expect(validatePart(payload)).toBe(true);
     });
-
   });
 });

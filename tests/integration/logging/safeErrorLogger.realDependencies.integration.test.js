@@ -160,12 +160,15 @@ describe('SafeErrorLogger integration with real dispatcher stack', () => {
     });
 
     await expect(
-      safeErrorLogger.withGameLoadingMode(async () => {
-        safeErrorLogger.enableGameLoadingMode({
-          context: ' leaked-phase ',
-          timeoutMs: 25,
-        });
-      }, { context: 'outer-phase', timeoutMs: 30 })
+      safeErrorLogger.withGameLoadingMode(
+        async () => {
+          safeErrorLogger.enableGameLoadingMode({
+            context: ' leaked-phase ',
+            timeoutMs: 25,
+          });
+        },
+        { context: 'outer-phase', timeoutMs: 30 }
+      )
     ).resolves.toBeUndefined();
 
     expect(
@@ -203,9 +206,12 @@ describe('SafeErrorLogger integration with real dispatcher stack', () => {
     });
 
     await expect(
-      safeErrorLogger.withGameLoadingMode(async () => {
-        await Promise.resolve();
-      }, { context: 'outer-phase', timeoutMs: 40 })
+      safeErrorLogger.withGameLoadingMode(
+        async () => {
+          await Promise.resolve();
+        },
+        { context: 'outer-phase', timeoutMs: 40 }
+      )
     ).rejects.toThrow('disable failure for integration test');
 
     expect(

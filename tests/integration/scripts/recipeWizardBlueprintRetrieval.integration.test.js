@@ -21,13 +21,22 @@ describe('Recipe Wizard Blueprint Retrieval', () => {
     await configureMinimalContainer(container);
 
     // Override data fetchers for Node environment
-    const NodeDataFetcher = (await import('../../../scripts/utils/nodeDataFetcher.js')).default;
-    const NodeTextDataFetcher = (await import('../../../scripts/utils/nodeTextDataFetcher.js')).default;
+    const NodeDataFetcher = (
+      await import('../../../scripts/utils/nodeDataFetcher.js')
+    ).default;
+    const NodeTextDataFetcher = (
+      await import('../../../scripts/utils/nodeTextDataFetcher.js')
+    ).default;
     container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
-    container.register(tokens.ITextDataFetcher, () => new NodeTextDataFetcher());
+    container.register(
+      tokens.ITextDataFetcher,
+      () => new NodeTextDataFetcher()
+    );
 
     dataRegistry = container.resolve(tokens.IDataRegistry);
-    anatomyBlueprintRepository = container.resolve(tokens.IAnatomyBlueprintRepository);
+    anatomyBlueprintRepository = container.resolve(
+      tokens.IAnatomyBlueprintRepository
+    );
 
     // Load essential mods
     let loadContext = createLoadContext({
@@ -66,17 +75,21 @@ describe('Recipe Wizard Blueprint Retrieval', () => {
       const blueprintId = firstBlueprint.id; // This might be non-namespaced
 
       // Step 3: Try to retrieve the blueprint using that ID (this is what fails in the wizard)
-      const retrievedBlueprint = await anatomyBlueprintRepository.getBlueprint(blueprintId);
+      const retrievedBlueprint =
+        await anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       // After the fix, using _fullId should always work
       const fullId = firstBlueprint._fullId || firstBlueprint.id;
-      const retrievedByFullId = await anatomyBlueprintRepository.getBlueprint(fullId);
+      const retrievedByFullId =
+        await anatomyBlueprintRepository.getBlueprint(fullId);
       expect(retrievedByFullId).not.toBeNull();
       expect(retrievedByFullId).toBeDefined();
 
       // The fix ensures that the blueprint can be retrieved
       // Either the id already includes namespace, or we use _fullId
-      expect(retrievedBlueprint !== null || retrievedByFullId !== null).toBe(true);
+      expect(retrievedBlueprint !== null || retrievedByFullId !== null).toBe(
+        true
+      );
     });
 
     it('should successfully retrieve blueprints when using _fullId field', async () => {
@@ -88,7 +101,8 @@ describe('Recipe Wizard Blueprint Retrieval', () => {
 
       // Use _fullId instead of id
       const blueprintId = firstBlueprint._fullId || firstBlueprint.id;
-      const retrievedBlueprint = await anatomyBlueprintRepository.getBlueprint(blueprintId);
+      const retrievedBlueprint =
+        await anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       expect(retrievedBlueprint).not.toBeNull();
       expect(retrievedBlueprint).toBeDefined();
@@ -96,7 +110,9 @@ describe('Recipe Wizard Blueprint Retrieval', () => {
 
     it('should handle V1 blueprints without schemaVersion property', async () => {
       // Get human_female blueprint which is V1 (no schemaVersion)
-      const blueprint = await anatomyBlueprintRepository.getBlueprint('anatomy:human_female');
+      const blueprint = await anatomyBlueprintRepository.getBlueprint(
+        'anatomy:human_female'
+      );
 
       expect(blueprint).toBeDefined();
       expect(blueprint).not.toBeNull();

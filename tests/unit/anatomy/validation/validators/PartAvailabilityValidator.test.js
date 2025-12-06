@@ -63,7 +63,9 @@ describe('PartAvailabilityValidator', () => {
             dataRegistry: {},
             entityMatcherService: { findMatchingEntities: jest.fn() },
           })
-      ).toThrow("Invalid or missing method 'getAll' on dependency 'IDataRegistry'.");
+      ).toThrow(
+        "Invalid or missing method 'getAll' on dependency 'IDataRegistry'."
+      );
     });
 
     it('validates entity matcher dependency', () => {
@@ -91,15 +93,19 @@ describe('PartAvailabilityValidator', () => {
 
       const entityDefinitions = [{ id: 'core:head' }];
       const matcher = jest.fn().mockReturnValue([{ id: 'match' }]);
-      const { validator, dataRegistry, entityMatcherService } = createValidator({
-        entityDefinitions,
-        matcherImpl: matcher,
-      });
+      const { validator, dataRegistry, entityMatcherService } = createValidator(
+        {
+          entityDefinitions,
+          matcherImpl: matcher,
+        }
+      );
 
       const result = await validator.validate(recipe);
 
       expect(dataRegistry.getAll).toHaveBeenCalledWith('entityDefinitions');
-      expect(entityMatcherService.findMatchingEntities).toHaveBeenCalledTimes(2);
+      expect(entityMatcherService.findMatchingEntities).toHaveBeenCalledTimes(
+        2
+      );
       expect(entityMatcherService.findMatchingEntities).toHaveBeenNthCalledWith(
         1,
         recipe.slots.head,
@@ -205,7 +211,9 @@ describe('PartAvailabilityValidator', () => {
       const { validator, entityMatcherService } = createValidator();
       await validator.validate(recipe);
 
-      expect(entityMatcherService.findMatchingEntities).toHaveBeenCalledTimes(1);
+      expect(entityMatcherService.findMatchingEntities).toHaveBeenCalledTimes(
+        1
+      );
       expect(entityMatcherService.findMatchingEntities).toHaveBeenCalledWith(
         recipe.patterns[0],
         expect.any(Array)

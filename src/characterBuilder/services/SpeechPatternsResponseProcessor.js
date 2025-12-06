@@ -337,7 +337,8 @@ export class SpeechPatternsResponseProcessor {
     // Convert to new schema format (v3.0.0)
     const type =
       pattern.pattern || pattern.rawText || 'General speech characteristic';
-    const example = pattern.example || 'Character expresses themselves naturally';
+    const example =
+      pattern.example || 'Character expresses themselves naturally';
     const circumstances = pattern.circumstances || '';
 
     // Schema requires minimum 2 examples, so add a variant if only one was extracted

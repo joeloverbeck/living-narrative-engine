@@ -100,7 +100,9 @@ describe('TurnCycle - Participation Filtering', () => {
       mockService.isEmpty.mockResolvedValue(false);
       mockService.getNextEntity.mockResolvedValue(mockEntity);
       mockService.getCurrentOrder.mockReturnValue([mockEntity]);
-      mockEntityManager.getComponentData.mockReturnValue({ participating: true });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: true,
+      });
 
       const result = await turnCycle.nextActor();
 
@@ -183,18 +185,24 @@ describe('TurnCycle - Participation Filtering', () => {
         .mockResolvedValueOnce(actor1)
         .mockResolvedValueOnce(actor2);
 
-      mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: false,
+      });
 
       const result = await turnCycle.nextActor();
 
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No participating actors found in turn queue after')
+        expect.stringContaining(
+          'No participating actors found in turn queue after'
+        )
       );
     });
 
     it('should respect max attempts limit (queue size)', async () => {
-      const actors = Array.from({ length: 3 }, (_, i) => ({ id: `actor-${i}` }));
+      const actors = Array.from({ length: 3 }, (_, i) => ({
+        id: `actor-${i}`,
+      }));
 
       mockService.isEmpty.mockResolvedValue(false);
       mockService.getCurrentOrder.mockReturnValue(actors);
@@ -203,7 +211,9 @@ describe('TurnCycle - Participation Filtering', () => {
       mockService.getNextEntity.mockImplementation(() =>
         Promise.resolve(actors[0])
       );
-      mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: false,
+      });
 
       const result = await turnCycle.nextActor();
 
@@ -227,7 +237,9 @@ describe('TurnCycle - Participation Filtering', () => {
         callCount++;
         return Promise.resolve({ id: `actor-${callCount}` });
       });
-      mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: false,
+      });
 
       const result = await turnCycle.nextActor();
 
@@ -248,7 +260,9 @@ describe('TurnCycle - Participation Filtering', () => {
         .mockResolvedValueOnce(actor1)
         .mockResolvedValueOnce(null); // Queue exhausted after first skip
 
-      mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: false,
+      });
 
       const result = await turnCycle.nextActor();
 

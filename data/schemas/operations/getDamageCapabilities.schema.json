@@ -25,10 +25,7 @@
       "properties": {
         "entity_ref": {
           "description": "Reference to the entity. Supports entity ID string, keywords (actor/target/primary/secondary/tertiary), or JSON Logic expression.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "output_variable": {
           "type": "string",

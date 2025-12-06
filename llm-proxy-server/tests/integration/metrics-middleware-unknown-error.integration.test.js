@@ -1,4 +1,11 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import { createMetricsMiddleware } from '../../src/middleware/metrics.js';
 import MetricsService from '../../src/services/metricsService.js';
@@ -40,7 +47,10 @@ describe('metrics middleware unknown error classification integration', () => {
       collectDefaultMetrics: false,
     });
 
-    const recordHttpRequestSpy = jest.spyOn(metricsService, 'recordHttpRequest');
+    const recordHttpRequestSpy = jest.spyOn(
+      metricsService,
+      'recordHttpRequest'
+    );
     const recordErrorSpy = jest.spyOn(metricsService, 'recordError');
 
     const middleware = createMetricsMiddleware({

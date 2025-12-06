@@ -8,15 +8,15 @@ Create the JSON schema definition for the `RESOLVE_OUTCOME` operation and add it
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                 | Purpose                     |
+| ---------------------------------------------------- | --------------------------- |
 | `data/schemas/operations/resolveOutcome.schema.json` | Operation schema definition |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add `$ref` to resolveOutcome.schema.json in `anyOf` array |
+| File                                       | Change                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------ |
+| `data/schemas/operation.schema.json`       | Add `$ref` to resolveOutcome.schema.json in `anyOf` array          |
 | `src/configuration/staticConfiguration.js` | Add `resolveOutcome.schema.json` to `OPERATION_SCHEMA_FILES` array |
 
 ## Implementation Details
@@ -183,12 +183,12 @@ The following should fail validation:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/addComponent.schema.json` | Operation schema pattern |
-| `data/schemas/operations/if.schema.json` | Complex operation schema pattern |
-| `data/schemas/base-operation.schema.json` | Base schema to extend |
-| `data/schemas/operation.schema.json` | Where to add $ref |
+| File                                               | Purpose                          |
+| -------------------------------------------------- | -------------------------------- |
+| `data/schemas/operations/addComponent.schema.json` | Operation schema pattern         |
+| `data/schemas/operations/if.schema.json`           | Complex operation schema pattern |
+| `data/schemas/base-operation.schema.json`          | Base schema to extend            |
+| `data/schemas/operation.schema.json`               | Where to add $ref                |
 
 ## Outcome
 
@@ -199,14 +199,17 @@ The following should fail validation:
 2. **Additional File Modification**: Required adding `resolveOutcome.schema.json` to `OPERATION_SCHEMA_FILES` array in `src/configuration/staticConfiguration.js` - not documented in the original ticket but necessary for the schema to be loaded.
 
 ### Files Created
+
 - `data/schemas/operations/resolveOutcome.schema.json`
 
 ### Files Modified
+
 - `data/schemas/operation.schema.json` (added `$ref` in alphabetical order after `resolveDirection`)
 - `src/configuration/staticConfiguration.js` (added to `OPERATION_SCHEMA_FILES` array)
 - `tickets/NONDETACTSYS-006-resolve-outcome-schema.md` (this ticket - corrected schema pattern)
 
 ### Validation Results
+
 - ✅ `npm run validate` - PASSED
 - ✅ Schema loaded successfully (103 schemas total)
 - ✅ Integration tests passed

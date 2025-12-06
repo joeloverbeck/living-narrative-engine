@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   safeDispatchError,
   dispatchValidationError,
@@ -34,7 +28,11 @@ const createTestLogger = () => ({
 async function createDispatcherHarness() {
   const logger = createTestLogger();
   const registry = new InMemoryDataRegistry({ logger });
-  registry.store('events', systemErrorEventDefinition.id, systemErrorEventDefinition);
+  registry.store(
+    'events',
+    systemErrorEventDefinition.id,
+    systemErrorEventDefinition
+  );
 
   const repository = new GameDataRepository(registry, logger);
   const schemaValidator = new AjvSchemaValidator({ logger });
@@ -74,10 +72,14 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
       receivedEvents.push(event);
     });
 
-    const success = await safeDispatchError(dispatcher, 'Network request failed', {
-      statusCode: 503,
-      url: 'https://example.com/status',
-    });
+    const success = await safeDispatchError(
+      dispatcher,
+      'Network request failed',
+      {
+        statusCode: 503,
+        url: 'https://example.com/status',
+      }
+    );
 
     expect(success).toBe(true);
     expect(receivedEvents).toHaveLength(1);
@@ -106,9 +108,17 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
       error: { message: 'Target missing required component' },
       actionDefinition: { id: 'core:test_action', name: 'Test Action' },
       actorSnapshot: { id: 'actor-001', components: { 'core:actor': {} } },
-      evaluationTrace: { steps: [], failurePoint: 'validation', finalContext: {} },
+      evaluationTrace: {
+        steps: [],
+        failurePoint: 'validation',
+        finalContext: {},
+      },
       suggestedFixes: [
-        { type: 'configuration', description: 'Attach component', confidence: 0.9 },
+        {
+          type: 'configuration',
+          description: 'Attach component',
+          confidence: 0.9,
+        },
       ],
       environmentContext: { location: 'training-room' },
       timestamp: 1700000000000,
@@ -171,7 +181,10 @@ describe('safeDispatchError integration with real dispatcher stack', () => {
       error: 'Schema validation failed',
       details: { statusCode: 422, scopeName: 'notes-persistence' },
     });
-    expect(withoutDetails).toEqual({ ok: false, error: 'Entity definition missing' });
+    expect(withoutDetails).toEqual({
+      ok: false,
+      error: 'Entity definition missing',
+    });
     expect(receivedEvents).toHaveLength(2);
     expect(receivedEvents[0].payload).toMatchObject({
       message: 'Schema validation failed',

@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Leg Entity Validation', () => {
   const legEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -16,7 +19,9 @@ describe('Tortoise Leg Entity Validation', () => {
     });
 
     it('should have correct description', () => {
-      expect(legEntity.description).toBe('Sturdy reptilian leg with foot socket');
+      expect(legEntity.description).toBe(
+        'Sturdy reptilian leg with foot socket'
+      );
     });
 
     it('should have anatomy:part component with tortoise_leg subType', () => {
@@ -31,7 +36,9 @@ describe('Tortoise Leg Entity Validation', () => {
 
     it('should have descriptors:texture component with "scaled" texture', () => {
       expect(legEntity.components['descriptors:texture']).toBeDefined();
-      expect(legEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(legEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have descriptors:build component with "stocky" build', () => {
@@ -41,7 +48,9 @@ describe('Tortoise Leg Entity Validation', () => {
 
     it('should have descriptors:color_extended component with "dark-olive" color', () => {
       expect(legEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(legEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
+      expect(legEntity.components['descriptors:color_extended'].color).toBe(
+        'dark-olive'
+      );
     });
   });
 
@@ -120,7 +129,9 @@ describe('Tortoise Leg Entity Validation', () => {
     });
 
     it('should have scaled texture as per reptilian anatomy', () => {
-      expect(legEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(legEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have stocky build as per tortoise physique', () => {

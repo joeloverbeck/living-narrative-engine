@@ -18,7 +18,9 @@ describe('normalizeEntityLookupDebugConfig', () => {
 
   it('enables debugging by default when NODE_ENV is not production', () => {
     process.env.NODE_ENV = 'test';
-    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({ enabled: true });
+    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({
+      enabled: true,
+    });
   });
 
   it('disables debugging by default when NODE_ENV is production and no env override is set', () => {
@@ -47,11 +49,16 @@ describe('normalizeEntityLookupDebugConfig', () => {
     process.env.NODE_ENV = 'production';
     process.env.SCOPE_DSL_ENTITY_LOOKUP_DEBUG = 'true';
 
-    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({ enabled: true });
+    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({
+      enabled: true,
+    });
   });
 
   it('honors explicit disablement in custom configuration objects', () => {
-    const config = normalizeEntityLookupDebugConfig({ enabled: false, cacheEvents: () => {} });
+    const config = normalizeEntityLookupDebugConfig({
+      enabled: false,
+      cacheEvents: () => {},
+    });
     expect(config).toBeNull();
   });
 
@@ -62,7 +69,9 @@ describe('normalizeEntityLookupDebugConfig', () => {
   it('honors environment overrides in production', () => {
     process.env.NODE_ENV = 'production';
     process.env.SCOPE_DSL_LOOKUP_DEBUG = 'true';
-    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({ enabled: true });
+    expect(normalizeEntityLookupDebugConfig(undefined)).toEqual({
+      enabled: true,
+    });
 
     process.env.SCOPE_DSL_LOOKUP_DEBUG = 'false';
     expect(normalizeEntityLookupDebugConfig(undefined)).toBeNull();
@@ -72,8 +81,15 @@ describe('normalizeEntityLookupDebugConfig', () => {
     process.env.NODE_ENV = 'production';
     const handler = () => {};
     const strategyFactory = () => {};
-    const config = normalizeEntityLookupDebugConfig({ cacheEvents: handler, strategyFactory });
-    expect(config).toMatchObject({ enabled: true, cacheEvents: handler, strategyFactory });
+    const config = normalizeEntityLookupDebugConfig({
+      cacheEvents: handler,
+      strategyFactory,
+    });
+    expect(config).toMatchObject({
+      enabled: true,
+      cacheEvents: handler,
+      strategyFactory,
+    });
   });
 
   it('falls back to disabled when process is unavailable', () => {

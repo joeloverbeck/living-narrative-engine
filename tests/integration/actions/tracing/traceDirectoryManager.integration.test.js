@@ -1,4 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import TraceDirectoryManager from '../../../../src/actions/tracing/traceDirectoryManager.js';
 import { createEnhancedMockLogger } from '../../../common/mockFactories/loggerMocks.js';
 
@@ -78,7 +87,9 @@ describe('TraceDirectoryManager integration', () => {
   });
 
   it('creates nested directories, normalizes paths, and caches successful results', async () => {
-    const result = await directoryManager.ensureDirectoryExists('./exports/\\session//2024/');
+    const result = await directoryManager.ensureDirectoryExists(
+      './exports/\\session//2024/'
+    );
 
     expect(result).toMatchObject({
       success: true,
@@ -86,22 +97,30 @@ describe('TraceDirectoryManager integration', () => {
       created: true,
       writable: true,
     });
-    expect(rootHandle.children.get('exports')?.children.get('session')).toBeDefined();
+    expect(
+      rootHandle.children.get('exports')?.children.get('session')
+    ).toBeDefined();
     expect(logger.info).toHaveBeenCalledWith(
       'Trace directory created successfully',
       expect.objectContaining({ path: 'exports/session/2024' })
     );
 
-    const cached = await directoryManager.ensureDirectoryExists('exports/session/2024');
+    const cached = await directoryManager.ensureDirectoryExists(
+      'exports/session/2024'
+    );
     expect(cached.cached).toBe(true);
     expect(window.showDirectoryPicker).toHaveBeenCalledTimes(1);
-    expect(directoryManager.getCachedDirectories()).toEqual(['exports/session/2024']);
+    expect(directoryManager.getCachedDirectories()).toEqual([
+      'exports/session/2024',
+    ]);
   });
 
   it('returns validation errors for unsafe paths and formats filesystem failures', async () => {
     const invalid = await directoryManager.ensureDirectoryExists('../bad/path');
     expect(invalid.success).toBe(false);
-    expect(invalid.errors).toContain('Path contains directory traversal sequences');
+    expect(invalid.errors).toContain(
+      'Path contains directory traversal sequences'
+    );
 
     const permissionError = new Error('permission blocked');
     permissionError.name = 'NotAllowedError';
@@ -135,7 +154,8 @@ describe('TraceDirectoryManager integration', () => {
       });
       window.showDirectoryPicker.mockResolvedValueOnce(errorHandle);
 
-      const result = await directoryManager.ensureDirectoryExists('scenario/path');
+      const result =
+        await directoryManager.ensureDirectoryExists('scenario/path');
       expect(result.success).toBe(false);
       expect(result.error).toBe(expectedMessage);
     }
@@ -145,9 +165,12 @@ describe('TraceDirectoryManager integration', () => {
     rootHandle.queryPermission = jest.fn().mockResolvedValue('prompt');
     rootHandle.requestPermission = jest.fn().mockResolvedValue('denied');
 
-    const denied = await directoryManager.ensureDirectoryExists('exports/denied');
+    const denied =
+      await directoryManager.ensureDirectoryExists('exports/denied');
     expect(denied.success).toBe(false);
-    expect(denied.error).toContain('User denied directory access or cancelled selection');
+    expect(denied.error).toContain(
+      'User denied directory access or cancelled selection'
+    );
 
     const abortForRoot = new Error('cancelled');
     abortForRoot.name = 'AbortError';
@@ -156,9 +179,12 @@ describe('TraceDirectoryManager integration', () => {
       throw abortForRoot;
     });
 
-    const rootCancelled = await directoryManager.ensureDirectoryExists('exports/again');
+    const rootCancelled =
+      await directoryManager.ensureDirectoryExists('exports/again');
     expect(rootCancelled.success).toBe(false);
-    expect(logger.info).toHaveBeenCalledWith('User cancelled directory selection');
+    expect(logger.info).toHaveBeenCalledWith(
+      'User cancelled directory selection'
+    );
 
     const abortError = new Error('cancelled');
     abortError.name = 'AbortError';
@@ -168,7 +194,9 @@ describe('TraceDirectoryManager integration', () => {
 
     const selection = await directoryManager.selectDirectory();
     expect(selection).toBeNull();
-    expect(logger.info).toHaveBeenCalledWith('User cancelled directory selection');
+    expect(logger.info).toHaveBeenCalledWith(
+      'User cancelled directory selection'
+    );
   });
 
   it('ensures subdirectories, reports invalid parents, and clears caches correctly', async () => {
@@ -176,13 +204,21 @@ describe('TraceDirectoryManager integration', () => {
     const handle = await directoryManager.selectDirectory();
     expect(handle).toBe(rootHandle);
 
-    const subdirectory = await directoryManager.ensureSubdirectoryExists(rootHandle, 'logs');
+    const subdirectory = await directoryManager.ensureSubdirectoryExists(
+      rootHandle,
+      'logs'
+    );
     expect(subdirectory).toBeInstanceOf(FakeDirectoryHandle);
     expect(rootHandle.children.has('logs')).toBe(true);
 
-    const missingParent = await directoryManager.ensureSubdirectoryExists(null, 'fail');
+    const missingParent = await directoryManager.ensureSubdirectoryExists(
+      null,
+      'fail'
+    );
     expect(missingParent).toBeNull();
-    expect(logger.error).toHaveBeenCalledWith('Parent directory handle is required');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Parent directory handle is required'
+    );
 
     directoryManager.clearCache();
     expect(logger.debug).toHaveBeenCalledWith(
@@ -212,7 +248,9 @@ describe('TraceDirectoryManager integration', () => {
     const longPath = 'x'.repeat(260);
     const longResult = directoryManager.validateDirectoryPath(longPath);
     expect(longResult.isValid).toBe(false);
-    expect(longResult.errors).toContain('Path exceeds maximum length (255 characters)');
+    expect(longResult.errors).toContain(
+      'Path exceeds maximum length (255 characters)'
+    );
 
     const safe = directoryManager.validateDirectoryPath('logs/safe');
     expect(safe.isValid).toBe(true);
@@ -223,7 +261,8 @@ describe('TraceDirectoryManager integration', () => {
       throw new Error('logger explode');
     });
 
-    const result = await directoryManager.ensureDirectoryExists('exports/failure');
+    const result =
+      await directoryManager.ensureDirectoryExists('exports/failure');
     expect(result.success).toBe(false);
     expect(result.error).toBe('logger explode');
     expect(logger.error).toHaveBeenCalledWith(
@@ -274,7 +313,8 @@ describe('TraceDirectoryManager integration', () => {
     window.showDirectoryPicker.mockImplementationOnce(async () => {
       throw new Error('root failure');
     });
-    const rootFailure = await directoryManager.ensureDirectoryExists('exports/missing');
+    const rootFailure =
+      await directoryManager.ensureDirectoryExists('exports/missing');
     expect(rootFailure.success).toBe(false);
     expect(logger.error).toHaveBeenCalledWith(
       'Failed to get root directory handle',

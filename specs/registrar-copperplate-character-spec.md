@@ -38,6 +38,7 @@ Registrar Copperplate is an ancient tortoise-person who has served as Mudbrook's
 **Temporal Imperviousness**: Has watched six generations of Mudbrook residents panic, scheme, love, and die while filing a single decade's worth of notices alphabetically.
 
 **Key Characteristics**:
+
 - Radical patience that borders on cruelty
 - Complete immunity to mammalian emotional manipulation
 - Obsessive procedural correctness
@@ -125,6 +126,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 ```
 
 **Rationale**: These slots allow tortoise-persons to wear:
+
 - **torso_upper/lower**: Waistcoats, vests, shirts
 - **head_accessory**: Spectacles, hats, reading glasses
 - **arm_clothing**: Sleeve cuffs, arm bands, bracers
@@ -138,6 +140,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 **Purpose**: Professional garment suitable for a bureaucratic official, designed to be visible even when the wearer withdraws into their shell.
 
 **Components**:
+
 - `core:name`: "Fitted Waistcoat"
 - `core:profile`: Detailed description emphasizing professional appearance and tailored fit
 - `clothing:wearable`:
@@ -147,6 +150,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 - `clothing:visual_properties`: Neutral professional color (brown, grey, navy), fitted cut
 
 **Design Notes**:
+
 - Must accommodate shell anatomy
 - Fitted style suggests custom tailoring
 - Durable material for centuries of use
@@ -159,6 +163,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 **Purpose**: Small reading glasses designed for a tortoise-person's beak structure.
 
 **Components**:
+
 - `core:name`: "Reading Spectacles"
 - `core:profile`: Small spectacles designed to perch on a beak, essential for close archival work
 - `clothing:wearable`:
@@ -168,6 +173,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 - `clothing:visual_properties`: Small, delicate, perched positioning
 
 **Design Notes**:
+
 - New item type (eyewear category)
 - Unique mounting (beak vs. ears)
 - Practical function (reading archival documents)
@@ -180,6 +186,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 **Purpose**: Standalone decorative cuffs visible at shell openings, representing professional formality.
 
 **Components**:
+
 - `core:name`: "Formal Sleeve Cuffs"
 - `core:profile`: Stiffened fabric cuffs that remain visible even when limbs are partially withdrawn
 - `clothing:wearable`:
@@ -189,6 +196,7 @@ Unlike other characters, Copperplate's goals are inhuman and bureaucratic:
 - `clothing:visual_properties`: Crisp, formal appearance
 
 **Design Notes**:
+
 - Unique item (standalone cuffs without full shirt)
 - Specific to tortoise anatomy (visible when withdrawn)
 - Symbol of professional station
@@ -449,12 +457,14 @@ npm run validate:mod:fantasy
 ## Implementation Checklist
 
 ### Phase 1: Blueprint Extension
+
 - [ ] Read existing tortoise_person.blueprint.json
 - [ ] Add clothing slot mappings for torso_upper, torso_lower, head_accessory, arm_clothing
 - [ ] Validate blueprint against schema
 - [ ] Test that tortoise blueprint accepts standard clothing
 
 ### Phase 2: Clothing Entities
+
 - [ ] Create fitted_waistcoat.entity.json with proper components
 - [ ] Create reading_spectacles.entity.json with proper components
 - [ ] Create formal_sleeve_cuffs.entity.json with proper components
@@ -462,6 +472,7 @@ npm run validate:mod:fantasy
 - [ ] Test that clothing items can be equipped to tortoise anatomy
 
 ### Phase 3: Character Recipe
+
 - [ ] Create registrar_copperplate.recipe.json
 - [ ] Define body descriptors (height, build, skin, smell)
 - [ ] Configure slots (shell, head with amber eyes, ink-stained claws)
@@ -471,6 +482,7 @@ npm run validate:mod:fantasy
 - [ ] Test recipe instantiation
 
 ### Phase 4: Character Entity
+
 - [ ] Create registrar_copperplate.character.json
 - [ ] Add core:name, core:profile, core:personality components
 - [ ] Add core:speech_patterns with examples
@@ -480,6 +492,7 @@ npm run validate:mod:fantasy
 - [ ] Validate character entity against schema
 
 ### Phase 5: Integration Testing
+
 - [ ] Run `npm run validate:recipe` on tortoise_person.blueprint.json
 - [ ] Run `npm run validate:recipe` on registrar_copperplate.recipe.json
 - [ ] Run `npm run validate:mod:fantasy`
@@ -490,17 +503,20 @@ npm run validate:mod:fantasy
 ## Testing Guidance
 
 ### Unit Testing
+
 - Test blueprint slot mappings accept valid clothing items
 - Test clothing entities validate against component schemas
 - Test recipe references resolve correctly
 
 ### Integration Testing
+
 - Test character instantiation with full clothing
 - Test clothing equip/unequip functionality
 - Test visual rendering of tortoise in waistcoat, spectacles, cuffs
 - Test clothing layer compatibility
 
 ### Gameplay Testing
+
 - Verify character appears in Mudbrook registry office
 - Test character interactions maintain speech patterns
 - Verify temporal imperviousness personality traits manifest
@@ -511,12 +527,14 @@ npm run validate:mod:fantasy
 ### Clothing System Architecture
 
 **How Clothing Works in Recipes**:
+
 1. Recipe specifies `clothingEntities` array
 2. During character generation, engine instantiates each clothing entity
 3. If `"equip": true`, engine automatically equips item to appropriate slot
 4. Clothing is NOT added to inventory—it's worn from creation
 
 **Layer System**:
+
 - `underwear`: Innermost layer
 - `base`: Standard clothing layer (shirts, pants, waistcoats)
 - `outer`: Outer garments (coats, robes)
@@ -524,6 +542,7 @@ npm run validate:mod:fantasy
 - `armor`: Protective gear
 
 **Slot Compatibility**:
+
 - Each clothing item specifies valid slots (e.g., `["torso_upper", "torso_lower"]`)
 - Blueprint defines which anatomical sockets map to clothing slots
 - Engine validates slot-to-socket compatibility during equip
@@ -531,12 +550,14 @@ npm run validate:mod:fantasy
 ### Tortoise-Specific Considerations
 
 **Unique Anatomy Challenges**:
+
 1. **Shell Coverage**: Shell occupies torso space but doesn't preclude clothing
 2. **Limb Retraction**: Clothing must accommodate withdrawn limbs
 3. **Beak Structure**: Spectacles mount differently than humanoid eyewear
 4. **No Ears**: Head accessories can't use ear attachment points
 
 **Flavor vs. Mechanics**:
+
 - "Visible when withdrawn into shell" is flavor text in description
 - Mechanically, waistcoat and cuffs function as standard clothing
 - No special "shell withdrawal" clothing system needed
@@ -544,11 +565,13 @@ npm run validate:mod:fantasy
 ### New Item Types Introduced
 
 **Reading Spectacles**:
+
 - First eyewear item in clothing system
 - Uses `head_accessory` slot
 - Could establish pattern for future eyewear (monocles, goggles, etc.)
 
 **Standalone Cuffs**:
+
 - Unique concept (cuffs without full shirt)
 - Specific to tortoise professional attire
 - Could inspire similar decorative arm accessories
@@ -556,6 +579,7 @@ npm run validate:mod:fantasy
 ## Dependencies
 
 ### Existing System Dependencies
+
 - Anatomy system with blueprint/recipe architecture
 - Clothing system with layer/slot mechanics
 - Entity component system
@@ -563,12 +587,14 @@ npm run validate:mod:fantasy
 - Validation system (AJV schemas)
 
 ### New Dependencies Created
+
 - Tortoise blueprint extended with humanoid clothing slots
 - Three new clothing entity types (waistcoat, spectacles, cuffs)
 - Character recipe for Registrar Copperplate
 - Character entity definition
 
 ### Cross-Mod Implications
+
 - Changes to tortoise blueprint affect ALL tortoise-persons
 - New clothing slot mappings enable future tortoise professional characters
 - Spectacles establish precedent for eyewear across mods
@@ -577,6 +603,7 @@ npm run validate:mod:fantasy
 ## Future Considerations
 
 ### Potential Enhancements
+
 1. **Temperature-Dependent Behavior**: Cold weather slows Copperplate further (mentioned in weaknesses)
 2. **Shell Withdrawal Mechanic**: Visual/mechanical representation of retreating into shell
 3. **Archival System**: Registry mechanics for posting management
@@ -584,12 +611,14 @@ npm run validate:mod:fantasy
 5. **Temporal Perception**: Modified time scale for tortoise-person perspective
 
 ### Expandability
+
 - Additional professional tortoise characters (scribes, scholars, judges)
 - More eyewear options (monocles, jeweler's loupes, safety goggles)
 - Formal attire accessories (pocket watches, tie pins, medals)
 - Shell customization/decoration items
 
 ### Mod Compatibility
+
 - Clothing items can be equipped by any character with compatible anatomy
 - Blueprint changes enable all tortoise-persons to wear professional attire
 - Character can interact with any mod that supports standard entity/component system

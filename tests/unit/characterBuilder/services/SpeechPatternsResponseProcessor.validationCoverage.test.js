@@ -40,9 +40,7 @@ let SpeechPatternsResponseProcessor;
 let speechPatternsPrompts;
 
 beforeAll(async () => {
-  ({
-    default: SpeechPatternsResponseProcessor,
-  } = await import(
+  ({ default: SpeechPatternsResponseProcessor } = await import(
     '../../../../src/characterBuilder/services/SpeechPatternsResponseProcessor.js'
   ));
   speechPatternsPrompts = await import(
@@ -105,10 +103,7 @@ describe('SpeechPatternsResponseProcessor - enhanced validation coverage', () =>
     mockShouldThrowOnValidatorConstruct = false;
 
     jest
-      .spyOn(
-        speechPatternsPrompts,
-        'validateSpeechPatternsGenerationResponse'
-      )
+      .spyOn(speechPatternsPrompts, 'validateSpeechPatternsGenerationResponse')
       .mockImplementation(() => ({ isValid: true, errors: [] }));
   });
 

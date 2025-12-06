@@ -35,7 +35,8 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   REQUEST_SHOW_LOAD_GAME_UI: 'core:ui_request_show_load_game',
   CANNOT_SAVE_GAME_INFO: 'core:ui_cannot_save_game_info',
   UI_SHOW_LLM_PROMPT_PREVIEW: 'core:ui_show_llm_prompt_preview',
-  INITIALIZATION_SERVICE_FAILED_ID: 'initialization:initialization_service:failed',
+  INITIALIZATION_SERVICE_FAILED_ID:
+    'initialization:initialization_service:failed',
   UI_SHOW_FATAL_ERROR_ID: 'ui:show_fatal_error',
   ENTITY_CREATED_ID: 'core:entity_created',
   ENTITY_REMOVED_ID: 'core:entity_removed',
@@ -43,7 +44,8 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   COMPONENTS_BATCH_ADDED_ID: 'core:components_batch_added',
   COMPONENT_REMOVED_ID: 'core:component_removed',
   WORLDINIT_ENTITY_INSTANTIATED_ID: 'core:entity_instantiated',
-  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID: 'worldinit:entity_instantiation_failed',
+  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID:
+    'worldinit:entity_instantiation_failed',
   AI_DECISION_REQUESTED: 'core:ai_decision_requested',
   AI_DECISION_RECEIVED: 'core:ai_decision_received',
   AI_DECISION_FAILED: 'core:ai_decision_failed',

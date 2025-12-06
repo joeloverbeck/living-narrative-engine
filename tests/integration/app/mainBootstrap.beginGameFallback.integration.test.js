@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const INITIAL_DOM = `
   <div id="outputDiv"></div>
@@ -53,7 +60,9 @@ describe('main.js beginGame fallback integration', () => {
 
     expect(global.alert).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Critical: GameEngine not initialized before attempting Start Game stage.')
+      expect.stringContaining(
+        'Critical: GameEngine not initialized before attempting Start Game stage.'
+      )
     );
   });
 });

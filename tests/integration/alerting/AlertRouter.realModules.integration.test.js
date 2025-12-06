@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -154,7 +161,9 @@ describe('AlertRouter with real event infrastructure', () => {
     expect(errorSpy).toHaveBeenCalledWith('System error');
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      expect.objectContaining({ message: 'Missing or invalid `message` in payload' })
+      expect.objectContaining({
+        message: 'Missing or invalid `message` in payload',
+      })
     );
     expect(alertRouter.queue).toEqual([]);
     expect(alertRouter.flushTimer).toBeNull();
@@ -169,7 +178,9 @@ describe('AlertRouter with real event infrastructure', () => {
       throw new Error('subscription failure');
     };
 
-    expect(() => new AlertRouter({ safeEventDispatcher: failingDispatcher })).not.toThrow();
+    expect(
+      () => new AlertRouter({ safeEventDispatcher: failingDispatcher })
+    ).not.toThrow();
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter subscription error:',

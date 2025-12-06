@@ -86,7 +86,7 @@ export class ComponentFilteringStage extends PipelineStage {
         actorId: actor.id,
         actorComponents: actor.componentTypeIds || [],
         candidateCount: candidateActions.length,
-        candidateIds: candidateActions.map(a => a.id),
+        candidateIds: candidateActions.map((a) => a.id),
       });
 
       this.#logger.debug(

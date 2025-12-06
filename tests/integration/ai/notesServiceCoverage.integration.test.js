@@ -1,6 +1,11 @@
 import { describe, expect, test } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 
 describe('NotesService integration coverage', () => {
   describe('normalizeNoteText', () => {
@@ -20,7 +25,9 @@ describe('NotesService integration coverage', () => {
     });
 
     test('normalizes unstructured notes using only the text content', () => {
-      const normalized = normalizeNoteText({ text: '  Multiple\n   spaces here  ' });
+      const normalized = normalizeNoteText({
+        text: '  Multiple\n   spaces here  ',
+      });
 
       expect(normalized).toBe('multiple spaces here');
     });

@@ -2,7 +2,14 @@
  * @file Unit tests for HasFreeGrabbingAppendagesOperator
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { HasFreeGrabbingAppendagesOperator } from '../../../../src/logic/operators/hasFreeGrabbingAppendagesOperator.js';
 import * as grabbingUtils from '../../../../src/utils/grabbingUtils.js';
@@ -47,19 +54,27 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
     it('should throw error if entityManager is missing', () => {
       expect(() => {
         new HasFreeGrabbingAppendagesOperator({ logger: mockLogger });
-      }).toThrow('HasFreeGrabbingAppendagesOperator: Missing required dependencies');
+      }).toThrow(
+        'HasFreeGrabbingAppendagesOperator: Missing required dependencies'
+      );
     });
 
     it('should throw error if logger is missing', () => {
       expect(() => {
-        new HasFreeGrabbingAppendagesOperator({ entityManager: mockEntityManager });
-      }).toThrow('HasFreeGrabbingAppendagesOperator: Missing required dependencies');
+        new HasFreeGrabbingAppendagesOperator({
+          entityManager: mockEntityManager,
+        });
+      }).toThrow(
+        'HasFreeGrabbingAppendagesOperator: Missing required dependencies'
+      );
     });
 
     it('should throw error if both dependencies are missing', () => {
       expect(() => {
         new HasFreeGrabbingAppendagesOperator({});
-      }).toThrow('HasFreeGrabbingAppendagesOperator: Missing required dependencies');
+      }).toThrow(
+        'HasFreeGrabbingAppendagesOperator: Missing required dependencies'
+      );
     });
   });
 
@@ -164,7 +179,10 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
       };
       grabbingUtils.countFreeGrabbingAppendages.mockReturnValue(2);
 
-      const result = operator.evaluate([{ var: 'event.payload.entityId' }, 2], context);
+      const result = operator.evaluate(
+        [{ var: 'event.payload.entityId' }, 2],
+        context
+      );
 
       expect(result).toBe(true);
       expect(grabbingUtils.countFreeGrabbingAppendages).toHaveBeenCalledWith(
@@ -395,7 +413,9 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
       operator.evaluate(['actor', 2], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('has 2 free grabbing appendages, required 2, result=true')
+        expect.stringContaining(
+          'has 2 free grabbing appendages, required 2, result=true'
+        )
       );
     });
 
@@ -406,7 +426,9 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
       operator.evaluate(['actor', 2], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('has 1 free grabbing appendages, required 2, result=false')
+        expect.stringContaining(
+          'has 1 free grabbing appendages, required 2, result=false'
+        )
       );
     });
   });
@@ -432,10 +454,7 @@ describe('HasFreeGrabbingAppendagesOperator', () => {
     it('should work with targets context pattern', () => {
       const context = {
         actor: { id: 'player_1' },
-        targets: [
-          { id: 'item_1' },
-          { id: 'item_2' },
-        ],
+        targets: [{ id: 'item_1' }, { id: 'item_2' }],
       };
       grabbingUtils.countFreeGrabbingAppendages.mockReturnValue(2);
 

@@ -249,7 +249,9 @@ describe('ErrorHandlingStrategy', () => {
   it('surfaces errors to UI through multiple fallback channels', () => {
     const showState = jest.fn();
     const uiStateManager = { showState: jest.fn() };
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     const { strategy: firstStrategy } = createStrategy({
       showError: null,

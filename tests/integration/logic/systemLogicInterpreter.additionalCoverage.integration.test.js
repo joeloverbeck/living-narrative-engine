@@ -51,20 +51,18 @@ function createInterpreterWithRules(rules, options = {}) {
     });
 
   const entities = options.entities ?? {};
-  const entityManager =
-    options.entityManager ?? {
-      getEntityInstance: jest.fn((id) => entities[id] ?? null),
-      getComponentData: jest.fn(),
-      hasComponent: jest.fn(() => false),
-      getAllComponentTypesForEntity: jest.fn(() => []),
-    };
+  const entityManager = options.entityManager ?? {
+    getEntityInstance: jest.fn((id) => entities[id] ?? null),
+    getComponentData: jest.fn(),
+    hasComponent: jest.fn(() => false),
+    getAllComponentTypesForEntity: jest.fn(() => []),
+  };
 
   const operationRegistry =
     options.operationRegistry ?? new OperationRegistry({ logger });
 
   const logHandler =
-    options.logHandler ??
-    jest.fn(async () => ({ success: true }));
+    options.logHandler ?? jest.fn(async () => ({ success: true }));
 
   if (!options.operationRegistry) {
     operationRegistry.register('LOG', async (params, ctx) => {
@@ -77,10 +75,9 @@ function createInterpreterWithRules(rules, options = {}) {
     options.operationInterpreter ??
     new OperationInterpreter({ logger, operationRegistry });
 
-  const bodyGraphService =
-    options.bodyGraphService ?? {
-      hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
-    };
+  const bodyGraphService = options.bodyGraphService ?? {
+    hasPartWithComponentValue: jest.fn().mockReturnValue({ found: false }),
+  };
 
   const interpreter = new SystemLogicInterpreter({
     logger,
@@ -145,7 +142,10 @@ describe('SystemLogicInterpreter additional integration coverage', () => {
     );
 
     interpreter.initialize();
-    expectLogContains(logger.warn, 'SystemLogicInterpreter already initialized.');
+    expectLogContains(
+      logger.warn,
+      'SystemLogicInterpreter already initialized.'
+    );
 
     interpreter.shutdown();
 
@@ -449,7 +449,11 @@ describe('SystemLogicInterpreter additional integration coverage', () => {
 
     const evalSpy = jest
       .spyOn(jsonLogicServiceModule, 'evaluateConditionWithLogging')
-      .mockReturnValue({ result: false, errored: true, error: new Error('oops') });
+      .mockReturnValue({
+        result: false,
+        errored: true,
+        error: new Error('oops'),
+      });
 
     const { interpreter, logger } = createInterpreterWithRules(rules);
     interpreter.initialize();
@@ -485,7 +489,11 @@ describe('SystemLogicInterpreter additional integration coverage', () => {
     interpreter.initialize();
 
     const evaluationData = {
-      bodyContext: { bodyPartId: 'torso', component: 'core:muscle', value: 'strong' },
+      bodyContext: {
+        bodyPartId: 'torso',
+        component: 'core:muscle',
+        value: 'strong',
+      },
       targetArgs: { actorId: 'hero' },
     };
     expect(capturedOperation).toBeInstanceOf(Function);

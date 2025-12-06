@@ -534,7 +534,9 @@ describe('Multi-Target Error Propagation', () => {
       expect(result.success).toBe(true);
       expect(result.errors).toBeDefined();
       expect(result.errors.length).toBeGreaterThan(0);
-      expect(String(result.errors[0].error)).toContain('Async formatting error');
+      expect(String(result.errors[0].error)).toContain(
+        'Async formatting error'
+      );
     });
   });
 });

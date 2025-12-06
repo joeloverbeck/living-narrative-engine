@@ -153,7 +153,9 @@ export function createProxyServer(options = {}) {
     proxyLogger.info(
       `LLM Proxy Server: Configuring CORS for ${allowedOriginsArray.length} origin(s)`
     );
-    proxyLogger.debug('CORS allowed origins:', { origins: allowedOriginsArray });
+    proxyLogger.debug('CORS allowed origins:', {
+      origins: allowedOriginsArray,
+    });
 
     const corsOptions = {
       origin: allowedOriginsArray,
@@ -275,8 +277,13 @@ export function createProxyServer(options = {}) {
 
   app.post(
     '/api/llm-request',
-    createTimeoutMiddleware(120000, { logger: proxyLogger, gracePeriod: 10000 }),
-    resolvedRateLimitingEnabled ? createLlmRateLimiter() : (_req, _res, next) => next(),
+    createTimeoutMiddleware(120000, {
+      logger: proxyLogger,
+      gracePeriod: 10000,
+    }),
+    resolvedRateLimitingEnabled
+      ? createLlmRateLimiter()
+      : (_req, _res, next) => next(),
     createLlmMetricsMiddleware({ metricsService, logger: proxyLogger }),
     validateRequestHeaders(),
     validateLlmRequest(),
@@ -443,12 +450,8 @@ export function createProxyServer(options = {}) {
         ? `Port ${PORT} is already in use by process ${processPid}`
         : `Port ${PORT} is already in use by another process`;
 
-      proxyLogger.error(
-        `LLM Proxy Server: ${errorMsg}. Cannot start server.`
-      );
-      proxyLogger.info(
-        `To resolve this issue, try one of the following:`
-      );
+      proxyLogger.error(`LLM Proxy Server: ${errorMsg}. Cannot start server.`);
+      proxyLogger.info(`To resolve this issue, try one of the following:`);
       proxyLogger.info(
         `  1. Kill the process: kill -9 ${processPid || '<PID>'}`
       );
@@ -458,9 +461,7 @@ export function createProxyServer(options = {}) {
       proxyLogger.info(
         `  3. Change port: Set PROXY_PORT environment variable to a different port`
       );
-      proxyLogger.info(
-        `  4. Run cleanup script: npm run cleanup:ports`
-      );
+      proxyLogger.info(`  4. Run cleanup script: npm run cleanup:ports`);
 
       throw new Error(errorMsg);
     }
@@ -616,9 +617,7 @@ export function createProxyServer(options = {}) {
             proxyLogger.info(
               `  3. Change port: Set PROXY_PORT environment variable to a different port`
             );
-            proxyLogger.info(
-              `  4. Run cleanup script: npm run cleanup:ports`
-            );
+            proxyLogger.info(`  4. Run cleanup script: npm run cleanup:ports`);
           } else {
             proxyLogger.error(
               'LLM Proxy Server: A critical error occurred during asynchronous server startup sequence PRIOR to app.listen.',
@@ -693,7 +692,10 @@ export default createProxyServer;
 // CLI entry point - only run when executed directly (not when imported in tests or other modules)
 // Detect if running as main module by checking if we're in a test environment
 // In test mode (NODE_ENV=test), this block is skipped entirely
-if (process.env.NODE_ENV !== 'test' && process.argv[1]?.endsWith('/server.js')) {
+if (
+  process.env.NODE_ENV !== 'test' &&
+  process.argv[1]?.endsWith('/server.js')
+) {
   const run = async () => {
     const serverController = createProxyServer();
     await serverController.start();

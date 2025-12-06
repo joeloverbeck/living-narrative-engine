@@ -27,7 +27,12 @@ class ResolveHitLocationHandler extends ComponentOperationHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {object} deps.bodyGraphService
    */
-  constructor({ entityManager, logger, safeEventDispatcher, bodyGraphService }) {
+  constructor({
+    entityManager,
+    logger,
+    safeEventDispatcher,
+    bodyGraphService,
+  }) {
     super('ResolveHitLocationHandler', {
       logger: { value: logger },
       entityManager: { value: entityManager },

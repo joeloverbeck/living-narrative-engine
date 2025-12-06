@@ -8,11 +8,7 @@
       "equipmentSlots": {
         "primary": "full_body"
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "outer"]
     },
     "core:material": {
       "material": "silk"
@@ -36,10 +32,7 @@
       "size": "draped cowl neckline"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper",
-        "torso_lower"
-      ],
+      "covers": ["torso_upper", "torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

@@ -43,7 +43,12 @@ async function loadLoggerModuleWithHelpers() {
 
   const { code } = await transformAsync(source, {
     filename: LOGGER_FILE_PATH,
-    presets: [["@babel/preset-env", { targets: { node: 'current' }, modules: 'commonjs' }]],
+    presets: [
+      [
+        '@babel/preset-env',
+        { targets: { node: 'current' }, modules: 'commonjs' },
+      ],
+    ],
     plugins: [
       ['@babel/plugin-transform-private-methods', { loose: true }],
       ['@babel/plugin-transform-private-property-in-object', { loose: true }],
@@ -79,7 +84,12 @@ async function loadFormatterModuleWithHelpers() {
 
   const { code } = await transformAsync(source, {
     filename: FORMATTER_FILE_PATH,
-    presets: [["@babel/preset-env", { targets: { node: 'current' }, modules: 'commonjs' }]],
+    presets: [
+      [
+        '@babel/preset-env',
+        { targets: { node: 'current' }, modules: 'commonjs' },
+      ],
+    ],
     plugins: [
       ['@babel/plugin-transform-private-methods', { loose: true }],
       ['@babel/plugin-transform-private-property-in-object', { loose: true }],
@@ -278,7 +288,10 @@ describe('Enhanced console logger primitive context routing integration', () => 
             )) {
               if (branchMeta.loc?.start?.line === 236) {
                 const branchCoverage = fileCoverage.b?.[branchId];
-                if (Array.isArray(branchCoverage) && branchCoverage.length > 1) {
+                if (
+                  Array.isArray(branchCoverage) &&
+                  branchCoverage.length > 1
+                ) {
                   branchCoverage[1] = Math.max(1, branchCoverage[1]);
                 }
               }
@@ -296,4 +309,3 @@ describe('Enhanced console logger primitive context routing integration', () => 
     }
   });
 });
-

@@ -122,7 +122,8 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from || [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
 
         const validTargets = closeness.reduce((acc, partnerId) => {
           const partner = entityManager.getEntityInstance(partnerId);
@@ -137,7 +138,8 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
             !partnerFacingAway.includes(actorId);
@@ -192,9 +194,11 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from || [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
         const holderFacingAway =
-          holderEntity.components?.['positioning:facing_away']?.facing_away_from || [];
+          holderEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
 
         const facingEachOther =
           !actorFacingAway.includes(holderId) &&
@@ -266,7 +270,9 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
     );
 
     expect(actorInstance.components['hand-holding:hand_held']).toBeUndefined();
-    expect(targetInstance.components['hand-holding:holding_hand']).toBeUndefined();
+    expect(
+      targetInstance.components['hand-holding:holding_hand']
+    ).toBeUndefined();
   });
 
   it('leaves other hand-holding relationships untouched', async () => {
@@ -340,7 +346,9 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
 
     configureActionDiscovery();
 
-    availableActions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+    availableActions = testFixture.testEnv.getAvailableActions(
+      scenario.actor.id
+    );
     actionIds = availableActions.map((action) => action.id);
     expect(actionIds).toContain('hand-holding:hold_hand');
     expect(actionIds).not.toContain('hand-holding:withdraw_hand_from_grasp');

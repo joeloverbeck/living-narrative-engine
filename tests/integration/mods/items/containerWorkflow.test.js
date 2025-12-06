@@ -101,8 +101,11 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       await openFixture.executeAction('test:actor1', 'locked-chest-1');
 
       // Verify container is now open
-      const containerAfterOpen = openFixture.entityManager.getEntityInstance('locked-chest-1');
-      expect(containerAfterOpen.components['items:container'].isOpen).toBe(true);
+      const containerAfterOpen =
+        openFixture.entityManager.getEntityInstance('locked-chest-1');
+      expect(containerAfterOpen.components['items:container'].isOpen).toBe(
+        true
+      );
 
       // Verify container_opened event
       const openedEvent = openFixture.events.find(
@@ -112,26 +115,46 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       expect(openedEvent.payload.contents).toEqual(['diamond-1', 'gold-bar-1']);
 
       // Step 2: Take item from opened container
-      const currentActor = openFixture.entityManager.getEntityInstance('test:actor1');
-      const currentChest = openFixture.entityManager.getEntityInstance('locked-chest-1');
-      const currentDiamond = openFixture.entityManager.getEntityInstance('diamond-1');
-      const currentGoldBar = openFixture.entityManager.getEntityInstance('gold-bar-1');
+      const currentActor =
+        openFixture.entityManager.getEntityInstance('test:actor1');
+      const currentChest =
+        openFixture.entityManager.getEntityInstance('locked-chest-1');
+      const currentDiamond =
+        openFixture.entityManager.getEntityInstance('diamond-1');
+      const currentGoldBar =
+        openFixture.entityManager.getEntityInstance('gold-bar-1');
 
-      takeFixture.reset([room, currentActor, currentChest, currentDiamond, currentGoldBar]);
+      takeFixture.reset([
+        room,
+        currentActor,
+        currentChest,
+        currentDiamond,
+        currentGoldBar,
+      ]);
 
       await takeFixture.executeAction('test:actor1', 'locked-chest-1', {
         additionalPayload: { secondaryId: 'diamond-1' },
       });
 
       // Verify item taken successfully
-      const actorAfterTake = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfterTake.components['items:inventory'].items).toContain('diamond-1');
-      expect(actorAfterTake.components['items:inventory'].items).toContain('brass-key-1'); // Still has key
+      const actorAfterTake =
+        takeFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfterTake.components['items:inventory'].items).toContain(
+        'diamond-1'
+      );
+      expect(actorAfterTake.components['items:inventory'].items).toContain(
+        'brass-key-1'
+      ); // Still has key
 
       // Verify container updated
-      const containerAfterTake = takeFixture.entityManager.getEntityInstance('locked-chest-1');
-      expect(containerAfterTake.components['items:container'].contents).toEqual(['gold-bar-1']);
-      expect(containerAfterTake.components['items:container'].isOpen).toBe(true);
+      const containerAfterTake =
+        takeFixture.entityManager.getEntityInstance('locked-chest-1');
+      expect(containerAfterTake.components['items:container'].contents).toEqual(
+        ['gold-bar-1']
+      );
+      expect(containerAfterTake.components['items:container'].isOpen).toBe(
+        true
+      );
 
       const takeEvent = takeFixture.events.find(
         (event) => event.eventType === 'items:item_taken_from_container'
@@ -146,10 +169,14 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       expect(takeTurnEnded.payload.success).toBe(true);
 
       // Phase 4: Return the item to the container using put_in_container
-      const putRoom = takeFixture.entityManager.getEntityInstance('treasure-vault');
-      const putActor = takeFixture.entityManager.getEntityInstance('test:actor1');
-      const putChest = takeFixture.entityManager.getEntityInstance('locked-chest-1');
-      const putDiamond = takeFixture.entityManager.getEntityInstance('diamond-1');
+      const putRoom =
+        takeFixture.entityManager.getEntityInstance('treasure-vault');
+      const putActor =
+        takeFixture.entityManager.getEntityInstance('test:actor1');
+      const putChest =
+        takeFixture.entityManager.getEntityInstance('locked-chest-1');
+      const putDiamond =
+        takeFixture.entityManager.getEntityInstance('diamond-1');
       const putGold = takeFixture.entityManager.getEntityInstance('gold-bar-1');
 
       putFixture.reset([putRoom, putActor, putChest, putDiamond, putGold]);
@@ -158,14 +185,20 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         additionalPayload: { secondaryId: 'diamond-1' },
       });
 
-      const actorAfterPut = putFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfterPut.components['items:inventory'].items).not.toContain('diamond-1');
-      expect(actorAfterPut.components['items:inventory'].items).toContain('brass-key-1');
-
-      const containerAfterPut = putFixture.entityManager.getEntityInstance('locked-chest-1');
-      expect(new Set(containerAfterPut.components['items:container'].contents)).toEqual(
-        new Set(['gold-bar-1', 'diamond-1'])
+      const actorAfterPut =
+        putFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfterPut.components['items:inventory'].items).not.toContain(
+        'diamond-1'
       );
+      expect(actorAfterPut.components['items:inventory'].items).toContain(
+        'brass-key-1'
+      );
+
+      const containerAfterPut =
+        putFixture.entityManager.getEntityInstance('locked-chest-1');
+      expect(
+        new Set(containerAfterPut.components['items:container'].contents)
+      ).toEqual(new Set(['gold-bar-1', 'diamond-1']));
       expect(containerAfterPut.components['items:container'].isOpen).toBe(true);
 
       const putRuleEvent = putFixture.events.find(
@@ -229,16 +262,24 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       });
 
       // Verify take failed - item remains in container
-      const actorAfter = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain('treasure-1');
+      const actorAfter =
+        takeFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfter.components['items:inventory'].items).not.toContain(
+        'treasure-1'
+      );
 
-      const containerAfter = takeFixture.entityManager.getEntityInstance('closed-chest-2');
-      expect(containerAfter.components['items:container'].contents).toContain('treasure-1');
+      const containerAfter =
+        takeFixture.entityManager.getEntityInstance('closed-chest-2');
+      expect(containerAfter.components['items:container'].contents).toContain(
+        'treasure-1'
+      );
       expect(containerAfter.components['items:container'].isOpen).toBe(false);
     });
 
     it('should handle multiple items taken sequentially from same container', async () => {
-      const room = new ModEntityBuilder('storage-room').asRoom('Storage').build();
+      const room = new ModEntityBuilder('storage-room')
+        .asRoom('Storage')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Charlie')
@@ -286,12 +327,15 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       openFixture.reset([room, actor, crate, potion1, potion2, potion3]);
       await openFixture.executeAction('test:actor1', 'supply-crate');
 
-      const crateAfterOpen = openFixture.entityManager.getEntityInstance('supply-crate');
+      const crateAfterOpen =
+        openFixture.entityManager.getEntityInstance('supply-crate');
       expect(crateAfterOpen.components['items:container'].isOpen).toBe(true);
 
       // Step 2: Take first potion
-      let currentActor = openFixture.entityManager.getEntityInstance('test:actor1');
-      let currentCrate = openFixture.entityManager.getEntityInstance('supply-crate');
+      let currentActor =
+        openFixture.entityManager.getEntityInstance('test:actor1');
+      let currentCrate =
+        openFixture.entityManager.getEntityInstance('supply-crate');
       let currentPotions = [
         openFixture.entityManager.getEntityInstance('potion-1'),
         openFixture.entityManager.getEntityInstance('potion-2'),
@@ -304,8 +348,11 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
         additionalPayload: { secondaryId: 'potion-1' },
       });
 
-      let actorState = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorState.components['items:inventory'].items).toContain('potion-1');
+      let actorState =
+        takeFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorState.components['items:inventory'].items).toContain(
+        'potion-1'
+      );
 
       // Step 3: Take second potion
       await takeFixture.executeAction('test:actor1', 'supply-crate', {
@@ -313,7 +360,9 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       });
 
       actorState = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorState.components['items:inventory'].items).toContain('potion-2');
+      expect(actorState.components['items:inventory'].items).toContain(
+        'potion-2'
+      );
 
       // Step 4: Take third potion
       await takeFixture.executeAction('test:actor1', 'supply-crate', {
@@ -328,7 +377,8 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       ]);
 
       // Verify container is now empty
-      const crateAfterAll = takeFixture.entityManager.getEntityInstance('supply-crate');
+      const crateAfterAll =
+        takeFixture.entityManager.getEntityInstance('supply-crate');
       expect(crateAfterAll.components['items:container'].contents).toEqual([]);
     });
   });
@@ -381,9 +431,12 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       expect(openPerception.payload.targetId).toBe('desk-drawer');
 
       // Take letter
-      const currentActor = openFixture.entityManager.getEntityInstance('test:actor1');
-      const currentDrawer = openFixture.entityManager.getEntityInstance('desk-drawer');
-      const currentLetter = openFixture.entityManager.getEntityInstance('letter-1');
+      const currentActor =
+        openFixture.entityManager.getEntityInstance('test:actor1');
+      const currentDrawer =
+        openFixture.entityManager.getEntityInstance('desk-drawer');
+      const currentLetter =
+        openFixture.entityManager.getEntityInstance('letter-1');
 
       takeFixture.reset([room, currentActor, currentDrawer, currentLetter]);
 
@@ -444,15 +497,23 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       });
 
       // Verify take failed
-      const actorAfter = takeFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actorAfter.components['items:inventory'].items).not.toContain('apple-1');
+      const actorAfter =
+        takeFixture.entityManager.getEntityInstance('test:actor1');
+      expect(actorAfter.components['items:inventory'].items).not.toContain(
+        'apple-1'
+      );
 
-      const boxAfter = takeFixture.entityManager.getEntityInstance('closed-box');
-      expect(boxAfter.components['items:container'].contents).toContain('apple-1');
+      const boxAfter =
+        takeFixture.entityManager.getEntityInstance('closed-box');
+      expect(boxAfter.components['items:container'].contents).toContain(
+        'apple-1'
+      );
     });
 
     it('should prevent opening already-open containers', async () => {
-      const room = new ModEntityBuilder('warehouse').asRoom('Warehouse').build();
+      const room = new ModEntityBuilder('warehouse')
+        .asRoom('Warehouse')
+        .build();
 
       const actor = new ModEntityBuilder('test:actor1')
         .withName('Frank')
@@ -481,7 +542,8 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       await openFixture.executeAction('test:actor1', 'open-crate');
 
       // Verify container remains open (no state change)
-      const crateAfter = openFixture.entityManager.getEntityInstance('open-crate');
+      const crateAfter =
+        openFixture.entityManager.getEntityInstance('open-crate');
       expect(crateAfter.components['items:container'].isOpen).toBe(true);
 
       // Verify no container_opened event (already was open)

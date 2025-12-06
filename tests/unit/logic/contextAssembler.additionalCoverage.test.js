@@ -49,7 +49,9 @@ describe('contextAssembler utility helpers', () => {
   const accessorFactory = /** @type {jest.Mock} */ (createComponentAccessor);
 
   beforeEach(() => {
-    accessorFactory.mockImplementation((entityId) => ({ accessorFor: entityId }));
+    accessorFactory.mockImplementation((entityId) => ({
+      accessorFor: entityId,
+    }));
   });
 
   describe('createEntityContext', () => {
@@ -63,7 +65,11 @@ describe('contextAssembler utility helpers', () => {
         id: 'actor-1',
         components: { accessorFor: 'actor-1' },
       });
-      expect(accessorFactory).toHaveBeenCalledWith('actor-1', entityManager, logger);
+      expect(accessorFactory).toHaveBeenCalledWith(
+        'actor-1',
+        entityManager,
+        logger
+      );
     });
   });
 
@@ -75,7 +81,13 @@ describe('contextAssembler utility helpers', () => {
       });
       const evaluationContext = { actor: null };
 
-      populateParticipant('actor', 'a-1', evaluationContext, entityManager, logger);
+      populateParticipant(
+        'actor',
+        'a-1',
+        evaluationContext,
+        entityManager,
+        logger
+      );
 
       expect(evaluationContext.actor).toEqual({
         id: 'a-1',
@@ -93,7 +105,13 @@ describe('contextAssembler utility helpers', () => {
       });
       const evaluationContext = { target: null };
 
-      populateParticipant('target', 'missing', evaluationContext, entityManager, logger);
+      populateParticipant(
+        'target',
+        'missing',
+        evaluationContext,
+        entityManager,
+        logger
+      );
 
       expect(evaluationContext.target).toBeNull();
       expect(logger.warn).toHaveBeenCalledWith(
@@ -112,7 +130,13 @@ describe('contextAssembler utility helpers', () => {
       const evaluationContext = { actor: null };
 
       expect(() =>
-        populateParticipant('actor', 'broken', evaluationContext, entityManager, logger)
+        populateParticipant(
+          'actor',
+          'broken',
+          evaluationContext,
+          entityManager,
+          logger
+        )
       ).toThrow(failure);
       expect(logger.error).toHaveBeenCalledWith(
         'Error processing actor ID [broken] in createJsonLogicContext:',
@@ -125,7 +149,13 @@ describe('contextAssembler utility helpers', () => {
       const entityManager = createEntityManagerMock();
       const evaluationContext = { actor: null };
 
-      populateParticipant('actor', { bad: true }, evaluationContext, entityManager, logger);
+      populateParticipant(
+        'actor',
+        { bad: true },
+        evaluationContext,
+        entityManager,
+        logger
+      );
 
       expect(logger.warn).toHaveBeenCalledWith(
         'Invalid actorId type provided: [object]. Setting actor context to null.'
@@ -138,7 +168,13 @@ describe('contextAssembler utility helpers', () => {
       const entityManager = createEntityManagerMock();
       const evaluationContext = { target: null };
 
-      populateParticipant('target', undefined, evaluationContext, entityManager, logger);
+      populateParticipant(
+        'target',
+        undefined,
+        evaluationContext,
+        entityManager,
+        logger
+      );
 
       expect(logger.debug).toHaveBeenCalledWith(
         'No targetId provided, target context remains null.'
@@ -181,8 +217,12 @@ describe('contextAssembler utility helpers', () => {
         })
       );
       expect(entityManager.getEntityInstance).toHaveBeenCalledWith('primary-1');
-      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('secondary-1');
-      expect(entityManager.getEntityInstance).toHaveBeenCalledWith('tertiary-1');
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith(
+        'secondary-1'
+      );
+      expect(entityManager.getEntityInstance).toHaveBeenCalledWith(
+        'tertiary-1'
+      );
       expect(context.primary).toEqual({
         id: 'primary-1',
         components: { accessorFor: 'primary-1' },
@@ -209,7 +249,10 @@ describe('contextAssembler utility helpers', () => {
       const serviceSetup = {
         setupService: jest.fn(() => logger),
       };
-      const event = { type: 'EVENT', payload: { actorId: 'actor-1', targetId: 'target-1' } };
+      const event = {
+        type: 'EVENT',
+        payload: { actorId: 'actor-1', targetId: 'target-1' },
+      };
 
       const nested = createNestedExecutionContext(
         event,
@@ -267,9 +310,9 @@ describe('contextAssembler utility helpers', () => {
 
   describe('createEvaluationContext', () => {
     it('throws when event metadata is missing', () => {
-      expect(() => createEvaluationContext(null, {}, createLoggerMock())).toThrow(
-        "createEvaluationContext: Missing or invalid 'event' object."
-      );
+      expect(() =>
+        createEvaluationContext(null, {}, createLoggerMock())
+      ).toThrow("createEvaluationContext: Missing or invalid 'event' object.");
     });
 
     it('builds actor and target contexts from payload identifiers', () => {
@@ -292,8 +335,16 @@ describe('contextAssembler utility helpers', () => {
         target: { id: 'target-4', components: { accessorFor: 'target-4' } },
         extra: 'details',
       });
-      expect(accessorFactory).toHaveBeenCalledWith('actor-9', entityManager, logger);
-      expect(accessorFactory).toHaveBeenCalledWith('target-4', entityManager, logger);
+      expect(accessorFactory).toHaveBeenCalledWith(
+        'actor-9',
+        entityManager,
+        logger
+      );
+      expect(accessorFactory).toHaveBeenCalledWith(
+        'target-4',
+        entityManager,
+        logger
+      );
     });
 
     it('ignores actor/target keys while copying additional payload data', () => {

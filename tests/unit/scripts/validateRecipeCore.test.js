@@ -70,7 +70,12 @@ describe('validateRecipeCore', () => {
     it('should calculate stats for multiple recipes', () => {
       const results = [
         { isValid: true, errors: [], warnings: [], suggestions: [] },
-        { isValid: false, errors: [{ message: 'error' }], warnings: [], suggestions: [] },
+        {
+          isValid: false,
+          errors: [{ message: 'error' }],
+          warnings: [],
+          suggestions: [],
+        },
       ];
 
       const stats = calculateSummaryStats(results);
@@ -179,7 +184,11 @@ describe('validateRecipeCore', () => {
     it('should count total errors from multiple recipes', () => {
       const results = [
         { isValid: false, errors: [{ message: 'error1' }], warnings: [] },
-        { isValid: false, errors: [{ message: 'error2' }, { message: 'error3' }], warnings: [] },
+        {
+          isValid: false,
+          errors: [{ message: 'error2' }, { message: 'error3' }],
+          warnings: [],
+        },
       ];
 
       const exitResult = determineExitCode(results);
@@ -204,7 +213,11 @@ describe('validateRecipeCore', () => {
     it('should handle mixed success and failure', () => {
       const results = [
         { isValid: true, errors: [], warnings: [] },
-        { isValid: false, errors: [{ message: 'error' }], warnings: [{ message: 'warn' }] },
+        {
+          isValid: false,
+          errors: [{ message: 'error' }],
+          warnings: [{ message: 'warn' }],
+        },
       ];
 
       const exitResult = determineExitCode(results);
@@ -241,7 +254,9 @@ describe('validateRecipeCore', () => {
     });
 
     it('should handle errors with complex messages', () => {
-      const error = new Error('Failed to load recipe file: ENOENT: no such file or directory');
+      const error = new Error(
+        'Failed to load recipe file: ENOENT: no such file or directory'
+      );
       const recipePath = 'invalid/path.json';
 
       const result = formatErrorResult(recipePath, error);

@@ -79,7 +79,7 @@ describe('Developer Experience E2E', () => {
         components: {
           'core:name': { name: 'Test Room' },
           'core:position': { x: 0, y: 0, z: 0 },
-          "movement:exits": {
+          'movement:exits': {
             north: { target: null, blocked: false },
           },
         },

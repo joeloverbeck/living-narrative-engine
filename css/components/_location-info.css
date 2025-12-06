@@ -73,9 +73,9 @@
   z-index: 100;
 }
 
-#location-characters-display li:hover>.character-tooltip,
-#location-characters-display li:focus-within>.character-tooltip,
-#location-characters-display li.tooltip-open>.character-tooltip {
+#location-characters-display li:hover > .character-tooltip,
+#location-characters-display li:focus-within > .character-tooltip,
+#location-characters-display li.tooltip-open > .character-tooltip {
   visibility: visible;
   opacity: 1;
 }
@@ -120,9 +120,9 @@
 }
 
 /* Enable hover/focus/click interactions for location portrait tooltips */
-#location-portrait-visuals:hover>.location-tooltip,
-#location-portrait-visuals:focus-within>.location-tooltip,
-#location-portrait-visuals.tooltip-open>.location-tooltip {
+#location-portrait-visuals:hover > .location-tooltip,
+#location-portrait-visuals:focus-within > .location-tooltip,
+#location-portrait-visuals.tooltip-open > .location-tooltip {
   visibility: visible;
   opacity: 1;
 }
@@ -166,7 +166,7 @@ details#location-exits-card {
 }
 
 /* accordion header */
-#location-info-container details.location-card>summary {
+#location-info-container details.location-card > summary {
   cursor: pointer;
   font-weight: 600;
   list-style: none;
@@ -177,22 +177,22 @@ details#location-exits-card {
   padding: var(--spacing-md);
   user-select: none;
   background: transparent;
-  border-bottom: 1px solid #E6DED3;
+  border-bottom: 1px solid #e6ded3;
 }
 
-#location-info-container details.location-card>summary::before {
+#location-info-container details.location-card > summary::before {
   content: '▸';
   transition: transform 0.2s ease;
   color: var(--secondary-text-color);
 }
 
-#location-info-container details.location-card[open]>summary::before {
+#location-info-container details.location-card[open] > summary::before {
   transform: rotate(90deg);
 }
 
 /* tidy up inner spacing for our non-collapsible card */
-#location-info-container .non-collapsible>h2,
-#location-info-container .non-collapsible>p {
+#location-info-container .non-collapsible > h2,
+#location-info-container .non-collapsible > p {
   margin: 0;
 }
 

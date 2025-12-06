@@ -120,7 +120,12 @@ const arrangeSuccessfulStages = () => {
       return undefined;
     }),
   };
-  const logger = { info: jest.fn(), debug: jest.fn(), error: jest.fn(), warn: jest.fn() };
+  const logger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+  };
   const gameEngine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
 
   mockStageModule.ensureCriticalDOMElementsStage.mockResolvedValue({

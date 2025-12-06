@@ -7,8 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 
-const handlerBasePath =
-  '../../../../src/logic/operationHandlers';
+const handlerBasePath = '../../../../src/logic/operationHandlers';
 
 const handlerModuleDefinitions = [
   ['ApplyDamageHandler', `${handlerBasePath}/applyDamageHandler.js`],
@@ -22,14 +21,8 @@ const handlerModuleDefinitions = [
   ['DispatchThoughtHandler', `${handlerBasePath}/dispatchThoughtHandler.js`],
   ['DigestFoodHandler', `${handlerBasePath}/digestFoodHandler.js`],
   ['LogHandler', `${handlerBasePath}/logHandler.js`],
-  [
-    'ModifyComponentHandler',
-    `${handlerBasePath}/modifyComponentHandler.js`,
-  ],
-  [
-    'ModifyPartHealthHandler',
-    `${handlerBasePath}/modifyPartHealthHandler.js`,
-  ],
+  ['ModifyComponentHandler', `${handlerBasePath}/modifyComponentHandler.js`],
+  ['ModifyPartHealthHandler', `${handlerBasePath}/modifyPartHealthHandler.js`],
   ['AddComponentHandler', `${handlerBasePath}/addComponentHandler.js`],
   ['RemoveComponentHandler', `${handlerBasePath}/removeComponentHandler.js`],
   ['QueryComponentHandler', `${handlerBasePath}/queryComponentHandler.js`],
@@ -37,10 +30,7 @@ const handlerModuleDefinitions = [
   ['QueryLookupHandler', `${handlerBasePath}/queryLookupHandler.js`],
   ['SetVariableHandler', `${handlerBasePath}/setVariableHandler.js`],
   ['EndTurnHandler', `${handlerBasePath}/endTurnHandler.js`],
-  [
-    'SystemMoveEntityHandler',
-    `${handlerBasePath}/systemMoveEntityHandler.js`,
-  ],
+  ['SystemMoveEntityHandler', `${handlerBasePath}/systemMoveEntityHandler.js`],
   ['GetTimestampHandler', `${handlerBasePath}/getTimestampHandler.js`],
   ['GetNameHandler', `${handlerBasePath}/getNameHandler.js`],
   [
@@ -51,10 +41,7 @@ const handlerModuleDefinitions = [
     'RebuildLeaderListCacheHandler',
     `${handlerBasePath}/rebuildLeaderListCacheHandler.js`,
   ],
-  [
-    'CheckFollowCycleHandler',
-    `${handlerBasePath}/checkFollowCycleHandler.js`,
-  ],
+  ['CheckFollowCycleHandler', `${handlerBasePath}/checkFollowCycleHandler.js`],
   [
     'EstablishFollowRelationHandler',
     `${handlerBasePath}/establishFollowRelationHandler.js`,
@@ -64,7 +51,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/breakFollowRelationHandler.js`,
   ],
   ['BurnEnergyHandler', `${handlerBasePath}/burnEnergyHandler.js`],
-  ['UpdateHungerStateHandler', `${handlerBasePath}/updateHungerStateHandler.js`],
+  [
+    'UpdateHungerStateHandler',
+    `${handlerBasePath}/updateHungerStateHandler.js`,
+  ],
   [
     'UpdatePartHealthStateHandler',
     `${handlerBasePath}/updatePartHealthStateHandler.js`,
@@ -75,10 +65,7 @@ const handlerModuleDefinitions = [
   ],
   ['QueryEntitiesHandler', `${handlerBasePath}/queryEntitiesHandler.js`],
   ['HasComponentHandler', `${handlerBasePath}/hasComponentHandler.js`],
-  [
-    'ModifyArrayFieldHandler',
-    `${handlerBasePath}/modifyArrayFieldHandler.js`,
-  ],
+  ['ModifyArrayFieldHandler', `${handlerBasePath}/modifyArrayFieldHandler.js`],
   [
     'ModifyContextArrayHandler',
     `${handlerBasePath}/modifyContextArrayHandler.js`,
@@ -151,10 +138,7 @@ const handlerModuleDefinitions = [
     'RegenerateDescriptionHandler',
     `${handlerBasePath}/regenerateDescriptionHandler.js`,
   ],
-  [
-    'ResolveDirectionHandler',
-    `${handlerBasePath}/resolveDirectionHandler.js`,
-  ],
+  ['ResolveDirectionHandler', `${handlerBasePath}/resolveDirectionHandler.js`],
   [
     'ResolveHitLocationHandler',
     `${handlerBasePath}/resolveHitLocationHandler.js`,
@@ -163,10 +147,7 @@ const handlerModuleDefinitions = [
     'AtomicModifyComponentHandler',
     `${handlerBasePath}/atomicModifyComponentHandler.js`,
   ],
-  [
-    'ResolveOutcomeHandler',
-    `${handlerBasePath}/resolveOutcomeHandler.js`,
-  ],
+  ['ResolveOutcomeHandler', `${handlerBasePath}/resolveOutcomeHandler.js`],
   ['SequenceHandler', `${handlerBasePath}/sequenceHandler.js`],
   ['TransferItemHandler', `${handlerBasePath}/transferItemHandler.js`],
   [
@@ -177,10 +158,7 @@ const handlerModuleDefinitions = [
     'DropItemAtLocationHandler',
     `${handlerBasePath}/dropItemAtLocationHandler.js`,
   ],
-  [
-    'PickRandomEntityHandler',
-    `${handlerBasePath}/pickRandomEntityHandler.js`,
-  ],
+  ['PickRandomEntityHandler', `${handlerBasePath}/pickRandomEntityHandler.js`],
   [
     'PickUpItemFromLocationHandler',
     `${handlerBasePath}/pickUpItemFromLocationHandler.js`,
@@ -190,7 +168,10 @@ const handlerModuleDefinitions = [
     `${handlerBasePath}/prepareActionContextHandler.js`,
   ],
   ['OpenContainerHandler', `${handlerBasePath}/openContainerHandler.js`],
-  ['TakeFromContainerHandler', `${handlerBasePath}/takeFromContainerHandler.js`],
+  [
+    'TakeFromContainerHandler',
+    `${handlerBasePath}/takeFromContainerHandler.js`,
+  ],
   ['PutInContainerHandler', `${handlerBasePath}/putInContainerHandler.js`],
   [
     'ValidateContainerCapacityHandler',
@@ -241,9 +222,7 @@ beforeAll(async () => {
     const module = await import(modulePath);
     mockHandlerRegistry.set(name, module.default);
   }
-  ({ tokens } = await import(
-    '../../../../src/dependencyInjection/tokens.js'
-  ));
+  ({ tokens } = await import('../../../../src/dependencyInjection/tokens.js'));
   ({ default: jsonLogic } = await import('json-logic-js'));
 
   const {
@@ -279,12 +258,24 @@ beforeAll(async () => {
           token: JsonLogicEvaluationServiceToken,
         },
         { property: 'bodyGraphService', token: BodyGraphServiceToken },
-        { property: 'damageTypeEffectsService', token: tokens.DamageTypeEffectsService },
-        { property: 'damagePropagationService', token: tokens.DamagePropagationService },
+        {
+          property: 'damageTypeEffectsService',
+          token: tokens.DamageTypeEffectsService,
+        },
+        {
+          property: 'damagePropagationService',
+          token: tokens.DamagePropagationService,
+        },
         { property: 'deathCheckService', token: tokens.DeathCheckService },
         { property: 'damageAccumulator', token: tokens.DamageAccumulator },
-        { property: 'damageNarrativeComposer', token: tokens.DamageNarrativeComposer },
-        { property: 'damageResolutionService', token: tokens.DamageResolutionService },
+        {
+          property: 'damageNarrativeComposer',
+          token: tokens.DamageNarrativeComposer,
+        },
+        {
+          property: 'damageResolutionService',
+          token: tokens.DamageResolutionService,
+        },
       ],
     },
     {
@@ -434,7 +425,11 @@ beforeAll(async () => {
       token: tokens.ForEachHandler,
       handlerName: 'ForEachHandler',
       dependencies: [
-        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
+        {
+          property: 'operationInterpreter',
+          token: OperationInterpreterToken,
+          isLazy: true,
+        },
         { property: 'jsonLogic', token: JsonLogicEvaluationServiceToken },
         { property: 'logger', token: ILogger },
       ],
@@ -456,7 +451,11 @@ beforeAll(async () => {
       token: tokens.IfHandler,
       handlerName: 'IfHandler',
       dependencies: [
-        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
+        {
+          property: 'operationInterpreter',
+          token: OperationInterpreterToken,
+          isLazy: true,
+        },
         { property: 'jsonLogic', token: JsonLogicEvaluationServiceToken },
         { property: 'logger', token: ILogger },
       ],
@@ -613,7 +612,11 @@ beforeAll(async () => {
       dependencies: [
         { property: 'entityManager', token: IEntityManager },
         { property: 'logger', token: ILogger },
-        { property: 'operationInterpreter', token: OperationInterpreterToken, isLazy: true },
+        {
+          property: 'operationInterpreter',
+          token: OperationInterpreterToken,
+          isLazy: true,
+        },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
@@ -641,7 +644,10 @@ beforeAll(async () => {
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
-        { property: 'systemMoveEntityHandler', token: SystemMoveEntityHandlerToken },
+        {
+          property: 'systemMoveEntityHandler',
+          token: SystemMoveEntityHandlerToken,
+        },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
@@ -1073,9 +1079,8 @@ describe('registerOperationHandlers', () => {
 
       const previousCallCount = mockContainer.resolve.mock.calls.length;
       const result = factory(mockContainer);
-      const newResolveCalls = mockContainer.resolve.mock.calls.slice(
-        previousCallCount
-      );
+      const newResolveCalls =
+        mockContainer.resolve.mock.calls.slice(previousCallCount);
 
       if (expectation.dependencies) {
         const handlerStats = mockHandlerRegistry.get(expectation.handlerName);
@@ -1101,11 +1106,11 @@ describe('registerOperationHandlers', () => {
         });
 
         const expectedTokens = expectation.dependencies
-          .filter(({ token, isLazy }) => token !== JSON_LOGIC_SENTINEL && !isLazy)
+          .filter(
+            ({ token, isLazy }) => token !== JSON_LOGIC_SENTINEL && !isLazy
+          )
           .map(({ token }) => token);
-        expect(newResolveCalls.map(([token]) => token)).toEqual(
-          expectedTokens
-        );
+        expect(newResolveCalls.map(([token]) => token)).toEqual(expectedTokens);
       } else if (expectation.factoryResultToken) {
         const expectedInstance = getDependencyInstance(
           expectation.factoryResultToken

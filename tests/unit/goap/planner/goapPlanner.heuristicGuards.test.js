@@ -13,7 +13,9 @@ const HUNGER_KEY = `${TEST_ACTOR_ID}:core:hunger`;
  * @param message
  */
 function getLogCount(logger, level, message) {
-  return logger[level].mock.calls.filter(([loggedMessage]) => loggedMessage === message).length;
+  return logger[level].mock.calls.filter(
+    ([loggedMessage]) => loggedMessage === message
+  ).length;
 }
 
 /**
@@ -23,7 +25,10 @@ function getLogCount(logger, level, message) {
  * @returns {object} Planning state hash for the actor.
  */
 function createState(hungerValue) {
-  return buildPlanningState({ [HUNGER_KEY]: hungerValue }, { actorId: TEST_ACTOR_ID });
+  return buildPlanningState(
+    { [HUNGER_KEY]: hungerValue },
+    { actorId: TEST_ACTOR_ID }
+  );
 }
 
 /**
@@ -59,14 +64,22 @@ describe('GoapPlanner - Heuristic Guards', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockJsonLogicService = testBed.createMock('jsonLogicService', ['evaluateCondition']);
+    mockJsonLogicService = testBed.createMock('jsonLogicService', [
+      'evaluateCondition',
+    ]);
     mockRepository = testBed.createMock('repository', ['get']);
-    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'getEntityInstance',
+    ]);
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
-    mockEffectsSimulator = testBed.createMock('effectsSimulator', ['simulateEffects']);
-    mockHeuristicRegistry = testBed.createMock('heuristicRegistry', ['calculate']);
+    mockEffectsSimulator = testBed.createMock('effectsSimulator', [
+      'simulateEffects',
+    ]);
+    mockHeuristicRegistry = testBed.createMock('heuristicRegistry', [
+      'calculate',
+    ]);
 
     mockEntityManager.getEntityInstance.mockReturnValue({
       id: TEST_ACTOR_ID,
@@ -93,13 +106,15 @@ describe('GoapPlanner - Heuristic Guards', () => {
       state: createState(0),
     }));
 
-    mockJsonLogicService.evaluateCondition.mockImplementation((_condition, context = {}) => {
-      const hunger = context.state?.[HUNGER_KEY];
-      if (typeof hunger === 'number') {
-        return hunger <= 0;
+    mockJsonLogicService.evaluateCondition.mockImplementation(
+      (_condition, context = {}) => {
+        const hunger = context.state?.[HUNGER_KEY];
+        if (typeof hunger === 'number') {
+          return hunger <= 0;
+        }
+        return true;
       }
-      return true;
-    });
+    );
 
     planner = new GoapPlanner({
       logger: mockLogger,
@@ -125,10 +140,14 @@ describe('GoapPlanner - Heuristic Guards', () => {
     expect(plan).not.toBeNull();
     expect(plan.tasks).toHaveLength(1);
 
-    const warningCalls = mockLogger.warn.mock.calls.filter(([message]) => message === 'Heuristic produced invalid value');
+    const warningCalls = mockLogger.warn.mock.calls.filter(
+      ([message]) => message === 'Heuristic produced invalid value'
+    );
     expect(warningCalls).toHaveLength(1);
 
-    const bypassLogs = mockLogger.debug.mock.calls.filter(([message]) => message === 'Heuristic distance invalid, bypassing guard');
+    const bypassLogs = mockLogger.debug.mock.calls.filter(
+      ([message]) => message === 'Heuristic distance invalid, bypassing guard'
+    );
     expect(bypassLogs.length).toBeGreaterThan(0);
   });
 
@@ -161,59 +180,106 @@ describe('GoapPlanner - Heuristic Guards', () => {
     expect(plan).not.toBeNull();
     expect(plan.cost).toBe(1);
 
-    const warningCalls = mockLogger.warn.mock.calls.filter(([message]) => message === 'Heuristic produced invalid value');
+    const warningCalls = mockLogger.warn.mock.calls.filter(
+      ([message]) => message === 'Heuristic produced invalid value'
+    );
     expect(warningCalls).toHaveLength(1);
   });
 
   it('bypasses the numeric guard when either estimate is Infinity and logs only once', () => {
-    mockHeuristicRegistry.calculate.mockImplementation(() => Number.POSITIVE_INFINITY);
+    mockHeuristicRegistry.calculate.mockImplementation(
+      () => Number.POSITIVE_INFINITY
+    );
 
     const goal = createNumericGoal();
     const currentState = createState(50);
     const task = { id: 'core:reduce_hunger', planningEffects: [] };
 
-    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+    const result = planner.testTaskReducesDistance(
+      task,
+      currentState,
+      goal,
+      TEST_ACTOR_ID
+    );
 
     expect(result).toBe(true);
-    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
-    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
+    expect(
+      getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')
+    ).toBe(1);
+    expect(
+      getLogCount(
+        mockLogger,
+        'debug',
+        'Heuristic distance invalid, bypassing guard'
+      )
+    ).toBe(1);
   });
 
   it('bypasses the numeric guard when current distance sanitizes due to negative outputs', () => {
-    mockHeuristicRegistry.calculate.mockImplementation((_heuristicId, state) => {
-      if (state?.[HUNGER_KEY] > 0) {
-        return -5;
+    mockHeuristicRegistry.calculate.mockImplementation(
+      (_heuristicId, state) => {
+        if (state?.[HUNGER_KEY] > 0) {
+          return -5;
+        }
+        return 0;
       }
-      return 0;
-    });
+    );
 
     const goal = createNumericGoal();
     const currentState = createState(70);
     const task = { id: 'core:reduce_hunger', planningEffects: [] };
 
-    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+    const result = planner.testTaskReducesDistance(
+      task,
+      currentState,
+      goal,
+      TEST_ACTOR_ID
+    );
 
     expect(result).toBe(true);
-    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
-    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
+    expect(
+      getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')
+    ).toBe(1);
+    expect(
+      getLogCount(
+        mockLogger,
+        'debug',
+        'Heuristic distance invalid, bypassing guard'
+      )
+    ).toBe(1);
   });
 
   it('still bypasses when only the next estimate sanitizes', () => {
-    mockHeuristicRegistry.calculate.mockImplementation((_heuristicId, state) => {
-      if (state?.[HUNGER_KEY] === 0) {
-        return Number.POSITIVE_INFINITY;
+    mockHeuristicRegistry.calculate.mockImplementation(
+      (_heuristicId, state) => {
+        if (state?.[HUNGER_KEY] === 0) {
+          return Number.POSITIVE_INFINITY;
+        }
+        return state?.[HUNGER_KEY] ?? 0;
       }
-      return state?.[HUNGER_KEY] ?? 0;
-    });
+    );
 
     const goal = createNumericGoal();
     const currentState = createState(20);
     const task = { id: 'core:reduce_hunger', planningEffects: [] };
 
-    const result = planner.testTaskReducesDistance(task, currentState, goal, TEST_ACTOR_ID);
+    const result = planner.testTaskReducesDistance(
+      task,
+      currentState,
+      goal,
+      TEST_ACTOR_ID
+    );
 
     expect(result).toBe(true);
-    expect(getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')).toBe(1);
-    expect(getLogCount(mockLogger, 'debug', 'Heuristic distance invalid, bypassing guard')).toBe(1);
+    expect(
+      getLogCount(mockLogger, 'warn', 'Heuristic produced invalid value')
+    ).toBe(1);
+    expect(
+      getLogCount(
+        mockLogger,
+        'debug',
+        'Heuristic distance invalid, bypassing guard'
+      )
+    ).toBe(1);
   });
 });

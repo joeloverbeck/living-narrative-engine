@@ -16,9 +16,11 @@ Create the event schema for `anatomy:part_health_changed`, which is dispatched w
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/anatomy/events/part_health_changed.event.json`
 
 ### Modified Files
+
 - None (mod manifest update in separate ticket)
 
 ---
@@ -26,6 +28,7 @@ Create the event schema for `anatomy:part_health_changed`, which is dispatched w
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing event schemas
 - Any operation handler files
 - The mod manifest (covered in PERPARHEAANDNARTHR-011)
@@ -132,6 +135,7 @@ Create `data/mods/anatomy/events/part_health_changed.event.json`:
 ### Tests That Must Pass
 
 1. **JSON validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/events/part_health_changed.event.json'))"
    ```
@@ -188,11 +192,11 @@ npm run test:ci
 
 ### What Changed vs Originally Planned
 
-| Aspect | Original Plan | Actual Implementation |
-|--------|---------------|----------------------|
-| Fields | 9 fields | 11 fields (added `previousState`, `newState`) |
-| additionalProperties | `true` | `false` (matches existing patterns) |
-| timestamp description | "Unix timestamp or game turn" | "Unix timestamp" (matches handler) |
+| Aspect                | Original Plan                 | Actual Implementation                         |
+| --------------------- | ----------------------------- | --------------------------------------------- |
+| Fields                | 9 fields                      | 11 fields (added `previousState`, `newState`) |
+| additionalProperties  | `true`                        | `false` (matches existing patterns)           |
+| timestamp description | "Unix timestamp or game turn" | "Unix timestamp" (matches handler)            |
 
 ### Discrepancies Corrected
 
@@ -201,12 +205,15 @@ npm run test:ci
 3. **Required fields**: Added `previousState` and `newState` to required array
 
 ### Files Created
+
 - `data/mods/anatomy/events/part_health_changed.event.json`
 
 ### Files Modified
+
 - This ticket (corrected schema before implementation)
 
 ### Verification Results
+
 - ✅ JSON validity: Valid
 - ✅ Event ID format: `anatomy:part_health_changed`
 - ✅ `npm run validate`: Passed (0 violations across 44 mods)

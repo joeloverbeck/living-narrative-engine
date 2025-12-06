@@ -106,7 +106,8 @@ function createFixSuggestionEngine(logger) {
  */
 function createProcessor(overrides = {}) {
   const logger = overrides.logger ?? new RecordingLogger();
-  const entityManager = overrides.entityManager ?? new SimpleEntityManager(defaultEntities);
+  const entityManager =
+    overrides.entityManager ?? new SimpleEntityManager(defaultEntities);
   const dispatcher = overrides.safeEventDispatcher ?? new RecordingDispatcher();
   const fixSuggestionEngine =
     overrides.fixSuggestionEngine ?? createFixSuggestionEngine(logger);
@@ -125,17 +126,15 @@ function createProcessor(overrides = {}) {
         return true;
       },
     };
-  const targetResolutionService =
-    overrides.targetResolutionService ?? {
-      resolveTargets() {
-        return ActionResult.success([
-          ActionTargetContext.forEntity('companion'),
-        ]);
-      },
-    };
+  const targetResolutionService = overrides.targetResolutionService ?? {
+    resolveTargets() {
+      return ActionResult.success([ActionTargetContext.forEntity('companion')]);
+    },
+  };
   const getEntityDisplayNameFn =
     overrides.getEntityDisplayNameFn ??
-    ((entity) => entity?.components?.['identity:name']?.text ?? entity?.id ?? 'Unknown');
+    ((entity) =>
+      entity?.components?.['identity:name']?.text ?? entity?.id ?? 'Unknown');
 
   const processor = new ActionCandidateProcessor({
     prerequisiteEvaluationService,
@@ -225,10 +224,21 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
     });
     const { trace, calls } = createTraceWithoutStructuredSpan();
 
-    const actionDef = { ...baseAction, id: 'social:wave', prerequisites: [], description: undefined, visual: undefined };
+    const actionDef = {
+      ...baseAction,
+      id: 'social:wave',
+      prerequisites: [],
+      description: undefined,
+      visual: undefined,
+    };
     const actorEntity = entityManager.getEntityInstance('hero');
 
-    const result = processor.process(actionDef, actorEntity, simpleContext, trace);
+    const result = processor.process(
+      actionDef,
+      actorEntity,
+      simpleContext,
+      trace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.actions).toHaveLength(2);
@@ -237,7 +247,11 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
       'greet Marek',
     ]);
     expect(result.value.errors).toHaveLength(0);
-    expect(calls.step.some((entry) => entry.message.includes('Processing candidate action'))).toBe(true);
+    expect(
+      calls.step.some((entry) =>
+        entry.message.includes('Processing candidate action')
+      )
+    ).toBe(true);
   });
 
   it('wraps prerequisite evaluation failures into structured error contexts even when timestamps are falsy', () => {
@@ -379,7 +393,12 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
       },
     });
 
-    const result = processor.process(baseAction, actor, simpleContext, spanTrace);
+    const result = processor.process(
+      baseAction,
+      actor,
+      simpleContext,
+      spanTrace
+    );
 
     expect(result.success).toBe(true);
     expect(result.value.cause).toBe('resolution-error');
@@ -442,7 +461,11 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
     expect(result.success).toBe(true);
     expect(result.value.cause).toBe('no-targets');
     expect(result.value.actions).toHaveLength(0);
-    expect(logger.debugMessages.some((args) => args[0].includes('resolved to 0 targets'))).toBe(true);
+    expect(
+      logger.debugMessages.some((args) =>
+        args[0].includes('resolved to 0 targets')
+      )
+    ).toBe(true);
   });
 
   it('captures thrown errors from target resolution and enriches them with context', () => {
@@ -473,13 +496,26 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
 
       format(actionDef, targetContext, entityManager, options, deps) {
         if (targetContext.entityId === this.failingTargetId) {
-          return { ok: false, error: 'formatter rejected target', details: { reason: 'custom' } };
+          return {
+            ok: false,
+            error: 'formatter rejected target',
+            details: { reason: 'custom' },
+          };
         }
-        return super.format(actionDef, targetContext, entityManager, options, deps);
+        return super.format(
+          actionDef,
+          targetContext,
+          entityManager,
+          options,
+          deps
+        );
       }
     }
 
-    const customFormatter = new ResultFailingFormatter({ logger: new RecordingLogger() }, 'companion');
+    const customFormatter = new ResultFailingFormatter(
+      { logger: new RecordingLogger() },
+      'companion'
+    );
     const { processor, logger } = createProcessor({
       actionCommandFormatter: customFormatter,
       targetResolutionService: {
@@ -499,7 +535,11 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
     expect(result.value.errors).toHaveLength(1);
     const [errorContext] = result.value.errors;
     expect(errorContext.additionalContext.formatDetails.reason).toBe('custom');
-    expect(logger.warnMessages.some((args) => args[0].includes('Failed to format command'))).toBe(true);
+    expect(
+      logger.warnMessages.some((args) =>
+        args[0].includes('Failed to format command')
+      )
+    ).toBe(true);
   });
 
   it('continues processing when one target formats successfully and another throws', () => {
@@ -513,13 +553,22 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
         if (targetContext.entityId === this.failingTargetId) {
           throw new Error('formatting failure');
         }
-        return super.format(actionDef, targetContext, entityManager, options, deps);
+        return super.format(
+          actionDef,
+          targetContext,
+          entityManager,
+          options,
+          deps
+        );
       }
     }
 
-    const customFormatter = new PartiallyThrowingFormatter({
-      logger: new RecordingLogger(),
-    }, 'companion');
+    const customFormatter = new PartiallyThrowingFormatter(
+      {
+        logger: new RecordingLogger(),
+      },
+      'companion'
+    );
 
     const { processor, logger } = createProcessor({
       actionCommandFormatter: customFormatter,
@@ -540,6 +589,10 @@ describe('ActionCandidateProcessor integration edge coverage', () => {
     expect(result.value.actions[0].params.targetId).toBe('observer');
     expect(result.value.errors).toHaveLength(1);
     expect(result.value.errors[0].targetId).toBe('companion');
-    expect(logger.errorMessages.some((args) => args[0].includes('Error formatting action'))).toBe(true);
+    expect(
+      logger.errorMessages.some((args) =>
+        args[0].includes('Error formatting action')
+      )
+    ).toBe(true);
   });
 });

@@ -203,9 +203,7 @@ describe('Build System - Memory Tests', () => {
         `Build memory usage: ${memoryIncreaseInMB.toFixed(2)}MB increase`
       );
       console.log(`Build time: ${(buildTimeMs / 1000).toFixed(2)}s`);
-      console.log(
-        `Final memory: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`
-      );
+      console.log(`Final memory: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`);
 
       // Use adaptive thresholds for memory assertions
       const thresholds = global.memoryTestUtils.getAdaptiveThresholds({

@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-013: Add TimeoutConfiguration Unit Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-013
 - **Phase:** 3 - Robustness (Optional Future Enhancement)
 - **Priority:** Low
@@ -14,11 +15,13 @@ Create comprehensive unit tests for `TimeoutConfiguration` class, verifying all 
 ## Files to Create
 
 ### New Test File
+
 - `tests/unit/turns/config/timeoutConfiguration.test.js` (NEW)
 
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
 import { describe, it, expect } from '@jest/globals';
 import TimeoutConfiguration from '../../../../src/turns/config/timeoutConfiguration.js';
@@ -45,10 +48,13 @@ describe('TimeoutConfiguration', () => {
 ### Group 1: Environment-Based Configuration
 
 #### Test 1: Production Environment
+
 ```javascript
 it('should return 30-second timeout for production environment', () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const config = new TimeoutConfiguration({
     environmentProvider: productionProvider,
   });
@@ -62,10 +68,13 @@ it('should return 30-second timeout for production environment', () => {
 ```
 
 #### Test 2: Development Environment
+
 ```javascript
 it('should return 3-second timeout for development environment', () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const config = new TimeoutConfiguration({
     environmentProvider: developmentProvider,
   });
@@ -81,10 +90,13 @@ it('should return 3-second timeout for development environment', () => {
 ### Group 2: Explicit Timeout Override
 
 #### Test 3: Override Production Default
+
 ```javascript
 it('should use explicit timeout over production default', () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const config = new TimeoutConfiguration({
     timeoutMs: 5_000,
     environmentProvider: productionProvider,
@@ -99,10 +111,13 @@ it('should use explicit timeout over production default', () => {
 ```
 
 #### Test 4: Override Development Default
+
 ```javascript
 it('should use explicit timeout over development default', () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const config = new TimeoutConfiguration({
     timeoutMs: 10_000,
     environmentProvider: developmentProvider,
@@ -119,6 +134,7 @@ it('should use explicit timeout over development default', () => {
 ### Group 3: Invalid Timeout Validation
 
 #### Test 5: NaN Timeout
+
 ```javascript
 it('should throw InvalidArgumentError for NaN timeout', () => {
   // Arrange
@@ -126,11 +142,14 @@ it('should throw InvalidArgumentError for NaN timeout', () => {
 
   // Act & Assert
   expect(() => config.getTimeoutMs()).toThrow(InvalidArgumentError);
-  expect(() => config.getTimeoutMs()).toThrow(/timeoutMs must be a positive finite number.*NaN/);
+  expect(() => config.getTimeoutMs()).toThrow(
+    /timeoutMs must be a positive finite number.*NaN/
+  );
 });
 ```
 
 #### Test 6: Negative Timeout
+
 ```javascript
 it('should throw InvalidArgumentError for negative timeout', () => {
   // Arrange
@@ -143,6 +162,7 @@ it('should throw InvalidArgumentError for negative timeout', () => {
 ```
 
 #### Test 7: Infinity Timeout
+
 ```javascript
 it('should throw InvalidArgumentError for Infinity timeout', () => {
   // Arrange
@@ -155,6 +175,7 @@ it('should throw InvalidArgumentError for Infinity timeout', () => {
 ```
 
 #### Test 8: Zero Timeout
+
 ```javascript
 it('should throw InvalidArgumentError for zero timeout', () => {
   // Arrange
@@ -169,12 +190,15 @@ it('should throw InvalidArgumentError for zero timeout', () => {
 ## Additional Recommended Tests (Not Required But Valuable)
 
 ### Test 9: Provider Throws Error
+
 ```javascript
 it('should fall back to production timeout when provider throws error', () => {
   // Arrange
   const mockLogger = { warn: jest.fn() };
   const errorProvider = {
-    getEnvironment: () => { throw new Error('Provider failed'); }
+    getEnvironment: () => {
+      throw new Error('Provider failed');
+    },
   };
   const config = new TimeoutConfiguration({
     environmentProvider: errorProvider,
@@ -194,11 +218,12 @@ it('should fall back to production timeout when provider throws error', () => {
 ```
 
 ### Test 10: Provider Returns Malformed Data
+
 ```javascript
 it('should fall back to production timeout when provider returns null', () => {
   // Arrange
   const malformedProvider = {
-    getEnvironment: () => null
+    getEnvironment: () => null,
   };
   const config = new TimeoutConfiguration({
     environmentProvider: malformedProvider,
@@ -213,11 +238,12 @@ it('should fall back to production timeout when provider returns null', () => {
 ```
 
 ### Test 11: Lazy Resolution and Caching
+
 ```javascript
 it('should cache resolved timeout and not call provider again', () => {
   // Arrange
   const mockProvider = {
-    getEnvironment: jest.fn(() => ({ IS_PRODUCTION: true }))
+    getEnvironment: jest.fn(() => ({ IS_PRODUCTION: true })),
   };
   const config = new TimeoutConfiguration({
     environmentProvider: mockProvider,
@@ -237,6 +263,7 @@ it('should cache resolved timeout and not call provider again', () => {
 ```
 
 ### Test 12: No Provider Uses Default
+
 ```javascript
 it('should use ProcessEnvironmentProvider by default when no provider given', () => {
   // Arrange
@@ -263,6 +290,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ## Out of Scope
 
 ### Must NOT Include
+
 - Integration tests (if needed, separate ticket)
 - Property-based tests (Ticket 014)
 - State lifecycle tests (existing tests)
@@ -270,6 +298,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 - Tests of ProcessEnvironmentProvider (test the configuration, not the provider)
 
 ### Must NOT Change
+
 - TimeoutConfiguration implementation (test only)
 - Other test files
 - Production code beyond what's in Ticket 012
@@ -277,6 +306,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ## Acceptance Criteria
 
 ### AC1: All 8 Required Tests Implemented
+
 ```javascript
 // GIVEN: Test suite with minimum 8 test cases
 // WHEN: npm run test:unit -- timeoutConfiguration.test.js
@@ -287,6 +317,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ```
 
 ### AC2: 100% Coverage Achieved
+
 ```javascript
 // GIVEN: Test suite execution with coverage
 // WHEN: Coverage report generated
@@ -298,6 +329,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ```
 
 ### AC3: All Configuration Paths Tested
+
 ```javascript
 // GIVEN: Test suite
 // WHEN: Code review performed
@@ -310,6 +342,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ```
 
 ### AC4: Tests Are Fast
+
 ```javascript
 // GIVEN: Test suite
 // WHEN: Tests executed
@@ -320,6 +353,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ```
 
 ### AC5: Tests Follow Project Patterns
+
 ```javascript
 // GIVEN: Test implementation
 // WHEN: Code review performed
@@ -333,18 +367,21 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ## Invariants
 
 ### Test Coverage Requirements (Must Achieve)
+
 1. **100% Branches**: All conditional paths tested
 2. **100% Functions**: All methods tested
 3. **100% Lines**: All code lines executed
 4. **100% Statements**: All statements covered
 
 ### Test Quality Standards (Must Maintain)
+
 1. **Unit Level**: Tests only TimeoutConfiguration, mock dependencies
 2. **Fast**: Complete in <100ms
 3. **Isolated**: Each test independent
 4. **Clear**: Test names describe behavior exactly
 
 ### Project Standards (Must Follow)
+
 1. **Mock Patterns**: jest.fn() for dependencies
 2. **Error Testing**: Test both throw and message
 3. **Import Style**: ES6 imports
@@ -353,6 +390,7 @@ it('should use ProcessEnvironmentProvider by default when no provider given', ()
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run test file only
 npm run test:unit -- timeoutConfiguration.test.js
@@ -368,6 +406,7 @@ npm run test:unit -- timeoutConfiguration.test.js --watch
 ```
 
 ### Coverage Verification
+
 ```bash
 # Verify 100% coverage
 npm run test:unit -- timeoutConfiguration.test.js --coverage --collectCoverageFrom='src/turns/config/timeoutConfiguration.js'
@@ -377,6 +416,7 @@ npm run test:unit -- timeoutConfiguration.test.js --coverage --coverageThreshold
 ```
 
 ### Full Suite
+
 ```bash
 # Run all unit tests
 npm run test:unit
@@ -388,6 +428,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### Test File Template
+
 ```javascript
 import { describe, it, expect } from '@jest/globals';
 import TimeoutConfiguration from '../../../../src/turns/config/timeoutConfiguration.js';
@@ -411,6 +452,7 @@ describe('TimeoutConfiguration', () => {
 ```
 
 ### Coverage Report Interpretation
+
 ```bash
 # After running with --coverage:
 # File                          | % Stmts | % Branch | % Funcs | % Lines
@@ -421,11 +463,12 @@ describe('TimeoutConfiguration', () => {
 ```
 
 ### Validation Testing Pattern
+
 ```javascript
 // Test validation thoroughly:
 const invalidValues = [NaN, -1000, 0, Infinity, -Infinity];
 
-invalidValues.forEach(value => {
+invalidValues.forEach((value) => {
   it(`should reject ${value}`, () => {
     const config = new TimeoutConfiguration({ timeoutMs: value });
     expect(() => config.getTimeoutMs()).toThrow(InvalidArgumentError);
@@ -459,12 +502,14 @@ Successfully implemented comprehensive unit tests for TimeoutConfiguration class
 ### What Was Implemented
 
 **Test File Created:**
+
 - `tests/unit/turns/config/timeoutConfiguration.test.js`
 - 22 test cases total (8 required + 14 bonus)
 - 100% coverage: Branches, Functions, Lines, Statements
 - All tests pass in <100ms
 
 **Test Coverage Groups:**
+
 1. Environment-Based Configuration (2 tests)
    - Production environment timeout (30s)
    - Development environment timeout (3s)
@@ -506,15 +551,18 @@ Successfully implemented comprehensive unit tests for TimeoutConfiguration class
 ### Changes vs Original Plan
 
 **Ticket Corrections:**
+
 - Fixed import path: `TestEnvironmentProvider` is in `src/configuration/` not `src/environment/`
 - Adjusted test expectations for cached invalid values (second call returns cached value, not error)
 - Added constructor default parameter coverage test
 
 **No Code Changes:**
+
 - TimeoutConfiguration implementation was not modified (test-only ticket)
 - All assumptions about implementation behavior were validated and correct
 
 **Test Quality:**
+
 - ESLint compliant (with appropriate jest/no-conditional-expect disables for try-catch blocks)
 - Follows AAA pattern consistently
 - Uses jest.fn() for mocks

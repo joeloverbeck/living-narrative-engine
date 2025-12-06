@@ -7,10 +7,7 @@
   "applicability": {
     "description": "Actor has inventory system (may be empty)",
     "condition": {
-      "has_component": [
-        { "var": "actor" },
-        "items:inventory"
-      ]
+      "has_component": [{ "var": "actor" }, "items:inventory"]
     }
   },
 
@@ -21,16 +18,10 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "items:inventory"
-            ]
+            "has_component": [{ "var": "actor" }, "items:inventory"]
           },
           {
-            ">": [
-              { "var": "actor.components.items:inventory.items.length" },
-              0
-            ]
+            ">": [{ "var": "actor.components.items:inventory.items.length" }, 0]
           }
         ]
       },
@@ -85,8 +76,10 @@
       "description": "Always check array length before accessing elements",
       "pattern": {
         "and": [
-          {"has_component": ["actor", "items:inventory"]},
-          {">": [{"var": "actor.components.items:inventory.items.length"}, 0]}
+          { "has_component": ["actor", "items:inventory"] },
+          {
+            ">": [{ "var": "actor.components.items:inventory.items.length" }, 0]
+          }
         ]
       }
     },
@@ -94,8 +87,12 @@
       "description": "Check specific array index exists",
       "pattern": {
         "and": [
-          {">": [{"var": "actor.components.items:inventory.items.length"}, 2]},
-          {"!=": [{"var": "actor.components.items:inventory.items[2]"}, null]}
+          {
+            ">": [{ "var": "actor.components.items:inventory.items.length" }, 2]
+          },
+          {
+            "!=": [{ "var": "actor.components.items:inventory.items[2]" }, null]
+          }
         ]
       }
     },
@@ -103,7 +100,9 @@
       "description": "Filter array, then check filtered result has items",
       "pattern": {
         ">": [
-          {"var": "actor.components.items:inventory.items.filter(item => item.type === 'weapon').length"},
+          {
+            "var": "actor.components.items:inventory.items.filter(item => item.type === 'weapon').length"
+          },
           0
         ]
       }

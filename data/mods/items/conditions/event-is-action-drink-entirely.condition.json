@@ -3,9 +3,6 @@
   "id": "items:event-is-action-drink-entirely",
   "description": "True when event is attempting the drink_entirely action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:drink_entirely"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:drink_entirely"]
   }
 }

@@ -154,9 +154,6 @@ describe('dispatchWithErrorHandling integration with real dispatcher', () => {
     expect(systemPayload.details.stack).toContain('Error: boom');
 
     const eventNames = dispatcher.events.map((event) => event.eventName);
-    expect(eventNames).toEqual([
-      'integration:error',
-      SYSTEM_ERROR_OCCURRED_ID,
-    ]);
+    expect(eventNames).toEqual(['integration:error', SYSTEM_ERROR_OCCURRED_ID]);
   });
 });

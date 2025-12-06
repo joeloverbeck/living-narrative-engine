@@ -23,14 +23,18 @@ const buildIpv6DiagnosticsApp = (ipv6Utils, rateLimiter) => {
 
   app.post('/ipv6/fallbacks', (req, res) => {
     const hosts = Array.isArray(req.body?.hosts) ? req.body.hosts : [];
-    const extracted = hosts.map((host) => ipv6Utils.extractIPv6FromHostname(host));
+    const extracted = hosts.map((host) =>
+      ipv6Utils.extractIPv6FromHostname(host)
+    );
     const classifications = ipv6Utils.validateMultipleIPv6Addresses(hosts);
     const summary = ipv6Utils.getIPv6ValidationSummary(classifications);
     const fallbackRange = ipv6Utils.__determineReservedRangeFromType(
       req.body?.fallbackRange || 'reserved'
     );
 
-    res.status(200).json({ extracted, classifications, summary, fallbackRange });
+    res
+      .status(200)
+      .json({ extracted, classifications, summary, fallbackRange });
   });
 
   return app;
@@ -203,7 +207,8 @@ describe('IPv6 utility fallback branch integration', () => {
 
     expect(response.status).toBe(200);
 
-    const { extracted, classifications, summary, fallbackRange } = response.body;
+    const { extracted, classifications, summary, fallbackRange } =
+      response.body;
 
     expect(extracted).toEqual([
       ...hostExpectations.map((entry) => entry.extracted),
@@ -229,7 +234,9 @@ describe('IPv6 utility fallback branch integration', () => {
 
     const invalidClassification = classifications[classifications.length - 1];
     expect(invalidClassification.isValid).toBe(false);
-    expect(invalidClassification.details.reason).toContain('Invalid IPv6 address');
+    expect(invalidClassification.details.reason).toContain(
+      'Invalid IPv6 address'
+    );
 
     expect(summary).toEqual(
       expect.objectContaining({

@@ -544,7 +544,9 @@ describe('Blueprint/Recipe Compatibility - Integration', () => {
 
       const warning = issues[0];
       expect(warning.severity).toBe('warning');
-      expect(warning.impact).toBe('Slot will be ignored during anatomy generation');
+      expect(warning.impact).toBe(
+        'Slot will be ignored during anatomy generation'
+      );
     });
   });
 });

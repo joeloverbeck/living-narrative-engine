@@ -17,8 +17,8 @@ Integrate the `parameterRuleGenerator.js` with `preValidationUtils.js` so that `
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                              | Change Type                              |
+| --------------------------------- | ---------------------------------------- |
 | `src/utils/preValidationUtils.js` | Replace manual rules with auto-generated |
 
 ### Files to Create
@@ -27,8 +27,8 @@ None
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
+| File                                  | Purpose                               |
+| ------------------------------------- | ------------------------------------- |
 | `src/utils/parameterRuleGenerator.js` | Generator created in SCHVALTESINT-010 |
 
 ---
@@ -63,23 +63,23 @@ const OPERATION_PARAMETER_RULES = {
   GET_NAME: {
     required: ['entity_ref', 'result_variable'],
     invalidFields: ['entity_id'], // Common mistake
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   QUERY_COMPONENT: {
     required: ['entity_ref', 'component_type', 'result_variable'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   ADD_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   REMOVE_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
-  }
+    fieldCorrections: { entity_id: 'entity_ref' },
+  },
   // Only 4 of 66 operations have typo-detection rules!
 };
 ```
@@ -95,6 +95,7 @@ const OPERATION_PARAMETER_RULES = {
 ### Implementation Strategy
 
 The implementation uses a **lazy initialization pattern** that:
+
 - Keeps `OPERATION_PARAMETER_RULES` as the internal variable name
 - Adds new exported functions for initialization and access
 - Preserves the existing internal `validateOperationParameters` function behavior
@@ -105,7 +106,10 @@ The implementation uses a **lazy initialization pattern** that:
 ```javascript
 // src/utils/preValidationUtils.js - additions
 
-import { generateParameterRules, validateCoverage } from './parameterRuleGenerator.js';
+import {
+  generateParameterRules,
+  validateCoverage,
+} from './parameterRuleGenerator.js';
 
 /** @type {Object|null} Auto-generated rules from schemas, initialized lazily */
 let _schemaGeneratedRules = null;
@@ -121,7 +125,7 @@ const MANUAL_TYPO_RULES = {
   GET_NAME: {
     required: ['entity_ref', 'result_variable'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   // ... other manual rules preserved
 };
@@ -134,7 +138,7 @@ export function getOperationParameterRules() {
   if (!_rulesInitialized) {
     throw new Error(
       'Operation parameter rules not initialized. ' +
-      'Call initializeParameterRules() during startup.'
+        'Call initializeParameterRules() during startup.'
     );
   }
   return _schemaGeneratedRules;
@@ -165,7 +169,7 @@ export async function initializeParameterRules(options = {}) {
       ...rule,
       // Preserve manual typo-detection features if they exist
       invalidFields: manualRule?.invalidFields || [],
-      fieldCorrections: manualRule?.fieldCorrections || {}
+      fieldCorrections: manualRule?.fieldCorrections || {},
     };
   }
 
@@ -180,14 +184,14 @@ export async function initializeParameterRules(options = {}) {
     if (missing.length > 0) {
       throw new Error(
         `INV-3 Violation: Missing parameter rules for operation types: ${missing.join(', ')}. ` +
-        `Ensure all operations have schemas in data/schemas/operations/`
+          `Ensure all operations have schemas in data/schemas/operations/`
       );
     }
 
     if (extra.length > 0) {
       console.warn(
         `Warning: Found parameter rules for types not in KNOWN_OPERATION_TYPES: ${extra.join(', ')}. ` +
-        `Consider adding to KNOWN_OPERATION_TYPES if these are valid operations.`
+          `Consider adding to KNOWN_OPERATION_TYPES if these are valid operations.`
       );
     }
   }
@@ -251,16 +255,20 @@ await initializeParameterRules({ assertCoverage: true });
 ### Manual Verification Steps
 
 1. Start application:
+
    ```bash
    npm run start
    ```
+
    Should initialize without errors (all 62 operations have rules).
 
 2. Remove one schema temporarily:
+
    ```bash
    mv data/schemas/operations/lockGrabbing.schema.json /tmp/
    npm run start
    ```
+
    Should fail with INV-3 violation error.
 
 3. Restore and verify:
@@ -299,14 +307,14 @@ Successfully integrated `parameterRuleGenerator.js` with `preValidationUtils.js`
 
 ### Files Modified
 
-| File | Changes |
-|------|---------|
+| File                              | Changes                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------- |
 | `src/utils/preValidationUtils.js` | Added lazy initialization infrastructure: imports, state variables, 4 new exports |
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                          | Purpose                                  |
+| ------------------------------------------------------------- | ---------------------------------------- |
 | `tests/unit/utils/preValidationUtils.schemaRulesInit.test.js` | 19 tests for schema rules initialization |
 
 ### New Exports Added

@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import path from 'node:path';
@@ -48,7 +42,10 @@ describe('traceRoutes security and error handling integration', () => {
       });
 
     expect(response.status).toBe(403);
-    expect(response.body).toMatchObject({ success: false, error: 'Invalid output path' });
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Invalid output path',
+    });
 
     const unexpectedRepoPath = path.join(defaultTraceDir, 'intrusion.log');
     await expect(access(unexpectedRepoPath)).rejects.toBeDefined();
@@ -93,10 +90,15 @@ describe('traceRoutes security and error handling integration', () => {
     const successResult = response.body.results.find(
       (result) => result.fileName === goodFileName
     );
-    const failureResult = response.body.results.find((result) => result.fileName === badFileName);
+    const failureResult = response.body.results.find(
+      (result) => result.fileName === badFileName
+    );
 
     expect(successResult).toBeDefined();
-    expect(successResult).toMatchObject({ success: true, bytesWritten: expect.any(Number) });
+    expect(successResult).toMatchObject({
+      success: true,
+      bytesWritten: expect.any(Number),
+    });
     expect(failureResult).toBeDefined();
     expect(failureResult.success).toBe(false);
     expect(failureResult.error).toContain('null bytes');
@@ -113,6 +115,9 @@ describe('traceRoutes security and error handling integration', () => {
       .query({ directory: '../../etc' });
 
     expect(response.status).toBe(403);
-    expect(response.body).toMatchObject({ success: false, error: 'Invalid directory path' });
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Invalid directory path',
+    });
   });
 });

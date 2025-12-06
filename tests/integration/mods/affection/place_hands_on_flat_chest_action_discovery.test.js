@@ -85,7 +85,9 @@ describe('affection:place_hands_on_flat_chest action discovery', () => {
       };
 
       scopeResolver.resolveSync = (scopeName, context) => {
-        if (scopeName === 'affection:actors_without_breasts_facing_each_other') {
+        if (
+          scopeName === 'affection:actors_without_breasts_facing_each_other'
+        ) {
           const actorId = context?.actor?.id;
           if (!actorId) {
             return { success: true, value: new Set() };
@@ -104,9 +106,11 @@ describe('affection:place_hands_on_flat_chest action discovery', () => {
           }
 
           const actorFacingAway =
-            actorEntity.components?.['positioning:facing_away']?.facing_away_from ?? [];
+            actorEntity.components?.['positioning:facing_away']
+              ?.facing_away_from ?? [];
           const actorKneelingBefore =
-            actorEntity.components?.['positioning:kneeling_before']?.entityId ?? null;
+            actorEntity.components?.['positioning:kneeling_before']?.entityId ??
+            null;
 
           const validTargets = closeness.reduce((acc, partnerId) => {
             const partner = entityManager.getEntityInstance(partnerId);
@@ -115,9 +119,11 @@ describe('affection:place_hands_on_flat_chest action discovery', () => {
             }
 
             const partnerFacingAway =
-              partner.components?.['positioning:facing_away']?.facing_away_from ?? [];
+              partner.components?.['positioning:facing_away']
+                ?.facing_away_from ?? [];
             const partnerKneelingBefore =
-              partner.components?.['positioning:kneeling_before']?.entityId ?? null;
+              partner.components?.['positioning:kneeling_before']?.entityId ??
+              null;
 
             const facingEachOther =
               !actorFacingAway.includes(partnerId) &&

@@ -16,6 +16,7 @@ Migrate all rules in the `seduction` mod from the expanded pattern to use `PREPA
 ## Files to Touch
 
 ### Modified Files
+
 - All rule files in `data/mods/seduction/rules/*.rule.json`
 
 ---
@@ -23,6 +24,7 @@ Migrate all rules in the `seduction` mod from the expanded pattern to use `PREPA
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
@@ -36,6 +38,7 @@ Migrate all rules in the `seduction` mod from the expanded pattern to use `PREPA
 ## Migration Pattern
 
 ### Before (~100 lines per rule)
+
 ```json
 {
   "actions": [
@@ -54,6 +57,7 @@ Migrate all rules in the `seduction` mod from the expanded pattern to use `PREPA
 ```
 
 ### After (~15 lines)
+
 ```json
 {
   "id": "seduction:handle_[action_name]",
@@ -89,11 +93,13 @@ Migrate all rules in the `seduction` mod from the expanded pattern to use `PREPA
 ### Tests That Must Pass
 
 1. **All seduction mod integration tests:**
+
    ```bash
    npm run test:integration -- tests/integration/mods/seduction/
    ```
 
 2. **Mod validation:**
+
    ```bash
    npm run validate:mod:seduction
    ```

@@ -6,11 +6,7 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import {
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -122,7 +118,10 @@ describe('CacheService advanced integration coverage', () => {
     writeFileSync(path.join(tempDir, 'alpha.key'), 'alpha-secret', 'utf8');
     writeFileSync(path.join(tempDir, 'bravo.key'), 'b'.repeat(160), 'utf8');
 
-    const alphaKey = await apiKeyService.getApiKey(configFor('alpha.key'), 'alpha-llm');
+    const alphaKey = await apiKeyService.getApiKey(
+      configFor('alpha.key'),
+      'alpha-llm'
+    );
     expect(alphaKey.apiKey).toBe('alpha-secret');
 
     await apiKeyService.getApiKey(configFor('bravo.key'), 'bravo-llm');

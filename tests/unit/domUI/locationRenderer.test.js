@@ -1274,9 +1274,11 @@ describe('LocationRenderer', () => {
       const targetElement = document.createElement('div');
 
       renderer._renderList(
-        [{
-          title: 'Codex of Places',
-        }],
+        [
+          {
+            title: 'Codex of Places',
+          },
+        ],
         targetElement,
         'Lore Entries',
         'title',

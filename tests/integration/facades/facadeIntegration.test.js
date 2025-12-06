@@ -17,15 +17,26 @@ class TestClothingFacade extends BaseFacade {
 
   async getAccessibleItems(entityId, options = {}) {
     return this.executeWithResilience('getAccessibleItems', async () => {
-      return this.cacheableOperation(`clothing:${entityId}:accessible`, async () => {
-        return { success: true, data: [{ id: 'item1', name: 'Test Item' }], total: 1 };
-      }, options);
+      return this.cacheableOperation(
+        `clothing:${entityId}:accessible`,
+        async () => {
+          return {
+            success: true,
+            data: [{ id: 'item1', name: 'Test Item' }],
+            total: 1,
+          };
+        },
+        options
+      );
     });
   }
 
   async equipItem(entityId, itemId, options = {}) {
     return this.executeWithResilience('equipItem', async () => {
-      const result = { success: true, data: { equipped: true, itemId, slot: 'weapon' } };
+      const result = {
+        success: true,
+        data: { equipped: true, itemId, slot: 'weapon' },
+      };
       // Use the inherited dispatchEvent method from BaseFacade
       this.dispatchEvent('ITEM_EQUIPPED', { entityId, itemId });
       return result;
@@ -40,15 +51,26 @@ class TestAnatomyFacade extends BaseFacade {
 
   async getBodyParts(entityId, options = {}) {
     return this.executeWithResilience('getBodyParts', async () => {
-      return this.cacheableOperation(`anatomy:${entityId}:parts`, async () => {
-        return { success: true, data: [{ id: 'part1', type: 'head' }], total: 1 };
-      }, options);
+      return this.cacheableOperation(
+        `anatomy:${entityId}:parts`,
+        async () => {
+          return {
+            success: true,
+            data: [{ id: 'part1', type: 'head' }],
+            total: 1,
+          };
+        },
+        options
+      );
     });
   }
 
   async attachPart(entityId, partId, socketId, options = {}) {
     return this.executeWithResilience('attachPart', async () => {
-      const result = { success: true, data: { attached: true, partId, socketId } };
+      const result = {
+        success: true,
+        data: { attached: true, partId, socketId },
+      };
       // Use the inherited dispatchEvent method from BaseFacade
       this.dispatchEvent('PART_ATTACHED', { entityId, partId, socketId });
       return result;
@@ -67,12 +89,21 @@ describe('Facade Integration Tests', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    
+
     // Setup mocks
-    mockContainer = testBed.createMock('container', ['resolve', 'isRegistered']);
+    mockContainer = testBed.createMock('container', [
+      'resolve',
+      'isRegistered',
+    ]);
     mockLogger = testBed.createMockLogger();
     mockEventBus = testBed.createMock('eventBus', ['dispatch', 'subscribe']);
-    mockCache = testBed.createMock('cache', ['get', 'set', 'clear', 'has', 'invalidate']);
+    mockCache = testBed.createMock('cache', [
+      'get',
+      'set',
+      'clear',
+      'has',
+      'invalidate',
+    ]);
 
     // Setup container responses
     mockContainer.resolve.mockImplementation((token) => {
@@ -103,20 +134,27 @@ describe('Facade Integration Tests', () => {
       if (token.startsWith('TestFacade')) {
         return true;
       }
-      return ['TestClothingFacade', 'TestAnatomyFacade', 'ILogger', 'IEventBus', 'IUnifiedCache', 'ICircuitBreaker'].includes(token);
+      return [
+        'TestClothingFacade',
+        'TestAnatomyFacade',
+        'ILogger',
+        'IEventBus',
+        'IUnifiedCache',
+        'ICircuitBreaker',
+      ].includes(token);
     });
 
     // Create factory and registry
     factory = new FacadeFactory({
       container: mockContainer,
       registry: null, // Will set after registry creation
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     registry = new FacadeRegistry({
       facadeFactory: factory,
       logger: mockLogger,
-      eventBus: mockEventBus
+      eventBus: mockEventBus,
     });
 
     // Mock registerFacade to avoid circular dependency issue in production code
@@ -140,44 +178,53 @@ describe('Facade Integration Tests', () => {
   describe('Factory and Registry Integration', () => {
     it('should register and retrieve facades through registry', () => {
       // Register facade
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0',
-        description: 'Test clothing facade',
-        capabilities: ['query', 'modify'],
-        tags: ['clothing', 'test']
-      }, {
-        name: 'TestClothingFacade',  // Factory needs name in config
-        timeout: 1000,
-        cacheEnabled: true
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+          description: 'Test clothing facade',
+          capabilities: ['query', 'modify'],
+          tags: ['clothing', 'test'],
+        },
+        {
+          name: 'TestClothingFacade', // Factory needs name in config
+          timeout: 1000,
+          cacheEnabled: true,
+        }
+      );
 
       expect(registry.isRegistered('TestClothingFacade')).toBe(true);
 
       // Get facade through registry
       const facade = registry.getFacade('TestClothingFacade');
-      
+
       expect(facade).toBeInstanceOf(TestClothingFacade);
       expect(facade).toBeInstanceOf(BaseFacade);
     });
 
     it('should support facade discovery by capabilities', () => {
       // Register multiple facades
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'validate']
-      }, {
-        name: 'TestClothingFacade'
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'validate'],
+        },
+        {
+          name: 'TestClothingFacade',
+        }
+      );
 
-      registry.register({
-        name: 'TestAnatomyFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify', 'graph']
-      }, {
-        name: 'TestAnatomyFacade'
-      });
+      registry.register(
+        {
+          name: 'TestAnatomyFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify', 'graph'],
+        },
+        {
+          name: 'TestAnatomyFacade',
+        }
+      );
 
       // Find facades by capability
       const queryFacades = registry.findByCapabilities(['query']);
@@ -190,21 +237,27 @@ describe('Facade Integration Tests', () => {
 
     it('should support facade discovery by tags', () => {
       // Register facades with tags
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0',
-        tags: ['clothing', 'equipment', 'core']
-      }, {
-        name: 'TestClothingFacade'
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+          tags: ['clothing', 'equipment', 'core'],
+        },
+        {
+          name: 'TestClothingFacade',
+        }
+      );
 
-      registry.register({
-        name: 'TestAnatomyFacade',
-        version: '1.0.0',
-        tags: ['anatomy', 'body', 'core']
-      }, {
-        name: 'TestAnatomyFacade'
-      });
+      registry.register(
+        {
+          name: 'TestAnatomyFacade',
+          version: '1.0.0',
+          tags: ['anatomy', 'body', 'core'],
+        },
+        {
+          name: 'TestAnatomyFacade',
+        }
+      );
 
       // Search by tags
       const coreFacades = registry.searchByTags(['core']);
@@ -222,31 +275,37 @@ describe('Facade Integration Tests', () => {
 
     beforeEach(() => {
       // Register facades
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify']
-      }, {
-        name: 'TestClothingFacade',
-        logger: mockLogger,
-        eventBus: mockEventBus,
-        unifiedCache: mockCache,  // BaseFacade expects unifiedCache, not cache
-        timeout: 1000,
-        cacheEnabled: true
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify'],
+        },
+        {
+          name: 'TestClothingFacade',
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          unifiedCache: mockCache, // BaseFacade expects unifiedCache, not cache
+          timeout: 1000,
+          cacheEnabled: true,
+        }
+      );
 
-      registry.register({
-        name: 'TestAnatomyFacade',
-        version: '1.0.0',
-        capabilities: ['query', 'modify']
-      }, {
-        name: 'TestAnatomyFacade',
-        logger: mockLogger,
-        eventBus: mockEventBus,
-        unifiedCache: mockCache,  // BaseFacade expects unifiedCache, not cache
-        timeout: 1000,
-        cacheEnabled: true
-      });
+      registry.register(
+        {
+          name: 'TestAnatomyFacade',
+          version: '1.0.0',
+          capabilities: ['query', 'modify'],
+        },
+        {
+          name: 'TestAnatomyFacade',
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          unifiedCache: mockCache, // BaseFacade expects unifiedCache, not cache
+          timeout: 1000,
+          cacheEnabled: true,
+        }
+      );
 
       // Get facade instances
       clothingFacade = registry.getFacade('TestClothingFacade');
@@ -255,7 +314,7 @@ describe('Facade Integration Tests', () => {
 
     it('should execute facade operations with resilience patterns', async () => {
       const result = await clothingFacade.getAccessibleItems('actor1');
-      
+
       expect(result.success).toBe(true);
       expect(result.data).toEqual([{ id: 'item1', name: 'Test Item' }]);
       expect(result.total).toBe(1);
@@ -275,7 +334,7 @@ describe('Facade Integration Tests', () => {
       mockCache.get.mockReturnValue({
         success: true,
         data: [{ id: 'item1', name: 'Test Item' }],
-        total: 1
+        total: 1,
       });
 
       // Second call - should hit cache
@@ -295,9 +354,9 @@ describe('Facade Integration Tests', () => {
           type: 'ITEM_EQUIPPED',
           payload: {
             entityId: 'actor1',
-            itemId: 'sword1'
+            itemId: 'sword1',
           },
-          source: 'TestClothingFacade'
+          source: 'TestClothingFacade',
         })
       );
     });
@@ -327,14 +386,20 @@ describe('Facade Integration Tests', () => {
 
       // Look for the specific cache keys in the calls
       const getCalls = mockCache.get.mock.calls.flat();
-      const setCalls = mockCache.set.mock.calls.map(call => call[0]);
+      const setCalls = mockCache.set.mock.calls.map((call) => call[0]);
 
       // These might be wrapped in another key format, so check if they contain the expected patterns
-      const hasClothingKey = getCalls.some(call =>
-        typeof call === 'string' && call.includes('clothing') && call.includes('actor1')
+      const hasClothingKey = getCalls.some(
+        (call) =>
+          typeof call === 'string' &&
+          call.includes('clothing') &&
+          call.includes('actor1')
       );
-      const hasAnatomyKey = getCalls.some(call =>
-        typeof call === 'string' && call.includes('anatomy') && call.includes('actor1')
+      const hasAnatomyKey = getCalls.some(
+        (call) =>
+          typeof call === 'string' &&
+          call.includes('anatomy') &&
+          call.includes('actor1')
       );
 
       expect(hasClothingKey || hasAnatomyKey).toBe(true);
@@ -344,9 +409,14 @@ describe('Facade Integration Tests', () => {
       // Create a facade that will fail
       class FailingFacade extends BaseFacade {
         async failingOperation() {
-          return this.executeWithResilience('failingOperation', async () => {
-            throw new Error('Operation failed');
-          }, null, { retryCount: 0 }); // Disable retries for test
+          return this.executeWithResilience(
+            'failingOperation',
+            async () => {
+              throw new Error('Operation failed');
+            },
+            null,
+            { retryCount: 0 }
+          ); // Disable retries for test
         }
       }
 
@@ -367,54 +437,68 @@ describe('Facade Integration Tests', () => {
         }
       });
 
-      registry.register({
-        name: 'FailingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'FailingFacade',
-        logger: mockLogger,
-        eventBus: mockEventBus,
-        unifiedCache: mockCache,  // Add missing unifiedCache
-        circuitBreaker: null  // Explicitly pass null for circuit breaker
-      });
+      registry.register(
+        {
+          name: 'FailingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'FailingFacade',
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          unifiedCache: mockCache, // Add missing unifiedCache
+          circuitBreaker: null, // Explicitly pass null for circuit breaker
+        }
+      );
 
       const failingFacade = registry.getFacade('FailingFacade');
 
-      await expect(failingFacade.failingOperation()).rejects.toThrow('Operation failed');
+      await expect(failingFacade.failingOperation()).rejects.toThrow(
+        'Operation failed'
+      );
       expect(mockLogger.error).toHaveBeenCalled();
     });
   });
 
   describe('Singleton Behavior Integration', () => {
     beforeEach(() => {
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade',
-        logger: mockLogger,
-        eventBus: mockEventBus
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+          logger: mockLogger,
+          eventBus: mockEventBus,
+        }
+      );
     });
 
     it('should return same instance for singleton requests', () => {
       const facade1 = registry.getFacade('TestClothingFacade');
       const facade2 = registry.getFacade('TestClothingFacade');
-      
+
       expect(facade1).toBe(facade2);
     });
 
     it('should return different instances with different options', () => {
-      const facade1 = registry.getFacade('TestClothingFacade', { timeout: 1000 });
-      const facade2 = registry.getFacade('TestClothingFacade', { timeout: 2000 });
-      
+      const facade1 = registry.getFacade('TestClothingFacade', {
+        timeout: 1000,
+      });
+      const facade2 = registry.getFacade('TestClothingFacade', {
+        timeout: 2000,
+      });
+
       expect(facade1).not.toBe(facade2);
     });
 
     it('should return new instance when singleton disabled', () => {
       const facade1 = registry.getFacade('TestClothingFacade');
-      const facade2 = registry.getFacade('TestClothingFacade', { singleton: false });
-      
+      const facade2 = registry.getFacade('TestClothingFacade', {
+        singleton: false,
+      });
+
       expect(facade1).not.toBe(facade2);
     });
 
@@ -426,7 +510,9 @@ describe('Facade Integration Tests', () => {
       expect(facade1).toBe(facade1b);
 
       // Now get a non-singleton instance
-      const facade2 = registry.getFacade('TestClothingFacade', { singleton: false });
+      const facade2 = registry.getFacade('TestClothingFacade', {
+        singleton: false,
+      });
 
       // Should be different instance
       expect(facade1).not.toBe(facade2);
@@ -440,20 +526,23 @@ describe('Facade Integration Tests', () => {
   describe('Configuration Merging Integration', () => {
     it('should merge registry config with runtime options', () => {
       // Register with default config
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade',
-        timeout: 1000,
-        cacheEnabled: true,
-        retryCount: 3
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+          timeout: 1000,
+          cacheEnabled: true,
+          retryCount: 3,
+        }
+      );
 
       // Get facade with runtime options
       const facade = registry.getFacade('TestClothingFacade', {
         timeout: 2000, // Override
-        logLevel: 'debug' // New option
+        logLevel: 'debug', // New option
       });
 
       // Verify facade was created with merged options
@@ -461,12 +550,15 @@ describe('Facade Integration Tests', () => {
     });
 
     it('should handle empty configuration gracefully', () => {
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade'
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+        }
+      );
 
       const facade = registry.getFacade('TestClothingFacade');
       expect(facade).toBeInstanceOf(TestClothingFacade);
@@ -493,12 +585,15 @@ describe('Facade Integration Tests', () => {
         }
       });
 
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade'
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+        }
+      );
 
       expect(() => {
         registry.getFacade('TestClothingFacade');
@@ -511,7 +606,7 @@ describe('Facade Integration Tests', () => {
       mockContainer.resolve.mockImplementation((token) => {
         // Return a failing constructor for TestClothingFacade
         if (token === 'TestClothingFacade') {
-          return function() {
+          return function () {
             throw new Error('Constructor error');
           };
         }
@@ -528,12 +623,15 @@ describe('Facade Integration Tests', () => {
         }
       });
 
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade'
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+        }
+      );
 
       expect(() => {
         registry.getFacade('TestClothingFacade');
@@ -551,14 +649,17 @@ describe('Facade Integration Tests', () => {
     it('should efficiently handle multiple facade types', () => {
       // Register multiple facades
       for (let i = 1; i <= 10; i++) {
-        registry.register({
-          name: `TestFacade${i}`,
-          version: '1.0.0',
-          capabilities: ['query'],
-          tags: ['test']
-        }, {
-          name: `TestFacade${i}`
-        });
+        registry.register(
+          {
+            name: `TestFacade${i}`,
+            version: '1.0.0',
+            capabilities: ['query'],
+            tags: ['test'],
+          },
+          {
+            name: `TestFacade${i}`,
+          }
+        );
       }
 
       // Verify all registered
@@ -574,30 +675,33 @@ describe('Facade Integration Tests', () => {
     });
 
     it('should handle concurrent facade operations', async () => {
-      registry.register({
-        name: 'TestClothingFacade',
-        version: '1.0.0'
-      }, {
-        name: 'TestClothingFacade',
-        logger: mockLogger,
-        eventBus: mockEventBus,
-        unifiedCache: mockCache  // BaseFacade expects unifiedCache
-      });
+      registry.register(
+        {
+          name: 'TestClothingFacade',
+          version: '1.0.0',
+        },
+        {
+          name: 'TestClothingFacade',
+          logger: mockLogger,
+          eventBus: mockEventBus,
+          unifiedCache: mockCache, // BaseFacade expects unifiedCache
+        }
+      );
 
       const facade = registry.getFacade('TestClothingFacade');
-      
+
       // Execute multiple concurrent operations
       const promises = [
         facade.getAccessibleItems('actor1'),
         facade.getAccessibleItems('actor2'),
         facade.equipItem('actor1', 'sword1'),
-        facade.equipItem('actor2', 'armor1')
+        facade.equipItem('actor2', 'armor1'),
       ];
 
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(4);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.success).toBe(true);
       });
     });

@@ -5,10 +5,7 @@
   "description": "Unlock a connection blocker using the matching key.",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory",
-      "core:position"
-    ]
+    "actor": ["items:inventory", "core:position"]
   },
   "forbidden_components": {
     "actor": [

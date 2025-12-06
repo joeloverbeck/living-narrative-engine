@@ -95,7 +95,8 @@ describe('ActivityDescriptionService cache management integration', () => {
       metadataCollectionSystem,
       groupingSystem,
       nlgSystem,
-      contextBuildingSystem: contextBuildingSystem ?? service?.contextBuildingSystem,
+      contextBuildingSystem:
+        contextBuildingSystem ?? service?.contextBuildingSystem,
     };
   };
 
@@ -264,7 +265,9 @@ describe('ActivityDescriptionService cache management integration', () => {
     expect(finalSnapshot.gender.has('jon')).toBe(false);
     expect(finalSnapshot.activityIndex.has('jon')).toBe(false);
     expect(finalSnapshot.closeness.has('jon')).toBe(false);
-    expect(contextBuildingSystem.invalidations.filter((id) => id === 'jon').length).toBeGreaterThanOrEqual(2);
+    expect(
+      contextBuildingSystem.invalidations.filter((id) => id === 'jon').length
+    ).toBeGreaterThanOrEqual(2);
 
     testBed.mocks.logger.warn.mockClear();
     service.invalidateCache('jon', 'unknown-type');

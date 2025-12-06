@@ -28,7 +28,8 @@ const buildApp = () => {
       /** @type {import('express').Response} */ _res,
       /** @type {import('express').NextFunction} */ next
     ) => {
-      req.headers['content-type'] = req.headers['content-type'] || 'application/json';
+      req.headers['content-type'] =
+        req.headers['content-type'] || 'application/json';
       req.headers['x-array-header'] = ['value-one', 'value-two'];
       req.headers['x-object-header'] = { enabled: true };
       next();

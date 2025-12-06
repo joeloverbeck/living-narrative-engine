@@ -73,7 +73,9 @@ describe('TargetDisplayNameResolver integration behavior', () => {
     it('returns entity id when entity is not found in manager', () => {
       const { resolver } = createResolver();
 
-      expect(resolver.getEntityDisplayName('ghost:entity')).toBe('ghost:entity');
+      expect(resolver.getEntityDisplayName('ghost:entity')).toBe(
+        'ghost:entity'
+      );
     });
 
     it('follows component precedence when resolving display names', () => {
@@ -120,7 +122,10 @@ describe('TargetDisplayNameResolver integration behavior', () => {
       );
 
       const withItem = createResolver([
-        { id: 'hero:aurora', components: buildComponents({ item: 'Aurora Item' }) },
+        {
+          id: 'hero:aurora',
+          components: buildComponents({ item: 'Aurora Item' }),
+        },
       ]);
       expect(withItem.resolver.getEntityDisplayName('hero:aurora')).toBe(
         'Aurora Item'
@@ -156,7 +161,10 @@ describe('TargetDisplayNameResolver integration behavior', () => {
 
       expect(resolver.getDisplayName(null)).toBe('Unknown Entity');
       expect(
-        resolver.getDisplayName({ id: null }, { defaultName: 'Mystery Visitor' })
+        resolver.getDisplayName(
+          { id: null },
+          { defaultName: 'Mystery Visitor' }
+        )
       ).toBe('Mystery Visitor');
     });
 
@@ -250,7 +258,10 @@ describe('TargetDisplayNameResolver integration behavior', () => {
 
       // When the entity is missing the id, the default is used
       expect(
-        resolver.getDisplayNameDetails({ id: null }, { defaultName: 'Unknown Visitor' })
+        resolver.getDisplayNameDetails(
+          { id: null },
+          { defaultName: 'Unknown Visitor' }
+        )
       ).toEqual({
         displayName: 'Unknown Visitor',
         source: 'default',
@@ -269,19 +280,20 @@ describe('TargetDisplayNameResolver integration behavior', () => {
     it('builds maps for entity instances while skipping invalid entries', () => {
       const entities = [
         { id: 'ally:1', components: buildComponents({ name: 'Ally One' }) },
-        { id: 'ally:2', components: buildComponents({ description: 'Backup Ally' }) },
+        {
+          id: 'ally:2',
+          components: buildComponents({ description: 'Backup Ally' }),
+        },
         { id: null, components: {} },
       ];
       const { resolver, entityManager } = createResolver(entities);
 
-      const result = resolver.getDisplayNames(
-        [
-          entityManager.getEntityInstance('ally:1'),
-          entityManager.getEntityInstance('ally:2'),
-          null,
-          { id: null },
-        ]
-      );
+      const result = resolver.getDisplayNames([
+        entityManager.getEntityInstance('ally:1'),
+        entityManager.getEntityInstance('ally:2'),
+        null,
+        { id: null },
+      ]);
 
       expect(Array.from(result.entries())).toEqual([
         ['ally:1', 'Ally One'],
@@ -292,13 +304,20 @@ describe('TargetDisplayNameResolver integration behavior', () => {
     it('throws ServiceError when bulk helpers receive invalid inputs', () => {
       const { resolver } = createResolver();
 
-      expect(() => resolver.getDisplayNames('not-an-array')).toThrow(ServiceError);
-      expect(() => resolver.getEntityDisplayNames('invalid')).toThrow(ServiceError);
+      expect(() => resolver.getDisplayNames('not-an-array')).toThrow(
+        ServiceError
+      );
+      expect(() => resolver.getEntityDisplayNames('invalid')).toThrow(
+        ServiceError
+      );
     });
 
     it('resolves entity ids with default argument behaviour', () => {
       const { resolver } = createResolver([
-        { id: 'figure:1', components: buildComponents({ actor: 'Key Figure' }) },
+        {
+          id: 'figure:1',
+          components: buildComponents({ actor: 'Key Figure' }),
+        },
       ]);
 
       expect(
@@ -326,7 +345,10 @@ describe('TargetDisplayNameResolver integration behavior', () => {
             health: { current: 100, max: 100 },
           }),
         },
-        { id: 'scout:stealth', components: buildComponents({ name: 'Scout Shade' }) },
+        {
+          id: 'scout:stealth',
+          components: buildComponents({ name: 'Scout Shade' }),
+        },
       ]);
 
       const displayName = resolver.formatWithContext(
@@ -345,7 +367,10 @@ describe('TargetDisplayNameResolver integration behavior', () => {
 
       // Skipping optional context flags should yield the base name for tracked entities
       expect(
-        resolver.formatWithContext({ id: 'scout:1' }, { includeLocation: false, includeState: false })
+        resolver.formatWithContext(
+          { id: 'scout:1' },
+          { includeLocation: false, includeState: false }
+        )
       ).toBe('Scout Mira');
 
       // Missing context data ensures branches that skip augmentation are covered
@@ -363,9 +388,9 @@ describe('TargetDisplayNameResolver integration behavior', () => {
       ]);
 
       // When entity is not tracked the method should just return the base display name
-      expect(resolver.formatWithContext({ id: 'missing' }, { includeLocation: true })).toBe(
-        'missing'
-      );
+      expect(
+        resolver.formatWithContext({ id: 'missing' }, { includeLocation: true })
+      ).toBe('missing');
 
       // Missing entity object triggers the fallback name and default context argument usage
       expect(resolver.formatWithContext(null)).toBe('Unknown Entity');

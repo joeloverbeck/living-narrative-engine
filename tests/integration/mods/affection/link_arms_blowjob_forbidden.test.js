@@ -222,7 +222,10 @@ describe('affection:link_arms - giving_blowjob forbidden component', () => {
 
       // Test 1: Action should succeed when targeting Casey (no forbidden component)
       await expect(
-        testFixture.executeAction(actorData.entity.id, targetThirdData.entity.id)
+        testFixture.executeAction(
+          actorData.entity.id,
+          targetThirdData.entity.id
+        )
       ).resolves.not.toThrow();
 
       // Test 2: Action should fail when targeting Blair (has giving_blowjob)

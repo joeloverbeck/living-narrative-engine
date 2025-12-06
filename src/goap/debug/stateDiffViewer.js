@@ -130,7 +130,9 @@ class StateDiffViewer {
     const removedCount = Object.keys(diff.removed).length;
     const totalChanges = addedCount + modifiedCount + removedCount;
 
-    lines.push(`Changes: ${totalChanges} total (${addedCount} added, ${modifiedCount} modified, ${removedCount} removed)`);
+    lines.push(
+      `Changes: ${totalChanges} total (${addedCount} added, ${modifiedCount} modified, ${removedCount} removed)`
+    );
 
     if (totalChanges === 0) {
       lines.push('No state changes detected.');
@@ -189,7 +191,10 @@ class StateDiffViewer {
     return {
       ...options,
       summary: {
-        totalChanges: Object.keys(diff.added).length + diff.modified.length + Object.keys(diff.removed).length,
+        totalChanges:
+          Object.keys(diff.added).length +
+          diff.modified.length +
+          Object.keys(diff.removed).length,
         added: Object.keys(diff.added).length,
         modified: diff.modified.length,
         removed: Object.keys(diff.removed).length,
@@ -236,7 +241,10 @@ class StateDiffViewer {
       if (keysA.length !== keysB.length) return false;
 
       return keysA.every((key) => {
-        return Object.prototype.hasOwnProperty.call(b, key) && this.#deepEquals(a[key], b[key]);
+        return (
+          Object.prototype.hasOwnProperty.call(b, key) &&
+          this.#deepEquals(a[key], b[key])
+        );
       });
     }
 

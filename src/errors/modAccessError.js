@@ -14,25 +14,28 @@ import { ModValidationError } from './modValidationError.js';
 export class ModAccessError extends ModValidationError {
   /**
    * Creates a new ModAccessError instance
-   * 
+   *
    * @param {string} message - The error message describing the access failure
    * @param {string} filePath - Path to the file that couldn't be accessed
    * @param {object} context - Additional context about the access failure
    */
   constructor(message, filePath, context) {
     // Access errors are often recoverable (can skip file, retry, etc.)
-    const isRecoverable = ModAccessError._determineRecoverability(message, context);
+    const isRecoverable = ModAccessError._determineRecoverability(
+      message,
+      context
+    );
     super(message, 'ACCESS_DENIED', context, isRecoverable);
     this.name = 'ModAccessError';
     this.filePath = filePath;
-    
+
     // Store enhanced context for access tracking
     this._enhancedContext = {
       ...context,
       filePath,
       accessType: this._detectAccessType(message, context),
       canRetry: this._checkRetryability(context),
-      alternativeActions: this._getAlternativeActions(context)
+      alternativeActions: this._getAlternativeActions(context),
     };
   }
 
@@ -54,30 +57,36 @@ export class ModAccessError extends ModValidationError {
    */
   static _determineRecoverability(message, context) {
     const lowerMessage = message.toLowerCase();
-    
+
     // File not found - can skip and continue
     if (lowerMessage.includes('enoent') || lowerMessage.includes('not found')) {
       return true;
     }
-    
+
     // Temporary lock - can retry
     if (lowerMessage.includes('ebusy') || lowerMessage.includes('locked')) {
       return true;
     }
-    
+
     // Permission denied - generally not recoverable without intervention
-    if (lowerMessage.includes('eacces') || lowerMessage.includes('permission')) {
+    if (
+      lowerMessage.includes('eacces') ||
+      lowerMessage.includes('permission')
+    ) {
       return false;
     }
-    
+
     // Network issues - can retry
-    if (lowerMessage.includes('etimedout') || lowerMessage.includes('network')) {
+    if (
+      lowerMessage.includes('etimedout') ||
+      lowerMessage.includes('network')
+    ) {
       return true;
     }
-    
+
     return context.recoverable !== false;
   }
-  
+
   /**
    * Detects the type of access error
    *
@@ -88,11 +97,14 @@ export class ModAccessError extends ModValidationError {
    */
   _detectAccessType(message, context) {
     const lowerMessage = message.toLowerCase();
-    
+
     if (lowerMessage.includes('enoent') || lowerMessage.includes('not found')) {
       return 'FILE_NOT_FOUND';
     }
-    if (lowerMessage.includes('eacces') || lowerMessage.includes('permission')) {
+    if (
+      lowerMessage.includes('eacces') ||
+      lowerMessage.includes('permission')
+    ) {
       return 'PERMISSION_DENIED';
     }
     if (lowerMessage.includes('ebusy') || lowerMessage.includes('locked')) {
@@ -107,10 +119,10 @@ export class ModAccessError extends ModValidationError {
     if (lowerMessage.includes('etimedout')) {
       return 'TIMEOUT';
     }
-    
+
     return context.accessType || 'UNKNOWN_ACCESS_ERROR';
   }
-  
+
   /**
    * Checks if the operation can be retried
    *
@@ -123,16 +135,12 @@ export class ModAccessError extends ModValidationError {
     if (context.retryCount >= 3) {
       return false;
     }
-    
-    const retryableTypes = [
-      'FILE_LOCKED',
-      'TOO_MANY_OPEN_FILES',
-      'TIMEOUT'
-    ];
-    
+
+    const retryableTypes = ['FILE_LOCKED', 'TOO_MANY_OPEN_FILES', 'TIMEOUT'];
+
     return retryableTypes.includes(this.context.accessType);
   }
-  
+
   /**
    * Gets alternative actions when file access fails
    *
@@ -142,7 +150,7 @@ export class ModAccessError extends ModValidationError {
    */
   _getAlternativeActions(context) {
     const actions = [];
-    
+
     switch (this.context.accessType) {
       case 'FILE_NOT_FOUND':
         actions.push('skip_file');
@@ -164,14 +172,14 @@ export class ModAccessError extends ModValidationError {
         actions.push('skip_file');
         actions.push('log_and_continue');
     }
-    
+
     if (context.hasDefault) {
       actions.push('use_default_value');
     }
-    
+
     return actions;
   }
-  
+
   /**
    * Generates an access failure report
    *
@@ -186,10 +194,10 @@ export class ModAccessError extends ModValidationError {
       recoverable: this.recoverable,
       canRetry: this.context.canRetry,
       alternativeActions: this.context.alternativeActions,
-      suggestedFixes: this._getSuggestedFixes()
+      suggestedFixes: this._getSuggestedFixes(),
     };
   }
-  
+
   /**
    * Gets suggested fixes for the access error
    *
@@ -198,7 +206,7 @@ export class ModAccessError extends ModValidationError {
    */
   _getSuggestedFixes() {
     const fixes = [];
-    
+
     switch (this.context.accessType) {
       case 'FILE_NOT_FOUND':
         fixes.push('Verify file path is correct');
@@ -223,7 +231,7 @@ export class ModAccessError extends ModValidationError {
         fixes.push('Check system logs for details');
         fixes.push('Verify filesystem integrity');
     }
-    
+
     return fixes;
   }
 

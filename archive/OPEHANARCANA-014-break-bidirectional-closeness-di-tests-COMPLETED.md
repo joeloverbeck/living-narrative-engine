@@ -9,11 +9,11 @@
 
 ## Outcome
 
--   Registered `BreakBidirectionalClosenessHandler` in `tokens-core.js`, `operationHandlerRegistrations.js`, and `interpreterRegistrations.js`.
--   Added to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`.
--   Created unit tests in `tests/unit/logic/operationHandlers/breakBidirectionalClosenessHandler.test.js` covering validation, execution, edge cases, and error handling (100% coverage).
--   Created integration tests in `tests/integration/logic/operationHandlers/breakBidirectionalCloseness.integration.test.js` verifying full lifecycle.
--   Updated `tests/common/mods/ModTestHandlerFactory.js` to support the new handler in integration tests.
+- Registered `BreakBidirectionalClosenessHandler` in `tokens-core.js`, `operationHandlerRegistrations.js`, and `interpreterRegistrations.js`.
+- Added to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`.
+- Created unit tests in `tests/unit/logic/operationHandlers/breakBidirectionalClosenessHandler.test.js` covering validation, execution, edge cases, and error handling (100% coverage).
+- Created integration tests in `tests/integration/logic/operationHandlers/breakBidirectionalCloseness.integration.test.js` verifying full lifecycle.
+- Updated `tests/common/mods/ModTestHandlerFactory.js` to support the new handler in integration tests.
 
 ---
 
@@ -26,12 +26,14 @@ Register the `BreakBidirectionalClosenessHandler` in the dependency injection sy
 ## Files to Touch
 
 ### Modified Files (DI Registration)
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Add token
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Add factory
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Add mapping
 - `src/utils/preValidationUtils.js` - Add to KNOWN_OPERATION_TYPES
 
 ### New Files (Tests)
+
 - `tests/unit/logic/operationHandlers/breakBidirectionalClosenessHandler.test.js`
 - `tests/integration/logic/operationHandlers/breakBidirectionalCloseness.integration.test.js`
 
@@ -40,6 +42,7 @@ Register the `BreakBidirectionalClosenessHandler` in the dependency injection sy
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation file (done in OPEHANARCANA-013)
 - Any schema files (done in OPEHANARCANA-012)
 - Any rule files (migrations are separate tickets)
@@ -75,7 +78,10 @@ import BreakBidirectionalClosenessHandler from '../../logic/operationHandlers/br
 ### 3. Operation Mapping (`interpreterRegistrations.js`)
 
 ```javascript
-registry.register('BREAK_BIDIRECTIONAL_CLOSENESS', bind(tokens.BreakBidirectionalClosenessHandler));
+registry.register(
+  'BREAK_BIDIRECTIONAL_CLOSENESS',
+  bind(tokens.BreakBidirectionalClosenessHandler)
+);
 ```
 
 ### 4. Pre-Validation Whitelist (`preValidationUtils.js`)
@@ -90,23 +96,41 @@ registry.register('BREAK_BIDIRECTIONAL_CLOSENESS', bind(tokens.BreakBidirectiona
 
 ```javascript
 describe('BreakBidirectionalClosenessHandler', () => {
-  describe('constructor validation', () => { /* ... */ });
+  describe('constructor validation', () => {
+    /* ... */
+  });
 
   describe('execute - component removal', () => {
-    it('should remove actor_component_type from both entities', async () => { /* ... */ });
-    it('should remove target_component_type from both entities', async () => { /* ... */ });
-    it('should remove additional_component_types_to_remove', async () => { /* ... */ });
-    it('should gracefully handle missing components', async () => { /* ... */ });
+    it('should remove actor_component_type from both entities', async () => {
+      /* ... */
+    });
+    it('should remove target_component_type from both entities', async () => {
+      /* ... */
+    });
+    it('should remove additional_component_types_to_remove', async () => {
+      /* ... */
+    });
+    it('should gracefully handle missing components', async () => {
+      /* ... */
+    });
   });
 
   describe('execute - description regeneration', () => {
-    it('should regenerate descriptions when enabled', async () => { /* ... */ });
-    it('should skip regeneration when disabled', async () => { /* ... */ });
+    it('should regenerate descriptions when enabled', async () => {
+      /* ... */
+    });
+    it('should skip regeneration when disabled', async () => {
+      /* ... */
+    });
   });
 
   describe('execute - edge cases', () => {
-    it('should handle already-broken relationship', async () => { /* ... */ });
-    it('should handle partial relationship (one side missing)', async () => { /* ... */ });
+    it('should handle already-broken relationship', async () => {
+      /* ... */
+    });
+    it('should handle partial relationship (one side missing)', async () => {
+      /* ... */
+    });
   });
 });
 ```
@@ -118,17 +142,20 @@ describe('BreakBidirectionalClosenessHandler', () => {
 ### Tests That Must Pass
 
 1. **DI Registration:**
+
    ```bash
    npm run typecheck
    npm run validate
    ```
 
 2. **Unit tests pass with 90%+ coverage:**
+
    ```bash
    npm run test:unit -- tests/unit/logic/operationHandlers/breakBidirectionalClosenessHandler.test.js --coverage
    ```
 
 3. **Integration tests pass:**
+
    ```bash
    npm run test:integration -- tests/integration/logic/operationHandlers/breakBidirectionalCloseness.integration.test.js
    ```

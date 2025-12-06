@@ -7,7 +7,14 @@
  * @see data/mods/anatomy/events/body_part_spawned.event.json
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -30,7 +37,10 @@ describe('anatomy:dismembered Event - Null Field Validation', () => {
 
     // Register the payload schema
     const payloadSchemaId = `${dismemberedEvent.id}#payload`;
-    await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+    await schemaValidator.addSchema(
+      dismemberedEvent.payloadSchema,
+      payloadSchemaId
+    );
   });
 
   afterEach(() => {
@@ -148,15 +158,22 @@ describe('anatomy:dismembered Event - Null Field Validation', () => {
   describe('Consistency with damage_applied event schema', () => {
     it('should allow null orientation like damage_applied event does', async () => {
       // Load damage_applied event for comparison
-      const damageAppliedPath = path.resolve(EVENTS_DIR, 'damage_applied.event.json');
-      const damageAppliedEvent = JSON.parse(fs.readFileSync(damageAppliedPath, 'utf8'));
+      const damageAppliedPath = path.resolve(
+        EVENTS_DIR,
+        'damage_applied.event.json'
+      );
+      const damageAppliedEvent = JSON.parse(
+        fs.readFileSync(damageAppliedPath, 'utf8')
+      );
 
       // damage_applied correctly uses type: ["string", "null"] for orientation
-      const damageAppliedOrientationType = damageAppliedEvent.payloadSchema.properties.orientation.type;
+      const damageAppliedOrientationType =
+        damageAppliedEvent.payloadSchema.properties.orientation.type;
       expect(damageAppliedOrientationType).toEqual(['string', 'null']);
 
       // dismembered should have the same pattern
-      const dismemberedOrientationType = dismemberedEvent.payloadSchema.properties.orientation.type;
+      const dismemberedOrientationType =
+        dismemberedEvent.payloadSchema.properties.orientation.type;
 
       // Before fix: this will fail because type is "string"
       // After fix: type should be ["string", "null"]
@@ -165,15 +182,22 @@ describe('anatomy:dismembered Event - Null Field Validation', () => {
 
     it('should allow null partType like damage_applied event does', async () => {
       // Load damage_applied event for comparison
-      const damageAppliedPath = path.resolve(EVENTS_DIR, 'damage_applied.event.json');
-      const damageAppliedEvent = JSON.parse(fs.readFileSync(damageAppliedPath, 'utf8'));
+      const damageAppliedPath = path.resolve(
+        EVENTS_DIR,
+        'damage_applied.event.json'
+      );
+      const damageAppliedEvent = JSON.parse(
+        fs.readFileSync(damageAppliedPath, 'utf8')
+      );
 
       // damage_applied correctly uses type: ["string", "null"] for partType
-      const damageAppliedPartType = damageAppliedEvent.payloadSchema.properties.partType.type;
+      const damageAppliedPartType =
+        damageAppliedEvent.payloadSchema.properties.partType.type;
       expect(damageAppliedPartType).toEqual(['string', 'null']);
 
       // dismembered should have the same pattern
-      const dismemberedPartType = dismemberedEvent.payloadSchema.properties.partType.type;
+      const dismemberedPartType =
+        dismemberedEvent.payloadSchema.properties.partType.type;
       expect(dismemberedPartType).toEqual(['string', 'null']);
     });
   });
@@ -229,7 +253,9 @@ describe('anatomy:dismembered Event - Null Field Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'damageTypeId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'damageTypeId'
+        )
       ).toBe(true);
     });
 
@@ -297,7 +323,10 @@ describe('anatomy:body_part_spawned Event - Schema Validation', () => {
 
     // Register the payload schema
     const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
-    await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+    await schemaValidator.addSchema(
+      bodyPartSpawnedEvent.payloadSchema,
+      payloadSchemaId
+    );
   });
 
   afterEach(() => {
@@ -343,7 +372,9 @@ describe('anatomy:body_part_spawned Event - Schema Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'entityName')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'entityName'
+        )
       ).toBe(true);
     });
 
@@ -364,7 +395,9 @@ describe('anatomy:body_part_spawned Event - Schema Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'spawnedEntityId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'spawnedEntityId'
+        )
       ).toBe(true);
     });
 
@@ -385,7 +418,9 @@ describe('anatomy:body_part_spawned Event - Schema Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'spawnedEntityName')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'spawnedEntityName'
+        )
       ).toBe(true);
     });
 
@@ -427,7 +462,9 @@ describe('anatomy:body_part_spawned Event - Schema Validation', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'definitionId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'definitionId'
+        )
       ).toBe(true);
     });
 

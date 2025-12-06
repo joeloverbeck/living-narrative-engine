@@ -44,7 +44,9 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
     expect(rootEntity.definitionId).toBe('anatomy:kraken_mantle');
 
     // Verify all kraken-specific properties exist (from entity definition, not overrides)
-    const sizeCategory = rootEntity.getComponentData('descriptors:size_category');
+    const sizeCategory = rootEntity.getComponentData(
+      'descriptors:size_category'
+    );
     const color = rootEntity.getComponentData('descriptors:color_extended');
     const texture = rootEntity.getComponentData('descriptors:texture');
     const shape = rootEntity.getComponentData('descriptors:shape_general');
@@ -124,7 +126,9 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
     expect(partCount).toBeLessThanOrEqual(12);
 
     // Verify tentacles
-    const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+    const tentacles = Object.keys(parts).filter((name) =>
+      name.includes('tentacle')
+    );
     expect(tentacles).toHaveLength(8);
   });
 
@@ -136,13 +140,21 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
 
     // Verify kraken-specific descriptor properties
     expect(krakenEntity.components['descriptors:size_category']).toBeDefined();
-    expect(krakenEntity.components['descriptors:size_category'].size).toBe('massive');
+    expect(krakenEntity.components['descriptors:size_category'].size).toBe(
+      'massive'
+    );
     expect(krakenEntity.components['descriptors:color_extended']).toBeDefined();
-    expect(krakenEntity.components['descriptors:color_extended'].color).toBe('abyssal-black');
+    expect(krakenEntity.components['descriptors:color_extended'].color).toBe(
+      'abyssal-black'
+    );
     expect(krakenEntity.components['descriptors:texture']).toBeDefined();
-    expect(krakenEntity.components['descriptors:texture'].texture).toBe('smooth');
+    expect(krakenEntity.components['descriptors:texture'].texture).toBe(
+      'smooth'
+    );
     expect(krakenEntity.components['descriptors:shape_general']).toBeDefined();
-    expect(krakenEntity.components['descriptors:shape_general'].shape).toBe('oval');
+    expect(krakenEntity.components['descriptors:shape_general'].shape).toBe(
+      'oval'
+    );
 
     // Verify sockets for beak and ink_sac
     expect(krakenEntity.components['anatomy:sockets']).toBeDefined();

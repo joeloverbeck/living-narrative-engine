@@ -1254,7 +1254,7 @@ ${'='.repeat(60)}
 
         // Check if already selected by comparing pattern text
         const patternText = pattern.type || pattern.pattern;
-        const alreadySelected = selected.some(s => s.pattern === patternText);
+        const alreadySelected = selected.some((s) => s.pattern === patternText);
 
         if (!alreadySelected) {
           const exampleText = Array.isArray(pattern.examples)

@@ -7,6 +7,7 @@ Implement the `#collectActionModifiers()` method in `ModifierCollectorService.js
 ## File List
 
 Files to modify:
+
 - `src/combat/services/ModifierCollectorService.js` (implement `#collectActionModifiers`)
 - `src/dependencyInjection/registrations/combatRegistrations.js` (add ModifierContextBuilder dependency)
 - `src/combat/services/ChanceCalculationService.js` (update call site to use new parameter names)
@@ -262,12 +263,14 @@ Update the ModifierCollectorService registration to inject ModifierContextBuilde
 
 ```javascript
 // Update existing registration
-registrar.singletonFactory(tokens.ModifierCollectorService, (c) =>
-  new ModifierCollectorService({
-    entityManager: c.resolve(tokens.IEntityManager),
-    modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
-    logger: c.resolve(tokens.ILogger),
-  })
+registrar.singletonFactory(
+  tokens.ModifierCollectorService,
+  (c) =>
+    new ModifierCollectorService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      modifierContextBuilder: c.resolve(tokens.ModifierContextBuilder),
+      logger: c.resolve(tokens.ILogger),
+    })
 );
 ```
 
@@ -279,14 +282,14 @@ Update the `collectModifiers` call to use the new parameter name:
 // In calculateForDisplay method, change:
 const modifierCollection = this.#modifierCollectorService.collectModifiers({
   actorId,
-  targetId,  // OLD
+  targetId, // OLD
   actionConfig: chanceBased,
 });
 
 // To:
 const modifierCollection = this.#modifierCollectorService.collectModifiers({
   actorId,
-  primaryTargetId: targetId,  // NEW - map targetId to primaryTargetId
+  primaryTargetId: targetId, // NEW - map targetId to primaryTargetId
   actionConfig: chanceBased,
 });
 ```

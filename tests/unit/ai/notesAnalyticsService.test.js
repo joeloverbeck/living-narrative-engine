@@ -119,8 +119,16 @@ describe('NotesAnalyticsService', () => {
 
     it('should track multiple misclassification patterns', () => {
       const errors = [
-        { note: { text: 'N1', subject: 'S1' }, incorrect: 'event', correct: 'plan' },
-        { note: { text: 'N2', subject: 'S2' }, incorrect: 'event', correct: 'plan' },
+        {
+          note: { text: 'N1', subject: 'S1' },
+          incorrect: 'event',
+          correct: 'plan',
+        },
+        {
+          note: { text: 'N2', subject: 'S2' },
+          incorrect: 'event',
+          correct: 'plan',
+        },
         {
           note: { text: 'N3', subject: 'S3' },
           incorrect: 'entity',
@@ -306,7 +314,9 @@ describe('NotesAnalyticsService', () => {
 
       summary = analyticsService.getAnalyticsSummary();
       expect(summary.summary.totalNotes).toBe(0);
-      expect(mockLogger.info).toHaveBeenCalledWith('Analytics: Resetting metrics');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'Analytics: Resetting metrics'
+      );
     });
 
     it('should clear all errors on reset', () => {

@@ -23,7 +23,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
   describe('Constructor with ValidatorGenerator', () => {
     it('should accept validatorGenerator and dataRegistry parameters', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',
@@ -76,7 +78,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should validate dataRegistry has required methods', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const invalidRegistry = {}; // Missing required methods
 
       // Act & Assert
@@ -91,7 +95,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should require both validatorGenerator and dataRegistry or neither', () => {
       // Arrange - Only validatorGenerator, no dataRegistry
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
 
       // Act
       new AjvSchemaValidator({
@@ -110,7 +116,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
   describe('Two-stage validation', () => {
     it('should call AJV validator first', async () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',
@@ -138,18 +146,27 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
       // Assert - Should fail at AJV stage
       expect(result.isValid).toBe(false);
       // Generated validator is called even when AJV fails (to get better error messages)
-      expect(mockDataRegistry.getComponentDefinition).toHaveBeenCalledWith('test:schema');
+      expect(mockDataRegistry.getComponentDefinition).toHaveBeenCalledWith(
+        'test:schema'
+      );
     });
 
     it('should call generated validator after AJV passes', async () => {
       // Arrange
-      const mockValidatorFn = jest.fn().mockReturnValue({ valid: true, errors: [] });
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorFn = jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [] });
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(mockValidatorFn);
 
       const mockComponentDef = {
         id: 'test:component',
-        dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
+        dataSchema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+        },
         validationRules: { generateValidator: true },
       };
 
@@ -174,8 +191,12 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
       // Assert
       expect(result.isValid).toBe(true);
-      expect(mockDataRegistry.getComponentDefinition).toHaveBeenCalledWith('test:component');
-      expect(mockValidatorGenerator.generate).toHaveBeenCalledWith(mockComponentDef);
+      expect(mockDataRegistry.getComponentDefinition).toHaveBeenCalledWith(
+        'test:component'
+      );
+      expect(mockValidatorGenerator.generate).toHaveBeenCalledWith(
+        mockComponentDef
+      );
       expect(mockValidatorFn).toHaveBeenCalledWith(validData);
     });
 
@@ -187,12 +208,17 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
         errors: [{ type: 'customError', message: 'Custom validation failed' }],
       });
 
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(mockValidatorFn);
 
       const mockComponentDef = {
         id: 'test:merge',
-        dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
+        dataSchema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+        },
         validationRules: { generateValidator: true },
       };
 
@@ -224,7 +250,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should skip generated validator if component not found in registry', async () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',
@@ -237,7 +265,10 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      const schema = { type: 'object', properties: { value: { type: 'string' } } };
+      const schema = {
+        type: 'object',
+        properties: { value: { type: 'string' } },
+      };
       await validator.addSchema(schema, 'test:not-a-component');
 
       const validData = { value: 'test' };
@@ -255,12 +286,17 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should skip generated validator if generator returns null', async () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(null); // No validator generated
 
       const mockComponentDef = {
         id: 'test:no-validator',
-        dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
+        dataSchema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+        },
         // No validationRules - generator returns null
       };
 
@@ -276,7 +312,10 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      await validator.addSchema(mockComponentDef.dataSchema, 'test:no-validator');
+      await validator.addSchema(
+        mockComponentDef.dataSchema,
+        'test:no-validator'
+      );
 
       const validData = { value: 'test' };
 
@@ -292,13 +331,20 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
   describe('Validator caching', () => {
     it('should cache generated validators', async () => {
       // Arrange
-      const mockValidatorFn = jest.fn().mockReturnValue({ valid: true, errors: [] });
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorFn = jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [] });
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(mockValidatorFn);
 
       const mockComponentDef = {
         id: 'test:cached',
-        dataSchema: { type: 'object', properties: { value: { type: 'string' } } },
+        dataSchema: {
+          type: 'object',
+          properties: { value: { type: 'string' } },
+        },
         validationRules: { generateValidator: true },
       };
 
@@ -330,7 +376,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should cache null for schemas without validators', async () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(null);
 
       const mockComponentDef = {
@@ -350,7 +398,10 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      await validator.addSchema(mockComponentDef.dataSchema, 'test:null-cached');
+      await validator.addSchema(
+        mockComponentDef.dataSchema,
+        'test:null-cached'
+      );
 
       // Act - Multiple validations
       validator.validate('test:null-cached', {});
@@ -365,8 +416,12 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
   describe('clearCache method', () => {
     it('should clear the generated validator cache', async () => {
       // Arrange
-      const mockValidatorFn = jest.fn().mockReturnValue({ valid: true, errors: [] });
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorFn = jest
+        .fn()
+        .mockReturnValue({ valid: true, errors: [] });
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(mockValidatorFn);
 
       const mockComponentDef = {
@@ -400,7 +455,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
       // Assert - generate() should be called twice (once before, once after clear)
       expect(mockValidatorGenerator.generate).toHaveBeenCalledTimes(2);
-      expect(logger.debug).toHaveBeenCalledWith('Generated validator cache cleared');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Generated validator cache cleared'
+      );
     });
 
     it('should handle clearCache when enhanced validation is disabled', () => {
@@ -417,7 +474,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
   describe('preGenerateValidators method', () => {
     it('should pre-generate validators for provided schemas', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       mockValidatorGenerator.generate.mockReturnValue(jest.fn());
 
       const mockDataRegistry = testBed.createMock('dataRegistry', [
@@ -454,7 +513,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should skip schemas without generateValidator flag', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',
@@ -491,7 +552,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should get schemas from data registry if not provided', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',
@@ -523,7 +586,9 @@ describe('AjvSchemaValidator - Enhanced Validation Features', () => {
 
     it('should handle errors during pre-generation gracefully', () => {
       // Arrange
-      const mockValidatorGenerator = testBed.createMock('validatorGenerator', ['generate']);
+      const mockValidatorGenerator = testBed.createMock('validatorGenerator', [
+        'generate',
+      ]);
       const mockDataRegistry = testBed.createMock('dataRegistry', [
         'getComponentDefinition',
         'getAllComponentDefinitions',

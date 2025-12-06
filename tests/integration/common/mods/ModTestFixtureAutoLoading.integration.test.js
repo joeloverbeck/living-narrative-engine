@@ -252,10 +252,7 @@ describe('ModTestFixture - Auto-Loading Integration', () => {
       // Create multiple fixtures with auto-loading
       const fixtures = await Promise.all([
         ModTestFixture.forActionAutoLoad('kissing', 'kissing:kiss_cheek'),
-        ModTestFixture.forActionAutoLoad(
-          'deference',
-          'deference:kneel_before'
-        ),
+        ModTestFixture.forActionAutoLoad('deference', 'deference:kneel_before'),
         ModTestFixture.forActionAutoLoad('violence', 'violence:sucker_punch'),
       ]);
 

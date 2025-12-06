@@ -1,19 +1,17 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:bertram_the_muddy_instance",
-    "definitionId": "fantasy:bertram_the_muddy",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        },
-        "items:inventory": {
-            "items": [
-                "fantasy:smoking_pipe_instance"
-            ],
-            "capacity": {
-                "maxWeight": 30.0,
-                "maxItems": 10
-            }
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:bertram_the_muddy_instance",
+  "definitionId": "fantasy:bertram_the_muddy",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
+    },
+    "items:inventory": {
+      "items": ["fantasy:smoking_pipe_instance"],
+      "capacity": {
+        "maxWeight": 30.0,
+        "maxItems": 10
+      }
     }
+  }
 }

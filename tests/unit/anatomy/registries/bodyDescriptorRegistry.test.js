@@ -231,7 +231,9 @@ describe('bodyDescriptorRegistry', () => {
 
       it('should have working formatter function', () => {
         const composition = BODY_DESCRIPTOR_REGISTRY.composition;
-        expect(composition.formatter('average')).toBe('Body composition: average');
+        expect(composition.formatter('average')).toBe(
+          'Body composition: average'
+        );
       });
     });
 
@@ -344,31 +346,59 @@ describe('bodyDescriptorRegistry', () => {
         },
       };
 
-      expect(BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent)).toBe('tall');
-      expect(BODY_DESCRIPTOR_REGISTRY.skinColor.extractor(bodyComponent)).toBe('olive');
-      expect(BODY_DESCRIPTOR_REGISTRY.build.extractor(bodyComponent)).toBe('athletic');
-      expect(BODY_DESCRIPTOR_REGISTRY.composition.extractor(bodyComponent)).toBe('lean');
-      expect(BODY_DESCRIPTOR_REGISTRY.hairDensity.extractor(bodyComponent)).toBe('moderate');
-      expect(BODY_DESCRIPTOR_REGISTRY.smell.extractor(bodyComponent)).toBe('pleasant');
+      expect(BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent)).toBe(
+        'tall'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.skinColor.extractor(bodyComponent)).toBe(
+        'olive'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.build.extractor(bodyComponent)).toBe(
+        'athletic'
+      );
+      expect(
+        BODY_DESCRIPTOR_REGISTRY.composition.extractor(bodyComponent)
+      ).toBe('lean');
+      expect(
+        BODY_DESCRIPTOR_REGISTRY.hairDensity.extractor(bodyComponent)
+      ).toBe('moderate');
+      expect(BODY_DESCRIPTOR_REGISTRY.smell.extractor(bodyComponent)).toBe(
+        'pleasant'
+      );
     });
   });
 
   describe('Formatter functions edge cases', () => {
     it('should format values correctly for all descriptors', () => {
-      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter('tall')).toBe('Height: tall');
-      expect(BODY_DESCRIPTOR_REGISTRY.skinColor.formatter('olive')).toBe('Skin color: olive');
-      expect(BODY_DESCRIPTOR_REGISTRY.build.formatter('athletic')).toBe('Build: athletic');
-      expect(BODY_DESCRIPTOR_REGISTRY.composition.formatter('lean')).toBe('Body composition: lean');
-      expect(BODY_DESCRIPTOR_REGISTRY.hairDensity.formatter('moderate')).toBe('Body hair: moderate');
-      expect(BODY_DESCRIPTOR_REGISTRY.smell.formatter('pleasant')).toBe('Smell: pleasant');
+      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter('tall')).toBe(
+        'Height: tall'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.skinColor.formatter('olive')).toBe(
+        'Skin color: olive'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.build.formatter('athletic')).toBe(
+        'Build: athletic'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.composition.formatter('lean')).toBe(
+        'Body composition: lean'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.hairDensity.formatter('moderate')).toBe(
+        'Body hair: moderate'
+      );
+      expect(BODY_DESCRIPTOR_REGISTRY.smell.formatter('pleasant')).toBe(
+        'Smell: pleasant'
+      );
     });
 
     it('should handle null values in formatter', () => {
-      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter(null)).toBe('Height: null');
+      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter(null)).toBe(
+        'Height: null'
+      );
     });
 
     it('should handle undefined values in formatter', () => {
-      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter(undefined)).toBe('Height: undefined');
+      expect(BODY_DESCRIPTOR_REGISTRY.height.formatter(undefined)).toBe(
+        'Height: undefined'
+      );
     });
 
     it('should handle empty string values in formatter', () => {
@@ -449,7 +479,9 @@ describe('bodyDescriptorRegistry', () => {
 
     it('should respect displayOrder property', () => {
       const ordered = getDescriptorsByDisplayOrder();
-      const orders = ordered.map((name) => BODY_DESCRIPTOR_REGISTRY[name].displayOrder);
+      const orders = ordered.map(
+        (name) => BODY_DESCRIPTOR_REGISTRY[name].displayOrder
+      );
       expect(orders).toEqual([10, 20, 30, 40, 50, 60]);
     });
 
@@ -473,7 +505,19 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid height values', () => {
-        const validHeights = ['microscopic', 'minuscule', 'tiny', 'petite', 'short', 'average', 'tall', 'very-tall', 'gigantic', 'colossal', 'titanic'];
+        const validHeights = [
+          'microscopic',
+          'minuscule',
+          'tiny',
+          'petite',
+          'short',
+          'average',
+          'tall',
+          'very-tall',
+          'gigantic',
+          'colossal',
+          'titanic',
+        ];
         for (const value of validHeights) {
           const result = validateDescriptorValue('height', value);
           expect(result.valid).toBe(true);
@@ -486,7 +530,28 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid build values', () => {
-        const validBuilds = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky', 'frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'];
+        const validBuilds = [
+          'skinny',
+          'slim',
+          'lissom',
+          'toned',
+          'athletic',
+          'shapely',
+          'hourglass',
+          'thick',
+          'muscular',
+          'hulking',
+          'stocky',
+          'frail',
+          'gaunt',
+          'skeletal',
+          'atrophied',
+          'cadaverous',
+          'massive',
+          'willowy',
+          'barrel-chested',
+          'lanky',
+        ];
         for (const value of validBuilds) {
           const result = validateDescriptorValue('build', value);
           expect(result.valid).toBe(true);
@@ -499,7 +564,24 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid composition values', () => {
-        const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese', 'atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'];
+        const validCompositions = [
+          'underweight',
+          'lean',
+          'average',
+          'soft',
+          'chubby',
+          'overweight',
+          'obese',
+          'atrophied',
+          'emaciated',
+          'skeletal',
+          'malnourished',
+          'dehydrated',
+          'wasted',
+          'desiccated',
+          'bloated',
+          'rotting',
+        ];
         for (const value of validCompositions) {
           const result = validateDescriptorValue('composition', value);
           expect(result.valid).toBe(true);
@@ -512,7 +594,15 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should pass validation for all valid hairDensity values', () => {
-        const validDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy', 'furred'];
+        const validDensities = [
+          'hairless',
+          'sparse',
+          'light',
+          'moderate',
+          'hairy',
+          'very-hairy',
+          'furred',
+        ];
         for (const value of validDensities) {
           const result = validateDescriptorValue('hairDensity', value);
           expect(result.valid).toBe(true);
@@ -543,7 +633,10 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should fail validation for invalid hairDensity value', () => {
-        const result = validateDescriptorValue('hairDensity', 'extremely-hairy');
+        const result = validateDescriptorValue(
+          'hairDensity',
+          'extremely-hairy'
+        );
         expect(result.valid).toBe(false);
         expect(result.error).toBeDefined();
       });
@@ -560,15 +653,21 @@ describe('bodyDescriptorRegistry', () => {
       it('should accept any value for skinColor (free-form)', () => {
         expect(validateDescriptorValue('skinColor', 'olive').valid).toBe(true);
         expect(validateDescriptorValue('skinColor', 'pale').valid).toBe(true);
-        expect(validateDescriptorValue('skinColor', 'dark brown').valid).toBe(true);
-        expect(validateDescriptorValue('skinColor', 'any-random-value').valid).toBe(true);
+        expect(validateDescriptorValue('skinColor', 'dark brown').valid).toBe(
+          true
+        );
+        expect(
+          validateDescriptorValue('skinColor', 'any-random-value').valid
+        ).toBe(true);
       });
 
       it('should accept any value for smell (free-form)', () => {
         expect(validateDescriptorValue('smell', 'pleasant').valid).toBe(true);
         expect(validateDescriptorValue('smell', 'musky').valid).toBe(true);
         expect(validateDescriptorValue('smell', 'like roses').valid).toBe(true);
-        expect(validateDescriptorValue('smell', 'any-random-value').valid).toBe(true);
+        expect(validateDescriptorValue('smell', 'any-random-value').valid).toBe(
+          true
+        );
       });
     });
 
@@ -620,7 +719,17 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should validate all new composition values', () => {
-        const newValues = ['atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'];
+        const newValues = [
+          'atrophied',
+          'emaciated',
+          'skeletal',
+          'malnourished',
+          'dehydrated',
+          'wasted',
+          'desiccated',
+          'bloated',
+          'rotting',
+        ];
         for (const value of newValues) {
           const result = validateDescriptorValue('composition', value);
           expect(result.valid).toBe(true);
@@ -630,9 +739,15 @@ describe('bodyDescriptorRegistry', () => {
 
       it('should format new composition values correctly', () => {
         const composition = BODY_DESCRIPTOR_REGISTRY.composition;
-        expect(composition.formatter('atrophied')).toBe('Body composition: atrophied');
-        expect(composition.formatter('skeletal')).toBe('Body composition: skeletal');
-        expect(composition.formatter('rotting')).toBe('Body composition: rotting');
+        expect(composition.formatter('atrophied')).toBe(
+          'Body composition: atrophied'
+        );
+        expect(composition.formatter('skeletal')).toBe(
+          'Body composition: skeletal'
+        );
+        expect(composition.formatter('rotting')).toBe(
+          'Body composition: rotting'
+        );
       });
     });
 
@@ -657,7 +772,17 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should validate all new build values', () => {
-        const newValues = ['frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'];
+        const newValues = [
+          'frail',
+          'gaunt',
+          'skeletal',
+          'atrophied',
+          'cadaverous',
+          'massive',
+          'willowy',
+          'barrel-chested',
+          'lanky',
+        ];
         for (const value of newValues) {
           const result = validateDescriptorValue('build', value);
           expect(result.valid).toBe(true);
@@ -708,16 +833,24 @@ describe('bodyDescriptorRegistry', () => {
         const sizes = height.validValues;
 
         // Verify smallest to largest ordering
-        expect(sizes.indexOf('microscopic')).toBeLessThan(sizes.indexOf('minuscule'));
+        expect(sizes.indexOf('microscopic')).toBeLessThan(
+          sizes.indexOf('minuscule')
+        );
         expect(sizes.indexOf('minuscule')).toBeLessThan(sizes.indexOf('tiny'));
         expect(sizes.indexOf('tiny')).toBeLessThan(sizes.indexOf('petite'));
         expect(sizes.indexOf('petite')).toBeLessThan(sizes.indexOf('short'));
         expect(sizes.indexOf('short')).toBeLessThan(sizes.indexOf('average'));
         expect(sizes.indexOf('average')).toBeLessThan(sizes.indexOf('tall'));
         expect(sizes.indexOf('tall')).toBeLessThan(sizes.indexOf('very-tall'));
-        expect(sizes.indexOf('very-tall')).toBeLessThan(sizes.indexOf('gigantic'));
-        expect(sizes.indexOf('gigantic')).toBeLessThan(sizes.indexOf('colossal'));
-        expect(sizes.indexOf('colossal')).toBeLessThan(sizes.indexOf('titanic'));
+        expect(sizes.indexOf('very-tall')).toBeLessThan(
+          sizes.indexOf('gigantic')
+        );
+        expect(sizes.indexOf('gigantic')).toBeLessThan(
+          sizes.indexOf('colossal')
+        );
+        expect(sizes.indexOf('colossal')).toBeLessThan(
+          sizes.indexOf('titanic')
+        );
       });
     });
 
@@ -789,7 +922,15 @@ describe('bodyDescriptorRegistry', () => {
 
     describe('Backward compatibility', () => {
       it('should still support all original composition values', () => {
-        const originalValues = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
+        const originalValues = [
+          'underweight',
+          'lean',
+          'average',
+          'soft',
+          'chubby',
+          'overweight',
+          'obese',
+        ];
         for (const value of originalValues) {
           const result = validateDescriptorValue('composition', value);
           expect(result.valid).toBe(true);
@@ -797,7 +938,19 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should still support all original build values', () => {
-        const originalValues = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+        const originalValues = [
+          'skinny',
+          'slim',
+          'lissom',
+          'toned',
+          'athletic',
+          'shapely',
+          'hourglass',
+          'thick',
+          'muscular',
+          'hulking',
+          'stocky',
+        ];
         for (const value of originalValues) {
           const result = validateDescriptorValue('build', value);
           expect(result.valid).toBe(true);
@@ -805,7 +958,15 @@ describe('bodyDescriptorRegistry', () => {
       });
 
       it('should still support all original height values', () => {
-        const originalValues = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+        const originalValues = [
+          'gigantic',
+          'very-tall',
+          'tall',
+          'average',
+          'short',
+          'petite',
+          'tiny',
+        ];
         for (const value of originalValues) {
           const result = validateDescriptorValue('height', value);
           expect(result.valid).toBe(true);

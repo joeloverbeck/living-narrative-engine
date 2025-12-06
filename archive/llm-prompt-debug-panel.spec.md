@@ -1,20 +1,24 @@
 # Specification: LLM Prompt Debug Panel
 
 ## Overview
+
 Add a debug-only UI control to `game.html` that lets developers view the fully composed LLM prompt for the **current acting actor** without triggering any LLM calls. The control sits above the existing "Game Menu" widget, exposes a button labeled `prompt to llm`, and opens a scrollable modal that renders the exact prompt string that would be sent to the LLM for the active turn (thoughts/speech/action/notes prompt), even when the actor is currently using a human player type.
 
 ## Goals
+
 - Surface the assembled LLM prompt in-browser with zero network/LLM spend.
 - Works for any acting actor (LLM or human player_type) as long as a turn context exists.
 - Reuse existing prompt-building pipeline to guarantee parity with live LLM calls.
 - Provide a readable, copyable, scrollable modal with basic metadata (actor, LLM config id, action count).
 
 ## Non-Goals
+
 - Do not change turn logic, action selection, or LLM invocation.
 - Do not add new LLM calls, retries, or caching layers.
 - No persistent storage or logging of prompts.
 
 ## UX & IA
+
 - **Placement:** New widget above the current `Game Menu` panel in `game.html` right-pane.
   - Container id: `llm-prompt-debug-widget`.
   - Contents: label "LLM Prompt Debug" (visually a widget header) + button with text `prompt to llm`.
@@ -26,6 +30,7 @@ Add a debug-only UI control to `game.html` that lets developers view the fully c
   - Loading state: spinner or text "Generating prompt…" while the preview is being built.
 
 ## Data Flow & Responsibilities
+
 - **Trigger:** Clicking `#llm-prompt-debug-button` calls a new GameEngine method (async) to request a prompt preview.
 - **Engine side:**
   - Add a method `previewLlmPromptForCurrentActor()` on `GameEngine`.
@@ -41,6 +46,7 @@ Add a debug-only UI control to `game.html` that lets developers view the fully c
   - Button wiring: add `#llm-prompt-debug-button` to the bootstrap stage `setupMenuButtonListenersStage` (or a sibling stage) to call `gameEngine.previewLlmPromptForCurrentActor()`; handle promise rejections by sending an inline error event/payload to the modal.
 
 ## Error Handling & Edge Cases
+
 - No active turn/handler/context → modal shows "No active turn is in progress" message.
 - Available actions resolve to empty → still build prompt (pipeline should handle empty list); surface `actionCount: 0`.
 - Prompt assembly errors → show partial prompt if returned; list errors in status area.
@@ -48,6 +54,7 @@ Add a debug-only UI control to `game.html` that lets developers view the fully c
 - Actor without `core:player_type` or with human type → still run pipeline and show prompt using current active LLM config; if no LLM config found, surface error state instead of throwing.
 
 ## Touchpoints / Files to Modify
+
 - `game.html`: add debug widget and modal markup (consistent ARIA roles/labels, follows existing modal structure).
 - `css/style.css`: styles for the new widget and modal (monospace, scrollable body, copy button).
 - `src/bootstrapper/stages/uiStages.js`: register click listener for the new button, guarded when `gameEngine` is unavailable.
@@ -60,7 +67,8 @@ Add a debug-only UI control to `game.html` that lets developers view the fully c
 - `src/dependencyInjection/registrations/aiRegistrations.js` (or a small helper) if a lightweight `PromptPreviewService` is introduced to encapsulate the pipeline call.
 
 ## Testing Plan
-- **Unit:** 
+
+- **Unit:**
   - `GameEngine.previewLlmPromptForCurrentActor` builds prompt via `AIPromptPipeline` and never calls `llmAdapter.getAIDecision` or modifies turn state; returns structured errors when context/actor/llm id missing.
   - `PromptPreviewModal` renders prompt text, metadata, and handles copy button; shows error state when payload contains errors or null prompt.
   - `EngineUIManager` routes `core:ui_show_llm_prompt_preview` events to the modal.
@@ -70,6 +78,7 @@ Add a debug-only UI control to `game.html` that lets developers view the fully c
 - **Regression:** ensure existing save/load/LLM selection modals and menu buttons still operate; snapshot the new widget markup in `game.html` if applicable.
 
 ## Out of Scope
+
 - No prompt editing or re-submission to the LLM.
 - No persistence/telemetry of prompts.
 - No additional controls (search/filter) inside the prompt modal for this iteration.

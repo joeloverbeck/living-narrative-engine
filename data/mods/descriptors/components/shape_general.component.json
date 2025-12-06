@@ -26,9 +26,7 @@
         "default": "round"
       }
     },
-    "required": [
-      "shape"
-    ],
+    "required": ["shape"],
     "additionalProperties": false
   },
   "validationRules": {

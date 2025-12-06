@@ -48,14 +48,9 @@ export class BlueprintRecipeValidationRule extends ValidationRule {
         requiredMethods: ['resolveRecipePatterns'],
       }
     );
-    validateDependency(
-      safeEventDispatcher,
-      'ISafeEventDispatcher',
-      logger,
-      {
-        requiredMethods: ['dispatch'],
-      }
-    );
+    validateDependency(safeEventDispatcher, 'ISafeEventDispatcher', logger, {
+      requiredMethods: ['dispatch'],
+    });
 
     this.#logger = logger;
     this.#recipePatternResolver = recipePatternResolver;
@@ -180,7 +175,8 @@ export class BlueprintRecipeValidationRule extends ValidationRule {
     // Calculate coverage metrics
     const totalSlots = Object.keys(blueprint.slots || {}).length;
     const coveredSlots = new Set(Object.keys(resolved || {}));
-    const coverage = totalSlots > 0 ? (coveredSlots.size / totalSlots) * 100 : 0;
+    const coverage =
+      totalSlots > 0 ? (coveredSlots.size / totalSlots) * 100 : 0;
 
     // Check for critically low coverage
     if (coverage < 50) {

@@ -3,6 +3,9 @@
   "id": "affection:event-is-action-push-target-playfully",
   "description": "Checks if the triggering event is for the 'affection:push_target_playfully' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "affection:push_target_playfully"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:push_target_playfully"
+    ]
   }
 }

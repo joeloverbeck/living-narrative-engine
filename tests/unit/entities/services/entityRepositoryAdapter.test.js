@@ -481,9 +481,7 @@ describe('EntityRepositoryAdapter', () => {
       });
 
       it('skips recording id when remove returns false during batch remove', () => {
-        const repoRemoveSpy = jest
-          .spyOn(repo, 'remove')
-          .mockReturnValue(false);
+        const repoRemoveSpy = jest.spyOn(repo, 'remove').mockReturnValue(false);
 
         const result = repo.batchRemove(['e1']);
 

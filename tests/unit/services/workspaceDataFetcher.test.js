@@ -21,9 +21,7 @@ describe('WorkspaceDataFetcher', () => {
     fetcher = new WorkspaceDataFetcher();
     // Spy on window.fetch because we are in the jsdom environment
     fetchSpy = jest.spyOn(window, 'fetch');
-    consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   // Task 1: Setup Mocking (Teardown)

@@ -90,7 +90,12 @@ describe('items:take_from_container action integration', () => {
     it('successfully executes take from container action', async () => {
       // Arrange: Setup scenario with open container containing items
       const scenario = setupTakeFromContainerScenario();
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       // Act: Take item from container
       await testFixture.executeAction('test:actor1', 'chest-1', {
@@ -100,12 +105,23 @@ describe('items:take_from_container action integration', () => {
       });
 
       // Debug: Check what events were dispatched and their payloads
-      console.log('All events:', testFixture.events.map(e => ({ type: e.eventType, payload: e.payload })));
-      console.log('Action ID in attempt_action:', testFixture.events[0]?.payload?.actionId);
+      console.log(
+        'All events:',
+        testFixture.events.map((e) => ({
+          type: e.eventType,
+          payload: e.payload,
+        }))
+      );
+      console.log(
+        'Action ID in attempt_action:',
+        testFixture.events[0]?.payload?.actionId
+      );
 
       // Assert: Verify item removed from container
       const container = testFixture.entityManager.getEntityInstance('chest-1');
-      expect(container.components['items:container'].contents).toEqual(['letter-1']);
+      expect(container.components['items:container'].contents).toEqual([
+        'letter-1',
+      ]);
 
       // Assert: Verify item added to actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -134,7 +150,12 @@ describe('items:take_from_container action integration', () => {
         'safe-1',
         ['revolver-1', 'gold-bar-1', 'letter-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'safe-1', {
         additionalPayload: {
@@ -159,7 +180,12 @@ describe('items:take_from_container action integration', () => {
         'box-1',
         ['coin-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'box-1', {
         additionalPayload: {
@@ -183,7 +209,12 @@ describe('items:take_from_container action integration', () => {
         'trunk-1',
         ['diamond-1', 'ruby-1', 'emerald-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       // Take first item
       await testFixture.executeAction('test:actor1', 'trunk-1', {
@@ -205,7 +236,9 @@ describe('items:take_from_container action integration', () => {
 
       // Verify container has only one item left
       const container = testFixture.entityManager.getEntityInstance('trunk-1');
-      expect(container.components['items:container'].contents).toEqual(['emerald-1']);
+      expect(container.components['items:container'].contents).toEqual([
+        'emerald-1',
+      ]);
     });
   });
 
@@ -220,7 +253,12 @@ describe('items:take_from_container action integration', () => {
         ['item1', 'item2'],
         2 // maxItems = 2
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'chest-2', {
         additionalPayload: {
@@ -230,11 +268,15 @@ describe('items:take_from_container action integration', () => {
 
       // Verify item NOT removed from container
       const container = testFixture.entityManager.getEntityInstance('chest-2');
-      expect(container.components['items:container'].contents).toContain('sword-1');
+      expect(container.components['items:container'].contents).toContain(
+        'sword-1'
+      );
 
       // Verify item NOT added to inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
-      expect(actor.components['items:inventory'].items).not.toContain('sword-1');
+      expect(actor.components['items:inventory'].items).not.toContain(
+        'sword-1'
+      );
 
       // Verify turn ended with failure
       const turnEndedEvent = testFixture.events.find(
@@ -254,7 +296,12 @@ describe('items:take_from_container action integration', () => {
         ['torch-1'],
         5 // maxItems = 5
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'barrel-1', {
         additionalPayload: {
@@ -277,7 +324,12 @@ describe('items:take_from_container action integration', () => {
         ['book-1'],
         false // isOpen = false
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'locked-chest', {
         additionalPayload: {
@@ -288,7 +340,9 @@ describe('items:take_from_container action integration', () => {
       // Verify item NOT removed from container
       const container =
         testFixture.entityManager.getEntityInstance('locked-chest');
-      expect(container.components['items:container'].contents).toContain('book-1');
+      expect(container.components['items:container'].contents).toContain(
+        'book-1'
+      );
 
       // Verify item NOT in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -302,7 +356,12 @@ describe('items:take_from_container action integration', () => {
         'crate-1',
         ['diary-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'crate-1', {
         additionalPayload: {
@@ -312,7 +371,9 @@ describe('items:take_from_container action integration', () => {
 
       // Verify container unchanged
       const container = testFixture.entityManager.getEntityInstance('crate-1');
-      expect(container.components['items:container'].contents).toEqual(['diary-1']);
+      expect(container.components['items:container'].contents).toEqual([
+        'diary-1',
+      ]);
 
       // Verify item NOT in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -330,7 +391,12 @@ describe('items:take_from_container action integration', () => {
         'toolbox-1',
         ['hammer-1', 'wrench-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'toolbox-1', {
         additionalPayload: {
@@ -362,7 +428,12 @@ describe('items:take_from_container action integration', () => {
         ['item1', 'item2', 'item3'],
         3 // maxItems = 3
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'wine-rack', {
         additionalPayload: {
@@ -380,7 +451,9 @@ describe('items:take_from_container action integration', () => {
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');
-      expect(failedEvent.payload.contextualData.reason).toBe('max_items_exceeded');
+      expect(failedEvent.payload.contextualData.reason).toBe(
+        'max_items_exceeded'
+      );
     });
   });
 
@@ -392,7 +465,12 @@ describe('items:take_from_container action integration', () => {
         'drawer-1',
         ['document-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'drawer-1', {
         additionalPayload: {
@@ -414,7 +492,12 @@ describe('items:take_from_container action integration', () => {
         'merchant-chest',
         ['silk-1', 'spice-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'merchant-chest', {
         additionalPayload: {
@@ -492,8 +575,11 @@ describe('items:take_from_container action integration', () => {
           secondaryId: 'apple-1',
         },
       });
-      const actor1After = testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor1After.components['items:inventory'].items).toContain('apple-1');
+      const actor1After =
+        testFixture.entityManager.getEntityInstance('actor-1');
+      expect(actor1After.components['items:inventory'].items).toContain(
+        'apple-1'
+      );
 
       // Actor 2 takes bread
       await testFixture.executeAction('actor-2', 'supply-crate', {
@@ -501,8 +587,11 @@ describe('items:take_from_container action integration', () => {
           secondaryId: 'bread-1',
         },
       });
-      const actor2After = testFixture.entityManager.getEntityInstance('actor-2');
-      expect(actor2After.components['items:inventory'].items).toContain('bread-1');
+      const actor2After =
+        testFixture.entityManager.getEntityInstance('actor-2');
+      expect(actor2After.components['items:inventory'].items).toContain(
+        'bread-1'
+      );
 
       // Verify container now empty
       const containerAfter =
@@ -519,7 +608,12 @@ describe('items:take_from_container action integration', () => {
         'display-case',
         ['artifact-1']
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       await testFixture.executeAction('test:actor1', 'display-case', {
         additionalPayload: {
@@ -546,7 +640,12 @@ describe('items:take_from_container action integration', () => {
         ['key-1'],
         false // Initially closed
       );
-      testFixture.reset([scenario.room, scenario.actor, scenario.container, ...scenario.items]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.container,
+        ...scenario.items,
+      ]);
 
       // First open the container (manually set for this test)
       const container =

@@ -20,7 +20,7 @@ describe('validateOperations integration tests', () => {
       const schemaFiles = glob
         .sync(path.join(projectRoot, 'data/schemas/operations/*.schema.json'))
         .filter(
-          f =>
+          (f) =>
             !f.endsWith('base-operation.schema.json') &&
             !f.endsWith('nested-operation.schema.json')
         );
@@ -47,19 +47,31 @@ describe('validateOperations integration tests', () => {
       expect(operations.length).toBeGreaterThan(0);
 
       // Step 2: Check schema references
-      const operationSchemaPath = path.join(projectRoot, 'data/schemas/operation.schema.json');
-      const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
+      const operationSchemaPath = path.join(
+        projectRoot,
+        'data/schemas/operation.schema.json'
+      );
+      const operationSchema = JSON.parse(
+        fs.readFileSync(operationSchemaPath, 'utf8')
+      );
       const referencedSchemas =
-        operationSchema.$defs?.Operation?.anyOf?.map(ref => path.basename(ref.$ref)) || [];
+        operationSchema.$defs?.Operation?.anyOf?.map((ref) =>
+          path.basename(ref.$ref)
+        ) || [];
 
       for (const op of operations) {
         if (!referencedSchemas.includes(op.schemaFile)) {
-          errors.push(`Schema ${op.schemaFile} not referenced in operation.schema.json`);
+          errors.push(
+            `Schema ${op.schemaFile} not referenced in operation.schema.json`
+          );
         }
       }
 
       // Step 3: Check KNOWN_OPERATION_TYPES
-      const preValidationPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+      const preValidationPath = path.join(
+        projectRoot,
+        'src/utils/preValidationUtils.js'
+      );
       const preValidationContent = fs.readFileSync(preValidationPath, 'utf8');
       const whitelistMatch = preValidationContent.match(
         /const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
@@ -86,7 +98,9 @@ describe('validateOperations integration tests', () => {
       );
       const tokensContent = fs.readFileSync(tokensPath, 'utf8');
       const definedTokens = new Set();
-      const tokenMatches = tokensContent.matchAll(/(\w+Handler):\s*['"](\w+Handler)['"]/g);
+      const tokenMatches = tokensContent.matchAll(
+        /(\w+Handler):\s*['"](\w+Handler)['"]/g
+      );
 
       for (const match of tokenMatches) {
         definedTokens.add(match[1]);
@@ -106,7 +120,9 @@ describe('validateOperations integration tests', () => {
       );
       const registrationsContent = fs.readFileSync(registrationsPath, 'utf8');
       const registeredTokens = new Set();
-      const regMatches = registrationsContent.matchAll(/\[tokens\.(\w+Handler)/g);
+      const regMatches = registrationsContent.matchAll(
+        /\[tokens\.(\w+Handler)/g
+      );
 
       for (const match of regMatches) {
         registeredTokens.add(match[1]);
@@ -137,7 +153,9 @@ describe('validateOperations integration tests', () => {
       for (const op of operations) {
         const expectedToken = toTokenName(op.type);
         if (!mappedOperations.has(op.type)) {
-          errors.push(`Operation ${op.type} not mapped in interpreterRegistrations.js`);
+          errors.push(
+            `Operation ${op.type} not mapped in interpreterRegistrations.js`
+          );
         } else if (mappedOperations.get(op.type) !== expectedToken) {
           errors.push(
             `Operation ${op.type} mapped to wrong token: ${mappedOperations.get(op.type)}, expected: ${expectedToken}`
@@ -155,7 +173,9 @@ describe('validateOperations integration tests', () => {
         );
 
         if (!fs.existsSync(handlerPath)) {
-          errors.push(`Handler file ${expectedFileName} not found for ${op.type}`);
+          errors.push(
+            `Handler file ${expectedFileName} not found for ${op.type}`
+          );
         }
       }
 
@@ -179,7 +199,7 @@ describe('validateOperations integration tests', () => {
       const schemaFiles = glob
         .sync(path.join(projectRoot, 'data/schemas/operations/*.schema.json'))
         .filter(
-          f =>
+          (f) =>
             !f.endsWith('base-operation.schema.json') &&
             !f.endsWith('nested-operation.schema.json')
         );
@@ -218,7 +238,9 @@ describe('validateOperations integration tests', () => {
       const tokensContent = fs.readFileSync(tokensPath, 'utf8');
 
       // Find all handler tokens
-      const tokenMatches = tokensContent.matchAll(/(\w+Handler):\s*['"](\w+Handler)['"]/g);
+      const tokenMatches = tokensContent.matchAll(
+        /(\w+Handler):\s*['"](\w+Handler)['"]/g
+      );
       const handlerTokens = [];
 
       for (const match of tokenMatches) {
@@ -229,17 +251,24 @@ describe('validateOperations integration tests', () => {
       expect(handlerTokens.length).toBeGreaterThan(0);
 
       // Most operation handlers should NOT have "I" prefix
-      const tokensWithIPrefix = handlerTokens.filter(t => t.startsWith('I'));
-      const tokensWithoutIPrefix = handlerTokens.filter(t => !t.startsWith('I'));
+      const tokensWithIPrefix = handlerTokens.filter((t) => t.startsWith('I'));
+      const tokensWithoutIPrefix = handlerTokens.filter(
+        (t) => !t.startsWith('I')
+      );
 
       // The majority should not have "I" prefix (operation handlers)
       // A small number with "I" prefix is acceptable (service interfaces)
-      expect(tokensWithoutIPrefix.length).toBeGreaterThan(tokensWithIPrefix.length);
+      expect(tokensWithoutIPrefix.length).toBeGreaterThan(
+        tokensWithIPrefix.length
+      );
     });
 
     it('should have all KNOWN_OPERATION_TYPES with corresponding schemas or be special cases', () => {
       // Some operations in KNOWN_OPERATION_TYPES don't have schema files (e.g., SEQUENCE)
-      const preValidationPath = path.join(projectRoot, 'src/utils/preValidationUtils.js');
+      const preValidationPath = path.join(
+        projectRoot,
+        'src/utils/preValidationUtils.js'
+      );
       const preValidationContent = fs.readFileSync(preValidationPath, 'utf8');
       const whitelistMatch = preValidationContent.match(
         /const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
@@ -256,7 +285,7 @@ describe('validateOperations integration tests', () => {
       const schemaFiles = glob
         .sync(path.join(projectRoot, 'data/schemas/operations/*.schema.json'))
         .filter(
-          f =>
+          (f) =>
             !f.endsWith('base-operation.schema.json') &&
             !f.endsWith('nested-operation.schema.json')
         );
@@ -311,7 +340,7 @@ function toTokenName(operationType) {
   return (
     operationType
       .split('_')
-      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
       .join('') + 'Handler'
   );
 }
@@ -325,7 +354,9 @@ function toHandlerFileName(operationType) {
   return (
     parts
       .map((word, idx) =>
-        idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase()
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
       )
       .join('') + 'Handler.js'
   );
@@ -340,7 +371,9 @@ function toSchemaFileName(operationType) {
   return (
     parts
       .map((word, idx) =>
-        idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase()
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
       )
       .join('') + '.schema.json'
   );

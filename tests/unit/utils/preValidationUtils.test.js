@@ -294,15 +294,20 @@ describe('preValidationUtils', () => {
         ];
         const result = validateAllOperations(operations, 'root', true);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation at index 1 failed validation: Missing required "type" field in operation');
+        expect(result.error).toBe(
+          'Operation at index 1 failed validation: Missing required "type" field in operation'
+        );
 
         expect(result.path).toBe('root[1]');
       });
 
       it('should include snippet when parameters object is missing', () => {
         const operations = [
-          { type: 'GET_NAME', parameters: { entity_ref: 'actor', result_variable: 'name' } },
-          { type: 'GET_NAME', parameters: null }
+          {
+            type: 'GET_NAME',
+            parameters: { entity_ref: 'actor', result_variable: 'name' },
+          },
+          { type: 'GET_NAME', parameters: null },
         ];
 
         const result = validateAllOperations(operations, 'root', true);
@@ -315,7 +320,7 @@ describe('preValidationUtils', () => {
         expect(result.suggestions).toEqual(
           expect.arrayContaining([
             'Add a "parameters" object with the required fields for this operation type',
-            expect.stringContaining('Problematic operation:')
+            expect.stringContaining('Problematic operation:'),
           ])
         );
       });
@@ -337,8 +342,9 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation at index 0 failed validation: Operation must be an object');
-
+        expect(result.error).toBe(
+          'Operation at index 0 failed validation: Operation must be an object'
+        );
       });
 
       it('should fail for invalid operations in else_actions', () => {
@@ -349,8 +355,9 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation at index 0 failed validation: Operation must be an object');
-
+        expect(result.error).toBe(
+          'Operation at index 0 failed validation: Operation must be an object'
+        );
       });
 
       it('should recursively validate nested objects', () => {
@@ -365,8 +372,9 @@ describe('preValidationUtils', () => {
         };
         const result = validateAllOperations(data);
         expect(result.isValid).toBe(false);
-        expect(result.error).toBe('Operation at index 0 failed validation: Operation "type" field must be a string');
-
+        expect(result.error).toBe(
+          'Operation at index 0 failed validation: Operation "type" field must be a string'
+        );
       });
 
       it('should skip validation for non-operation fields', () => {
@@ -917,18 +925,21 @@ describe('preValidationUtils', () => {
     it('should include all registered operation handlers', () => {
       // Arrange
       const whitelistedTypes = KNOWN_OPERATION_TYPES;
-      console.log('DEBUG: KNOWN_OPERATION_TYPES includes APPLY_DAMAGE:', whitelistedTypes.includes('APPLY_DAMAGE'));
+      console.log(
+        'DEBUG: KNOWN_OPERATION_TYPES includes APPLY_DAMAGE:',
+        whitelistedTypes.includes('APPLY_DAMAGE')
+      );
 
       // Act & Assert - verify each registered handler is in the whitelist
       const missing = registeredHandlers.filter(
-        type => !whitelistedTypes.includes(type)
+        (type) => !whitelistedTypes.includes(type)
       );
 
       if (missing.length > 0) {
         throw new Error(
           `Expected whitelisted operation types to include all registered handlers.\n` +
-          `Missing from KNOWN_OPERATION_TYPES: ${missing.join(', ')}\n\n` +
-          `Add these types to src/utils/preValidationUtils.js (lines 32-94)`
+            `Missing from KNOWN_OPERATION_TYPES: ${missing.join(', ')}\n\n` +
+            `Add these types to src/utils/preValidationUtils.js (lines 32-94)`
         );
       }
 
@@ -938,16 +949,16 @@ describe('preValidationUtils', () => {
     it('should not include non-existent operation types', () => {
       // Act & Assert - verify each whitelisted type has a registered handler
       const orphaned = KNOWN_OPERATION_TYPES.filter(
-        type => !registeredHandlers.includes(type)
+        (type) => !registeredHandlers.includes(type)
       );
 
       if (orphaned.length > 0) {
         throw new Error(
           `Expected all whitelisted types to have registered handlers.\n` +
-          `No handler found for: ${orphaned.join(', ')}\n\n` +
-          `Either:\n` +
-          `1. Register handlers for these types, or\n` +
-          `2. Remove from KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
+            `No handler found for: ${orphaned.join(', ')}\n\n` +
+            `Either:\n` +
+            `1. Register handlers for these types, or\n` +
+            `2. Remove from KNOWN_OPERATION_TYPES in src/utils/preValidationUtils.js`
         );
       }
 

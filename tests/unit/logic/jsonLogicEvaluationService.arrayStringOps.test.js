@@ -370,11 +370,7 @@ describe('JsonLogicEvaluationService - Array/String Operator Tests ([PARENT_ID].
 
       test('should concatenate arrays with {"merge": [[array1], [array2], ...]}', () => {
         const conditionJson = {
-          merge: [
-            [1, 2],
-            [3, 4],
-            [5],
-          ],
+          merge: [[1, 2], [3, 4], [5]],
         };
         const mockContext = createJsonLogicContext(
           baseEvent,

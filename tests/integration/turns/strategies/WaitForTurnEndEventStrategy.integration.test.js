@@ -86,9 +86,7 @@ function createHandler(logger, overrides = {}) {
     _isDestroyed: false,
     getLogger: () => logger,
     requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
-    requestAwaitingInputStateTransition: jest
-      .fn()
-      .mockResolvedValue(undefined),
+    requestAwaitingInputStateTransition: jest.fn().mockResolvedValue(undefined),
     requestProcessingCommandStateTransition: jest
       .fn()
       .mockResolvedValue(undefined),
@@ -149,7 +147,9 @@ describe('WaitForTurnEndEventStrategy integration', () => {
 
     await strategy.execute(context, TurnDirective.WAIT_FOR_EVENT, {});
 
-    expect(handler.requestAwaitingExternalTurnEndStateTransition).toHaveBeenCalledTimes(1);
+    expect(
+      handler.requestAwaitingExternalTurnEndStateTransition
+    ).toHaveBeenCalledTimes(1);
     expect(logger.debug).toHaveBeenCalledWith(
       'WaitForTurnEndEventStrategy: Actor actor-123 to wait for external event (e.g., core:turn_ended). Requesting transition to AwaitingExternalTurnEndState.'
     );
@@ -173,7 +173,9 @@ describe('WaitForTurnEndEventStrategy integration', () => {
     expect(logger.error).toHaveBeenCalledWith(
       'WaitForTurnEndEventStrategy: Received wrong directive (RE_PROMPT). Expected WAIT_FOR_EVENT.'
     );
-    expect(handler.requestAwaitingExternalTurnEndStateTransition).not.toHaveBeenCalled();
+    expect(
+      handler.requestAwaitingExternalTurnEndStateTransition
+    ).not.toHaveBeenCalled();
   });
 
   it('ends the turn with an error when no actor is available on the context', async () => {
@@ -187,7 +189,9 @@ describe('WaitForTurnEndEventStrategy integration', () => {
 
     await strategy.execute(context, TurnDirective.WAIT_FOR_EVENT, {});
 
-    expect(handler.requestAwaitingExternalTurnEndStateTransition).not.toHaveBeenCalled();
+    expect(
+      handler.requestAwaitingExternalTurnEndStateTransition
+    ).not.toHaveBeenCalled();
     expect(endTurnSpy).toHaveBeenCalledTimes(1);
     const errorArg = endTurnSpy.mock.calls[0][0];
     expect(errorArg).toBeInstanceOf(Error);
@@ -214,7 +218,9 @@ describe('WaitForTurnEndEventStrategy integration', () => {
 
     await strategy.execute(context, TurnDirective.WAIT_FOR_EVENT, {});
 
-    expect(handler.requestAwaitingExternalTurnEndStateTransition).toHaveBeenCalledTimes(1);
+    expect(
+      handler.requestAwaitingExternalTurnEndStateTransition
+    ).toHaveBeenCalledTimes(1);
     expect(logger.error).toHaveBeenCalledWith(
       'WaitForTurnEndEventStrategy: Failed to request transition to AwaitingExternalTurnEndState for actor actor-123. Error: state machine jammed',
       transitionError

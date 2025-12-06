@@ -45,7 +45,11 @@ class NodeDataFetcher {
         // Get the current module URL and convert to file path
         const currentModuleFile = fileURLToPath(import.meta.url);
         // Navigate to project root (assuming this file is in src/data/)
-        const projectRoot = path.resolve(path.dirname(currentModuleFile), '..', '..');
+        const projectRoot = path.resolve(
+          path.dirname(currentModuleFile),
+          '..',
+          '..'
+        );
         filePath = path.resolve(projectRoot, filePath);
       }
 
@@ -62,7 +66,7 @@ class NodeDataFetcher {
           `NodeDataFetcher: File not found at ${identifier} (resolved to ${filePath || identifier})`
         );
       }
-      
+
       if (error instanceof SyntaxError) {
         throw new Error(
           `NodeDataFetcher: Invalid JSON in file ${identifier}: ${error.message}`

@@ -58,11 +58,15 @@ describe('Aim Item Rules Validation', () => {
 
       // Operation 2: ADD_COMPONENT
       expect(aimItemRule.actions[1].type).toBe('ADD_COMPONENT');
-      expect(aimItemRule.actions[1].parameters.component_type).toBe('items:aimed_at');
+      expect(aimItemRule.actions[1].parameters.component_type).toBe(
+        'items:aimed_at'
+      );
 
       // Operation 3: DISPATCH_EVENT
       expect(aimItemRule.actions[2].type).toBe('DISPATCH_EVENT');
-      expect(aimItemRule.actions[2].parameters.eventType).toBe('items:item_aimed');
+      expect(aimItemRule.actions[2].parameters.eventType).toBe(
+        'items:item_aimed'
+      );
 
       // Operation 4: END_TURN
       expect(aimItemRule.actions[3].type).toBe('END_TURN');
@@ -122,18 +126,24 @@ describe('Aim Item Rules Validation', () => {
 
       // Operation 1: QUERY_COMPONENT
       expect(lowerAimRule.actions[0].type).toBe('QUERY_COMPONENT');
-      expect(lowerAimRule.actions[0].parameters.component_type).toBe('items:aimed_at');
+      expect(lowerAimRule.actions[0].parameters.component_type).toBe(
+        'items:aimed_at'
+      );
 
       // Operation 2: GET_TIMESTAMP
       expect(lowerAimRule.actions[1].type).toBe('GET_TIMESTAMP');
 
       // Operation 3: REMOVE_COMPONENT
       expect(lowerAimRule.actions[2].type).toBe('REMOVE_COMPONENT');
-      expect(lowerAimRule.actions[2].parameters.component_type).toBe('items:aimed_at');
+      expect(lowerAimRule.actions[2].parameters.component_type).toBe(
+        'items:aimed_at'
+      );
 
       // Operation 4: DISPATCH_EVENT
       expect(lowerAimRule.actions[3].type).toBe('DISPATCH_EVENT');
-      expect(lowerAimRule.actions[3].parameters.eventType).toBe('items:aim_lowered');
+      expect(lowerAimRule.actions[3].parameters.eventType).toBe(
+        'items:aim_lowered'
+      );
 
       // Operation 5: END_TURN
       expect(lowerAimRule.actions[4].type).toBe('END_TURN');
@@ -181,8 +191,12 @@ describe('Aim Item Rules Validation', () => {
       expect(lowerTimestampOp.type).toBe('GET_TIMESTAMP');
 
       // Both store result in currentTimestamp variable
-      expect(aimTimestampOp.parameters.result_variable).toBe('currentTimestamp');
-      expect(lowerTimestampOp.parameters.result_variable).toBe('currentTimestamp');
+      expect(aimTimestampOp.parameters.result_variable).toBe(
+        'currentTimestamp'
+      );
+      expect(lowerTimestampOp.parameters.result_variable).toBe(
+        'currentTimestamp'
+      );
     });
 
     it('both rules should end with END_TURN operation', () => {
@@ -200,12 +214,16 @@ describe('Aim Item Rules Validation', () => {
 
     it('both rules should dispatch events related to aiming', () => {
       // handle_aim_item dispatches items:item_aimed
-      const aimDispatchOp = aimItemRule.actions.find(op => op.type === 'DISPATCH_EVENT');
+      const aimDispatchOp = aimItemRule.actions.find(
+        (op) => op.type === 'DISPATCH_EVENT'
+      );
       expect(aimDispatchOp).toBeDefined();
       expect(aimDispatchOp.parameters.eventType).toBe('items:item_aimed');
 
       // handle_lower_aim dispatches items:aim_lowered
-      const lowerDispatchOp = lowerAimRule.actions.find(op => op.type === 'DISPATCH_EVENT');
+      const lowerDispatchOp = lowerAimRule.actions.find(
+        (op) => op.type === 'DISPATCH_EVENT'
+      );
       expect(lowerDispatchOp).toBeDefined();
       expect(lowerDispatchOp.parameters.eventType).toBe('items:aim_lowered');
     });

@@ -39,7 +39,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
   describe('Successful Execution', () => {
     it('should successfully move actor one spot to the left', async () => {
       const scenario = createScootScenario();
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -89,7 +91,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
           { id: 'actor1', name: 'Alice', spotIndex: 3 },
         ],
       });
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -127,7 +131,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
   describe('Component State Validation', () => {
     it('should maintain furniture_id reference after scooting', async () => {
       const scenario = createScootScenario();
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -147,7 +153,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
     it('should update furniture spots array atomically', async () => {
       const scenario = createScootScenario();
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -185,7 +193,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
           { id: 'actor1', name: 'Alice', spotIndex: 3 },
         ],
       });
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -243,7 +253,9 @@ describe('scoot_closer action execution - Integration Tests', () => {
   describe('Edge Cases', () => {
     it('should handle immediate neighbor scenario', async () => {
       const scenario = createScootScenario();
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
 
       // Act - should still execute successfully
       await testFixture.executeAction(actor.id, scenario.furniture.id);
@@ -259,14 +271,14 @@ describe('scoot_closer action execution - Integration Tests', () => {
       );
       const successEvent = getSuccessEvent();
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toContain(
-        'Alice scoots closer to'
-      );
+      expect(successEvent.payload.message).toContain('Alice scoots closer to');
     });
 
     it('should preserve spot_index type as number after execution', async () => {
       const scenario = createScootScenario();
-      const actor = scenario.seatedActors.find((entity) => entity.id === 'actor1');
+      const actor = scenario.seatedActors.find(
+        (entity) => entity.id === 'actor1'
+      );
       const occupant = scenario.seatedActors.find(
         (entity) => entity.id === 'occupant1'
       );
@@ -278,8 +290,7 @@ describe('scoot_closer action execution - Integration Tests', () => {
 
       // Assert - spot_index is number, not string
       const actorEntity = testFixture.entityManager.getEntityInstance(actor.id);
-      const sittingData =
-        actorEntity.components['positioning:sitting_on'];
+      const sittingData = actorEntity.components['positioning:sitting_on'];
       expect(typeof sittingData.spot_index).toBe('number');
       expect(sittingData.spot_index).toBe(1);
     });

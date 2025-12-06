@@ -231,7 +231,9 @@ describe('registerFacadeAndManager', () => {
       // The production EngineUIManager throws immediately when eventDispatcher is null
       expect(() => {
         factory(mockContainer);
-      }).toThrow('EngineUIManager: ISafeEventDispatcher dependency is required.');
+      }).toThrow(
+        'EngineUIManager: ISafeEventDispatcher dependency is required.'
+      );
     });
 
     it('should handle null domUiFacade in EngineUIManager factory', () => {

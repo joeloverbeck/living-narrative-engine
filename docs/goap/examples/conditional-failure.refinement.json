@@ -9,10 +9,7 @@
     "condition": {
       "and": [
         {
-          "has_component": [
-            { "var": "actor" },
-            "core:health"
-          ]
+          "has_component": [{ "var": "actor" }, "core:health"]
         },
         {
           "<": [
@@ -31,10 +28,7 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "items:inventory"
-            ]
+            "has_component": [{ "var": "actor" }, "items:inventory"]
           },
           {
             "has_component": [
@@ -64,10 +58,7 @@
           "stepType": "conditional",
           "description": "Try to rest/recover naturally (optional fallback)",
           "condition": {
-            "has_component": [
-              { "var": "actor" },
-              "core:can_rest"
-            ]
+            "has_component": [{ "var": "actor" }, "core:can_rest"]
           },
           "thenSteps": [
             {
@@ -87,16 +78,10 @@
       "condition": {
         "and": [
           {
-            "has_component": [
-              { "var": "actor" },
-              "core:health"
-            ]
+            "has_component": [{ "var": "actor" }, "core:health"]
           },
           {
-            ">": [
-              { "var": "actor.components.core:health.current" },
-              50
-            ]
+            ">": [{ "var": "actor.components.core:health.current" }, 50]
           }
         ]
       },

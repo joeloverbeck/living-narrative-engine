@@ -3,7 +3,10 @@ import GameEngineSaveAdapter from '../../../src/adapters/GameEngineSaveAdapter.j
 
 const createAdapter = (engineOverrides = {}) => {
   const defaultTriggerManualSave = jest.fn();
-  const engine = { triggerManualSave: defaultTriggerManualSave, ...engineOverrides };
+  const engine = {
+    triggerManualSave: defaultTriggerManualSave,
+    ...engineOverrides,
+  };
   const adapter = new GameEngineSaveAdapter(engine);
   return { adapter, engine, triggerManualSave: engine.triggerManualSave };
 };
@@ -15,7 +18,9 @@ describe('GameEngineSaveAdapter', () => {
       triggerManualSave: jest.fn().mockResolvedValue(saveResult),
     });
 
-    await expect(adapter.save('slot-1', 'First save')).resolves.toBe(saveResult);
+    await expect(adapter.save('slot-1', 'First save')).resolves.toBe(
+      saveResult
+    );
 
     expect(triggerManualSave).toHaveBeenCalledTimes(1);
     expect(triggerManualSave).toHaveBeenCalledWith('First save', 'slot-1');

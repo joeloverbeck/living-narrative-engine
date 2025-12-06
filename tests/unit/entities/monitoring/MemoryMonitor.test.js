@@ -16,7 +16,12 @@ jest.mock('../../../../src/utils/environmentUtils.js', () => ({
 }));
 
 const MB = 1024 * 1024;
-const createUsage = ({ heapUsed, heapTotal = heapUsed * 2, rss = 0, external = 0 }) => ({
+const createUsage = ({
+  heapUsed,
+  heapTotal = heapUsed * 2,
+  rss = 0,
+  external = 0,
+}) => ({
   heapUsed,
   heapTotal,
   heapLimit: heapTotal,
@@ -38,7 +43,9 @@ describe('MemoryMonitor', () => {
     );
 
   const latestDispatchFor = (type) => {
-    const calls = eventBus.dispatch.mock.calls.filter(([event]) => event?.type === type);
+    const calls = eventBus.dispatch.mock.calls.filter(
+      ([event]) => event?.type === type
+    );
     return calls.length ? calls[calls.length - 1][0] : undefined;
   };
 
@@ -73,23 +80,29 @@ describe('MemoryMonitor', () => {
   });
 
   it('initializes with defaults and validates thresholds', () => {
-    getMemoryUsage.mockReturnValue(createUsage({ heapUsed: 20 * MB, heapTotal: 80 * MB }));
+    getMemoryUsage.mockReturnValue(
+      createUsage({ heapUsed: 20 * MB, heapTotal: 80 * MB })
+    );
 
     const defaultMonitor = new MemoryMonitor({ logger, eventBus });
 
     expect(infoIncludes('MemoryMonitor initialized')).toBe(true);
     expect(defaultMonitor.getConfiguration()).toMatchObject({
       thresholds: { heapWarning: 0.7, heapCritical: 0.85 },
-      leakDetection: expect.objectContaining({ windowSize: 100, sensitivity: 'medium' }),
+      leakDetection: expect.objectContaining({
+        windowSize: 100,
+        sensitivity: 'medium',
+      }),
     });
 
-    expect(() =>
-      new MemoryMonitor({
-        logger,
-        eventBus,
-        heapWarning: 0.9,
-        heapCritical: 0.8,
-      })
+    expect(
+      () =>
+        new MemoryMonitor({
+          logger,
+          eventBus,
+          heapWarning: 0.9,
+          heapCritical: 0.8,
+        })
     ).toThrow(InvalidArgumentError);
   });
 
@@ -126,7 +139,10 @@ describe('MemoryMonitor', () => {
     jest.advanceTimersByTime(50);
     expect(warningHandler).toHaveBeenCalledTimes(1);
     const warningEvent = latestDispatchFor('MEMORY_THRESHOLD_EXCEEDED');
-    expect(warningEvent.payload).toMatchObject({ level: 'warning', type: 'heap' });
+    expect(warningEvent.payload).toMatchObject({
+      level: 'warning',
+      type: 'heap',
+    });
 
     jest.advanceTimersByTime(50);
     expect(criticalHandler).toHaveBeenCalledTimes(1);
@@ -135,7 +151,10 @@ describe('MemoryMonitor', () => {
       expect.any(Error)
     );
     const criticalEvent = latestDispatchFor('MEMORY_THRESHOLD_EXCEEDED');
-    expect(criticalEvent.payload).toMatchObject({ level: 'critical', type: 'heap' });
+    expect(criticalEvent.payload).toMatchObject({
+      level: 'critical',
+      type: 'heap',
+    });
 
     jest.advanceTimersByTime(50);
     expect(monitor.getPressureLevel()).toBe('normal');
@@ -246,7 +265,9 @@ describe('MemoryMonitor', () => {
   });
 
   it('handles edge cases, validation failures, and browser memory API', () => {
-    const emptyMonitor = createMonitor({ leakDetectionConfig: { windowSize: 4 } });
+    const emptyMonitor = createMonitor({
+      leakDetectionConfig: { windowSize: 4 },
+    });
 
     expect(emptyMonitor.detectMemoryLeak()).toEqual(
       expect.objectContaining({ detected: false, trend: 'insufficient_data' })
@@ -264,7 +285,9 @@ describe('MemoryMonitor', () => {
       ...flatSequence[Math.min(idx++, flatSequence.length - 1)],
     }));
 
-    const zeroSpanMonitor = createMonitor({ leakDetectionConfig: { windowSize: 4 } });
+    const zeroSpanMonitor = createMonitor({
+      leakDetectionConfig: { windowSize: 4 },
+    });
     zeroSpanMonitor.start();
     jest.advanceTimersByTime(200);
     const zeroSpanResult = zeroSpanMonitor.detectMemoryLeak();
@@ -283,7 +306,9 @@ describe('MemoryMonitor', () => {
       ...altSequence[Math.min(altIndex++, altSequence.length - 1)],
     }));
 
-    const patternMonitor = createMonitor({ leakDetectionConfig: { windowSize: 4 } });
+    const patternMonitor = createMonitor({
+      leakDetectionConfig: { windowSize: 4 },
+    });
     patternMonitor.start();
     jest.advanceTimersByTime(200);
     const pattern = patternMonitor.analyzeGrowthPattern();
@@ -295,7 +320,9 @@ describe('MemoryMonitor', () => {
       InvalidArgumentError
     );
 
-    expect(() => patternMonitor.onThresholdExceeded('', () => {})).toThrow(InvalidArgumentError);
+    expect(() => patternMonitor.onThresholdExceeded('', () => {})).toThrow(
+      InvalidArgumentError
+    );
     expect(() => patternMonitor.onThresholdExceeded('warning')).toThrow(Error);
 
     eventBus.dispatch.mockClear();
@@ -313,22 +340,25 @@ describe('MemoryMonitor', () => {
         jsHeapSizeLimit: 160 * MB,
       },
     };
-    getMemoryUsage.mockReturnValue(createUsage({ heapUsed: 10 * MB, heapTotal: 40 * MB }));
+    getMemoryUsage.mockReturnValue(
+      createUsage({ heapUsed: 10 * MB, heapTotal: 40 * MB })
+    );
     const browserMonitor = createMonitor();
     browserMonitor.start();
     const [browserSnapshot] = browserMonitor.getHistory();
-    expect(browserSnapshot.usagePercent).toBeCloseTo(40 * MB / (160 * MB));
+    expect(browserSnapshot.usagePercent).toBeCloseTo((40 * MB) / (160 * MB));
     expect(getMemoryUsage).not.toHaveBeenCalled();
     browserMonitor.stop();
   });
 
   it('exercises fallback memory usage paths and additional threshold validation', () => {
-    expect(() =>
-      new MemoryMonitor({
-        logger,
-        eventBus,
-        heapCritical: -0.1,
-      })
+    expect(
+      () =>
+        new MemoryMonitor({
+          logger,
+          eventBus,
+          heapCritical: -0.1,
+        })
     ).toThrow(InvalidArgumentError);
 
     global.performance = {
@@ -392,7 +422,11 @@ describe('MemoryMonitor', () => {
     }));
 
     const growthMonitor = createMonitor({
-      leakDetectionConfig: { windowSize: 4, checkInterval: 50, sensitivity: 'low' },
+      leakDetectionConfig: {
+        windowSize: 4,
+        checkInterval: 50,
+        sensitivity: 'low',
+      },
     });
     growthMonitor.start();
     jest.advanceTimersByTime(150);
@@ -421,10 +455,14 @@ describe('MemoryMonitor', () => {
     ];
     let shrinkingIndex = 0;
     getMemoryUsage.mockImplementation(() => ({
-      ...shrinkingSequence[Math.min(shrinkingIndex++, shrinkingSequence.length - 1)],
+      ...shrinkingSequence[
+        Math.min(shrinkingIndex++, shrinkingSequence.length - 1)
+      ],
     }));
 
-    const shrinkingMonitor = createMonitor({ leakDetectionConfig: { windowSize: 4 } });
+    const shrinkingMonitor = createMonitor({
+      leakDetectionConfig: { windowSize: 4 },
+    });
     shrinkingMonitor.start();
     jest.advanceTimersByTime(200);
 

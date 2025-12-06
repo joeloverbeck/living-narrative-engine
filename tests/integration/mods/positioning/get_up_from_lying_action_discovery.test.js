@@ -12,14 +12,18 @@ describe('positioning:get_up_from_lying action discovery', () => {
       expect(getUpFromLyingAction).toBeDefined();
       expect(getUpFromLyingAction.id).toBe('positioning:get_up_from_lying');
       expect(getUpFromLyingAction.name).toBe('Get up');
-      expect(getUpFromLyingAction.description).toBe("Get up from the furniture you're lying on");
-      expect(getUpFromLyingAction.targets).toBe('positioning:furniture_im_lying_on');
+      expect(getUpFromLyingAction.description).toBe(
+        "Get up from the furniture you're lying on"
+      );
+      expect(getUpFromLyingAction.targets).toBe(
+        'positioning:furniture_im_lying_on'
+      );
     });
 
     it('should require lying_down component', () => {
       expect(getUpFromLyingAction.required_components).toBeDefined();
       expect(getUpFromLyingAction.required_components.actor).toEqual([
-        'positioning:lying_down'
+        'positioning:lying_down',
       ]);
     });
 

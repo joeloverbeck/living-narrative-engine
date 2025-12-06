@@ -45,7 +45,11 @@ class NodeTextDataFetcher {
         // Get the current module URL and convert to file path
         const currentModuleFile = fileURLToPath(import.meta.url);
         // Navigate to project root (assuming this file is in scripts/utils/)
-        const projectRoot = path.resolve(path.dirname(currentModuleFile), '..', '..');
+        const projectRoot = path.resolve(
+          path.dirname(currentModuleFile),
+          '..',
+          '..'
+        );
         filePath = path.resolve(projectRoot, filePath);
       }
 
@@ -61,10 +65,7 @@ class NodeTextDataFetcher {
       }
 
       // Log and re-throw other errors
-      console.error(
-        `NodeTextDataFetcher: Error reading ${identifier}:`,
-        error
-      );
+      console.error(`NodeTextDataFetcher: Error reading ${identifier}:`, error);
       throw error;
     }
   }

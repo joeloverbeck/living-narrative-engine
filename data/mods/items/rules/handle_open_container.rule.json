@@ -21,10 +21,7 @@
       "comment": "Branch based on open result",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.openResult.success" },
-            false
-          ]
+          "==": [{ "var": "context.openResult.success" }, false]
         },
         "then_actions": [
           {
@@ -32,10 +29,7 @@
             "comment": "Check if failure was due to missing key",
             "parameters": {
               "condition": {
-                "==": [
-                  { "var": "context.openResult.error" },
-                  "missing_key"
-                ]
+                "==": [{ "var": "context.openResult.error" }, "missing_key"]
               },
               "then_actions": [
                 {

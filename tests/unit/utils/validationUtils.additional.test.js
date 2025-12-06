@@ -89,7 +89,9 @@ describe('assertValidActionIndex', () => {
         {},
         { extra: 'data' }
       )
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'Prov: invalid chosenIndex (5) for actor actor2.',
       details: { extra: 'data', actionsCount: 3 },

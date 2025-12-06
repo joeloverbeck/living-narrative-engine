@@ -22,7 +22,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('applies bound parameters to precondition evaluation context', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-binding' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-binding',
+    });
     mocks.scopeRegistry.getScopeAst.mockReturnValue({});
     mocks.scopeEngine.resolve.mockReturnValue(new Set(['entity:target']));
 
@@ -39,7 +41,10 @@ describe('GoapPlanner uncovered branches', () => {
           id: 'task:with-scope',
           planningScope: 'scope:targetable',
           planningPreconditions: [
-            { description: 'requires bound target', condition: { var: 'target' } },
+            {
+              description: 'requires bound target',
+              condition: { var: 'target' },
+            },
           ],
           planningEffects: [],
         },
@@ -53,13 +58,17 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('skips tasks when precondition evaluation throws errors', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-precondition-error' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-precondition-error',
+    });
     mocks.scopeRegistry.getScopeAst.mockReturnValue({});
     mocks.scopeEngine.resolve.mockReturnValue(new Set(['entity:target']));
 
-    mocks.jsonLogicEvaluationService.evaluateCondition.mockImplementation(() => {
-      throw new Error('precondition boom');
-    });
+    mocks.jsonLogicEvaluationService.evaluateCondition.mockImplementation(
+      () => {
+        throw new Error('precondition boom');
+      }
+    );
 
     const applicable = planner.testGetApplicableTasks(
       [
@@ -83,7 +92,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('records and trims goal path diagnostics', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-goalpath' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-goalpath',
+    });
     mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(true);
 
     const invalidGoalTemplate = {
@@ -105,14 +116,14 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('warns when goal state serialization fails', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-serialization' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-serialization',
+    });
     mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(true);
 
-    jest
-      .spyOn(JSON, 'stringify')
-      .mockImplementationOnce(() => {
-        throw new Error('serialize-failure');
-      });
+    jest.spyOn(JSON, 'stringify').mockImplementationOnce(() => {
+      throw new Error('serialize-failure');
+    });
 
     const goal = { id: 'goal-serialization', goalState: { var: 'actor.id' } };
 
@@ -125,7 +136,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('trims effect failure telemetry after more than 10 entries', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-telemetry' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-telemetry',
+    });
     mocks.effectsSimulator.simulateEffects.mockReturnValue({
       success: false,
       error: 'simulation failed',
@@ -146,7 +159,9 @@ describe('GoapPlanner uncovered branches', () => {
           'actor-telemetry'
         );
       } catch (error) {
-        expect(error.code).toBe(GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION);
+        expect(error.code).toBe(
+          GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION
+        );
       }
     }
 
@@ -163,10 +178,16 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('aborts planning when applicability checks raise invalid effect errors', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-invalid-effect' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-invalid-effect',
+    });
     mocks.gameDataRepository.get.mockReturnValue({
       core: {
-        'task:bad': { id: 'task:bad', planningScope: 'none', planningEffects: [] },
+        'task:bad': {
+          id: 'task:bad',
+          planningScope: 'none',
+          planningEffects: [],
+        },
       },
     });
     mocks.heuristicRegistry.calculate.mockReturnValue(0);
@@ -216,7 +237,8 @@ describe('GoapPlanner uncovered branches', () => {
       thrownError = error;
     }
 
-    const simulationResult = mocks.effectsSimulator.simulateEffects.mock.results[0];
+    const simulationResult =
+      mocks.effectsSimulator.simulateEffects.mock.results[0];
     if (!thrownError && simulationResult?.type === 'throw') {
       thrownError = simulationResult.value;
     }
@@ -228,7 +250,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('reports no applicable tasks when planning exhausts options', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-no-tasks' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-no-tasks',
+    });
     mocks.gameDataRepository.get.mockReturnValue({
       core: {
         'task:inapplicable': {
@@ -240,10 +264,16 @@ describe('GoapPlanner uncovered branches', () => {
     });
     mocks.scopeRegistry.getScopeAst.mockReturnValue(null);
     mocks.heuristicRegistry.calculate.mockReturnValue(0);
-    mocks.effectsSimulator.simulateEffects.mockReturnValue({ success: true, state: {} });
+    mocks.effectsSimulator.simulateEffects.mockReturnValue({
+      success: true,
+      state: {},
+    });
     mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(false);
 
-    const goal = { id: 'goal-no-applicable', goalState: { var: 'actor.ready' } };
+    const goal = {
+      id: 'goal-no-applicable',
+      goalState: { var: 'actor.ready' },
+    };
 
     const planResult = planner.plan('actor-no-tasks', goal, {});
 
@@ -256,7 +286,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('records undefined goal state signatures without crashing', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-undefined-goal' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-undefined-goal',
+    });
 
     mocks.heuristicRegistry.calculate.mockReturnValue(0);
     mocks.gameDataRepository.get.mockReturnValue({ core: {} });
@@ -274,7 +306,9 @@ describe('GoapPlanner uncovered branches', () => {
   });
 
   it('rethrows unexpected goal path lint errors during normalization handling', () => {
-    const { planner, mocks } = createPlannerHarness({ actorId: 'actor-goalpath-throw' });
+    const { planner, mocks } = createPlannerHarness({
+      actorId: 'actor-goalpath-throw',
+    });
     mocks.heuristicRegistry.calculate.mockReturnValue(0);
     mocks.gameDataRepository.get.mockReturnValue({ core: {} });
     mocks.jsonLogicEvaluationService.evaluateCondition.mockReturnValue(false);
@@ -283,7 +317,9 @@ describe('GoapPlanner uncovered branches', () => {
       .spyOn(goalPathValidator, 'validateGoalPaths')
       .mockReturnValue({
         normalizedGoalState: { var: 'actor.name' },
-        violations: [{ path: 'actor.name', reason: 'missing-components-prefix' }],
+        violations: [
+          { path: 'actor.name', reason: 'missing-components-prefix' },
+        ],
       });
 
     const lintSpy = jest

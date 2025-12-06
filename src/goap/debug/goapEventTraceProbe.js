@@ -145,7 +145,8 @@ export function createGoapEventTraceProbe(options = {}) {
 
     captureTargets.forEach((target) => {
       const buffer = ensureActorBuffer(target);
-      const limit = target === GLOBAL_ACTOR_ID ? maxGlobalEvents : maxEventsPerActor;
+      const limit =
+        target === GLOBAL_ACTOR_ID ? maxGlobalEvents : maxEventsPerActor;
       pushEvent(buffer, snapshot, limit);
     });
   };

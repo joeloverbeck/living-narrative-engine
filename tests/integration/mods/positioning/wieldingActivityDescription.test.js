@@ -73,14 +73,19 @@ function registerWieldingComponents(testBed) {
  * @param root0.gender
  */
 async function createActor(testBed, { id, name, gender = 'male' }) {
-  const entity = await testBed.entityManager.createEntityInstance('core:actor', {
-    instanceId: id,
-  });
+  const entity = await testBed.entityManager.createEntityInstance(
+    'core:actor',
+    {
+      instanceId: id,
+    }
+  );
   if (name) {
     testBed.entityManager.addComponent(entity.id, 'core:name', { text: name });
   }
   if (gender) {
-    testBed.entityManager.addComponent(entity.id, 'core:gender', { value: gender });
+    testBed.entityManager.addComponent(entity.id, 'core:gender', {
+      value: gender,
+    });
   }
   return entity;
 }
@@ -94,9 +99,12 @@ async function createActor(testBed, { id, name, gender = 'male' }) {
  * @param root0.name
  */
 async function createWeapon(testBed, { id, name }) {
-  const entity = await testBed.entityManager.createEntityInstance('test:weapon', {
-    instanceId: id,
-  });
+  const entity = await testBed.entityManager.createEntityInstance(
+    'test:weapon',
+    {
+      instanceId: id,
+    }
+  );
   testBed.entityManager.addComponent(entity.id, 'core:name', { text: name });
   testBed.entityManager.addComponent(entity.id, 'items:item', {});
   testBed.entityManager.addComponent(entity.id, 'weapons:weapon', {});
@@ -111,7 +119,12 @@ async function createWeapon(testBed, { id, name }) {
  * @param weaponIds
  * @param customMetadata
  */
-function addWieldingComponent(entityManager, entityId, weaponIds, customMetadata = {}) {
+function addWieldingComponent(
+  entityManager,
+  entityId,
+  weaponIds,
+  customMetadata = {}
+) {
   const defaultMetadata = {
     shouldDescribeInActivity: true,
     template: '{actor} is wielding {targets} threateningly',
@@ -142,7 +155,10 @@ describe('Wielding Activity Description Integration', () => {
   describe('Single Weapon', () => {
     it('should generate description for single wielded weapon', async () => {
       // Arrange
-      const actor = await createActor(testBed, { id: 'warrior', name: 'Marcus' });
+      const actor = await createActor(testBed, {
+        id: 'warrior',
+        name: 'Marcus',
+      });
       await createWeapon(testBed, { id: 'longsword', name: 'Longsword' });
       addWieldingComponent(entityManager, actor.id, ['longsword']);
 
@@ -245,7 +261,9 @@ describe('Wielding Activity Description Integration', () => {
       const phrase = nlgSystem.generateActivityPhrase('Viktor', activity);
 
       // Assert - Oxford comma format: "A, B, and C"
-      expect(phrase).toBe('Viktor is wielding Sword, Dagger, and Staff threateningly');
+      expect(phrase).toBe(
+        'Viktor is wielding Sword, Dagger, and Staff threateningly'
+      );
     });
 
     it('should format four or more weapons correctly', async () => {
@@ -274,14 +292,19 @@ describe('Wielding Activity Description Integration', () => {
       const phrase = nlgSystem.generateActivityPhrase('Warrior', activity);
 
       // Assert - "A, B, C, and D" format
-      expect(phrase).toBe('Warrior is wielding Sword, Dagger, Axe, and Mace threateningly');
+      expect(phrase).toBe(
+        'Warrior is wielding Sword, Dagger, Axe, and Mace threateningly'
+      );
     });
   });
 
   describe('Activity Metadata', () => {
     it('should respect shouldDescribeInActivity: false', async () => {
       // Arrange
-      const actor = await createActor(testBed, { id: 'sneaky', name: 'Shadow' });
+      const actor = await createActor(testBed, {
+        id: 'sneaky',
+        name: 'Shadow',
+      });
       await createWeapon(testBed, { id: 'hidden-blade', name: 'Hidden Blade' });
       addWieldingComponent(entityManager, actor.id, ['hidden-blade'], {
         shouldDescribeInActivity: false,
@@ -305,7 +328,10 @@ describe('Wielding Activity Description Integration', () => {
 
     it('should use priority 70 by default', async () => {
       // Arrange
-      const actor = await createActor(testBed, { id: 'fighter', name: 'Knight' });
+      const actor = await createActor(testBed, {
+        id: 'fighter',
+        name: 'Knight',
+      });
       await createWeapon(testBed, { id: 'broadsword', name: 'Broadsword' });
       addWieldingComponent(entityManager, actor.id, ['broadsword']);
 

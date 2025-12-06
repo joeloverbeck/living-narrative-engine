@@ -5,7 +5,8 @@ Currently, the prompt to the LLM produces thought sections like these:
 <thoughts>
 Recent thoughts (avoid repeating or barely rephrasing these):
 
------
+---
+
 Generate a fresh, unique thought that builds upon your mental state. Your thought should reflect what you're thinking RIGHT BEFORE taking your chosen action - focus on your intentions, motivations, or reasoning, NOT on anticipated outcomes or results.
 </thoughts>"
 
@@ -14,7 +15,8 @@ We realized that the text that comes after '-----' is redundant with the INNER V
 "<thoughts>
 Recent thoughts (avoid repeating or barely rephrasing these):
 
------
+---
+
 INNER VOICE GUIDANCE: Generate thoughts in your character's authentic mental voice (their habits of mind, personality patterns, and inner speech style). Build on your current mental state with a fresh thought that does not repeat or barely rephrase the "Recent thoughts" above.
 
 TIMING: The thought must occur in the instant IMMEDIATELY BEFORE you perform your chosen action.

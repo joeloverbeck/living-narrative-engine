@@ -10,7 +10,7 @@ describe('Movement Scopes', () => {
     beforeEach(() => {
       scopePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/scopes/clear_directions.scope',
+        'data/mods/movement/scopes/clear_directions.scope'
       );
       scopeContent = fs.readFileSync(scopePath, 'utf8');
     });
@@ -34,7 +34,9 @@ describe('Movement Scopes', () => {
       const hasComponentNamespace = scopeContent.includes(':');
 
       // At least one of these patterns should be present
-      expect(hasExitsReference || hasLocationReference || hasComponentNamespace).toBe(true);
+      expect(
+        hasExitsReference || hasLocationReference || hasComponentNamespace
+      ).toBe(true);
     });
 
     it('should follow scope DSL syntax rules', () => {
@@ -88,7 +90,10 @@ describe('Movement Scopes', () => {
 
       // At least one of these should be present for a movement scope
       const hasMovementReferences =
-        referencesLocation || referencesExits || referencesTarget || referencesMovement;
+        referencesLocation ||
+        referencesExits ||
+        referencesTarget ||
+        referencesMovement;
 
       expect(hasMovementReferences).toBe(true);
     });
@@ -152,7 +157,7 @@ describe('Movement Scopes', () => {
       // Load the go action to verify it references the scope
       const actionPath = path.resolve(
         process.cwd(),
-        'data/mods/movement/actions/go.action.json',
+        'data/mods/movement/actions/go.action.json'
       );
       const action = JSON.parse(fs.readFileSync(actionPath, 'utf8'));
 
@@ -162,7 +167,7 @@ describe('Movement Scopes', () => {
       // Verify the referenced scope file exists
       const scopePath = path.resolve(
         process.cwd(),
-        'data/mods/movement/scopes/clear_directions.scope',
+        'data/mods/movement/scopes/clear_directions.scope'
       );
       expect(fs.existsSync(scopePath)).toBe(true);
     });

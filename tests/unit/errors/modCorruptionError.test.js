@@ -53,11 +53,18 @@ describe('ModCorruptionError', () => {
       expectedType: 'UNKNOWN_CORRUPTION',
       recoverable: false,
     },
-  ])('detects $expectedType corruption type', ({ message, context, expectedType, recoverable }) => {
-    const corruptionError = new ModCorruptionError(message, 'mods/sample.json', context);
-    expect(corruptionError.context.corruptionType).toBe(expectedType);
-    expect(corruptionError.context.canPartiallyRecover).toBe(recoverable);
-  });
+  ])(
+    'detects $expectedType corruption type',
+    ({ message, context, expectedType, recoverable }) => {
+      const corruptionError = new ModCorruptionError(
+        message,
+        'mods/sample.json',
+        context
+      );
+      expect(corruptionError.context.corruptionType).toBe(expectedType);
+      expect(corruptionError.context.canPartiallyRecover).toBe(recoverable);
+    }
+  );
 
   it('provides targeted suggested actions in the corruption report', () => {
     const cases = [
@@ -86,15 +93,16 @@ describe('ModCorruptionError', () => {
       },
       {
         message: 'Unidentified corruption mode',
-        expected: [
-          'Restore file from backup',
-          'Re-create file from template',
-        ],
+        expected: ['Restore file from backup', 'Re-create file from template'],
       },
     ];
 
     for (const { message, expected } of cases) {
-      const corruptionError = new ModCorruptionError(message, 'mods/sample.json', {});
+      const corruptionError = new ModCorruptionError(
+        message,
+        'mods/sample.json',
+        {}
+      );
       const report = corruptionError.generateCorruptionReport();
       expect(report).toMatchObject({
         filePath: 'mods/sample.json',
@@ -107,9 +115,13 @@ describe('ModCorruptionError', () => {
   });
 
   it('appends partial recovery suggestion when recovery is possible', () => {
-    const corruptionError = new ModCorruptionError('Malformed JSON', 'mods/test.json', {
-      partialData: { kept: true },
-    });
+    const corruptionError = new ModCorruptionError(
+      'Malformed JSON',
+      'mods/test.json',
+      {
+        partialData: { kept: true },
+      }
+    );
 
     const report = corruptionError.generateCorruptionReport();
     expect(report.suggestedActions).toContain('Attempt partial data recovery');
@@ -117,7 +129,11 @@ describe('ModCorruptionError', () => {
 
   it('falls back to base context when enhanced context is unavailable', () => {
     const originalContext = { hint: 'base' };
-    const corruptionError = new ModCorruptionError('Malformed JSON', 'mods/test.json', originalContext);
+    const corruptionError = new ModCorruptionError(
+      'Malformed JSON',
+      'mods/test.json',
+      originalContext
+    );
 
     // Simulate scenario where enhanced context is missing
     corruptionError._enhancedContext = undefined;

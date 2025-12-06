@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { LegacyStrategy } from '../../../../src/actions/pipeline/stages/actionFormatting/legacy/LegacyStrategy.js';
 import ActionCommandFormatter from '../../../../src/actions/actionFormatter.js';
 import { MultiTargetActionFormatter } from '../../../../src/actions/formatters/MultiTargetActionFormatter.js';
@@ -78,12 +85,14 @@ describe('LegacyStrategy integration', () => {
     });
     targetNormalizationService = new TargetNormalizationService({ logger });
 
-    createError = jest.fn((errorOrResult, actionDef, actor, trace, targetId) => ({
-      actionId: actionDef.id,
-      actorId: actor,
-      targetId: targetId ?? null,
-      error: errorOrResult,
-    }));
+    createError = jest.fn(
+      (errorOrResult, actionDef, actor, trace, targetId) => ({
+        actionId: actionDef.id,
+        actorId: actor,
+        targetId: targetId ?? null,
+        error: errorOrResult,
+      })
+    );
     validateVisualProperties = jest.fn(() => true);
 
     strategy = new LegacyStrategy({
@@ -158,7 +167,7 @@ describe('LegacyStrategy integration', () => {
 
     expect(validateVisualProperties).toHaveBeenCalledWith(
       actionDef.visual,
-      actionDef.id,
+      actionDef.id
     );
     expect(result.formattedCommands).toEqual([
       expect.objectContaining({
@@ -224,7 +233,13 @@ describe('LegacyStrategy integration', () => {
       captureActionData: jest.fn(),
       info: jest.fn(),
     };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const result = await strategy.format({
       actor,
@@ -253,14 +268,17 @@ describe('LegacyStrategy integration', () => {
     expect(trace.captureActionData).toHaveBeenCalledWith(
       'formatting',
       actionDef.id,
-      expect.objectContaining({ status: 'formatting', formattingPath: 'legacy' }),
+      expect.objectContaining({
+        status: 'formatting',
+        formattingPath: 'legacy',
+      })
     );
     expect(result.fallbackUsed).toBe(false);
     expect(result.formattedCommands[0]).toEqual(
       expect.objectContaining({
         command: 'Salute Primary Friend and Secondary Ally',
         params: expect.objectContaining({ isMultiTarget: true }),
-      }),
+      })
     );
     expect(result.fallbackUsed).toBe(false);
     expect(result.errors).toEqual([]);
@@ -270,7 +288,13 @@ describe('LegacyStrategy integration', () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildSingleTargetAction();
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const result = await strategy.format({
       actor,
@@ -297,7 +321,10 @@ describe('LegacyStrategy integration', () => {
     expect(trace.captureActionData).toHaveBeenCalledWith(
       'formatting',
       actionDef.id,
-      expect.objectContaining({ formatterMethod: 'format', status: 'completed' }),
+      expect.objectContaining({
+        formatterMethod: 'format',
+        status: 'completed',
+      })
     );
   });
 
@@ -334,7 +361,7 @@ describe('LegacyStrategy integration', () => {
     expect(result.errors).toHaveLength(1);
     expect(createError).toHaveBeenCalledTimes(1);
     expect(createError.mock.calls[0][0]).toEqual(
-      expect.objectContaining({ code: 'TARGETS_INVALID' }),
+      expect.objectContaining({ code: 'TARGETS_INVALID' })
     );
     expect(trace.captureActionData).toHaveBeenCalled();
   });
@@ -343,7 +370,13 @@ describe('LegacyStrategy integration', () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildMultiTargetAction();
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     jest
       .spyOn(commandFormatter, 'formatMultiTarget')
@@ -375,7 +408,9 @@ describe('LegacyStrategy integration', () => {
 
     expect(result.fallbackUsed).toBe(true);
     expect(result.formattedCommands[0]).toEqual(
-      expect.objectContaining({ command: 'Salute Primary Friend and Secondary Ally' }),
+      expect.objectContaining({
+        command: 'Salute Primary Friend and Secondary Ally',
+      })
     );
     expect(processingStats.legacy).toBeGreaterThan(0);
   });
@@ -384,7 +419,13 @@ describe('LegacyStrategy integration', () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildMultiTargetAction();
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     jest
       .spyOn(commandFormatter, 'formatMultiTarget')
@@ -424,7 +465,7 @@ describe('LegacyStrategy integration', () => {
       actionDef,
       actor.id,
       trace,
-      primaryTargetId ?? null,
+      primaryTargetId ?? null
     );
     expect(processingStats.failed).toBeGreaterThan(0);
   });
@@ -449,13 +490,19 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.formattedCommands).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -485,7 +532,13 @@ describe('LegacyStrategy integration', () => {
       validateVisualProperties,
     });
 
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const result = await strategy.format({
       actor,
@@ -553,7 +606,13 @@ describe('LegacyStrategy integration', () => {
       validateVisualProperties,
     });
 
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const result = await strategy.format({
       actor,
@@ -586,7 +645,7 @@ describe('LegacyStrategy integration', () => {
       actionDef,
       actor.id,
       trace,
-      primaryTargetId,
+      primaryTargetId
     );
     expect(processingStats.failed).toBeGreaterThan(0);
   });
@@ -595,7 +654,13 @@ describe('LegacyStrategy integration', () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildSingleTargetAction();
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     jest
       .spyOn(baseFormatter, 'format')
@@ -622,8 +687,10 @@ describe('LegacyStrategy integration', () => {
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
-      expect.any(Object),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
+      expect.any(Object)
     );
     expect(processingStats.failed).toBeGreaterThan(0);
   });
@@ -654,16 +721,26 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
       expect.objectContaining({
-        error: expect.objectContaining({ target: { entityId: 'target.from.throw' } }),
-      }),
+        error: expect.objectContaining({
+          target: { entityId: 'target.from.throw' },
+        }),
+      })
     );
   });
 
@@ -693,16 +770,24 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
       expect.objectContaining({
         error: expect.objectContaining({ entityId: primaryTargetId }),
-      }),
+      })
     );
   });
 
@@ -730,16 +815,24 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
       expect.objectContaining({
         error: expect.any(Error),
-      }),
+      })
     );
     expect(createError).toHaveBeenCalledWith(
       expect.any(Error),
@@ -747,14 +840,20 @@ describe('LegacyStrategy integration', () => {
       actor.id,
       trace,
       null,
-      primaryTargetId,
+      primaryTargetId
     );
   });
 
   it('formats multi-target actions without trace using normalization', async () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildMultiTargetAction();
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const result = await strategy.format({
       actor,
@@ -785,7 +884,7 @@ describe('LegacyStrategy integration', () => {
       expect.objectContaining({
         command: 'Salute Primary Friend and Secondary Ally',
         params: expect.objectContaining({ isMultiTarget: true }),
-      }),
+      })
     );
     expect(result.fallbackUsed).toBe(false);
   });
@@ -824,7 +923,7 @@ describe('LegacyStrategy integration', () => {
       expect.objectContaining({ code: 'TARGETS_INVALID' }),
       actionDef,
       actor.id,
-      null,
+      null
     );
   });
 
@@ -869,7 +968,7 @@ describe('LegacyStrategy integration', () => {
       actionDef,
       actor.id,
       null,
-      primaryTargetId,
+      primaryTargetId
     );
   });
 
@@ -890,14 +989,20 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.formattedCommands).toEqual([]);
     expect(result.fallbackUsed).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -935,13 +1040,19 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.formattedCommands).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -996,7 +1107,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1006,7 +1123,7 @@ describe('LegacyStrategy integration', () => {
         description: '',
         visual: null,
         params: { targetId: primaryTargetId },
-      }),
+      })
     );
   });
 
@@ -1127,7 +1244,7 @@ describe('LegacyStrategy integration', () => {
       actionDef,
       actor.id,
       null,
-      primaryTargetId,
+      primaryTargetId
     );
   });
 
@@ -1155,7 +1272,7 @@ describe('LegacyStrategy integration', () => {
 
     expect(result.formattedCommands).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -1187,8 +1304,10 @@ describe('LegacyStrategy integration', () => {
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
-      expect.any(Object),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
+      expect.any(Object)
     );
   });
 
@@ -1222,10 +1341,14 @@ describe('LegacyStrategy integration', () => {
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
       expect.objectContaining({
-        error: expect.objectContaining({ target: { entityId: 'target.from.throw' } }),
-      }),
+        error: expect.objectContaining({
+          target: { entityId: 'target.from.throw' },
+        }),
+      })
     );
   });
 
@@ -1254,16 +1377,24 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.errors).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Failed to format command for action '" + actionDef.id),
+      expect.stringContaining(
+        "Failed to format command for action '" + actionDef.id
+      ),
       expect.objectContaining({
         error: expect.objectContaining({ entityId: primaryTargetId }),
-      }),
+      })
     );
   });
 
@@ -1290,7 +1421,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1301,7 +1438,7 @@ describe('LegacyStrategy integration', () => {
       actor.id,
       null,
       null,
-      primaryTargetId,
+      primaryTargetId
     );
   });
 
@@ -1333,7 +1470,7 @@ describe('LegacyStrategy integration', () => {
     expect(trace.captureActionData).toHaveBeenCalledWith(
       'formatting',
       actionDef.id,
-      expect.objectContaining({ status: 'completed' }),
+      expect.objectContaining({ status: 'completed' })
     );
   });
 
@@ -1360,7 +1497,13 @@ describe('LegacyStrategy integration', () => {
     const actor = entityManager.getEntityInstance(actorId);
     const actionDef = buildMultiTargetAction();
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const explicitTargets = {
       primary: [
@@ -1419,7 +1562,7 @@ describe('LegacyStrategy integration', () => {
           isMultiTarget: true,
           targetIds: expect.objectContaining({ primary: [primaryTargetId] }),
         }),
-      }),
+      })
     );
     expect(processingStats.multiTarget).toBeGreaterThan(0);
   });
@@ -1456,7 +1599,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1464,7 +1613,7 @@ describe('LegacyStrategy integration', () => {
     expect(result.formattedCommands[0]).toEqual(
       expect.objectContaining({
         params: {},
-      }),
+      })
     );
     expect(createError).not.toHaveBeenCalled();
   });
@@ -1501,7 +1650,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1512,7 +1667,7 @@ describe('LegacyStrategy integration', () => {
       actionDef,
       actor.id,
       trace,
-      null,
+      null
     );
   });
 
@@ -1534,14 +1689,20 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.formattedCommands).toEqual([]);
     expect(result.fallbackUsed).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -1581,13 +1742,19 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
     expect(result.formattedCommands).toEqual([]);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Skipping multi-target action '" + actionDef.id),
+      expect.stringContaining("Skipping multi-target action '" + actionDef.id)
     );
   });
 
@@ -1643,7 +1810,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1653,7 +1826,7 @@ describe('LegacyStrategy integration', () => {
         description: '',
         visual: null,
         params: { targetId: primaryTargetId },
-      }),
+      })
     );
   });
   it('omits target identifier when standard fallback receives a context without entity id', async () => {
@@ -1687,7 +1860,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1695,7 +1874,7 @@ describe('LegacyStrategy integration', () => {
     expect(result.formattedCommands[0]).toEqual(
       expect.objectContaining({
         params: {},
-      }),
+      })
     );
     expect(createError).not.toHaveBeenCalled();
   });
@@ -1711,7 +1890,13 @@ describe('LegacyStrategy integration', () => {
       },
     };
     const trace = { captureActionData: jest.fn(), info: jest.fn() };
-    const processingStats = { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 };
+    const processingStats = {
+      formatted: 0,
+      successful: 0,
+      failed: 0,
+      multiTarget: 0,
+      legacy: 0,
+    };
 
     const commandTargets = {
       primary: [
@@ -1760,12 +1945,14 @@ describe('LegacyStrategy integration', () => {
         command: 'Coordinate team',
         description: '',
         visual: null,
-      }),
+      })
     );
     expect(result.formattedCommands[0].params).toEqual(
       expect.objectContaining({
-        targetIds: expect.objectContaining({ primary: [primaryTargetId, secondaryTargetId] }),
-      }),
+        targetIds: expect.objectContaining({
+          primary: [primaryTargetId, secondaryTargetId],
+        }),
+      })
     );
   });
 
@@ -1829,7 +2016,7 @@ describe('LegacyStrategy integration', () => {
           isMultiTarget: true,
           targetIds: expect.objectContaining({ primary: [primaryTargetId] }),
         }),
-      }),
+      })
     );
   });
 
@@ -1890,12 +2077,14 @@ describe('LegacyStrategy integration', () => {
         command: 'Coordinate standard team',
         description: '',
         visual: null,
-      }),
+      })
     );
     expect(result.formattedCommands[0].params).toEqual(
       expect.objectContaining({
-        targetIds: expect.objectContaining({ primary: [primaryTargetId, secondaryTargetId] }),
-      }),
+        targetIds: expect.objectContaining({
+          primary: [primaryTargetId, secondaryTargetId],
+        }),
+      })
     );
   });
 
@@ -1948,7 +2137,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -1957,7 +2152,7 @@ describe('LegacyStrategy integration', () => {
       expect.objectContaining({
         command: 'Assist Primary Friend',
         params: { targetId: primaryTargetId },
-      }),
+      })
     );
   });
 
@@ -1994,7 +2189,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -2004,7 +2205,7 @@ describe('LegacyStrategy integration', () => {
         description: '',
         visual: null,
         params: { targetId: primaryTargetId },
-      }),
+      })
     );
   });
 
@@ -2040,7 +2241,13 @@ describe('LegacyStrategy integration', () => {
         },
       ],
       trace: null,
-      processingStats: { formatted: 0, successful: 0, failed: 0, multiTarget: 0, legacy: 0 },
+      processingStats: {
+        formatted: 0,
+        successful: 0,
+        failed: 0,
+        multiTarget: 0,
+        legacy: 0,
+      },
       traceSource: 'ActionFormattingStage.execute',
     });
 
@@ -2050,7 +2257,7 @@ describe('LegacyStrategy integration', () => {
         description: '',
         visual: null,
         params: { targetId: primaryTargetId },
-      }),
+      })
     );
   });
 
@@ -2085,7 +2292,7 @@ describe('LegacyStrategy integration', () => {
       expect.objectContaining({
         description: '',
         visual: null,
-      }),
+      })
     );
   });
 
@@ -2119,7 +2326,7 @@ describe('LegacyStrategy integration', () => {
       expect.objectContaining({
         description: '',
         visual: null,
-      }),
+      })
     );
   });
 });

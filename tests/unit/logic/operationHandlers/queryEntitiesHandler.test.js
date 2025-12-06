@@ -434,7 +434,8 @@ describe('QueryEntitiesHandler', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'QUERY_ENTITIES: Invalid filter object. Skipping.'
       );
-      const result = mockExecutionContext.evaluationContext.context.skip_invalid;
+      const result =
+        mockExecutionContext.evaluationContext.context.skip_invalid;
       expect(result.length).toBe(5);
     });
   });

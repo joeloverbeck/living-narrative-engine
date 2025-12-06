@@ -29,11 +29,7 @@
       "hunger_state.component.json",
       "metabolic_store.component.json"
     ],
-    "actions": [
-      "drink.action.json",
-      "eat.action.json",
-      "rest.action.json"
-    ],
+    "actions": ["drink.action.json", "eat.action.json", "rest.action.json"],
     "rules": [
       "handle_drink_beverage.rule.json",
       "handle_eat_food.rule.json",
@@ -52,13 +48,8 @@
       "is_digesting.condition.json",
       "is_hungry.condition.json"
     ],
-    "scopes": [
-      "consumable_items.scope",
-      "inventory_food.scope"
-    ],
-    "goals": [
-      "satisfy_hunger.goal.json"
-    ],
+    "scopes": ["consumable_items.scope", "inventory_food.scope"],
+    "goals": ["satisfy_hunger.goal.json"],
     "entities": {
       "definitions": [
         "bread.entity.json",

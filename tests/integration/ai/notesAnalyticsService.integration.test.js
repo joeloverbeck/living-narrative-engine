@@ -47,14 +47,21 @@ describe('NotesAnalyticsService - Integration', () => {
       storage,
     });
 
-    const entityNote = createNote(SUBJECT_TYPES.ENTITY, { context: 'origin story' });
-    const eventNote = createNote(SUBJECT_TYPES.EVENT, { text: 'Festival scheduled next week' });
+    const entityNote = createNote(SUBJECT_TYPES.ENTITY, {
+      context: 'origin story',
+    });
+    const eventNote = createNote(SUBJECT_TYPES.EVENT, {
+      text: 'Festival scheduled next week',
+    });
     const planNote = createNote(SUBJECT_TYPES.PLAN, {
       text: 'Arrange supplies before the festival',
       context: null,
     });
 
-    analytics.recordNoteCreation(entityNote, { tags: ['backstory'], source: 'player' });
+    analytics.recordNoteCreation(entityNote, {
+      tags: ['backstory'],
+      source: 'player',
+    });
     analytics.recordNoteCreation(eventNote, { source: 'ai' });
     analytics.recordNoteCreation(planNote);
 
@@ -64,7 +71,11 @@ describe('NotesAnalyticsService - Integration', () => {
       SUBJECT_TYPES.PLAN,
       'This describes a future intention'
     );
-    analytics.recordCategorizationError(planNote, SUBJECT_TYPES.PLAN, SUBJECT_TYPES.EVENT);
+    analytics.recordCategorizationError(
+      planNote,
+      SUBJECT_TYPES.PLAN,
+      SUBJECT_TYPES.EVENT
+    );
 
     await analytics.saveAnalytics();
 
@@ -107,7 +118,10 @@ describe('NotesAnalyticsService - Integration', () => {
     const subjectTypes = Object.values(SUBJECT_TYPES);
     subjectTypes.forEach((type, index) => {
       firstService.recordNoteCreation(
-        createNote(type, { text: `Detail ${index}`, context: index % 2 === 0 ? 'context' : undefined })
+        createNote(type, {
+          text: `Detail ${index}`,
+          context: index % 2 === 0 ? 'context' : undefined,
+        })
       );
     });
     firstService.recordCategorizationError(
@@ -147,10 +161,18 @@ describe('NotesAnalyticsService - Integration', () => {
   });
 
   it('handles storage absence, missing data, and persistence failures gracefully', async () => {
-    const serviceWithoutStorage = new NotesAnalyticsService({ logger: createLogger() });
-    serviceWithoutStorage.recordNoteCreation(createNote(SUBJECT_TYPES.KNOWLEDGE));
-    await expect(serviceWithoutStorage.saveAnalytics()).resolves.toBeUndefined();
-    await expect(serviceWithoutStorage.loadAnalytics()).resolves.toBeUndefined();
+    const serviceWithoutStorage = new NotesAnalyticsService({
+      logger: createLogger(),
+    });
+    serviceWithoutStorage.recordNoteCreation(
+      createNote(SUBJECT_TYPES.KNOWLEDGE)
+    );
+    await expect(
+      serviceWithoutStorage.saveAnalytics()
+    ).resolves.toBeUndefined();
+    await expect(
+      serviceWithoutStorage.loadAnalytics()
+    ).resolves.toBeUndefined();
 
     const partialStorage = new (class {
       constructor() {
@@ -173,15 +195,25 @@ describe('NotesAnalyticsService - Integration', () => {
       logger: createLogger(),
       storage: partialStorage,
     });
-    serviceWithPartialStorage.recordNoteCreation(createNote(SUBJECT_TYPES.ENTITY));
+    serviceWithPartialStorage.recordNoteCreation(
+      createNote(SUBJECT_TYPES.ENTITY)
+    );
     await serviceWithPartialStorage.saveAnalytics();
     const beforeLoadSummary = serviceWithPartialStorage.getAnalyticsSummary();
-    await expect(serviceWithPartialStorage.loadAnalytics()).resolves.toBeUndefined();
-    const afterFirstLoadSummary = serviceWithPartialStorage.getAnalyticsSummary();
-    expect(afterFirstLoadSummary.summary.totalNotes).toBe(beforeLoadSummary.summary.totalNotes);
+    await expect(
+      serviceWithPartialStorage.loadAnalytics()
+    ).resolves.toBeUndefined();
+    const afterFirstLoadSummary =
+      serviceWithPartialStorage.getAnalyticsSummary();
+    expect(afterFirstLoadSummary.summary.totalNotes).toBe(
+      beforeLoadSummary.summary.totalNotes
+    );
     await serviceWithPartialStorage.loadAnalytics();
-    const afterSecondLoadSummary = serviceWithPartialStorage.getAnalyticsSummary();
-    expect(afterSecondLoadSummary.summary.totalNotes).toBe(beforeLoadSummary.summary.totalNotes);
+    const afterSecondLoadSummary =
+      serviceWithPartialStorage.getAnalyticsSummary();
+    expect(afterSecondLoadSummary.summary.totalNotes).toBe(
+      beforeLoadSummary.summary.totalNotes
+    );
 
     const failingStorage = new (class {
       async save() {
@@ -196,7 +228,11 @@ describe('NotesAnalyticsService - Integration', () => {
       logger: createLogger(),
       storage: failingStorage,
     });
-    await expect(serviceWithFailingStorage.saveAnalytics()).resolves.toBeUndefined();
-    await expect(serviceWithFailingStorage.loadAnalytics()).resolves.toBeUndefined();
+    await expect(
+      serviceWithFailingStorage.saveAnalytics()
+    ).resolves.toBeUndefined();
+    await expect(
+      serviceWithFailingStorage.loadAnalytics()
+    ).resolves.toBeUndefined();
   });
 });

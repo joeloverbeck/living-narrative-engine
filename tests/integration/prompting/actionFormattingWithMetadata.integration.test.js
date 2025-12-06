@@ -6,7 +6,14 @@
  * @see ModActionMetadataProvider.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AIPromptContentProvider } from '../../../src/prompting/AIPromptContentProvider.js';
 import { ModActionMetadataProvider } from '../../../src/prompting/modActionMetadataProvider.js';
 import ActionCategorizationService from '../../../src/entities/utils/ActionCategorizationService.js';
@@ -83,16 +90,20 @@ describe('Action Formatting with Metadata - Integration', () => {
     id: 'positioning',
     version: '1.0.0',
     name: 'Positioning System',
-    actionPurpose: 'Change body position and spatial relationships relative to others.',
-    actionConsiderWhen: 'Getting closer or farther, changing posture, adjusting facing direction.',
+    actionPurpose:
+      'Change body position and spatial relationships relative to others.',
+    actionConsiderWhen:
+      'Getting closer or farther, changing posture, adjusting facing direction.',
   };
 
   const itemsManifest = {
     id: 'items',
     version: '1.0.0',
     name: 'Items System',
-    actionPurpose: 'Interact with objects through pickup, examination, use, and transfer.',
-    actionConsiderWhen: 'Managing inventory, examining objects, sharing items, using functional items.',
+    actionPurpose:
+      'Interact with objects through pickup, examination, use, and transfer.',
+    actionConsiderWhen:
+      'Managing inventory, examining objects, sharing items, using functional items.',
   };
 
   const coreManifest = {
@@ -117,11 +128,14 @@ describe('Action Formatting with Metadata - Integration', () => {
     });
 
     const safeEventDispatcher = { dispatch: jest.fn() };
-    const perceptionLogFormatter = new PerceptionLogFormatter({ logger: mockLogger });
-    const gameStateValidationService = new GameStateValidationServiceForPrompting({
+    const perceptionLogFormatter = new PerceptionLogFormatter({
       logger: mockLogger,
-      safeEventDispatcher,
     });
+    const gameStateValidationService =
+      new GameStateValidationServiceForPrompting({
+        logger: mockLogger,
+        safeEventDispatcher,
+      });
     const actionCategorizationService = new ActionCategorizationService({
       logger: mockLogger,
       config: integrationTestConfig,
@@ -164,7 +178,8 @@ describe('Action Formatting with Metadata - Integration', () => {
         },
       ];
 
-      const result = aiPromptContentProvider._formatCategorizedActions(sampleActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(sampleActions);
 
       expect(result).toContain('POSITIONING');
       expect(result).toContain('**Purpose:**');
@@ -175,11 +190,22 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should verify output format matches expected LLM prompt structure', () => {
       const sampleActions = [
-        { actionId: 'positioning:sit', commandString: 'sit', description: 'Sit down', index: 0 },
-        { actionId: 'positioning:stand', commandString: 'stand', description: 'Stand up', index: 1 },
+        {
+          actionId: 'positioning:sit',
+          commandString: 'sit',
+          description: 'Sit down',
+          index: 0,
+        },
+        {
+          actionId: 'positioning:stand',
+          commandString: 'stand',
+          description: 'Stand up',
+          index: 1,
+        },
       ];
 
-      const result = aiPromptContentProvider._formatCategorizedActions(sampleActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(sampleActions);
 
       // Verify structure matches spec
       expect(result).toMatch(/^## Available Actions/);
@@ -190,12 +216,28 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should handle mixed scenario: some mods have metadata, others do not', () => {
       const mixedActions = [
-        { actionId: 'positioning:sit', commandString: 'sit', description: 'Sit', index: 0 },
-        { actionId: 'core:wait', commandString: 'wait', description: 'Wait', index: 1 },
-        { actionId: 'items:pickup', commandString: 'pick up', description: 'Pick up', index: 2 },
+        {
+          actionId: 'positioning:sit',
+          commandString: 'sit',
+          description: 'Sit',
+          index: 0,
+        },
+        {
+          actionId: 'core:wait',
+          commandString: 'wait',
+          description: 'Wait',
+          index: 1,
+        },
+        {
+          actionId: 'items:pickup',
+          commandString: 'pick up',
+          description: 'Pick up',
+          index: 2,
+        },
       ];
 
-      const result = aiPromptContentProvider._formatCategorizedActions(mixedActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(mixedActions);
 
       // Positioning and items should have metadata
       expect(result).toContain('**Purpose:**');
@@ -209,20 +251,34 @@ describe('Action Formatting with Metadata - Integration', () => {
       expect(coreSection).toBeDefined();
 
       // Get the content between CORE header and the next section (or end)
-      const coreSectionContent = coreSection.split('POSITIONING')[0] || coreSection;
+      const coreSectionContent =
+        coreSection.split('POSITIONING')[0] || coreSection;
       // Core has no actionPurpose in manifest, so it shouldn't appear in core section
       const coreLines = coreSectionContent.split('\n').slice(1); // Skip header line
-      const corePurposeLine = coreLines.find((line) => line.includes('**Purpose:**'));
+      const corePurposeLine = coreLines.find((line) =>
+        line.includes('**Purpose:**')
+      );
       expect(corePurposeLine).toBeUndefined();
     });
 
     it('should include items mod metadata when items actions are present', () => {
       const itemsActions = [
-        { actionId: 'items:pickup', commandString: 'pick up', description: 'Pick up item', index: 0 },
-        { actionId: 'items:drop', commandString: 'drop', description: 'Drop item', index: 1 },
+        {
+          actionId: 'items:pickup',
+          commandString: 'pick up',
+          description: 'Pick up item',
+          index: 0,
+        },
+        {
+          actionId: 'items:drop',
+          commandString: 'drop',
+          description: 'Drop item',
+          index: 1,
+        },
       ];
 
-      const result = aiPromptContentProvider._formatCategorizedActions(itemsActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(itemsActions);
 
       expect(result).toContain('ITEMS Actions');
       expect(result).toContain('Interact with objects');
@@ -246,7 +302,8 @@ describe('Action Formatting with Metadata - Integration', () => {
       }
 
       const startTime = performance.now();
-      const result = aiPromptContentProvider._formatCategorizedActions(manyActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(manyActions);
       const duration = performance.now() - startTime;
 
       expect(result).toBeDefined();
@@ -256,9 +313,24 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should cache metadata lookups efficiently', () => {
       const actions = [
-        { actionId: 'positioning:sit', commandString: 'sit', description: 'Sit', index: 0 },
-        { actionId: 'positioning:stand', commandString: 'stand', description: 'Stand', index: 1 },
-        { actionId: 'positioning:walk', commandString: 'walk', description: 'Walk', index: 2 },
+        {
+          actionId: 'positioning:sit',
+          commandString: 'sit',
+          description: 'Sit',
+          index: 0,
+        },
+        {
+          actionId: 'positioning:stand',
+          commandString: 'stand',
+          description: 'Stand',
+          index: 1,
+        },
+        {
+          actionId: 'positioning:walk',
+          commandString: 'walk',
+          description: 'Walk',
+          index: 2,
+        },
       ];
 
       aiPromptContentProvider._formatCategorizedActions(actions);
@@ -272,12 +344,32 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should verify cache persistence across multiple format calls', () => {
       const actions1 = [
-        { actionId: 'positioning:sit', commandString: 'sit', description: 'Sit', index: 0 },
-        { actionId: 'positioning:stand', commandString: 'stand', description: 'Stand', index: 1 },
+        {
+          actionId: 'positioning:sit',
+          commandString: 'sit',
+          description: 'Sit',
+          index: 0,
+        },
+        {
+          actionId: 'positioning:stand',
+          commandString: 'stand',
+          description: 'Stand',
+          index: 1,
+        },
       ];
       const actions2 = [
-        { actionId: 'positioning:walk', commandString: 'walk', description: 'Walk', index: 0 },
-        { actionId: 'positioning:run', commandString: 'run', description: 'Run', index: 1 },
+        {
+          actionId: 'positioning:walk',
+          commandString: 'walk',
+          description: 'Walk',
+          index: 0,
+        },
+        {
+          actionId: 'positioning:run',
+          commandString: 'run',
+          description: 'Run',
+          index: 1,
+        },
       ];
 
       aiPromptContentProvider._formatCategorizedActions(actions1);
@@ -292,8 +384,18 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should refresh metadata after cache clear', () => {
       const actions = [
-        { actionId: 'positioning:sit', commandString: 'sit', description: 'Sit', index: 0 },
-        { actionId: 'positioning:stand', commandString: 'stand', description: 'Stand', index: 1 },
+        {
+          actionId: 'positioning:sit',
+          commandString: 'sit',
+          description: 'Sit',
+          index: 0,
+        },
+        {
+          actionId: 'positioning:stand',
+          commandString: 'stand',
+          description: 'Stand',
+          index: 1,
+        },
       ];
 
       aiPromptContentProvider._formatCategorizedActions(actions);
@@ -319,13 +421,24 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should handle actions from unknown mods gracefully', () => {
       const unknownModActions = [
-        { actionId: 'unknown_mod:action1', commandString: 'action1', description: 'Test', index: 0 },
-        { actionId: 'unknown_mod:action2', commandString: 'action2', description: 'Test 2', index: 1 },
+        {
+          actionId: 'unknown_mod:action1',
+          commandString: 'action1',
+          description: 'Test',
+          index: 0,
+        },
+        {
+          actionId: 'unknown_mod:action2',
+          commandString: 'action2',
+          description: 'Test 2',
+          index: 1,
+        },
       ];
 
       // Should not throw
       expect(() => {
-        const result = aiPromptContentProvider._formatCategorizedActions(unknownModActions);
+        const result =
+          aiPromptContentProvider._formatCategorizedActions(unknownModActions);
         expect(result).toBeDefined();
         expect(result).toContain('UNKNOWN_MOD Actions');
         // Should not have Purpose/Consider when since manifest doesn't exist
@@ -335,7 +448,12 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should handle malformed action IDs without namespace', () => {
       const malformedActions = [
-        { actionId: 'nonamespace', commandString: 'test', description: 'Test', index: 0 },
+        {
+          actionId: 'nonamespace',
+          commandString: 'test',
+          description: 'Test',
+          index: 0,
+        },
       ];
 
       // Should not throw
@@ -346,11 +464,17 @@ describe('Action Formatting with Metadata - Integration', () => {
 
     it('should handle actions with special characters in namespace', () => {
       const specialActions = [
-        { actionId: 'my-mod:action', commandString: 'test', description: 'Test', index: 0 },
+        {
+          actionId: 'my-mod:action',
+          commandString: 'test',
+          description: 'Test',
+          index: 0,
+        },
       ];
 
       expect(() => {
-        const result = aiPromptContentProvider._formatCategorizedActions(specialActions);
+        const result =
+          aiPromptContentProvider._formatCategorizedActions(specialActions);
         expect(result).toBeDefined();
       }).not.toThrow();
     });
@@ -360,16 +484,42 @@ describe('Action Formatting with Metadata - Integration', () => {
     it('should format a realistic set of actions from multiple gameplay systems', () => {
       const gameplayActions = [
         // Positioning actions
-        { actionId: 'positioning:sit_down', commandString: 'sit on couch', description: 'Take a seat', index: 0 },
-        { actionId: 'personal-space:get_close', commandString: 'approach Alice', description: 'Move closer', index: 1 },
+        {
+          actionId: 'positioning:sit_down',
+          commandString: 'sit on couch',
+          description: 'Take a seat',
+          index: 0,
+        },
+        {
+          actionId: 'personal-space:get_close',
+          commandString: 'approach Alice',
+          description: 'Move closer',
+          index: 1,
+        },
         // Items actions
-        { actionId: 'items:pick_up_item', commandString: 'pick up book', description: 'Pick up the book', index: 2 },
-        { actionId: 'item-transfer:give_item', commandString: 'give book to Alice', description: 'Hand over the book', index: 3 },
+        {
+          actionId: 'items:pick_up_item',
+          commandString: 'pick up book',
+          description: 'Pick up the book',
+          index: 2,
+        },
+        {
+          actionId: 'item-transfer:give_item',
+          commandString: 'give book to Alice',
+          description: 'Hand over the book',
+          index: 3,
+        },
         // Core actions
-        { actionId: 'core:wait', commandString: 'wait', description: 'Wait for a moment', index: 4 },
+        {
+          actionId: 'core:wait',
+          commandString: 'wait',
+          description: 'Wait for a moment',
+          index: 4,
+        },
       ];
 
-      const result = aiPromptContentProvider._formatCategorizedActions(gameplayActions);
+      const result =
+        aiPromptContentProvider._formatCategorizedActions(gameplayActions);
 
       // Verify all sections are present
       expect(result).toContain('POSITIONING Actions');

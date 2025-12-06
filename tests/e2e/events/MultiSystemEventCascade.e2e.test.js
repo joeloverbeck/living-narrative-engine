@@ -3,7 +3,7 @@
  * @description End-to-end test validating event cascades across multiple systems
  * in the Living Narrative Engine. Tests the complete flow from initial trigger
  * through entity, component, action, turn, and UI systems.
- * 
+ *
  * Priority 2 implementation addressing missing cascade-focused testing:
  * - End-to-end event cascade flow validation (Entity → Component → Action → Turn → UI)
  * - Cross-system event propagation timing and ordering
@@ -13,7 +13,14 @@
  * @jest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import EventBus from '../../../src/events/eventBus.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -143,7 +150,10 @@ class MockSystemCoordinator {
       this.logger.debug('Component System: Processing component addition');
       const { entityId, componentType } = event.payload;
       const key = `${entityId}:${componentType}`;
-      this.systemStates.componentSystem.components.set(key, event.payload.componentData);
+      this.systemStates.componentSystem.components.set(
+        key,
+        event.payload.componentData
+      );
       this.systemStates.componentSystem.operationCount++;
       this.recordEventTiming(COMPONENT_ADDED_ID, event);
 
@@ -214,7 +224,7 @@ class MockSystemCoordinator {
     if (!this.cascadeMetrics.startTime) {
       this.cascadeMetrics.startTime = now;
     }
-    
+
     this.cascadeMetrics.eventTimings.push({
       eventType,
       timestamp: now,
@@ -271,14 +281,14 @@ describe('Multi-System Event Cascade E2E Test', () => {
     // Create core services - FRESH instances for each test
     logger = new ConsoleLogger();
     eventBus = new EventBus({ logger });
-    
+
     // Create a proper async mock for SafeEventDispatcher that matches production interface
     safeEventDispatcher = {
       dispatch: async (eventType, payload) => {
         // Async dispatch matching production interface
         await eventBus.dispatch(eventType, payload);
         return true;
-      }
+      },
     };
 
     // Create mock system coordinator with fresh EventBus
@@ -296,10 +306,10 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
   afterEach(() => {
     // Restore console
-    console.error = console.error.toString().includes('originalConsoleError') 
-      ? console.error 
+    console.error = console.error.toString().includes('originalConsoleError')
+      ? console.error
       : jest.fn();
-    
+
     // Clear captured data
     capturedEvents = [];
     consoleOutput = [];
@@ -325,7 +335,7 @@ describe('Multi-System Event Cascade E2E Test', () => {
       expect(metrics.eventTimings.length).toBeGreaterThanOrEqual(8);
 
       // Verify expected event sequence
-      const eventSequence = metrics.eventTimings.map(e => e.eventType);
+      const eventSequence = metrics.eventTimings.map((e) => e.eventType);
       expect(eventSequence).toContain(TURN_STARTED_ID);
       expect(eventSequence).toContain(ACTION_DECIDED_ID);
       expect(eventSequence).toContain(ATTEMPT_ACTION_ID);
@@ -354,15 +364,28 @@ describe('Multi-System Event Cascade E2E Test', () => {
       );
 
       // Assert: Verify event ordering
-      const eventTimings = mockSystemCoordinator.getCascadeMetrics().eventTimings;
-      
+      const eventTimings =
+        mockSystemCoordinator.getCascadeMetrics().eventTimings;
+
       // Find indices of key events
-      const turnStartIdx = eventTimings.findIndex(e => e.eventType === TURN_STARTED_ID);
-      const actionDecidedIdx = eventTimings.findIndex(e => e.eventType === ACTION_DECIDED_ID);
-      const entityCreatedIdx = eventTimings.findIndex(e => e.eventType === ENTITY_CREATED_ID);
-      const entitySpokeIdx = eventTimings.findIndex(e => e.eventType === ENTITY_SPOKE_ID);
-      const displaySpeechIdx = eventTimings.findIndex(e => e.eventType === DISPLAY_SPEECH_ID);
-      const turnEndedIdx = eventTimings.findIndex(e => e.eventType === TURN_ENDED_ID);
+      const turnStartIdx = eventTimings.findIndex(
+        (e) => e.eventType === TURN_STARTED_ID
+      );
+      const actionDecidedIdx = eventTimings.findIndex(
+        (e) => e.eventType === ACTION_DECIDED_ID
+      );
+      const entityCreatedIdx = eventTimings.findIndex(
+        (e) => e.eventType === ENTITY_CREATED_ID
+      );
+      const entitySpokeIdx = eventTimings.findIndex(
+        (e) => e.eventType === ENTITY_SPOKE_ID
+      );
+      const displaySpeechIdx = eventTimings.findIndex(
+        (e) => e.eventType === DISPLAY_SPEECH_ID
+      );
+      const turnEndedIdx = eventTimings.findIndex(
+        (e) => e.eventType === TURN_ENDED_ID
+      );
 
       // Verify logical ordering
       expect(turnStartIdx).toBeLessThan(actionDecidedIdx);
@@ -383,9 +406,9 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
   describe('Cascade Interruption and Recovery', () => {
     it('should handle entity creation failure and prevent cascade corruption', async () => {
-      // Arrange: Create separate EventBus for this test 
+      // Arrange: Create separate EventBus for this test
       const testEventBus = new EventBus({ logger });
-      
+
       // Create a minimal test-specific mock that only handles what we need for this test
       const testStates = {
         turnSystem: { active: false, turnCount: 0 },
@@ -397,12 +420,12 @@ describe('Multi-System Event Cascade E2E Test', () => {
       const cascadeMetrics = {
         errorCount: 0,
       };
-      
+
       // Set up minimal handlers
       testEventBus.subscribe(TURN_STARTED_ID, async (event) => {
         testStates.turnSystem.active = true;
         testStates.turnSystem.turnCount++;
-        
+
         // Trigger action decision
         setTimeout(async () => {
           await testEventBus.dispatch(ACTION_DECIDED_ID, {
@@ -413,10 +436,10 @@ describe('Multi-System Event Cascade E2E Test', () => {
           });
         }, 10);
       });
-      
+
       testEventBus.subscribe(ACTION_DECIDED_ID, async (event) => {
         testStates.actionSystem.actionsProcessed++;
-        
+
         setTimeout(async () => {
           await testEventBus.dispatch(ATTEMPT_ACTION_ID, {
             entityId: event.payload.entityId,
@@ -426,9 +449,9 @@ describe('Multi-System Event Cascade E2E Test', () => {
           });
         }, 15);
       });
-      
+
       let entityCreationAttempted = false;
-      
+
       // This handler REPLACES entity creation with an error
       testEventBus.subscribe(ATTEMPT_ACTION_ID, async (event) => {
         if (!entityCreationAttempted) {
@@ -445,7 +468,7 @@ describe('Multi-System Event Cascade E2E Test', () => {
           // Don't create the entity!
         }
       });
-      
+
       testEventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, async (event) => {
         cascadeMetrics.errorCount++;
       });
@@ -467,12 +490,12 @@ describe('Multi-System Event Cascade E2E Test', () => {
       // Assert: Verify failure handling
       expect(entityCreationAttempted).toBe(true);
       expect(cascadeMetrics.errorCount).toBe(1);
-      
+
       // Verify cascade stopped at appropriate point
       expect(testStates.entitySystem.entities.size).toBe(0); // No entity created
       expect(testStates.componentSystem.components.size).toBe(0); // No components added
       expect(testStates.uiSystem.displayedContent.length).toBe(0); // No UI updates
-      
+
       // But turn system should still function
       expect(testStates.turnSystem.turnCount).toBe(1); // Turn was started
     });
@@ -482,10 +505,13 @@ describe('Multi-System Event Cascade E2E Test', () => {
       const testEventBus = new EventBus({ logger });
       const testCoordinator = new MockSystemCoordinator(testEventBus, logger);
       let componentFailureInjected = false;
-      
+
       // Override component handler to inject failure
       testEventBus.subscribe(COMPONENT_ADDED_ID, async (event) => {
-        if (event.payload.componentType === 'position' && !componentFailureInjected) {
+        if (
+          event.payload.componentType === 'position' &&
+          !componentFailureInjected
+        ) {
           componentFailureInjected = true;
           // Fail the first component addition, but allow dialogue component
           setTimeout(async () => {
@@ -511,7 +537,7 @@ describe('Multi-System Event Cascade E2E Test', () => {
       );
 
       // Wait a bit more for potential completion
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Assert: Verify partial recovery
       const metrics = testCoordinator.getCascadeMetrics();
@@ -519,11 +545,13 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
       expect(componentFailureInjected).toBe(true);
       expect(metrics.errorCount).toBe(1);
-      
+
       // Verify partial success
       expect(systemStates.entitySystem.entities.size).toBe(1); // Entity created
       // One component may have failed, but dialogue should succeed
-      expect(systemStates.componentSystem.components.size).toBeGreaterThanOrEqual(1);
+      expect(
+        systemStates.componentSystem.components.size
+      ).toBeGreaterThanOrEqual(1);
     });
 
     it('should handle UI system failures without breaking other systems', async () => {
@@ -532,29 +560,34 @@ describe('Multi-System Event Cascade E2E Test', () => {
       const testCoordinator = new MockSystemCoordinator(testEventBus, logger);
       let uiFailureInjected = false;
       let errorCount = 0;
-      
+
       // Track the original UI display count
-      const originalDisplayHandler = testCoordinator.systemStates.uiSystem.displayedContent.length;
-      
+      const originalDisplayHandler =
+        testCoordinator.systemStates.uiSystem.displayedContent.length;
+
       // Override only the DISPLAY_SPEECH handler to inject failure
-      testEventBus.subscribe(DISPLAY_SPEECH_ID, async (event) => {
-        if (!uiFailureInjected) {
-          uiFailureInjected = true;
-          // Don't update the UI state
-          setTimeout(async () => {
-            await testEventBus.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-              error: 'UI rendering failed',
-              context: 'MockUISystem',
-              speechContent: event.payload.speechContent,
-              timestamp: Date.now(),
-            });
-          }, 5);
-          // Ensure original handler doesn't run
-          event.stopPropagation && event.stopPropagation();
-          return; // Don't process UI display
-        }
-      }, { priority: 1000 }); // Higher priority to run before the normal handler
-      
+      testEventBus.subscribe(
+        DISPLAY_SPEECH_ID,
+        async (event) => {
+          if (!uiFailureInjected) {
+            uiFailureInjected = true;
+            // Don't update the UI state
+            setTimeout(async () => {
+              await testEventBus.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+                error: 'UI rendering failed',
+                context: 'MockUISystem',
+                speechContent: event.payload.speechContent,
+                timestamp: Date.now(),
+              });
+            }, 5);
+            // Ensure original handler doesn't run
+            event.stopPropagation && event.stopPropagation();
+            return; // Don't process UI display
+          }
+        },
+        { priority: 1000 }
+      ); // Higher priority to run before the normal handler
+
       testEventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, async (event) => {
         errorCount++;
         testCoordinator.cascadeMetrics.errorCount++;
@@ -576,12 +609,12 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
       expect(uiFailureInjected).toBe(true);
       expect(metrics.errorCount).toBeGreaterThanOrEqual(1); // May have multiple error events
-      
+
       // All other systems should work normally
       expect(systemStates.entitySystem.entities.size).toBe(1);
       expect(systemStates.componentSystem.components.size).toBe(2);
       expect(systemStates.turnSystem.turnCount).toBe(1);
-      
+
       // UI system should have processed the display (since EventBus doesn't support stopPropagation)
       expect(systemStates.uiSystem.displayedContent.length).toBe(1); // The normal handler still runs
       expect(systemStates.uiSystem.renderCount).toBe(1); // The normal handler still runs
@@ -595,15 +628,15 @@ describe('Multi-System Event Cascade E2E Test', () => {
       const coordinators = [];
       const eventBuses = [];
       const startTime = Date.now();
-      
+
       // Track all events across all buses
       const allTestEvents = [];
-      
+
       // Create separate EventBus and coordinator for each cascade
       for (let i = 0; i < cascadeCount; i++) {
         const bus = new EventBus({ logger });
         eventBuses.push(bus);
-        
+
         // Track events from this bus
         bus.subscribe('*', (event) => {
           allTestEvents.push({
@@ -612,7 +645,7 @@ describe('Multi-System Event Cascade E2E Test', () => {
             captureTimestamp: Date.now(),
           });
         });
-        
+
         const coordinator = new MockSystemCoordinator(bus, logger);
         coordinators.push(coordinator);
       }
@@ -620,7 +653,7 @@ describe('Multi-System Event Cascade E2E Test', () => {
       // Act: Start cascades with staggered timing
       const startPromises = [];
       for (let i = 0; i < cascadeCount; i++) {
-        const promise = new Promise(resolve => {
+        const promise = new Promise((resolve) => {
           setTimeout(async () => {
             await coordinators[i].startCascade();
             resolve();
@@ -632,8 +665,8 @@ describe('Multi-System Event Cascade E2E Test', () => {
       // Wait for all cascades to complete
       await waitForCondition(
         () => {
-          const completedCount = coordinators.filter(c => 
-            c.getCascadeMetrics().completionTime !== null
+          const completedCount = coordinators.filter(
+            (c) => c.getCascadeMetrics().completionTime !== null
           ).length;
           return completedCount >= cascadeCount;
         },
@@ -645,23 +678,23 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
       // Assert: Verify performance characteristics
       expect(completionTime).toBeLessThan(8000); // Should complete within 8 seconds
-      
+
       // Verify all cascades completed - check each coordinator individually
       let totalTurnEnds = 0;
       let totalEntityCreates = 0;
-      
+
       for (let i = 0; i < cascadeCount; i++) {
         const metrics = coordinators[i].getCascadeMetrics();
         expect(metrics.completionTime).not.toBeNull();
-        
+
         const systemStates = coordinators[i].getSystemStates();
         expect(systemStates.turnSystem.turnCount).toBe(1);
         expect(systemStates.entitySystem.entities.size).toBe(1);
-        
+
         totalTurnEnds += systemStates.turnSystem.turnCount;
         totalEntityCreates += systemStates.entitySystem.entities.size;
       }
-      
+
       expect(totalTurnEnds).toBe(cascadeCount);
       expect(totalEntityCreates).toBe(cascadeCount);
     });
@@ -671,15 +704,15 @@ describe('Multi-System Event Cascade E2E Test', () => {
       const cascadeCount = 2;
       const coordinators = [];
       const eventBuses = [];
-      
+
       // Track events from all buses
       const allOrderTestEvents = [];
-      
+
       // Create separate EventBus and coordinator for each cascade
       for (let i = 0; i < cascadeCount; i++) {
         const bus = new EventBus({ logger });
         eventBuses.push(bus);
-        
+
         // Track events with cascade identifier
         bus.subscribe('*', (event) => {
           allOrderTestEvents.push({
@@ -688,20 +721,22 @@ describe('Multi-System Event Cascade E2E Test', () => {
             captureTimestamp: Date.now(),
           });
         });
-        
+
         const coordinator = new MockSystemCoordinator(bus, logger);
         coordinators.push(coordinator);
       }
 
       // Act: Start cascades simultaneously
-      const promises = coordinators.map(coordinator => coordinator.startCascade());
+      const promises = coordinators.map((coordinator) =>
+        coordinator.startCascade()
+      );
       await Promise.all(promises);
 
       // Wait for completion
       await waitForCondition(
         () => {
-          return coordinators.every(c => 
-            c.getCascadeMetrics().completionTime !== null
+          return coordinators.every(
+            (c) => c.getCascadeMetrics().completionTime !== null
           );
         },
         8000,
@@ -710,28 +745,46 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
       // Assert: Verify event ordering within each cascade
       for (let i = 0; i < cascadeCount; i++) {
-        const cascadeEvents = allOrderTestEvents.filter(e => e.cascadeIndex === i);
-        
-        const turnStartEvent = cascadeEvents.find(e => e.type === TURN_STARTED_ID);
-        const turnEndEvent = cascadeEvents.find(e => e.type === TURN_ENDED_ID);
-        
+        const cascadeEvents = allOrderTestEvents.filter(
+          (e) => e.cascadeIndex === i
+        );
+
+        const turnStartEvent = cascadeEvents.find(
+          (e) => e.type === TURN_STARTED_ID
+        );
+        const turnEndEvent = cascadeEvents.find(
+          (e) => e.type === TURN_ENDED_ID
+        );
+
         expect(turnStartEvent).toBeDefined();
         expect(turnEndEvent).toBeDefined();
-        
+
         // Turn start should come before turn end
-        expect(turnStartEvent.captureTimestamp).toBeLessThan(turnEndEvent.captureTimestamp);
-        
+        expect(turnStartEvent.captureTimestamp).toBeLessThan(
+          turnEndEvent.captureTimestamp
+        );
+
         // Verify the full cascade sequence
-        const actionDecidedEvent = cascadeEvents.find(e => e.type === ACTION_DECIDED_ID);
-        const entityCreatedEvent = cascadeEvents.find(e => e.type === ENTITY_CREATED_ID);
-        
+        const actionDecidedEvent = cascadeEvents.find(
+          (e) => e.type === ACTION_DECIDED_ID
+        );
+        const entityCreatedEvent = cascadeEvents.find(
+          (e) => e.type === ENTITY_CREATED_ID
+        );
+
         expect(actionDecidedEvent).toBeDefined();
         expect(entityCreatedEvent).toBeDefined();
-        
+
         // Verify ordering
-        expect(turnStartEvent.captureTimestamp).toBeLessThan(actionDecidedEvent.captureTimestamp);
-        expect(actionDecidedEvent.captureTimestamp).toBeLessThan(entityCreatedEvent.captureTimestamp);
-        expect(entityCreatedEvent.captureTimestamp).toBeLessThan(turnEndEvent.captureTimestamp);
+        expect(turnStartEvent.captureTimestamp).toBeLessThan(
+          actionDecidedEvent.captureTimestamp
+        );
+        expect(actionDecidedEvent.captureTimestamp).toBeLessThan(
+          entityCreatedEvent.captureTimestamp
+        );
+        expect(entityCreatedEvent.captureTimestamp).toBeLessThan(
+          turnEndEvent.captureTimestamp
+        );
       }
     });
   });
@@ -740,8 +793,11 @@ describe('Multi-System Event Cascade E2E Test', () => {
     it('should validate proper event dependencies between systems', async () => {
       // Arrange: Create a fresh EventBus for dependency test
       const depTestEventBus = new EventBus({ logger });
-      const testCoordinator = new MockSystemCoordinator(depTestEventBus, logger);
-      
+      const testCoordinator = new MockSystemCoordinator(
+        depTestEventBus,
+        logger
+      );
+
       // Track system interactions
       const systemInteractions = {
         turnToAction: [],
@@ -814,13 +870,22 @@ describe('Multi-System Event Cascade E2E Test', () => {
     it('should demonstrate proper event payload propagation across systems', async () => {
       // Arrange: Create a fresh EventBus for payload test
       const payloadTestEventBus = new EventBus({ logger });
-      const testCoordinator = new MockSystemCoordinator(payloadTestEventBus, logger);
-      
+      const testCoordinator = new MockSystemCoordinator(
+        payloadTestEventBus,
+        logger
+      );
+
       // Track payload data flow
       const payloadFlow = [];
 
       // Monitor how data flows through the cascade
-      [TURN_STARTED_ID, ACTION_DECIDED_ID, ENTITY_CREATED_ID, COMPONENT_ADDED_ID, DISPLAY_SPEECH_ID].forEach(eventType => {
+      [
+        TURN_STARTED_ID,
+        ACTION_DECIDED_ID,
+        ENTITY_CREATED_ID,
+        COMPONENT_ADDED_ID,
+        DISPLAY_SPEECH_ID,
+      ].forEach((eventType) => {
         payloadTestEventBus.subscribe(eventType, (event) => {
           payloadFlow.push({
             eventType,
@@ -843,9 +908,15 @@ describe('Multi-System Event Cascade E2E Test', () => {
       expect(payloadFlow.length).toBeGreaterThanOrEqual(5);
 
       // Verify entity ID propagation
-      const entityCreatedEvent = payloadFlow.find(p => p.eventType === ENTITY_CREATED_ID);
-      const componentAddedEvents = payloadFlow.filter(p => p.eventType === COMPONENT_ADDED_ID);
-      const displaySpeechEvent = payloadFlow.find(p => p.eventType === DISPLAY_SPEECH_ID);
+      const entityCreatedEvent = payloadFlow.find(
+        (p) => p.eventType === ENTITY_CREATED_ID
+      );
+      const componentAddedEvents = payloadFlow.filter(
+        (p) => p.eventType === COMPONENT_ADDED_ID
+      );
+      const displaySpeechEvent = payloadFlow.find(
+        (p) => p.eventType === DISPLAY_SPEECH_ID
+      );
 
       expect(entityCreatedEvent).toBeDefined();
       expect(componentAddedEvents.length).toBe(2);
@@ -853,13 +924,15 @@ describe('Multi-System Event Cascade E2E Test', () => {
 
       // Verify entity ID consistency across events
       const entityId = entityCreatedEvent.payload.entityId;
-      componentAddedEvents.forEach(event => {
+      componentAddedEvents.forEach((event) => {
         expect(event.payload.entityId).toBe(entityId);
       });
       expect(displaySpeechEvent.payload.entityId).toBe(entityId);
 
       // Verify data transformation through systems
-      const dialogueComponent = componentAddedEvents.find(e => e.payload.componentType === 'dialogue');
+      const dialogueComponent = componentAddedEvents.find(
+        (e) => e.payload.componentType === 'dialogue'
+      );
       expect(dialogueComponent).toBeDefined();
       expect(displaySpeechEvent.payload.speechContent).toBe(
         dialogueComponent.payload.componentData.greeting
@@ -875,15 +948,19 @@ describe('Multi-System Event Cascade E2E Test', () => {
  * @param timeoutMs
  * @param errorMessage
  */
-async function waitForCondition(condition, timeoutMs = 5000, errorMessage = 'Condition not met') {
+async function waitForCondition(
+  condition,
+  timeoutMs = 5000,
+  errorMessage = 'Condition not met'
+) {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeoutMs) {
     if (condition()) {
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  
+
   throw new Error(`${errorMessage} within ${timeoutMs}ms`);
 }

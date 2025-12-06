@@ -17,20 +17,24 @@ The fix relies on the `anatomy:body.body.root` field being present and valid. We
 ## Files Expected to Touch
 
 ### New Files
+
 - `tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js`
 
 ### Modified Files
+
 - None (pure test addition)
 
 ## Explicit Out of Scope
 
 **DO NOT MODIFY**:
+
 - `src/anatomy/anatomyCacheManager.js` (edge case handling already implemented)
 - Production code behavior (tests validate existing behavior)
 - Warning log messages (tests validate they're called, don't change messages)
 - Error handling strategy (already implemented)
 
 **DO NOT ADD**:
+
 - New edge case handling in production code
 - Alternative validation strategies
 - Schema changes
@@ -69,7 +73,7 @@ describe('AnatomyCacheManager - Edge Cases', () => {
         recipeId: 'anatomy:human_male',
         body: {
           // root field missing
-        }
+        },
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -89,8 +93,8 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const anatomyBody = {
         recipeId: 'anatomy:human_male',
         body: {
-          root: null  // Explicitly null
-        }
+          root: null, // Explicitly null
+        },
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -109,7 +113,7 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const actorId = 'test:actor_no_root';
       const anatomyBody = {
         recipeId: 'anatomy:human_male',
-        body: {}
+        body: {},
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -132,8 +136,8 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const anatomyBody = {
         recipeId: 'anatomy:human_male',
         body: {
-          root: 'non-existent-entity-id'
-        }
+          root: 'non-existent-entity-id',
+        },
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -155,8 +159,8 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const anatomyBody = {
         recipeId: 'anatomy:human_male',
         body: {
-          root: rootId
-        }
+          root: rootId,
+        },
       };
 
       // Create entity that exists but is not an anatomy part
@@ -179,8 +183,8 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const actorId = 'test:actor_invalid';
       const anatomyBody = {
         body: {
-          root: 'invalid-reference'
-        }
+          root: 'invalid-reference',
+        },
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -219,8 +223,8 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const actorId = 'test:circular_actor';
       const anatomyBody = {
         body: {
-          root: actorId  // Points to self!
-        }
+          root: actorId, // Points to self!
+        },
       };
 
       entityManager.addComponent(actorId, 'anatomy:body', anatomyBody);
@@ -245,23 +249,23 @@ describe('AnatomyCacheManager - Edge Cases', () => {
 
       // Create anatomy:body
       entityManager.addComponent(actorId, 'anatomy:body', {
-        body: { root: partA }
+        body: { root: partA },
       });
 
       // Create cyclic parts: A → B → C → A
       entityManager.addComponent(partA, 'anatomy:part', { subType: 'torso' });
       entityManager.addComponent(partA, 'anatomy:joint', {
-        parentEntityId: partC  // Creates cycle!
+        parentEntityId: partC, // Creates cycle!
       });
 
       entityManager.addComponent(partB, 'anatomy:part', { subType: 'arm' });
       entityManager.addComponent(partB, 'anatomy:joint', {
-        parentEntityId: partA
+        parentEntityId: partA,
       });
 
       entityManager.addComponent(partC, 'anatomy:part', { subType: 'leg' });
       entityManager.addComponent(partC, 'anatomy:joint', {
-        parentEntityId: partB
+        parentEntityId: partB,
       });
 
       // Act: Build cache (should not infinite loop)
@@ -283,11 +287,11 @@ describe('AnatomyCacheManager - Edge Cases', () => {
       const rootId = 'test:valid_root';
 
       entityManager.addComponent(actorId, 'anatomy:body', {
-        body: { root: rootId }
+        body: { root: rootId },
       });
 
       entityManager.addComponent(rootId, 'anatomy:part', {
-        subType: 'torso'
+        subType: 'torso',
       });
 
       // Act: Build cache
@@ -321,9 +325,11 @@ describe('AnatomyCacheManager - Edge Cases', () => {
 ### Specific Tests That Must Pass
 
 1. **New Test Suite Passes**:
+
    ```bash
    NODE_ENV=test npx jest tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js --no-coverage --silent
    ```
+
    - All 10+ test cases pass
    - No unhandled promise rejections
    - No stack overflows or infinite loops
@@ -403,6 +409,7 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 ### ✅ What Was Implemented
 
 #### New Test File Created
+
 - **File**: `tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js` (573 lines)
 - **Test Count**: 16 comprehensive edge case tests
 - **Test Structure**: 7 describe blocks covering all edge cases
@@ -440,6 +447,7 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
    - Catches and logs errors during anatomy processing
 
 #### Existing Test Suite Updates
+
 - **Fixed 5 failing tests** in `tests/unit/anatomy/anatomyCacheManager.test.js`
 - **Root Cause**: Old tests were written for BROKEN behavior (global anatomy part search)
 - **Fix Applied**: Added required `body.root` field to anatomy:body components in tests
@@ -453,6 +461,7 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 ### ✅ Validation Results
 
 #### Test Execution
+
 ```bash
 # All tests pass
 PASS tests/unit/anatomy/anatomyCacheManager.test.js (43 tests)
@@ -464,11 +473,13 @@ Time:        ~0.6s
 ```
 
 #### Consistency Verification
+
 - **Runs**: 5 consecutive runs
 - **Result**: 100% pass rate (59/59 tests each run)
 - **Performance**: All tests complete in <1 second
 
 #### Code Quality
+
 ```bash
 npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 # ✅ No errors, no warnings
@@ -477,6 +488,7 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 ### 📝 Changes vs. Plan
 
 #### What Matched the Plan
+
 ✅ Created `anatomyCacheManager.edgeCases.test.js` with 10+ tests (actual: 16)
 ✅ All edge cases covered: missing field, invalid reference, null component, circular protection
 ✅ Tests validate warning logs and graceful degradation
@@ -486,12 +498,15 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 ✅ Tests complete in <3 seconds
 
 #### What Differed from the Plan
+
 ⚠️ **Additional Work Required**: Fixed 5 existing tests that were incompatible with the fix
+
 - **Reason**: Old tests assumed BROKEN behavior (global search for anatomy parts)
 - **Impact**: Required adding `body.root` field to existing test anatomy:body components
 - **Benefit**: Entire test suite now validates CORRECT behavior
 
 ➕ **Extra Tests Added**: 16 tests vs. planned 10+
+
 - **Reason**: Comprehensive coverage of all edge cases and success paths
 - **Coverage**: Missing field (4), invalid reference (3), null component (2), circular protection (3), success logging (2), actor with children (1), error handling (1)
 
@@ -510,13 +525,13 @@ npx eslint tests/unit/anatomy/anatomyCacheManager.edgeCases.test.js
 
 ### 📊 Test Summary
 
-| Category | Test Count | Status |
-|----------|-----------|--------|
-| New Edge Case Tests | 16 | ✅ All Pass |
-| Fixed Existing Tests | 5 | ✅ All Pass |
-| Total Test Count | 59 | ✅ All Pass |
-| Runs Performed | 5 | ✅ 100% Pass Rate |
-| Performance | <1s | ✅ Well Under Limit |
+| Category             | Test Count | Status              |
+| -------------------- | ---------- | ------------------- |
+| New Edge Case Tests  | 16         | ✅ All Pass         |
+| Fixed Existing Tests | 5          | ✅ All Pass         |
+| Total Test Count     | 59         | ✅ All Pass         |
+| Runs Performed       | 5          | ✅ 100% Pass Rate   |
+| Performance          | <1s        | ✅ Well Under Limit |
 
 ### 🔍 Key Insights
 

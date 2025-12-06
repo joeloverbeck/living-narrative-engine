@@ -10,9 +10,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import {
-  ClichesGeneratorControllerTestBed,
-} from '../../../common/clichesGeneratorControllerTestBed.js';
+import { ClichesGeneratorControllerTestBed } from '../../../common/clichesGeneratorControllerTestBed.js';
 
 /**
  *
@@ -89,7 +87,9 @@ describe('ClichesGeneratorController keyboard and focus management', () => {
 
     const fieldError = document.createElement('div');
     fieldError.className = 'cb-field-error';
-    testBed.getDirectionSelector().insertAdjacentElement('afterend', fieldError);
+    testBed
+      .getDirectionSelector()
+      .insertAdjacentElement('afterend', fieldError);
     testBed.getDirectionSelector().classList.add('cb-form-error');
 
     testBed.controller._testSetCurrentState({ isGenerating: true });

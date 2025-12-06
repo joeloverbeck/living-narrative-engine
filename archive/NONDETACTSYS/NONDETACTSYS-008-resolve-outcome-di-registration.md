@@ -10,18 +10,18 @@ Complete the DI system registration for the RESOLVE_OUTCOME operation. This incl
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                           | Purpose                         |
+| -------------------------------------------------------------- | ------------------------------- |
 | `src/dependencyInjection/registrations/combatRegistrations.js` | Combat service DI registrations |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Add `ResolveOutcomeHandler` token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler import and factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Map RESOLVE_OUTCOME to handler |
-| `src/dependencyInjection/baseContainerConfig.js` | Import and call combatRegistrations |
+| File                                                                     | Change                              |
+| ------------------------------------------------------------------------ | ----------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add `ResolveOutcomeHandler` token   |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add handler import and factory      |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Map RESOLVE_OUTCOME to handler      |
+| `src/dependencyInjection/baseContainerConfig.js`                         | Import and call combatRegistrations |
 
 ## Implementation Details
 
@@ -48,25 +48,31 @@ export function registerCombatServices(container) {
   const registrar = new Registrar(container);
 
   // Register SkillResolverService
-  registrar.singletonFactory(tokens.SkillResolverService, (c) =>
-    new SkillResolverService({
-      entityManager: c.resolve(tokens.IEntityManager),
-      logger: c.resolve(tokens.ILogger),
-    })
+  registrar.singletonFactory(
+    tokens.SkillResolverService,
+    (c) =>
+      new SkillResolverService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   // Register ProbabilityCalculatorService
-  registrar.singletonFactory(tokens.ProbabilityCalculatorService, (c) =>
-    new ProbabilityCalculatorService({
-      logger: c.resolve(tokens.ILogger),
-    })
+  registrar.singletonFactory(
+    tokens.ProbabilityCalculatorService,
+    (c) =>
+      new ProbabilityCalculatorService({
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 
   // Register OutcomeDeterminerService
-  registrar.singletonFactory(tokens.OutcomeDeterminerService, (c) =>
-    new OutcomeDeterminerService({
-      logger: c.resolve(tokens.ILogger),
-    })
+  registrar.singletonFactory(
+    tokens.OutcomeDeterminerService,
+    (c) =>
+      new OutcomeDeterminerService({
+        logger: c.resolve(tokens.ILogger),
+      })
   );
 }
 
@@ -197,13 +203,13 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
+| File                                                                     | Purpose                      |
+| ------------------------------------------------------------------------ | ---------------------------- |
 | `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Handler registration pattern |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Operation mapping pattern |
-| `src/dependencyInjection/registrations/infrastructureRegistrations.js` | Service registration pattern |
-| `src/utils/registrarHelpers.js` | Registrar API |
-| `src/dependencyInjection/baseContainerConfig.js` | Registration orchestration |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Operation mapping pattern    |
+| `src/dependencyInjection/registrations/infrastructureRegistrations.js`   | Service registration pattern |
+| `src/utils/registrarHelpers.js`                                          | Registrar API                |
+| `src/dependencyInjection/baseContainerConfig.js`                         | Registration orchestration   |
 
 ## Checklist for Adding Operations
 
@@ -221,6 +227,7 @@ Per CLAUDE.md guidelines, this ticket completes:
 ## Validation Results (Post-Implementation)
 
 Discrepancies corrected from original ticket:
+
 1. **preValidationUtils.js**: No change needed - `RESOLVE_OUTCOME` was already present
 2. **Registration API**: Corrected from `.bind().toFactory()` to `Registrar.singletonFactory()` pattern
 3. **Import style**: Corrected from `require()` to ES module imports
@@ -230,26 +237,32 @@ Discrepancies corrected from original ticket:
 ### What Changed vs Planned
 
 **Created Files:**
+
 - `src/dependencyInjection/registrations/combatRegistrations.js` - Combat service DI registrations (as planned)
 
 **Modified Files:**
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Added `ResolveOutcomeHandler` token (as planned)
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added handler import and factory (as planned)
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Added `RESOLVE_OUTCOME` → `ResolveOutcomeHandler` mapping (as planned)
 - `src/dependencyInjection/baseContainerConfig.js` - Import and call `registerCombatServices` (as planned)
 
 **Test Updates:**
+
 - `tests/unit/dependencyInjection/registrations/operationHandlerRegistrations.test.js` - Added `ResolveOutcomeHandler` to handler module definitions, token imports, and expectations array
 - `tests/unit/dependencyInjection/baseContainerConfig.errorHandling.test.js` - Added `registerCombatServices` to registration module paths and failure scenarios
 
 **Not Modified (contrary to original ticket):**
+
 - `src/utils/preValidationUtils.js` - No change needed; `RESOLVE_OUTCOME` was already present from NONDETACTSYS-007
 
 ### Test Results
+
 - All 37,334 unit tests pass
 - All 462 DI-related tests pass
 - Validation (`npm run validate`) passes with 0 violations across 44 mods
 - Lint passes on all modified source files
 
 ### Completion Date
+
 2025-11-26

@@ -44,9 +44,6 @@
     },
     "events": [],
     "macros": [],
-    "scopes": [
-      "hugged_by_actor.scope",
-      "hugging_actor.scope"
-    ]
+    "scopes": ["hugged_by_actor.scope", "hugging_actor.scope"]
   }
 }

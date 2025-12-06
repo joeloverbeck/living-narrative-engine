@@ -57,7 +57,9 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
       );
 
       expect(actorInstance).toNotHaveComponent('positioning:biting_neck');
-      expect(targetInstance).toNotHaveComponent('positioning:being_bitten_in_neck');
+      expect(targetInstance).toNotHaveComponent(
+        'positioning:being_bitten_in_neck'
+      );
     });
 
     it('preserves unrelated components on both entities', async () => {
@@ -141,7 +143,9 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         scenario.target.id
       );
 
-      expect(targetInstance).toHaveComponent('positioning:being_bitten_in_neck');
+      expect(targetInstance).toHaveComponent(
+        'positioning:being_bitten_in_neck'
+      );
       expect(targetInstance).toHaveComponentData(
         'positioning:being_bitten_in_neck',
         { biting_entity_id: 'stranger' }

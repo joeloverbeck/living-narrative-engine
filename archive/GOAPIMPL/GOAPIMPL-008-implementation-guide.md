@@ -71,59 +71,68 @@ Create a comprehensive implementation guide for developers that translates the r
 # Implementing the Refinement Engine
 
 ## 1. Architecture Overview
-   - System components
-   - Data flow
-   - Integration with GOAP planner and action executor
+
+- System components
+- Data flow
+- Integration with GOAP planner and action executor
 
 ## 2. Component Design
-   - RefinementEngine
-   - MethodSelectionService
-   - PrimitiveActionStepExecutor
-   - ConditionalStepExecutor
-   - ParameterResolutionService
-   - JSON Logic evaluation & diagnostics
+
+- RefinementEngine
+- MethodSelectionService
+- PrimitiveActionStepExecutor
+- ConditionalStepExecutor
+- ParameterResolutionService
+- JSON Logic evaluation & diagnostics
 
 ## 3. Refinement Execution Algorithm
-   - High-level flow (pseudocode)
-   - Step-by-step execution
-   - State management
-   - Error handling
+
+- High-level flow (pseudocode)
+- Step-by-step execution
+- State management
+- Error handling
 
 ## 4. Integration with Existing Systems
-   - GOAP planner integration
-   - Action executor integration
-   - Event bus integration
-   - Context assembly & parameter resolution integration
-   - JSON-logic integration
+
+- GOAP planner integration
+- Action executor integration
+- Event bus integration
+- Context assembly & parameter resolution integration
+- JSON-logic integration
 
 ## 5. Implementation Order
-   - Phase 1: Core infrastructure
-   - Phase 2: Basic execution
-   - Phase 3: Conditionals and state
-   - Phase 4: Failure handling
-   - Phase 5: Optimization
+
+- Phase 1: Core infrastructure
+- Phase 2: Basic execution
+- Phase 3: Conditionals and state
+- Phase 4: Failure handling
+- Phase 5: Optimization
 
 ## 6. Testing Strategy
-   - Unit tests
-   - Integration tests
-   - End-to-end tests
-   - Performance tests
+
+- Unit tests
+- Integration tests
+- End-to-end tests
+- Performance tests
 
 ## 7. Debugging and Troubleshooting
-   - Common issues
-   - Debugging tools
-   - Logging strategy
-   - Performance profiling
+
+- Common issues
+- Debugging tools
+- Logging strategy
+- Performance profiling
 
 ## 8. Code Patterns and Examples
-   - Component implementation examples
-   - Common patterns
-   - Anti-patterns to avoid
+
+- Component implementation examples
+- Common patterns
+- Anti-patterns to avoid
 ```
 
 ## Tasks
 
 ### 1. Write Architecture Overview
+
 - [ ] Create component diagram (RefinementEngine, MethodSelectionService, PrimitiveActionStepExecutor, ConditionalStepExecutor, ParameterResolutionService, ContextAssemblyService, JsonLogicEvaluationService)
 - [ ] Describe data flow from task selection to primitive execution
 - [ ] Map components to existing codebase structure
@@ -132,6 +141,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference existing architectural patterns in codebase
 
 ### 2. Document RefinementEngine Component
+
 - [ ] Define RefinementEngine class interface
 - [ ] Specify constructor dependencies (logger, eventBus, methodRegistry, etc.)
 - [ ] Document `refine(task, context)` method signature
@@ -141,6 +151,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference similar components (e.g., action executor)
 
 ### 3. Document MethodSelectionService Component
+
 - [ ] Define MethodSelectionService contract
 - [ ] Specify `selectMethod(taskId, actorId, params, options)` signature
 - [ ] Document applicability condition evaluation
@@ -149,6 +160,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton code
 
 ### 4. Document PrimitiveActionStepExecutor Component
+
 - [ ] Define PrimitiveActionStepExecutor dependencies and contract
 - [ ] Specify `execute(step, context, stepIndex)` signature and parameters
 - [ ] Document action lookup, target binding, and parameter merging flow
@@ -157,6 +169,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton code
 
 ### 5. Document ConditionalStepExecutor Component
+
 - [ ] Define ConditionalStepExecutor dependencies and contract
 - [ ] Specify `execute(step, context, stepIndex, currentDepth)` signature
 - [ ] Document nesting limits, branch selection, and reuse of primitive executor
@@ -165,6 +178,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton code
 
 ### 6. Document ParameterResolutionService Component
+
 - [ ] Define ParameterResolutionService responsibilities and constructor requirements
 - [ ] Specify `resolve(reference, context, options)` signature
 - [ ] Document supported reference formats and scope (task.params, refinement.localState, actor, world)
@@ -173,6 +187,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton code
 
 ### 7. Document JSON Logic Evaluation Integration
+
 - [ ] Define how JsonLogicEvaluationService is wired into method selection and conditional execution
 - [ ] Specify `evaluate(condition, context)` expectations and diagnostics
 - [ ] Document available custom operators / safe access helpers
@@ -180,6 +195,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide implementation skeleton or pseudo-API usage examples
 
 ### 8. Document Refinement Execution Algorithm
+
 - [ ] Write high-level algorithm pseudocode
 - [ ] Document method selection process
 - [ ] Specify step execution loop
@@ -189,6 +205,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide annotated code example
 
 ### 9. Document Integration with GOAP Planner
+
 - [ ] Specify where refinement is triggered in planning flow
 - [ ] Document task-to-method lookup mechanism
 - [ ] Specify parameter passing from planner to refinement
@@ -197,6 +214,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference `goapDecisionProvider.js` integration points
 
 ### 10. Document Integration with Action Executor
+
 - [ ] Specify how primitives are queued for execution
 - [ ] Document action parameter binding
 - [ ] Specify target resolution from refinement context
@@ -205,6 +223,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference existing action executor code
 
 ### 11. Document Integration with Event Bus
+
 - [ ] List all events dispatched by refinement engine:
   - REFINEMENT_STARTED
   - REFINEMENT_METHOD_SELECTED
@@ -216,6 +235,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference existing event bus patterns
 
 ### 12. Define Implementation Order
+
 - [ ] Phase 1: Core infrastructure (loaders, registry, basic components)
 - [ ] Phase 2: Basic execution (simple sequential methods)
 - [ ] Phase 3: Conditionals and state (branching, storeResultAs)
@@ -225,6 +245,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide milestone checklist
 
 ### 13. Create Testing Strategy
+
 - [ ] Unit test guidelines (mock dependencies, test components in isolation)
 - [ ] Integration test guidelines (test component interactions)
 - [ ] E2E test guidelines (test complete refinement flow)
@@ -233,6 +254,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Reference existing test patterns (`tests/common/`)
 
 ### 14. Write Debugging Section
+
 - [ ] List common implementation issues:
   - Method not found
   - Condition evaluation failure
@@ -244,6 +266,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Provide troubleshooting flowchart
 
 ### 15. Create Code Examples
+
 - [ ] Example: RefinementEngine implementation
 - [ ] Example: MethodSelector implementation
 - [ ] Example: Conditional step execution
@@ -252,6 +275,7 @@ Create a comprehensive implementation guide for developers that translates the r
 - [ ] Annotate examples with explanations
 
 ### 15. Review and Polish
+
 - [ ] Ensure consistency with specification document
 - [ ] Verify all components are covered
 - [ ] Check for clarity and comprehensibility

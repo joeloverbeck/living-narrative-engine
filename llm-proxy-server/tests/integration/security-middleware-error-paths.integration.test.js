@@ -4,13 +4,7 @@
  *              enhanced security middleware stack when underlying HTTP primitives fail.
  */
 
-import {
-  afterEach,
-  describe,
-  expect,
-  jest,
-  test,
-} from '@jest/globals';
+import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 

@@ -5,12 +5,15 @@
 **Status:** Not Started
 
 ## Report Reference
+
 [reports/hardcoded-mod-references-analysis.md](../reports/hardcoded-mod-references-analysis.md) - "Core References Requiring Review (20 references)"
 
 ## Problem Statement
+
 Review and refactor 20 core mod references that enforce potentially unnecessary constraints. Make validation rules configurable based on entity types.
 
 ## Affected Files
+
 1. `src/validation/entityValidator.js`
 2. `src/entities/registries/entityTypeRegistry.js` (new)
 3. `data/schemas/entity-type.schema.json` (new)
@@ -19,6 +22,7 @@ Review and refactor 20 core mod references that enforce potentially unnecessary 
 ## Implementation
 
 ### EntityTypeRegistry
+
 ```javascript
 export class EntityTypeRegistry {
   register(entityType, definition) {
@@ -33,6 +37,7 @@ export class EntityTypeRegistry {
 ```
 
 ### EntityValidator Refactored
+
 ```javascript
 // OLD
 const requiredCoreComponents = ['core:name', 'core:description', 'core:tags'];
@@ -49,6 +54,7 @@ const requiredComponents = entityTypeDef.requiredComponents || [];
 3. **System Entities** - No UI requirements
 
 ## Acceptance Criteria
+
 - [ ] EntityTypeRegistry created
 - [ ] Entity type schema defined
 - [ ] Validation uses entity type definitions
@@ -57,4 +63,5 @@ const requiredComponents = entityTypeDef.requiredComponents || [];
 - [ ] Entity creation guide updated
 
 ## Dependencies
+
 HARMODREF-011 (registry pattern established)

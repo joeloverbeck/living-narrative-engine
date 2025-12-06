@@ -84,7 +84,10 @@ describe('GoapDecisionProvider', () => {
       ];
 
       baseDeps.goapController.decideTurn.mockResolvedValue({
-        actionHint: { actionId: 'core:sit_down', targetBindings: { target: 'chair-1' } },
+        actionHint: {
+          actionId: 'core:sit_down',
+          targetBindings: { target: 'chair-1' },
+        },
       });
 
       await provider.decide({ id: 'actor-1' }, mockContext, actions);
@@ -121,10 +124,17 @@ describe('GoapDecisionProvider', () => {
       ];
 
       baseDeps.goapController.decideTurn.mockResolvedValue({
-        actionHint: { actionId: 'core:sit_down', targetBindings: { target: 'chair-1' } },
+        actionHint: {
+          actionId: 'core:sit_down',
+          targetBindings: { target: 'chair-1' },
+        },
       });
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result).toEqual({
         chosenIndex: 1,
@@ -148,10 +158,17 @@ describe('GoapDecisionProvider', () => {
       ];
 
       baseDeps.goapController.decideTurn.mockResolvedValue({
-        actionHint: { actionId: 'core:sit_down', targetBindings: { seat: 'chair-1' } },
+        actionHint: {
+          actionId: 'core:sit_down',
+          targetBindings: { seat: 'chair-1' },
+        },
       });
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(1);
     });
@@ -181,7 +198,11 @@ describe('GoapDecisionProvider', () => {
         actionHint: { actionId: 'core:stand_up', targetBindings: {} },
       });
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(1);
     });
@@ -201,7 +222,11 @@ describe('GoapDecisionProvider', () => {
 
       baseDeps.goapController.decideTurn.mockResolvedValue(null);
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result).toEqual({
         chosenIndex: null,
@@ -209,9 +234,12 @@ describe('GoapDecisionProvider', () => {
         thoughts: null,
         notes: null,
       });
-      expect(baseDeps.logger.debug).toHaveBeenCalledWith('GOAP returned no decision', {
-        actorId: 'actor-1',
-      });
+      expect(baseDeps.logger.debug).toHaveBeenCalledWith(
+        'GOAP returned no decision',
+        {
+          actorId: 'actor-1',
+        }
+      );
     });
 
     it('returns null when GOAP returns result without actionHint', async () => {
@@ -229,7 +257,11 @@ describe('GoapDecisionProvider', () => {
 
       baseDeps.goapController.decideTurn.mockResolvedValue({});
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(null);
     });
@@ -251,7 +283,11 @@ describe('GoapDecisionProvider', () => {
         actionHint: { actionId: 'core:stand_up', targetBindings: {} },
       });
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(null);
       expect(baseDeps.logger.warn).toHaveBeenCalledWith(
@@ -286,10 +322,17 @@ describe('GoapDecisionProvider', () => {
 
       // GOAP wants chair-3, but only chair-1 and chair-2 are available
       baseDeps.goapController.decideTurn.mockResolvedValue({
-        actionHint: { actionId: 'core:sit_down', targetBindings: { seat: 'chair-3' } },
+        actionHint: {
+          actionId: 'core:sit_down',
+          targetBindings: { seat: 'chair-3' },
+        },
       });
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(1); // Falls back to first candidate
       expect(baseDeps.logger.warn).toHaveBeenCalledWith(
@@ -311,9 +354,15 @@ describe('GoapDecisionProvider', () => {
         },
       ];
 
-      baseDeps.goapController.decideTurn.mockRejectedValue(new Error('Planning failed'));
+      baseDeps.goapController.decideTurn.mockRejectedValue(
+        new Error('Planning failed')
+      );
 
-      const result = await provider.decide({ id: 'actor-1' }, mockContext, actions);
+      const result = await provider.decide(
+        { id: 'actor-1' },
+        mockContext,
+        actions
+      );
 
       expect(result.chosenIndex).toBe(null);
       expect(baseDeps.logger.error).toHaveBeenCalledWith(
@@ -339,7 +388,10 @@ describe('GoapDecisionProvider', () => {
       ];
 
       baseDeps.goapController.decideTurn.mockResolvedValue({
-        actionHint: { actionId: 'core:sit_down', targetBindings: { seat: 'chair-1' } },
+        actionHint: {
+          actionId: 'core:sit_down',
+          targetBindings: { seat: 'chair-1' },
+        },
       });
 
       await provider.decide({ id: 'actor-1' }, mockContext, actions);

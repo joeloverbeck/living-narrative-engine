@@ -334,10 +334,7 @@ class LoadGameUI extends SlotModalBase {
     }
 
     if (statusToRestore && statusToRestore.message) {
-      this._displayStatusMessage(
-        statusToRestore.message,
-        statusToRestore.type
-      );
+      this._displayStatusMessage(statusToRestore.message, statusToRestore.type);
     }
 
     this.logger.debug(`${this._logPrefix} Load slots list populated.`);

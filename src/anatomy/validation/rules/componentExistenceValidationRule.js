@@ -83,7 +83,11 @@ export class ComponentExistenceValidationRule extends ValidationRule {
     for (const [recipeId, recipe] of Object.entries(recipes)) {
       // Get recipePath from options if available (added during validation, not in recipe JSON)
       const recipePath = recipe.recipePath || null;
-      const recipeIssues = this.#validateRecipeComponents(recipe, recipeId, recipePath);
+      const recipeIssues = this.#validateRecipeComponents(
+        recipe,
+        recipeId,
+        recipePath
+      );
 
       // Add recipe context to each issue
       for (const issue of recipeIssues) {

@@ -18,63 +18,47 @@
         {
           "id": "leg_left_front",
           "orientation": "left_front",
-          "allowedTypes": [
-            "dragon_leg"
-          ],
+          "allowedTypes": ["dragon_leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_right_front",
           "orientation": "right_front",
-          "allowedTypes": [
-            "dragon_leg"
-          ],
+          "allowedTypes": ["dragon_leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_left_rear",
           "orientation": "left_rear",
-          "allowedTypes": [
-            "dragon_leg"
-          ],
+          "allowedTypes": ["dragon_leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_right_rear",
           "orientation": "right_rear",
-          "allowedTypes": [
-            "dragon_leg"
-          ],
+          "allowedTypes": ["dragon_leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "wing_left",
           "orientation": "left",
-          "allowedTypes": [
-            "dragon_wing"
-          ],
+          "allowedTypes": ["dragon_wing"],
           "nameTpl": "{{orientation}} wing"
         },
         {
           "id": "wing_right",
           "orientation": "right",
-          "allowedTypes": [
-            "dragon_wing"
-          ],
+          "allowedTypes": ["dragon_wing"],
           "nameTpl": "{{orientation}} wing"
         },
         {
           "id": "neck",
-          "allowedTypes": [
-            "dragon_head"
-          ],
+          "allowedTypes": ["dragon_head"],
           "nameTpl": "neck"
         },
         {
           "id": "tail",
-          "allowedTypes": [
-            "dragon_tail"
-          ],
+          "allowedTypes": ["dragon_tail"],
           "nameTpl": "tail"
         }
       ]

@@ -266,7 +266,8 @@ describe('UnifiedScopeResolver - Memory Tests', () => {
 
         // Optimized: Reduced delay and sample count for memory snapshots
         await new Promise((resolve) => setTimeout(resolve, 30));
-        const cycleMemory = await global.memoryTestUtils.getStableMemoryUsage(3);
+        const cycleMemory =
+          await global.memoryTestUtils.getStableMemoryUsage(3);
         memorySnapshots.push(cycleMemory);
       }
 

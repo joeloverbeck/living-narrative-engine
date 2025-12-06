@@ -24,14 +24,14 @@
 
 The JSON schema validation system spans multiple modules:
 
-| Module | File Path | Purpose |
-|--------|-----------|---------|
-| **Schema Definition** | `data/schemas/operation.schema.json` | Defines Operation and MacroReference validation rules |
-| **Pre-Validation** | `src/utils/preValidationUtils.js` | Fast structural checks before AJV validation |
-| **AJV Validation** | `src/validation/ajvSchemaValidator.js` | Main validation coordinator using AJV library |
-| **Error Formatting** | `src/utils/ajvAnyOfErrorFormatter.js` | Intelligent error message generation |
-| **Macro Expansion** | `src/loaders/macroUtils.js` | Load-time macro reference expansion |
-| **Rule Loading** | `src/loaders/ruleLoader.js` | Orchestrates validation and macro expansion |
+| Module                | File Path                              | Purpose                                               |
+| --------------------- | -------------------------------------- | ----------------------------------------------------- |
+| **Schema Definition** | `data/schemas/operation.schema.json`   | Defines Operation and MacroReference validation rules |
+| **Pre-Validation**    | `src/utils/preValidationUtils.js`      | Fast structural checks before AJV validation          |
+| **AJV Validation**    | `src/validation/ajvSchemaValidator.js` | Main validation coordinator using AJV library         |
+| **Error Formatting**  | `src/utils/ajvAnyOfErrorFormatter.js`  | Intelligent error message generation                  |
+| **Macro Expansion**   | `src/loaders/macroUtils.js`            | Load-time macro reference expansion                   |
+| **Rule Loading**      | `src/loaders/ruleLoader.js`            | Orchestrates validation and macro expansion           |
 
 ### What the Module Does
 
@@ -103,10 +103,12 @@ Rule File (JSON)
 **Issue**: The `operation.schema.json` file used the `oneOf` JSON Schema keyword to validate actions that could be either a `MacroReference` or an `Operation`. This caused **322 false-positive validation errors** for valid macro references.
 
 **Affected Files**:
+
 - `data/mods/metabolism/rules/handle_drink_beverage.rule.json` (322 errors)
 - `data/mods/metabolism/rules/handle_eat_food.rule.json` (322 errors)
 
 **Example Valid Macro Reference** (from handle_drink_beverage.rule.json:76-78):
+
 ```json
 {
   "comment": "Log success, dispatch events, and end turn",
@@ -117,6 +119,7 @@ Rule File (JSON)
 ### How It Failed
 
 **Error Message** (misleading):
+
 ```
 Missing operation type - this operation needs a "type" field.
 
@@ -165,6 +168,7 @@ Common operation types:
   - Designed for union type validation
 
 **Why oneOf Was Wrong Choice**:
+
 ```json
 // oneOf says: "This MUST be MacroReference XOR Operation, prove it's not both"
 // But we only care: "Is this a valid MacroReference OR Operation?"
@@ -174,6 +178,7 @@ Common operation types:
 ```
 
 **Performance Impact**:
+
 - oneOf: O(n) where n = total schemas in all branches (300+ schemas)
 - anyOf: O(k) where k = schemas until first match (1-2 schemas typically)
 
@@ -211,12 +216,15 @@ Common operation types:
 **Relevant Sections**:
 
 **Section 6.7.1 - oneOf**:
+
 > An instance validates successfully against this keyword if it validates successfully against exactly one schema defined by this keyword's value.
 
 **Section 6.7.2 - anyOf**:
+
 > An instance validates successfully against this keyword if it validates successfully against at least one schema defined by this keyword's value.
 
 **Key Implications**:
+
 - **oneOf** is for **mutual exclusivity** (validate it's not both)
 - **anyOf** is for **union types** (validate it's at least one)
 - **Performance**: anyOf can short-circuit, oneOf must validate all branches
@@ -226,11 +234,13 @@ Common operation types:
 **Source**: https://ajv.js.org/json-schema.html
 
 **Error Reporting Behavior**:
+
 - **oneOf errors**: Reports errors from ALL branches that failed, plus a final oneOf error if match count ≠ 1
 - **anyOf errors**: Reports errors only if NO branches match
 - **Recommended**: Use anyOf for discriminated unions (our use case)
 
 **Configuration** (from ajvSchemaValidator.js:48-53):
+
 ```javascript
 {
   allErrors: true,           // Collect all errors (not just first)
@@ -249,6 +259,7 @@ Common operation types:
 **Operation Registration Pattern** (CLAUDE.md:421-504):
 
 Seven-step checklist for adding new operations:
+
 1. Create operation schema in `data/schemas/operations/`
 2. Add $ref to `operation.schema.json` anyOf array
 3. Create operation handler in `src/logic/operationHandlers/`
@@ -270,6 +281,7 @@ Seven-step checklist for adding new operations:
 5. **Substitution**: Entire macro reference replaced with macro's `actions` array
 
 **Example Macro Definition**:
+
 ```json
 {
   "macro_id": "core:logSuccessAndEndTurn",
@@ -277,7 +289,10 @@ Seven-step checklist for adding new operations:
   "actions": [
     {
       "type": "LOG",
-      "parameters": {"message": "Action completed successfully", "level": "info"}
+      "parameters": {
+        "message": "Action completed successfully",
+        "level": "info"
+      }
     },
     {
       "type": "END_TURN",
@@ -288,6 +303,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expansion**:
+
 ```json
 // Before
 {"macro": "core:logSuccessAndEndTurn"}
@@ -302,11 +318,13 @@ Seven-step checklist for adding new operations:
 ### 5. External Contracts
 
 **AJV Version**: `^8.12.0` (package.json)
+
 - **Breaking Changes**: v8 introduced strictTypes by default
 - **Compatibility**: Must maintain compatibility with v8.x for security updates
 - **Migration Path**: Document any required config changes for v9.x
 
 **JSON Schema Draft**: Draft-07
+
 - **Stability**: No breaking changes expected (Draft-08 is not widely adopted)
 - **Features**: Conditional schemas (`if/then/else`) available but not currently used
 - **Future**: Consider Draft 2020-12 for better discriminated union support
@@ -320,17 +338,17 @@ Seven-step checklist for adding new operations:
 #### 1. Valid Macro Reference
 
 **Input**:
+
 ```json
 {
   "rule_id": "test_rule",
   "event_type": "core:test_event",
-  "actions": [
-    {"macro": "core:logSuccessAndEndTurn"}
-  ]
+  "actions": [{ "macro": "core:logSuccessAndEndTurn" }]
 }
 ```
 
 **Expected Behavior**:
+
 - ✅ Pre-validation: Pass (has "macro" field)
 - ✅ AJV validation: Pass (matches MacroReference schema)
 - ✅ Error count: 0
@@ -340,6 +358,7 @@ Seven-step checklist for adding new operations:
 #### 2. Valid Operation
 
 **Input**:
+
 ```json
 {
   "rule_id": "test_rule",
@@ -358,6 +377,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ✅ Pre-validation: Pass (type in KNOWN_OPERATION_TYPES)
 - ✅ AJV validation: Pass (matches QUERY_COMPONENT schema)
 - ✅ Error count: 0
@@ -367,18 +387,23 @@ Seven-step checklist for adding new operations:
 #### 3. Mixed Actions Array
 
 **Input**:
+
 ```json
 {
   "rule_id": "test_rule",
   "event_type": "core:test_event",
   "actions": [
-    {"type": "SET_VARIABLE", "parameters": {"variable_name": "test", "value": "123"}},
-    {"macro": "core:logSuccessAndEndTurn"}
+    {
+      "type": "SET_VARIABLE",
+      "parameters": { "variable_name": "test", "value": "123" }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
   ]
 }
 ```
 
 **Expected Behavior**:
+
 - ✅ Pre-validation: Pass (both actions valid)
 - ✅ AJV validation: Pass (SET_VARIABLE + MacroReference both valid)
 - ✅ Error count: 0
@@ -388,6 +413,7 @@ Seven-step checklist for adding new operations:
 #### 4. Nested Macro Expansion
 
 **Input**:
+
 ```json
 // Macro A references Macro B
 {"macro": "custom:complexWorkflow"}
@@ -402,6 +428,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ✅ First expansion: Macro A → [LOG, {"macro": "core:logSuccessAndEndTurn"}]
 - ✅ Second expansion: Nested macro → [LOG, LOG, END_TURN]
 - ✅ Max depth check: Depth 2 < 10, allowed
@@ -412,11 +439,13 @@ Seven-step checklist for adding new operations:
 #### 1. Empty Macro Reference (Missing Required Field)
 
 **Input**:
+
 ```json
-{"macro": ""}
+{ "macro": "" }
 ```
 
 **Expected Behavior**:
+
 - ❌ AJV validation: Fail (empty string doesn't match namespacedId pattern)
 - 📋 Error message: "Invalid macro ID format. Expected 'namespace:identifier'"
 - 🔧 Suggestion: "Check macro ID follows 'namespace:identifier' format (e.g., 'core:logSuccess')"
@@ -424,6 +453,7 @@ Seven-step checklist for adding new operations:
 #### 2. Macro with Type Field (Invalid Hybrid)
 
 **Input**:
+
 ```json
 {
   "type": "QUERY_COMPONENT",
@@ -432,6 +462,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ❌ Pre-validation: Fail (has both type and macro)
 - 📋 Error message: "Macro reference should not have a type field"
 - 🔧 Suggestion: "Remove either 'type' (for macro) or 'macro' (for operation)"
@@ -439,6 +470,7 @@ Seven-step checklist for adding new operations:
 #### 3. Unknown Operation Type
 
 **Input**:
+
 ```json
 {
   "type": "UNKNOWN_OPERATION",
@@ -447,6 +479,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ❌ Pre-validation: Fail (type not in KNOWN_OPERATION_TYPES)
 - 📋 Error message: "Unknown operation type: 'UNKNOWN_OPERATION'"
 - 🔧 Suggestion: Lists first 12 valid operation types + "... and 81 more"
@@ -454,6 +487,7 @@ Seven-step checklist for adding new operations:
 #### 4. Missing Required Parameters
 
 **Input**:
+
 ```json
 {
   "type": "QUERY_COMPONENT",
@@ -465,6 +499,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ✅ Pre-validation: Pass (type exists)
 - ❌ AJV validation: Fail (missing required parameters)
 - 📋 Error message: "Operation type 'QUERY_COMPONENT' validation failed:
@@ -474,17 +509,19 @@ Seven-step checklist for adding new operations:
 #### 5. entity_id vs entity_ref Typo
 
 **Input**:
+
 ```json
 {
   "type": "GET_NAME",
   "parameters": {
-    "entity_id": "actor",  // Should be entity_ref
+    "entity_id": "actor", // Should be entity_ref
     "output_var": "actorName"
   }
 }
 ```
 
 **Expected Behavior**:
+
 - ❌ AJV validation: Fail (additionalProperty 'entity_id')
 - 📋 Error message: "Operation type 'GET_NAME' has invalid parameters:
   - /parameters: Unexpected property 'entity_id'
@@ -495,9 +532,10 @@ Seven-step checklist for adding new operations:
 #### 6. Circular Macro Reference
 
 **Input**:
+
 ```json
 // Macro A
-{"macro": "custom:macroA"}
+{ "macro": "custom:macroA" }
 // macroA definition: {"actions": [{"macro": "custom:macroB"}]}
 
 // Macro B
@@ -505,6 +543,7 @@ Seven-step checklist for adding new operations:
 ```
 
 **Expected Behavior**:
+
 - ❌ Macro expansion: Fail (max depth 10 exceeded)
 - 📋 Error message: "Circular macro reference detected: custom:macroA → custom:macroB → custom:macroA"
 - 🔧 Suggestion: "Check macro definitions for circular references"
@@ -512,11 +551,13 @@ Seven-step checklist for adding new operations:
 #### 7. Undefined Macro Reference
 
 **Input**:
+
 ```json
-{"macro": "custom:nonexistentMacro"}
+{ "macro": "custom:nonexistentMacro" }
 ```
 
 **Expected Behavior**:
+
 - ✅ Pre-validation: Pass (valid structure)
 - ✅ AJV validation: Pass (valid MacroReference)
 - ❌ Macro expansion: Fail (macro not found in registry)
@@ -530,6 +571,7 @@ Seven-step checklist for adding new operations:
 **When**: Structural issues caught before AJV validation
 
 **Error Response**:
+
 ```javascript
 throw new Error(`Pre-validation failed for ${filename}: ${error.message}`);
 ```
@@ -537,6 +579,7 @@ throw new Error(`Pre-validation failed for ${filename}: ${error.message}`);
 **User Impact**: Immediate failure with clear error message
 
 **Examples**:
+
 - Missing "type" and "macro" fields
 - Unknown operation type
 - Both "type" and "macro" present
@@ -546,14 +589,18 @@ throw new Error(`Pre-validation failed for ${filename}: ${error.message}`);
 **When**: Schema validation fails
 
 **Error Response**:
+
 ```javascript
 const formattedError = formatAjvErrorsEnhanced(errors, data);
-throw new Error(`RuleLoader [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.\nDetails:\n${formattedError}`);
+throw new Error(
+  `RuleLoader [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.\nDetails:\n${formattedError}`
+);
 ```
 
 **User Impact**: Detailed validation errors with fix suggestions
 
 **Examples**:
+
 - Missing required parameters
 - Invalid parameter types
 - Additional unexpected properties
@@ -564,6 +611,7 @@ throw new Error(`RuleLoader [${modId}]: Primary schema validation failed for '${
 **When**: Macro cannot be resolved or expanded
 
 **Error Response**:
+
 ```javascript
 throw new Error(`Macro expansion failed: ${error.message}`);
 ```
@@ -571,6 +619,7 @@ throw new Error(`Macro expansion failed: ${error.message}`);
 **User Impact**: Clear indication of which macro failed and why
 
 **Examples**:
+
 - Macro not found in registry
 - Circular macro reference
 - Max recursion depth exceeded
@@ -580,6 +629,7 @@ throw new Error(`Macro expansion failed: ${error.message}`);
 **When**: Schema compilation fails during initialization
 
 **Error Response**:
+
 ```javascript
 throw new Error(`Schema compilation failed for ${schemaId}: ${error.message}`);
 ```
@@ -587,6 +637,7 @@ throw new Error(`Schema compilation failed for ${schemaId}: ${error.message}`);
 **User Impact**: Application fails to start, requires schema fix
 
 **Examples**:
+
 - Invalid schema syntax
 - Circular $ref dependencies
 - Unknown schema format
@@ -604,6 +655,7 @@ Properties that must ALWAYS hold:
 **Meaning**: Every action must have EITHER a "type" field OR a "macro" field, never both, never neither.
 
 **Enforcement**:
+
 - Pre-validation checks this before AJV validation
 - anyOf schema structure enforces at AJV level
 - Macro expansion validates expanded actions maintain invariant
@@ -617,6 +669,7 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 **Meaning**: Validation stages ALWAYS execute in this order.
 
 **Enforcement**:
+
 - RuleLoader orchestrates order (ruleLoader.js:103-126)
 - Pre-validation throws before AJV validation can run
 - Macro expansion only happens after validation passes
@@ -630,6 +683,7 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 **Meaning**: Every operation type in the whitelist has a registered handler, and vice versa.
 
 **Enforcement**:
+
 - Developer checklist in CLAUDE.md (step 7)
 - Validation script: `npm run validate:operation-types` (proposed)
 - Integration test: operationTypeCompleteness.test.js
@@ -643,6 +697,7 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 **Meaning**: Every error message includes either a fix suggestion OR a list of valid options.
 
 **Enforcement**:
+
 - ajvAnyOfErrorFormatter.js provides suggestions
 - Pre-validation messages include guidance
 - Test coverage for error message quality
@@ -656,6 +711,7 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 **Meaning**: After expansion, NO actions should have "macro" field (all resolved).
 
 **Enforcement**:
+
 - macroUtils.js validateExpansion() function
 - Recursive expansion with termination check
 - Final validation ensures no unexpanded macros
@@ -667,12 +723,13 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 **1. Schema Structure**
 
 **MacroReference Schema** (STABLE):
+
 ```json
 {
   "type": "object",
   "properties": {
-    "macro": {"$ref": "./common.schema.json#/definitions/namespacedId"},
-    "comment": {"type": "string"}
+    "macro": { "$ref": "./common.schema.json#/definitions/namespacedId" },
+    "comment": { "type": "string" }
   },
   "required": ["macro"],
   "additionalProperties": false
@@ -680,12 +737,13 @@ Pre-validation → AJV Validation → Macro Expansion → Final Validation
 ```
 
 **Operation Schema** (STABLE):
+
 ```json
 {
   "type": "object",
   "properties": {
-    "type": {"const": "OPERATION_NAME"},
-    "parameters": {"type": "object"}
+    "type": { "const": "OPERATION_NAME" },
+    "parameters": { "type": "object" }
   },
   "required": ["type", "parameters"],
   "additionalProperties": false
@@ -800,14 +858,12 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
       $schema: 'schema://living-narrative-engine/rule.schema.json',
       rule_id: 'test_macro_validation',
       event_type: 'core:test_event',
-      actions: [
-        { macro: 'core:logSuccessAndEndTurn' }
-      ]
+      actions: [{ macro: 'core:logSuccessAndEndTurn' }],
     };
 
     const errors = [];
     const mockLogger = {
-      error: (msg, ctx) => errors.push({ msg, ctx })
+      error: (msg, ctx) => errors.push({ msg, ctx }),
     };
 
     await validateAgainstSchema(schemaValidator, schemaId, rule, mockLogger);
@@ -819,13 +875,13 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
   it('should not generate more than 10 errors for invalid macro reference', async () => {
     const rule = {
       actions: [
-        { macro: '' } // Invalid: empty string
-      ]
+        { macro: '' }, // Invalid: empty string
+      ],
     };
 
     const errors = [];
     const mockLogger = {
-      error: (msg, ctx) => errors.push({ msg, ctx })
+      error: (msg, ctx) => errors.push({ msg, ctx }),
     };
 
     try {
@@ -841,8 +897,8 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
     const rule = {
       actions: [
         { type: 'LOG', parameters: { message: 'test' } },
-        { macro: 'core:logSuccessAndEndTurn' }
-      ]
+        { macro: 'core:logSuccessAndEndTurn' },
+      ],
     };
 
     const errors = [];
@@ -854,6 +910,7 @@ describe('Macro Reference Validation - anyOf Regression Prevention', () => {
 ```
 
 **Success Criteria**:
+
 - ✅ Valid macro references generate 0 errors
 - ✅ Invalid macro references generate <10 errors (not 322)
 - ✅ Mixed actions arrays validate correctly
@@ -875,8 +932,8 @@ describe('Action Array Validation - Property Tests', () => {
     fc.assert(
       fc.property(
         fc.record({
-          macro: fc.string({ minLength: 3 }).map(s => `namespace:${s}`),
-          comment: fc.option(fc.string())
+          macro: fc.string({ minLength: 3 }).map((s) => `namespace:${s}`),
+          comment: fc.option(fc.string()),
         }),
         (macroRef) => {
           const result = validateMacroReference(macroRef);
@@ -910,7 +967,7 @@ describe('Action Array Validation - Property Tests', () => {
     fc.assert(
       fc.property(
         fc.constantFrom(...KNOWN_OPERATION_TYPES),
-        fc.string().map(s => `namespace:${s}`),
+        fc.string().map((s) => `namespace:${s}`),
         (type, macro) => {
           const invalidAction = { type, macro, parameters: {} };
           const result = validateOperationStructure(invalidAction);
@@ -940,6 +997,7 @@ describe('Action Array Validation - Property Tests', () => {
 ```
 
 **Success Criteria**:
+
 - ✅ 100 random valid macro references validate
 - ✅ 100 random valid operations validate
 - ✅ 100 random invalid hybrids fail with correct error
@@ -956,11 +1014,13 @@ describe('Action Array Validation - Property Tests', () => {
 ```javascript
 describe('anyOf Performance - Regression Prevention', () => {
   it('should validate 1000 macro references in <100ms', async () => {
-    const rules = Array(1000).fill().map((_, i) => ({
-      rule_id: `test_rule_${i}`,
-      event_type: 'core:test_event',
-      actions: [{ macro: 'core:logSuccessAndEndTurn' }]
-    }));
+    const rules = Array(1000)
+      .fill()
+      .map((_, i) => ({
+        rule_id: `test_rule_${i}`,
+        event_type: 'core:test_event',
+        actions: [{ macro: 'core:logSuccessAndEndTurn' }],
+      }));
 
     const start = performance.now();
 
@@ -979,7 +1039,14 @@ describe('anyOf Performance - Regression Prevention', () => {
     await validator.addSchema(largeSchema);
 
     const rule = {
-      actions: [{ type: 'QUERY_COMPONENT', parameters: { /* valid */ } }]
+      actions: [
+        {
+          type: 'QUERY_COMPONENT',
+          parameters: {
+            /* valid */
+          },
+        },
+      ],
     };
 
     const start = performance.now();
@@ -995,7 +1062,10 @@ describe('anyOf Performance - Regression Prevention', () => {
     const nestedMacros = createNestedMacros(5);
 
     const start = performance.now();
-    const expanded = await expandMacros([{ macro: 'test:macroA' }], nestedMacros);
+    const expanded = await expandMacros(
+      [{ macro: 'test:macroA' }],
+      nestedMacros
+    );
     const duration = performance.now() - start;
 
     expect(expanded.errors).toHaveLength(0);
@@ -1005,6 +1075,7 @@ describe('anyOf Performance - Regression Prevention', () => {
 ```
 
 **Success Criteria**:
+
 - ✅ 1000 validations in <100ms (baseline: oneOf was ~150ms)
 - ✅ Large schemas (<5ms per validation)
 - ✅ Nested expansion remains <10ms
@@ -1022,23 +1093,21 @@ describe('anyOf Performance - Regression Prevention', () => {
 describe('Macro Reference Error Handling', () => {
   it('should not report false positives for valid macro references', async () => {
     const data = {
-      actions: [
-        { macro: 'core:logSuccessAndEndTurn' }
-      ]
+      actions: [{ macro: 'core:logSuccessAndEndTurn' }],
     };
 
     const errors = validator.validate(schemaId, data);
 
     // Should have NO anyOf errors for valid macro
-    const anyOfErrors = errors.filter(e => e.keyword === 'anyOf');
+    const anyOfErrors = errors.filter((e) => e.keyword === 'anyOf');
     expect(anyOfErrors).toHaveLength(0);
   });
 
   it('should provide clear error for invalid macro format', async () => {
     const data = {
       actions: [
-        { macro: 'invalid-format' } // Missing namespace separator
-      ]
+        { macro: 'invalid-format' }, // Missing namespace separator
+      ],
     };
 
     try {
@@ -1064,7 +1133,7 @@ describe('KNOWN_OPERATION_TYPES Whitelist', () => {
     const registeredHandlers = getRegisteredOperationHandlers();
     const whitelistedTypes = KNOWN_OPERATION_TYPES;
 
-    registeredHandlers.forEach(handlerType => {
+    registeredHandlers.forEach((handlerType) => {
       expect(whitelistedTypes).toContain(handlerType);
     });
   });
@@ -1072,7 +1141,7 @@ describe('KNOWN_OPERATION_TYPES Whitelist', () => {
   it('should not include non-existent operation types', () => {
     const registeredHandlers = getRegisteredOperationHandlers();
 
-    KNOWN_OPERATION_TYPES.forEach(type => {
+    KNOWN_OPERATION_TYPES.forEach((type) => {
       expect(registeredHandlers).toContain(type);
     });
   });
@@ -1092,7 +1161,7 @@ describe('KNOWN_OPERATION_TYPES Whitelist', () => {
 
 ```javascript
 describe('Operation Type Regression', () => {
-  KNOWN_OPERATION_TYPES.forEach(operationType => {
+  KNOWN_OPERATION_TYPES.forEach((operationType) => {
     it(`should validate operation type: ${operationType}`, async () => {
       const operation = createMinimalOperation(operationType);
       const result = validateOperationStructure(operation);
@@ -1113,7 +1182,9 @@ describe('Nested Macro Expansion Regression', () => {
     const macros = {
       'test:level1': { actions: [{ macro: 'test:level2' }] },
       'test:level2': { actions: [{ macro: 'test:level3' }] },
-      'test:level3': { actions: [{ type: 'LOG', parameters: { message: 'final' } }] }
+      'test:level3': {
+        actions: [{ type: 'LOG', parameters: { message: 'final' } }],
+      },
     };
 
     const result = await expandMacros([{ macro: 'test:level1' }], macros);
@@ -1133,7 +1204,7 @@ describe('Error Message Quality Regression', () => {
   it('should detect entity_id vs entity_ref typo', () => {
     const operation = {
       type: 'GET_NAME',
-      parameters: { entity_id: 'actor', output_var: 'name' }
+      parameters: { entity_id: 'actor', output_var: 'name' },
     };
 
     try {
@@ -1155,9 +1226,12 @@ describe('Error Message Quality Regression', () => {
 describe('Mixed Action Array Regression', () => {
   it('should validate arrays with both macros and operations', async () => {
     const actions = [
-      { type: 'SET_VARIABLE', parameters: { variable_name: 'test', value: '123' } },
+      {
+        type: 'SET_VARIABLE',
+        parameters: { variable_name: 'test', value: '123' },
+      },
       { macro: 'core:logSuccessAndEndTurn' },
-      { type: 'LOG', parameters: { message: 'after macro' } }
+      { type: 'LOG', parameters: { message: 'after macro' } },
     ];
 
     const result = await validateActions(actions);
@@ -1179,7 +1253,7 @@ fc.assert(
   fc.property(
     fc.record({
       type: fc.constantFrom(...KNOWN_OPERATION_TYPES),
-      parameters: fc.object()
+      parameters: fc.object(),
     }),
     (operation) => {
       const result1 = validateOperationStructure(operation);
@@ -1198,10 +1272,12 @@ fc.assert(
 ```javascript
 fc.assert(
   fc.property(
-    fc.array(fc.oneof(
-      fc.record({ type: fc.string(), parameters: fc.object() }),
-      fc.record({ macro: fc.string() })
-    )),
+    fc.array(
+      fc.oneof(
+        fc.record({ type: fc.string(), parameters: fc.object() }),
+        fc.record({ macro: fc.string() })
+      )
+    ),
     (actions) => {
       try {
         validateActions(actions);
@@ -1225,9 +1301,10 @@ fc.assert(
 fc.assert(
   fc.property(
     fc.record({
-      macro: fc.tuple(fc.string({ minLength: 1 }), fc.string({ minLength: 1 }))
+      macro: fc
+        .tuple(fc.string({ minLength: 1 }), fc.string({ minLength: 1 }))
         .map(([ns, id]) => `${ns}:${id}`),
-      comment: fc.option(fc.string())
+      comment: fc.option(fc.string()),
     }),
     (macroRef) => {
       const result = validateMacroReference(macroRef);
@@ -1268,6 +1345,7 @@ fc.assert(
 **Rule**: When data can match multiple valid structures (union types), use `anyOf`
 
 **Example**:
+
 ```json
 {
   "anyOf": [
@@ -1278,11 +1356,13 @@ fc.assert(
 ```
 
 **Rationale**:
+
 - anyOf allows short-circuit validation (stops after first match)
 - No error cascade from failed branches
 - Better performance (O(k) vs O(n) where k = matching branches)
 
 **When NOT to use anyOf**:
+
 - When you need to validate EXACTLY one match (use oneOf)
 - When order matters (use ordered validation instead)
 
@@ -1291,6 +1371,7 @@ fc.assert(
 **Rule**: When data MUST match exactly one schema and you want to verify it's not ambiguous, use `oneOf`
 
 **Example**:
+
 ```json
 {
   "oneOf": [
@@ -1301,11 +1382,13 @@ fc.assert(
 ```
 
 **Rationale**:
+
 - Validates data is unambiguous (matches exactly one schema)
 - Useful for discriminated unions where overlap is an error
 - Reports all failures to help identify ambiguity
 
 **When NOT to use oneOf**:
+
 - For simple union types (use anyOf instead)
 - When error cascade is unacceptable
 - When performance is critical
@@ -1315,16 +1398,18 @@ fc.assert(
 **Rule**: Place most specific schemas first, most general last
 
 **Example**:
+
 ```json
 {
   "anyOf": [
-    { "$ref": "#/$defs/MacroReference" },  // More specific (requires "macro")
-    { "$ref": "#/$defs/Operation" }         // More general (many subtypes)
+    { "$ref": "#/$defs/MacroReference" }, // More specific (requires "macro")
+    { "$ref": "#/$defs/Operation" } // More general (many subtypes)
   ]
 }
 ```
 
 **Rationale**:
+
 - Fails fast for specific types (macro validates in 1 schema check)
 - Reduces validation overhead (doesn't check 60+ operation types first)
 - Better error messages (tries likely matches first)
@@ -1334,6 +1419,7 @@ fc.assert(
 **Rule**: Always include description fields explaining schema purpose
 
 **Example**:
+
 ```json
 {
   "Action": {
@@ -1344,6 +1430,7 @@ fc.assert(
 ```
 
 **Rationale**:
+
 - Improves maintainability (future developers understand intent)
 - Helps with schema evolution (know what can change)
 - Better error messages (descriptions appear in AJV errors)
@@ -1361,17 +1448,19 @@ fc.assert(
 **Maintenance Workflow**:
 
 1. **Adding New Operation**:
+
    ```javascript
    // Step 7 of operation registration (CLAUDE.md:421-504)
    // CRITICAL: Add to KNOWN_OPERATION_TYPES array
 
    export const KNOWN_OPERATION_TYPES = [
      // ... existing types ...
-     'NEW_OPERATION_TYPE',  // Add here, alphabetically sorted
+     'NEW_OPERATION_TYPE', // Add here, alphabetically sorted
    ];
    ```
 
 2. **Verification**:
+
    ```bash
    # Proposed npm script
    npm run validate:operation-types
@@ -1383,19 +1472,23 @@ fc.assert(
    ```
 
 3. **Test Coverage**:
+
    ```javascript
    // tests/unit/utils/preValidationUtils.test.js
    it('should include all registered operation handlers', () => {
-     const registeredHandlers = container.resolve('OperationHandlerRegistry').getAll();
+     const registeredHandlers = container
+       .resolve('OperationHandlerRegistry')
+       .getAll();
      const whitelistedTypes = KNOWN_OPERATION_TYPES;
 
-     registeredHandlers.forEach(handler => {
+     registeredHandlers.forEach((handler) => {
        expect(whitelistedTypes).toContain(handler.type);
      });
    });
    ```
 
 **Consequences of Desynchronization**:
+
 - ❌ Pre-validation fails for valid operations
 - ❌ Error: "Unknown operation type: X"
 - ❌ Mod loading fails even though handler exists
@@ -1405,6 +1498,7 @@ fc.assert(
 **Rule**: Handler registration and whitelist update MUST be atomic
 
 **Git Best Practice**:
+
 ```bash
 # Single commit for operation addition
 git add src/logic/operationHandlers/newOperationHandler.js
@@ -1414,6 +1508,7 @@ git commit -m "Add NEW_OPERATION handler with schema and whitelist"
 ```
 
 **PR Checklist**:
+
 - [ ] Handler implemented
 - [ ] Schema defined
 - [ ] Whitelist updated (preValidationUtils.js)
@@ -1425,6 +1520,7 @@ git commit -m "Add NEW_OPERATION handler with schema and whitelist"
 #### 3. Use npm Script for Validation
 
 **Proposed Script** (`package.json`):
+
 ```json
 {
   "scripts": {
@@ -1434,6 +1530,7 @@ git commit -m "Add NEW_OPERATION handler with schema and whitelist"
 ```
 
 **Script Implementation** (`scripts/validateOperationTypes.js`):
+
 ```javascript
 import { KNOWN_OPERATION_TYPES } from '../src/utils/preValidationUtils.js';
 import { getRegisteredOperationHandlers } from '../src/logic/operationRegistry.js';
@@ -1442,14 +1539,14 @@ const registered = getRegisteredOperationHandlers();
 const whitelisted = new Set(KNOWN_OPERATION_TYPES);
 
 // Check all registered handlers are whitelisted
-const missing = registered.filter(type => !whitelisted.has(type));
+const missing = registered.filter((type) => !whitelisted.has(type));
 if (missing.length > 0) {
   console.error(`❌ Missing from whitelist: ${missing.join(', ')}`);
   process.exit(1);
 }
 
 // Check all whitelisted types have handlers
-const orphaned = [...whitelisted].filter(type => !registered.includes(type));
+const orphaned = [...whitelisted].filter((type) => !registered.includes(type));
 if (orphaned.length > 0) {
   console.error(`❌ Whitelisted but no handler: ${orphaned.join(', ')}`);
   process.exit(1);
@@ -1466,6 +1563,7 @@ console.log(`✅ All ${registered.length} operation types validated`);
 ```
 
 **Usage in CI**:
+
 ```yaml
 # .github/workflows/validate.yml
 - name: Validate Operation Types
@@ -1487,7 +1585,7 @@ export function formatAjvErrorsEnhanced(errors, data) {
   }
 
   // Pattern 1: entity_id vs entity_ref
-  if (errors.some(e => e.params?.additionalProperty === 'entity_id')) {
+  if (errors.some((e) => e.params?.additionalProperty === 'entity_id')) {
     return formatEntityIdTypo(errors, data);
   }
 
@@ -1497,7 +1595,7 @@ export function formatAjvErrorsEnhanced(errors, data) {
   }
 
   // Pattern 3: Invalid enum value
-  const enumError = errors.find(e => e.keyword === 'enum');
+  const enumError = errors.find((e) => e.keyword === 'enum');
   if (enumError) {
     return formatEnumError(enumError, data);
   }
@@ -1508,6 +1606,7 @@ export function formatAjvErrorsEnhanced(errors, data) {
 ```
 
 **Benefits**:
+
 - Faster error detection (pattern matching vs full formatting)
 - More relevant error messages (targeted to specific issues)
 - Better user experience (clear fix guidance)
@@ -1519,6 +1618,7 @@ export function formatAjvErrorsEnhanced(errors, data) {
 **Examples**:
 
 **Missing Type Error**:
+
 ```
 Missing operation type - this operation needs a "type" field.
 
@@ -1535,6 +1635,7 @@ Common operation types:
 ```
 
 **entity_id Typo Error**:
+
 ```
 Operation type 'GET_NAME' has invalid parameters:
   - /parameters: Unexpected property 'entity_id'
@@ -1544,6 +1645,7 @@ The GET_NAME operation expects "entity_ref", not "entity_id"
 ```
 
 **Enum Error**:
+
 ```
 Invalid enum value 'INVALID_TYPE'. Allowed values: [TYPE_A, TYPE_B, TYPE_C]
 
@@ -1557,6 +1659,7 @@ Invalid enum value 'INVALID_TYPE'. Allowed values: [TYPE_A, TYPE_B, TYPE_C]
 **Rule**: Combine errors by operation type or schema branch
 
 **Implementation**:
+
 ```javascript
 function groupErrorsByOperationType(errors) {
   const grouped = new Map();
@@ -1577,6 +1680,7 @@ function groupErrorsByOperationType(errors) {
 ```
 
 **Output**:
+
 ```
 Operation type 'QUERY_COMPONENT' validation failed:
   - /parameters: Missing required property 'entity_ref'
@@ -1584,6 +1688,7 @@ Operation type 'QUERY_COMPONENT' validation failed:
 ```
 
 Instead of:
+
 ```
 Error 1: Missing required property 'entity_ref'
 Error 2: Missing required property 'output_var'
@@ -1597,16 +1702,17 @@ Error 4: anyOf branch 0 failed
 **Rule**: Show maximum 5 errors per category, indicate if more exist
 
 **Implementation**:
+
 ```javascript
 function formatOperationErrors(errors) {
   const MAX_ERRORS = 5;
   const lines = [`Operation validation failed:`];
 
   const paramErrors = errors
-    .filter(e => e.instancePath.includes('/parameters'))
+    .filter((e) => e.instancePath.includes('/parameters'))
     .slice(0, MAX_ERRORS);
 
-  paramErrors.forEach(error => {
+  paramErrors.forEach((error) => {
     lines.push(`  - ${error.instancePath}: ${formatSingleError(error)}`);
   });
 
@@ -1619,6 +1725,7 @@ function formatOperationErrors(errors) {
 ```
 
 **Benefits**:
+
 - Prevents overwhelming error output (not 322 errors)
 - Highlights most important errors first
 - Still indicates total error count for awareness
@@ -1630,6 +1737,7 @@ function formatOperationErrors(errors) {
 **Rule**: Always validate macro reference structure before attempting expansion
 
 **Workflow**:
+
 ```
 1. Pre-validate: Check structure (has "macro" field)
 2. AJV validate: Check macro ID format (namespacedId pattern)
@@ -1638,6 +1746,7 @@ function formatOperationErrors(errors) {
 ```
 
 **Implementation** (`macroUtils.js`):
+
 ```javascript
 export function expandMacros(actions, macroRegistry, options = {}) {
   const errors = [];
@@ -1677,13 +1786,16 @@ export function expandMacros(actions, macroRegistry, options = {}) {
 **Rule**: Support nested macros up to max depth 10, detect cycles
 
 **Implementation**:
+
 ```javascript
 function expandRecursively(actions, macroRegistry, options, depth = 0) {
   const MAX_DEPTH = 10;
   const genealogy = options.genealogy || [];
 
   if (depth > MAX_DEPTH) {
-    throw new Error(`Max macro expansion depth (${MAX_DEPTH}) exceeded. Possible circular reference.`);
+    throw new Error(
+      `Max macro expansion depth (${MAX_DEPTH}) exceeded. Possible circular reference.`
+    );
   }
 
   const expanded = [];
@@ -1692,7 +1804,9 @@ function expandRecursively(actions, macroRegistry, options, depth = 0) {
     if (action.macro) {
       // Check for circular reference
       if (genealogy.includes(action.macro)) {
-        throw new Error(`Circular macro reference detected: ${genealogy.join(' → ')} → ${action.macro}`);
+        throw new Error(
+          `Circular macro reference detected: ${genealogy.join(' → ')} → ${action.macro}`
+        );
       }
 
       // Fetch and expand macro
@@ -1720,6 +1834,7 @@ function expandRecursively(actions, macroRegistry, options, depth = 0) {
 ```
 
 **Benefits**:
+
 - Supports arbitrary nesting (limited by max depth)
 - Detects circular references early
 - Provides clear genealogy for debugging
@@ -1729,6 +1844,7 @@ function expandRecursively(actions, macroRegistry, options, depth = 0) {
 **Rule**: Maintain parent-child relationships for debugging
 
 **Data Structure**:
+
 ```javascript
 {
   originalAction: { macro: 'custom:macroA' },
@@ -1742,6 +1858,7 @@ function expandRecursively(actions, macroRegistry, options, depth = 0) {
 ```
 
 **Usage in Error Messages**:
+
 ```
 Macro expansion failed at depth 3:
   custom:workflowA → custom:workflowB → custom:workflowC
@@ -1753,6 +1870,7 @@ Macro expansion failed at depth 3:
 **Rule**: Cache macro expansion results for performance
 
 **Implementation**:
+
 ```javascript
 const expansionCache = new Map();
 
@@ -1771,6 +1889,7 @@ function expandMacrosWithCache(actions, macroRegistry) {
 ```
 
 **Cache Invalidation**:
+
 ```javascript
 // Clear cache when macros are modified
 macroRegistry.on('macro:updated', (macroId) => {
@@ -1780,6 +1899,7 @@ macroRegistry.on('macro:updated', (macroId) => {
 ```
 
 **Benefits**:
+
 - Faster validation for repeated rule loads
 - Reduced computational overhead
 - Better performance in hot paths (rule re-validation)
@@ -1797,6 +1917,7 @@ This specification establishes robust guidelines for the JSON schema validation 
 5. **Performance**: Validation remains fast even with 100+ operation types
 
 **Next Steps**:
+
 1. Implement proposed validation script (`npm run validate:operation-types`)
 2. Add regression tests for oneOf → anyOf fix
 3. Add property-based tests for action validation
@@ -1806,4 +1927,5 @@ This specification establishes robust guidelines for the JSON schema validation 
 ---
 
 **Document History**:
+
 - 2025-01-22: Initial version (1.0) - Created after oneOf → anyOf fix

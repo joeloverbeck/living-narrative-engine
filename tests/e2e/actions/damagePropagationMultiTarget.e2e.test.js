@@ -97,7 +97,10 @@ const createChain = ({
       maxHealth: health.child,
       state: 'healthy',
     })
-    .withComponent('anatomy:joint', { parentId: root.id, socketId: 'arm_socket' })
+    .withComponent('anatomy:joint', {
+      parentId: root.id,
+      socketId: 'arm_socket',
+    })
     .withComponent('anatomy:damage_propagation', { rules: [] })
     .withComponent('anatomy:sockets', {
       sockets: [
@@ -253,13 +256,10 @@ describe('damage propagation multi-target chains e2e', () => {
   let safeDispatcher;
 
   beforeEach(async () => {
-    fixture = await ModTestFixture.forAction(
-      'weapons',
-      ACTION_ID,
-      null,
-      null,
-      { autoRegisterScopes: true, scopeCategories: ['positioning', 'anatomy'] }
-    );
+    fixture = await ModTestFixture.forAction('weapons', ACTION_ID, null, null, {
+      autoRegisterScopes: true,
+      scopeCategories: ['positioning', 'anatomy'],
+    });
     testEnv = fixture.testEnv;
     safeDispatcher = createSafeDispatcher(testEnv.eventBus);
     jest.spyOn(Math, 'random').mockReturnValue(0);
@@ -319,8 +319,13 @@ describe('damage propagation multi-target chains e2e', () => {
       .asActor()
       .withComponent('core:position', { locationId: ROOM_ID })
       .withComponent('skills:melee_skill', { level: 95 })
-      .withComponent('items:inventory', { items: ['prop-chain-blade'], capacity: 3 })
-      .withComponent('positioning:wielding', { wielded_item_ids: ['prop-chain-blade'] })
+      .withComponent('items:inventory', {
+        items: ['prop-chain-blade'],
+        capacity: 3,
+      })
+      .withComponent('positioning:wielding', {
+        wielded_item_ids: ['prop-chain-blade'],
+      })
       .build();
 
     const room = new ModEntityBuilder(ROOM_ID)
@@ -373,7 +378,9 @@ describe('damage propagation multi-target chains e2e', () => {
       chainA.child.components['anatomy:damage_propagation'].rules
     );
     expect(resultsA1.some((r) => r.childPartId === chainA.child.id)).toBe(true);
-    expect(resultsA2.some((r) => r.childPartId === chainA.grandchild.id)).toBe(true);
+    expect(resultsA2.some((r) => r.childPartId === chainA.grandchild.id)).toBe(
+      true
+    );
     expect(resultsB.length).toBeLessThanOrEqual(1);
   });
 });

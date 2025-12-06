@@ -90,7 +90,9 @@ describe('ValidationPhase integration behaviour', () => {
       logger,
       options: { failFast: true, skipCrossReferences: true },
     });
-    const ctx = createContext({ finalModOrder: ['core:base', 'story:chapter1'] });
+    const ctx = createContext({
+      finalModOrder: ['core:base', 'story:chapter1'],
+    });
 
     const result = await phase.execute(ctx);
 
@@ -133,7 +135,10 @@ describe('ValidationPhase integration behaviour', () => {
         canLoad: true,
       },
     });
-    const phase = new ValidationPhase({ validationOrchestrator: orchestrator, logger });
+    const phase = new ValidationPhase({
+      validationOrchestrator: orchestrator,
+      logger,
+    });
     const ctx = createContext({ finalModOrder: undefined });
 
     const result = await phase.execute(ctx);
@@ -148,7 +153,7 @@ describe('ValidationPhase integration behaviour', () => {
     expect(result.validationRecommendations).toEqual([]);
     expect(logger.warnMessages).toHaveLength(0);
     expect(logger.infoMessages.map((args) => args[0])).toContain(
-      '— ValidationPhase completed successfully —',
+      '— ValidationPhase completed successfully —'
     );
   });
 
@@ -181,16 +186,14 @@ describe('ValidationPhase integration behaviour', () => {
       options: { strictMode: false, allowWarnings: true },
     });
     expect(logger.errorMessages).toEqual([
-      [
-        'Mod validation failed - cannot proceed with loading',
-      ],
+      ['Mod validation failed - cannot proceed with loading'],
       [
         'Dependency validation errors:',
         ['Missing dependency: storyteller:core'],
       ],
     ]);
     expect(logger.warnMessages.map((args) => args[0])).toContain(
-      'Validation warning: Optional asset mismatch',
+      'Validation warning: Optional asset mismatch'
     );
   });
 
@@ -201,7 +204,10 @@ describe('ValidationPhase integration behaviour', () => {
         canLoad: false,
       },
     });
-    const phase = new ValidationPhase({ validationOrchestrator: orchestrator, logger });
+    const phase = new ValidationPhase({
+      validationOrchestrator: orchestrator,
+      logger,
+    });
 
     await expect(phase.execute(createContext())).rejects.toMatchObject({
       name: 'ModsLoaderPhaseError',
@@ -219,10 +225,15 @@ describe('ValidationPhase integration behaviour', () => {
     const phaseError = new ModsLoaderPhaseError(
       ModsLoaderErrorCode.VALIDATION,
       'Existing failure',
-      'ValidationPhase',
+      'ValidationPhase'
     );
-    const orchestrator = new RecordingValidationOrchestrator({ error: phaseError });
-    const phase = new ValidationPhase({ validationOrchestrator: orchestrator, logger });
+    const orchestrator = new RecordingValidationOrchestrator({
+      error: phaseError,
+    });
+    const phase = new ValidationPhase({
+      validationOrchestrator: orchestrator,
+      logger,
+    });
 
     await expect(phase.execute(createContext())).rejects.toBe(phaseError);
   });
@@ -230,8 +241,13 @@ describe('ValidationPhase integration behaviour', () => {
   it('wraps unexpected orchestrator failures in ModsLoaderPhaseError', async () => {
     const logger = new RecordingLogger();
     const originalError = new Error('unexpected failure');
-    const orchestrator = new RecordingValidationOrchestrator({ error: originalError });
-    const phase = new ValidationPhase({ validationOrchestrator: orchestrator, logger });
+    const orchestrator = new RecordingValidationOrchestrator({
+      error: originalError,
+    });
+    const phase = new ValidationPhase({
+      validationOrchestrator: orchestrator,
+      logger,
+    });
 
     await expect(phase.execute(createContext())).rejects.toEqual(
       expect.objectContaining({
@@ -239,7 +255,7 @@ describe('ValidationPhase integration behaviour', () => {
         message: 'unexpected failure',
         phase: 'ValidationPhase',
         cause: originalError,
-      }),
+      })
     );
   });
 });

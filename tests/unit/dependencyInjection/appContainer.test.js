@@ -123,7 +123,9 @@ describe('AppContainer', () => {
         let created = 0;
         const factory = jest.fn(() => ({ id: ++created }));
 
-        container.register('defaultLifecycle', factory, { lifecycle: undefined });
+        container.register('defaultLifecycle', factory, {
+          lifecycle: undefined,
+        });
 
         const first = container.resolve('defaultLifecycle');
         const second = container.resolve('defaultLifecycle');

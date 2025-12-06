@@ -119,9 +119,10 @@ describe('GOAP event trace hardening', () => {
       );
       expect(fallbackWarnings).toHaveLength(0);
 
-      const disabledLogs = setup.goapEventDispatcherLogger.info.mock.calls.filter(
-        ([, meta]) => meta?.code === 'GOAP_EVENT_TRACE_DISABLED'
-      );
+      const disabledLogs =
+        setup.goapEventDispatcherLogger.info.mock.calls.filter(
+          ([, meta]) => meta?.code === 'GOAP_EVENT_TRACE_DISABLED'
+        );
       expect(disabledLogs).toHaveLength(0);
     });
   });
@@ -169,9 +170,10 @@ describe('GOAP event trace hardening', () => {
       const stream = goapDebugger.getEventStream(actorId);
       expect(stream.captureDisabled).toBe(true);
 
-      const disabledLogs = setup.goapEventDispatcherLogger.info.mock.calls.filter(
-        ([, meta]) => meta?.code === 'GOAP_EVENT_TRACE_DISABLED'
-      );
+      const disabledLogs =
+        setup.goapEventDispatcherLogger.info.mock.calls.filter(
+          ([, meta]) => meta?.code === 'GOAP_EVENT_TRACE_DISABLED'
+        );
       expect(disabledLogs.length).toBeGreaterThan(0);
     });
   });

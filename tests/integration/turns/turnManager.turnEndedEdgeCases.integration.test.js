@@ -177,7 +177,9 @@ describe('TurnManager integration edge cases', () => {
       eventBus,
       logger,
     });
-    const resolver = { resolveHandler: () => Promise.reject(new Error('boom')) };
+    const resolver = {
+      resolveHandler: () => Promise.reject(new Error('boom')),
+    };
     const scheduler = new ImmediateScheduler();
 
     const manager = new TurnManager({
@@ -194,7 +196,9 @@ describe('TurnManager integration edge cases', () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(
-      dispatcher.calls.find((call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID)
+      dispatcher.calls.find(
+        (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID
+      )
     ).toBeDefined();
     expect(manager.getCurrentActor()).toBeNull();
   });
@@ -257,9 +261,9 @@ describe('TurnManager integration edge cases', () => {
       )
     ).toBe(true);
     expect(
-      env.dispatcher.calls.filter((call) => call.eventName === TURN_PROCESSING_ENDED)
-        .length
+      env.dispatcher.calls.filter(
+        (call) => call.eventName === TURN_PROCESSING_ENDED
+      ).length
     ).toBeGreaterThan(0);
   });
 });
-

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import CircuitBreaker from '../../../src/entities/monitoring/CircuitBreaker.js';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 import { validateDependency } from '../../../src/utils/dependencyUtils.js';
@@ -49,7 +56,9 @@ describe('CircuitBreaker state transitions and reporting', () => {
       logger,
       'ILogger',
       console,
-      expect.objectContaining({ requiredMethods: ['info', 'error', 'warn', 'debug'] }),
+      expect.objectContaining({
+        requiredMethods: ['info', 'error', 'warn', 'debug'],
+      })
     );
     expect(ensureValidLogger).toHaveBeenCalledWith(logger, 'CircuitBreaker');
 
@@ -60,7 +69,7 @@ describe('CircuitBreaker state transitions and reporting', () => {
         failureThreshold: 3,
         timeout: 5000,
         successThreshold: 4,
-      }),
+      })
     );
 
     const stats = breaker.getStats();
@@ -92,7 +101,11 @@ describe('CircuitBreaker state transitions and reporting', () => {
     await expect(breaker.execute(failingOperation)).rejects.toThrow('boom');
     expect(logger.debug).toHaveBeenCalledWith(
       "Circuit breaker 'CriticalOps' - Failure recorded",
-      expect.objectContaining({ failureCount: 1, state: 'CLOSED', error: 'boom' }),
+      expect.objectContaining({
+        failureCount: 1,
+        state: 'CLOSED',
+        error: 'boom',
+      })
     );
 
     jest.setSystemTime(10);
@@ -106,13 +119,13 @@ describe('CircuitBreaker state transitions and reporting', () => {
         failureThreshold: 2,
         timeoutMs: 1000,
         timestamp: expect.any(String),
-      }),
+      })
     );
 
     const blockedOperation = jest.fn().mockResolvedValue('should not run');
     jest.setSystemTime(20);
     await expect(breaker.execute(blockedOperation)).rejects.toThrow(
-      /Circuit breaker 'CriticalOps' is OPEN/,
+      /Circuit breaker 'CriticalOps' is OPEN/
     );
     expect(blockedOperation).not.toHaveBeenCalled();
 
@@ -127,7 +140,7 @@ describe('CircuitBreaker state transitions and reporting', () => {
         state: 'HALF_OPEN',
         successThreshold: 2,
         timestamp: expect.any(String),
-      }),
+      })
     );
     expect(breaker.isHalfOpen()).toBe(true);
 
@@ -136,7 +149,10 @@ describe('CircuitBreaker state transitions and reporting', () => {
     expect(breaker.isClosed()).toBe(true);
     expect(logger.info).toHaveBeenCalledWith(
       "Circuit breaker 'CriticalOps' transitioned to CLOSED",
-      expect.objectContaining({ state: 'CLOSED', timestamp: expect.any(String) }),
+      expect.objectContaining({
+        state: 'CLOSED',
+        timestamp: expect.any(String),
+      })
     );
 
     const stats = breaker.getStats();
@@ -176,14 +192,16 @@ describe('CircuitBreaker state transitions and reporting', () => {
       throw new Error('half-open failure');
     });
 
-    expect(() => breaker.executeSync(halfOpenFailure)).toThrow('half-open failure');
+    expect(() => breaker.executeSync(halfOpenFailure)).toThrow(
+      'half-open failure'
+    );
     expect(logger.info).toHaveBeenCalledWith(
       "Circuit breaker 'HalfOpenFailure' transitioned to HALF_OPEN",
-      expect.objectContaining({ state: 'HALF_OPEN' }),
+      expect.objectContaining({ state: 'HALF_OPEN' })
     );
     expect(logger.warn).toHaveBeenCalledWith(
       "Circuit breaker 'HalfOpenFailure' transitioned to OPEN",
-      expect.objectContaining({ state: 'OPEN', failureCount: 1 }),
+      expect.objectContaining({ state: 'OPEN', failureCount: 1 })
     );
     expect(breaker.isOpen()).toBe(true);
 
@@ -233,15 +251,18 @@ describe('CircuitBreaker state transitions and reporting', () => {
 
     breaker.setEnabled(false);
     expect(logger.info).toHaveBeenCalledWith(
-      "Circuit breaker 'ToggleBreaker' disabled",
+      "Circuit breaker 'ToggleBreaker' disabled"
     );
     const directResult = breaker.executeSync(() => 'direct');
     expect(directResult).toBe('direct');
-    expect(breaker.getStats()).toMatchObject({ enabled: false, totalRequests: 0 });
+    expect(breaker.getStats()).toMatchObject({
+      enabled: false,
+      totalRequests: 0,
+    });
 
     breaker.setEnabled(true);
     expect(logger.info).toHaveBeenCalledWith(
-      "Circuit breaker 'ToggleBreaker' enabled",
+      "Circuit breaker 'ToggleBreaker' enabled"
     );
     const wrappedResult = breaker.executeSync(() => 'wrapped');
     expect(wrappedResult).toBe('wrapped');

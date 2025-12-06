@@ -1,8 +1,16 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const ENTRY_MODULE_PATH = '../../../src/character-concepts-manager-entry.js';
 const MAIN_MODULE_PATH = '../../../src/character-concepts-manager-main.js';
-const BOOTSTRAP_PATH = '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
+const BOOTSTRAP_PATH =
+  '../../../src/characterBuilder/CharacterBuilderBootstrap.js';
 
 const flushMicrotasks = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -13,7 +21,10 @@ describe('character-concepts-manager entry integration', () => {
   beforeEach(() => {
     jest.resetModules();
     originalController = window.__characterConceptsManagerController;
-    originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(document, 'readyState');
+    originalReadyStateDescriptor = Object.getOwnPropertyDescriptor(
+      document,
+      'readyState'
+    );
     document.body.innerHTML = '<div id="error-display"></div>';
   });
 
@@ -21,7 +32,11 @@ describe('character-concepts-manager entry integration', () => {
     jest.restoreAllMocks();
     window.__characterConceptsManagerController = originalController;
     if (originalReadyStateDescriptor) {
-      Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+      Object.defineProperty(
+        document,
+        'readyState',
+        originalReadyStateDescriptor
+      );
     } else {
       delete document.readyState;
     }
@@ -37,7 +52,9 @@ describe('character-concepts-manager entry integration', () => {
         get: () => readyState,
       });
 
-      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleLogSpy = jest
+        .spyOn(console, 'log')
+        .mockImplementation(() => {});
 
       const { CharacterBuilderBootstrap } = await import(BOOTSTRAP_PATH);
       const logger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -103,7 +120,9 @@ describe('character-concepts-manager entry integration', () => {
       });
 
       const failure = new Error('entry bootstrap failure');
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       jest.doMock(MAIN_MODULE_PATH, () => ({
         initializeApp: jest.fn(() => Promise.reject(failure)),

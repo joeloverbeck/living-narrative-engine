@@ -85,7 +85,9 @@ describe('ActionDiscoveryService integration coverage', () => {
     expect(options).toEqual({ trace: null });
     expect(result.actions).toEqual([{ id: 'test:go' }]);
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Finished action discovery for actor actor-basic.')
+      expect.stringContaining(
+        'Finished action discovery for actor actor-basic.'
+      )
     );
   });
 
@@ -106,7 +108,9 @@ describe('ActionDiscoveryService integration coverage', () => {
       expect.stringContaining('actionTraceFilter missing required methods')
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('actionTraceOutputService missing writeTrace method')
+      expect.stringContaining(
+        'actionTraceOutputService missing writeTrace method'
+      )
     );
   });
 
@@ -165,7 +169,9 @@ describe('ActionDiscoveryService integration coverage', () => {
       captureActionData: jest.fn(),
       withSpanAsync: jest.fn(async (name, execute) => execute()),
       info: jest.fn(),
-      getTracedActions: jest.fn(() => new Map([["action", { id: 'action-1' }]])),
+      getTracedActions: jest.fn(
+        () => new Map([['action', { id: 'action-1' }]])
+      ),
       getTracingSummary: jest.fn(() => ({
         totalStagesTracked: 3,
         sessionDuration: 42,
@@ -209,7 +215,9 @@ describe('ActionDiscoveryService integration coverage', () => {
     expect(actionTraceOutputService.writeTrace).toHaveBeenCalledWith(trace);
     expect(result.actions).toEqual([{ id: 'trace:success' }]);
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Action discovery completed for actor actor-trace with action tracing'),
+      expect.stringContaining(
+        'Action discovery completed for actor actor-trace with action tracing'
+      ),
       expect.objectContaining({
         tracedActionCount: 1,
         totalStagesTracked: 3,
@@ -232,7 +240,9 @@ describe('ActionDiscoveryService integration coverage', () => {
       captureActionData: jest.fn(),
       withSpanAsync: jest.fn(async (name, execute) => execute()),
       info: jest.fn(),
-      getTracedActions: jest.fn(() => new Map([["action", { id: 'fallback' }]])),
+      getTracedActions: jest.fn(
+        () => new Map([['action', { id: 'fallback' }]])
+      ),
     };
 
     const actionTraceOutputService = {
@@ -253,10 +263,16 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-summary-fallback' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-summary-fallback' },
+      {},
+      { trace: true }
+    );
 
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Action discovery completed for actor actor-summary-fallback with action tracing'),
+      expect.stringContaining(
+        'Action discovery completed for actor actor-summary-fallback with action tracing'
+      ),
       expect.objectContaining({
         totalStagesTracked: 0,
         sessionDuration: 0,
@@ -269,7 +285,9 @@ describe('ActionDiscoveryService integration coverage', () => {
       captureActionData: jest.fn(),
       withSpanAsync: jest.fn(async (name, execute) => execute()),
       info: jest.fn(),
-      getTracedActions: jest.fn(() => new Map([["action", { id: 'action-2' }]])),
+      getTracedActions: jest.fn(
+        () => new Map([['action', { id: 'action-2' }]])
+      ),
       getTracingSummary: jest.fn(() => ({
         totalStagesTracked: 1,
         sessionDuration: 10,
@@ -294,7 +312,11 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-trace-warn' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-trace-warn' },
+      {},
+      { trace: true }
+    );
     await flushPromises();
 
     expect(actionTraceOutputService.writeTrace).toHaveBeenCalledWith(trace);
@@ -333,7 +355,11 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-empty-trace' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-empty-trace' },
+      {},
+      { trace: true }
+    );
 
     expect(actionTraceOutputService.writeTrace).not.toHaveBeenCalled();
     expect(dependencies.logger.debug).not.toHaveBeenCalledWith(
@@ -361,7 +387,9 @@ describe('ActionDiscoveryService integration coverage', () => {
 
     expect(dependencies.traceContextFactory).toHaveBeenCalled();
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Created StructuredTrace for actor actor-structured'),
+      expect.stringContaining(
+        'Created StructuredTrace for actor actor-structured'
+      ),
       expect.objectContaining({ actorId: 'actor-structured' })
     );
     const [[, , options]] =
@@ -396,10 +424,16 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-fallback' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-fallback' },
+      {},
+      { trace: true }
+    );
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to create trace context for actor actor-fallback'),
+      expect.stringContaining(
+        'Failed to create trace context for actor actor-fallback'
+      ),
       expect.any(Error)
     );
     expect(traceContextFactory).toHaveBeenCalledTimes(1);
@@ -429,7 +463,11 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-no-trace' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-no-trace' },
+      {},
+      { trace: true }
+    );
 
     expect(traceContextFactory).toHaveBeenCalledTimes(1);
     expect(errorLogger.error).toHaveBeenCalledTimes(2);
@@ -474,10 +512,16 @@ describe('ActionDiscoveryService integration coverage', () => {
       errors: [],
     });
 
-    await service.getValidActions({ id: 'actor-unknown-trace' }, {}, { trace: true });
+    await service.getValidActions(
+      { id: 'actor-unknown-trace' },
+      {},
+      { trace: true }
+    );
 
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Created UnknownTrace for actor actor-unknown-trace'),
+      expect.stringContaining(
+        'Created UnknownTrace for actor actor-unknown-trace'
+      ),
       expect.objectContaining({ actorId: 'actor-unknown-trace' })
     );
   });

@@ -167,9 +167,9 @@ describe('RecipePatternResolver', () => {
         leg_fr_lower: { partType: 'leg_segment' },
       });
       // Validation phase + resolution phase = 2 calls per limbSet = 4 total
-      expect(mockSlotGenerator.extractSlotKeysFromLimbSet).toHaveBeenCalledTimes(
-        4
-      );
+      expect(
+        mockSlotGenerator.extractSlotKeysFromLimbSet
+      ).toHaveBeenCalledTimes(4);
     });
 
     it('should resolve appendage:tail to correct slot keys', () => {
@@ -362,7 +362,9 @@ describe('RecipePatternResolver', () => {
         .mockImplementation(() => emptyTemplate);
 
       const recipe = {
-        patterns: [{ matchesGroup: 'appendage:tail', partType: 'tail_segment' }],
+        patterns: [
+          { matchesGroup: 'appendage:tail', partType: 'tail_segment' },
+        ],
       };
 
       const blueprint = {
@@ -372,9 +374,7 @@ describe('RecipePatternResolver', () => {
         slots: {},
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Slot group 'appendage:tail' not found in structure template 'dragon:body'."
       );
     });
@@ -404,9 +404,7 @@ describe('RecipePatternResolver', () => {
         slots: {},
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Slot group 'limbSet:leg' not found in structure template 'beast:body'."
       );
     });
@@ -433,9 +431,9 @@ describe('RecipePatternResolver', () => {
         slots: {},
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow('generator validation failure');
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'generator validation failure'
+      );
     });
 
     it('should rethrow unexpected errors during matchesGroup resolution', () => {
@@ -462,9 +460,9 @@ describe('RecipePatternResolver', () => {
         slots: { leg_front: {} },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow('generator resolution failure');
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'generator resolution failure'
+      );
     });
 
     it('should provide availability details when slot generation returns no keys', () => {
@@ -498,9 +496,7 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Slot group 'limbSet:leg' matched 0 slots in structure template 'beast:body'. Available slot keys: aux_slot, existing_slot. Available orientations: north, south. Available sockets: primary."
       );
 
@@ -614,9 +610,9 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow("Pattern 1: matchesPattern 'wing_*' matched 0 slots");
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Pattern 1: matchesPattern 'wing_*' matched 0 slots"
+      );
     });
 
     it('should throw when wildcard pattern matches no blueprint slots', () => {
@@ -626,9 +622,9 @@ describe('RecipePatternResolver', () => {
 
       const blueprint = {};
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow("Pattern 1: matchesPattern 'wing_*' matched 0 slots");
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        "Pattern 1: matchesPattern 'wing_*' matched 0 slots"
+      );
     });
   });
 
@@ -794,9 +790,9 @@ describe('RecipePatternResolver', () => {
 
       const blueprint = { id: 'anatomy:wingless' };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow("matchesAll filter {\"slotType\":\"wing_segment\"} matched 0 slots");
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'matchesAll filter {"slotType":"wing_segment"} matched 0 slots'
+      );
     });
   });
 
@@ -847,9 +843,7 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern matchesGroup: 'limbSet:leg' matched 0 slots after applying exclusions"
       );
     });
@@ -951,7 +945,7 @@ describe('RecipePatternResolver', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationError);
         expect(error.message).toContain(
-          "Pattern 1: matchesAll filter {\"slotType\":\"leg_segment\",\"orientation\":\"*_left\"} matched 0 slots after applying exclusions"
+          'Pattern 1: matchesAll filter {"slotType":"leg_segment","orientation":"*_left"} matched 0 slots after applying exclusions'
         );
         expect(error.message).toContain(
           "in blueprint 'beast:body_blueprint'. Available slot keys: leg_front_left, leg_front_right, leg_rear_left, leg_rear_right."
@@ -1114,7 +1108,7 @@ describe('RecipePatternResolver', () => {
       const blueprint = { slots: {} };
 
       expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
-        "has no matcher"
+        'has no matcher'
       );
     });
 
@@ -1140,9 +1134,7 @@ describe('RecipePatternResolver', () => {
 
     it('should throw when structure template is missing from registry', () => {
       const recipe = {
-        patterns: [
-          { matchesGroup: 'limbSet:leg', partType: 'leg_segment' },
-        ],
+        patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg_segment' }],
       };
 
       const blueprint = {
@@ -1160,9 +1152,7 @@ describe('RecipePatternResolver', () => {
 
     it('should throw when matchesGroup format is invalid for V2 blueprints', () => {
       const recipe = {
-        patterns: [
-          { matchesGroup: 'invalidformat', partType: 'leg_segment' },
-        ],
+        patterns: [{ matchesGroup: 'invalidformat', partType: 'leg_segment' }],
       };
 
       const blueprint = {
@@ -1210,9 +1200,7 @@ describe('RecipePatternResolver', () => {
       mockDataRegistry.get.mockReturnValue(template);
 
       const recipe = {
-        patterns: [
-          { matchesGroup: 'limbSet:wing', partType: 'wing_segment' },
-        ],
+        patterns: [{ matchesGroup: 'limbSet:wing', partType: 'wing_segment' }],
       };
 
       const blueprint = {
@@ -1287,9 +1275,9 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow("matchesAll filter {\"slotType\":\"tail\"} matched 0 slots");
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
+        'matchesAll filter {"slotType":"tail"} matched 0 slots'
+      );
     });
 
     it('should throw when exclusion slot group is missing in template', () => {
@@ -1365,9 +1353,7 @@ describe('RecipePatternResolver', () => {
         slots: {},
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Slot group 'limbSet:leg' matched 0 slots in structure template 'statue:body'."
       );
     });
@@ -1402,8 +1388,9 @@ describe('RecipePatternResolver', () => {
       resolver.resolveRecipePatterns(recipe, blueprint);
 
       expect(
-        mockLogger.warn.mock.calls.some(call =>
-          typeof call[0] === 'string' && call[0].includes('matchesAll:')
+        mockLogger.warn.mock.calls.some(
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('matchesAll:')
         )
       ).toBe(true);
     });
@@ -1450,15 +1437,15 @@ describe('RecipePatternResolver', () => {
       );
 
       expect(
-        mockLogger.warn.mock.calls.filter(call =>
-          typeof call[0] === 'string' &&
-          call[0].includes('no recognized matcher type')
+        mockLogger.warn.mock.calls.filter(
+          (call) =>
+            typeof call[0] === 'string' &&
+            call[0].includes('no recognized matcher type')
         ).length
       ).toBeGreaterThan(0);
 
       expect(result.slots).toEqual({});
     });
-
   });
 
   describe('Advanced matcher coverage', () => {
@@ -1502,9 +1489,7 @@ describe('RecipePatternResolver', () => {
         },
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern matchesGroup: 'appendage:tail' matched 0 slots after applying exclusions"
       );
     });
@@ -1512,16 +1497,12 @@ describe('RecipePatternResolver', () => {
     it('should warn when patterns of equal specificity overlap', () => {
       const template = {
         topology: {
-          limbSets: [
-            { type: 'leg', id: 'frontLeft' },
-          ],
+          limbSets: [{ type: 'leg', id: 'frontLeft' }],
         },
       };
 
       mockDataRegistry.get.mockReturnValue(template);
-      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue([
-        'leg_fl',
-      ]);
+      mockSlotGenerator.extractSlotKeysFromLimbSet.mockReturnValue(['leg_fl']);
 
       const recipe = {
         patterns: [
@@ -1542,7 +1523,8 @@ describe('RecipePatternResolver', () => {
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call => typeof call[0] === 'string' && call[0].includes('equal specificity')
+          (call) =>
+            typeof call[0] === 'string' && call[0].includes('equal specificity')
         )
       ).toBe(true);
     });
@@ -1733,7 +1715,7 @@ describe('RecipePatternResolver', () => {
 
       expect(
         mockLogger.warn.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes('no recognized matcher type') &&
             call[1] === flakyPattern
@@ -1772,9 +1754,7 @@ describe('RecipePatternResolver', () => {
         patterns: [{ matchesGroup: 'limbSet:leg', partType: 'leg' }],
       };
 
-      expect(() =>
-        resolver.resolveRecipePatterns(recipe, blueprint)
-      ).toThrow(
+      expect(() => resolver.resolveRecipePatterns(recipe, blueprint)).toThrow(
         "Pattern 1: Cannot resolve slot group 'limbSet:leg': blueprint has no structure template"
       );
     });
@@ -1893,7 +1873,9 @@ describe('RecipePatternResolver', () => {
             },
           }
         )
-      ).toThrow("Invalid slot group type: 'unknownType'. Expected 'limbSet' or 'appendage'");
+      ).toThrow(
+        "Invalid slot group type: 'unknownType'. Expected 'limbSet' or 'appendage'"
+      );
     });
 
     it('should surface default hints when matcher disappears before override logging', () => {
@@ -1944,7 +1926,7 @@ describe('RecipePatternResolver', () => {
       ]);
       expect(
         mockLogger.info.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes('Pattern resolution added 0 slot definitions')
         )
@@ -2000,7 +1982,7 @@ describe('RecipePatternResolver', () => {
 
       expect(
         mockLogger.info.mock.calls.some(
-          call =>
+          (call) =>
             typeof call[0] === 'string' &&
             call[0].includes(
               "Blueprint additionalSlots for slot 'arm_left' overrides Pattern 1"

@@ -51,7 +51,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
     // Create test bed with mock dependencies
     testBed = new ActionDiscoveryServiceTestBed();
     entityManager = new SimpleEntityManager([]);
-    
+
     // Create entities gateway for coverage analyzer and scope resolution
     entitiesGateway = {
       getComponentData: (entityId, componentType) => {
@@ -64,7 +64,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
       },
       getEntities: () => {
         return Array.from(entityManager.entities);
-      }
+      },
     };
 
     // Create coverage analyzer
@@ -72,16 +72,19 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
 
     // Replace the entityManager in test bed mocks
     testBed.mocks.entityManager = entityManager;
-    
+
     // Configure action index mock to return remove_clothing action
     testBed.mocks.actionIndex.getCandidateActions = jest.fn((actor) => {
       // Only return action if actor has clothing:equipment component
-      const hasEquipment = entityManager.getComponentData(actor.id, 'clothing:equipment');
+      const hasEquipment = entityManager.getComponentData(
+        actor.id,
+        'clothing:equipment'
+      );
       if (hasEquipment) {
         // Create a modified version with scope at top level for the mock
         const actionWithScope = {
           ...removeClothingAction,
-          scope: removeClothingAction.targets.primary.scope // Add scope at top level
+          scope: removeClothingAction.targets.primary.scope, // Add scope at top level
         };
         return [actionWithScope];
       }
@@ -89,54 +92,64 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
     });
 
     // Configure target resolution service to use real scope resolution
-    testBed.mocks.targetResolutionService.resolveTargets = jest.fn((scopeName, actorEntity, context) => {
-      // Handle the clothing:topmost_clothing scope
-      if (scopeName === 'clothing:topmost_clothing') {
-        const targets = [];
-        const equipment = entityManager.getComponentData(actorEntity.id, 'clothing:equipment');
-        
-        if (equipment?.equipped) {
-          // Get topmost items from each slot using coverage analyzer
-          const analysis = coverageAnalyzer.analyzeCoverageBlocking(equipment.equipped, actorEntity.id);
-          
-          // Iterate through all slots and layers to find accessible items
-          for (const [slotName, slotData] of Object.entries(equipment.equipped)) {
-            if (!slotData || typeof slotData !== 'object') continue;
-            
-            // Check layers in priority order
-            const layerOrder = ['outer', 'base', 'underwear'];
-            for (const layer of layerOrder) {
-              if (slotData[layer]) {
-                const itemId = slotData[layer];
-                // Check if this item is accessible (not blocked by coverage)
-                if (analysis.isAccessible(itemId, slotName, layer)) {
-                  const item = entityManager.getEntityInstance(itemId);
-                  if (item) {
-                    targets.push({
-                      entityId: itemId,
-                      displayName: itemId,
-                      components: item.components || {},
-                    });
-                    break; // Only take the topmost accessible item per slot
+    testBed.mocks.targetResolutionService.resolveTargets = jest.fn(
+      (scopeName, actorEntity, context) => {
+        // Handle the clothing:topmost_clothing scope
+        if (scopeName === 'clothing:topmost_clothing') {
+          const targets = [];
+          const equipment = entityManager.getComponentData(
+            actorEntity.id,
+            'clothing:equipment'
+          );
+
+          if (equipment?.equipped) {
+            // Get topmost items from each slot using coverage analyzer
+            const analysis = coverageAnalyzer.analyzeCoverageBlocking(
+              equipment.equipped,
+              actorEntity.id
+            );
+
+            // Iterate through all slots and layers to find accessible items
+            for (const [slotName, slotData] of Object.entries(
+              equipment.equipped
+            )) {
+              if (!slotData || typeof slotData !== 'object') continue;
+
+              // Check layers in priority order
+              const layerOrder = ['outer', 'base', 'underwear'];
+              for (const layer of layerOrder) {
+                if (slotData[layer]) {
+                  const itemId = slotData[layer];
+                  // Check if this item is accessible (not blocked by coverage)
+                  if (analysis.isAccessible(itemId, slotName, layer)) {
+                    const item = entityManager.getEntityInstance(itemId);
+                    if (item) {
+                      targets.push({
+                        entityId: itemId,
+                        displayName: itemId,
+                        components: item.components || {},
+                      });
+                      break; // Only take the topmost accessible item per slot
+                    }
                   }
                 }
               }
             }
           }
+
+          return {
+            success: true,
+            value: targets,
+          };
         }
-        
+
+        // Default fallback for other scopes
         return {
           success: true,
-          value: targets,
+          value: [],
         };
       }
-      
-      // Default fallback for other scopes
-      return {
-        success: true,
-        value: [],
-      };
-    });
+    );
 
     // Create action discovery service using test bed
     actionDiscoveryService = testBed.createStandardDiscoveryService();
@@ -159,7 +172,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
             base: 'clothing:jeans',
             underwear: 'clothing:boxers',
           },
-        }
+        },
       });
 
       // Create jeans (accessible)
@@ -169,10 +182,14 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         slot: 'torso_lower',
         layer: 'base',
       });
-      entityManager.addComponent('clothing:jeans', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'base',
-      });
+      entityManager.addComponent(
+        'clothing:jeans',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'base',
+        }
+      );
 
       // Create boxers (blocked by jeans)
       const boxers = entityManager.createEntity('clothing:boxers');
@@ -181,10 +198,14 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         slot: 'torso_lower',
         layer: 'underwear',
       });
-      entityManager.addComponent('clothing:boxers', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'clothing:boxers',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Get available actions for the actor
       const testActor = entityManager.getEntityInstance('test:actor');
@@ -193,18 +214,25 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      
-      const result = await actionDiscoveryService.getValidActions(testActor, context);
+
+      const result = await actionDiscoveryService.getValidActions(
+        testActor,
+        context
+      );
       const actions = result.actions || result.validActions || [];
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Should only have one remove action (for jeans)
       expect(removeActions).toHaveLength(1);
-      expect(removeActions[0].params?.targetId || removeActions[0].targetId).toBe('clothing:jeans');
-      
+      expect(
+        removeActions[0].params?.targetId || removeActions[0].targetId
+      ).toBe('clothing:jeans');
+
       // Should not have action for blocked boxers
-      const boxersAction = removeActions.find(a => 
-        (a.params?.targetId || a.targetId) === 'clothing:boxers'
+      const boxersAction = removeActions.find(
+        (a) => (a.params?.targetId || a.targetId) === 'clothing:boxers'
       );
       expect(boxersAction).toBeUndefined();
     });
@@ -221,7 +249,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
             base: 'dynamic:pants',
             underwear: 'dynamic:underwear',
           },
-        }
+        },
       });
 
       // Create pants
@@ -243,10 +271,14 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         slot: 'torso_lower',
         layer: 'underwear',
       });
-      entityManager.addComponent('dynamic:underwear', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'dynamic:underwear',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Initial state: only pants should be removable
       const dynamicActor = entityManager.getEntityInstance('dynamic:actor');
@@ -255,25 +287,46 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      let result = await actionDiscoveryService.getValidActions(dynamicActor, context);
+      let result = await actionDiscoveryService.getValidActions(
+        dynamicActor,
+        context
+      );
       let actions = result.actions || result.validActions || [];
-      let removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
-      
+      let removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
+
       expect(removeActions).toHaveLength(1);
-      expect(removeActions[0].params?.targetId || removeActions[0].targetId).toBe('dynamic:pants');
+      expect(
+        removeActions[0].params?.targetId || removeActions[0].targetId
+      ).toBe('dynamic:pants');
 
       // Simulate removing pants
-      const equipment = entityManager.getComponentData('dynamic:actor', 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        'dynamic:actor',
+        'clothing:equipment'
+      );
       delete equipment.equipped.torso_lower.base;
-      entityManager.addComponent('dynamic:actor', 'clothing:equipment', equipment);
+      entityManager.addComponent(
+        'dynamic:actor',
+        'clothing:equipment',
+        equipment
+      );
 
       // After removing pants: underwear should now be removable
-      result = await actionDiscoveryService.getValidActions(dynamicActor, context);
+      result = await actionDiscoveryService.getValidActions(
+        dynamicActor,
+        context
+      );
       actions = result.actions || result.validActions || [];
-      removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
-      
+      removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
+
       expect(removeActions).toHaveLength(1);
-      expect(removeActions[0].params?.targetId || removeActions[0].targetId).toBe('dynamic:underwear');
+      expect(
+        removeActions[0].params?.targetId || removeActions[0].targetId
+      ).toBe('dynamic:underwear');
     });
 
     it('should handle multiple slots with different blocking states', async () => {
@@ -295,19 +348,39 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
           feet: {
             base: 'multi:shoes',
           },
-        }
+        },
       });
 
       // Create all clothing items
       const items = [
-        { id: 'multi:jacket', slot: 'torso_upper', layer: 'outer', covers: ['torso_upper'] },
-        { id: 'multi:shirt', slot: 'torso_upper', layer: 'base', covers: ['torso_upper'] },
-        { id: 'multi:pants', slot: 'torso_lower', layer: 'base', covers: ['torso_lower'] },
-        { id: 'multi:underwear', slot: 'torso_lower', layer: 'underwear', covers: ['torso_lower'] },
+        {
+          id: 'multi:jacket',
+          slot: 'torso_upper',
+          layer: 'outer',
+          covers: ['torso_upper'],
+        },
+        {
+          id: 'multi:shirt',
+          slot: 'torso_upper',
+          layer: 'base',
+          covers: ['torso_upper'],
+        },
+        {
+          id: 'multi:pants',
+          slot: 'torso_lower',
+          layer: 'base',
+          covers: ['torso_lower'],
+        },
+        {
+          id: 'multi:underwear',
+          slot: 'torso_lower',
+          layer: 'underwear',
+          covers: ['torso_lower'],
+        },
         { id: 'multi:shoes', slot: 'feet', layer: 'base', covers: ['feet'] },
       ];
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const entity = entityManager.createEntity(item.id);
         entityManager.addComponent(item.id, 'clothing:item', {
           name: item.id,
@@ -327,21 +400,28 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      const result = await actionDiscoveryService.getValidActions(multiActor, context);
+      const result = await actionDiscoveryService.getValidActions(
+        multiActor,
+        context
+      );
       const actions = result.actions || result.validActions || [];
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Should have actions for:
       // - jacket (topmost in torso_upper)
       // - pants (topmost in torso_lower)
       // - shoes (only item in feet)
       expect(removeActions).toHaveLength(3);
-      
-      const targetIds = removeActions.map(a => a.params?.targetId || a.targetId);
+
+      const targetIds = removeActions.map(
+        (a) => a.params?.targetId || a.targetId
+      );
       expect(targetIds).toContain('multi:jacket');
       expect(targetIds).toContain('multi:pants');
       expect(targetIds).toContain('multi:shoes');
-      
+
       // Should NOT have actions for blocked items:
       expect(targetIds).not.toContain('multi:shirt'); // Blocked by jacket
       expect(targetIds).not.toContain('multi:underwear'); // Blocked by pants
@@ -361,7 +441,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
             base: 'nocov:item1',
             underwear: 'nocov:item2',
           },
-        }
+        },
       });
 
       // Create items WITHOUT coverage mapping
@@ -388,9 +468,14 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      const result = await actionDiscoveryService.getValidActions(nocovActor, context);
+      const result = await actionDiscoveryService.getValidActions(
+        nocovActor,
+        context
+      );
       const actions = result.actions || result.validActions || [];
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Without coverage data, should fall back to showing topmost item
       expect(removeActions.length).toBeGreaterThan(0);
@@ -413,9 +498,14 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      const result = await actionDiscoveryService.getValidActions(emptyActor, context);
+      const result = await actionDiscoveryService.getValidActions(
+        emptyActor,
+        context
+      );
       const actions = result.actions || result.validActions || [];
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       expect(removeActions).toHaveLength(0);
     });
@@ -436,7 +526,7 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
             base: 'partial:skirt',
             // No underwear
           },
-        }
+        },
       });
 
       // Create items
@@ -469,14 +559,21 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      const result = await actionDiscoveryService.getValidActions(partialActor, context);
+      const result = await actionDiscoveryService.getValidActions(
+        partialActor,
+        context
+      );
       const actions = result.actions || result.validActions || [];
-      const removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Should have actions for both items (no blocking)
       expect(removeActions).toHaveLength(2);
-      
-      const targetIds = removeActions.map(a => a.params?.targetId || a.targetId);
+
+      const targetIds = removeActions.map(
+        (a) => a.params?.targetId || a.targetId
+      );
       expect(targetIds).toContain('partial:bra');
       expect(targetIds).toContain('partial:skirt');
     });
@@ -496,17 +593,32 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
             base: 'prereq:pants',
             underwear: 'prereq:underwear',
           },
-        }
+        },
       });
 
       // Create layered items
       const items = [
-        { id: 'prereq:coat', slot: 'torso_lower', layer: 'outer', covers: ['torso_lower'] },
-        { id: 'prereq:pants', slot: 'torso_lower', layer: 'base', covers: ['torso_lower'] },
-        { id: 'prereq:underwear', slot: 'torso_lower', layer: 'underwear', covers: ['torso_lower'] },
+        {
+          id: 'prereq:coat',
+          slot: 'torso_lower',
+          layer: 'outer',
+          covers: ['torso_lower'],
+        },
+        {
+          id: 'prereq:pants',
+          slot: 'torso_lower',
+          layer: 'base',
+          covers: ['torso_lower'],
+        },
+        {
+          id: 'prereq:underwear',
+          slot: 'torso_lower',
+          layer: 'underwear',
+          covers: ['torso_lower'],
+        },
       ];
 
-      items.forEach(item => {
+      items.forEach((item) => {
         const entity = entityManager.createEntity(item.id);
         entityManager.addComponent(item.id, 'clothing:item', {
           name: item.id,
@@ -526,26 +638,48 @@ describe('Remove Clothing Action with Coverage Blocking Integration', () => {
         location: null,
         allEntities: Array.from(entityManager.entities),
       };
-      let result = await actionDiscoveryService.getValidActions(prereqActor, context);
+      let result = await actionDiscoveryService.getValidActions(
+        prereqActor,
+        context
+      );
       let actions = result.actions || result.validActions || [];
-      let removeActions = actions.filter(a => a.id === 'clothing:remove_clothing');
+      let removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
 
       // Only coat should be removable initially
       expect(removeActions).toHaveLength(1);
-      expect(removeActions[0].params?.targetId || removeActions[0].targetId).toBe('prereq:coat');
+      expect(
+        removeActions[0].params?.targetId || removeActions[0].targetId
+      ).toBe('prereq:coat');
 
       // Simulate removing coat
-      const equipment = entityManager.getComponentData('prereq:actor', 'clothing:equipment');
+      const equipment = entityManager.getComponentData(
+        'prereq:actor',
+        'clothing:equipment'
+      );
       delete equipment.equipped.torso_lower.outer;
-      entityManager.addComponent('prereq:actor', 'clothing:equipment', equipment);
+      entityManager.addComponent(
+        'prereq:actor',
+        'clothing:equipment',
+        equipment
+      );
 
       // Now pants should be removable
-      result = await actionDiscoveryService.getValidActions(prereqActor, context);
+      result = await actionDiscoveryService.getValidActions(
+        prereqActor,
+        context
+      );
       actions = result.actions || result.validActions || [];
-      const updatedRemoveActions = actions.filter(a => a.id === 'clothing:remove_clothing');
-      
+      const updatedRemoveActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
+
       expect(updatedRemoveActions).toHaveLength(1);
-      expect(updatedRemoveActions[0].params?.targetId || updatedRemoveActions[0].targetId).toBe('prereq:pants');
+      expect(
+        updatedRemoveActions[0].params?.targetId ||
+          updatedRemoveActions[0].targetId
+      ).toBe('prereq:pants');
     });
   });
 });

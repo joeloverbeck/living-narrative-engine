@@ -10,18 +10,18 @@ Create the `UnwieldItemHandler` class that encapsulates all logic for stopping w
 
 The following assumptions from the original ticket were corrected to match actual codebase patterns:
 
-| Original Assumption | Correction | Rationale |
-|---------------------|------------|-----------|
-| Parameters: `actor_id`, `item_id` | Use `actorEntity`, `itemEntity` | Match schema in `unwieldItem.schema.json` |
-| `entityManager.getComponent()` | Use `getComponentData()` | Consistent with modern handlers |
-| `entityManager.updateComponent()` | Use `addComponent()` (upsert) | `updateComponent()` doesn't exist |
-| Return `{ success, wasWielding }` | Return `{ success, error? }` | Match `DropItemAtLocationHandler` pattern |
-| Constructor calls `super()` with no args | Use `super(name, deps)` pattern | Match modern handler validation pattern |
+| Original Assumption                      | Correction                      | Rationale                                 |
+| ---------------------------------------- | ------------------------------- | ----------------------------------------- |
+| Parameters: `actor_id`, `item_id`        | Use `actorEntity`, `itemEntity` | Match schema in `unwieldItem.schema.json` |
+| `entityManager.getComponent()`           | Use `getComponentData()`        | Consistent with modern handlers           |
+| `entityManager.updateComponent()`        | Use `addComponent()` (upsert)   | `updateComponent()` doesn't exist         |
+| Return `{ success, wasWielding }`        | Return `{ success, error? }`    | Match `DropItemAtLocationHandler` pattern |
+| Constructor calls `super()` with no args | Use `super(name, deps)` pattern | Match modern handler validation pattern   |
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                | Purpose                |
+| --------------------------------------------------- | ---------------------- |
 | `src/logic/operationHandlers/unwieldItemHandler.js` | Handler implementation |
 
 ## Implementation Details
@@ -37,7 +37,10 @@ The following assumptions from the original ticket were corrected to match actua
 
 import BaseOperationHandler from './baseOperationHandler.js';
 import { unlockAppendagesHoldingItem } from '../../utils/grabbingUtils.js';
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 
 class UnwieldItemHandler extends BaseOperationHandler {
   #entityManager;
@@ -48,7 +51,11 @@ class UnwieldItemHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -164,22 +171,24 @@ Note: Full unit tests are in UNWITEOPE-004. This ticket focuses on implementatio
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/unlockGrabbingHandler.js` | Similar appendage manipulation |
-| `src/logic/operationHandlers/dropItemAtLocationHandler.js` | Similar item operation pattern |
-| `src/utils/grabbingUtils.js` | `unlockAppendagesHoldingItem` function |
-| `src/utils/cloneUtils.js` | `deepClone` function |
-| `src/utils/safeDispatchErrorUtils.js` | Error dispatch pattern |
+| File                                                       | Purpose                                |
+| ---------------------------------------------------------- | -------------------------------------- |
+| `src/logic/operationHandlers/unlockGrabbingHandler.js`     | Similar appendage manipulation         |
+| `src/logic/operationHandlers/dropItemAtLocationHandler.js` | Similar item operation pattern         |
+| `src/utils/grabbingUtils.js`                               | `unlockAppendagesHoldingItem` function |
+| `src/utils/cloneUtils.js`                                  | `deepClone` function                   |
+| `src/utils/safeDispatchErrorUtils.js`                      | Error dispatch pattern                 |
 
 ---
 
 ## Outcome
 
 ### Completion Date
+
 2025-11-27
 
 ### Implementation Summary
+
 Successfully created `UnwieldItemHandler` at `src/logic/operationHandlers/unwieldItemHandler.js` following the `DropItemAtLocationHandler` pattern. The handler:
 
 1. **Validates parameters** using `assertParamsObject` and `validateStringParam` utilities
@@ -189,11 +198,14 @@ Successfully created `UnwieldItemHandler` at `src/logic/operationHandlers/unwiel
 5. **Dispatches `items:item_unwielded` event** with actor, item, and remaining wielded items
 
 ### Validation Results
+
 - **TypeScript**: ✅ No errors for `unwieldItemHandler.js`
 - **ESLint**: ✅ Only expected warnings for hardcoded mod references (consistent with other handlers)
 
 ### Assumption Corrections Applied
+
 Five original ticket assumptions were corrected before implementation to match actual codebase patterns:
+
 - Parameter names: `actorEntity`/`itemEntity` (not `actor_id`/`item_id`)
 - API: `getComponentData()` (not `getComponent()`)
 - API: `addComponent()` for upsert (no `updateComponent()`)
@@ -201,6 +213,7 @@ Five original ticket assumptions were corrected before implementation to match a
 - Constructor pattern: `super(name, deps)` validation pattern
 
 ### Next Steps
+
 - UNWITEOPE-003: DI registration (now unblocked)
 - UNWITEOPE-004: Unit tests
 - UNWITEOPE-005, UNWITEOPE-006: Rule file modifications

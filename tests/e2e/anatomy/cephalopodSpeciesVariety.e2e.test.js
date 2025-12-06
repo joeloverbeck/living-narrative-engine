@@ -38,11 +38,15 @@ describe('Cephalopod Species Variety - E2E', () => {
 
       // Assert - Tentacles (8)
       const parts = anatomyData.body.parts;
-      const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+      const tentacles = Object.keys(parts).filter((name) =>
+        name.includes('tentacle')
+      );
       expect(tentacles).toHaveLength(8);
 
       // Check tentacle properties (generic entity)
-      const firstTentacle = entityManager.getEntityInstance(parts[tentacles[0]]);
+      const firstTentacle = entityManager.getEntityInstance(
+        parts[tentacles[0]]
+      );
       const tentaclePart = firstTentacle.getComponentData('anatomy:part');
 
       expect(tentaclePart.subType).toBe('tentacle');
@@ -74,11 +78,15 @@ describe('Cephalopod Species Variety - E2E', () => {
 
       // Assert - Tentacles (8)
       const parts = anatomyData.body.parts;
-      const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+      const tentacles = Object.keys(parts).filter((name) =>
+        name.includes('tentacle')
+      );
       expect(tentacles).toHaveLength(8);
 
       // Check tentacle properties (generic entity)
-      const firstTentacle = entityManager.getEntityInstance(parts[tentacles[0]]);
+      const firstTentacle = entityManager.getEntityInstance(
+        parts[tentacles[0]]
+      );
       const tentaclePart = firstTentacle.getComponentData('anatomy:part');
 
       expect(tentaclePart.subType).toBe('tentacle');
@@ -110,11 +118,15 @@ describe('Cephalopod Species Variety - E2E', () => {
 
       // Assert - Tentacles (8)
       const parts = anatomyData.body.parts;
-      const tentacles = Object.keys(parts).filter((name) => name.includes('tentacle'));
+      const tentacles = Object.keys(parts).filter((name) =>
+        name.includes('tentacle')
+      );
       expect(tentacles).toHaveLength(8);
 
       // Check tentacle properties (generic entity)
-      const firstTentacle = entityManager.getEntityInstance(parts[tentacles[0]]);
+      const firstTentacle = entityManager.getEntityInstance(
+        parts[tentacles[0]]
+      );
       const tentaclePart = firstTentacle.getComponentData('anatomy:part');
 
       expect(tentaclePart.subType).toBe('tentacle');
@@ -128,9 +140,15 @@ describe('Cephalopod Species Variety - E2E', () => {
   describe('Cross-Species Validation', () => {
     it('should use same generic mantle entity for all three species', async () => {
       // Arrange - Create all three species
-      const krakenActor = await testBed.createActor({ recipeId: 'anatomy:kraken_elder' });
-      const squidActor = await testBed.createActor({ recipeId: 'anatomy:squid_common' });
-      const octopusActor = await testBed.createActor({ recipeId: 'anatomy:octopus_common' });
+      const krakenActor = await testBed.createActor({
+        recipeId: 'anatomy:kraken_elder',
+      });
+      const squidActor = await testBed.createActor({
+        recipeId: 'anatomy:squid_common',
+      });
+      const octopusActor = await testBed.createActor({
+        recipeId: 'anatomy:octopus_common',
+      });
 
       // Act - Generate anatomy for all
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -149,14 +167,22 @@ describe('Cephalopod Species Variety - E2E', () => {
       const squidAnatomy = squidInstance.getComponentData('anatomy:body');
       const octopusAnatomy = octopusInstance.getComponentData('anatomy:body');
 
-      const krakenRoot = entityManager.getEntityInstance(krakenAnatomy.body.root);
+      const krakenRoot = entityManager.getEntityInstance(
+        krakenAnatomy.body.root
+      );
       const squidRoot = entityManager.getEntityInstance(squidAnatomy.body.root);
-      const octopusRoot = entityManager.getEntityInstance(octopusAnatomy.body.root);
+      const octopusRoot = entityManager.getEntityInstance(
+        octopusAnatomy.body.root
+      );
 
       // All should have mantle subType
-      expect(krakenRoot.getComponentData('anatomy:part').subType).toBe('mantle');
+      expect(krakenRoot.getComponentData('anatomy:part').subType).toBe(
+        'mantle'
+      );
       expect(squidRoot.getComponentData('anatomy:part').subType).toBe('mantle');
-      expect(octopusRoot.getComponentData('anatomy:part').subType).toBe('mantle');
+      expect(octopusRoot.getComponentData('anatomy:part').subType).toBe(
+        'mantle'
+      );
 
       // All should have sockets
       expect(krakenRoot.getComponentData('anatomy:sockets')).toBeDefined();
@@ -166,9 +192,15 @@ describe('Cephalopod Species Variety - E2E', () => {
 
     it('should use same generic tentacle entity for all three species', async () => {
       // Arrange - Create all three species
-      const krakenActor = await testBed.createActor({ recipeId: 'anatomy:kraken_elder' });
-      const squidActor = await testBed.createActor({ recipeId: 'anatomy:squid_common' });
-      const octopusActor = await testBed.createActor({ recipeId: 'anatomy:octopus_common' });
+      const krakenActor = await testBed.createActor({
+        recipeId: 'anatomy:kraken_elder',
+      });
+      const squidActor = await testBed.createActor({
+        recipeId: 'anatomy:squid_common',
+      });
+      const octopusActor = await testBed.createActor({
+        recipeId: 'anatomy:octopus_common',
+      });
 
       // Act - Generate anatomy for all
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -187,9 +219,15 @@ describe('Cephalopod Species Variety - E2E', () => {
       const squidAnatomy = squidInstance.getComponentData('anatomy:body');
       const octopusAnatomy = octopusInstance.getComponentData('anatomy:body');
 
-      const krakenTentacles = Object.keys(krakenAnatomy.body.parts).filter((name) => name.includes('tentacle'));
-      const squidTentacles = Object.keys(squidAnatomy.body.parts).filter((name) => name.includes('tentacle'));
-      const octopusTentacles = Object.keys(octopusAnatomy.body.parts).filter((name) => name.includes('tentacle'));
+      const krakenTentacles = Object.keys(krakenAnatomy.body.parts).filter(
+        (name) => name.includes('tentacle')
+      );
+      const squidTentacles = Object.keys(squidAnatomy.body.parts).filter(
+        (name) => name.includes('tentacle')
+      );
+      const octopusTentacles = Object.keys(octopusAnatomy.body.parts).filter(
+        (name) => name.includes('tentacle')
+      );
 
       // All should have 8 tentacles
       expect(krakenTentacles).toHaveLength(8);
@@ -207,9 +245,15 @@ describe('Cephalopod Species Variety - E2E', () => {
         octopusAnatomy.body.parts[octopusTentacles[0]]
       );
 
-      expect(krakenFirstTentacle.getComponentData('anatomy:part').subType).toBe('tentacle');
-      expect(squidFirstTentacle.getComponentData('anatomy:part').subType).toBe('tentacle');
-      expect(octopusFirstTentacle.getComponentData('anatomy:part').subType).toBe('tentacle');
+      expect(krakenFirstTentacle.getComponentData('anatomy:part').subType).toBe(
+        'tentacle'
+      );
+      expect(squidFirstTentacle.getComponentData('anatomy:part').subType).toBe(
+        'tentacle'
+      );
+      expect(
+        octopusFirstTentacle.getComponentData('anatomy:part').subType
+      ).toBe('tentacle');
     });
 
     // Note: Visual properties test removed - generic entities don't have descriptor properties
@@ -222,12 +266,20 @@ describe('Cephalopod Species Variety - E2E', () => {
       await testBed.loadAnatomyModData();
 
       // Assert - Species-specific entities should exist
-      const krakenTentacle = testBed.getEntityDefinition('anatomy:kraken_tentacle');
+      const krakenTentacle = testBed.getEntityDefinition(
+        'anatomy:kraken_tentacle'
+      );
       const krakenMantle = testBed.getEntityDefinition('anatomy:kraken_mantle');
-      const squidTentacle = testBed.getEntityDefinition('anatomy:squid_tentacle');
+      const squidTentacle = testBed.getEntityDefinition(
+        'anatomy:squid_tentacle'
+      );
       const squidMantle = testBed.getEntityDefinition('anatomy:squid_mantle');
-      const octopusTentacle = testBed.getEntityDefinition('anatomy:octopus_tentacle');
-      const octopusMantle = testBed.getEntityDefinition('anatomy:octopus_mantle');
+      const octopusTentacle = testBed.getEntityDefinition(
+        'anatomy:octopus_tentacle'
+      );
+      const octopusMantle = testBed.getEntityDefinition(
+        'anatomy:octopus_mantle'
+      );
 
       expect(krakenTentacle).toBeDefined();
       expect(krakenMantle).toBeDefined();
@@ -237,11 +289,15 @@ describe('Cephalopod Species Variety - E2E', () => {
       expect(octopusMantle).toBeDefined();
 
       // Assert - All should have generic subTypes
-      expect(krakenTentacle.components['anatomy:part'].subType).toBe('tentacle');
+      expect(krakenTentacle.components['anatomy:part'].subType).toBe(
+        'tentacle'
+      );
       expect(krakenMantle.components['anatomy:part'].subType).toBe('mantle');
       expect(squidTentacle.components['anatomy:part'].subType).toBe('tentacle');
       expect(squidMantle.components['anatomy:part'].subType).toBe('mantle');
-      expect(octopusTentacle.components['anatomy:part'].subType).toBe('tentacle');
+      expect(octopusTentacle.components['anatomy:part'].subType).toBe(
+        'tentacle'
+      );
       expect(octopusMantle.components['anatomy:part'].subType).toBe('mantle');
     });
 

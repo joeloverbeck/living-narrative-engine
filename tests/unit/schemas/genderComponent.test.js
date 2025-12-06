@@ -120,14 +120,16 @@ describe('Gender Component Schema Validation', () => {
 
       expect(result).toBe(false);
       expect(validator.errors).not.toBeNull();
-      expect(validator.errors.some(err => err.keyword === 'additionalProperties')).toBe(true);
+      expect(
+        validator.errors.some((err) => err.keyword === 'additionalProperties')
+      ).toBe(true);
     });
 
     test('should reject multiple additional properties', () => {
       const extraProps = {
         value: 'female',
         extraField1: 'not allowed',
-        extraField2: 'also not allowed'
+        extraField2: 'also not allowed',
       };
       const result = validator(extraProps);
 

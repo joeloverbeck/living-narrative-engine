@@ -47,7 +47,9 @@ describe('TurnCycle', () => {
       mockService.isEmpty.mockResolvedValue(false);
       mockService.getNextEntity.mockResolvedValue(mockEntity);
       mockService.getCurrentOrder.mockReturnValue([mockEntity]);
-      mockEntityManager.getComponentData.mockReturnValue({ participating: true });
+      mockEntityManager.getComponentData.mockReturnValue({
+        participating: true,
+      });
 
       const result = await turnCycle.nextActor();
 
@@ -70,7 +72,9 @@ describe('TurnCycle', () => {
       mockService.getCurrentOrder.mockReturnValue([{ id: 'test' }]);
       mockService.getNextEntity.mockRejectedValue(error);
 
-      await expect(turnCycle.nextActor()).rejects.toThrow('Next entity failure');
+      await expect(turnCycle.nextActor()).rejects.toThrow(
+        'Next entity failure'
+      );
       expect(mockService.isEmpty).toHaveBeenCalledOnce();
       expect(mockService.getNextEntity).toHaveBeenCalledOnce();
       expect(mockLogger.error).toHaveBeenCalledWith(

@@ -9,11 +9,11 @@ describe('Blocking System Edge Cases', () => {
     fixture = await ModTestFixture.forAction(
       'clothing',
       'clothing:remove_clothing',
-      null,  // ruleFile - auto-loaded
-      null,  // conditionFile - auto-loaded
+      null, // ruleFile - auto-loaded
+      null, // conditionFile - auto-loaded
       {
         autoRegisterScopes: true,
-        scopeCategories: ['clothing']
+        scopeCategories: ['clothing'],
       }
     );
   });
@@ -67,12 +67,17 @@ describe('Blocking System Edge Cases', () => {
 
     // Act: Check that action is discovered
     const actions = fixture.discoverActions(actor.id);
-    const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+    const removeAction = actions.find(
+      (a) => a.id === 'clothing:remove_clothing'
+    );
     expect(removeAction).toBeDefined();
 
     // Resolve the scope to get removable items
     const testContext = { actor: { id: actor.id, components: {} } };
-    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync(
+      'clothing:topmost_clothing',
+      testContext
+    );
     const removableItems = Array.from(scopeResult.value);
 
     // Assert: Belt should still be removable (not blocking itself)
@@ -106,7 +111,9 @@ describe('Blocking System Edge Cases', () => {
     // Act & Assert: Action discovery should not throw with empty equipment
     expect(() => {
       const actions = fixture.discoverActions(actor.id);
-      const removeActions = actions.filter((a) => a.id === 'clothing:remove_clothing');
+      const removeActions = actions.filter(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
       expect(removeActions).toHaveLength(0);
     }).not.toThrow();
   });
@@ -151,12 +158,17 @@ describe('Blocking System Edge Cases', () => {
 
       // Action discovery should handle this gracefully
       const actions = fixture.discoverActions(actor.id);
-      const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+      const removeAction = actions.find(
+        (a) => a.id === 'clothing:remove_clothing'
+      );
       expect(removeAction).toBeDefined();
 
       // Resolve the scope to get removable items
       const testContext = { actor: { id: actor.id, components: {} } };
-      const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+      const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync(
+        'clothing:topmost_clothing',
+        testContext
+      );
       const removableItems = Array.from(scopeResult.value);
 
       // Item should be removable (empty blockedSlots means it blocks nothing)
@@ -223,12 +235,17 @@ describe('Blocking System Edge Cases', () => {
 
     // Verify action is discovered and belt is removable
     const actions = fixture.discoverActions(actor.id);
-    const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+    const removeAction = actions.find(
+      (a) => a.id === 'clothing:remove_clothing'
+    );
     expect(removeAction).toBeDefined();
 
     // Resolve scope to verify belt is removable
     const testContext = { actor: { id: actor.id, components: {} } };
-    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync(
+      'clothing:topmost_clothing',
+      testContext
+    );
     const removableItems = Array.from(scopeResult.value);
     expect(removableItems).toContain(belt);
 

@@ -70,7 +70,11 @@ describe('PatternMatchingValidator', () => {
   it('skips validation when blueprint cannot be loaded', async () => {
     const validator = createValidator();
     anatomyBlueprintRepository.getBlueprint.mockResolvedValue(null);
-    const recipe = { recipeId: 'recipe:missing', blueprintId: 'missing:blueprint', patterns: [{}] };
+    const recipe = {
+      recipeId: 'recipe:missing',
+      blueprintId: 'missing:blueprint',
+      patterns: [{}],
+    };
 
     const result = await validator.validate(recipe);
 
@@ -101,7 +105,10 @@ describe('PatternMatchingValidator', () => {
     const result = await validator.validate(recipe);
 
     expect(result.passed).toEqual([
-      { message: 'All 1 pattern(s) have matching slots', check: 'pattern_matching' },
+      {
+        message: 'All 1 pattern(s) have matching slots',
+        check: 'pattern_matching',
+      },
     ]);
     expect(result.warnings).toHaveLength(0);
   });
@@ -114,7 +121,9 @@ describe('PatternMatchingValidator', () => {
       slots: { leg_left: { socket: 'leg_left' } },
       structureTemplate: 'tpl',
     };
-    anatomyBlueprintRepository.getBlueprint.mockResolvedValue(processedBlueprint);
+    anatomyBlueprintRepository.getBlueprint.mockResolvedValue(
+      processedBlueprint
+    );
     jest
       .spyOn(blueprintProcessingUtils, 'ensureBlueprintProcessed')
       .mockResolvedValue(processedBlueprint);
@@ -122,10 +131,7 @@ describe('PatternMatchingValidator', () => {
     const recipe = {
       recipeId: 'recipe:warnings',
       blueprintId: 'blueprint:test',
-      patterns: [
-        { matchesPattern: 'wing_*' },
-        { matchesPattern: 'horn_*' },
-      ],
+      patterns: [{ matchesPattern: 'wing_*' }, { matchesPattern: 'horn_*' }],
     };
 
     const result = await validator.validate(recipe);

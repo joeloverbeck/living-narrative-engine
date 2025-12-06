@@ -125,7 +125,9 @@ export const buildHealthRoutesApp = ({
   logger = null,
 } = {}) => {
   if (!llmConfigService) {
-    throw new Error('llmConfigService is required to build the health routes app');
+    throw new Error(
+      'llmConfigService is required to build the health routes app'
+    );
   }
 
   const app = express();

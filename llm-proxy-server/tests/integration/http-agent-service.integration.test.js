@@ -170,7 +170,9 @@ describe('HttpAgentService integration behavior', () => {
       const statsAfterRequests = httpAgentService.getStats();
       expect(statsAfterRequests.activeAgents).toBe(1);
       expect(statsAfterRequests.requestsServed).toBeGreaterThanOrEqual(2);
-      expect(statsAfterRequests.agentDetails[0].requestCount).toBeGreaterThanOrEqual(1);
+      expect(
+        statsAfterRequests.agentDetails[0].requestCount
+      ).toBeGreaterThanOrEqual(1);
 
       // Destroy the agent explicitly to verify lifecycle management works with real requests
       expect(httpAgentService.hasAgent(endpointUrl)).toBe(true);
@@ -188,7 +190,9 @@ describe('HttpAgentService integration behavior', () => {
       expect(thirdResponse.success).toBe(true);
 
       const futureTime = Date.now() + 10 * 60 * 1000;
-      const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => futureTime);
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => futureTime);
       const cleaned = httpAgentService.cleanupIdleAgents(100);
       nowSpy.mockRestore();
       expect(cleaned).toBeGreaterThanOrEqual(1);
@@ -196,7 +200,9 @@ describe('HttpAgentService integration behavior', () => {
 
       // Adaptive cleanup and enhanced stats should reflect the cleanup operation
       const enhancedStats = httpAgentService.getEnhancedStats();
-      expect(enhancedStats.adaptiveCleanup.cleanupOperations).toBeGreaterThanOrEqual(0);
+      expect(
+        enhancedStats.adaptiveCleanup.cleanupOperations
+      ).toBeGreaterThanOrEqual(0);
       expect(enhancedStats.agentDetails).toHaveLength(0);
 
       const forcedCleanupResult = httpAgentService.forceAdaptiveCleanup();

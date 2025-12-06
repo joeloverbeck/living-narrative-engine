@@ -316,10 +316,7 @@ describe('Injury Reporting Flow Integration', () => {
         return components[id]?.[comp] || null;
       });
 
-      bodyGraphService.getAllParts.mockReturnValue([
-        torsoPartId,
-        fingerPartId,
-      ]);
+      bodyGraphService.getAllParts.mockReturnValue([torsoPartId, fingerPartId]);
 
       const summary = injuryAggregationService.aggregateInjuries(entityId);
 

@@ -47,7 +47,11 @@ describe('blueprintProcessingUtils.ensureBlueprintProcessed', () => {
   });
 
   it('returns original blueprint when already processed', async () => {
-    const blueprint = { id: 'blueprint:processed', structureTemplate: 'tpl', _generatedSockets: true };
+    const blueprint = {
+      id: 'blueprint:processed',
+      structureTemplate: 'tpl',
+      _generatedSockets: true,
+    };
 
     const result = await ensureBlueprintProcessed({
       blueprint,
@@ -107,6 +111,8 @@ describe('blueprintProcessingUtils.ensureBlueprintProcessed', () => {
       leg_right: { socket: 'generated_right' },
       tail: { socket: 'tail' },
     });
-    expect(slotGenerator.generateBlueprintSlots).toHaveBeenCalledWith({ id: 'tpl:dragon' });
+    expect(slotGenerator.generateBlueprintSlots).toHaveBeenCalledWith({
+      id: 'tpl:dragon',
+    });
   });
 });

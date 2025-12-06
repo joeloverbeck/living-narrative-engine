@@ -104,7 +104,7 @@ describe('HttpAgentService adaptive preview integration', () => {
       highLoadRequestsPerMin: 1,
     });
 
-    const trackedUrl = `${baseUrl}/adaptive`; 
+    const trackedUrl = `${baseUrl}/adaptive`;
     const { agent } = service.getFetchOptions(trackedUrl);
 
     await performRequest(agent, server.port, '/adaptive');

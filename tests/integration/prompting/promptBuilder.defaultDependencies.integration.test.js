@@ -31,13 +31,22 @@ const SAMPLE_PROMPT_DATA = {
     { type: 'audio', content: 'Cooling fans ramp to operational speed.' },
   ],
   thoughtsArray: [
-    { text: 'Maintain deterministic processing.', timestamp: '2024-05-01T00:00:00Z' },
+    {
+      text: 'Maintain deterministic processing.',
+      timestamp: '2024-05-01T00:00:00Z',
+    },
   ],
   notesArray: [
-    { text: 'Primary objective: clarify architecture.', timestamp: '2024-05-01T00:00:00Z' },
+    {
+      text: 'Primary objective: clarify architecture.',
+      timestamp: '2024-05-01T00:00:00Z',
+    },
   ],
   goalsArray: [
-    { text: 'Deliver concise implementation guidance.', timestamp: '2024-05-01T00:00:00Z' },
+    {
+      text: 'Deliver concise implementation guidance.',
+      timestamp: '2024-05-01T00:00:00Z',
+    },
   ],
 };
 
@@ -71,17 +80,27 @@ describe('PromptBuilder default dependency integration', () => {
 
     // Check sections with processing hints where applicable
     expect(prompt).toContain('<task_definition>');
-    expect(prompt).toContain('<!-- *** CRITICAL: Your core task - all output stems from this -->');
+    expect(prompt).toContain(
+      '<!-- *** CRITICAL: Your core task - all output stems from this -->'
+    );
     expect(prompt).toContain('Integrate the core prompt pipeline.');
     expect(prompt).toContain('</task_definition>');
-    expect(prompt).toContain('<character_persona>\nAn AI assistant focused on precision.\n</character_persona>');
-    expect(prompt).toContain('<portrayal_guidelines>\nStay factual and structured.\n</portrayal_guidelines>');
+    expect(prompt).toContain(
+      '<character_persona>\nAn AI assistant focused on precision.\n</character_persona>'
+    );
+    expect(prompt).toContain(
+      '<portrayal_guidelines>\nStay factual and structured.\n</portrayal_guidelines>'
+    );
     expect(prompt).toContain('<world_context>');
-    expect(prompt).toContain('<!-- REFERENCE: Environmental context for decision-making -->');
+    expect(prompt).toContain(
+      '<!-- REFERENCE: Environmental context for decision-making -->'
+    );
     expect(prompt).toContain('Operating within a simulated world.');
     expect(prompt).toContain('</world_context>');
     expect(prompt).toContain('<available_actions_info>');
-    expect(prompt).toContain('<!-- REFERENCE: Choose based on character state, goals, and recent events -->');
+    expect(prompt).toContain(
+      '<!-- REFERENCE: Choose based on character state, goals, and recent events -->'
+    );
     expect(prompt).toContain('Respond with detailed explanations.');
     expect(prompt).toContain('</available_actions_info>');
     // System constraints now includes action tag rules (empty) and final instructions
@@ -101,7 +120,9 @@ describe('PromptBuilder default dependency integration', () => {
     expect(prompt).toContain(
       '<notes>\n## Other\n### General\n- Primary objective: clarify architecture.\n</notes>'
     );
-    expect(prompt).toContain('<goals>\n- Deliver concise implementation guidance.\n</goals>');
+    expect(prompt).toContain(
+      '<goals>\n- Deliver concise implementation guidance.\n</goals>'
+    );
 
     expect(prompt).toEndWith('\n');
 

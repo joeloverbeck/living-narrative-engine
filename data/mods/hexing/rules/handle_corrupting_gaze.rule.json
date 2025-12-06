@@ -65,10 +65,7 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.gazeResult.outcome" },
-            "CRITICAL_SUCCESS"
-          ]
+          "==": [{ "var": "context.gazeResult.outcome" }, "CRITICAL_SUCCESS"]
         },
         "then_actions": [
           {
@@ -124,10 +121,7 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.gazeResult.outcome" },
-            "SUCCESS"
-          ]
+          "==": [{ "var": "context.gazeResult.outcome" }, "SUCCESS"]
         },
         "then_actions": [
           {
@@ -183,10 +177,7 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.gazeResult.outcome" },
-            "FAILURE"
-          ]
+          "==": [{ "var": "context.gazeResult.outcome" }, "FAILURE"]
         },
         "then_actions": [
           {
@@ -214,10 +205,7 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [
-            { "var": "context.gazeResult.outcome" },
-            "FUMBLE"
-          ]
+          "==": [{ "var": "context.gazeResult.outcome" }, "FUMBLE"]
         },
         "then_actions": [
           {

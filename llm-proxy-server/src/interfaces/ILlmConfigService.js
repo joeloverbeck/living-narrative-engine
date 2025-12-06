@@ -78,7 +78,8 @@ export const ILlmConfigServiceMetadata = Object.freeze({
   methods: [
     {
       name: 'initialize',
-      description: 'Loads and validates configuration data before the service is used.',
+      description:
+        'Loads and validates configuration data before the service is used.',
       returns: 'Promise<void>',
     },
     {
@@ -93,7 +94,8 @@ export const ILlmConfigServiceMetadata = Object.freeze({
     },
     {
       name: 'getLlmById',
-      description: 'Looks up a single LLM model configuration by its identifier.',
+      description:
+        'Looks up a single LLM model configuration by its identifier.',
       params: [{ name: 'id', type: 'string' }],
       returns: 'LLMModelConfig | null',
     },
@@ -104,7 +106,8 @@ export const ILlmConfigServiceMetadata = Object.freeze({
     },
     {
       name: 'getInitializationErrorDetails',
-      description: 'Provides information about initialization failures when present.',
+      description:
+        'Provides information about initialization failures when present.',
       returns: 'StandardizedErrorObject | null',
     },
     {

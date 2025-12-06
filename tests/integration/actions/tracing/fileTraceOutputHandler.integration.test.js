@@ -32,7 +32,6 @@ import {
 async function waitForQueueToDrain(handler, timeout = 1000) {
   const start = Date.now();
   while (!handler.isQueueEmpty() && Date.now() - start < timeout) {
-     
     await new Promise((resolve) => setTimeout(resolve, 15));
   }
   await new Promise((resolve) => setTimeout(resolve, 25));

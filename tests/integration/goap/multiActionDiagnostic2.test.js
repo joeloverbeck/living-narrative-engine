@@ -112,7 +112,9 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
       goapController: setup.controller,
       dataRegistry: setup.dataRegistry,
       entityManager: setup.entityManager,
-      entityDisplayDataProvider: { getEntityDisplayData: (id) => ({ name: id }) },
+      entityDisplayDataProvider: {
+        getEntityDisplayData: (id) => ({ name: id }),
+      },
       logger,
     });
     const stateDiffViewer = new StateDiffViewer({ logger });
@@ -166,7 +168,9 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       priority: 10,
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 0],
+      },
     });
 
     setup.dataRegistry.register('goals', goal.id, goal);
@@ -184,7 +188,9 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     console.log('  hunger:', actor.components['core:needs'].hunger);
     console.log('  goal: hunger ≤ 0');
     console.log('  task: eat (decrement 25, cost 5)');
-    console.log('  expected plan: [eat, eat, eat, eat] → 100 → 75 → 50 → 25 → 0\n');
+    console.log(
+      '  expected plan: [eat, eat, eat, eat] → 100 → 75 → 50 → 25 → 0\n'
+    );
 
     // Calculate initial distance
     const initialDistance = setup.heuristicRegistry.calculate(
@@ -215,12 +221,18 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     const events = setup.eventBus.getEvents();
 
     console.log('=== EVENT BUS ANALYSIS ===\n');
-    const eventTypes = events.map(e => e.type);
+    const eventTypes = events.map((e) => e.type);
     console.log('Events dispatched:', eventTypes);
 
-    const planningStarted = events.find(e => e.type === GOAP_EVENTS.PLANNING_STARTED);
-    const planningCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
-    const planningFailed = events.find(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+    const planningStarted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_STARTED
+    );
+    const planningCompleted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
+    const planningFailed = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+    );
 
     console.log('\nPlanning lifecycle events:');
     console.log('  PLANNING_STARTED:', planningStarted ? '✓ YES' : '✗ NO');
@@ -245,14 +257,14 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     const failures = goapDebugger.getFailureHistory('test_actor');
     console.log('Failed goals:', failures.failedGoals.length);
     if (failures.failedGoals.length > 0) {
-      failures.failedGoals.forEach(f => {
+      failures.failedGoals.forEach((f) => {
         console.log(`  - ${f.goalId}: ${f.reason}`);
       });
     }
 
     console.log('Failed tasks:', failures.failedTasks.length);
     if (failures.failedTasks.length > 0) {
-      failures.failedTasks.forEach(f => {
+      failures.failedTasks.forEach((f) => {
         console.log(`  - ${f.taskId}: ${f.reason}`);
       });
     }
@@ -265,7 +277,9 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
       console.log('  Goal:', planJSON.plan.goalId);
       console.log('  Tasks:', planJSON.plan.tasks.length);
       planJSON.plan.tasks.forEach((task, i) => {
-        console.log(`    ${i + 1}. ${task.taskId} (cost: ${task.cost || 'unknown'})`);
+        console.log(
+          `    ${i + 1}. ${task.taskId} (cost: ${task.cost || 'unknown'})`
+        );
       });
       console.log('  Total cost:', planJSON.plan.totalCost || 'unknown');
     } else {
@@ -289,13 +303,17 @@ describe('GOAP Multi-Action Diagnostic (Extended)', () => {
     if (planningCompleted) {
       console.log('✓ Planning completed');
       console.log(`  Expected: 4 tasks`);
-      console.log(`  Actual: ${planningCompleted.payload.tasks.length} task(s)`);
+      console.log(
+        `  Actual: ${planningCompleted.payload.tasks.length} task(s)`
+      );
 
       expect(planningCompleted).toBeDefined();
 
       // This will fail - that's what we're investigating
       if (planningCompleted.payload.tasks.length !== 4) {
-        console.log(`\n⚠️  ISSUE CONFIRMED: Plan has ${planningCompleted.payload.tasks.length} tasks instead of 4`);
+        console.log(
+          `\n⚠️  ISSUE CONFIRMED: Plan has ${planningCompleted.payload.tasks.length} tasks instead of 4`
+        );
         console.log('     This is the bug we need to investigate.');
       }
     } else if (planningFailed) {

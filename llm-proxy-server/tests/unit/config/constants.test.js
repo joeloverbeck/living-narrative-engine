@@ -1,15 +1,15 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, describe, expect, it } from '@jest/globals';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { execFileSync } from 'child_process';
 
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
-const CONSTANTS_PATH = path.join(process.cwd(), 'src', 'config', 'constants.js');
+const CONSTANTS_PATH = path.join(
+  process.cwd(),
+  'src',
+  'config',
+  'constants.js'
+);
 
 const importConstantsWithEnv = async (nodeEnv) => {
   if (typeof nodeEnv === 'undefined') {
@@ -19,7 +19,10 @@ const importConstantsWithEnv = async (nodeEnv) => {
   }
 
   const moduleUrl = pathToFileURL(CONSTANTS_PATH);
-  moduleUrl.searchParams.set('env', `${nodeEnv ?? 'unset'}-${Date.now()}-${Math.random()}`);
+  moduleUrl.searchParams.set(
+    'env',
+    `${nodeEnv ?? 'unset'}-${Date.now()}-${Math.random()}`
+  );
   return import(moduleUrl.href);
 };
 
@@ -35,10 +38,14 @@ const readRateLimitValuesInChild = (nodeEnv) => {
   const script = `import { RATE_LIMIT_GENERAL_MAX_REQUESTS, RATE_LIMIT_LLM_MAX_REQUESTS } from '${moduleUrl.href}';
 console.log(JSON.stringify({ general: RATE_LIMIT_GENERAL_MAX_REQUESTS, llm: RATE_LIMIT_LLM_MAX_REQUESTS }));`;
 
-  const output = execFileSync(process.execPath, ['--input-type=module', '-e', script], {
-    env: childEnv,
-    encoding: 'utf8',
-  });
+  const output = execFileSync(
+    process.execPath,
+    ['--input-type=module', '-e', script],
+    {
+      env: childEnv,
+      encoding: 'utf8',
+    }
+  );
 
   return JSON.parse(output.trim());
 };
@@ -53,7 +60,8 @@ afterEach(() => {
 
 describe('config/constants', () => {
   it('should list local API types that do not require proxy-managed keys', async () => {
-    const { LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY } = await importConstantsWithEnv('test');
+    const { LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY } =
+      await importConstantsWithEnv('test');
 
     expect(LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY).toEqual([
       'ollama',
@@ -66,7 +74,8 @@ describe('config/constants', () => {
   });
 
   it('should expose retryable HTTP status codes as a unique ascending list', async () => {
-    const { RETRYABLE_HTTP_STATUS_CODES } = await importConstantsWithEnv('test');
+    const { RETRYABLE_HTTP_STATUS_CODES } =
+      await importConstantsWithEnv('test');
 
     const sortedCodes = [...RETRYABLE_HTTP_STATUS_CODES].sort((a, b) => a - b);
     expect(RETRYABLE_HTTP_STATUS_CODES).toEqual(sortedCodes);
@@ -120,6 +129,8 @@ describe('config/constants', () => {
       SECURITY_DANGEROUS_HEADER_NAMES.length
     );
     expect(SECURITY_DANGEROUS_HEADER_PATTERN.test('__proto__')).toBe(true);
-    expect(SECURITY_DANGEROUS_HEADER_PATTERN.test('X-Custom-Header')).toBe(false);
+    expect(SECURITY_DANGEROUS_HEADER_PATTERN.test('X-Custom-Header')).toBe(
+      false
+    );
   });
 });

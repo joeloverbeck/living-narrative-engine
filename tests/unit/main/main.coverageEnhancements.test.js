@@ -116,7 +116,10 @@ describe('main.js high fidelity coverage', () => {
       success: true,
       payload: defaultUiElements,
     });
-    mockStages.setupDI.mockResolvedValue({ success: true, payload: createMainBootstrapContainerMock() });
+    mockStages.setupDI.mockResolvedValue({
+      success: true,
+      payload: createMainBootstrapContainerMock(),
+    });
     mockStages.resolveLogger.mockResolvedValue({
       success: true,
       payload: { logger },

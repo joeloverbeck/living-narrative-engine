@@ -5,9 +5,7 @@
   "description": "Violently tear out the throat of the target you are currently biting, causing severe trauma and ending the bite.",
   "targets": "positioning:actor_being_bitten_by_me",
   "required_components": {
-    "actor": [
-      "positioning:biting_neck"
-    ]
+    "actor": ["positioning:biting_neck"]
   },
   "template": "tear out {target}'s throat",
   "visual": {

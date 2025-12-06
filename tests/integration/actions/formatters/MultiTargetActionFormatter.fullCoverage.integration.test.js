@@ -501,7 +501,9 @@ describe('MultiTargetActionFormatter comprehensive integration suite', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('Multi-target formatting failed: access failure');
+    expect(result.error).toContain(
+      'Multi-target formatting failed: access failure'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Error in multi-target formatting:',
       expect.any(Error)

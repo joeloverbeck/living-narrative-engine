@@ -29,7 +29,12 @@ class PrimaryFailureNLGSystem extends ActivityNLGSystem {
     if (activity?.sourceComponent === 'test:primary_failure') {
       throw new Error('primary phrase failure');
     }
-    return super.generateActivityPhrase(actorReference, activity, usePronoun, options);
+    return super.generateActivityPhrase(
+      actorReference,
+      activity,
+      usePronoun,
+      options
+    );
   }
 }
 
@@ -157,9 +162,12 @@ describe('ActivityDescriptionService uncovered branch integration', () => {
   };
 
   const createActor = async (id = 'jon') => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-      instanceId: id,
-    });
+    const actor = await testBed.entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: id,
+      }
+    );
     testBed.entityManager.addComponent(actor.id, 'core:name', {
       text: 'Jon Ureña',
     });
@@ -260,11 +268,18 @@ describe('ActivityDescriptionService uncovered branch integration', () => {
       contextFactory: (deps) => new ThrowingContextBuildingSystem(deps),
     });
     const actor = await createActor('context');
-    const target = await testBed.entityManager.createEntityInstance('core:actor', {
-      instanceId: 'ane',
+    const target = await testBed.entityManager.createEntityInstance(
+      'core:actor',
+      {
+        instanceId: 'ane',
+      }
+    );
+    testBed.entityManager.addComponent(target.id, 'core:name', {
+      text: 'Ane Arrieta',
     });
-    testBed.entityManager.addComponent(target.id, 'core:name', { text: 'Ane Arrieta' });
-    testBed.entityManager.addComponent(target.id, 'core:gender', { value: 'female' });
+    testBed.entityManager.addComponent(target.id, 'core:gender', {
+      value: 'female',
+    });
 
     addInlineActivity(
       actor.id,
@@ -287,7 +302,8 @@ describe('ActivityDescriptionService uncovered branch integration', () => {
   it('accepts iterable grouping results produced by real grouping system wrappers', async () => {
     const { service, groupingSystem } = createService({
       groupingFactory: ({ baseGroupingSystem }) => {
-        const original = baseGroupingSystem.groupActivities.bind(baseGroupingSystem);
+        const original =
+          baseGroupingSystem.groupActivities.bind(baseGroupingSystem);
         baseGroupingSystem.groupActivities = (activities, cacheKey) => {
           const groups = original(activities, cacheKey);
           return new Set(groups);

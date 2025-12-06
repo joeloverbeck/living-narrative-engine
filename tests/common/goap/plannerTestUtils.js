@@ -12,7 +12,9 @@ export function expectInvalidEffectFailure(planner, taskId) {
       : null;
 
   expect(failure).toEqual(
-    expect.objectContaining({ code: GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION })
+    expect.objectContaining({
+      code: GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
+    })
   );
 
   if (taskId) {

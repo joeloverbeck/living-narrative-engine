@@ -97,7 +97,9 @@ describe('ActionDefinitionValidator integration coverage', () => {
     const result = validator.validate(definition);
 
     expect(result.isValid).toBe(false);
-    expect(result.errors).toContain('required_components.actor must be an array');
+    expect(result.errors).toContain(
+      'required_components.actor must be an array'
+    );
   });
 
   it('validates every required component entry for type and format', () => {
@@ -134,9 +136,13 @@ describe('ActionDefinitionValidator integration coverage', () => {
     const missingActorResult = validator.validate(missingActor);
 
     expect(notObjectResult.isValid).toBe(false);
-    expect(notObjectResult.errors).toContain('required_components must be an object');
+    expect(notObjectResult.errors).toContain(
+      'required_components must be an object'
+    );
     expect(missingActorResult.isValid).toBe(false);
-    expect(missingActorResult.errors).toContain('required_components must have an "actor" property');
+    expect(missingActorResult.errors).toContain(
+      'required_components must have an "actor" property'
+    );
   });
 
   it('validates prerequisite structures for arrays, strings, and objects', () => {
@@ -178,11 +184,15 @@ describe('ActionDefinitionValidator integration coverage', () => {
         expect.stringContaining(
           'Invalid prerequisite format at index 3: expected string or object'
         ),
-        expect.stringContaining('Prerequisite condition_ref at index 4 must be a string'),
+        expect.stringContaining(
+          'Prerequisite condition_ref at index 4 must be a string'
+        ),
         expect.stringContaining(
           'Invalid prerequisite condition_ref at index 5: "bad-ref" (must follow namespace:identifier format)'
         ),
-        expect.stringContaining('Prerequisite failure_message at index 6 must be a string'),
+        expect.stringContaining(
+          'Prerequisite failure_message at index 6 must be a string'
+        ),
       ])
     );
   });
@@ -192,7 +202,10 @@ describe('ActionDefinitionValidator integration coverage', () => {
       ...createBaseDefinition(),
       prerequisites: [
         'core:first-prereq',
-        { logic: { condition_ref: 'core:second-prereq' }, failure_message: 'Needs condition' },
+        {
+          logic: { condition_ref: 'core:second-prereq' },
+          failure_message: 'Needs condition',
+        },
       ],
       required_components: {
         actor: ['core:primary-component', 'core:secondary_component'],

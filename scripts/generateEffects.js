@@ -41,7 +41,7 @@ async function main() {
     let loadContext = createLoadContext({
       worldName: 'effects-generation',
       requestedMods: args.mods || [],
-      registry: dataRegistry
+      registry: dataRegistry,
     });
     loadContext = await schemaPhase.execute(loadContext);
     logger.info('✅ Schemas loaded');
@@ -133,9 +133,7 @@ async function generateForAllMods(effectsGenerator, dataRegistry, logger) {
 
   // Extract unique mod IDs
   const modIds = new Set(
-    allActions
-      .map(action => action.id?.split(':')[0])
-      .filter(Boolean)
+    allActions.map((action) => action.id?.split(':')[0]).filter(Boolean)
   );
 
   let totalActions = 0;
@@ -154,7 +152,9 @@ async function generateForAllMods(effectsGenerator, dataRegistry, logger) {
     }
   }
 
-  logger.info(`Generated effects for ${totalActions} actions across ${modIds.size} mods`);
+  logger.info(
+    `Generated effects for ${totalActions} actions across ${modIds.size} mods`
+  );
 }
 
 /**
@@ -204,7 +204,7 @@ function parseArgs(argv) {
   const args = {
     mod: null,
     action: null,
-    mods: []
+    mods: [],
   };
 
   for (const arg of argv) {

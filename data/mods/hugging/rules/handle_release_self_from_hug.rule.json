@@ -3,7 +3,9 @@
   "rule_id": "handle_release_self_from_hug",
   "comment": "Handles the 'hugging:release_self_from_hug' action by clearing hugging state when the actor frees themselves.",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "hugging:event-is-action-release-self-from-hug" },
+  "condition": {
+    "condition_ref": "hugging:event-is-action-release-self-from-hug"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -61,7 +63,9 @@
             { "var": "context.actorExistingBeingHuggedComponent" },
             {
               "!=": [
-                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -86,7 +90,9 @@
             { "var": "context.actorExistingHuggingComponent" },
             {
               "!=": [
-                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.actorExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -111,7 +117,9 @@
             { "var": "context.targetExistingHuggingComponent" },
             {
               "!=": [
-                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.targetExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -136,7 +144,9 @@
             { "var": "context.targetExistingBeingHuggedComponent" },
             {
               "!=": [
-                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -161,7 +171,9 @@
             { "var": "context.actorExistingBeingHuggedComponent" },
             {
               "==": [
-                { "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.actorExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -186,7 +198,9 @@
             { "var": "context.actorExistingHuggingComponent" },
             {
               "==": [
-                { "var": "context.actorExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.actorExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.targetId" }
               ]
             }
@@ -211,7 +225,9 @@
             { "var": "context.targetExistingHuggingComponent" },
             {
               "==": [
-                { "var": "context.targetExistingHuggingComponent.embraced_entity_id" },
+                {
+                  "var": "context.targetExistingHuggingComponent.embraced_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }
@@ -236,7 +252,9 @@
             { "var": "context.targetExistingBeingHuggedComponent" },
             {
               "==": [
-                { "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id" },
+                {
+                  "var": "context.targetExistingBeingHuggedComponent.hugging_entity_id"
+                },
                 { "var": "event.payload.actorId" }
               ]
             }

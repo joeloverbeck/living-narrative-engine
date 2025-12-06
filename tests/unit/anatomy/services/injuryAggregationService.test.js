@@ -782,9 +782,17 @@ describe('InjuryAggregationService', () => {
             }
             if (componentId === 'anatomy:part') {
               if (id === 'part:brain')
-                return { subType: 'brain', orientation: null, health_calculation_weight: 2 };
+                return {
+                  subType: 'brain',
+                  orientation: null,
+                  health_calculation_weight: 2,
+                };
               if (id === 'part:arm')
-                return { subType: 'arm', orientation: 'left', health_calculation_weight: 1 };
+                return {
+                  subType: 'arm',
+                  orientation: 'left',
+                  health_calculation_weight: 1,
+                };
             }
             if (componentId === 'anatomy:vital_organ' && id === 'part:brain') {
               return {
@@ -798,15 +806,20 @@ describe('InjuryAggregationService', () => {
         );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           if (componentId === 'anatomy:part_health') return true;
-          if (id === 'part:brain' && componentId === 'anatomy:vital_organ') return true;
+          if (id === 'part:brain' && componentId === 'anatomy:vital_organ')
+            return true;
           return false;
         });
         mockBodyGraphService.getAllParts.mockReturnValue(partIds);
 
         const result = service.aggregateInjuries(entityId);
 
-        const brain = result.injuredParts.find((p) => p.partEntityId === 'part:brain');
-        const arm = result.injuredParts.find((p) => p.partEntityId === 'part:arm');
+        const brain = result.injuredParts.find(
+          (p) => p.partEntityId === 'part:brain'
+        );
+        const arm = result.injuredParts.find(
+          (p) => p.partEntityId === 'part:arm'
+        );
 
         expect(brain.isVitalOrgan).toBe(true);
         expect(brain.vitalOrganCap).toEqual({ threshold: 20, capValue: 30 });
@@ -1072,10 +1085,7 @@ describe('InjuryAggregationService', () => {
             ) {
               return { currentHealth: 80, maxHealth: 100, state: 'scratched' };
             }
-            if (
-              id === 'part:with_health' &&
-              componentId === 'anatomy:part'
-            ) {
+            if (id === 'part:with_health' && componentId === 'anatomy:part') {
               return { subType: 'arm', orientation: 'left' };
             }
             return null;
@@ -1264,7 +1274,8 @@ describe('InjuryAggregationService', () => {
         );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           if (componentId === 'anatomy:part_health') return true;
-          if (id === partId && componentId === 'anatomy:vital_organ') return true;
+          if (id === partId && componentId === 'anatomy:vital_organ')
+            return true;
           return false;
         });
         mockBodyGraphService.getAllParts.mockReturnValue([partId]);

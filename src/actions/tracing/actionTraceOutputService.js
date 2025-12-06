@@ -447,7 +447,11 @@ export class ActionTraceOutputService {
    * @private
    */
   #scheduleQueueResume() {
-    if (this.#outputQueue && this.#outputQueue.length > 0 && this.#writeErrors < 10) {
+    if (
+      this.#outputQueue &&
+      this.#outputQueue.length > 0 &&
+      this.#writeErrors < 10
+    ) {
       this.#timerService.setTimeout(() => this.#processQueue(), 1000);
     }
   }
@@ -675,19 +679,24 @@ export class ActionTraceOutputService {
     // Wait for the file handler's queue to be processed
     let attempts = 0;
     const maxAttempts = 50; // 5 seconds total wait time
-    
+
     while (attempts < maxAttempts) {
-      if (this.#fileOutputHandler.isQueueEmpty && this.#fileOutputHandler.isQueueEmpty()) {
+      if (
+        this.#fileOutputHandler.isQueueEmpty &&
+        this.#fileOutputHandler.isQueueEmpty()
+      ) {
         break;
       }
-      
+
       // Wait 100ms between checks
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       attempts++;
     }
 
     if (attempts >= maxAttempts) {
-      this.#logger.warn('File operations may not have completed within timeout');
+      this.#logger.warn(
+        'File operations may not have completed within timeout'
+      );
     } else {
       this.#logger.debug('File operations completed successfully');
     }
@@ -1228,8 +1237,14 @@ export class ActionTraceOutputService {
     if (timestamps.length < 2) return 0;
 
     // Use reduce to avoid stack overflow with large arrays
-    const maxTimestamp = timestamps.reduce((max, ts) => Math.max(max, ts), -Infinity);
-    const minTimestamp = timestamps.reduce((min, ts) => Math.min(min, ts), Infinity);
+    const maxTimestamp = timestamps.reduce(
+      (max, ts) => Math.max(max, ts),
+      -Infinity
+    );
+    const minTimestamp = timestamps.reduce(
+      (min, ts) => Math.min(min, ts),
+      Infinity
+    );
     return maxTimestamp - minTimestamp;
   }
 

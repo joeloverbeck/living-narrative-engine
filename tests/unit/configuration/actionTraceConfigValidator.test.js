@@ -707,7 +707,12 @@ describe('ActionTraceConfigValidator', () => {
       const config = {
         actionTracing: {
           enabled: true,
-          tracedActions: ['movement:go', 'core:look', 'movement:go', 'core:examine'],
+          tracedActions: [
+            'movement:go',
+            'core:look',
+            'movement:go',
+            'core:examine',
+          ],
           outputDirectory: './traces',
         },
       };

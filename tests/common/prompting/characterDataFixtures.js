@@ -26,12 +26,16 @@ export const COMPLETE_CHARACTER_DATA = {
   description: "5'6\" dancer's build with lean muscle and feline grace",
   personality:
     'A cat-girl bard, ruthlessly ambitious and calculating beneath her charming exterior',
-  profile: 'I grew up in the back alleys of the merchant district, learning to survive by wit alone',
-  motivations: 'I need to create something that matters, something that outlasts my mortal span',
-  internalTensions: 'The performer vs the person - am I the mask or what lies beneath?',
+  profile:
+    'I grew up in the back alleys of the merchant district, learning to survive by wit alone',
+  motivations:
+    'I need to create something that matters, something that outlasts my mortal span',
+  internalTensions:
+    'The performer vs the person - am I the mask or what lies beneath?',
   coreDilemmas: 'Is authenticity possible when performance is survival?',
   strengths: 'Combat composure that unsettles my allies and enemies alike',
-  weaknesses: 'Impatient with incompetence and dismissive of those I deem beneath me',
+  weaknesses:
+    'Impatient with incompetence and dismissive of those I deem beneath me',
   likes: 'Classical music, fine wine, witty banter',
   dislikes: 'Dishonesty, rudeness, small talk',
   fears: 'Genuine emotional intimacy, being truly seen',
@@ -53,7 +57,10 @@ export const COMPLETE_CHARACTER_DATA = {
   // NOTE: These are NOT part of base ActorPromptDataDTO but may be passed
   // by the integration layer (AIPromptContentProvider) in CHADATXMLREW-004
   goals: [
-    { text: 'Compose three masterpieces before the winter solstice', timestamp: '2024-01-15T08:00:00Z' },
+    {
+      text: 'Compose three masterpieces before the winter solstice',
+      timestamp: '2024-01-15T08:00:00Z',
+    },
     { text: 'Find the emotional depth I have been avoiding' },
   ],
   notes: [
@@ -70,8 +77,14 @@ export const COMPLETE_CHARACTER_DATA = {
   ],
   shortTermMemory: {
     thoughts: [
-      { text: 'That look she gave me was unexpected', timestamp: '2024-01-15T10:30:00Z' },
-      { text: 'I should not have revealed so much', timestamp: '2024-01-15T10:35:00Z' },
+      {
+        text: 'That look she gave me was unexpected',
+        timestamp: '2024-01-15T10:30:00Z',
+      },
+      {
+        text: 'I should not have revealed so much',
+        timestamp: '2024-01-15T10:35:00Z',
+      },
     ],
   },
 };
@@ -203,7 +216,8 @@ export const CHARACTER_WITH_PARTIAL_NOTES = {
 export const CHARACTER_FULL_PSYCHOLOGY = {
   name: 'Psychological Character',
   motivations: 'I seek power above all else, to never feel helpless again',
-  internalTensions: 'My desire for control conflicts with my need for connection',
+  internalTensions:
+    'My desire for control conflicts with my need for connection',
   coreDilemmas: 'Can one truly love another while seeking to dominate them?',
 };
 
@@ -212,7 +226,8 @@ export const CHARACTER_FULL_PSYCHOLOGY = {
  */
 export const CHARACTER_FULL_TRAITS = {
   name: 'Trait-Rich Character',
-  strengths: 'Natural leadership ability, strategic thinking, unwavering loyalty',
+  strengths:
+    'Natural leadership ability, strategic thinking, unwavering loyalty',
   weaknesses: 'Pride that borders on arrogance, difficulty admitting mistakes',
   likes: 'Chess, thunderstorms, ancient texts, solitude',
   dislikes: 'Incompetence, betrayal, unnecessary cruelty, small talk',

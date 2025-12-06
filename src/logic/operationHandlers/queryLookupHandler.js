@@ -88,9 +88,7 @@ class QueryLookupHandler extends BaseOperationHandler {
    * @private
    */
   #validateParams(params, executionContext, logger) {
-    if (
-      !assertParamsObject(params, this.#dispatcher, 'QueryLookupHandler')
-    ) {
+    if (!assertParamsObject(params, this.#dispatcher, 'QueryLookupHandler')) {
       return null;
     }
 
@@ -314,13 +312,8 @@ class QueryLookupHandler extends BaseOperationHandler {
     const validated = this.#validateParams(params, executionContext, logger);
     if (!validated) return;
 
-    const {
-      lookupId,
-      entryKey,
-      resultVar,
-      trimmedResultVar,
-      missingValue,
-    } = validated;
+    const { lookupId, entryKey, resultVar, trimmedResultVar, missingValue } =
+      validated;
 
     this.#fetchAndStoreLookup(
       lookupId,

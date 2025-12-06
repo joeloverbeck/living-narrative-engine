@@ -29,7 +29,9 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
 
   describe('toSchemaFileName', () => {
     it('should convert ADD_COMPONENT to addComponent.schema.json', () => {
-      expect(toSchemaFileName('ADD_COMPONENT')).toBe('addComponent.schema.json');
+      expect(toSchemaFileName('ADD_COMPONENT')).toBe(
+        'addComponent.schema.json'
+      );
     });
 
     it('should convert VALIDATE_INVENTORY_CAPACITY to validateInventoryCapacity.schema.json', () => {
@@ -44,8 +46,12 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
 
     it('should handle all known operation types', () => {
       // Test a few representative examples
-      expect(toSchemaFileName('QUERY_COMPONENT')).toBe('queryComponent.schema.json');
-      expect(toSchemaFileName('DISPATCH_EVENT')).toBe('dispatchEvent.schema.json');
+      expect(toSchemaFileName('QUERY_COMPONENT')).toBe(
+        'queryComponent.schema.json'
+      );
+      expect(toSchemaFileName('DISPATCH_EVENT')).toBe(
+        'dispatchEvent.schema.json'
+      );
       expect(toSchemaFileName('SET_VARIABLE')).toBe('setVariable.schema.json');
     });
 
@@ -94,7 +100,9 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
 
   describe('toHandlerClassName', () => {
     it('should match toTokenName for operation handlers', () => {
-      expect(toHandlerClassName('ADD_COMPONENT')).toBe(toTokenName('ADD_COMPONENT'));
+      expect(toHandlerClassName('ADD_COMPONENT')).toBe(
+        toTokenName('ADD_COMPONENT')
+      );
       expect(toHandlerClassName('VALIDATE_INVENTORY_CAPACITY')).toBe(
         toTokenName('VALIDATE_INVENTORY_CAPACITY')
       );
@@ -102,7 +110,9 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
 
     it('should produce correct handler class names', () => {
       expect(toHandlerClassName('OPEN_CONTAINER')).toBe('OpenContainerHandler');
-      expect(toHandlerClassName('TAKE_FROM_CONTAINER')).toBe('TakeFromContainerHandler');
+      expect(toHandlerClassName('TAKE_FROM_CONTAINER')).toBe(
+        'TakeFromContainerHandler'
+      );
     });
 
     it('should not include "I" prefix', () => {
@@ -140,7 +150,9 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
       });
 
       it('should log debug message for valid operation', () => {
-        validateOperationType('ADD_COMPONENT', mockLogger, { throwOnError: false });
+        validateOperationType('ADD_COMPONENT', mockLogger, {
+          throwOnError: false,
+        });
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           'Operation type validation passed',
@@ -269,7 +281,9 @@ describe('preValidationUtils - Helper Functions (Option B)', () => {
 
         // Should throw with throwOnError: true
         expect(() => {
-          validateOperationType('INVALID_OP', mockLogger, { throwOnError: true });
+          validateOperationType('INVALID_OP', mockLogger, {
+            throwOnError: true,
+          });
         }).toThrow(OperationValidationError);
       });
 

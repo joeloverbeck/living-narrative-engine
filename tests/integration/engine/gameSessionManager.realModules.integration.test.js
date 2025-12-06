@@ -351,9 +351,7 @@ describe('GameSessionManager integration (real collaborators)', () => {
       expect(
         env.logger
           .get('warn')
-          .some((entry) =>
-            entry.message.includes('Engine already initialized')
-          )
+          .some((entry) => entry.message.includes('Engine already initialized'))
       ).toBe(true);
       expect(env.recordingDispatcher.events).toHaveLength(0);
     });
@@ -429,7 +427,9 @@ describe('GameSessionManager integration (real collaborators)', () => {
         timeoutEnv.logger
           .get('warn')
           .some((entry) =>
-            entry.message.includes('Anatomy generation did not complete in time')
+            entry.message.includes(
+              'Anatomy generation did not complete in time'
+            )
           )
       ).toBe(true);
     });
@@ -482,9 +482,7 @@ describe('GameSessionManager integration (real collaborators)', () => {
       expect(
         noTurnsEnv.logger
           .get('error')
-          .some((entry) =>
-            entry.message.includes('TurnManager not available')
-          )
+          .some((entry) => entry.message.includes('TurnManager not available'))
       ).toBe(true);
     });
   });

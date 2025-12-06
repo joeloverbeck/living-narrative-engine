@@ -71,7 +71,12 @@ describe('safeDispatchError', () => {
     };
     const dispatcher = { dispatch: jest.fn().mockResolvedValue('nope') };
 
-    const result = await safeDispatchError(dispatcher, 'warn-level failure', {}, logger);
+    const result = await safeDispatchError(
+      dispatcher,
+      'warn-level failure',
+      {},
+      logger
+    );
 
     expect(result).toBe(false);
     expect(logger.warn).toHaveBeenCalledWith(
@@ -92,7 +97,12 @@ describe('safeDispatchError', () => {
       dispatch: jest.fn().mockRejectedValue(dispatchedError),
     };
 
-    const result = await safeDispatchError(dispatcher, 'exception failure', {}, logger);
+    const result = await safeDispatchError(
+      dispatcher,
+      'exception failure',
+      {},
+      logger
+    );
 
     expect(result).toBe(false);
     expect(logger.error).toHaveBeenCalledWith(
@@ -176,7 +186,10 @@ describe('safeDispatchError', () => {
 
   it('treats plain objects without error metadata as generic messages', async () => {
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-    const payload = { actionId: 'maybe-context', reason: 'missing error object' };
+    const payload = {
+      actionId: 'maybe-context',
+      reason: 'missing error object',
+    };
     const diagnostics = { correlationId: 'diag-7' };
 
     await safeDispatchError(dispatcher, payload, diagnostics);
@@ -303,9 +316,16 @@ describe('additional coverage', () => {
   it('falls back to function stringification when the name is missing', async () => {
     const dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
     const anonymousFn = function () {};
-    Object.defineProperty(anonymousFn, 'name', { value: '', configurable: true });
+    Object.defineProperty(anonymousFn, 'name', {
+      value: '',
+      configurable: true,
+    });
 
-    await safeDispatchError(dispatcher, 'anonymous function detail', anonymousFn);
+    await safeDispatchError(
+      dispatcher,
+      'anonymous function detail',
+      anonymousFn
+    );
 
     expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'anonymous function detail',

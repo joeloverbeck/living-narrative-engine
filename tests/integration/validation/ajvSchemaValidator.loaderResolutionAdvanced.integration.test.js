@@ -89,7 +89,10 @@ describe('AjvSchemaValidator schema loader advanced integration', () => {
       },
     };
 
-    await validator.addSchema(encodedDefinitionsSchema, encodedDefinitionsSchema.$id);
+    await validator.addSchema(
+      encodedDefinitionsSchema,
+      encodedDefinitionsSchema.$id
+    );
     await validator.addSchema(fallbackSchema, fallbackSchema.$id);
 
     const fragmentResult = await loader(
@@ -138,7 +141,9 @@ describe('AjvSchemaValidator schema loader advanced integration', () => {
     const debugMessages = logger.debugMessages.map((args) => String(args[0]));
     expect(
       debugMessages.some((message) =>
-        message.includes('Attempting to load schema from URI: ../shared/encoded.schema.json')
+        message.includes(
+          'Attempting to load schema from URI: ../shared/encoded.schema.json'
+        )
       )
     ).toBe(true);
     expect(
@@ -162,13 +167,20 @@ describe('AjvSchemaValidator schema loader advanced integration', () => {
       },
     };
 
-    await validator.addSchema(encodedDefinitionsSchema, encodedDefinitionsSchema.$id);
+    await validator.addSchema(
+      encodedDefinitionsSchema,
+      encodedDefinitionsSchema.$id
+    );
 
     await expect(
       loader('../shared/encoded.schema.json#/definitions/does-not-exist')
-    ).rejects.toThrow('Cannot resolve schema reference: ../shared/encoded.schema.json#/definitions/does-not-exist');
+    ).rejects.toThrow(
+      'Cannot resolve schema reference: ../shared/encoded.schema.json#/definitions/does-not-exist'
+    );
 
-    await expect(loader('./#')).rejects.toThrow('Cannot resolve schema reference: ./#');
+    await expect(loader('./#')).rejects.toThrow(
+      'Cannot resolve schema reference: ./#'
+    );
 
     const warnMessages = logger.warnMessages.map((args) => String(args[0]));
     expect(

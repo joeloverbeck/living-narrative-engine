@@ -181,7 +181,10 @@ describe('TraceContext', () => {
       const evaluations = trace.getOperatorEvaluations();
 
       expect(evaluations).toHaveLength(2);
-      expect(evaluations.map((entry) => entry.operator)).toEqual(['first', 'second']);
+      expect(evaluations.map((entry) => entry.operator)).toEqual([
+        'first',
+        'second',
+      ]);
       expect(evaluations.map((entry) => entry.capturedAt)).toEqual([100, 200]);
 
       nowSpy.mockRestore();

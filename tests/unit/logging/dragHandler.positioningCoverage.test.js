@@ -14,7 +14,9 @@ import DragHandler from '../../../src/logging/dragHandler.js';
  * @param eventName
  */
 function getHandler(spy, eventName) {
-  const call = [...spy.mock.calls].reverse().find(([name]) => name === eventName);
+  const call = [...spy.mock.calls]
+    .reverse()
+    .find(([name]) => name === eventName);
   return call && call[1];
 }
 
@@ -137,8 +139,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: window.innerWidth - 5, clientY: 30, preventDefault: jest.fn() });
-    mouseup({ clientX: window.innerWidth - 5, clientY: 30, preventDefault: jest.fn() });
+    mousemove({
+      clientX: window.innerWidth - 5,
+      clientY: 30,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: window.innerWidth - 5,
+      clientY: 30,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenCalledWith('top-right');
     expect(container.getAttribute('data-position')).toBe('top-right');
@@ -151,8 +161,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: 15, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
-    mouseup({ clientX: 15, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
+    mousemove({
+      clientX: 15,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: 15,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenCalledWith('bottom-left');
     expect(container.getAttribute('data-position')).toBe('bottom-left');
@@ -177,8 +195,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: 220, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
-    mouseup({ clientX: 220, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
+    mousemove({
+      clientX: 220,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: 220,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenLastCalledWith('bottom-left');
     expect(container.getAttribute('data-position')).toBe('bottom-left');
@@ -189,8 +215,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: 700, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
-    mouseup({ clientX: 700, clientY: window.innerHeight - 10, preventDefault: jest.fn() });
+    mousemove({
+      clientX: 700,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: 700,
+      clientY: window.innerHeight - 10,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenLastCalledWith('bottom-right');
     expect(container.getAttribute('data-position')).toBe('bottom-right');
@@ -215,8 +249,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: window.innerWidth - 400, clientY: 150, preventDefault: jest.fn() });
-    mouseup({ clientX: window.innerWidth - 400, clientY: 150, preventDefault: jest.fn() });
+    mousemove({
+      clientX: window.innerWidth - 400,
+      clientY: 150,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: window.innerWidth - 400,
+      clientY: 150,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenCalledWith('top-right');
     expect(container.getAttribute('data-position')).toBe('top-right');
@@ -239,8 +281,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: 150, clientY: window.innerHeight - 200, preventDefault: jest.fn() });
-    mouseup({ clientX: 150, clientY: window.innerHeight - 200, preventDefault: jest.fn() });
+    mousemove({
+      clientX: 150,
+      clientY: window.innerHeight - 200,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: 150,
+      clientY: window.innerHeight - 200,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenCalledWith('bottom-left');
     expect(container.getAttribute('data-position')).toBe('bottom-left');
@@ -259,7 +309,7 @@ describe('DragHandler positional coverage', () => {
 
     expect(logger.warn).toHaveBeenCalledWith(
       'Error calculating final position, using default',
-      expect.any(Error),
+      expect.any(Error)
     );
     expect(callbacks.onDragEnd).toHaveBeenCalledWith('top-right');
     expect(container.getAttribute('data-position')).toBe('top-right');
@@ -440,8 +490,16 @@ describe('DragHandler positional coverage', () => {
 
     const mousemove = getHandler(documentAddSpy, 'mousemove');
     const mouseup = getHandler(documentAddSpy, 'mouseup');
-    mousemove({ clientX: window.innerWidth / 2, clientY: 5, preventDefault: jest.fn() });
-    mouseup({ clientX: window.innerWidth / 2, clientY: 5, preventDefault: jest.fn() });
+    mousemove({
+      clientX: window.innerWidth / 2,
+      clientY: 5,
+      preventDefault: jest.fn(),
+    });
+    mouseup({
+      clientX: window.innerWidth / 2,
+      clientY: 5,
+      preventDefault: jest.fn(),
+    });
 
     expect(callbacks.onDragEnd).toHaveBeenLastCalledWith('top-right');
   });

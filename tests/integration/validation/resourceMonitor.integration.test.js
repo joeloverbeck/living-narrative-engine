@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   ResourceMonitor,
   ResourceExhaustionError,
@@ -97,7 +104,7 @@ describe('ResourceMonitor integration', () => {
       guard = monitor.createOperationGuard('validate:core', { timeout: 80 });
 
       expect(() => monitor.createOperationGuard('validate:extra')).toThrow(
-        ResourceExhaustionError,
+        ResourceExhaustionError
       );
 
       let stats = monitor.getResourceStats();
@@ -107,7 +114,7 @@ describe('ResourceMonitor integration', () => {
         expect.objectContaining({
           id: 'validate:core',
           startTime: expect.any(String),
-        }),
+        })
       );
 
       jest.advanceTimersByTime(20);
@@ -116,7 +123,7 @@ describe('ResourceMonitor integration', () => {
         expect.objectContaining({
           current: expect.stringMatching(/MB/),
           limit: expect.any(String),
-        }),
+        })
       );
 
       jest.advanceTimersByTime(20);
@@ -125,7 +132,7 @@ describe('ResourceMonitor integration', () => {
         expect.objectContaining({
           current: expect.stringMatching(/MB/),
           limit: expect.any(String),
-        }),
+        })
       );
       expect(globalThis.gc).toHaveBeenCalledTimes(1);
 
@@ -136,7 +143,9 @@ describe('ResourceMonitor integration', () => {
         arrayBuffers: 0,
         heapTotal: 120 * megabyte,
       }));
-      expect(() => monitor.checkResourceLimits()).toThrow(ResourceExhaustionError);
+      expect(() => monitor.checkResourceLimits()).toThrow(
+        ResourceExhaustionError
+      );
 
       const postCheckMemoryUsage = jest.fn(() => ({
         heapUsed: 20 * megabyte,
@@ -171,7 +180,7 @@ describe('ResourceMonitor integration', () => {
           peakMemory: expect.any(Number),
           finalMemory: expect.any(Number),
           memoryGrowth: expect.any(Number),
-        }),
+        })
       );
     } finally {
       if (guard?.isActive()) {
@@ -209,17 +218,21 @@ describe('ResourceMonitor integration', () => {
       monitor.startMonitoring();
 
       guardA = monitor.createOperationGuard('recipe:alpha');
-      const guardB = monitor.createOperationGuard('recipe:beta', { timeout: 25 });
+      const guardB = monitor.createOperationGuard('recipe:beta', {
+        timeout: 25,
+      });
 
       expect(monitor.getResourceStats().status).toBe('MODERATE');
 
-      expect(() => jest.advanceTimersByTime(26)).toThrow(ResourceExhaustionError);
+      expect(() => jest.advanceTimersByTime(26)).toThrow(
+        ResourceExhaustionError
+      );
       expect(logger.error).toHaveBeenCalledWith(
         'Operation timeout: recipe:beta',
         expect.objectContaining({
           duration: expect.any(Number),
           maxDuration: 50,
-        }),
+        })
       );
       expect(guardB.isActive()).toBe(false);
 
@@ -300,13 +313,18 @@ describe('ResourceMonitor integration', () => {
       monitor.startMonitoring();
       expect(jest.getTimerCount()).toBe(timersAfterFirstStart);
 
-      const lifecycleGuard = monitor.createOperationGuard('lifecycle:node', { timeout: 40 });
+      const lifecycleGuard = monitor.createOperationGuard('lifecycle:node', {
+        timeout: 40,
+      });
       jest.advanceTimersByTime(12);
       expect(lifecycleGuard.getDuration()).toBeGreaterThanOrEqual(12);
 
       monitor.stopMonitoring();
       expect(lifecycleGuard.isActive()).toBe(false);
-      expect(logger.debug).toHaveBeenCalledWith('Resource monitoring stopped', expect.any(Object));
+      expect(logger.debug).toHaveBeenCalledWith(
+        'Resource monitoring stopped',
+        expect.any(Object)
+      );
     } finally {
       if (interceptedIntervalId) {
         originalClearInterval(interceptedIntervalId);
@@ -344,7 +362,9 @@ describe('ResourceMonitor integration', () => {
     guardA.cleanup();
 
     monitor.maxMemoryUsage = 1.5 * megabyte;
-    expect(() => monitor.checkResourceLimits()).toThrow(ResourceExhaustionError);
+    expect(() => monitor.checkResourceLimits()).toThrow(
+      ResourceExhaustionError
+    );
 
     monitor.reset();
     expect(logger.debug).toHaveBeenCalledWith('Resource monitor reset');
@@ -372,7 +392,9 @@ describe('ResourceMonitor integration', () => {
       }
     });
 
-    const ephemeralGuard = monitor.createOperationGuard('runtime:ephemeral', { timeout: 15 });
+    const ephemeralGuard = monitor.createOperationGuard('runtime:ephemeral', {
+      timeout: 15,
+    });
     try {
       ephemeralGuard.cleanup();
       expect(ephemeralGuard.isActive()).toBe(false);

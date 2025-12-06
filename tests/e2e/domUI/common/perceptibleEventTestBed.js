@@ -105,7 +105,9 @@ export class PerceptibleEventTestBed {
       'core:actor'
     );
 
-    this.logger.debug('Registered component schemas for perceptible event tests');
+    this.logger.debug(
+      'Registered component schemas for perceptible event tests'
+    );
   }
 
   /**

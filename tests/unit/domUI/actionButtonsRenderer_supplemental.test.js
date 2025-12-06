@@ -53,7 +53,7 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
 
     mockLogger = new ConsoleLogger();
     mockVed = new ValidatedEventDispatcher({});
-    
+
     mockDomElementFactoryInstance = new DomElementFactory(docContext);
     mockDomElementFactoryInstance.button.mockImplementation((text, cls) => {
       const btn = document.createElement('button');
@@ -61,7 +61,9 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
       if (cls) btn.className = cls;
       return btn;
     });
-    mockDomElementFactoryInstance.create.mockImplementation((tagName) => document.createElement(tagName));
+    mockDomElementFactoryInstance.create.mockImplementation((tagName) =>
+      document.createElement(tagName)
+    );
 
     const actualUnsubscribeFn = jest.fn();
     mockVed.subscribe.mockReturnValue(actualUnsubscribeFn);
@@ -82,7 +84,7 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
     shouldUseGrouping: jest.fn().mockReturnValue(false),
     groupActionsByNamespace: jest.fn().mockReturnValue(new Map()),
     getSortedNamespaces: jest.fn().mockReturnValue([]),
-    formatNamespaceDisplayName: jest.fn().mockImplementation(n => n),
+    formatNamespaceDisplayName: jest.fn().mockImplementation((n) => n),
     shouldShowCounts: jest.fn().mockReturnValue(false),
   };
 
@@ -103,20 +105,24 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('Visual Properties Logging', () => {
     it('should log actions with visual properties', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
-      const actions = [{
-        index: 1,
-        actionId: 'core:test',
-        commandString: 'Test',
-        description: 'Desc',
-        params: {},
-        visual: { backgroundColor: 'red' }
-      }];
+      const actions = [
+        {
+          index: 1,
+          actionId: 'core:test',
+          commandString: 'Test',
+          description: 'Desc',
+          params: {},
+          visual: { backgroundColor: 'red' },
+        },
+      ];
 
       await handler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'player', actions }
+        payload: { actorId: 'player', actions },
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -125,28 +131,35 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
           total: 1,
           withVisualProps: 1,
           visualDetails: expect.arrayContaining([
-            expect.objectContaining({ actionId: 'core:test', visual: { backgroundColor: 'red' } })
-          ])
+            expect.objectContaining({
+              actionId: 'core:test',
+              visual: { backgroundColor: 'red' },
+            }),
+          ]),
         })
       );
     });
 
     it('should log when no actions have visual properties', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
-      const actions = [{
-        index: 1,
-        actionId: 'core:test',
-        commandString: 'Test',
-        description: 'Desc',
-        params: {},
-        visual: null
-      }];
+      const actions = [
+        {
+          index: 1,
+          actionId: 'core:test',
+          commandString: 'Test',
+          description: 'Desc',
+          params: {},
+          visual: null,
+        },
+      ];
 
       await handler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'player', actions }
+        payload: { actorId: 'player', actions },
       });
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -154,7 +167,7 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
         expect.objectContaining({
           total: 1,
           withNullVisual: 1,
-          missingVisual: 0
+          missingVisual: 0,
         })
       );
     });
@@ -163,61 +176,75 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('LLM Suggestion Callout', () => {
     it('should use suggestion descriptor if provided', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
-      
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
+
       // Need to set currentActorId first via update actions
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
-          actions: [{
-            index: 1,
-            actionId: 'core:wait',
-            commandString: 'Wait',
-            description: 'Wait here',
-            params: {}
-          }] 
-        }
+        payload: {
+          actorId: 'player',
+          actions: [
+            {
+              index: 1,
+              actionId: 'core:wait',
+              commandString: 'Wait',
+              description: 'Wait here',
+              params: {},
+            },
+          ],
+        },
       });
 
       await handler({
         payload: {
           actorId: 'player',
           suggestedIndex: 1,
-          suggestedActionDescriptor: 'Try waiting patiently'
-        }
+          suggestedActionDescriptor: 'Try waiting patiently',
+        },
       });
 
-      const callout = document.querySelector('.llm-suggestion-callout .llm-suggestion-body');
+      const callout = document.querySelector(
+        '.llm-suggestion-callout .llm-suggestion-body'
+      );
       expect(callout.textContent).toBe('Try waiting patiently');
     });
 
     it('should warn and abort if callout elements cannot be created', async () => {
       const renderer = createRenderer();
-      
+
       // Mock create to return null specifically for suggestion callout elements
       jest.spyOn(docContext, 'create').mockImplementation((tagName) => {
-        return null; 
+        return null;
       });
 
       // Set actor ID
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'player', actions: [] }
+        payload: { actorId: 'player', actions: [] },
       });
 
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
       await handler({
         payload: {
           actorId: 'player',
-          suggestedIndex: 1
-        }
+          suggestedIndex: 1,
+        },
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Unable to render suggestion callout because required elements could not be created.')
+        expect.stringContaining(
+          'Unable to render suggestion callout because required elements could not be created.'
+        )
       );
     });
   });
@@ -225,22 +252,28 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('Theme Handling', () => {
     it('should handle THEME_CHANGED event', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === 'THEME_CHANGED')[1];
-      
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === 'THEME_CHANGED'
+      )[1];
+
       // Render some buttons first
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
-          actions: [{
-            index: 1,
-            actionId: 'core:test',
-            commandString: 'Test',
-            description: 'Desc',
-            params: {}
-          }] 
-        }
+        payload: {
+          actorId: 'player',
+          actions: [
+            {
+              index: 1,
+              actionId: 'core:test',
+              commandString: 'Test',
+              description: 'Desc',
+              params: {},
+            },
+          ],
+        },
       });
 
       const button = actionButtonsContainerElement.querySelector('button');
@@ -250,8 +283,8 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
       await handler({
         payload: {
           newTheme: 'dark',
-          previousTheme: 'light'
-        }
+          previousTheme: 'light',
+        },
       });
 
       expect(button.classList.contains('theme-dark-adapted')).toBe(true);
@@ -264,31 +297,37 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
 
     it('should warn on invalid THEME_CHANGED payload', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === 'THEME_CHANGED')[1];
-      
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === 'THEME_CHANGED'
+      )[1];
+
       await handler({
         payload: {
           // Missing newTheme
-        }
+        },
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Received THEME_CHANGED event with invalid newTheme'),
+        expect.stringContaining(
+          'Received THEME_CHANGED event with invalid newTheme'
+        ),
         expect.anything()
       );
     });
 
     it('should abort theme application if list container is missing', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === 'THEME_CHANGED')[1];
-      
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === 'THEME_CHANGED'
+      )[1];
+
       // Remove container
       renderer.elements.listContainerElement = null;
 
       await handler({
         payload: {
-          newTheme: 'dark'
-        }
+          newTheme: 'dark',
+        },
       });
 
       // Should not log the success message
@@ -301,33 +340,37 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('Contrast Validation', () => {
     it('should warn if contrast is insufficient', async () => {
       const renderer = createRenderer();
-      const handler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      const handler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
       // Mock _validateContrast to return false to ensure we hit the warning logic
       // We use spyOn if possible, or just overwrite the property for the instance
       renderer._validateContrast = jest.fn().mockReturnValue(false);
 
-      const actions = [{
-        index: 1,
-        actionId: 'core:test',
-        commandString: 'Test',
-        description: 'Desc',
-        params: {},
-        visual: { 
-          backgroundColor: '#ffffff',
-          textColor: '#ffffff'
-        }
-      }];
+      const actions = [
+        {
+          index: 1,
+          actionId: 'core:test',
+          commandString: 'Test',
+          description: 'Desc',
+          params: {},
+          visual: {
+            backgroundColor: '#ffffff',
+            textColor: '#ffffff',
+          },
+        },
+      ];
 
       await handler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { actorId: 'player', actions }
+        payload: { actorId: 'player', actions },
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('insufficient contrast')
       );
-      
+
       const button = actionButtonsContainerElement.querySelector('button');
       expect(button.classList.contains('contrast-warning')).toBe(true);
     });
@@ -336,27 +379,43 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('Suggestion Index Resolution', () => {
     it('should fallback to index 1 if invalid index and no wait action', async () => {
       const renderer = createRenderer();
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
-      const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
       // Actions with no 'wait'
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
+        payload: {
+          actorId: 'player',
           actions: [
-            { index: 1, actionId: 'core:go', commandString: 'Go', description: 'Go', params: {} },
-            { index: 2, actionId: 'core:look', commandString: 'Look', description: 'Look', params: {} }
-          ] 
-        }
+            {
+              index: 1,
+              actionId: 'core:go',
+              commandString: 'Go',
+              description: 'Go',
+              params: {},
+            },
+            {
+              index: 2,
+              actionId: 'core:look',
+              commandString: 'Look',
+              description: 'Look',
+              params: {},
+            },
+          ],
+        },
       });
 
       // Suggest invalid index (e.g. null/undefined via non-integer)
       await suggestionHandler({
         payload: {
           actorId: 'player',
-          suggestedIndex: 'invalid' // Not an integer
-        }
+          suggestedIndex: 'invalid', // Not an integer
+        },
       });
 
       // Should select index 1 (default)
@@ -365,26 +424,42 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
 
     it('should clamp index if out of bounds', async () => {
       const renderer = createRenderer();
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
-      const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
+        payload: {
+          actorId: 'player',
           actions: [
-            { index: 1, actionId: 'core:go', commandString: 'Go', description: 'Go', params: {} },
-            { index: 2, actionId: 'core:look', commandString: 'Look', description: 'Look', params: {} }
-          ] 
-        }
+            {
+              index: 1,
+              actionId: 'core:go',
+              commandString: 'Go',
+              description: 'Go',
+              params: {},
+            },
+            {
+              index: 2,
+              actionId: 'core:look',
+              commandString: 'Look',
+              description: 'Look',
+              params: {},
+            },
+          ],
+        },
       });
 
       // Suggest index 99
       await suggestionHandler({
         payload: {
           actorId: 'player',
-          suggestedIndex: 99
-        }
+          suggestedIndex: 99,
+        },
       });
 
       // Should select index 2 (max)
@@ -393,25 +468,41 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
 
     it('should prioritize wait action if index is invalid', async () => {
       const renderer = createRenderer();
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
-      const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
+        payload: {
+          actorId: 'player',
           actions: [
-            { index: 1, actionId: 'core:go', commandString: 'Go', description: 'Go', params: {} },
-            { index: 2, actionId: 'core:wait', commandString: 'Wait', description: 'Wait', params: {} }
-          ] 
-        }
+            {
+              index: 1,
+              actionId: 'core:go',
+              commandString: 'Go',
+              description: 'Go',
+              params: {},
+            },
+            {
+              index: 2,
+              actionId: 'core:wait',
+              commandString: 'Wait',
+              description: 'Wait',
+              params: {},
+            },
+          ],
+        },
       });
 
       await suggestionHandler({
         payload: {
           actorId: 'player',
-          suggestedIndex: -5
-        }
+          suggestedIndex: -5,
+        },
       });
 
       // Should select wait action (index 2)
@@ -422,254 +513,217 @@ describe('ActionButtonsRenderer Supplemental Coverage', () => {
   describe('Edge Cases', () => {
     it('should re-enable speech input when clearing suggestion', async () => {
       const renderer = createRenderer();
-      const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
-      const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'player', 
-          actions: [{ index: 1, actionId: 'core:go', commandString: 'Go', description: 'Go', params: {} }] 
-        }
+        payload: {
+          actorId: 'player',
+          actions: [
+            {
+              index: 1,
+              actionId: 'core:go',
+              commandString: 'Go',
+              description: 'Go',
+              params: {},
+            },
+          ],
+        },
       });
 
       // Suggestion disables input
       await suggestionHandler({
-        payload: { actorId: 'player', suggestedIndex: 1 }
+        payload: { actorId: 'player', suggestedIndex: 1 },
       });
       expect(speechInputElement.disabled).toBe(true);
 
       // Update actions for different actor should clear suggestion and re-enable input
       await updateHandler({
         type: UPDATE_ACTIONS_EVENT_TYPE,
-        payload: { 
-          actorId: 'other-actor', 
-          actions: [] 
-        }
+        payload: {
+          actorId: 'other-actor',
+          actions: [],
+        },
       });
 
-            expect(speechInputElement.disabled).toBe(false);
+      expect(speechInputElement.disabled).toBe(false);
+    });
 
-          });
+    it('should apply theme when rendering list item', async () => {
+      const renderer = createRenderer();
 
-      
+      const themeHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === 'THEME_CHANGED'
+      )[1];
 
-          it('should apply theme when rendering list item', async () => {
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
-            const renderer = createRenderer();
+      // Set theme
 
-            const themeHandler = mockVed.subscribe.mock.calls.find(c => c[0] === 'THEME_CHANGED')[1];
+      await themeHandler({ payload: { newTheme: 'dark' } });
 
-            const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      // Render actions
 
-      
+      await updateHandler({
+        type: UPDATE_ACTIONS_EVENT_TYPE,
 
-            // Set theme
+        payload: {
+          actorId: 'player',
 
-            await themeHandler({ payload: { newTheme: 'dark' } });
+          actions: [
+            {
+              index: 1,
+              actionId: 'core:test',
+              commandString: 'Test',
+              description: 'Desc',
+              params: {},
+            },
+          ],
+        },
+      });
 
-      
+      const button = actionButtonsContainerElement.querySelector('button');
 
-            // Render actions
+      expect(button.classList.contains('theme-dark-adapted')).toBe(true);
 
-            await updateHandler({
+      expect(button.style.getPropertyValue('--current-theme')).toBe('dark');
+    });
 
-              type: UPDATE_ACTIONS_EVENT_TYPE,
+    it('should warn and ignore suggestion with invalid actorId', async () => {
+      const renderer = createRenderer();
 
-              payload: { 
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
-                actorId: 'player', 
+      await suggestionHandler({
+        payload: {
+          actorId: '', // Invalid
 
-                actions: [{ index: 1, actionId: 'core:test', commandString: 'Test', description: 'Desc', params: {} }] 
+          suggestedIndex: 1,
+        },
+      });
 
-              }
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('invalid actorId'),
 
-            });
+        expect.anything()
+      );
+    });
 
-      
+    it('should remove suggestion callout if suggestion comes for different actor', async () => {
+      const renderer = createRenderer();
 
-            const button = actionButtonsContainerElement.querySelector('button');
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
-            expect(button.classList.contains('theme-dark-adapted')).toBe(true);
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
-            expect(button.style.getPropertyValue('--current-theme')).toBe('dark');
+      // Setup initial state with actor 'player'
 
-          });
+      await updateHandler({
+        type: UPDATE_ACTIONS_EVENT_TYPE,
 
-      
+        payload: {
+          actorId: 'player',
 
-          it('should warn and ignore suggestion with invalid actorId', async () => {
+          actions: [
+            {
+              index: 1,
+              actionId: 'core:go',
+              commandString: 'Go',
+              description: 'Go',
+              params: {},
+            },
+          ],
+        },
+      });
 
-            const renderer = createRenderer();
+      // Suggestion for 'player' (shows callout)
 
-            const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+      await suggestionHandler({
+        payload: { actorId: 'player', suggestedIndex: 1 },
+      });
 
-      
+      expect(document.querySelector('.llm-suggestion-callout')).toBeTruthy();
 
-            await suggestionHandler({
+      // Suggestion for 'other' (should remove callout)
 
-              payload: {
+      // Note: currentActorId is still 'player'
 
-                actorId: '', // Invalid
+      await suggestionHandler({
+        payload: { actorId: 'other', suggestedIndex: 1 },
+      });
 
-                suggestedIndex: 1
+      expect(document.querySelector('.llm-suggestion-callout')).toBeNull();
+    });
 
-              }
+    it('should handle suggestion with no resolved action (empty text fallback)', async () => {
+      const renderer = createRenderer();
 
-            });
+      const updateHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === UPDATE_ACTIONS_EVENT_TYPE
+      )[1];
 
-      
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
-            expect(mockLogger.warn).toHaveBeenCalledWith(
+      // Empty actions
 
-              expect.stringContaining("invalid actorId"),
+      await updateHandler({
+        type: UPDATE_ACTIONS_EVENT_TYPE,
 
-              expect.anything()
+        payload: { actorId: 'player', actions: [] },
+      });
 
-            );
+      // Suggestion (no descriptor)
 
-          });
+      await suggestionHandler({
+        payload: { actorId: 'player', suggestedIndex: 1 },
+      });
 
-      
+      // Should render callout with fallback text
 
-          it('should remove suggestion callout if suggestion comes for different actor', async () => {
+      const callout = document.querySelector('.llm-suggestion-body');
 
-            const renderer = createRenderer();
+      expect(callout).toBeTruthy();
 
-            const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
+      expect(callout.textContent).toBe('Awaiting suggestion details...');
+    });
 
-            const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
+    it('should abort suggestion rendering if list container is missing', async () => {
+      const renderer = createRenderer();
 
-      
+      const suggestionHandler = mockVed.subscribe.mock.calls.find(
+        (c) => c[0] === LLM_SUGGESTED_ACTION_ID
+      )[1];
 
-            // Setup initial state with actor 'player'
+      // Remove container
 
-            await updateHandler({
+      renderer.elements.listContainerElement = null;
 
-              type: UPDATE_ACTIONS_EVENT_TYPE,
+      // Trigger suggestion
 
-              payload: { 
+      await suggestionHandler({
+        payload: { actorId: 'player', suggestedIndex: 1 },
+      });
 
-                actorId: 'player', 
+      // Should not crash and should not create callout (since container is missing, can't prepend)
 
-                actions: [{ index: 1, actionId: 'core:go', commandString: 'Go', description: 'Go', params: {} }] 
+      // And line 1206 should be hit
 
-              }
-
-            });
-
-      
-
-            // Suggestion for 'player' (shows callout)
-
-            await suggestionHandler({
-
-              payload: { actorId: 'player', suggestedIndex: 1 }
-
-            });
-
-            expect(document.querySelector('.llm-suggestion-callout')).toBeTruthy();
-
-      
-
-            // Suggestion for 'other' (should remove callout)
-
-            // Note: currentActorId is still 'player'
-
-            await suggestionHandler({
-
-              payload: { actorId: 'other', suggestedIndex: 1 }
-
-            });
-
-      
-
-            expect(document.querySelector('.llm-suggestion-callout')).toBeNull();
-
-          });
-
-      
-
-          it('should handle suggestion with no resolved action (empty text fallback)', async () => {
-
-            const renderer = createRenderer();
-
-            const updateHandler = mockVed.subscribe.mock.calls.find(c => c[0] === UPDATE_ACTIONS_EVENT_TYPE)[1];
-
-            const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
-
-      
-
-            // Empty actions
-
-            await updateHandler({
-
-              type: UPDATE_ACTIONS_EVENT_TYPE,
-
-              payload: { actorId: 'player', actions: [] }
-
-            });
-
-      
-
-            // Suggestion (no descriptor)
-
-            await suggestionHandler({
-
-              payload: { actorId: 'player', suggestedIndex: 1 }
-
-            });
-
-      
-
-            // Should render callout with fallback text
-
-                  const callout = document.querySelector('.llm-suggestion-body');
-
-                  expect(callout).toBeTruthy();
-
-                  expect(callout.textContent).toBe('Awaiting suggestion details...');
-
-                });
-
-            
-
-                it('should abort suggestion rendering if list container is missing', async () => {
-
-                  const renderer = createRenderer();
-
-                  const suggestionHandler = mockVed.subscribe.mock.calls.find(c => c[0] === LLM_SUGGESTED_ACTION_ID)[1];
-
-                  
-
-                  // Remove container
-
-                  renderer.elements.listContainerElement = null;
-
-            
-
-                  // Trigger suggestion
-
-                  await suggestionHandler({
-
-                    payload: { actorId: 'player', suggestedIndex: 1 }
-
-                  });
-
-            
-
-                  // Should not crash and should not create callout (since container is missing, can't prepend)
-
-                  // And line 1206 should be hit
-
-                  expect(document.querySelector('.llm-suggestion-callout')).toBeNull();
-
-                });
-
-              });
-
-            });
-
-            
-
-      
+      expect(document.querySelector('.llm-suggestion-callout')).toBeNull();
+    });
+  });
+});

@@ -26,9 +26,7 @@
       "shape": "hooded"
     },
     "descriptors:skin_condition": {
-      "conditions": [
-        "sleep-hollowed"
-      ]
+      "conditions": ["sleep-hollowed"]
     }
   }
 }

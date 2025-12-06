@@ -16,13 +16,13 @@ Create a Scope DSL file that resolves to weapons the actor is wielding that have
 
 ### Discrepancies from Original Plan
 
-| Original Assumption | Corrected Reality |
-|---------------------|-------------------|
+| Original Assumption                              | Corrected Reality                                                                                               |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | Reference file `wielded_weapon_ids.scope` exists | File does NOT exist. Correct reference is `items:wielded_items` at `data/mods/items/scopes/wielded_items.scope` |
-| Property name `.weapon_id` | Correct property is `.wielded_item_ids` (array) |
-| Syntax `actor.positioning:wielding.weapon_id` | Correct syntax is `actor.components.positioning:wielding.wielded_item_ids[]` |
-| Operator `hasComponent` (camelCase) | Correct operator is `has_component` (snake_case) |
-| hasComponent syntax `[{"var":""}, "component"]` | Correct syntax is `[".", "component_id"]` for scope DSL filters |
+| Property name `.weapon_id`                       | Correct property is `.wielded_item_ids` (array)                                                                 |
+| Syntax `actor.positioning:wielding.weapon_id`    | Correct syntax is `actor.components.positioning:wielding.wielded_item_ids[]`                                    |
+| Operator `hasComponent` (camelCase)              | Correct operator is `has_component` (snake_case)                                                                |
+| hasComponent syntax `[{"var":""}, "component"]`  | Correct syntax is `[".", "component_id"]` for scope DSL filters                                                 |
 
 ### Validation Results
 
@@ -34,8 +34,8 @@ Create a Scope DSL file that resolves to weapons the actor is wielding that have
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                     | Purpose          |
+| -------------------------------------------------------- | ---------------- |
 | `data/mods/weapons/scopes/wielded_cutting_weapons.scope` | Scope definition |
 
 ## Implementation Details
@@ -66,12 +66,12 @@ weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded
 
 ### Expected Behavior
 
-| Scenario | Result |
-|----------|--------|
-| Actor wielding longsword (has can_cut) | Returns [longsword_id] |
-| Actor wielding mace (no can_cut) | Returns [] |
+| Scenario                                 | Result                         |
+| ---------------------------------------- | ------------------------------ |
+| Actor wielding longsword (has can_cut)   | Returns [longsword_id]         |
+| Actor wielding mace (no can_cut)         | Returns []                     |
 | Actor wielding two swords (both can_cut) | Returns [sword1_id, sword2_id] |
-| Actor not wielding anything | Returns [] |
+| Actor not wielding anything              | Returns []                     |
 
 ## Out of Scope
 
@@ -120,15 +120,16 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/items/scopes/wielded_items.scope` | Existing wielding scope pattern |
-| `data/mods/metabolism/scopes/inventory_food.scope` | Scope with `has_component` filter pattern |
-| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope` | Weapons scope with component filter |
+| File                                                            | Purpose                                   |
+| --------------------------------------------------------------- | ----------------------------------------- |
+| `data/mods/items/scopes/wielded_items.scope`                    | Existing wielding scope pattern           |
+| `data/mods/metabolism/scopes/inventory_food.scope`              | Scope with `has_component` filter pattern |
+| `data/mods/weapons/scopes/grabbable_weapons_in_inventory.scope` | Weapons scope with component filter       |
 
 ## Scope DSL Syntax Reference
 
 From CLAUDE.md:
+
 - `.` - Field access
 - `[]` - Array iteration
 - `[{...}]` - JSON Logic filters

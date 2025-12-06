@@ -80,8 +80,7 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action execution', () 
   });
 
   it('adds giving_blowjob component to actor with correct data', async () => {
-    const { entities, actorId, primaryId } =
-      buildLickGlansLyingCloseScenario();
+    const { entities, actorId, primaryId } = buildLickGlansLyingCloseScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -98,8 +97,7 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action execution', () 
   });
 
   it('adds receiving_blowjob component to primary with correct data', async () => {
-    const { entities, actorId, primaryId } =
-      buildLickGlansLyingCloseScenario();
+    const { entities, actorId, primaryId } = buildLickGlansLyingCloseScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

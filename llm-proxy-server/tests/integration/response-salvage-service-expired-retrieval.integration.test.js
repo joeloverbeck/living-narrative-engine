@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -41,7 +48,8 @@ describe('ResponseSalvageService integration: expired retrieval safeguards', () 
     app.use('/api/llm-request', createSalvageRoutes(controller));
 
     app.post('/api/llm-request/store-salvage', (req, res) => {
-      const { requestId, llmId, payload, responseData, statusCode, ttl } = req.body;
+      const { requestId, llmId, payload, responseData, statusCode, ttl } =
+        req.body;
 
       salvageService.salvageResponse(
         requestId,
@@ -109,7 +117,9 @@ describe('ResponseSalvageService integration: expired retrieval safeguards', () 
 
     await jest.advanceTimersByTimeAsync(80);
 
-    const midWindow = await request(app).get('/api/llm-request/salvage/extend-test');
+    const midWindow = await request(app).get(
+      '/api/llm-request/salvage/extend-test'
+    );
 
     expect(midWindow.status).toBe(202);
     expect(midWindow.body.reply).toBe('extended copy');
@@ -123,7 +133,9 @@ describe('ResponseSalvageService integration: expired retrieval safeguards', () 
 
     await jest.advanceTimersByTimeAsync(400);
 
-    const afterExpiry = await request(app).get('/api/llm-request/salvage/extend-test');
+    const afterExpiry = await request(app).get(
+      '/api/llm-request/salvage/extend-test'
+    );
     expect(afterExpiry.status).toBe(404);
     expect(salvageService.getStats()).toEqual({
       salvaged: 0,

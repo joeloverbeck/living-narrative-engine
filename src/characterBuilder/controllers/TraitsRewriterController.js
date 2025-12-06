@@ -183,7 +183,11 @@ export class TraitsRewriterController extends BaseCharacterBuilderController {
       );
 
       // Real-time validation on input with debouncing
-      this._addEventListener('characterDefinition', 'input', debouncedInputHandler);
+      this._addEventListener(
+        'characterDefinition',
+        'input',
+        debouncedInputHandler
+      );
 
       // Validation on blur
       this._addEventListener(

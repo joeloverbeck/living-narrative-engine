@@ -6,7 +6,10 @@
 import express from 'express';
 import os from 'node:os';
 
-import { createLivenessCheck, createReadinessCheck } from '../middleware/healthCheck.js';
+import {
+  createLivenessCheck,
+  createReadinessCheck,
+} from '../middleware/healthCheck.js';
 import { ConsoleLogger } from '../consoleLogger.js';
 
 /**

@@ -31,10 +31,16 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
     });
 
     // Verify clean state - NO hand-holding components
-    expect(scenario.actor.components['hand-holding:holding_hand']).toBeUndefined();
+    expect(
+      scenario.actor.components['hand-holding:holding_hand']
+    ).toBeUndefined();
     expect(scenario.actor.components['hand-holding:hand_held']).toBeUndefined();
-    expect(scenario.target.components['hand-holding:holding_hand']).toBeUndefined();
-    expect(scenario.target.components['hand-holding:hand_held']).toBeUndefined();
+    expect(
+      scenario.target.components['hand-holding:holding_hand']
+    ).toBeUndefined();
+    expect(
+      scenario.target.components['hand-holding:hand_held']
+    ).toBeUndefined();
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
@@ -63,7 +69,9 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
       holding_entity_id: scenario.actor.id,
       consented: true,
     });
-    expect(targetInstance.components['hand-holding:holding_hand']).toBeUndefined();
+    expect(
+      targetInstance.components['hand-holding:holding_hand']
+    ).toBeUndefined();
   });
 
   it('does not throw ComponentOverrideNotFoundError when removing non-existent components', async () => {
@@ -72,10 +80,16 @@ describe('hand-holding:hold_hand first-time scenarios', () => {
     });
 
     // Ensure clean state
-    expect(scenario.actor.components['hand-holding:holding_hand']).toBeUndefined();
+    expect(
+      scenario.actor.components['hand-holding:holding_hand']
+    ).toBeUndefined();
     expect(scenario.actor.components['hand-holding:hand_held']).toBeUndefined();
-    expect(scenario.target.components['hand-holding:holding_hand']).toBeUndefined();
-    expect(scenario.target.components['hand-holding:hand_held']).toBeUndefined();
+    expect(
+      scenario.target.components['hand-holding:holding_hand']
+    ).toBeUndefined();
+    expect(
+      scenario.target.components['hand-holding:hand_held']
+    ).toBeUndefined();
 
     // Execute action - should not throw
     let error;

@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import TurnManager from '../../../src/turns/turnManager.js';
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import EventBus from '../../../src/events/eventBus.js';
@@ -132,7 +127,10 @@ class SingleExecutionScheduler extends IScheduler {
  * @param root0.playerType
  * @param root0.includeLegacy
  */
-function createActorEntity(id, { playerType = 'human', includeLegacy = true } = {}) {
+function createActorEntity(
+  id,
+  { playerType = 'human', includeLegacy = true } = {}
+) {
   const components = {
     [ACTOR_COMPONENT_ID]: {},
   };
@@ -275,13 +273,13 @@ describe('TurnManager integration coverage', () => {
 
     env.turnOrderService.startNewRound(
       [ghostEntity, ghostDuplicate, heroInstance],
-      'round-robin',
+      'round-robin'
     );
 
     await env.manager.start();
 
     const systemErrors = env.dispatcher.calls.filter(
-      (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID,
+      (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID
     );
 
     expect(systemErrors.length).toBeGreaterThanOrEqual(2);
@@ -313,15 +311,15 @@ describe('TurnManager integration coverage', () => {
 
     await waitForCondition(() =>
       env.dispatcher.calls.some(
-        (call) => call.eventName === TURN_PROCESSING_ENDED,
-      ),
+        (call) => call.eventName === TURN_PROCESSING_ENDED
+      )
     );
 
     await env.manager.stop();
     await startPromise;
 
     const startedEvent = env.dispatcher.calls.find(
-      (call) => call.eventName === TURN_PROCESSING_STARTED,
+      (call) => call.eventName === TURN_PROCESSING_STARTED
     );
     expect(startedEvent.payload).toEqual({
       entityId: 'hero',
@@ -329,7 +327,7 @@ describe('TurnManager integration coverage', () => {
     });
 
     const processingEndedCall = env.dispatcher.calls.find(
-      (call) => call.eventName === TURN_PROCESSING_ENDED,
+      (call) => call.eventName === TURN_PROCESSING_ENDED
     );
     expect(processingEndedCall.payload).toEqual({
       entityId: 'hero',
@@ -356,22 +354,25 @@ describe('TurnManager integration coverage', () => {
     });
 
     env.entityManager.setEntities([
-      createActorEntity('legacy-player', { playerType: null, includeLegacy: true }),
+      createActorEntity('legacy-player', {
+        playerType: null,
+        includeLegacy: true,
+      }),
     ]);
 
     const startPromise = env.manager.start();
 
     await waitForCondition(() =>
       env.dispatcher.calls.some(
-        (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID,
-      ),
+        (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID
+      )
     );
 
     await env.manager.stop();
     await startPromise;
 
     const processingEndedCall = env.dispatcher.calls.find(
-      (call) => call.eventName === TURN_PROCESSING_ENDED,
+      (call) => call.eventName === TURN_PROCESSING_ENDED
     );
     expect(processingEndedCall.payload).toEqual({
       entityId: 'legacy-player',
@@ -381,7 +382,7 @@ describe('TurnManager integration coverage', () => {
     const systemErrorFromDispatch = env.dispatcher.calls.find(
       (call) =>
         call.eventName === SYSTEM_ERROR_OCCURRED_ID &&
-        call.payload.details?.entityId === 'legacy-player',
+        call.payload.details?.entityId === 'legacy-player'
     );
     expect(systemErrorFromDispatch).toBeDefined();
   });
@@ -415,7 +416,7 @@ describe('TurnManager integration coverage', () => {
     ).catch(() => {});
 
     const processingEndedCall = env.dispatcher.calls.find(
-      (call) => call.eventName === TURN_PROCESSING_ENDED,
+      (call) => call.eventName === TURN_PROCESSING_ENDED
     );
     expect(processingEndedCall.payload).toEqual({
       entityId: 'hero',
@@ -430,12 +431,12 @@ describe('TurnManager integration coverage', () => {
       expect.arrayContaining([
         'Error initiating turn for hero',
         'Error initiating turn for hero.',
-      ]),
+      ])
     );
     expect(
       systemErrorMessages.some((msg) =>
         msg.includes('System Error: No progress made in the last round.')
-      ),
+      )
     ).toBe(true);
   });
 
@@ -456,12 +457,12 @@ describe('TurnManager integration coverage', () => {
     await env.manager.start();
 
     const systemErrors = env.dispatcher.calls.filter(
-      (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID,
+      (call) => call.eventName === SYSTEM_ERROR_OCCURRED_ID
     );
     expect(systemErrors.length).toBeGreaterThanOrEqual(2);
     expect(systemErrors[0].payload.message).toContain('Failed to subscribe to');
     expect(systemErrors[systemErrors.length - 1].payload.message).toContain(
-      'Game cannot proceed reliably',
+      'Game cannot proceed reliably'
     );
     expect(env.manager.getCurrentActor()).toBeNull();
 
@@ -499,7 +500,7 @@ describe('TurnManager integration coverage', () => {
     await startPromise;
 
     const startedEvents = env.dispatcher.calls.filter(
-      (call) => call.eventName === TURN_PROCESSING_STARTED,
+      (call) => call.eventName === TURN_PROCESSING_STARTED
     );
     expect(startedEvents).toHaveLength(1);
   });
@@ -516,8 +517,8 @@ describe('TurnManager integration coverage', () => {
 
     await waitForCondition(() =>
       env.dispatcher.calls.some(
-        (call) => call.eventName === TURN_PROCESSING_ENDED,
-      ),
+        (call) => call.eventName === TURN_PROCESSING_ENDED
+      )
     );
 
     expect(scheduler.callCount).toBe(1);
@@ -547,7 +548,7 @@ describe('TurnManager integration coverage', () => {
     await env.manager.start();
 
     const processingEndedCall = env.dispatcher.calls.find(
-      (call) => call.eventName === TURN_PROCESSING_ENDED,
+      (call) => call.eventName === TURN_PROCESSING_ENDED
     );
     expect(processingEndedCall.payload).toEqual({
       entityId: 'hero',
@@ -570,7 +571,7 @@ describe('TurnManager integration coverage', () => {
     expect(systemErrorMessages).toEqual(
       expect.arrayContaining([
         'System Error: No active actors found to start a round. Stopping game.',
-      ]),
+      ])
     );
 
     await env.manager.stop();
@@ -604,7 +605,7 @@ describe('TurnManager integration coverage', () => {
     const failureDetails = env.dispatcher.calls.find(
       (call) =>
         call.eventName === SYSTEM_ERROR_OCCURRED_ID &&
-        call.payload.details?.error === dispatchError.message,
+        call.payload.details?.error === dispatchError.message
     );
     expect(failureDetails).toBeDefined();
 

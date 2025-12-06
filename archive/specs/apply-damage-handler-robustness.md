@@ -4,16 +4,17 @@
 
 ### Where in the Codebase
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/applyDamageHandler.js` | Main operation handler for APPLY_DAMAGE |
-| `src/anatomy/services/damageAccumulator.js` | Session-based damage entry accumulation |
-| `src/anatomy/services/damageNarrativeComposer.js` | Composes damage narratives for UI display |
-| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | Unit tests (70 tests) |
+| File                                                            | Purpose                                   |
+| --------------------------------------------------------------- | ----------------------------------------- |
+| `src/logic/operationHandlers/applyDamageHandler.js`             | Main operation handler for APPLY_DAMAGE   |
+| `src/anatomy/services/damageAccumulator.js`                     | Session-based damage entry accumulation   |
+| `src/anatomy/services/damageNarrativeComposer.js`               | Composes damage narratives for UI display |
+| `tests/unit/logic/operationHandlers/applyDamageHandler.test.js` | Unit tests (70 tests)                     |
 
 ### What the Module Does
 
 The `ApplyDamageHandler` processes `APPLY_DAMAGE` operations from rules, which:
+
 1. Applies damage to entity body parts (via `anatomy:part_health` component)
 2. Triggers damage propagation to connected parts
 3. Accumulates damage entries in a session for narrative composition
@@ -29,11 +30,13 @@ The `ApplyDamageHandler` processes `APPLY_DAMAGE` operations from rules, which:
 Two sequential failures prevented damage messages from appearing in the UI:
 
 **Failure 1: actorId was null**
+
 ```
 APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target fantasy:copper_backed_rooster_instance or actor null
 ```
 
 **Failure 2: Location component mismatch**
+
 ```
 APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target fantasy:copper_backed_rooster_instance or actor fantasy:aldous_instance
 ```
@@ -67,11 +70,11 @@ APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target f
 
 ### Documentation
 
-| Source | Location | Content |
-|--------|----------|---------|
-| Component ID Constants | `src/constants/componentIds.js` | `POSITION_COMPONENT_ID = 'core:position'` |
-| Context Assembly | `src/logic/contextAssembler.js:249-301` | Execution context structure definition |
-| Position Schema | `data/mods/core/components/position.component.json` | `locationId` field structure |
+| Source                 | Location                                            | Content                                   |
+| ---------------------- | --------------------------------------------------- | ----------------------------------------- |
+| Component ID Constants | `src/constants/componentIds.js`                     | `POSITION_COMPONENT_ID = 'core:position'` |
+| Context Assembly       | `src/logic/contextAssembler.js:249-301`             | Execution context structure definition    |
+| Position Schema        | `data/mods/core/components/position.component.json` | `locationId` field structure              |
 
 ### Domain Rules
 
@@ -81,10 +84,10 @@ APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target f
 
 ### External Contracts
 
-| Contract | Parties | Requirements |
-|----------|---------|--------------|
-| `core:perceptible_event` | Handler → EventBus → UI Renderers | Must include `locationId`, `perceptionType`, `descriptionText` |
-| EntityManager API | Handler → EntityManager | `getComponentData(entityId, componentId)` returns component data or undefined |
+| Contract                 | Parties                           | Requirements                                                                  |
+| ------------------------ | --------------------------------- | ----------------------------------------------------------------------------- |
+| `core:perceptible_event` | Handler → EventBus → UI Renderers | Must include `locationId`, `perceptionType`, `descriptionText`                |
+| EntityManager API        | Handler → EntityManager           | `getComponentData(entityId, componentId)` returns component data or undefined |
 
 ---
 
@@ -92,31 +95,31 @@ APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target f
 
 ### Normal Cases
 
-| Scenario | Input | Expected Output |
-|----------|-------|-----------------|
-| Damage with target location | Target has `core:position` | Event dispatched to target's location |
+| Scenario                       | Input                                      | Expected Output                                     |
+| ------------------------------ | ------------------------------------------ | --------------------------------------------------- |
+| Damage with target location    | Target has `core:position`                 | Event dispatched to target's location               |
 | Damage without target location | Target lacks `core:position`, actor has it | Event dispatched to actor's location (with warning) |
-| actorId in nested structure | `executionContext.actor.id` set | Actor ID correctly extracted |
-| actorId at top level (legacy) | `executionContext.actorId` set | Actor ID correctly extracted |
+| actorId in nested structure    | `executionContext.actor.id` set            | Actor ID correctly extracted                        |
+| actorId at top level (legacy)  | `executionContext.actorId` set             | Actor ID correctly extracted                        |
 
 ### Edge Cases
 
-| Edge Case | Handling |
-|-----------|----------|
+| Edge Case                             | Handling                                                       |
+| ------------------------------------- | -------------------------------------------------------------- |
 | Neither target nor actor has location | Dispatch error via `safeDispatchError`, skip perceptible event |
-| Target has location, actor doesn't | Use target's location (normal path) |
-| Both actor.id and actorId present | Prefer `actor.id` (newer structure) |
-| Empty locationId string | Treat as missing (null check) |
-| executionContext is undefined | Safe optional chaining, return null for actorId |
+| Target has location, actor doesn't    | Use target's location (normal path)                            |
+| Both actor.id and actorId present     | Prefer `actor.id` (newer structure)                            |
+| Empty locationId string               | Treat as missing (null check)                                  |
+| executionContext is undefined         | Safe optional chaining, return null for actorId                |
 
 ### Failure Modes
 
-| Failure | Error Raised | Return Value |
-|---------|--------------|--------------|
+| Failure                             | Error Raised                     | Return Value           |
+| ----------------------------------- | -------------------------------- | ---------------------- |
 | Missing location for event dispatch | `safeDispatchError` with context | Continue without event |
-| Invalid entity reference | Log warning | null entity ID |
-| Component data lookup fails | Caught exception | null location |
-| Session creation fails | Error dispatched | Early return |
+| Invalid entity reference            | Log warning                      | null entity ID         |
+| Component data lookup fails         | Caught exception                 | null location          |
+| Session creation fails              | Error dispatched                 | Early return           |
 
 ---
 
@@ -136,32 +139,32 @@ Properties that must **always** hold:
 
 ### What Stays Stable
 
-| API Element | Stability Guarantee |
-|-------------|---------------------|
-| `execute(params, executionContext)` signature | Stable |
-| `params.entity_ref`, `params.part_ref`, `params.damage_entry` | Stable |
-| `core:perceptible_event` payload structure | Stable |
-| `perceptionType: 'damage_received'` | Stable |
+| API Element                                                   | Stability Guarantee |
+| ------------------------------------------------------------- | ------------------- |
+| `execute(params, executionContext)` signature                 | Stable              |
+| `params.entity_ref`, `params.part_ref`, `params.damage_entry` | Stable              |
+| `core:perceptible_event` payload structure                    | Stable              |
+| `perceptionType: 'damage_received'`                           | Stable              |
 
 ### Internal Contracts
 
-| Method | Contract |
-|--------|----------|
-| `#getEntityLocation(entityId)` | Returns `string \| null`, never throws |
-| `#resolveLocationForEvent(targetId, actorId, log)` | Returns `string \| null`, logs warnings on fallback |
-| `#resolveEntityRef(ref, context, logger)` | Returns `string \| null`, supports keywords/objects/strings |
+| Method                                             | Contract                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| `#getEntityLocation(entityId)`                     | Returns `string \| null`, never throws                      |
+| `#resolveLocationForEvent(targetId, actorId, log)` | Returns `string \| null`, logs warnings on fallback         |
+| `#resolveEntityRef(ref, context, logger)`          | Returns `string \| null`, supports keywords/objects/strings |
 
 ---
 
 ## What is Allowed to Change
 
-| Area | Allowed Changes |
-|------|-----------------|
-| Component ID source | May change from local constant to imported constant |
-| actorId extraction | May add additional fallback paths |
-| Error messages | May be enhanced with more context |
-| Internal method signatures | May change if tests are updated |
-| Logging verbosity | May increase for debugging |
+| Area                       | Allowed Changes                                     |
+| -------------------------- | --------------------------------------------------- |
+| Component ID source        | May change from local constant to imported constant |
+| actorId extraction         | May add additional fallback paths                   |
+| Error messages             | May be enhanced with more context                   |
+| Internal method signatures | May change if tests are updated                     |
+| Logging verbosity          | May increase for debugging                          |
 
 ### NOT Allowed to Change (Breaking)
 
@@ -175,29 +178,29 @@ Properties that must **always** hold:
 
 ### Tests That Must Be Updated/Added
 
-| Test | File | Status |
-|------|------|--------|
-| Actor fallback with nested structure | `applyDamageHandler.test.js:2481` | ✅ Added |
-| Mock using `core:position` | `applyDamageHandler.test.js:2372,2511,2513` | ✅ Updated |
+| Test                                 | File                                        | Status     |
+| ------------------------------------ | ------------------------------------------- | ---------- |
+| Actor fallback with nested structure | `applyDamageHandler.test.js:2481`           | ✅ Added   |
+| Mock using `core:position`           | `applyDamageHandler.test.js:2372,2511,2513` | ✅ Updated |
 
 ### Regression Tests Required
 
-| Test | Purpose |
-|------|---------|
-| `actorId from actor.id` | Verify nested extraction works |
-| `actorId from legacy property` | Verify backward compatibility |
-| `location from core:position` | Verify correct component access |
-| `location fallback chain` | Verify target → actor → error flow |
+| Test                           | Purpose                            |
+| ------------------------------ | ---------------------------------- |
+| `actorId from actor.id`        | Verify nested extraction works     |
+| `actorId from legacy property` | Verify backward compatibility      |
+| `location from core:position`  | Verify correct component access    |
+| `location fallback chain`      | Verify target → actor → error flow |
 
 ### Property Tests to Add
 
 ```javascript
 // Property: actorId extraction should handle all valid context structures
 test.each([
-  { actor: { id: 'actor-1' } },           // Modern structure
-  { actorId: 'actor-2' },                  // Legacy structure
+  { actor: { id: 'actor-1' } }, // Modern structure
+  { actorId: 'actor-2' }, // Legacy structure
   { actor: { id: 'actor-3' }, actorId: 'ignored' }, // Both (prefer actor.id)
-  {},                                      // Neither (returns null)
+  {}, // Neither (returns null)
 ])('extracts actorId from %j', (contextPart) => {
   const actorId = extractActorId(contextPart);
   // Assert expected behavior
@@ -216,11 +219,11 @@ test('uses correct position component ID', () => {
 
 ### Integration Tests
 
-| Test | Scenario |
-|------|----------|
+| Test                     | Scenario                                    |
+| ------------------------ | ------------------------------------------- |
 | Full damage flow with UI | Damage → Event → DamageEventMessageRenderer |
-| Location-less entities | Both actor and target without position |
-| Cross-location damage | Actor in different location than target |
+| Location-less entities   | Both actor and target without position      |
+| Cross-location damage    | Actor in different location than target     |
 
 ---
 
@@ -229,6 +232,7 @@ test('uses correct position component ID', () => {
 ### Immediate Improvements (Low Risk)
 
 1. **Import constant** instead of hardcoding:
+
    ```javascript
    import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
    ```

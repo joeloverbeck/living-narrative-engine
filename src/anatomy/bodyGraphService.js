@@ -178,11 +178,11 @@ export class BodyGraphService {
     const cacheSize = this.#cacheManager.size();
     if (actorEntityId && this.#cacheManager.has(actorEntityId)) {
       cacheRootId = actorEntityId;
-      this.#logger.info(
+      this.#logger.debug(
         `BodyGraphService.getAllParts: Actor '${actorEntityId}' -> Using actor as cache root (blueprint root was '${rootId}', cache size: ${cacheSize})`
       );
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `BodyGraphService.getAllParts: Actor '${actorEntityId}' -> Using blueprint root '${rootId}' as cache root (actor not in cache, cache size: ${cacheSize})`
       );
     }
@@ -190,12 +190,12 @@ export class BodyGraphService {
     // Check query cache first
     const cachedResult = this.#queryCache.getCachedGetAllParts(cacheRootId);
     if (cachedResult !== undefined) {
-      this.#logger.info(
+      this.#logger.debug(
         `BodyGraphService.getAllParts: CACHE HIT for cache root '${cacheRootId}': returning ${cachedResult.length} parts [${cachedResult.slice(0, 3).join(', ')}${cachedResult.length > 3 ? '...' : ''}]`
       );
       return cachedResult;
     } else {
-      this.#logger.info(
+      this.#logger.debug(
         `BodyGraphService.getAllParts: CACHE MISS for cache root '${cacheRootId}': will query and cache`
       );
     }
@@ -207,13 +207,13 @@ export class BodyGraphService {
       this.#entityManager
     );
 
-    this.#logger.info(
+    this.#logger.debug(
       `BodyGraphService.getAllParts: AnatomyGraphAlgorithms returned ${result.length} parts for cache root '${cacheRootId}': [${result.slice(0, 5).join(', ')}${result.length > 5 ? '...' : ''}]`
     );
 
     // Cache the result
     this.#queryCache.cacheGetAllParts(cacheRootId, result);
-    this.#logger.info(
+    this.#logger.debug(
       `BodyGraphService.getAllParts: Cached ${result.length} parts for cache root '${cacheRootId}'`
     );
 

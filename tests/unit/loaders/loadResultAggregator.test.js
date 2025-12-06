@@ -35,8 +35,14 @@ describe('LoadResultAggregator', () => {
     const failure1 = { file: 'test1.json', error: new Error('error 1') };
     const failure2 = { file: 'test2.json', error: new Error('error 2') };
 
-    agg.aggregate({ count: 0, overrides: 0, errors: 1, failures: [failure1] }, 'items');
-    agg.aggregate({ count: 0, overrides: 0, errors: 1, failures: [failure2] }, 'items');
+    agg.aggregate(
+      { count: 0, overrides: 0, errors: 1, failures: [failure1] },
+      'items'
+    );
+    agg.aggregate(
+      { count: 0, overrides: 0, errors: 1, failures: [failure2] },
+      'items'
+    );
 
     const totals = agg.getTotalCounts();
     expect(totals.items.failures).toHaveLength(2);

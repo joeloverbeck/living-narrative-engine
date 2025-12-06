@@ -8,7 +8,7 @@ import { createTestBed } from '../../common/testBed.js';
 import {
   simulateErrorBurst,
   createTestError,
-  createDomainErrors
+  createDomainErrors,
 } from '../../common/errorTestHelpers.js';
 import CentralErrorHandler from '../../../src/errors/CentralErrorHandler.js';
 import RecoveryStrategyManager from '../../../src/errors/RecoveryStrategyManager.js';
@@ -28,15 +28,24 @@ describe('Error Handling Performance', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockEventBus = testBed.createMock('MockEventBus', ['dispatch', 'subscribe']);
-    mockMonitoringCoordinator = testBed.createMock('MockMonitoringCoordinator', [
-      'executeMonitored', 'getStats', 'getPerformanceMonitor', 'getCircuitBreaker'
+    mockEventBus = testBed.createMock('MockEventBus', [
+      'dispatch',
+      'subscribe',
     ]);
+    mockMonitoringCoordinator = testBed.createMock(
+      'MockMonitoringCoordinator',
+      [
+        'executeMonitored',
+        'getStats',
+        'getPerformanceMonitor',
+        'getCircuitBreaker',
+      ]
+    );
 
     // Use real implementations for performance testing
     recoveryManager = new RecoveryStrategyManager({
       logger: mockLogger,
-      monitoringCoordinator: mockMonitoringCoordinator
+      monitoringCoordinator: mockMonitoringCoordinator,
     });
 
     errorReporter = new ErrorReporter({
@@ -45,7 +54,7 @@ describe('Error Handling Performance', () => {
       batchSize: 100,
       flushInterval: 1000,
       enabled: true,
-      endpoint: 'test-endpoint' // Required for enabled to be true
+      endpoint: 'test-endpoint', // Required for enabled to be true
     });
 
     centralErrorHandler = new CentralErrorHandler({
@@ -53,7 +62,7 @@ describe('Error Handling Performance', () => {
       eventBus: mockEventBus,
       monitoringCoordinator: mockMonitoringCoordinator,
       recoveryManager,
-      errorReporter
+      errorReporter,
     });
   });
 
@@ -68,7 +77,9 @@ describe('Error Handling Performance', () => {
 
       // Pre-create errors to exclude creation time
       for (let i = 0; i < iterations; i++) {
-        errors.push(new BaseError(`Test error ${i}`, ErrorCodes.INVALID_DATA_GENERIC));
+        errors.push(
+          new BaseError(`Test error ${i}`, ErrorCodes.INVALID_DATA_GENERIC)
+        );
       }
 
       const start = Date.now();
@@ -122,7 +133,7 @@ describe('Error Handling Performance', () => {
       for (let i = 0; i < batches; i++) {
         const batch = errors.slice(i * batchSize, (i + 1) * batchSize);
         await Promise.all(
-          batch.map(error =>
+          batch.map((error) =>
             centralErrorHandler.handle(error).catch(() => {})
           )
         );
@@ -132,7 +143,9 @@ describe('Error Handling Performance', () => {
       const avgBatchTime = totalTime / batches;
 
       expect(avgBatchTime).toBeLessThan(100); // Each batch < 100ms
-      console.log(`Average batch processing time: ${avgBatchTime.toFixed(2)}ms`);
+      console.log(
+        `Average batch processing time: ${avgBatchTime.toFixed(2)}ms`
+      );
     });
 
     it('should handle concurrent errors efficiently', async () => {
@@ -143,15 +156,15 @@ describe('Error Handling Performance', () => {
 
       // Process all errors concurrently
       await Promise.all(
-        errors.map(error =>
-          centralErrorHandler.handle(error).catch(() => {})
-        )
+        errors.map((error) => centralErrorHandler.handle(error).catch(() => {}))
       );
 
       const totalTime = Date.now() - start;
 
       expect(totalTime).toBeLessThan(500); // All concurrent errors < 500ms
-      console.log(`Concurrent processing time for ${concurrentErrors} errors: ${totalTime}ms`);
+      console.log(
+        `Concurrent processing time for ${concurrentErrors} errors: ${totalTime}ms`
+      );
     });
   });
 
@@ -184,7 +197,7 @@ describe('Error Handling Performance', () => {
 
       // Allow pending async work (like reporter flush timers) to settle before
       // capturing the final reading.
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       if (errorReporter?.flush) {
         await errorReporter.flush();
@@ -196,7 +209,7 @@ describe('Error Handling Performance', () => {
         global.gc();
       } else {
         // Give V8 a moment to perform an automatic GC cycle before sampling.
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
       const finalMemory = process.memoryUsage().heapUsed;
@@ -208,7 +221,9 @@ describe('Error Handling Performance', () => {
       const memoryThresholdMb = global.gc ? 10 : 25;
 
       expect(memoryIncrease).toBeLessThan(memoryThresholdMb);
-      console.log(`Memory increase: ${memoryIncrease.toFixed(2)}MB (threshold: ${memoryThresholdMb}MB)`);
+      console.log(
+        `Memory increase: ${memoryIncrease.toFixed(2)}MB (threshold: ${memoryThresholdMb}MB)`
+      );
     });
 
     it('should maintain bounded registry size', async () => {
@@ -244,11 +259,13 @@ describe('Error Handling Performance', () => {
         const time = Date.now() - start;
         timings.push({ volume, time, avgTime: time / volume });
 
-        console.log(`Volume ${volume}: ${time}ms total, ${(time / volume).toFixed(2)}ms avg`);
+        console.log(
+          `Volume ${volume}: ${time}ms total, ${(time / volume).toFixed(2)}ms avg`
+        );
       }
 
       // Check that average time remains relatively constant
-      const avgTimes = timings.map(t => t.avgTime);
+      const avgTimes = timings.map((t) => t.avgTime);
       const maxAvg = Math.max(...avgTimes);
       const minAvg = Math.min(...avgTimes);
       const variance = maxAvg - minAvg;
@@ -263,7 +280,7 @@ describe('Error Handling Performance', () => {
       const start = Date.now();
 
       // Process burst as fast as possible
-      const promises = errors.map(error =>
+      const promises = errors.map((error) =>
         centralErrorHandler.handle(error).catch(() => {})
       );
 
@@ -289,7 +306,9 @@ describe('Error Handling Performance', () => {
           super(message, 'TEST_ERROR');
           this.name = 'TestError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const errors = [];
@@ -325,7 +344,9 @@ describe('Error Handling Performance', () => {
           super('Retry error', 'RETRY_ERROR');
           this.name = 'RetryError';
         }
-        isRecoverable() { return true; }
+        isRecoverable() {
+          return true;
+        }
       }
 
       const start = Date.now();
@@ -364,7 +385,7 @@ describe('Error Handling Performance', () => {
     it('should generate analytics quickly', async () => {
       const errors = simulateErrorBurst(1000, {
         errorType: 'AnalyticsError',
-        severity: 'warning'
+        severity: 'warning',
       });
 
       for (const error of errors) {
@@ -381,12 +402,15 @@ describe('Error Handling Performance', () => {
       // Each error has a unique name like AnalyticsError_0, AnalyticsError_1, etc.
       // Check that at least one of these error types was recorded
       const analyticsErrorCount = Object.keys(analytics.errorsByType)
-        .filter(key => key.startsWith('AnalyticsError'))
+        .filter((key) => key.startsWith('AnalyticsError'))
         .reduce((sum, key) => sum + analytics.errorsByType[key], 0);
 
       // If no AnalyticsError found, check what error types were actually recorded
       if (analyticsErrorCount === 0) {
-        console.log('Error types recorded:', Object.keys(analytics.errorsByType));
+        console.log(
+          'Error types recorded:',
+          Object.keys(analytics.errorsByType)
+        );
       }
 
       expect(analyticsErrorCount).toBeGreaterThan(0);
@@ -401,10 +425,12 @@ describe('Error Handling Performance', () => {
       const circuitBreaker = {
         execute: jest.fn().mockRejectedValue(new Error('Circuit open')),
         getState: jest.fn().mockReturnValue('OPEN'),
-        getStats: jest.fn().mockReturnValue({ failures: 10, successes: 0 })
+        getStats: jest.fn().mockReturnValue({ failures: 10, successes: 0 }),
       };
 
-      mockMonitoringCoordinator.getCircuitBreaker.mockReturnValue(circuitBreaker);
+      mockMonitoringCoordinator.getCircuitBreaker.mockReturnValue(
+        circuitBreaker
+      );
 
       const errors = simulateErrorBurst(100);
       const start = Date.now();
@@ -418,7 +444,9 @@ describe('Error Handling Performance', () => {
       const totalTime = Date.now() - start;
 
       expect(totalTime).toBeLessThan(100); // Should fail fast without delays
-      console.log(`Circuit breaker fail-fast time for 100 errors: ${totalTime}ms`);
+      console.log(
+        `Circuit breaker fail-fast time for 100 errors: ${totalTime}ms`
+      );
     });
   });
 
@@ -428,7 +456,7 @@ describe('Error Handling Performance', () => {
         errorHandlingOverhead: 10, // ms
         recoveryAttemptTime: 100, // ms
         batchReportingTime: 50, // ms
-        memoryUsageFor1000Errors: 10 // MB
+        memoryUsageFor1000Errors: 10, // MB
       };
 
       // Test error handling overhead
@@ -451,7 +479,9 @@ describe('Error Handling Performance', () => {
       expect(reportTime).toBeLessThan(benchmarks.batchReportingTime * 10);
 
       console.log('Performance benchmarks met:');
-      console.log(`- Error handling: ${handleTime}ms < ${benchmarks.errorHandlingOverhead}ms`);
+      console.log(
+        `- Error handling: ${handleTime}ms < ${benchmarks.errorHandlingOverhead}ms`
+      );
       console.log(`- Batch reporting: ${reportTime}ms`);
     });
   });

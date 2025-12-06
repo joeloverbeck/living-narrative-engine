@@ -59,7 +59,11 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
     mockSocketManager = {
       validateSocketAvailability: jest.fn().mockReturnValue({
         valid: true,
-        socket: { id: 'test_socket', orientation: 'left', allowedTypes: ['test'] },
+        socket: {
+          id: 'test_socket',
+          orientation: 'left',
+          allowedTypes: ['test'],
+        },
       }),
       occupySocket: jest.fn(),
       generatePartName: jest.fn().mockReturnValue('Test Part'),
@@ -171,14 +175,21 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:spider_v2', 'anatomy:spider_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:spider_v2',
+        'anatomy:spider_standard'
+      );
 
       // Verify that 8 sockets and 8 slots were generated
       const logCalls = mockLogger.info.mock.calls;
-      const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('processed successfully') && call[0].includes('sockets')
+      const blueprintLogCall = logCalls.find(
+        (call) =>
+          call[0].includes('processed successfully') &&
+          call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -244,14 +255,21 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:centaur_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:centaur_v2', 'anatomy:centaur_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:centaur_v2',
+        'anatomy:centaur_standard'
+      );
 
       // Verify that 5 sockets and 6 slots were processed (5 generated + 1 additional)
       const logCalls = mockLogger.info.mock.calls;
-      const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('processed successfully') && call[0].includes('sockets')
+      const blueprintLogCall = logCalls.find(
+        (call) =>
+          call[0].includes('processed successfully') &&
+          call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -333,14 +351,21 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:dragon_v2', 'anatomy:dragon_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:dragon_v2',
+        'anatomy:dragon_standard'
+      );
 
       // Verify that 8 sockets and 8 slots were generated (4 legs + 2 wings + 1 tail + 1 head)
       const logCalls = mockLogger.info.mock.calls;
-      const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('processed successfully') && call[0].includes('sockets')
+      const blueprintLogCall = logCalls.find(
+        (call) =>
+          call[0].includes('processed successfully') &&
+          call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -384,9 +409,14 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:test_v2', 'anatomy:test_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:test_v2',
+        'anatomy:test_standard'
+      );
 
       // Verify processors logged success with correct counts
       expect(mockLogger.info).toHaveBeenCalledWith(
@@ -442,14 +472,21 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:test_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
-      await factory.createAnatomyGraph('anatomy:test_comprehensive_v2', 'anatomy:test_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:test_comprehensive_v2',
+        'anatomy:test_standard'
+      );
 
       // Verify that socket count matches slot count
       const logCalls = mockLogger.info.mock.calls;
-      const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('processed successfully') && call[0].includes('sockets')
+      const blueprintLogCall = logCalls.find(
+        (call) =>
+          call[0].includes('processed successfully') &&
+          call[0].includes('sockets')
       );
 
       expect(blueprintLogCall).toBeDefined();
@@ -493,10 +530,15 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:simple_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
       const startTime = performance.now();
-      await factory.createAnatomyGraph('anatomy:simple_v2', 'anatomy:simple_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:simple_v2',
+        'anatomy:simple_standard'
+      );
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
@@ -573,10 +615,15 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
-      mockEntityGraphBuilder.createRootEntity.mockResolvedValue('root-entity-1');
+      mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
+        'root-entity-1'
+      );
 
       const startTime = performance.now();
-      await factory.createAnatomyGraph('anatomy:dragon_complex_v2', 'anatomy:dragon_standard');
+      await factory.createAnatomyGraph(
+        'anatomy:dragon_complex_v2',
+        'anatomy:dragon_standard'
+      );
       const endTime = performance.now();
 
       const processingTime = endTime - startTime;
@@ -585,8 +632,10 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       expect(processingTime).toBeLessThan(150); // Generous for complex template
 
       const logCalls = mockLogger.info.mock.calls;
-      const blueprintLogCall = logCalls.find((call) =>
-        call[0].includes('processed successfully') && call[0].includes('sockets')
+      const blueprintLogCall = logCalls.find(
+        (call) =>
+          call[0].includes('processed successfully') &&
+          call[0].includes('sockets')
       );
       expect(blueprintLogCall).toBeDefined();
       expect(blueprintLogCall[0]).toContain('8 sockets');

@@ -59,8 +59,13 @@ export class ActionFormattingErrorFactory {
     let error = errorOrResult;
     let formatDetails;
 
-    if (errorOrResult && typeof errorOrResult === 'object' && 'error' in errorOrResult) {
-      const resultWithError = /** @type {{error: unknown, details?: unknown}} */ (errorOrResult);
+    if (
+      errorOrResult &&
+      typeof errorOrResult === 'object' &&
+      'error' in errorOrResult
+    ) {
+      const resultWithError =
+        /** @type {{error: unknown, details?: unknown}} */ (errorOrResult);
       error = resultWithError.error;
       formatDetails = resultWithError.details;
     }
@@ -69,7 +74,7 @@ export class ActionFormattingErrorFactory {
       targetId ??
       (error && typeof error === 'object'
         ? // @ts-expect-error - runtime inspection of optional properties
-          error?.target?.entityId ?? error?.entityId ?? null
+          (error?.target?.entityId ?? error?.entityId ?? null)
         : null) ??
       fallbackTargetId ??
       null;

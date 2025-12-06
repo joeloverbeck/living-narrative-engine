@@ -30,21 +30,25 @@ The Living Narrative Engine uses operation handlers to execute game logic define
 ### Recommended Improvements
 
 **Immediate (Days):**
+
 - Enhanced documentation and inline comments
 - Improved error messages with actionable guidance
 - Expanded checklist in CLAUDE.md
 
 **Medium-term (Weeks):**
+
 - CLI scaffolding tool: `npm run create-operation`
 - Build-time completeness validation
 - Better pre-validation error messages
 
 **Long-term (Months):**
+
 - Schema-driven code generation
 - Single source of truth architecture
 - Auto-discovery registration patterns
 
 **Expected Outcomes:**
+
 - Time to add operation: 15-30 minutes
 - Debugging time: <30 minutes
 - Reduced error rate by 80%+
@@ -101,6 +105,7 @@ Operation handlers in the Living Narrative Engine follow these architectural pat
 Each new operation handler requires updates to these files:
 
 #### Point 1: Operation Schema File
+
 **Location**: `data/schemas/operations/[operationName].schema.json`
 
 ```json
@@ -138,6 +143,7 @@ Each new operation handler requires updates to these files:
 **Purpose**: Define operation structure and validation rules
 
 #### Point 2: Base Operation Schema Reference
+
 **Location**: `data/schemas/operations/operation.schema.json`
 
 ```json
@@ -146,7 +152,7 @@ Each new operation handler requires updates to these files:
     { "$ref": "./addComponent.schema.json" },
     { "$ref": "./removeComponent.schema.json" },
     { "$ref": "./drinkFrom.schema.json" },
-    { "$ref": "./drinkEntirely.schema.json" },
+    { "$ref": "./drinkEntirely.schema.json" }
     // ... other operations
   ]
 }
@@ -156,6 +162,7 @@ Each new operation handler requires updates to these files:
 **Pain Point**: Easy to forget, causes "no matching schema" errors
 
 #### Point 3: DI Token Registration
+
 **Location**: `src/dependencyInjection/tokens/tokens-core.js`
 
 ```javascript
@@ -169,6 +176,7 @@ export const tokens = {
 **Purpose**: Define dependency injection token for handler
 
 #### Point 4: Handler Factory Registration
+
 **Location**: `src/dependencyInjection/registrations/operationHandlerRegistrations.js`
 
 ```javascript
@@ -185,19 +193,24 @@ export function registerOperationHandlers(container) {
 **Purpose**: Register handler class with DI container
 
 #### Point 5: Operation Registry Mapping
+
 **Location**: `src/dependencyInjection/registrations/interpreterRegistrations.js`
 
 ```javascript
 const operationRegistry = container.resolve(tokens.IOperationRegistry);
 
 operationRegistry.registerOperation('DRINK_FROM', tokens.IDrinkFromHandler);
-operationRegistry.registerOperation('DRINK_ENTIRELY', tokens.IDrinkEntirelyHandler);
+operationRegistry.registerOperation(
+  'DRINK_ENTIRELY',
+  tokens.IDrinkEntirelyHandler
+);
 ```
 
 **Purpose**: Map operation type string to handler token
 **Pain Point**: Must match schema `const` value exactly
 
 #### Point 6: Pre-validation Whitelist ⚠️ CRITICAL
+
 **Location**: `src/utils/preValidationUtils.js`
 
 ```javascript
@@ -214,7 +227,9 @@ const KNOWN_OPERATION_TYPES = [
 **Pain Point**: **Most commonly forgotten step**, causes cryptic validation failures
 
 #### Point 7: Test Creation
+
 **Locations**:
+
 - `tests/unit/logic/operationHandlers/[operationName]Handler.test.js`
 - `tests/integration/mods/[category]/[operationName]RuleExecution.test.js`
 
@@ -225,6 +240,7 @@ const KNOWN_OPERATION_TYPES = [
 #### DRINK_FROM Operation
 
 **Files Modified** (from git history):
+
 - `data/schemas/operations/drinkFrom.schema.json` - Created
 - `data/schemas/operations/operation.schema.json` - Updated
 - `src/logic/operationHandlers/drinkFromHandler.js` - Created
@@ -236,6 +252,7 @@ const KNOWN_OPERATION_TYPES = [
 - `tests/integration/mods/items/drinkFromRuleExecution.test.js` - Created
 
 **Issues Encountered:**
+
 1. Initial implementation missed `KNOWN_OPERATION_TYPES` registration
 2. AJV validation failed with unclear error messages
 3. Integration tests revealed missing schema reference
@@ -244,6 +261,7 @@ const KNOWN_OPERATION_TYPES = [
 #### DRINK_ENTIRELY Operation
 
 **Pattern Observed**: Similar implementation, similar issues
+
 - Same registration oversight initially
 - Learned from DRINK_FROM mistakes but process still manual
 - Better but still error-prone
@@ -264,12 +282,22 @@ class DrinkFromHandler extends BaseOperationHandler {
   #componentMutationService;
   #entityStateQuerier;
 
-  constructor({ componentMutationService, entityStateQuerier, logger, eventBus }) {
+  constructor({
+    componentMutationService,
+    entityStateQuerier,
+    logger,
+    eventBus,
+  }) {
     super({ logger, eventBus });
 
-    validateDependency(componentMutationService, 'IComponentMutationService', logger, {
-      requiredMethods: ['addComponent', 'removeComponent'],
-    });
+    validateDependency(
+      componentMutationService,
+      'IComponentMutationService',
+      logger,
+      {
+        requiredMethods: ['addComponent', 'removeComponent'],
+      }
+    );
 
     this.#componentMutationService = componentMutationService;
     this.#entityStateQuerier = entityStateQuerier;
@@ -283,7 +311,9 @@ class DrinkFromHandler extends BaseOperationHandler {
       assertPresent(parameters.drinkableItemId, 'drinkableItemId is required');
 
       // 2. Query current state
-      const item = this.#entityStateQuerier.getEntity(parameters.drinkableItemId);
+      const item = this.#entityStateQuerier.getEntity(
+        parameters.drinkableItemId
+      );
 
       // 3. Execute business logic
       const consumptionQuantity = parameters.consumptionQuantity || 1;
@@ -296,7 +326,6 @@ class DrinkFromHandler extends BaseOperationHandler {
         itemId: parameters.drinkableItemId,
         quantity: consumptionQuantity,
       });
-
     } catch (error) {
       this.handleOperationError(error, 'DRINK_FROM', context);
       throw error;
@@ -327,7 +356,9 @@ export default DrinkFromHandler;
           "properties": {
             // Operation-specific parameters
           },
-          "required": [/* required params */]
+          "required": [
+            /* required params */
+          ]
         }
       }
     }
@@ -344,18 +375,21 @@ export default DrinkFromHandler;
 **Problem**: The `KNOWN_OPERATION_TYPES` array in `preValidationUtils.js` is the most commonly forgotten registration step.
 
 **Why It Happens:**
+
 - Not obvious from file name that it's required
 - Located in utility file, not near other registrations
 - No automated check until integration tests run
 - CLAUDE.md mentions it but easy to overlook in checklist
 
 **Impact:**
+
 - Causes validation failures during mod loading
 - Error message is generic: "Unknown operation type"
 - Developers waste time checking schemas and registrations
 - Average debugging time: 1-2 hours
 
 **Example Error:**
+
 ```
 Error: Validation failed for rule 'drink_from_rule'
 Unknown operation type: DRINK_FROM
@@ -368,23 +402,27 @@ Unknown operation type: DRINK_FROM
 **Problem**: Complex `$ref` resolution in AJV causing validation failures
 
 **Common Issues:**
+
 1. **Circular Reference Errors**: When schemas reference each other
 2. **Missing Schema Errors**: When `$id` doesn't match file location
 3. **Resolution Path Errors**: Incorrect `../` paths in `$ref`
 
 **Example Symptoms:**
+
 ```
 AJVError: can't resolve reference ../base-operation.schema.json
   from id https://living-narrative-engine/schemas/operations/drinkFrom.schema.json
 ```
 
 **Why It Happens:**
+
 - Complex schema loading order dependencies
 - Non-standard `$id` URLs don't match file paths
 - AJV configuration requires precise setup
 - Schema references use relative paths that break if moved
 
 **Impact:**
+
 - 2+ hours debugging typical
 - Requires deep AJV knowledge
 - Trial-and-error fixes common
@@ -412,12 +450,14 @@ Handler class name conventions:
 ```
 
 **Pain Points:**
+
 - Easy to have typos/mismatches
 - No automated verification
 - Refactoring is risky
 - Copy-paste errors common
 
 **Example Issues:**
+
 - Operation type in schema: `DRINK_FROM`
 - Operation type in registry: `DRINK_FORM` (typo)
 - Result: Runtime error when rule tries to execute
@@ -430,25 +470,27 @@ Handler class name conventions:
 
 ```javascript
 // Pre-validation failure
-"Unknown operation type: DRINK_FROM"
+'Unknown operation type: DRINK_FROM';
 // Doesn't tell you to add it to KNOWN_OPERATION_TYPES
 
 // AJV validation failure
-"data/type must be equal to one of the allowed values"
+'data/type must be equal to one of the allowed values';
 // Doesn't tell you which schema is missing
 
 // Operation registry failure
-"No handler registered for operation type: DRINK_FROM"
+'No handler registered for operation type: DRINK_FROM';
 // Doesn't tell you to check interpreterRegistrations.js
 ```
 
 **What's Missing:**
+
 - Specific file paths to update
 - Checklist of registration points
 - Links to documentation
 - Suggestions for common mistakes
 
 **Impact:**
+
 - Developers must remember all registration points
 - Consult CLAUDE.md or ask for help
 - Trial-and-error approach common
@@ -457,24 +499,28 @@ Handler class name conventions:
 ### 2.5 Developer Experience Issues
 
 **Cognitive Load:**
+
 - Must remember 7 registration points
 - Must understand DI container, schema system, event bus
 - Must know file naming conventions
 - Must recall operation type naming patterns
 
 **Knowledge Distribution:**
+
 - No single file shows full picture
 - Must navigate between 7+ files
 - Context switching between schema JSON and JS code
 - Different mental models (schema vs. DI vs. registry)
 
 **Feedback Loop:**
+
 - Errors only appear at runtime or integration tests
 - No early validation during development
 - Long cycle time between mistake and detection
 - Difficult to identify which step was missed
 
 **Onboarding Impact:**
+
 - New developers struggle
 - Even experienced developers make mistakes
 - Process requires deep codebase knowledge
@@ -501,12 +547,14 @@ JSON Schemas          JavaScript Code         Test Files
 ```
 
 **Why It's Problematic:**
+
 - Each file has partial knowledge
 - Must manually synchronize changes
 - No automated consistency check
 - Easy for pieces to drift
 
 **Contrast with Better Patterns:**
+
 - Single schema generates code (e.g., OpenAPI → server stubs)
 - Code annotations drive registration (e.g., Spring decorators)
 - Convention over configuration (e.g., Rails ActiveRecord)
@@ -514,12 +562,14 @@ JSON Schemas          JavaScript Code         Test Files
 #### Manual Process Inherently Error-Prone
 
 **Human Factors:**
+
 - Checklists are often skipped when under time pressure
 - Copy-paste introduces subtle errors
 - Interruptions cause steps to be forgotten
 - Confidence increases, vigilance decreases
 
 **No Automation:**
+
 - No code generation tools
 - No scaffolding scripts
 - No build-time validation
@@ -528,6 +578,7 @@ JSON Schemas          JavaScript Code         Test Files
 #### Late Error Detection
 
 **When Errors Are Detected:**
+
 1. **Pre-validation** (if registered): During mod loading
 2. **Schema validation** (if schema added): During mod loading
 3. **Operation registry** (if mapped): When rule tries to execute
@@ -544,6 +595,7 @@ JSON Schemas          JavaScript Code         Test Files
 **Alternative**: Generate handler boilerplate from schema
 
 **Potential Approach:**
+
 ```bash
 npm run create-operation drink_from
 
@@ -565,6 +617,7 @@ npm run create-operation drink_from
 **Alternative**: Validate completeness during build
 
 **Potential Checks:**
+
 - All schemas in `/operations/` are referenced in `operation.schema.json`
 - All operation types in schemas are in `KNOWN_OPERATION_TYPES`
 - All operation types have handlers registered
@@ -577,6 +630,7 @@ npm run create-operation drink_from
 **Alternative**: Fail fast with helpful messages
 
 **Examples:**
+
 - Pre-commit hook validates operation completeness
 - Build script checks registration consistency
 - IDE extension highlights missing registrations
@@ -618,6 +672,7 @@ Tight Coupling Desired:           Current Weak Coupling:
 **Problem**: No checkpoint validation between steps
 
 **Current Process:**
+
 1. Create schema → No validation
 2. Add handler → No validation
 3. Register token → No validation
@@ -625,6 +680,7 @@ Tight Coupling Desired:           Current Weak Coupling:
 5. Run tests → Errors detected!
 
 **Improved Process:**
+
 1. Create schema → Validate schema syntax
 2. Add to operation.schema.json → Verify $ref resolves
 3. Add handler → Verify extends BaseOperationHandler
@@ -667,8 +723,8 @@ Tight Coupling Desired:           Current Weak Coupling:
 const KNOWN_OPERATION_TYPES = [
   'ADD_COMPONENT',
   'REMOVE_COMPONENT',
-  'DRINK_FROM',      // Added for DRINK_FROM operation
-  'DRINK_ENTIRELY',  // Added for DRINK_ENTIRELY operation
+  'DRINK_FROM', // Added for DRINK_FROM operation
+  'DRINK_ENTIRELY', // Added for DRINK_ENTIRELY operation
   // ... ADD NEW OPERATION TYPES HERE
 ];
 ```
@@ -697,14 +753,21 @@ export function registerInterpreter(container) {
   const operationRegistry = container.resolve(tokens.IOperationRegistry);
 
   // Operation mappings - keep alphabetically sorted
-  operationRegistry.registerOperation('ADD_COMPONENT', tokens.IAddComponentHandler);
-  operationRegistry.registerOperation('DRINK_ENTIRELY', tokens.IDrinkEntirelyHandler);
+  operationRegistry.registerOperation(
+    'ADD_COMPONENT',
+    tokens.IAddComponentHandler
+  );
+  operationRegistry.registerOperation(
+    'DRINK_ENTIRELY',
+    tokens.IDrinkEntirelyHandler
+  );
   operationRegistry.registerOperation('DRINK_FROM', tokens.IDrinkFromHandler);
   // ... ADD NEW MAPPINGS HERE (alphabetically)
 }
 ```
 
 **Impact**:
+
 - Developers have guidance at point of modification
 - Reduces "what file do I update next?" questions
 - Links related files for easier navigation
@@ -777,6 +840,7 @@ See docs/adding-operations.md for complete checklist.
 ```
 
 **Impact**:
+
 - Reduces debugging time from hours to minutes
 - Developers get actionable next steps immediately
 - Self-documenting error messages reduce support burden
@@ -787,7 +851,7 @@ See docs/adding-operations.md for complete checklist.
 
 **Addition to CLAUDE.md:**
 
-```markdown
+````markdown
 ### Adding New Operations - Complete Checklist
 
 When adding a new operation to the system, follow this checklist to ensure complete integration:
@@ -864,39 +928,45 @@ npm run test:integration
 # Final verification: Full test suite
 npm run test:ci
 ```
+````
 
 #### Common Pitfalls
 
 ❌ **Forgetting pre-validation whitelist** (Step 7)
+
 - Symptom: "Unknown operation type" error during mod loading
 - Fix: Add to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`
 
 ❌ **Type string mismatch**
+
 - Symptom: "No handler registered" error at runtime
 - Fix: Ensure type matches exactly in schema, registry, and whitelist
 
 ❌ **Missing schema $ref**
+
 - Symptom: AJV validation fails with "no matching schema"
 - Fix: Add `$ref` to `operation.schema.json`
 
 ❌ **Incomplete DI registration**
+
 - Symptom: "Cannot resolve token" error
 - Fix: Check token defined, factory registered, and operation mapped
 
 #### Quick Reference
 
-| File | Purpose | Pattern |
-|------|---------|---------|
-| `[operation].schema.json` | Structure | `"const": "OPERATION_NAME"` |
-| `operation.schema.json` | Reference | `{ "$ref": "./[operation].schema.json" }` |
-| `[operation]Handler.js` | Logic | `class extends BaseOperationHandler` |
-| `tokens-core.js` | Token | `I[Operation]Handler: 'I[Operation]Handler'` |
-| `operationHandlerRegistrations.js` | Factory | `container.register(token, Class)` |
-| `interpreterRegistrations.js` | Mapping | `registerOperation('TYPE', token)` |
-| `preValidationUtils.js` | Whitelist | `'OPERATION_NAME'` in array |
+| File                               | Purpose   | Pattern                                      |
+| ---------------------------------- | --------- | -------------------------------------------- |
+| `[operation].schema.json`          | Structure | `"const": "OPERATION_NAME"`                  |
+| `operation.schema.json`            | Reference | `{ "$ref": "./[operation].schema.json" }`    |
+| `[operation]Handler.js`            | Logic     | `class extends BaseOperationHandler`         |
+| `tokens-core.js`                   | Token     | `I[Operation]Handler: 'I[Operation]Handler'` |
+| `operationHandlerRegistrations.js` | Factory   | `container.register(token, Class)`           |
+| `interpreterRegistrations.js`      | Mapping   | `registerOperation('TYPE', token)`           |
+| `preValidationUtils.js`            | Whitelist | `'OPERATION_NAME'` in array                  |
 
 See `docs/adding-operations.md` for detailed examples and troubleshooting.
-```
+
+````
 
 **Impact**:
 - Comprehensive checklist reduces missed steps
@@ -926,7 +996,7 @@ See `docs/adding-operations.md` for detailed examples and troubleshooting.
 class DrinkFromHandler extends BaseOperationHandler {
   // ...
 }
-```
+````
 
 **Example in schema file:**
 
@@ -942,6 +1012,7 @@ class DrinkFromHandler extends BaseOperationHandler {
 ```
 
 **Impact**:
+
 - IDE navigation between related files
 - Documentation at point of use
 - Easier code review and maintenance
@@ -987,7 +1058,7 @@ if (!OPERATION_NAME) {
 function toPascalCase(snakeCase) {
   return snakeCase
     .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join('');
 }
 
@@ -998,7 +1069,8 @@ function toUpperSnakeCase(snakeCase) {
 
 const operationNamePascal = toPascalCase(OPERATION_NAME);
 const operationNameUpper = toUpperSnakeCase(OPERATION_NAME);
-const operationNameCamel = operationNamePascal.charAt(0).toLowerCase() + operationNamePascal.slice(1);
+const operationNameCamel =
+  operationNamePascal.charAt(0).toLowerCase() + operationNamePascal.slice(1);
 
 console.log('🚀 Creating operation handler...');
 console.log(`  Operation: ${OPERATION_NAME}`);
@@ -1043,16 +1115,21 @@ console.log(`  ✅ Created ${schemaPath}`);
 // Step 2: Update operation.schema.json
 console.log('\n📋 Step 2: Adding schema reference to operation.schema.json...');
 const operationSchemaPath = 'data/schemas/operations/operation.schema.json';
-const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
+const operationSchema = JSON.parse(
+  fs.readFileSync(operationSchemaPath, 'utf8')
+);
 
-const newRef = { "$ref": `./${operationNameCamel}.schema.json` };
+const newRef = { $ref: `./${operationNameCamel}.schema.json` };
 if (!operationSchema.oneOf) {
   operationSchema.oneOf = [];
 }
 operationSchema.oneOf.push(newRef);
 operationSchema.oneOf.sort((a, b) => a.$ref.localeCompare(b.$ref));
 
-fs.writeFileSync(operationSchemaPath, JSON.stringify(operationSchema, null, 2) + '\n');
+fs.writeFileSync(
+  operationSchemaPath,
+  JSON.stringify(operationSchema, null, 2) + '\n'
+);
 console.log(`  ✅ Updated ${operationSchemaPath}`);
 
 // Step 3: Create handler class
@@ -1156,11 +1233,13 @@ const tokensPath = 'src/dependencyInjection/tokens/tokens-core.js';
 let tokensContent = fs.readFileSync(tokensPath, 'utf8');
 
 const tokenEntry = `  I${operationNamePascal}Handler: 'I${operationNamePascal}Handler',`;
-const tokensMatch = tokensContent.match(/export const tokens = \{([\s\S]*?)\};/);
+const tokensMatch = tokensContent.match(
+  /export const tokens = \{([\s\S]*?)\};/
+);
 
 if (tokensMatch) {
   const tokensBody = tokensMatch[1];
-  const tokenLines = tokensBody.split('\n').filter(line => line.trim());
+  const tokenLines = tokensBody.split('\n').filter((line) => line.trim());
   tokenLines.push(tokenEntry);
   tokenLines.sort();
 
@@ -1178,21 +1257,21 @@ if (tokensMatch) {
 
 // Step 5: Register handler factory
 console.log('\n📋 Step 5: Registering handler factory...');
-const registrationsPath = 'src/dependencyInjection/registrations/operationHandlerRegistrations.js';
+const registrationsPath =
+  'src/dependencyInjection/registrations/operationHandlerRegistrations.js';
 let registrationsContent = fs.readFileSync(registrationsPath, 'utf8');
 
 const importStatement = `import ${operationNamePascal}Handler from '../../logic/operationHandlers/${operationNameCamel}Handler.js';`;
 const registrationStatement = `  container.register(tokens.I${operationNamePascal}Handler, ${operationNamePascal}Handler);`;
 
 // Add import (alphabetically)
-const imports = registrationsContent.split('\n').filter(line => line.startsWith('import') && line.includes('Handler'));
+const imports = registrationsContent
+  .split('\n')
+  .filter((line) => line.startsWith('import') && line.includes('Handler'));
 imports.push(importStatement);
 imports.sort();
 
-registrationsContent = registrationsContent.replace(
-  /import.*Handler.*\n/g,
-  ''
-);
+registrationsContent = registrationsContent.replace(/import.*Handler.*\n/g, '');
 registrationsContent = imports.join('\n') + '\n' + registrationsContent;
 
 // Add registration (alphabetically)
@@ -1206,7 +1285,8 @@ console.log(`  ✅ Updated ${registrationsPath}`);
 
 // Step 6: Map operation
 console.log('\n📋 Step 6: Mapping operation to handler...');
-const interpreterPath = 'src/dependencyInjection/registrations/interpreterRegistrations.js';
+const interpreterPath =
+  'src/dependencyInjection/registrations/interpreterRegistrations.js';
 let interpreterContent = fs.readFileSync(interpreterPath, 'utf8');
 
 const mappingStatement = `  operationRegistry.registerOperation('${operationNameUpper}', tokens.I${operationNamePascal}Handler);`;
@@ -1224,12 +1304,18 @@ console.log('\n📋 Step 7: Adding to pre-validation whitelist...');
 const preValidationPath = 'src/utils/preValidationUtils.js';
 let preValidationContent = fs.readFileSync(preValidationPath, 'utf8');
 
-const whitelistMatch = preValidationContent.match(/const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+const whitelistMatch = preValidationContent.match(
+  /const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
+);
 
 if (whitelistMatch) {
   const whitelistBody = whitelistMatch[1];
-  const whitelistLines = whitelistBody.split('\n').filter(line => line.trim() && !line.trim().startsWith('//'));
-  const operations = whitelistLines.map(line => line.trim().replace(/[',]/g, '')).filter(Boolean);
+  const whitelistLines = whitelistBody
+    .split('\n')
+    .filter((line) => line.trim() && !line.trim().startsWith('//'));
+  const operations = whitelistLines
+    .map((line) => line.trim().replace(/[',]/g, ''))
+    .filter(Boolean);
 
   operations.push(`'${operationNameUpper}'`);
   operations.sort();
@@ -1243,7 +1329,9 @@ if (whitelistMatch) {
   fs.writeFileSync(preValidationPath, preValidationContent);
   console.log(`  ✅ Updated ${preValidationPath}`);
 } else {
-  console.error(`  ❌ Could not update ${preValidationPath} - manual update required`);
+  console.error(
+    `  ❌ Could not update ${preValidationPath} - manual update required`
+  );
 }
 
 // Step 8: Create test templates
@@ -1398,7 +1486,9 @@ try {
 
 console.log('\n✅ Operation handler scaffolding complete!');
 console.log('\n📝 Next steps:');
-console.log('  1. Review and update generated files with actual implementation');
+console.log(
+  '  1. Review and update generated files with actual implementation'
+);
 console.log(`  2. Edit ${schemaPath} to define correct parameters`);
 console.log(`  3. Implement business logic in ${handlerPath}`);
 console.log(`  4. Complete test cases in ${unitTestPath}`);
@@ -1419,6 +1509,7 @@ console.log('\n📚 See docs/adding-operations.md for detailed guidance.');
 ```
 
 **Impact**:
+
 - Reduces manual work from 30+ minutes to 2 minutes
 - Eliminates copy-paste errors
 - Ensures all registration points are updated
@@ -1452,8 +1543,13 @@ console.log('🔍 Validating operation registration completeness...\n');
 
 // 1. Collect all operation schemas
 console.log('📋 Step 1: Scanning operation schemas...');
-const schemaFiles = glob.sync('data/schemas/operations/*.schema.json')
-  .filter(f => !f.endsWith('operation.schema.json') && !f.endsWith('base-operation.schema.json'));
+const schemaFiles = glob
+  .sync('data/schemas/operations/*.schema.json')
+  .filter(
+    (f) =>
+      !f.endsWith('operation.schema.json') &&
+      !f.endsWith('base-operation.schema.json')
+  );
 
 const operationsFromSchemas = [];
 
@@ -1469,7 +1565,9 @@ for (const schemaFile of schemaFiles) {
       schemaFile: path.basename(schemaFile),
     });
   } else {
-    warnings.push(`⚠️  Schema ${schemaFile} does not define operation type constant`);
+    warnings.push(
+      `⚠️  Schema ${schemaFile} does not define operation type constant`
+    );
   }
 }
 
@@ -1478,15 +1576,19 @@ console.log(`  Found ${operationsFromSchemas.length} operation schemas`);
 // 2. Check operation.schema.json references
 console.log('\n📋 Step 2: Checking operation.schema.json references...');
 const operationSchemaPath = 'data/schemas/operations/operation.schema.json';
-const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
+const operationSchema = JSON.parse(
+  fs.readFileSync(operationSchemaPath, 'utf8')
+);
 
-const referencedSchemas = operationSchema.oneOf.map(ref =>
+const referencedSchemas = operationSchema.oneOf.map((ref) =>
   path.basename(ref.$ref)
 );
 
 for (const op of operationsFromSchemas) {
   if (!referencedSchemas.includes(op.schemaFile)) {
-    errors.push(`❌ Schema ${op.schemaFile} not referenced in operation.schema.json`);
+    errors.push(
+      `❌ Schema ${op.schemaFile} not referenced in operation.schema.json`
+    );
   }
 }
 
@@ -1497,7 +1599,9 @@ console.log('\n📋 Step 3: Checking pre-validation whitelist...');
 const preValidationPath = 'src/utils/preValidationUtils.js';
 const preValidationContent = fs.readFileSync(preValidationPath, 'utf8');
 
-const whitelistMatch = preValidationContent.match(/const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/);
+const whitelistMatch = preValidationContent.match(
+  /const KNOWN_OPERATION_TYPES = \[([\s\S]*?)\];/
+);
 const knownTypes = [];
 
 if (whitelistMatch) {
@@ -1510,7 +1614,9 @@ if (whitelistMatch) {
 
 for (const op of operationsFromSchemas) {
   if (!knownTypes.includes(op.type)) {
-    errors.push(`❌ Operation type ${op.type} not in KNOWN_OPERATION_TYPES (preValidationUtils.js)`);
+    errors.push(
+      `❌ Operation type ${op.type} not in KNOWN_OPERATION_TYPES (preValidationUtils.js)`
+    );
   }
 }
 
@@ -1522,10 +1628,14 @@ const tokensPath = 'src/dependencyInjection/tokens/tokens-core.js';
 const tokensContent = fs.readFileSync(tokensPath, 'utf8');
 
 function toTokenName(operationType) {
-  return 'I' + operationType
-    .split('_')
-    .map(word => word.charAt(0) + word.slice(1).toLowerCase())
-    .join('') + 'Handler';
+  return (
+    'I' +
+    operationType
+      .split('_')
+      .map((word) => word.charAt(0) + word.slice(1).toLowerCase())
+      .join('') +
+    'Handler'
+  );
 }
 
 const definedTokens = [];
@@ -1537,7 +1647,9 @@ for (const match of tokenMatches) {
 for (const op of operationsFromSchemas) {
   const expectedToken = toTokenName(op.type);
   if (!definedTokens.includes(expectedToken)) {
-    errors.push(`❌ Token ${expectedToken} not defined for operation ${op.type} (tokens-core.js)`);
+    errors.push(
+      `❌ Token ${expectedToken} not defined for operation ${op.type} (tokens-core.js)`
+    );
   }
 }
 
@@ -1545,11 +1657,14 @@ console.log(`  ${definedTokens.length} handler tokens defined`);
 
 // 5. Check handler registrations
 console.log('\n📋 Step 5: Checking handler factory registrations...');
-const handlerRegPath = 'src/dependencyInjection/registrations/operationHandlerRegistrations.js';
+const handlerRegPath =
+  'src/dependencyInjection/registrations/operationHandlerRegistrations.js';
 const handlerRegContent = fs.readFileSync(handlerRegPath, 'utf8');
 
 const registeredHandlers = [];
-const regMatches = handlerRegContent.matchAll(/container\.register\(tokens\.(I\w+Handler)/g);
+const regMatches = handlerRegContent.matchAll(
+  /container\.register\(tokens\.(I\w+Handler)/g
+);
 for (const match of regMatches) {
   registeredHandlers.push(match[1]);
 }
@@ -1557,7 +1672,9 @@ for (const match of regMatches) {
 for (const op of operationsFromSchemas) {
   const expectedToken = toTokenName(op.type);
   if (!registeredHandlers.includes(expectedToken)) {
-    errors.push(`❌ Handler ${expectedToken} not registered for operation ${op.type} (operationHandlerRegistrations.js)`);
+    errors.push(
+      `❌ Handler ${expectedToken} not registered for operation ${op.type} (operationHandlerRegistrations.js)`
+    );
   }
 }
 
@@ -1565,7 +1682,8 @@ console.log(`  ${registeredHandlers.length} handlers registered`);
 
 // 6. Check operation registry mappings
 console.log('\n📋 Step 6: Checking operation registry mappings...');
-const interpreterPath = 'src/dependencyInjection/registrations/interpreterRegistrations.js';
+const interpreterPath =
+  'src/dependencyInjection/registrations/interpreterRegistrations.js';
 const interpreterContent = fs.readFileSync(interpreterPath, 'utf8');
 
 const mappedOperations = [];
@@ -1576,7 +1694,9 @@ for (const match of mapMatches) {
 
 for (const op of operationsFromSchemas) {
   if (!mappedOperations.includes(op.type)) {
-    errors.push(`❌ Operation ${op.type} not mapped in operation registry (interpreterRegistrations.js)`);
+    errors.push(
+      `❌ Operation ${op.type} not mapped in operation registry (interpreterRegistrations.js)`
+    );
   }
 }
 
@@ -1586,16 +1706,24 @@ console.log(`  ${mappedOperations.length} operations mapped`);
 console.log('\n📋 Step 7: Checking handler file existence...');
 
 function toHandlerFileName(operationType) {
-  return operationType
-    .split('_')
-    .map((word, idx) => idx === 0 ? word.toLowerCase() : word.charAt(0) + word.slice(1).toLowerCase())
-    .join('') + 'Handler.js';
+  return (
+    operationType
+      .split('_')
+      .map((word, idx) =>
+        idx === 0
+          ? word.toLowerCase()
+          : word.charAt(0) + word.slice(1).toLowerCase()
+      )
+      .join('') + 'Handler.js'
+  );
 }
 
 for (const op of operationsFromSchemas) {
   const expectedFile = `src/logic/operationHandlers/${toHandlerFileName(op.type)}`;
   if (!fs.existsSync(expectedFile)) {
-    errors.push(`❌ Handler file ${expectedFile} not found for operation ${op.type}`);
+    errors.push(
+      `❌ Handler file ${expectedFile} not found for operation ${op.type}`
+    );
   }
 }
 
@@ -1605,16 +1733,18 @@ console.log('📊 Validation Results\n');
 
 if (warnings.length > 0) {
   console.log('⚠️  Warnings:');
-  warnings.forEach(w => console.log(`  ${w}`));
+  warnings.forEach((w) => console.log(`  ${w}`));
   console.log();
 }
 
 if (errors.length > 0) {
   console.log('❌ Errors:');
-  errors.forEach(e => console.log(`  ${e}`));
+  errors.forEach((e) => console.log(`  ${e}`));
   console.log();
   console.log(`Found ${errors.length} error(s) that must be fixed.`);
-  console.log('\n📚 See docs/adding-operations.md for guidance on fixing these issues.');
+  console.log(
+    '\n📚 See docs/adding-operations.md for guidance on fixing these issues.'
+  );
   process.exit(1);
 } else {
   console.log('✅ All operation handlers are properly registered!');
@@ -1651,6 +1781,7 @@ console.log('='.repeat(70));
 ```
 
 **Impact**:
+
 - Catches missing registrations immediately
 - Runs in <5 seconds
 - Can be added to pre-commit hook
@@ -1695,7 +1826,9 @@ function formatValidationError(operationType, missingRegistrations) {
   if (missingRegistrations.includes('schema')) {
     lines.push('');
     lines.push('  ⚠️  SCHEMA NOT FOUND');
-    lines.push(`  Expected: data/schemas/operations/${operationType.toLowerCase()}.schema.json`);
+    lines.push(
+      `  Expected: data/schemas/operations/${operationType.toLowerCase()}.schema.json`
+    );
     lines.push('  Action: Create schema file with operation type constant');
   }
 
@@ -1704,7 +1837,9 @@ function formatValidationError(operationType, missingRegistrations) {
     lines.push('  ⚠️  SCHEMA NOT REFERENCED');
     lines.push('  File: data/schemas/operations/operation.schema.json');
     lines.push('  Action: Add $ref to oneOf array');
-    lines.push(`  Code: { "$ref": "./${operationType.toLowerCase()}.schema.json" }`);
+    lines.push(
+      `  Code: { "$ref": "./${operationType.toLowerCase()}.schema.json" }`
+    );
   }
 
   lines.push('');
@@ -1734,8 +1869,10 @@ export function validateOperationType(operationType, logger) {
 
   // Check schema referenced
   const operationSchemaPath = 'data/schemas/operations/operation.schema.json';
-  const operationSchema = JSON.parse(fs.readFileSync(operationSchemaPath, 'utf8'));
-  const isReferenced = operationSchema.oneOf.some(ref =>
+  const operationSchema = JSON.parse(
+    fs.readFileSync(operationSchemaPath, 'utf8')
+  );
+  const isReferenced = operationSchema.oneOf.some((ref) =>
     ref.$ref.includes(operationType.toLowerCase())
   );
   if (!isReferenced) {
@@ -1743,7 +1880,10 @@ export function validateOperationType(operationType, logger) {
   }
 
   if (missingRegistrations.length > 0) {
-    const error = new OperationValidationError(operationType, missingRegistrations);
+    const error = new OperationValidationError(
+      operationType,
+      missingRegistrations
+    );
     logger.error(error.message);
     throw error;
   }
@@ -1751,6 +1891,7 @@ export function validateOperationType(operationType, logger) {
 ```
 
 **Impact**:
+
 - Developers immediately know what's missing
 - Error message provides exact code to add
 - Links to documentation for full context
@@ -1781,13 +1922,8 @@ export function validateOperationType(operationType, logger) {
       "success": "DRINK_FROM_COMPLETED",
       "failure": "DRINK_FROM_FAILED"
     },
-    "stateQueries": [
-      "items:drinkable",
-      "items:quantity"
-    ],
-    "stateMutations": [
-      "items:quantity"
-    ]
+    "stateQueries": ["items:drinkable", "items:quantity"],
+    "stateMutations": ["items:quantity"]
   },
   "allOf": [
     {
@@ -1834,6 +1970,7 @@ npm run generate-handler --from-schema data/schemas/operations/drinkFrom.schema.
 ```
 
 **Benefits**:
+
 - Single source of truth (schema)
 - No manual synchronization
 - Consistent patterns
@@ -1855,10 +1992,7 @@ export const OPERATION_DEFINITIONS = {
     handlerToken: 'IDrinkFromHandler',
     schemaPath: 'data/schemas/operations/drinkFrom.schema.json',
     category: 'items',
-    dependencies: [
-      'IComponentMutationService',
-      'IEntityStateQuerier',
-    ],
+    dependencies: ['IComponentMutationService', 'IEntityStateQuerier'],
     events: {
       success: 'DRINK_FROM_COMPLETED',
       failure: 'DRINK_FROM_FAILED',
@@ -1871,10 +2005,7 @@ export const OPERATION_DEFINITIONS = {
     handlerToken: 'IDrinkEntirelyHandler',
     schemaPath: 'data/schemas/operations/drinkEntirely.schema.json',
     category: 'items',
-    dependencies: [
-      'IComponentMutationService',
-      'IEntityStateQuerier',
-    ],
+    dependencies: ['IComponentMutationService', 'IEntityStateQuerier'],
     events: {
       success: 'DRINK_ENTIRELY_COMPLETED',
       failure: 'DRINK_ENTIRELY_FAILED',
@@ -1899,15 +2030,20 @@ export const OPERATION_DEFINITIONS = {
 export const KNOWN_OPERATION_TYPES = Object.keys(OPERATION_DEFINITIONS);
 
 // Auto-generate tokens
-export const tokens = Object.values(OPERATION_DEFINITIONS).reduce((acc, def) => {
-  acc[def.handlerToken] = def.handlerToken;
-  return acc;
-}, {});
+export const tokens = Object.values(OPERATION_DEFINITIONS).reduce(
+  (acc, def) => {
+    acc[def.handlerToken] = def.handlerToken;
+    return acc;
+  },
+  {}
+);
 
 // Auto-register handlers
 export function registerOperationHandlers(container) {
   for (const def of Object.values(OPERATION_DEFINITIONS)) {
-    const HandlerClass = require(`../../logic/operationHandlers/${def.handlerClass.charAt(0).toLowerCase() + def.handlerClass.slice(1)}.js`).default;
+    const HandlerClass = require(
+      `../../logic/operationHandlers/${def.handlerClass.charAt(0).toLowerCase() + def.handlerClass.slice(1)}.js`
+    ).default;
     container.register(tokens[def.handlerToken], HandlerClass);
   }
 }
@@ -1923,6 +2059,7 @@ export function registerInterpreter(container) {
 ```
 
 **Benefits**:
+
 - Single place to add operations
 - Automatic registration everywhere
 - Impossible to have inconsistency
@@ -1955,7 +2092,10 @@ export function autoRegisterOperationHandlers(container) {
 
       // Auto-map
       const operationRegistry = container.resolve(tokens.IOperationRegistry);
-      operationRegistry.registerOperation(HandlerClass.operationType, tokenName);
+      operationRegistry.registerOperation(
+        HandlerClass.operationType,
+        tokenName
+      );
     }
   }
 }
@@ -1974,6 +2114,7 @@ class DrinkFromHandler extends BaseOperationHandler {
 ```
 
 **Benefits**:
+
 - Zero manual registration
 - Just create handler file and it works
 - Convention over configuration
@@ -1984,6 +2125,7 @@ class DrinkFromHandler extends BaseOperationHandler {
 **Concept**: Use TypeScript for compile-time safety
 
 **Benefits**:
+
 - Type checking catches missing registrations at build time
 - Interface enforcement for handlers
 - Better IDE support
@@ -2012,6 +2154,7 @@ export enum OperationTypeEnum {
 ```
 
 **Considerations**:
+
 - Significant migration effort
 - Build process changes
 - Testing infrastructure updates
@@ -2029,21 +2172,25 @@ export enum OperationTypeEnum {
 **Impact**: Medium
 
 #### Day 1
+
 - [ ] Update CLAUDE.md with enhanced checklist and validation commands
 - [ ] Add detailed inline comments to all registration files
 - [ ] Add JSDoc cross-references in handler files
 
 #### Day 2
+
 - [ ] Implement improved error messages in `preValidationUtils.js`
 - [ ] Enhance error messages in operation registry
 - [ ] Add file path suggestions to validation errors
 
 #### Day 3
+
 - [ ] Create docs/adding-operations.md with detailed guide
 - [ ] Add troubleshooting section for common issues
 - [ ] Update existing operation handlers with cross-references
 
 **Outcomes**:
+
 - Developers have clear guidance at point of use
 - Error messages provide actionable next steps
 - Reduced support requests
@@ -2055,26 +2202,31 @@ export enum OperationTypeEnum {
 **Impact**: High
 
 #### Week 1
+
 - [ ] Implement CLI scaffolding tool (`npm run create-operation`)
 - [ ] Add comprehensive templates for all file types
 - [ ] Test scaffolding tool with new operation
 
 #### Week 2
+
 - [ ] Create build-time validation script (`npm run validate:operations`)
 - [ ] Integrate validation into CI pipeline
 - [ ] Add pre-commit hook for validation
 
 #### Week 3
+
 - [ ] Refactor pre-validation for better error messages
 - [ ] Add specific checks for each registration point
 - [ ] Create validation report format
 
 #### Week 4
+
 - [ ] Create integration test template generator
 - [ ] Add automated test coverage checks
 - [ ] Document improved workflow
 
 **Outcomes**:
+
 - Time to add operation reduced from 1-3 hours to 15-30 minutes
 - Automated catching of missing registrations
 - Consistent, high-quality implementations
@@ -2086,6 +2238,7 @@ export enum OperationTypeEnum {
 **Impact**: Very High
 
 #### Month 1: Investigation & Design
+
 - [ ] Research schema-driven code generation approaches
 - [ ] Design single source of truth architecture
 - [ ] Prototype auto-discovery registration
@@ -2094,6 +2247,7 @@ export enum OperationTypeEnum {
 - [ ] Get team feedback and buy-in
 
 #### Month 2: Implementation
+
 - [ ] Implement chosen architecture approach
 - [ ] Migrate existing operations to new pattern
 - [ ] Update documentation and guides
@@ -2101,6 +2255,7 @@ export enum OperationTypeEnum {
 - [ ] Comprehensive testing of new architecture
 
 #### Month 3: Rollout & Refinement
+
 - [ ] Deploy new architecture to development
 - [ ] Monitor for issues and gather feedback
 - [ ] Refine based on real-world usage
@@ -2109,6 +2264,7 @@ export enum OperationTypeEnum {
 - [ ] Celebrate success! 🎉
 
 **Outcomes**:
+
 - Near-zero chance of registration errors
 - Single command to add operations
 - Self-documenting architecture
@@ -2128,6 +2284,7 @@ export enum OperationTypeEnum {
 3. **No forced migration**: Old patterns continue to work
 
 **Migration Priority**:
+
 1. Most recently added operations (easiest)
 2. Operations needing bug fixes (opportunistic)
 3. Frequently modified operations (high value)
@@ -2154,25 +2311,27 @@ export function registerOperations(container) {
 
 **Current State** vs **Target State**:
 
-| Metric | Current | Phase 1 | Phase 2 | Phase 3 |
-|--------|---------|---------|---------|---------|
-| Time to add operation | 1-3 hours | 45-60 min | 15-30 min | 5-10 min |
-| Debugging time per issue | 2+ hours | 1 hour | 15-30 min | <15 min |
-| Steps requiring manual updates | 7 files | 7 files | 3 files | 1 command |
-| Error detection time | Runtime/Integration tests | Runtime | Build time | Compile time |
-| Registration errors per operation | ~1-2 | ~0.5 | ~0.1 | ~0 |
-| Documentation lookups needed | 3-5 times | 1-2 times | 0-1 times | 0 times |
-| Developer confidence (1-10) | 4-5 | 6-7 | 8-9 | 9-10 |
+| Metric                            | Current                   | Phase 1   | Phase 2    | Phase 3      |
+| --------------------------------- | ------------------------- | --------- | ---------- | ------------ |
+| Time to add operation             | 1-3 hours                 | 45-60 min | 15-30 min  | 5-10 min     |
+| Debugging time per issue          | 2+ hours                  | 1 hour    | 15-30 min  | <15 min      |
+| Steps requiring manual updates    | 7 files                   | 7 files   | 3 files    | 1 command    |
+| Error detection time              | Runtime/Integration tests | Runtime   | Build time | Compile time |
+| Registration errors per operation | ~1-2                      | ~0.5      | ~0.1       | ~0           |
+| Documentation lookups needed      | 3-5 times                 | 1-2 times | 0-1 times  | 0 times      |
+| Developer confidence (1-10)       | 4-5                       | 6-7       | 8-9        | 9-10         |
 
 ### Process Quality Metrics
 
 **Tracked via:**
+
 - Git commit messages (fix commits related to operations)
 - Issue tracker (operation-related bugs)
 - Code review comments (registration mistakes caught)
 - Developer surveys (satisfaction, pain points)
 
 **Targets**:
+
 - Reduce operation-related bugs by 80%
 - Reduce code review cycles for operations by 50%
 - Increase developer satisfaction scores by 40%
@@ -2181,12 +2340,14 @@ export function registerOperations(container) {
 ### Technical Debt Metrics
 
 **Track:**
+
 - Number of operations with inconsistent patterns
 - Number of missing registrations caught by CI
 - Time spent on operation-related refactoring
 - Code duplication in operation handlers
 
 **Targets**:
+
 - 100% of operations follow consistent patterns
 - Zero missing registrations in CI
 - Reduce refactoring time by 60%
@@ -2203,6 +2364,7 @@ export function registerOperations(container) {
 **Likelihood**: Medium
 **Impact**: High
 **Mitigation**:
+
 - Comprehensive test suite before changes
 - Gradual rollout with feature flags
 - Maintain backward compatibility
@@ -2213,6 +2375,7 @@ export function registerOperations(container) {
 **Likelihood**: Medium
 **Impact**: Medium
 **Mitigation**:
+
 - Clear migration guide
 - Automated migration tools where possible
 - Track migration progress
@@ -2223,6 +2386,7 @@ export function registerOperations(container) {
 **Likelihood**: Low
 **Impact**: Medium
 **Mitigation**:
+
 - Early involvement in design
 - Clear communication of benefits
 - Training and documentation
@@ -2233,6 +2397,7 @@ export function registerOperations(container) {
 **Likelihood**: Medium
 **Impact**: Medium
 **Mitigation**:
+
 - Prototype with real operations
 - Extensive testing
 - Iterative refinement
@@ -2248,7 +2413,8 @@ If Phase 2 or 3 causes issues:
 4. **Long-term**: Implement with lessons learned
 
 **Rollback Triggers**:
-- >2 critical bugs in production
+
+- > 2 critical bugs in production
 - Developer productivity decrease >20%
 - Test suite regression >10%
 - Stakeholder concerns
@@ -2333,6 +2499,7 @@ The recommended improvements follow a phased approach:
 **Phase 3 (Months)** explores architectural improvements like schema-driven generation and single source of truth patterns, aiming for near-zero manual work and maximum robustness.
 
 Expected outcomes include:
+
 - Time to add operation reduced from 1-3 hours to <30 minutes
 - Debugging time reduced from 2+ hours to <30 minutes
 - Error rate reduced by 80%+
@@ -2343,6 +2510,7 @@ The key to success is starting with Phase 1 immediately to provide quick relief,
 ---
 
 **Next Steps**:
+
 1. Review this report with team
 2. Prioritize recommendations based on team capacity
 3. Begin Phase 1 implementation (Days 1-3)
@@ -2350,6 +2518,7 @@ The key to success is starting with Phase 1 immediately to provide quick relief,
 5. Track metrics and adjust approach as needed
 
 **Questions for Discussion**:
+
 - Which Phase 1 improvements should we prioritize first?
 - What's our appetite for Phase 3 architectural changes?
 - Are there additional pain points not covered here?

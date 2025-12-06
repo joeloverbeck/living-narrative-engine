@@ -4,7 +4,14 @@
  * @see src/core/server.js
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import request from 'supertest';
 import path from 'node:path';
 import { createProxyServer } from '../../src/core/server.js';
@@ -45,7 +52,10 @@ describe('Server Lifecycle Integration Tests', () => {
     process.env.NODE_ENV = 'test';
 
     // Set path to test LLM config file (relative to project root)
-    process.env.LLM_CONFIG_PATH = path.resolve(process.cwd(), 'tests/fixtures/test-llm-configs.json');
+    process.env.LLM_CONFIG_PATH = path.resolve(
+      process.cwd(),
+      'tests/fixtures/test-llm-configs.json'
+    );
   });
 
   afterEach(async () => {
@@ -169,7 +179,6 @@ describe('Server Lifecycle Integration Tests', () => {
   describe('Feature 2: Server Start Lifecycle', () => {
     it('should successfully start server on specified port', async () => {
       process.env.PROXY_PORT = '3002';
-      
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
@@ -180,8 +189,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should call LLM config service initialize on start', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -191,7 +198,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should emit comprehensive startup summary logs', async () => {
-      
       process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
       process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '/test/path';
 
@@ -212,23 +218,26 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should register shutdown signal handlers on start', async () => {
       const processOnSpy = jest.spyOn(process, 'on');
-      
 
       serverController = createProxyServer();
       await serverController.start();
 
       // Verify signal handlers registered
-      expect(processOnSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
+      expect(processOnSpy).toHaveBeenCalledWith(
+        'SIGTERM',
+        expect.any(Function)
+      );
       expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
       expect(processOnSpy).toHaveBeenCalledWith('SIGHUP', expect.any(Function));
-      expect(processOnSpy).toHaveBeenCalledWith('beforeExit', expect.any(Function));
+      expect(processOnSpy).toHaveBeenCalledWith(
+        'beforeExit',
+        expect.any(Function)
+      );
 
       processOnSpy.mockRestore();
     });
 
     it('should prevent double start (idempotency)', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -242,8 +251,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should report operational status after successful start', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -254,8 +261,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log LLM configurations loaded count', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -270,7 +275,6 @@ describe('Server Lifecycle Integration Tests', () => {
     // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should log CORS configuration status when origins set', async () => {
-
       process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -284,19 +288,19 @@ describe('Server Lifecycle Integration Tests', () => {
     // NOTE: This test has been moved to tests/integration/isolated/server-api-key-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should log API key file root path when set', async () => {
-
       process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '/secure/path';
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: API Key file root path set to:')
+        expect.stringContaining(
+          'LLM Proxy Server: API Key file root path set to:'
+        )
       );
     });
 
     it('should log cache configuration when enabled', async () => {
-      
       process.env.CACHE_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -308,8 +312,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log salvage configuration', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -319,7 +321,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log HTTP agent configuration when enabled', async () => {
-      
       process.env.HTTP_AGENT_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -331,11 +332,9 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log metrics configuration when enabled', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: true
+        metricsEnabled: true,
       });
       await serverController.start();
 
@@ -346,7 +345,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should log port defaulted message when PROXY_PORT not set', async () => {
       delete process.env.PROXY_PORT;
-      
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
@@ -359,8 +357,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 3: Server Stop and Cleanup', () => {
     it('should successfully stop server', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -376,8 +372,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should cleanup salvage service on stop', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
       await serverController.stop();
@@ -388,8 +382,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should cleanup HTTP agent service on stop', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
       await serverController.stop();
@@ -400,8 +392,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should cleanup cache service on stop', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
       await serverController.stop();
@@ -412,11 +402,9 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should cleanup metrics service on stop', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: true
+        metricsEnabled: true,
       });
       await serverController.start();
       await serverController.stop();
@@ -428,17 +416,28 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should remove shutdown handlers on stop', async () => {
       const processOffSpy = jest.spyOn(process, 'off');
-      
 
       serverController = createProxyServer();
       await serverController.start();
       await serverController.stop();
 
       // Verify signal handlers removed
-      expect(processOffSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
-      expect(processOffSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
-      expect(processOffSpy).toHaveBeenCalledWith('SIGHUP', expect.any(Function));
-      expect(processOffSpy).toHaveBeenCalledWith('beforeExit', expect.any(Function));
+      expect(processOffSpy).toHaveBeenCalledWith(
+        'SIGTERM',
+        expect.any(Function)
+      );
+      expect(processOffSpy).toHaveBeenCalledWith(
+        'SIGINT',
+        expect.any(Function)
+      );
+      expect(processOffSpy).toHaveBeenCalledWith(
+        'SIGHUP',
+        expect.any(Function)
+      );
+      expect(processOffSpy).toHaveBeenCalledWith(
+        'beforeExit',
+        expect.any(Function)
+      );
 
       processOffSpy.mockRestore();
     });
@@ -451,8 +450,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should allow restart after stop', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
       await serverController.stop();
@@ -467,8 +464,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 4: Graceful Shutdown', () => {
     it('should prevent double shutdown with isShuttingDown flag', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -478,18 +473,16 @@ describe('Server Lifecycle Integration Tests', () => {
       process.emit(signal);
 
       // Wait for shutdown to process
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Should only log shutdown once
-      const shutdownLogs = mockLogger.info.mock.calls.filter(call =>
+      const shutdownLogs = mockLogger.info.mock.calls.filter((call) =>
         call[0].includes('Received SIGTERM')
       );
       expect(shutdownLogs.length).toBe(1);
     });
 
     it('should log graceful shutdown message with signal name', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -503,14 +496,13 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should handle beforeExit event', async () => {
       const processOnSpy = jest.spyOn(process, 'on');
-      
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
       // Verify beforeExit handler registered
       const beforeExitCall = processOnSpy.mock.calls.find(
-        call => call[0] === 'beforeExit'
+        (call) => call[0] === 'beforeExit'
       );
       expect(beforeExitCall).toBeDefined();
 
@@ -520,8 +512,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 5: Middleware Stack Integration', () => {
     it('should apply security middleware to all responses', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -532,8 +522,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should apply compression middleware', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -546,8 +534,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should apply rate limiting when enabled', async () => {
-      
-
       serverController = createProxyServer({ rateLimitingEnabled: true });
       await serverController.start();
 
@@ -558,27 +544,23 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should skip rate limiting when disabled', async () => {
-      
-
       serverController = createProxyServer({ rateLimitingEnabled: false });
       await serverController.start();
 
       // Make multiple rapid requests
-      const requests = Array(10).fill(null).map(() =>
-        request(serverController.app).get('/health')
-      );
+      const requests = Array(10)
+        .fill(null)
+        .map(() => request(serverController.app).get('/health'));
 
       const responses = await Promise.all(requests);
 
       // All should succeed without rate limiting
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect(response.status).not.toBe(429);
       });
     });
 
     it('should apply JSON body parsing with size limits', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -593,8 +575,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should apply request tracking middleware', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -605,15 +585,15 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should apply metrics middleware when metrics enabled', async () => {
-      
-
       serverController = createProxyServer({ metricsEnabled: true });
       await serverController.start();
 
       await request(serverController.app).get('/health');
 
       // Metrics should be collected
-      const metricsResponse = await request(serverController.app).get('/metrics');
+      const metricsResponse = await request(serverController.app).get(
+        '/metrics'
+      );
       expect(metricsResponse.status).toBe(200);
     });
   });
@@ -622,28 +602,31 @@ describe('Server Lifecycle Integration Tests', () => {
     // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should configure CORS with single allowed origin', async () => {
-
       process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: Configuring CORS for 1 origin(s)')
+        expect.stringContaining(
+          'LLM Proxy Server: Configuring CORS for 1 origin(s)'
+        )
       );
     });
 
     // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should configure CORS with multiple allowed origins', async () => {
-
-      process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080,http://127.0.0.1:8080';
+      process.env.PROXY_ALLOWED_ORIGIN =
+        'http://localhost:8080,http://127.0.0.1:8080';
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: Configuring CORS for 2 origin(s)')
+        expect.stringContaining(
+          'LLM Proxy Server: Configuring CORS for 2 origin(s)'
+        )
       );
     });
 
@@ -656,7 +639,9 @@ describe('Server Lifecycle Integration Tests', () => {
       await serverController.start();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: CORS not configured in development mode')
+        expect.stringContaining(
+          'LLM Proxy Server: CORS not configured in development mode'
+        )
       );
     });
 
@@ -684,12 +669,13 @@ describe('Server Lifecycle Integration Tests', () => {
       await serverController.start();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set')
+        expect.stringContaining(
+          'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set'
+        )
       );
     });
 
     it('should handle empty string for PROXY_ALLOWED_ORIGIN', async () => {
-      
       process.env.PROXY_ALLOWED_ORIGIN = '';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -702,7 +688,7 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should resolve NODE_ENV correctly for CORS logic', async () => {
       delete process.env.NODE_ENV;
-      
+
       delete process.env.PROXY_ALLOWED_ORIGIN;
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -722,14 +708,15 @@ describe('Server Lifecycle Integration Tests', () => {
 
       // Should recognize as development after trimming/lowercasing
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: CORS not configured in development mode')
+        expect.stringContaining(
+          'LLM Proxy Server: CORS not configured in development mode'
+        )
       );
     });
 
     // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should log CORS debug information', async () => {
-
       process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -751,8 +738,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 7: GET / - Root Endpoint', () => {
     it('should return 200 when server is operational', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -763,8 +748,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log deprecation warning when root endpoint accessed', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -776,8 +759,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should recommend health endpoints in response', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -789,8 +770,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 8: GET /metrics - Metrics Endpoint', () => {
     it('should return metrics when metrics service is enabled', async () => {
-      
-
       serverController = createProxyServer({ metricsEnabled: true });
       await serverController.start();
 
@@ -801,8 +780,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should return metrics even when disabled (empty or minimal)', async () => {
-      
-
       serverController = createProxyServer({ metricsEnabled: false });
       await serverController.start();
 
@@ -815,8 +792,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 9: POST /api/llm-request - Main Endpoint', () => {
     it('should reject invalid requests with validation errors', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -829,8 +804,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should apply validation middleware', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -844,22 +817,22 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should skip rate limiting for llm-request when disabled globally', async () => {
-      
-
       serverController = createProxyServer({ rateLimitingEnabled: false });
       await serverController.start();
 
       // Make multiple rapid requests
-      const requests = Array(5).fill(null).map(() =>
-        request(serverController.app)
-          .post('/api/llm-request')
-          .send({ llmId: 'test', targetPayload: {} })
-      );
+      const requests = Array(5)
+        .fill(null)
+        .map(() =>
+          request(serverController.app)
+            .post('/api/llm-request')
+            .send({ llmId: 'test', targetPayload: {} })
+        );
 
       const responses = await Promise.all(requests);
 
       // None should be rate limited (all will fail validation instead)
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect(response.status).not.toBe(429);
       });
     });
@@ -867,8 +840,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 10: Health Routes Integration', () => {
     it('should mount health routes under /health', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -879,8 +850,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should provide health/ready endpoint', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
@@ -893,13 +862,13 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 11: Trace Routes Integration', () => {
     it('should mount trace routes under /api/traces', async () => {
-      
-
       serverController = createProxyServer();
       await serverController.start();
 
       // Trace routes should be accessible (even if they return errors for invalid data)
-      const response = await request(serverController.app).get('/api/traces/test');
+      const response = await request(serverController.app).get(
+        '/api/traces/test'
+      );
 
       expect(response.status).toBeDefined();
     });
@@ -911,7 +880,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 12: Cache Service Configuration', () => {
     it('should log cache enabled status during startup', async () => {
-      
       process.env.CACHE_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -925,7 +893,6 @@ describe('Server Lifecycle Integration Tests', () => {
     // NOTE: This test has been moved to tests/integration/isolated/server-cache-disabled-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should log cache disabled status during startup', async () => {
-
       process.env.CACHE_ENABLED = 'false';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -937,7 +904,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should include cache configuration details in logs', async () => {
-      
       process.env.CACHE_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -951,7 +917,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 13: HTTP Agent Service Configuration', () => {
     it('should log HTTP agent enabled status during startup', async () => {
-      
       process.env.HTTP_AGENT_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -965,7 +930,6 @@ describe('Server Lifecycle Integration Tests', () => {
     // NOTE: This test has been moved to tests/integration/isolated/server-http-agent-disabled-logging.isolated.test.js
     // to avoid AppConfigService singleton pollution when running the full test suite
     it.skip('should log HTTP agent disabled status during startup', async () => {
-
       process.env.HTTP_AGENT_ENABLED = 'false';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -977,7 +941,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should include HTTP agent configuration details in logs', async () => {
-      
       process.env.HTTP_AGENT_ENABLED = 'true';
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -991,11 +954,9 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 14: Metrics Service Configuration', () => {
     it('should log metrics enabled status during startup', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: true
+        metricsEnabled: true,
       });
       await serverController.start();
 
@@ -1005,11 +966,9 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log metrics disabled status during startup', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: false
+        metricsEnabled: false,
       });
       await serverController.start();
 
@@ -1019,25 +978,23 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should include metrics statistics in logs', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: true
+        metricsEnabled: true,
       });
       await serverController.start();
 
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringMatching(/Total metrics:.*Custom metrics:.*Default metrics:/i)
+        expect.stringMatching(
+          /Total metrics:.*Custom metrics:.*Default metrics:/i
+        )
       );
     });
 
     it('should mention Prometheus endpoint when metrics enabled', async () => {
-      
-
       serverController = createProxyServer({
         logger: mockLogger,
-        metricsEnabled: true
+        metricsEnabled: true,
       });
       await serverController.start();
 
@@ -1049,7 +1006,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 15: API Key Service Configuration', () => {
     it('should warn when API key path not set but file-based keys are configured', async () => {
-
       delete process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES;
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -1058,7 +1014,9 @@ describe('Server Lifecycle Integration Tests', () => {
       // Should warn when file-based keys are configured but path is not set
       // The real LLM config file contains file-based API keys, so this warning is correct
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET')
+        expect.stringContaining(
+          'PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES is NOT SET'
+        )
       );
     });
   });
@@ -1069,7 +1027,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 16: Global Error Handler', () => {
     it('should catch unhandled errors in routes', async () => {
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 
@@ -1083,8 +1040,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should extract status code from error object', async () => {
-      
-
       serverController = createProxyServer();
 
       // Add a route that throws an error with status
@@ -1096,14 +1051,14 @@ describe('Server Lifecycle Integration Tests', () => {
 
       await serverController.start();
 
-      const response = await request(serverController.app).get('/test-status-error');
+      const response = await request(serverController.app).get(
+        '/test-status-error'
+      );
 
       expect(response.status).toBe(503);
     });
 
     it('should default to 500 when no status code', async () => {
-      
-
       serverController = createProxyServer();
 
       // Add a route that throws an error without status
@@ -1113,14 +1068,14 @@ describe('Server Lifecycle Integration Tests', () => {
 
       await serverController.start();
 
-      const response = await request(serverController.app).get('/test-no-status');
+      const response = await request(serverController.app).get(
+        '/test-no-status'
+      );
 
       expect(response.status).toBe(500);
     });
 
     it('should validate status code range (400-599)', async () => {
-      
-
       serverController = createProxyServer();
 
       // Add a route that throws error with invalid status
@@ -1132,7 +1087,9 @@ describe('Server Lifecycle Integration Tests', () => {
 
       await serverController.start();
 
-      const response = await request(serverController.app).get('/test-invalid-status');
+      const response = await request(serverController.app).get(
+        '/test-invalid-status'
+      );
 
       // Should default to 500 for invalid status code
       expect(response.status).toBe(500);
@@ -1170,13 +1127,14 @@ describe('Server Lifecycle Integration Tests', () => {
 
       // Should log development-specific CORS warning
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: CORS not configured in development mode')
+        expect.stringContaining(
+          'LLM Proxy Server: CORS not configured in development mode'
+        )
       );
     });
 
     it('should handle test environment', async () => {
       process.env.NODE_ENV = 'test';
-      
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
@@ -1187,7 +1145,7 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should default to production when NODE_ENV undefined', async () => {
       delete process.env.NODE_ENV;
-      
+
       delete process.env.PROXY_ALLOWED_ORIGIN;
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -1199,7 +1157,7 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should handle empty NODE_ENV string', async () => {
       process.env.NODE_ENV = '';
-      
+
       delete process.env.PROXY_ALLOWED_ORIGIN;
 
       serverController = createProxyServer({ logger: mockLogger });
@@ -1211,7 +1169,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
     it('should trim and lowercase NODE_ENV with whitespace', async () => {
       process.env.NODE_ENV = '  TEST  ';
-      
 
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
@@ -1223,8 +1180,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
   describe('Feature 18: Server Resilience', () => {
     it('should handle multiple start/stop cycles', async () => {
-      
-
       serverController = createProxyServer();
 
       // Cycle 1
@@ -1242,8 +1197,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should maintain state consistency during lifecycle', async () => {
-      
-
       serverController = createProxyServer();
 
       // Initial state
@@ -1266,8 +1219,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should handle rapid start/stop gracefully', async () => {
-      
-
       serverController = createProxyServer();
 
       await serverController.start();
@@ -1279,8 +1230,6 @@ describe('Server Lifecycle Integration Tests', () => {
     });
 
     it('should log maintenance scheduler status during startup', async () => {
-      
-
       serverController = createProxyServer({ logger: mockLogger });
       await serverController.start();
 

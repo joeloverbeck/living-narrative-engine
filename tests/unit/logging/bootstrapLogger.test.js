@@ -1,4 +1,11 @@
-import { jest, describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+} from '@jest/globals';
 
 import {
   createBootstrapLogger,
@@ -81,4 +88,3 @@ describe('bootstrapLogger', () => {
     expect(level).toBe(LogLevel.WARN);
   });
 });
-

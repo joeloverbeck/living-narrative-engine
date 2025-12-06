@@ -7,11 +7,11 @@
  *
  * This addresses the Priority 1 critical gap identified in the entity workflows
  * E2E test coverage analysis for multi-target action operations.
- * 
+ *
  * Key test scenarios from analysis report section 5.2:
  * 1. Complete Target Workflow - Target extraction, resolution, event construction
  * 2. Target Relationship Validation - Consistency, circular references, validation
- * 3. Dynamic Target Resolution - Runtime changes, placeholder resolution, performance  
+ * 3. Dynamic Target Resolution - Runtime changes, placeholder resolution, performance
  * 4. Error Recovery & Edge Cases - Invalid configurations, graceful degradation
  */
 
@@ -88,7 +88,9 @@ describe('Multi-Target Action E2E Workflow', () => {
         id: primaryTargetDefinition,
         components: {
           'core:name': { text: 'Primary Target' },
-          'core:description': { text: 'Primary target for multi-target action' },
+          'core:description': {
+            text: 'Primary target for multi-target action',
+          },
         },
       });
 
@@ -96,7 +98,9 @@ describe('Multi-Target Action E2E Workflow', () => {
         id: secondaryTargetDefinition,
         components: {
           'core:name': { text: 'Secondary Target' },
-          'core:description': { text: 'Secondary target for multi-target action' },
+          'core:description': {
+            text: 'Secondary target for multi-target action',
+          },
         },
       });
 
@@ -104,16 +108,22 @@ describe('Multi-Target Action E2E Workflow', () => {
       const actorEntity = await testBed.createTestEntity(actorDefinition, {
         instanceId: 'test_actor_001',
       });
-      const primaryTargetEntity = await testBed.createTestEntity(primaryTargetDefinition, {
-        instanceId: 'test_primary_001',
-      });
-      const secondaryTargetEntity = await testBed.createTestEntity(secondaryTargetDefinition, {
-        instanceId: 'test_secondary_001',
-      });
+      const primaryTargetEntity = await testBed.createTestEntity(
+        primaryTargetDefinition,
+        {
+          instanceId: 'test_primary_001',
+        }
+      );
+      const secondaryTargetEntity = await testBed.createTestEntity(
+        secondaryTargetDefinition,
+        {
+          instanceId: 'test_secondary_001',
+        }
+      );
 
       // Act - Create TargetManager with multiple targets
       const targetManager = new TargetManager({ logger });
-      
+
       const targets = {
         primary: primaryTargetEntity.id,
         secondary: secondaryTargetEntity.id,
@@ -126,7 +136,9 @@ describe('Multi-Target Action E2E Workflow', () => {
       expect(targetManager.isMultiTarget()).toBe(true);
       expect(targetManager.getPrimaryTarget()).toBe(primaryTargetEntity.id);
       expect(targetManager.getTarget('primary')).toBe(primaryTargetEntity.id);
-      expect(targetManager.getTarget('secondary')).toBe(secondaryTargetEntity.id);
+      expect(targetManager.getTarget('secondary')).toBe(
+        secondaryTargetEntity.id
+      );
 
       // Act - Create TargetExtractionResult
       const extractionResult = new TargetExtractionResult({
@@ -172,7 +184,9 @@ describe('Multi-Target Action E2E Workflow', () => {
       expect(validationResult.errors).toHaveLength(0);
       expect(validationResult.details.hasMultipleTargets).toBe(true);
       expect(validationResult.details.targetCount).toBe(2);
-      expect(validationResult.details.primaryTarget).toBe(primaryTargetEntity.id);
+      expect(validationResult.details.primaryTarget).toBe(
+        primaryTargetEntity.id
+      );
     });
 
     it('should handle single target workflow with backward compatibility', async () => {
@@ -255,11 +269,21 @@ describe('Multi-Target Action E2E Workflow', () => {
       });
 
       // Act & Assert - Test placeholder resolution
-      expect(extractionResult.getEntityIdByPlaceholder('primary')).toBe('entity_001');
-      expect(extractionResult.getEntityIdByPlaceholder('secondary')).toBe('entity_002');
-      expect(extractionResult.getEntityIdByPlaceholder('tertiary')).toBe('entity_003');
-      expect(extractionResult.getEntityIdByPlaceholder('custom_target')).toBe('entity_004');
-      expect(extractionResult.getEntityIdByPlaceholder('nonexistent')).toBe(null);
+      expect(extractionResult.getEntityIdByPlaceholder('primary')).toBe(
+        'entity_001'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('secondary')).toBe(
+        'entity_002'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('tertiary')).toBe(
+        'entity_003'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('custom_target')).toBe(
+        'entity_004'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('nonexistent')).toBe(
+        null
+      );
 
       // Assert - Verify target existence checks
       expect(extractionResult.hasTarget('primary')).toBe(true);
@@ -334,7 +358,7 @@ describe('Multi-Target Action E2E Workflow', () => {
     it('should detect and handle duplicate entity IDs in targets', async () => {
       // Arrange - Create scenario with duplicate entity IDs
       const entityDefinition = 'test:duplicate_entity';
-      
+
       await testBed.ensureEntityDefinitionExists(entityDefinition, {
         id: entityDefinition,
         components: {
@@ -351,7 +375,7 @@ describe('Multi-Target Action E2E Workflow', () => {
       const duplicateTargets = {
         primary: entity.id,
         secondary: entity.id, // Duplicate!
-        tertiary: entity.id,  // Duplicate!
+        tertiary: entity.id, // Duplicate!
       };
 
       targetManager.setTargets(duplicateTargets);
@@ -359,7 +383,9 @@ describe('Multi-Target Action E2E Workflow', () => {
       // Assert - Validation should detect duplicates
       const validation = targetManager.validate();
       expect(validation.isValid).toBe(true); // Still valid but with warnings
-      expect(validation.warnings).toContain('Duplicate entity IDs found in targets');
+      expect(validation.warnings).toContain(
+        'Duplicate entity IDs found in targets'
+      );
 
       // Verify target manager still functions correctly
       expect(targetManager.getTargetCount()).toBe(3);
@@ -432,7 +458,7 @@ describe('Multi-Target Action E2E Workflow', () => {
     it('should handle runtime target changes and re-resolution', async () => {
       // Arrange - Set up initial target configuration
       const targetManager = new TargetManager({ logger });
-      
+
       const initialTargets = {
         primary: 'initial_entity_001',
         secondary: 'initial_entity_002',
@@ -472,7 +498,7 @@ describe('Multi-Target Action E2E Workflow', () => {
     it('should handle complex placeholder resolution scenarios', async () => {
       // Arrange - Create complex placeholder scenario
       const targetManager = new TargetManager({ logger });
-      
+
       const complexTargets = {
         primary: 'primary_entity_001',
         secondary: 'secondary_entity_002',
@@ -494,16 +520,30 @@ describe('Multi-Target Action E2E Workflow', () => {
       });
 
       // Act & Assert - Test various placeholder resolution patterns
-      expect(extractionResult.getEntityIdByPlaceholder('primary')).toBe('primary_entity_001');
-      expect(extractionResult.getEntityIdByPlaceholder('secondary')).toBe('secondary_entity_002');
-      expect(extractionResult.getEntityIdByPlaceholder('tertiary')).toBe('tertiary_entity_003');
-      expect(extractionResult.getEntityIdByPlaceholder('weapon')).toBe('weapon_entity_004');
-      expect(extractionResult.getEntityIdByPlaceholder('armor')).toBe('armor_entity_005');
-      expect(extractionResult.getEntityIdByPlaceholder('consumable')).toBe('consumable_entity_006');
+      expect(extractionResult.getEntityIdByPlaceholder('primary')).toBe(
+        'primary_entity_001'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('secondary')).toBe(
+        'secondary_entity_002'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('tertiary')).toBe(
+        'tertiary_entity_003'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('weapon')).toBe(
+        'weapon_entity_004'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('armor')).toBe(
+        'armor_entity_005'
+      );
+      expect(extractionResult.getEntityIdByPlaceholder('consumable')).toBe(
+        'consumable_entity_006'
+      );
 
       // Test non-existent placeholders
-      expect(extractionResult.getEntityIdByPlaceholder('nonexistent')).toBe(null);
-      
+      expect(extractionResult.getEntityIdByPlaceholder('nonexistent')).toBe(
+        null
+      );
+
       // Note: Empty string placeholder throws validation error as expected behavior
       expect(() => {
         extractionResult.getEntityIdByPlaceholder('');
@@ -525,7 +565,8 @@ describe('Multi-Target Action E2E Workflow', () => {
 
       // Create 100 targets for performance testing
       for (let i = 1; i <= 100; i++) {
-        largeTargetSet[`target_${i.toString().padStart(3, '0')}`] = `entity_${i.toString().padStart(3, '0')}`;
+        largeTargetSet[`target_${i.toString().padStart(3, '0')}`] =
+          `entity_${i.toString().padStart(3, '0')}`;
       }
 
       targetManager.setTargets(largeTargetSet);
@@ -607,7 +648,7 @@ describe('Multi-Target Action E2E Workflow', () => {
     it('should handle primary target validation errors', async () => {
       // Arrange - Create target manager with invalid primary target scenario
       const targetManager = new TargetManager({ logger });
-      
+
       const targets = {
         secondary: 'entity_002',
         tertiary: 'entity_003',
@@ -685,7 +726,7 @@ describe('Multi-Target Action E2E Workflow', () => {
           secondary: `entity_secondary_${i}`,
           tertiary: `entity_tertiary_${i}`,
         };
-        
+
         targetManager.setTargets(targets);
         targetManagers.push(targetManager);
 
@@ -759,7 +800,7 @@ describe('Multi-Target Action E2E Workflow', () => {
           }
 
           targetManager.setTargets(targets);
-          
+
           const extractionResult = new TargetExtractionResult({
             targetManager,
             extractionMetadata: {
@@ -794,21 +835,26 @@ describe('Multi-Target Action E2E Workflow', () => {
 
       // Assert - Verify all operations completed successfully
       expect(stressResults).toHaveLength(50);
-      
+
       for (const result of stressResults) {
         expect(result.isValid).toBe(true);
         expect(result.payloadValid).toBe(true);
         expect(result.targetCount).toBeGreaterThan(0);
         expect(result.targetCount).toBeLessThanOrEqual(10);
-        
+
         // Check multi-target expectations based on target count
         const expectedMultiTarget = result.targetCount > 1;
         expect(result.hasMultipleTargets).toBe(expectedMultiTarget);
       }
 
       // Log stress test results
-      const totalTargets = stressResults.reduce((sum, result) => sum + result.targetCount, 0);
-      const multiTargetOperations = stressResults.filter(result => result.hasMultipleTargets).length;
+      const totalTargets = stressResults.reduce(
+        (sum, result) => sum + result.targetCount,
+        0
+      );
+      const multiTargetOperations = stressResults.filter(
+        (result) => result.hasMultipleTargets
+      ).length;
 
       logger.debug('Stress test completed successfully', {
         totalOperations: 50,

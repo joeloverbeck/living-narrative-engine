@@ -19,6 +19,7 @@
 ## Objective
 
 Implement the `EstablishBidirectionalClosenessHandler` class that:
+
 1. Cleans up existing third-party relationships (if `clean_existing: true`)
 2. Removes old relationship components from actor and target
 3. Adds new relationship components to both entities
@@ -31,10 +32,12 @@ This handler will reduce hugging/hand-holding rules from ~200 lines to ~25 lines
 ## Files to Touch
 
 ### Modified Files
+
 - `src/logic/operationHandlers/establishBidirectionalClosenessHandler.js` — replace stub with implementation
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` — supply real dependencies (entity manager, dispatcher, regenerateDescriptionHandler)
 
 ### New Files
+
 - `tests/unit/logic/operationHandlers/establishBidirectionalClosenessHandler.test.js`
 
 ---
@@ -42,6 +45,7 @@ This handler will reduce hugging/hand-holding rules from ~200 lines to ~25 lines
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Other operation handlers
 - Rule files
 - Token definitions or interpreter registrations
@@ -81,6 +85,7 @@ This handler will reduce hugging/hand-holding rules from ~200 lines to ~25 lines
 ### Tests That Must Pass
 
 1. **Unit tests for handler logic (run in-band to avoid flakiness):**
+
    ```bash
    npm run test:unit -- --runInBand tests/unit/logic/operationHandlers/establishBidirectionalClosenessHandler.test.js
    ```

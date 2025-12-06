@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import path from 'node:path';
@@ -42,16 +36,21 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  const paths = Array.from(createdDirectories).sort((a, b) => b.length - a.length);
+  const paths = Array.from(createdDirectories).sort(
+    (a, b) => b.length - a.length
+  );
   for (const directory of paths) {
     try {
       await rm(directory, { recursive: true, force: true });
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Failed to remove temporary trace directory during cleanup', {
-        directory,
-        error: error.message,
-      });
+      console.error(
+        'Failed to remove temporary trace directory during cleanup',
+        {
+          directory,
+          error: error.message,
+        }
+      );
     }
   }
   createdDirectories.clear();
@@ -98,8 +97,14 @@ describe('traceRoutes batch success statistics integration', () => {
       bytesWritten: traceTwo.length,
     });
 
-    const alphaContent = await readFile(path.join(expectedDirectory, 'alpha.json'), 'utf8');
-    const betaContent = await readFile(path.join(expectedDirectory, 'beta.json'), 'utf8');
+    const alphaContent = await readFile(
+      path.join(expectedDirectory, 'alpha.json'),
+      'utf8'
+    );
+    const betaContent = await readFile(
+      path.join(expectedDirectory, 'beta.json'),
+      'utf8'
+    );
 
     expect(alphaContent).toBe(traceOne);
     expect(betaContent).toBe(traceTwo);

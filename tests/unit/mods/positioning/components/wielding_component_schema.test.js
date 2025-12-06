@@ -172,7 +172,9 @@ describe('positioning:wielding Component Schema', () => {
       expect(dataValidator.errors).toBeDefined();
       expect(
         dataValidator.errors.some(
-          (e) => e.keyword === 'required' && e.params.missingProperty === 'wielded_item_ids'
+          (e) =>
+            e.keyword === 'required' &&
+            e.params.missingProperty === 'wielded_item_ids'
         )
       ).toBe(true);
     });

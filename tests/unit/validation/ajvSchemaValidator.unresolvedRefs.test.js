@@ -78,7 +78,10 @@ describe('AjvSchemaValidator - Unresolved References Detection', () => {
       expect(isLoaded).toBe(true);
 
       // Validation will detect the unresolved refs
-      const result = validator.validate(schemaWithUnresolvedAbsoluteRef.$id, {});
+      const result = validator.validate(
+        schemaWithUnresolvedAbsoluteRef.$id,
+        {}
+      );
       expect(result.isValid).toBe(false);
     });
 

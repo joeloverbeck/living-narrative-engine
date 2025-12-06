@@ -3,7 +3,14 @@
  * Tests complete refinement flows with real services and task examples.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import RefinementEngine from '../../../src/goap/refinement/refinementEngine.js';
 import MethodSelectionService from '../../../src/goap/refinement/methodSelectionService.js';
@@ -49,12 +56,12 @@ describe('RefinementEngine Integration Tests', () => {
     };
 
     // Configure getTask to return from tasks object
-    gameDataRepository.getTask.mockImplementation(taskId => {
+    gameDataRepository.getTask.mockImplementation((taskId) => {
       return gameDataRepository.tasks[taskId] || null;
     });
 
     // Configure getRefinementMethod to return from refinementMethods object
-    gameDataRepository.getRefinementMethod.mockImplementation(methodRef => {
+    gameDataRepository.getRefinementMethod.mockImplementation((methodRef) => {
       return gameDataRepository.refinementMethods[methodRef] || null;
     });
 
@@ -62,7 +69,7 @@ describe('RefinementEngine Integration Tests', () => {
     gameDataRepository.getAllActions.mockReturnValue([]);
 
     // Configure get method for registry access (used by MethodSelectionService)
-    gameDataRepository.get.mockImplementation(key => {
+    gameDataRepository.get.mockImplementation((key) => {
       if (key === 'tasks') {
         return gameDataRepository.tasks;
       }
@@ -142,7 +149,7 @@ describe('RefinementEngine Integration Tests', () => {
     actionIndex = testBed.createMock('ActionIndex', ['getActionById']);
 
     // Configure actionIndex to return mock action definitions
-    actionIndex.getActionById.mockImplementation(actionId => {
+    actionIndex.getActionById.mockImplementation((actionId) => {
       return {
         id: actionId,
         displayName: `Action ${actionId}`,
@@ -153,7 +160,7 @@ describe('RefinementEngine Integration Tests', () => {
 
     // Mock entity data
     entityManager.hasEntity.mockReturnValue(true);
-    entityManager.getEntity.mockImplementation(entityId => {
+    entityManager.getEntity.mockImplementation((entityId) => {
       if (entityId === 'test_actor_1') {
         return {
           id: 'test_actor_1',
@@ -319,8 +326,8 @@ describe('RefinementEngine Integration Tests', () => {
       // Verify events were dispatched
       const eventsSeen = eventBus
         .getEvents()
-        .filter(event => event.type.startsWith('goap:'))
-        .map(event => event.type);
+        .filter((event) => event.type.startsWith('goap:'))
+        .map((event) => event.type);
 
       expect(eventsSeen).toContain('goap:refinement_started');
       expect(eventsSeen).toContain('goap:method_selected');
@@ -645,12 +652,12 @@ describe('RefinementEngine Integration Tests', () => {
       // Assert
       const eventsReceived = eventBus
         .getEvents()
-        .filter(event => event.type.startsWith('goap:'))
-        .map(event => ({ type: event.type, payload: event.payload }));
+        .filter((event) => event.type.startsWith('goap:'))
+        .map((event) => ({ type: event.type, payload: event.payload }));
 
       expect(eventsReceived.length).toBeGreaterThanOrEqual(5);
 
-      const eventTypes = eventsReceived.map(e => e.type);
+      const eventTypes = eventsReceived.map((e) => e.type);
       expect(eventTypes[0]).toBe('goap:refinement_started');
       expect(eventTypes[1]).toBe('goap:method_selected');
       expect(eventTypes[2]).toBe('goap:refinement_step_started');
@@ -727,7 +734,11 @@ describe('RefinementEngine Integration Tests', () => {
       }));
 
       // Act
-      await refinementEngine.refine('test.step_events_task', 'test_actor_1', {});
+      await refinementEngine.refine(
+        'test.step_events_task',
+        'test_actor_1',
+        {}
+      );
 
       // Assert: Verify step events were dispatched
       const eventLog = eventBus.getEvents();
@@ -827,7 +838,11 @@ describe('RefinementEngine Integration Tests', () => {
       });
 
       // Act - Refinement completes even though step failed
-      const result = await refinementEngine.refine('test.graceful_failure_task', 'test_actor_1', {});
+      const result = await refinementEngine.refine(
+        'test.graceful_failure_task',
+        'test_actor_1',
+        {}
+      );
 
       // Assert - Refinement itself succeeds
       expect(result.success).toBe(true);

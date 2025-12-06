@@ -1,10 +1,10 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:copper_backed_rooster_instance",
-    "definitionId": "fantasy:copper_backed_rooster",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:copper_backed_rooster_instance",
+  "definitionId": "fantasy:copper_backed_rooster",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
     }
+  }
 }

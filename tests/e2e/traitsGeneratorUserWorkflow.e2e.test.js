@@ -63,9 +63,9 @@ describe('Traits Generator User Workflow E2E', () => {
         } else {
           Object.defineProperty(window, 'performance', {
             value: {
-              now: jest.fn(() => Date.now())
+              now: jest.fn(() => Date.now()),
             },
-            configurable: true
+            configurable: true,
           });
         }
       },

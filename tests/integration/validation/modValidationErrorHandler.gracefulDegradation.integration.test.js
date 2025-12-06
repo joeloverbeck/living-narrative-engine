@@ -17,7 +17,10 @@ import ModValidationErrorHandler, {
 import { ModAccessError } from '../../../src/errors/modAccessError.js';
 import { ModCorruptionError } from '../../../src/errors/modCorruptionError.js';
 import { ModValidationError } from '../../../src/errors/modValidationError.js';
-import { ModSecurityError, SecurityLevel } from '../../../src/errors/modSecurityError.js';
+import {
+  ModSecurityError,
+  SecurityLevel,
+} from '../../../src/errors/modSecurityError.js';
 
 /**
  * Lightweight logger that captures structured messages from the real services.
@@ -148,10 +151,10 @@ describe('Mod validation error handling with graceful degradation (integration)'
     eventBus = new RecordingEventBus(logger);
 
     const cache = new Map();
-    cache.set(
-      '/mods/physical-control/actions/turn_around.action.json',
-      { id: 'physical-control:turn_around', cached: true }
-    );
+    cache.set('/mods/physical-control/actions/turn_around.action.json', {
+      id: 'physical-control:turn_around',
+      cached: true,
+    });
 
     const defaults = {
       'mod.positioning': { id: 'positioning', partial: true },
@@ -184,10 +187,8 @@ describe('Mod validation error handling with graceful degradation (integration)'
       defaultValue: { id: 'physical-control:turn_around', placeholder: true },
     };
 
-    const { recovery, degradation: degradationResult } = pipeline.processExtraction(
-      error,
-      context
-    );
+    const { recovery, degradation: degradationResult } =
+      pipeline.processExtraction(error, context);
 
     expect(recovery.strategy).toBe(RecoveryStrategy.USE_DEFAULT);
     expect(recovery.usedDefault).toBe(true);
@@ -210,15 +211,21 @@ describe('Mod validation error handling with graceful degradation (integration)'
 
     expect(
       logger.records.warn.some((entry) =>
-        entry.message.includes('Handling extraction error: ENOENT: missing file')
+        entry.message.includes(
+          'Handling extraction error: ENOENT: missing file'
+        )
       )
     ).toBe(true);
   });
 
   it('returns partial results for recoverable corruption errors', () => {
-    const error = new ModCorruptionError('Malformed JSON data', 'mods/bad.json', {
-      partialData: { fragments: ['action', 'component'] },
-    });
+    const error = new ModCorruptionError(
+      'Malformed JSON data',
+      'mods/bad.json',
+      {
+        partialData: { fragments: ['action', 'component'] },
+      }
+    );
 
     const context = {
       filePath: 'mods/bad.json',
@@ -226,14 +233,14 @@ describe('Mod validation error handling with graceful degradation (integration)'
       partialData: { fragments: ['action', 'component'] },
     };
 
-    const { recovery, degradation: degradationResult } = pipeline.processExtraction(
-      error,
-      context
-    );
+    const { recovery, degradation: degradationResult } =
+      pipeline.processExtraction(error, context);
 
     expect(recovery.strategy).toBe(RecoveryStrategy.PARTIAL_RESULT);
     expect(recovery.partialResults).toEqual(context.partialData);
-    expect(degradationResult.strategy).toBe(DegradationStrategy.PARTIAL_EXTRACTION);
+    expect(degradationResult.strategy).toBe(
+      DegradationStrategy.PARTIAL_EXTRACTION
+    );
     expect(degradationResult.data).toEqual(context.partialData);
   });
 
@@ -294,18 +301,23 @@ describe('Mod validation error handling with graceful degradation (integration)'
       { module: 'evil-mod' }
     );
 
-    const securityContext = { modPath: 'mods/evil', filePath: 'mods/evil/mod.json' };
+    const securityContext = {
+      modPath: 'mods/evil',
+      filePath: 'mods/evil/mod.json',
+    };
 
-    expect(() => pipeline.processExtraction(securityError, securityContext)).toThrow(
-      ModSecurityError
-    );
+    expect(() =>
+      pipeline.processExtraction(securityError, securityContext)
+    ).toThrow(ModSecurityError);
 
     expect(eventBus.events[eventBus.events.length - 1].payload.errorType).toBe(
       ErrorType.SECURITY
     );
     expect(
       logger.records.warn.some((entry) =>
-        entry.message.includes('Handling extraction error: Malicious content detected')
+        entry.message.includes(
+          'Handling extraction error: Malicious content detected'
+        )
       )
     ).toBe(true);
   });
@@ -325,10 +337,8 @@ describe('Mod validation error handling with graceful degradation (integration)'
       allowSkip: true,
     };
 
-    const { recovery, degradation: degradationResult } = pipeline.processValidation(
-      validationError,
-      validationContext
-    );
+    const { recovery, degradation: degradationResult } =
+      pipeline.processValidation(validationError, validationContext);
 
     expect(recovery.strategy).toBe(RecoveryStrategy.SKIP);
     expect(recovery.degradationApplied).toBe(true);
@@ -336,7 +346,9 @@ describe('Mod validation error handling with graceful degradation (integration)'
 
     expect(() =>
       pipeline.processValidation(
-        new ModSecurityError('Security breach', SecurityLevel.HIGH, { module: 'bad' }),
+        new ModSecurityError('Security breach', SecurityLevel.HIGH, {
+          module: 'bad',
+        }),
         { module: 'bad' }
       )
     ).toThrow(ModSecurityError);
@@ -345,25 +357,19 @@ describe('Mod validation error handling with graceful degradation (integration)'
   it('aggregates statistics across both systems and resets cleanly', () => {
     const missingError = new Error('ENOENT: missing mod');
     missingError.code = 'ACCESS';
-    pipeline.processExtraction(
-      missingError,
-      {
-        filePath: 'mods/missing.json',
-        modId: 'missing',
-        type: 'mod',
-        hasDefault: true,
-        defaultValue: { id: 'missing', placeholder: true },
-      }
-    );
+    pipeline.processExtraction(missingError, {
+      filePath: 'mods/missing.json',
+      modId: 'missing',
+      type: 'mod',
+      hasDefault: true,
+      defaultValue: { id: 'missing', placeholder: true },
+    });
 
-    pipeline.processExtraction(
-      new Error('timeout waiting for manifest'),
-      {
-        filePath: 'mods/wait.json',
-        modId: 'wait',
-        partialData: { id: 'wait:manifest' },
-      }
-    );
+    pipeline.processExtraction(new Error('timeout waiting for manifest'), {
+      filePath: 'mods/wait.json',
+      modId: 'wait',
+      partialData: { id: 'wait:manifest' },
+    });
 
     pipeline.processExtraction(
       new Error('timeout waiting for manifest again'),
@@ -379,24 +385,25 @@ describe('Mod validation error handling with graceful degradation (integration)'
       'mods/corrupt.json',
       { partialData: { kept: true } }
     );
-    pipeline.processExtraction(
-      corruptionError,
-      {
-        filePath: 'mods/corrupt.json',
-        modId: 'corrupt',
-        partialData: { kept: true },
-      }
-    );
+    pipeline.processExtraction(corruptionError, {
+      filePath: 'mods/corrupt.json',
+      modId: 'corrupt',
+      partialData: { kept: true },
+    });
 
     const errorStats = handler.getErrorStatistics();
     expect(errorStats.totalErrors).toBe(4);
     expect(errorStats.errorsByType[ErrorType.ACCESS]).toBeGreaterThanOrEqual(1);
-    expect(errorStats.errorsByType[ErrorType.TIMEOUT]).toBeGreaterThanOrEqual(1);
+    expect(errorStats.errorsByType[ErrorType.TIMEOUT]).toBeGreaterThanOrEqual(
+      1
+    );
     expect(errorStats.recentErrors).toHaveLength(4);
 
     const degradationStats = degradation.getStatistics();
     expect(degradationStats.totalDegradations).toBe(3);
-    expect(Object.keys(degradationStats.byStrategy).length).toBeGreaterThanOrEqual(2);
+    expect(
+      Object.keys(degradationStats.byStrategy).length
+    ).toBeGreaterThanOrEqual(2);
 
     handler.reset();
     degradation.reset();

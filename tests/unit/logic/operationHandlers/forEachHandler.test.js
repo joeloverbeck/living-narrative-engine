@@ -65,7 +65,9 @@ describe('ForEachHandler', () => {
             jsonLogic: mockJsonLogic,
             logger: mockLogger,
           })
-      ).toThrow('ForEachHandler requires a valid OperationInterpreter resolver or instance.');
+      ).toThrow(
+        'ForEachHandler requires a valid OperationInterpreter resolver or instance.'
+      );
     });
 
     test('should throw if operationInterpreter is invalid', () => {
@@ -76,7 +78,9 @@ describe('ForEachHandler', () => {
             jsonLogic: mockJsonLogic,
             logger: mockLogger,
           })
-      ).toThrow('ForEachHandler requires operationInterpreter to be either a resolver function or an object with execute() method.');
+      ).toThrow(
+        'ForEachHandler requires operationInterpreter to be either a resolver function or an object with execute() method.'
+      );
     });
 
     test('should throw if jsonLogic is missing', () => {
@@ -86,7 +90,9 @@ describe('ForEachHandler', () => {
             operationInterpreter: mockOperationInterpreter,
             logger: mockLogger,
           })
-      ).toThrow('ForEachHandler requires a valid JsonLogicEvaluationService instance.');
+      ).toThrow(
+        'ForEachHandler requires a valid JsonLogicEvaluationService instance.'
+      );
     });
 
     test('should throw if jsonLogic is invalid', () => {
@@ -97,7 +103,9 @@ describe('ForEachHandler', () => {
             jsonLogic: {},
             logger: mockLogger,
           })
-      ).toThrow('ForEachHandler requires a valid JsonLogicEvaluationService instance.');
+      ).toThrow(
+        'ForEachHandler requires a valid JsonLogicEvaluationService instance.'
+      );
     });
 
     test('should throw if logger is missing', () => {

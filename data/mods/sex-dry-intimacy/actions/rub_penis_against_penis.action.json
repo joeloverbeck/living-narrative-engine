@@ -11,28 +11,20 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "template": "rub your penis against {primary}'s penis",
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "penis"
-        ]
+        "hasPartOfType": ["actor", "penis"]
       },
       "failure_message": "You need a penis to perform this action."
     },
     {
       "logic": {
         "not": {
-          "isSocketCovered": [
-            "actor",
-            "penis"
-          ]
+          "isSocketCovered": ["actor", "penis"]
         }
       },
       "failure_message": "Your penis must be uncovered to perform this action."

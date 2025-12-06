@@ -57,7 +57,10 @@ describe('Vital Organ Entity Definitions', () => {
     );
 
     it('should have heart with correct health values', () => {
-      const filePath = path.join(ANATOMY_ENTITIES_PATH, 'human_heart.entity.json');
+      const filePath = path.join(
+        ANATOMY_ENTITIES_PATH,
+        'human_heart.entity.json'
+      );
       const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       expect(content.components['anatomy:part_health'].maxHealth).toBe(50);
@@ -65,7 +68,10 @@ describe('Vital Organ Entity Definitions', () => {
     });
 
     it('should have brain with correct health values', () => {
-      const filePath = path.join(ANATOMY_ENTITIES_PATH, 'human_brain.entity.json');
+      const filePath = path.join(
+        ANATOMY_ENTITIES_PATH,
+        'human_brain.entity.json'
+      );
       const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       expect(content.components['anatomy:part_health'].maxHealth).toBe(40);
@@ -73,7 +79,10 @@ describe('Vital Organ Entity Definitions', () => {
     });
 
     it('should have spine with correct health values', () => {
-      const filePath = path.join(ANATOMY_ENTITIES_PATH, 'human_spine.entity.json');
+      const filePath = path.join(
+        ANATOMY_ENTITIES_PATH,
+        'human_spine.entity.json'
+      );
       const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       expect(content.components['anatomy:part_health'].maxHealth).toBe(60);
@@ -82,19 +91,16 @@ describe('Vital Organ Entity Definitions', () => {
   });
 
   describe('torso entity damage propagation', () => {
-    it.each(TORSO_ENTITIES)(
-      'should have organ sockets in %s',
-      (filename) => {
-        const filePath = path.join(ANATOMY_ENTITIES_PATH, filename);
-        const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    it.each(TORSO_ENTITIES)('should have organ sockets in %s', (filename) => {
+      const filePath = path.join(ANATOMY_ENTITIES_PATH, filename);
+      const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-        const sockets = content.components['anatomy:sockets'].sockets;
-        const socketIds = sockets.map((s) => s.id);
+      const sockets = content.components['anatomy:sockets'].sockets;
+      const socketIds = sockets.map((s) => s.id);
 
-        expect(socketIds).toContain('heart_socket');
-        expect(socketIds).toContain('spine_socket');
-      }
-    );
+      expect(socketIds).toContain('heart_socket');
+      expect(socketIds).toContain('spine_socket');
+    });
 
     it.each(TORSO_ENTITIES)(
       'should have damage propagation rules in %s',
@@ -173,17 +179,23 @@ describe('Vital Organ Entity Definitions', () => {
       expect(slotDefs.standard_heart).toBeDefined();
       expect(slotDefs.standard_heart.socket).toBe('heart_socket');
       expect(slotDefs.standard_heart.requirements.partType).toBe('heart');
-      expect(slotDefs.standard_heart.requirements.components).toContain('anatomy:vital_organ');
+      expect(slotDefs.standard_heart.requirements.components).toContain(
+        'anatomy:vital_organ'
+      );
 
       expect(slotDefs.standard_spine).toBeDefined();
       expect(slotDefs.standard_spine.socket).toBe('spine_socket');
       expect(slotDefs.standard_spine.requirements.partType).toBe('spine');
-      expect(slotDefs.standard_spine.requirements.components).toContain('anatomy:vital_organ');
+      expect(slotDefs.standard_spine.requirements.components).toContain(
+        'anatomy:vital_organ'
+      );
 
       expect(slotDefs.standard_brain).toBeDefined();
       expect(slotDefs.standard_brain.socket).toBe('brain_socket');
       expect(slotDefs.standard_brain.requirements.partType).toBe('brain');
-      expect(slotDefs.standard_brain.requirements.components).toContain('anatomy:vital_organ');
+      expect(slotDefs.standard_brain.requirements.components).toContain(
+        'anatomy:vital_organ'
+      );
     });
   });
 

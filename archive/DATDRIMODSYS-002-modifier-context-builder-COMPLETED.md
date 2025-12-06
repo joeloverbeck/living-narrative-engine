@@ -7,9 +7,11 @@ Create a new `ModifierContextBuilder` service that builds the evaluation context
 ## File List
 
 Files to create:
+
 - `src/combat/services/ModifierContextBuilder.js`
 
 Files to modify:
+
 - `src/dependencyInjection/tokens/tokens-core.js` (add token)
 - `src/dependencyInjection/registrations/combatRegistrations.js` (register service)
 
@@ -89,7 +91,12 @@ class ModifierContextBuilder {
    * @param {string} [params.tertiaryTargetId] - Tertiary target entity ID
    * @returns {ModifierEvaluationContext}
    */
-  buildContext({ actorId, primaryTargetId, secondaryTargetId, tertiaryTargetId }) {
+  buildContext({
+    actorId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+  }) {
     this.#logger.debug('ModifierContextBuilder: Building context', {
       actorId,
       primaryTargetId,
@@ -102,12 +109,20 @@ class ModifierContextBuilder {
 
     // Resolve location from actor's position
     const locationId = this.#resolveLocationId(actorId);
-    const locationContext = locationId ? this.#buildEntityContext(locationId) : null;
+    const locationContext = locationId
+      ? this.#buildEntityContext(locationId)
+      : null;
 
     // Build target contexts
-    const primaryContext = primaryTargetId ? this.#buildEntityContext(primaryTargetId) : null;
-    const secondaryContext = secondaryTargetId ? this.#buildEntityContext(secondaryTargetId) : null;
-    const tertiaryContext = tertiaryTargetId ? this.#buildEntityContext(tertiaryTargetId) : null;
+    const primaryContext = primaryTargetId
+      ? this.#buildEntityContext(primaryTargetId)
+      : null;
+    const secondaryContext = secondaryTargetId
+      ? this.#buildEntityContext(secondaryTargetId)
+      : null;
+    const tertiaryContext = tertiaryTargetId
+      ? this.#buildEntityContext(tertiaryTargetId)
+      : null;
 
     const context = {
       entity: {
@@ -145,7 +160,9 @@ class ModifierContextBuilder {
     try {
       const entity = this.#entityManager.getEntity(entityId);
       if (!entity) {
-        this.#logger.debug(`ModifierContextBuilder: Entity not found: ${entityId}`);
+        this.#logger.debug(
+          `ModifierContextBuilder: Entity not found: ${entityId}`
+        );
         return null;
       }
 
@@ -156,7 +173,10 @@ class ModifierContextBuilder {
       const componentIds = this.#getEntityComponentIds(entityId);
 
       for (const componentId of componentIds) {
-        const componentData = this.#entityManager.getComponentData(entityId, componentId);
+        const componentData = this.#entityManager.getComponentData(
+          entityId,
+          componentId
+        );
         if (componentData !== null && componentData !== undefined) {
           components[componentId] = componentData;
         }
@@ -167,7 +187,10 @@ class ModifierContextBuilder {
         components,
       };
     } catch (error) {
-      this.#logger.warn(`ModifierContextBuilder: Error building entity context for ${entityId}`, error);
+      this.#logger.warn(
+        `ModifierContextBuilder: Error building entity context for ${entityId}`,
+        error
+      );
       return null;
     }
   }
@@ -193,7 +216,10 @@ class ModifierContextBuilder {
 
       return Object.keys(entity.components);
     } catch (error) {
-      this.#logger.debug(`ModifierContextBuilder: Could not get component IDs for ${entityId}`, error);
+      this.#logger.debug(
+        `ModifierContextBuilder: Could not get component IDs for ${entityId}`,
+        error
+      );
       return [];
     }
   }
@@ -207,13 +233,19 @@ class ModifierContextBuilder {
    */
   #resolveLocationId(actorId) {
     try {
-      const positionData = this.#entityManager.getComponentData(actorId, 'core:position');
+      const positionData = this.#entityManager.getComponentData(
+        actorId,
+        'core:position'
+      );
       if (positionData?.locationId) {
         return positionData.locationId;
       }
       return null;
     } catch (error) {
-      this.#logger.debug(`ModifierContextBuilder: Could not resolve location for ${actorId}`, error);
+      this.#logger.debug(
+        `ModifierContextBuilder: Could not resolve location for ${actorId}`,
+        error
+      );
       return null;
     }
   }
@@ -225,6 +257,7 @@ export default ModifierContextBuilder;
 ### 2. Add Token to `tokens-core.js`
 
 Add to the tokens object:
+
 ```javascript
 ModifierContextBuilder: 'ModifierContextBuilder',
 ```
@@ -232,18 +265,22 @@ ModifierContextBuilder: 'ModifierContextBuilder',
 ### 3. Update `combatRegistrations.js`
 
 Add import:
+
 ```javascript
 import ModifierContextBuilder from '../../combat/services/ModifierContextBuilder.js';
 ```
 
 Add registration (before ModifierCollectorService):
+
 ```javascript
 // Register ModifierContextBuilder
-registrar.singletonFactory(tokens.ModifierContextBuilder, (c) =>
-  new ModifierContextBuilder({
-    entityManager: c.resolve(tokens.IEntityManager),
-    logger: c.resolve(tokens.ILogger),
-  })
+registrar.singletonFactory(
+  tokens.ModifierContextBuilder,
+  (c) =>
+    new ModifierContextBuilder({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+    })
 );
 ```
 
@@ -349,15 +386,15 @@ npx eslint src/combat/services/ModifierContextBuilder.js
 
 ### Test Rationale
 
-| Test Category | Count | Rationale |
-|--------------|-------|-----------|
-| Constructor validation | 5 | Ensures DI contract enforced with proper error messages |
-| Context building (actor only) | 3 | Minimum valid use case per spec |
-| Context building (all targets) | 3 | Full context building verification |
-| Location resolution | 3 | Core spec requirement (Section 4.2) |
-| Error handling | 4 | Graceful degradation on failures |
-| Component inclusion | 3 | Context completeness verification |
-| Invariants | 5 | No side effects, no events, proper null handling |
+| Test Category                  | Count | Rationale                                               |
+| ------------------------------ | ----- | ------------------------------------------------------- |
+| Constructor validation         | 5     | Ensures DI contract enforced with proper error messages |
+| Context building (actor only)  | 3     | Minimum valid use case per spec                         |
+| Context building (all targets) | 3     | Full context building verification                      |
+| Location resolution            | 3     | Core spec requirement (Section 4.2)                     |
+| Error handling                 | 4     | Graceful degradation on failures                        |
+| Component inclusion            | 3     | Context completeness verification                       |
+| Invariants                     | 5     | No side effects, no events, proper null handling        |
 
 ### Blockers Unblocked
 

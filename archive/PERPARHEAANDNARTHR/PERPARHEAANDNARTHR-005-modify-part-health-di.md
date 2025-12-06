@@ -4,6 +4,7 @@
 **Priority:** Critical (Phase 2)
 **Estimated Effort:** 0.5 days
 **Dependencies:**
+
 - PERPARHEAANDNARTHR-003 (MODIFY_PART_HEALTH Schema)
 - PERPARHEAANDNARTHR-004 (MODIFY_PART_HEALTH Handler)
 
@@ -18,9 +19,11 @@ Complete the DI registration for the `MODIFY_PART_HEALTH` operation following th
 ## Files to Touch
 
 ### New Files
+
 - None
 
 ### Modified Files
+
 - `src/dependencyInjection/tokens/tokens-core.js` (add token)
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` (add factory)
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` (add mapping)
@@ -31,6 +34,7 @@ Complete the DI registration for the `MODIFY_PART_HEALTH` operation following th
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation (covered in PERPARHEAANDNARTHR-004)
 - The schema (covered in PERPARHEAANDNARTHR-003)
 - Any other operation registrations
@@ -55,11 +59,13 @@ ModifyPartHealthHandler: 'ModifyPartHealthHandler',
 In `src/dependencyInjection/registrations/operationHandlerRegistrations.js`:
 
 **Add import** at the top with other handler imports:
+
 ```javascript
 import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHealthHandler.js';
 ```
 
 **Add factory** to the `handlerFactories` array (maintain alphabetical order):
+
 ```javascript
 [
   tokens.ModifyPartHealthHandler,
@@ -79,6 +85,7 @@ import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHea
 In `src/dependencyInjection/registrations/interpreterRegistrations.js`:
 
 **Add mapping** in the operation registry section (maintain alphabetical order):
+
 ```javascript
 registry.register('MODIFY_PART_HEALTH', bind(tokens.ModifyPartHealthHandler));
 ```
@@ -88,6 +95,7 @@ registry.register('MODIFY_PART_HEALTH', bind(tokens.ModifyPartHealthHandler));
 In `src/utils/preValidationUtils.js`:
 
 **Add to `KNOWN_OPERATION_TYPES` array** (maintain alphabetical order):
+
 ```javascript
 'MODIFY_PART_HEALTH',
 ```
@@ -99,16 +107,19 @@ In `src/utils/preValidationUtils.js`:
 ### Tests That Must Pass
 
 1. **Type checking:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **Full validation (including pre-validation):**
+
    ```bash
    npm run validate
    ```
 
 3. **Unit tests (DI should resolve correctly):**
+
    ```bash
    npm run test:unit
    ```
@@ -188,6 +199,7 @@ Per CLAUDE.md "Adding New Operations" section:
 The implementation was already complete when this ticket was reviewed. The actual implementation matched the planned changes with one minor correction:
 
 **Originally proposed in ticket:**
+
 ```javascript
 {
   token: tokens.ModifyPartHealthHandler,
@@ -201,6 +213,7 @@ The implementation was already complete when this ticket was reviewed. The actua
 ```
 
 **Actual implementation:**
+
 ```javascript
 [
   tokens.ModifyPartHealthHandler,
@@ -216,6 +229,7 @@ The implementation was already complete when this ticket was reviewed. The actua
 ```
 
 **Key differences:**
+
 1. Factory uses array pattern `[token, Handler, factoryFn]` matching project's current style
 2. Dependency name is `safeEventDispatcher` (not `eventDispatcher`) matching handler constructor
 3. Uses `tokens.JsonLogicEvaluationService` (not `tokens.IJsonLogicEvaluationService`) matching project's token naming
@@ -223,6 +237,7 @@ The implementation was already complete when this ticket was reviewed. The actua
 ### Verification Results
 
 All verifications passed:
+
 - ✅ Token defined at line 204 in `tokens-core.js`
 - ✅ Factory registered at line 187-195 in `operationHandlerRegistrations.js`
 - ✅ Operation mapped at line 93-95 in `interpreterRegistrations.js`

@@ -34,7 +34,10 @@ describe('music:play_phrase_on_instrument - Rule Execution', () => {
 
   describe('Successfully executes play_phrase_on_instrument action', () => {
     it('should dispatch perceptible event with mood-flavored message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Lyra')
@@ -78,7 +81,9 @@ describe('music:play_phrase_on_instrument - Rule Execution', () => {
         'bright, skipping'
       );
       expect(perceptibleEvent.payload.descriptionText).toContain('silver lute');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/shapes a.*phrase on/);
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /shapes a.*phrase on/
+      );
     });
 
     it('should dispatch action success event', async () => {

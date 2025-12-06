@@ -49,8 +49,12 @@ describe('Security hardening integration', () => {
     expect(response.headers['x-csp-nonce']).toBe(response.body.nonce);
 
     const cspHeader = response.headers['content-security-policy'];
-    expect(cspHeader).toContain(`script-src 'self' 'nonce-${response.body.nonce}'`);
-    expect(cspHeader).toContain(`style-src 'self' 'nonce-${response.body.nonce}'`);
+    expect(cspHeader).toContain(
+      `script-src 'self' 'nonce-${response.body.nonce}'`
+    );
+    expect(cspHeader).toContain(
+      `style-src 'self' 'nonce-${response.body.nonce}'`
+    );
 
     expect(response.headers['permissions-policy']).toContain('geolocation=()');
     expect(response.headers['expect-ct']).toBe('max-age=86400, enforce');

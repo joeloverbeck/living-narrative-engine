@@ -68,7 +68,11 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.secondary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.secondary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",

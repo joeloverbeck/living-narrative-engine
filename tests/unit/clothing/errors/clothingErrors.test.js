@@ -10,7 +10,7 @@ import {
   CoverageAnalysisError,
   PriorityCalculationError,
   ClothingServiceError,
-  ClothingValidationError
+  ClothingValidationError,
 } from '../../../../src/clothing/errors/clothingErrors.js';
 
 describe('Clothing Error Classes', () => {
@@ -35,13 +35,19 @@ describe('Clothing Error Classes', () => {
     it('should maintain backward compatibility with timestamp', () => {
       const error = new ClothingError('Test message');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
   });
 
   describe('ClothingAccessibilityError', () => {
     it('should extend BaseError', () => {
-      const error = new ClothingAccessibilityError('Access error', 'entity_1', 'item_1');
+      const error = new ClothingAccessibilityError(
+        'Access error',
+        'entity_1',
+        'item_1'
+      );
       expect(error).toBeInstanceOf(BaseError);
       expect(error).toBeInstanceOf(Error);
     });
@@ -59,14 +65,18 @@ describe('Clothing Error Classes', () => {
       expect(error.context).toEqual({
         entityId: 'entity_1',
         itemId: 'item_1',
-        reason: 'blocked'
+        reason: 'blocked',
       });
       expect(error.getSeverity()).toBe('warning');
       expect(error.isRecoverable()).toBe(true);
     });
 
     it('should maintain backward compatibility', () => {
-      const error = new ClothingAccessibilityError('Test', 'entity_1', 'item_1');
+      const error = new ClothingAccessibilityError(
+        'Test',
+        'entity_1',
+        'item_1'
+      );
       expect(error.entityId).toBe('entity_1');
       expect(error.itemId).toBe('item_1');
     });
@@ -91,7 +101,7 @@ describe('Clothing Error Classes', () => {
       expect(error.code).toBe('COVERAGE_ANALYSIS_ERROR');
       expect(error.context).toEqual({
         equipmentState,
-        entityId: 'test'
+        entityId: 'test',
       });
       expect(error.getSeverity()).toBe('warning');
       expect(error.isRecoverable()).toBe(true);
@@ -106,7 +116,12 @@ describe('Clothing Error Classes', () => {
 
   describe('PriorityCalculationError', () => {
     it('should extend BaseError', () => {
-      const error = new PriorityCalculationError('Priority error', 'base', {}, []);
+      const error = new PriorityCalculationError(
+        'Priority error',
+        'base',
+        {},
+        []
+      );
       expect(error).toBeInstanceOf(BaseError);
       expect(error).toBeInstanceOf(Error);
     });
@@ -125,7 +140,7 @@ describe('Clothing Error Classes', () => {
       expect(error.context).toEqual({
         layer: 'outer',
         modifiers,
-        additionalContext: 'test'
+        additionalContext: 'test',
       });
       expect(error.getSeverity()).toBe('warning');
       expect(error.isRecoverable()).toBe(true);
@@ -133,7 +148,12 @@ describe('Clothing Error Classes', () => {
 
     it('should maintain backward compatibility', () => {
       const modifiers = ['mod1'];
-      const error = new PriorityCalculationError('Test', 'layer1', {}, modifiers);
+      const error = new PriorityCalculationError(
+        'Test',
+        'layer1',
+        {},
+        modifiers
+      );
       expect(error.layer).toBe('layer1');
       expect(error.modifiers).toBe(modifiers);
     });
@@ -159,7 +179,7 @@ describe('Clothing Error Classes', () => {
       expect(error.context).toEqual({
         serviceName: 'TestService',
         operation: 'testOp',
-        detail: 'test'
+        detail: 'test',
       });
       expect(error.getSeverity()).toBe('error'); // Higher severity
       expect(error.isRecoverable()).toBe(true);
@@ -174,7 +194,12 @@ describe('Clothing Error Classes', () => {
 
   describe('ClothingValidationError', () => {
     it('should extend BaseError', () => {
-      const error = new ClothingValidationError('Validation error', 'field', 123, 'string');
+      const error = new ClothingValidationError(
+        'Validation error',
+        'field',
+        123,
+        'string'
+      );
       expect(error).toBeInstanceOf(BaseError);
       expect(error).toBeInstanceOf(Error);
     });
@@ -194,14 +219,19 @@ describe('Clothing Error Classes', () => {
         field: 'entityId',
         value: 123,
         expectedType: 'string',
-        source: 'input'
+        source: 'input',
       });
       expect(error.getSeverity()).toBe('warning');
       expect(error.isRecoverable()).toBe(true);
     });
 
     it('should maintain backward compatibility', () => {
-      const error = new ClothingValidationError('Test', 'field1', 'value1', 'type1');
+      const error = new ClothingValidationError(
+        'Test',
+        'field1',
+        'value1',
+        'type1'
+      );
       expect(error.field).toBe('field1');
       expect(error.value).toBe('value1');
       expect(error.expectedType).toBe('type1');
@@ -210,7 +240,9 @@ describe('Clothing Error Classes', () => {
 
   describe('Error serialization', () => {
     it('should serialize to JSON properly', () => {
-      const error = new ClothingServiceError('Test error', 'Service', 'op', { test: true });
+      const error = new ClothingServiceError('Test error', 'Service', 'op', {
+        test: true,
+      });
       const json = error.toJSON();
 
       expect(json).toHaveProperty('name');

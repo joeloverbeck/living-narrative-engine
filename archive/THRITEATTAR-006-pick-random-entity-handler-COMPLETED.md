@@ -6,8 +6,8 @@ Implement the `PickRandomEntityHandler` class that picks a random entity from a 
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                     | Purpose                |
+| -------------------------------------------------------- | ---------------------- |
 | `src/logic/operationHandlers/pickRandomEntityHandler.js` | Handler implementation |
 
 ## Implementation Details
@@ -41,7 +41,11 @@ class PickRandomEntityHandler extends BaseOperationHandler {
   constructor({ entityManager, logger }) {
     super();
     validateDependency(entityManager, 'IEntityManager', logger, {
-      requiredMethods: ['getEntitiesWithComponent', 'getComponentData', 'hasComponent'],
+      requiredMethods: [
+        'getEntitiesWithComponent',
+        'getComponentData',
+        'hasComponent',
+      ],
     });
     validateDependency(logger, 'ILogger', logger, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
@@ -236,6 +240,7 @@ node -e "import('./src/logic/operationHandlers/pickRandomEntityHandler.js').then
 ## Reference Files
 
 For understanding handler patterns:
+
 - `src/logic/operationHandlers/baseOperationHandler.js` - Base class
 - `src/logic/operationHandlers/getDamageCapabilitiesHandler.js` - Similar handler with entity operations
 - `src/logic/operationHandlers/setVariableHandler.js` - Simple handler pattern
@@ -256,4 +261,3 @@ For understanding handler patterns:
 - Updated dependency validation to check for `getEntitiesWithComponent` and `getComponentData` instead.
 - Added comprehensive unit tests in `tests/unit/logic/operationHandlers/pickRandomEntityHandler.test.js` covering all scenarios including context reference resolution.
 - Verified with `npm run typecheck` and `npx eslint`.
-

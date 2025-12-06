@@ -8,7 +8,7 @@ describe('Movement Go Rule', () => {
   beforeEach(() => {
     const rulePath = path.resolve(
       process.cwd(),
-      'data/mods/movement/rules/go.rule.json',
+      'data/mods/movement/rules/go.rule.json'
     );
     const ruleContent = fs.readFileSync(rulePath, 'utf8');
     rule = JSON.parse(ruleContent);
@@ -39,7 +39,9 @@ describe('Movement Go Rule', () => {
   });
 
   it('should have the correct JSON schema reference', () => {
-    expect(rule.$schema).toBe('schema://living-narrative-engine/rule.schema.json');
+    expect(rule.$schema).toBe(
+      'schema://living-narrative-engine/rule.schema.json'
+    );
   });
 
   it('should have a valid condition structure', () => {

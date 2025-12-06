@@ -1,6 +1,7 @@
 # THRITEATTAR-005: Create PICK_RANDOM_ENTITY Operation Schema (COMPLETED)
 
 ## Outcome
+
 - Created `data/schemas/operations/pickRandomEntity.schema.json` with the specified schema structure.
 - Updated `data/schemas/operation.schema.json` to include the reference to the new schema.
 - Verified validation using `node -e ...` and `npm run validate`.
@@ -12,14 +13,14 @@ Create the JSON schema for the new `PICK_RANDOM_ENTITY` operation. This operatio
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                   | Purpose                     |
+| ------------------------------------------------------ | --------------------------- |
 | `data/schemas/operations/pickRandomEntity.schema.json` | Operation schema definition |
 
 ## Files to Modify
 
-| File | Modification |
-|------|-------------|
+| File                                 | Modification                                      |
+| ------------------------------------ | ------------------------------------------------- |
 | `data/schemas/operation.schema.json` | Add `$ref` to the new schema in the `anyOf` array |
 
 ## Implementation Details
@@ -45,19 +46,13 @@ Create the JSON schema for the new `PICK_RANDOM_ENTITY` operation. This operatio
           "properties": {
             "location_id": {
               "description": "Location to search for entities",
-              "oneOf": [
-                { "type": "string" },
-                { "type": "object" }
-              ]
+              "oneOf": [{ "type": "string" }, { "type": "object" }]
             },
             "exclude_entities": {
               "description": "Array of entity IDs to exclude from selection",
               "type": "array",
               "items": {
-                "oneOf": [
-                  { "type": "string" },
-                  { "type": "object" }
-                ]
+                "oneOf": [{ "type": "string" }, { "type": "object" }]
               },
               "default": []
             },
@@ -97,13 +92,13 @@ Add the following `$ref` entry to the `anyOf` array (alphabetically sorted):
 
 ### Parameter Details
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `location_id` | string/object | Yes | - | Location entity ID or JSON Logic expression |
-| `exclude_entities` | array | No | `[]` | Entity IDs to exclude from selection |
-| `require_components` | array | No | `[]` | Components the entity must have (AND logic) |
-| `exclude_components` | array | No | `[]` | Components the entity must NOT have (OR logic) |
-| `result_variable` | string | Yes | - | Context variable to store result |
+| Parameter            | Type          | Required | Default | Description                                    |
+| -------------------- | ------------- | -------- | ------- | ---------------------------------------------- |
+| `location_id`        | string/object | Yes      | -       | Location entity ID or JSON Logic expression    |
+| `exclude_entities`   | array         | No       | `[]`    | Entity IDs to exclude from selection           |
+| `require_components` | array         | No       | `[]`    | Components the entity must have (AND logic)    |
+| `exclude_components` | array         | No       | `[]`    | Components the entity must NOT have (OR logic) |
+| `result_variable`    | string        | Yes      | -       | Context variable to store result               |
 
 ## Out of Scope
 
@@ -141,6 +136,7 @@ npm run validate
 ## Reference Files
 
 For understanding operation schema patterns:
+
 - `data/schemas/operations/getDamageCapabilities.schema.json` - Similar operation schema
 - `data/schemas/operations/setVariable.schema.json` - Simple operation pattern
 - `data/schemas/base-operation.schema.json` - Base schema being extended

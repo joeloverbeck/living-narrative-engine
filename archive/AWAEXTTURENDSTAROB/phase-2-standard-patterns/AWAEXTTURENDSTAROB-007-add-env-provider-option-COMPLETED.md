@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-007: Add IEnvironmentProvider Constructor Option
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-007
 - **Phase:** 2 - Standard Patterns
 - **Priority:** High
@@ -14,6 +15,7 @@ Add optional `environmentProvider` parameter to constructor following the projec
 ## Files to Modify
 
 ### Production Code
+
 - `src/turns/states/awaitingExternalTurnEndState.js`
   - Imports (add `ProcessEnvironmentProvider`)
   - Constructor (add `environmentProvider` parameter to options object)
@@ -24,29 +26,35 @@ Add optional `environmentProvider` parameter to constructor following the projec
 ## CORRECTED Assumptions
 
 ### Constructor Architecture
+
 **ACTUAL CONSTRUCTOR SIGNATURE** (Line 58-65):
+
 ```javascript
 constructor(
-  handler,  // First parameter: ITurnStateHost (BaseTurnHandler)
-  {
+  handler, // First parameter: ITurnStateHost (BaseTurnHandler)
+  ({
     timeoutMs,
     setTimeoutFn = (...args) => setTimeout(...args),
     clearTimeoutFn = (...args) => clearTimeout(...args),
-  } = {}  // Second parameter: options object
-)
+  } = {}) // Second parameter: options object
+);
 ```
 
 **NOT** the ticket's original assumption:
+
 ```javascript
 // ❌ WRONG - this is not the actual constructor
 constructor({ context, logger, eventBus, endTurn, timeoutMs, ... })
 ```
 
 ### Import Path
+
 **CORRECT PATH**: `src/configuration/ProcessEnvironmentProvider.js` (NOT `src/environment/`)
 
 ### Interface Contract
+
 **ACTUAL RETURN TYPE** from `IEnvironmentProvider.getEnvironment()`:
+
 ```javascript
 {
   NODE_ENV: string,        // 'production' | 'development' | 'test'
@@ -59,6 +67,7 @@ constructor({ context, logger, eventBus, endTurn, timeoutMs, ... })
 ## Changes Required
 
 ### 1. Add Import for ProcessEnvironmentProvider
+
 ```javascript
 // ADD to imports (~line 13):
 import { ProcessEnvironmentProvider } from '../../configuration/ProcessEnvironmentProvider.js';
@@ -68,6 +77,7 @@ import { getEnvironmentMode } from '../../utils/environmentUtils.js';
 ```
 
 ### 2. Add Constructor Parameter to Options Object
+
 ```javascript
 // UPDATE constructor signature (~line 58):
 constructor(
@@ -85,6 +95,7 @@ constructor(
 ```
 
 ### 3. Store Environment Provider
+
 ```javascript
 // ADD to private fields (~line 60):
 /**
@@ -96,6 +107,7 @@ constructor(
 ```
 
 ### 4. Initialize Provider in Constructor
+
 ```javascript
 // UPDATE constructor initialization (~line 66):
 constructor(
@@ -120,6 +132,7 @@ constructor(
 ```
 
 ### 5. Update #resolveDefaultTimeout Method
+
 ```javascript
 // UPDATE #resolveDefaultTimeout to use provider (~line 100):
 /**
@@ -145,6 +158,7 @@ constructor(
 ```
 
 ### 6. (Optional) Remove getEnvironmentMode Import Later
+
 ```javascript
 // NOTE: Can remove in cleanup:
 // import { getEnvironmentMode } from '../utils/environmentUtils.js';
@@ -154,6 +168,7 @@ constructor(
 ## Out of Scope
 
 ### Must NOT Change
+
 - Test files (updated in Ticket 008)
 - `IEnvironmentProvider` interface definition (use existing)
 - `ProcessEnvironmentProvider` implementation (use existing)
@@ -163,6 +178,7 @@ constructor(
 - Event handling logic
 
 ### Must NOT Add
+
 - Environment provider validation (beyond null check via `??`)
 - Multiple provider types in constructor
 - Provider factory pattern
@@ -171,6 +187,7 @@ constructor(
 ## Acceptance Criteria
 
 ### AC1: Default Uses ProcessEnvironmentProvider
+
 ```javascript
 // GIVEN: Constructor called without environmentProvider
 // WHEN: State instantiated
@@ -183,6 +200,7 @@ constructor(
 ```
 
 ### AC2: Accepts Custom Environment Provider
+
 ```javascript
 // GIVEN: Constructor called with custom environmentProvider
 const mockProvider = {
@@ -190,15 +208,14 @@ const mockProvider = {
     NODE_ENV: 'production',
     IS_PRODUCTION: true,
     IS_DEVELOPMENT: false,
-    IS_TEST: false
-  }))
+    IS_TEST: false,
+  })),
 };
 
 // WHEN: State instantiated with handler and options
-const state = new AwaitingExternalTurnEndState(
-  mockHandler,
-  { environmentProvider: mockProvider }
-);
+const state = new AwaitingExternalTurnEndState(mockHandler, {
+  environmentProvider: mockProvider,
+});
 
 // THEN:
 //   ✓ Custom provider used instead of ProcessEnvironmentProvider
@@ -207,6 +224,7 @@ const state = new AwaitingExternalTurnEndState(
 ```
 
 ### AC3: Provider Returns Development Environment
+
 ```javascript
 // GIVEN: Custom provider returning development environment
 const devProvider = {
@@ -214,12 +232,14 @@ const devProvider = {
     NODE_ENV: 'development',
     IS_PRODUCTION: false,
     IS_DEVELOPMENT: true,
-    IS_TEST: false
-  })
+    IS_TEST: false,
+  }),
 };
 
 // WHEN: State instantiated with devProvider
-const state = new AwaitingExternalTurnEndState(mockHandler, { environmentProvider: devProvider });
+const state = new AwaitingExternalTurnEndState(mockHandler, {
+  environmentProvider: devProvider,
+});
 
 // THEN:
 //   ✓ this.#configuredTimeout === 3_000
@@ -227,10 +247,13 @@ const state = new AwaitingExternalTurnEndState(mockHandler, { environmentProvide
 ```
 
 ### AC4: Provider Throws Error - Graceful Degradation
+
 ```javascript
 // GIVEN: Provider that throws error
 const errorProvider = {
-  getEnvironment: () => { throw new Error('Provider failed'); }
+  getEnvironment: () => {
+    throw new Error('Provider failed');
+  },
 };
 
 // WHEN: State instantiated with errorProvider
@@ -242,6 +265,7 @@ const errorProvider = {
 ```
 
 ### AC5: Explicit Timeout Still Overrides Provider
+
 ```javascript
 // GIVEN: Custom provider + explicit timeoutMs
 const mockProvider = {
@@ -249,15 +273,15 @@ const mockProvider = {
     NODE_ENV: 'production',
     IS_PRODUCTION: true,
     IS_DEVELOPMENT: false,
-    IS_TEST: false
-  })  // Would give 30s
+    IS_TEST: false,
+  }), // Would give 30s
 };
 
 // WHEN: State instantiated with explicit timeout
-const state = new AwaitingExternalTurnEndState(
-  mockHandler,
-  { environmentProvider: mockProvider, timeoutMs: 5_000 }
-);
+const state = new AwaitingExternalTurnEndState(mockHandler, {
+  environmentProvider: mockProvider,
+  timeoutMs: 5_000,
+});
 
 // THEN:
 //   ✓ this.#configuredTimeout === 5_000
@@ -266,6 +290,7 @@ const state = new AwaitingExternalTurnEndState(
 ```
 
 ### AC6: Backward Compatibility - Existing Code Unaffected
+
 ```javascript
 // GIVEN: Existing code without environmentProvider parameter
 const state = new AwaitingExternalTurnEndState(mockHandler, {
@@ -282,6 +307,7 @@ const state = new AwaitingExternalTurnEndState(mockHandler, {
 ```
 
 ### AC7: Existing Tests Still Pass
+
 ```javascript
 // GIVEN: All existing unit and integration tests
 // WHEN: npm run test:unit && npm run test:integration
@@ -294,22 +320,26 @@ const state = new AwaitingExternalTurnEndState(mockHandler, {
 ## Invariants
 
 ### DI Pattern Compliance (Must Follow)
+
 1. **Optional Parameter**: Provider is optional with sensible default
 2. **Interface-Based**: Accepts any `IEnvironmentProvider` implementation
 3. **Backward Compatible**: Existing code works without changes
 4. **Fail-Safe**: Provider errors don't crash state
 
 ### Configuration Guarantees (Must Maintain)
+
 1. **Safe Default**: Missing/failing provider → production timeout
 2. **Override Precedence**: Explicit timeoutMs > provider > default
 3. **Evaluated at Construction**: Provider called during instantiation
 
 ### State Lifecycle Invariants (Must Maintain)
+
 1. **Single Timeout**: At most one timeout scheduled
 2. **Resource Cleanup**: All resources cleared on exit/destroy
 3. **Context Validity**: All operations verify context exists
 
 ### API Contract Preservation (Must Maintain)
+
 1. **Constructor Signature**: Only adds optional parameter
 2. **Lifecycle Methods**: Unchanged
 3. **Event Handling**: Unchanged
@@ -318,6 +348,7 @@ const state = new AwaitingExternalTurnEndState(mockHandler, {
 ## Testing Commands
 
 ### After Implementation
+
 ```bash
 # Lint modified file
 npx eslint src/turns/states/awaitingExternalTurnEndState.js
@@ -339,6 +370,7 @@ npm run test:ci
 ```
 
 ### Manual Verification
+
 ```bash
 # In Node.js REPL:
 # const { ProcessEnvironmentProvider } = require('./src/environment/ProcessEnvironmentProvider.js');
@@ -350,6 +382,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### IEnvironmentProvider Interface (Reference)
+
 ```javascript
 // From src/interfaces/IEnvironmentProvider.js
 // (Do NOT modify, just reference)
@@ -363,6 +396,7 @@ interface IEnvironmentProvider {
 ```
 
 ### ProcessEnvironmentProvider Usage
+
 ```javascript
 // From src/configuration/ProcessEnvironmentProvider.js
 // (Do NOT modify, just use)
@@ -380,6 +414,7 @@ class ProcessEnvironmentProvider {
 ```
 
 ### Error Handling Pattern
+
 ```javascript
 try {
   const env = this.#environmentProvider.getEnvironment();
@@ -391,12 +426,15 @@ try {
 ```
 
 ### Default Parameter Pattern
+
 ```javascript
 // Use nullish coalescing for default
-this.#environmentProvider = environmentProvider ?? new ProcessEnvironmentProvider();
+this.#environmentProvider =
+  environmentProvider ?? new ProcessEnvironmentProvider();
 
 // NOT:
-this.#environmentProvider = environmentProvider || new ProcessEnvironmentProvider();
+this.#environmentProvider =
+  environmentProvider || new ProcessEnvironmentProvider();
 // (nullish coalescing allows explicit null/undefined but not other falsy values)
 ```
 
@@ -426,12 +464,14 @@ this.#environmentProvider = environmentProvider || new ProcessEnvironmentProvide
 ### What Was Changed vs. Originally Planned
 
 **Ticket Assumptions Corrected:**
+
 1. **Constructor signature**: Corrected from `constructor({context, logger, ...})` to actual `constructor(handler, {timeoutMs, ...})`
 2. **Import path**: Corrected from `../../environment/` to `../../configuration/`
 3. **Interface return type**: Documented full return type (NODE_ENV, IS_PRODUCTION, IS_DEVELOPMENT, IS_TEST) instead of simplified version
 4. **Constant reference**: Used top-level exports (DEFAULT_TIMEOUT_PRODUCTION) instead of static class properties
 
 **Actual Changes Made:**
+
 1. ✅ Added `ProcessEnvironmentProvider` import from correct path (`../../configuration/ProcessEnvironmentProvider.js`)
 2. ✅ Added `#environmentProvider` private field with JSDoc type annotation
 3. ✅ Added `environmentProvider` to constructor options object (second parameter)
@@ -441,6 +481,7 @@ this.#environmentProvider = environmentProvider || new ProcessEnvironmentProvide
 7. ✅ Silent error handling in catch block (no logger warning during construction)
 
 **Test Results:**
+
 - ✅ All 58 existing unit tests pass without modification
 - ✅ No integration tests exist for this file
 - ✅ ESLint warnings resolved (removed unused import, removed unused error variable)
@@ -449,6 +490,7 @@ this.#environmentProvider = environmentProvider || new ProcessEnvironmentProvide
 **Lines Changed:** ~20 lines (more minimal than estimated ~30)
 
 **Public API Changes:**
+
 - ✅ Only added optional parameter to constructor options object
 - ✅ No breaking changes to existing API
 - ✅ Fully backward compatible

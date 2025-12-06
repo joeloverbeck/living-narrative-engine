@@ -52,7 +52,11 @@
           {
             "step": 3,
             "action": "collectMetadata",
-            "expectedSources": ["activityIndex", "inlineMetadata", "dedicatedMetadata"],
+            "expectedSources": [
+              "activityIndex",
+              "inlineMetadata",
+              "dedicatedMetadata"
+            ],
             "expectedDeduplication": true
           },
           {

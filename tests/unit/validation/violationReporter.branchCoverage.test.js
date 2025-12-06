@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ViolationReporter from '../../../src/validation/violationReporter.js';
 
@@ -21,7 +28,9 @@ describe('ViolationReporter branch coverage', () => {
       hasViolations: false,
     });
 
-    expect(output).toContain("Cross-Reference Validation Report for 'minimal_mod'");
+    expect(output).toContain(
+      "Cross-Reference Validation Report for 'minimal_mod'"
+    );
     expect(output).toContain('References to 0 mods');
     expect(output).toContain('0 total component references');
   });
@@ -227,7 +236,9 @@ describe('ViolationReporter branch coverage', () => {
 
     const groupSpy = jest
       .spyOn(reporter, '_groupByMod')
-      .mockReturnValue(new Map([[stubViolations[0].referencedMod, stubViolations]]));
+      .mockReturnValue(
+        new Map([[stubViolations[0].referencedMod, stubViolations]])
+      );
 
     const report = reporter._generateEcosystemConsoleReport(
       new Map([
@@ -282,9 +293,17 @@ describe('ViolationReporter branch coverage', () => {
   });
 
   it('exposes minimal JSON, HTML, and Markdown outputs with default options', () => {
-    const json = reporter._generateJsonReport(new Map([['mod', { hasViolations: false }]]));
-    const html = reporter._generateHtmlReport({ modId: 'html_mod', hasViolations: false });
-    const markdown = reporter._generateMarkdownReport({ modId: 'md_mod', hasViolations: false });
+    const json = reporter._generateJsonReport(
+      new Map([['mod', { hasViolations: false }]])
+    );
+    const html = reporter._generateHtmlReport({
+      modId: 'html_mod',
+      hasViolations: false,
+    });
+    const markdown = reporter._generateMarkdownReport({
+      modId: 'md_mod',
+      hasViolations: false,
+    });
 
     expect(() => JSON.parse(json)).not.toThrow();
     expect(html).toContain('<!DOCTYPE html>');
@@ -298,9 +317,7 @@ describe('ViolationReporter branch coverage', () => {
       [
         'unknown_mod',
         {
-          violations: [
-            { severity: 'unknown' },
-          ],
+          violations: [{ severity: 'unknown' }],
         },
       ],
     ]);
@@ -337,11 +354,11 @@ describe('ViolationReporter branch coverage', () => {
                 contextSnippet: 'context',
                 suggestedFix: 'Add modB dependency',
               },
-            {
-              referencedMod: 'modB',
-              referencedComponent: 'componentC',
-              file: 'no-line.html',
-            },
+              {
+                referencedMod: 'modB',
+                referencedComponent: 'componentC',
+                file: 'no-line.html',
+              },
             ],
           },
         ],
@@ -524,9 +541,7 @@ describe('ViolationReporter branch coverage', () => {
           {
             modId: 'mod_bad',
             isValid: false,
-            missingFiles: [
-              { category: 'stories', file: 'missing.story.json' },
-            ],
+            missingFiles: [{ category: 'stories', file: 'missing.story.json' }],
             namingIssues: [
               {
                 category: 'rules',

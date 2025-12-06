@@ -90,14 +90,14 @@ InjuryStatusPanel         Chat Panel                    CharacterDataXmlBuilder
 
 ### 2.3 Integration Points
 
-| System | Integration Method | Purpose |
-|--------|-------------------|---------|
-| Damage System | Event subscription | React to `anatomy:damage_applied`, `anatomy:part_state_changed` |
-| Effects System | Component queries | Read `anatomy:bleeding`, `anatomy:burning`, etc. |
-| Anatomy System | Graph traversal | Find all parts, parent-child relationships |
-| Event Bus | Event dispatch | Dispatch `anatomy:entity_dying`, `anatomy:entity_died` |
-| DOM UI | Widget rendering | Update status panel, chat messages |
-| LLM Prompting | Data extraction | Include health in `ActorPromptDataDTO` |
+| System         | Integration Method | Purpose                                                         |
+| -------------- | ------------------ | --------------------------------------------------------------- |
+| Damage System  | Event subscription | React to `anatomy:damage_applied`, `anatomy:part_state_changed` |
+| Effects System | Component queries  | Read `anatomy:bleeding`, `anatomy:burning`, etc.                |
+| Anatomy System | Graph traversal    | Find all parts, parent-child relationships                      |
+| Event Bus      | Event dispatch     | Dispatch `anatomy:entity_dying`, `anatomy:entity_died`          |
+| DOM UI         | Widget rendering   | Update status panel, chat messages                              |
+| LLM Prompting  | Data extraction    | Include health in `ActorPromptDataDTO`                          |
 
 ---
 
@@ -110,17 +110,20 @@ This spec requires implementing two systems from the brainstorming document that
 **Purpose**: When a parent body part is hit, internal/child parts may also take damage based on configurable probabilities and damage type penetration values.
 
 **Mechanism**:
+
 1. When damage is applied to a part with children (via sockets), check for propagation
 2. Roll against propagation probability (modified by damage type's `penetration` value)
 3. Apply a fraction of the damage to affected child parts
 4. Dispatch `anatomy:internal_damage_propagated` event
 
 **Example**: Arrow hits torso (40 damage, piercing with 0.8 penetration)
+
 - Check heart socket: 30% base chance × 0.8 penetration = 24% chance
 - If triggered: Apply 50% of damage (20) to heart
 - Dispatch event with details of propagated damage
 
 **Configuration**:
+
 - Each parent part can define `propagationRules` in its component data
 - Damage types define `penetration` factor (already exists in schema)
 - Propagation fraction is configurable per rule
@@ -130,12 +133,14 @@ This spec requires implementing two systems from the brainstorming document that
 **Purpose**: Determine when an entity dies based on vital organ destruction or critical overall health.
 
 **Death Conditions**:
+
 1. **Vital Organ Destruction**: Brain, heart, or spine destroyed → immediate death
 2. **Overall Health Critical**: Weighted health < 10% → enter dying state
 3. **Dying Countdown**: Each turn in dying state decrements counter; at 0 → death
 4. **Stabilization**: Healing action can remove dying state before death
 
 **State Flow**:
+
 ```
 Normal → (vital organ destroyed) → Dead
 Normal → (overall health < 10%) → Dying → (countdown expires) → Dead
@@ -309,6 +314,7 @@ Dying → (stabilized) → Normal (but still injured)
 ```
 
 **Example Usage** (on torso entity):
+
 ```json
 {
   "anatomy:damage_propagation": {
@@ -348,6 +354,7 @@ Dying → (stabilized) → Normal (but still injured)
 **File**: `src/anatomy/services/injuryAggregationService.js`
 
 **Dependencies**:
+
 - `IEntityManager` - Access entity components
 - `ILogger` - Logging
 
@@ -424,28 +431,33 @@ aggregateInjuries(entityId)
 **File**: `src/anatomy/services/injuryNarrativeFormatterService.js`
 
 **Dependencies**:
+
 - `ILogger` - Logging
 
 **Formatting Rules**:
 
 #### First-Person Voice (Status Panel)
+
 - Sensory, internal experience
 - Uses "I feel...", "My [part]...", "I can barely..."
 - Groups by severity: destroyed > badly_damaged > wounded > bruised
 - Effects show severity only: "bleeding heavily" (severe), "bleeding" (moderate), "seeping blood" (minor)
 
 **Examples**:
+
 - "I feel sharp pain in my left arm, blood seeping from the wound."
 - "My torso aches with deep bruising. Every breath is agony."
 - "I can barely feel my right leg - it's completely destroyed."
 - "Fire sears across my back. The burning is unbearable."
 
 #### Third-Person Voice (Chat Panel)
+
 - Narrative, observable
 - Uses entity name or pronoun
 - Structure: [Who] suffers [damage type] damage to [part]. [State change]. [Propagation consequences].
 
 **Examples**:
+
 - "Vespera Nightwhisper suffers piercing damage to her torso."
 - "Her torso is now badly wounded and bleeding heavily."
 - "As a result of this attack, her heart has been bruised."
@@ -518,6 +530,7 @@ formatDamageEvent(damageEventData)
 **File**: `src/anatomy/services/deathCheckService.js`
 
 **Dependencies**:
+
 - `IEntityManager` - Access entity components
 - `IEventBus` - Dispatch death events
 - `InjuryAggregationService` - Get overall health
@@ -573,6 +586,7 @@ processDyingTurn(entityId)
 **File**: `src/anatomy/services/damagePropagationService.js`
 
 **Dependencies**:
+
 - `IEntityManager` - Access entity components
 - `IEventBus` - Dispatch propagation events
 - `ILogger` - Logging
@@ -631,7 +645,13 @@ propagateDamage(partEntityId, damageAmount, damageTypeId)
       "causeOfDying": { "type": "string" },
       "timestamp": { "type": "integer" }
     },
-    "required": ["entityId", "entityName", "turnsRemaining", "causeOfDying", "timestamp"]
+    "required": [
+      "entityId",
+      "entityName",
+      "turnsRemaining",
+      "causeOfDying",
+      "timestamp"
+    ]
   }
 }
 ```
@@ -707,7 +727,13 @@ propagateDamage(partEntityId, damageAmount, damageTypeId)
       "effectsTriggered": { "type": "array", "items": { "type": "string" } },
       "timestamp": { "type": "integer" }
     },
-    "required": ["ownerEntityId", "sourcePartId", "targetPartId", "damageAmount", "timestamp"]
+    "required": [
+      "ownerEntityId",
+      "sourcePartId",
+      "targetPartId",
+      "damageAmount",
+      "timestamp"
+    ]
   }
 }
 ```
@@ -758,6 +784,7 @@ UI components update (status panel, chat messages)
 **HTML Target**: New widget in `#left-pane`, between `#current-turn-actor-panel` and `#perception-log-widget`
 
 **HTML Structure**:
+
 ```html
 <div
   id="injury-status-widget"
@@ -779,7 +806,9 @@ UI components update (status panel, chat messages)
     <ul class="injury-list">
       <li class="injury-item severity-wounded">
         <span class="injury-icon">🩸</span>
-        <span class="injury-text">I feel sharp pain in my left arm, blood seeping from the wound.</span>
+        <span class="injury-text"
+          >I feel sharp pain in my left arm, blood seeping from the wound.</span
+        >
       </li>
       <!-- More items... -->
     </ul>
@@ -804,6 +833,7 @@ UI components update (status panel, chat messages)
 | `.state-dead` | Grayed out, 50% opacity |
 
 **Event Subscriptions**:
+
 - `anatomy:part_health_changed` - Update on any health change
 - `anatomy:part_state_changed` - Update on state transitions
 - `anatomy:bleeding_started`, `anatomy:bleeding_stopped` - Effect changes
@@ -852,11 +882,16 @@ updateForActor(actorId)
 **HTML Target**: Messages appended to `#message-list` in center pane
 
 **Message Structure**:
+
 ```html
 <li class="message damage-event">
   <div class="damage-message-content">
-    <p class="damage-primary">Vespera Nightwhisper suffers piercing damage to her torso.</p>
-    <p class="damage-state-change">Her torso is now badly wounded and bleeding heavily.</p>
+    <p class="damage-primary">
+      Vespera Nightwhisper suffers piercing damage to her torso.
+    </p>
+    <p class="damage-state-change">
+      Her torso is now badly wounded and bleeding heavily.
+    </p>
     <p class="damage-propagation">As a result, her heart has been bruised.</p>
   </div>
 </li>
@@ -873,6 +908,7 @@ updateForActor(actorId)
 | `.damage-dying` | Dying state warning |
 
 **Event Subscriptions**:
+
 - `anatomy:damage_applied` - Primary damage event
 - `anatomy:part_state_changed` - State transitions
 - `anatomy:internal_damage_propagated` - Propagation results
@@ -1085,6 +1121,7 @@ Modify `#buildCurrentStateSection()` to include physical condition:
 ```
 
 **Example Output**:
+
 ```xml
 <current_state>
   <physical_condition>
@@ -1310,16 +1347,16 @@ describe('Injury Aggregation Performance', () => {
 
 ### 9.5 Test Scenarios
 
-| Scenario | Expected Behavior |
-|----------|-------------------|
+| Scenario                      | Expected Behavior                                    |
+| ----------------------------- | ---------------------------------------------------- |
 | Single damage, no propagation | Status panel shows injury, chat shows damage message |
-| Damage with bleeding | Status shows bleeding icon, chat mentions bleeding |
-| Damage propagates to heart | Chat shows "As a result, heart is bruised" |
-| Heart destroyed | Immediate death, death message in chat |
-| Overall health < 10% | Enter dying state, warning in status panel |
-| Dying countdown expires | Death triggered, UI reflects dead state |
-| Multiple injuries same turn | Single batched chat message |
-| Healing while dying | Stabilized, dying state removed |
+| Damage with bleeding          | Status shows bleeding icon, chat mentions bleeding   |
+| Damage propagates to heart    | Chat shows "As a result, heart is bruised"           |
+| Heart destroyed               | Immediate death, death message in chat               |
+| Overall health < 10%          | Enter dying state, warning in status panel           |
+| Dying countdown expires       | Death triggered, UI reflects dead state              |
+| Multiple injuries same turn   | Single batched chat message                          |
+| Healing while dying           | Stabilized, dying state removed                      |
 
 ---
 
@@ -1328,12 +1365,14 @@ describe('Injury Aggregation Performance', () => {
 ### Phase 1: Core Infrastructure (Est. 3-4 days)
 
 **Components**:
+
 - [ ] Component JSON files (`vital_organ`, `dying`, `dead`, `damage_propagation`)
 - [ ] Event JSON files (`entity_dying`, `entity_died`, `entity_stabilized`, `internal_damage_propagated`)
 - [ ] `InjuryAggregationService` with full aggregation logic
 - [ ] Unit tests for `InjuryAggregationService`
 
 **Deliverables**:
+
 - All new component schemas validated
 - Event schemas validated
 - Aggregation service passing all unit tests
@@ -1341,6 +1380,7 @@ describe('Injury Aggregation Performance', () => {
 ### Phase 2: Death System (Est. 2-3 days)
 
 **Components**:
+
 - [ ] `DeathCheckService` implementation
 - [ ] `DamagePropagationService` implementation
 - [ ] Integration with `ApplyDamageHandler` event flow
@@ -1348,6 +1388,7 @@ describe('Injury Aggregation Performance', () => {
 - [ ] Unit tests for death and propagation services
 
 **Deliverables**:
+
 - Death conditions properly detected
 - Propagation working with probability rolls
 - Death events dispatched correctly
@@ -1355,6 +1396,7 @@ describe('Injury Aggregation Performance', () => {
 ### Phase 3: Narrative Formatting (Est. 2 days)
 
 **Components**:
+
 - [ ] `InjuryNarrativeFormatterService` implementation
 - [ ] First-person voice formatting
 - [ ] Third-person voice formatting
@@ -1362,12 +1404,14 @@ describe('Injury Aggregation Performance', () => {
 - [ ] Unit tests for formatter
 
 **Deliverables**:
+
 - Narrative generation working for all injury states
 - Both voice styles producing correct output
 
 ### Phase 4: UI Components (Est. 3-4 days)
 
 **Components**:
+
 - [ ] Modify `game.html` to add `#injury-status-widget`
 - [ ] `InjuryStatusPanel` component
 - [ ] `DamageEventMessageRenderer` component
@@ -1375,6 +1419,7 @@ describe('Injury Aggregation Performance', () => {
 - [ ] Event subscription wiring
 
 **Deliverables**:
+
 - Status panel displaying in left pane
 - Chat messages appearing after damage
 - Event batching working correctly
@@ -1382,18 +1427,21 @@ describe('Injury Aggregation Performance', () => {
 ### Phase 5: LLM Integration (Est. 2 days)
 
 **Components**:
+
 - [ ] Extend `ActorPromptDataDTO` with health fields
 - [ ] Add `#extractHealthData()` to `ActorDataExtractor`
 - [ ] Add `#buildPhysicalConditionSection()` to `CharacterDataXmlBuilder`
 - [ ] Wire health extraction into `extractPromptData()`
 
 **Deliverables**:
+
 - Health state included in LLM context
 - XML output validates correctly
 
 ### Phase 6: Integration & Polish (Est. 2-3 days)
 
 **Components**:
+
 - [ ] Integration tests for full flow
 - [ ] E2E tests for UI
 - [ ] Performance tests
@@ -1401,6 +1449,7 @@ describe('Injury Aggregation Performance', () => {
 - [ ] Documentation updates
 
 **Deliverables**:
+
 - All tests passing
 - Performance within targets
 - System fully operational
@@ -1411,49 +1460,49 @@ describe('Injury Aggregation Performance', () => {
 
 ### New Files to Create
 
-| File Path | Type | Purpose |
-|-----------|------|---------|
-| `data/mods/anatomy/components/vital_organ.component.json` | Component | Mark organs as vital |
-| `data/mods/anatomy/components/dying.component.json` | Component | Dying state tracking |
-| `data/mods/anatomy/components/dead.component.json` | Component | Death marker |
-| `data/mods/anatomy/components/damage_propagation.component.json` | Component | Propagation config |
-| `data/mods/anatomy/events/entity_dying.event.json` | Event | Dying state event |
-| `data/mods/anatomy/events/entity_died.event.json` | Event | Death event |
-| `data/mods/anatomy/events/entity_stabilized.event.json` | Event | Stabilization event |
-| `data/mods/anatomy/events/internal_damage_propagated.event.json` | Event | Propagation event |
-| `src/anatomy/services/injuryAggregationService.js` | Service | Injury data collection |
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Service | Narrative generation |
-| `src/anatomy/services/deathCheckService.js` | Service | Death condition monitoring |
-| `src/anatomy/services/damagePropagationService.js` | Service | Internal damage propagation |
-| `src/domUI/injuryStatusPanel.js` | UI | Status panel widget |
-| `src/domUI/damageEventMessageRenderer.js` | UI | Chat damage messages |
-| `tests/unit/anatomy/services/injuryAggregationService.test.js` | Test | Aggregation tests |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Test | Formatter tests |
-| `tests/unit/anatomy/services/deathCheckService.test.js` | Test | Death system tests |
-| `tests/unit/anatomy/services/damagePropagationService.test.js` | Test | Propagation tests |
-| `tests/integration/anatomy/injuryReportingFlow.integration.test.js` | Test | Flow integration |
-| `tests/integration/anatomy/deathSystem.integration.test.js` | Test | Death integration |
-| `tests/e2e/injuryDisplay.e2e.test.js` | Test | E2E UI tests |
-| `tests/performance/anatomy/injuryAggregation.performance.test.js` | Test | Performance tests |
+| File Path                                                             | Type      | Purpose                     |
+| --------------------------------------------------------------------- | --------- | --------------------------- |
+| `data/mods/anatomy/components/vital_organ.component.json`             | Component | Mark organs as vital        |
+| `data/mods/anatomy/components/dying.component.json`                   | Component | Dying state tracking        |
+| `data/mods/anatomy/components/dead.component.json`                    | Component | Death marker                |
+| `data/mods/anatomy/components/damage_propagation.component.json`      | Component | Propagation config          |
+| `data/mods/anatomy/events/entity_dying.event.json`                    | Event     | Dying state event           |
+| `data/mods/anatomy/events/entity_died.event.json`                     | Event     | Death event                 |
+| `data/mods/anatomy/events/entity_stabilized.event.json`               | Event     | Stabilization event         |
+| `data/mods/anatomy/events/internal_damage_propagated.event.json`      | Event     | Propagation event           |
+| `src/anatomy/services/injuryAggregationService.js`                    | Service   | Injury data collection      |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`             | Service   | Narrative generation        |
+| `src/anatomy/services/deathCheckService.js`                           | Service   | Death condition monitoring  |
+| `src/anatomy/services/damagePropagationService.js`                    | Service   | Internal damage propagation |
+| `src/domUI/injuryStatusPanel.js`                                      | UI        | Status panel widget         |
+| `src/domUI/damageEventMessageRenderer.js`                             | UI        | Chat damage messages        |
+| `tests/unit/anatomy/services/injuryAggregationService.test.js`        | Test      | Aggregation tests           |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Test      | Formatter tests             |
+| `tests/unit/anatomy/services/deathCheckService.test.js`               | Test      | Death system tests          |
+| `tests/unit/anatomy/services/damagePropagationService.test.js`        | Test      | Propagation tests           |
+| `tests/integration/anatomy/injuryReportingFlow.integration.test.js`   | Test      | Flow integration            |
+| `tests/integration/anatomy/deathSystem.integration.test.js`           | Test      | Death integration           |
+| `tests/e2e/injuryDisplay.e2e.test.js`                                 | Test      | E2E UI tests                |
+| `tests/performance/anatomy/injuryAggregation.performance.test.js`     | Test      | Performance tests           |
 
 ### Files to Modify
 
-| File Path | Modification |
-|-----------|--------------|
-| `game.html` | Add `#injury-status-widget` div in left pane |
-| `css/style.css` | Add injury panel and damage message styles |
-| `src/turns/dtos/AIGameStateDTO.js` | Add `ActorHealthStateDTO` typedef |
-| `src/turns/services/actorDataExtractor.js` | Add `#extractHealthData()` method |
-| `src/prompting/characterDataXmlBuilder.js` | Add `#buildPhysicalConditionSection()` |
-| `src/logic/operationHandlers/applyDamageHandler.js` | Integrate propagation and death checks |
-| `src/dependencyInjection/tokens/` | Add tokens for new services |
-| `src/dependencyInjection/registrations/` | Register new services |
-| `data/mods/anatomy/entities/definitions/` | Update heart/brain with vital_organ |
+| File Path                                           | Modification                                 |
+| --------------------------------------------------- | -------------------------------------------- |
+| `game.html`                                         | Add `#injury-status-widget` div in left pane |
+| `css/style.css`                                     | Add injury panel and damage message styles   |
+| `src/turns/dtos/AIGameStateDTO.js`                  | Add `ActorHealthStateDTO` typedef            |
+| `src/turns/services/actorDataExtractor.js`          | Add `#extractHealthData()` method            |
+| `src/prompting/characterDataXmlBuilder.js`          | Add `#buildPhysicalConditionSection()`       |
+| `src/logic/operationHandlers/applyDamageHandler.js` | Integrate propagation and death checks       |
+| `src/dependencyInjection/tokens/`                   | Add tokens for new services                  |
+| `src/dependencyInjection/registrations/`            | Register new services                        |
+| `data/mods/anatomy/entities/definitions/`           | Update heart/brain with vital_organ          |
 
 ---
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0.0 | 2025-12-02 | System Architect | Initial specification |
+| Version | Date       | Author           | Changes               |
+| ------- | ---------- | ---------------- | --------------------- |
+| 1.0.0   | 2025-12-02 | System Architect | Initial specification |

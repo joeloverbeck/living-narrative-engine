@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import NotesAnalyticsService from '../../../src/ai/notesAnalyticsService.js';
 import { SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
@@ -92,7 +99,9 @@ describe('NotesAnalyticsService optional branch coverage', () => {
 
     const afterLoad = service.getAnalyticsSummary();
     expect(afterLoad.summary.totalNotes).toBe(beforeLoad.summary.totalNotes);
-    expect(afterLoad.typeDistribution.timeline).toBe(beforeLoad.typeDistribution.timeline);
+    expect(afterLoad.typeDistribution.timeline).toBe(
+      beforeLoad.typeDistribution.timeline
+    );
   });
 
   it('updates the session start timestamp when analytics are reset', () => {

@@ -127,7 +127,13 @@ class ResolveDirectionHandler extends BaseOperationHandler {
         `RESOLVE_DIRECTION: Could not retrieve exits component from location '${locationId}'.`,
         { error: e.message }
       );
-      tryWriteContextVariable(resultVar, null, executionContext, undefined, log);
+      tryWriteContextVariable(
+        resultVar,
+        null,
+        executionContext,
+        undefined,
+        log
+      );
       return;
     }
 
@@ -136,7 +142,13 @@ class ResolveDirectionHandler extends BaseOperationHandler {
       log.debug(
         `RESOLVE_DIRECTION: Location '${locationId}' has no exits array. Storing null.`
       );
-      tryWriteContextVariable(resultVar, null, executionContext, undefined, log);
+      tryWriteContextVariable(
+        resultVar,
+        null,
+        executionContext,
+        undefined,
+        log
+      );
       return;
     }
 
@@ -164,7 +176,13 @@ class ResolveDirectionHandler extends BaseOperationHandler {
       log.debug(
         `RESOLVE_DIRECTION: No exit found for direction '${direction}' from location '${locationId}'. Storing null.`
       );
-      tryWriteContextVariable(resultVar, null, executionContext, undefined, log);
+      tryWriteContextVariable(
+        resultVar,
+        null,
+        executionContext,
+        undefined,
+        log
+      );
     }
   }
 }

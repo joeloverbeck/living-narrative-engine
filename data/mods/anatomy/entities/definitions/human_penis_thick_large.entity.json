@@ -15,10 +15,7 @@
     },
     "anatomy:visibility_rules": {
       "clothingSlotId": "torso_lower",
-      "nonBlockingLayers": [
-        "underwear",
-        "accessories"
-      ]
+      "nonBlockingLayers": ["underwear", "accessories"]
     },
     "core:name": {
       "text": "thick, large penis"

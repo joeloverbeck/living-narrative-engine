@@ -38,10 +38,10 @@ describe('targetFormatters placeholder behavior', () => {
     expect(result).toEqual({
       ok: false,
       error:
-        "formatActionCommand: Target context type is 'entity' but entityId is missing for action core:use. Template: \"use {target}\"",
+        'formatActionCommand: Target context type is \'entity\' but entityId is missing for action core:use. Template: "use {target}"',
     });
     expect(logger.warn).toHaveBeenCalledWith(
-      "formatActionCommand: Target context type is 'entity' but entityId is missing for action core:use. Template: \"use {target}\""
+      'formatActionCommand: Target context type is \'entity\' but entityId is missing for action core:use. Template: "use {target}"'
     );
   });
 
@@ -60,11 +60,21 @@ describe('targetFormatters placeholder behavior', () => {
     };
     entityManager.getEntityInstance.mockReturnValue({ id: 'npc-42' });
 
-    const result = formatEntityTarget('give {recipient} the gem', targetContext, formatterDeps);
+    const result = formatEntityTarget(
+      'give {recipient} the gem',
+      targetContext,
+      formatterDeps
+    );
 
     expect(result).toEqual({ ok: true, value: 'give Friendly NPC the gem' });
-    expect(displayNameFn).toHaveBeenCalledWith({ id: 'npc-42' }, 'npc-42', logger);
-    expect(logger.debug).toHaveBeenCalledWith(' -> Found entity npc-42, display name: "Friendly NPC"');
+    expect(displayNameFn).toHaveBeenCalledWith(
+      { id: 'npc-42' },
+      'npc-42',
+      logger
+    );
+    expect(logger.debug).toHaveBeenCalledWith(
+      ' -> Found entity npc-42, display name: "Friendly NPC"'
+    );
   });
 
   it('warns but does not emit debug output when an entity is missing even in debug mode', () => {
@@ -79,7 +89,11 @@ describe('targetFormatters placeholder behavior', () => {
       debug: true,
     };
 
-    const result = formatEntityTarget('inspect {target}', targetContext, formatterDeps);
+    const result = formatEntityTarget(
+      'inspect {target}',
+      targetContext,
+      formatterDeps
+    );
 
     expect(result).toEqual({ ok: true, value: 'inspect npc-404' });
     expect(logger.warn).toHaveBeenCalledWith(
@@ -92,12 +106,18 @@ describe('targetFormatters placeholder behavior', () => {
   it('logs both debug and warning messages when none-target templates contain placeholders', () => {
     const deps = { actionId: 'core:wait', logger, debug: true };
 
-    const result = formatNoneTarget('wait for {target}', { type: 'none' }, deps);
+    const result = formatNoneTarget(
+      'wait for {target}',
+      { type: 'none' },
+      deps
+    );
 
     expect(result).toEqual({ ok: true, value: 'wait for {target}' });
-    expect(logger.debug).toHaveBeenCalledWith(' -> No target type, using template as is.');
+    expect(logger.debug).toHaveBeenCalledWith(
+      ' -> No target type, using template as is.'
+    );
     expect(logger.warn).toHaveBeenCalledWith(
-      "formatActionCommand: Action core:wait has target_domain 'none' but template \"wait for {target}\" contains placeholders."
+      'formatActionCommand: Action core:wait has target_domain \'none\' but template "wait for {target}" contains placeholders.'
     );
   });
 });

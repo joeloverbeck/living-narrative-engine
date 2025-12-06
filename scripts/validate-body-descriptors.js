@@ -79,7 +79,9 @@ async function main() {
   // 1. Validate Registry
   console.log('\n📋 Checking Registry...');
   const registeredDescriptors = getAllDescriptorNames();
-  console.log(`   Found ${registeredDescriptors.length} registered descriptors`);
+  console.log(
+    `   Found ${registeredDescriptors.length} registered descriptors`
+  );
   console.log(`   ${registeredDescriptors.join(', ')}`);
 
   // 2. Validate Formatting Config
@@ -92,15 +94,18 @@ async function main() {
     if (configResult.errors.length > 0) {
       hasErrors = true;
       console.log('\n❌ Errors:');
-      configResult.errors.forEach(err => console.log(`   ${err}`));
+      configResult.errors.forEach((err) => console.log(`   ${err}`));
     }
 
     if (configResult.warnings.length > 0) {
       console.log('\n⚠️  Warnings:');
-      configResult.warnings.forEach(warn => console.log(`   ${warn}`));
+      configResult.warnings.forEach((warn) => console.log(`   ${warn}`));
     }
 
-    if (configResult.errors.length === 0 && configResult.warnings.length === 0) {
+    if (
+      configResult.errors.length === 0 &&
+      configResult.warnings.length === 0
+    ) {
       console.log('   ✅ Formatting configuration is valid');
     }
   } else {
@@ -114,20 +119,25 @@ async function main() {
   for (const recipeFile of sampleRecipes) {
     const recipe = loadRecipe(recipeFile);
     if (recipe?.bodyDescriptors) {
-      const recipeResult = validator.validateRecipeDescriptors(recipe.bodyDescriptors);
+      const recipeResult = validator.validateRecipeDescriptors(
+        recipe.bodyDescriptors
+      );
 
       if (recipeResult.errors.length > 0) {
         hasErrors = true;
         console.log(`\n   ❌ ${recipeFile}:`);
-        recipeResult.errors.forEach(err => console.log(`      ${err}`));
+        recipeResult.errors.forEach((err) => console.log(`      ${err}`));
       }
 
       if (recipeResult.warnings.length > 0) {
         console.log(`\n   ⚠️  ${recipeFile}:`);
-        recipeResult.warnings.forEach(warn => console.log(`      ${warn}`));
+        recipeResult.warnings.forEach((warn) => console.log(`      ${warn}`));
       }
 
-      if (recipeResult.errors.length === 0 && recipeResult.warnings.length === 0) {
+      if (
+        recipeResult.errors.length === 0 &&
+        recipeResult.warnings.length === 0
+      ) {
         console.log(`   ✅ ${recipeFile}`);
       }
     }
@@ -149,7 +159,7 @@ async function main() {
 }
 
 // Run validation
-main().catch(err => {
+main().catch((err) => {
   console.error('\n❌ Unexpected error during validation:');
   console.error(err);
   process.exit(1);

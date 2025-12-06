@@ -22,7 +22,8 @@ describe('LlmJsonService – real module integration', () => {
   });
 
   it('cleans conversational prefixes and markdown wrappers end-to-end', () => {
-    const rawOutput = "Sure, here is the JSON:\n```json\n{\"status\":\"ok\",\"count\":2}\n```";
+    const rawOutput =
+      'Sure, here is the JSON:\n```json\n{"status":"ok","count":2}\n```';
 
     const cleaned = service.clean(rawOutput);
 
@@ -30,7 +31,8 @@ describe('LlmJsonService – real module integration', () => {
   });
 
   it('parses cleaned JSON without needing repair and logs success details', async () => {
-    const rawResponse = "Here is the json: ```json\n{\"alpha\":true,\"values\":[1,2]}\n```";
+    const rawResponse =
+      'Here is the json: ```json\n{"alpha":true,"values":[1,2]}\n```';
 
     const result = await service.parseAndRepair(rawResponse, { logger });
 
@@ -54,7 +56,9 @@ describe('LlmJsonService – real module integration', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining("Input 'jsonString' must be a string."),
+        message: expect.stringContaining(
+          "Input 'jsonString' must be a string."
+        ),
         details: {},
       })
     );
@@ -91,24 +95,27 @@ describe('LlmJsonService – real module integration', () => {
       service.parseAndRepair(emptyPayload, { logger, dispatcher })
     ).rejects.toBeInstanceOf(JsonProcessingError);
 
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      {
-        message: 'parseAndRepair: Cleaned JSON string is null or empty, cannot parse.',
-        details: { originalInput: emptyPayload },
-      }
-    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
+      message:
+        'parseAndRepair: Cleaned JSON string is null or empty, cannot parse.',
+      details: { originalInput: emptyPayload },
+    });
     expect(logger.error).not.toHaveBeenCalled();
   });
 
   it('repairs malformed JSON, emitting warnings but producing a result', async () => {
     const rawResponse = 'Here is the JSON: {"beta": 1,}';
 
-    const result = await service.parseAndRepair(rawResponse, { logger, dispatcher });
+    const result = await service.parseAndRepair(rawResponse, {
+      logger,
+      dispatcher,
+    });
 
     expect(result).toEqual({ beta: 1 });
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Initial JSON.parse failed after cleaning. Attempting repair.'),
+      expect.stringContaining(
+        'Initial JSON.parse failed after cleaning. Attempting repair.'
+      ),
       expect.objectContaining({
         originalInputLength: rawResponse.length,
         cleanedJsonStringLength: expect.any(Number),
@@ -136,12 +143,16 @@ describe('LlmJsonService – real module integration', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining('Failed to parse JSON even after repair attempt.'),
+        message: expect.stringContaining(
+          'Failed to parse JSON even after repair attempt.'
+        ),
         details: expect.objectContaining({
           cleanedJsonStringLength: expect.any(Number),
           cleanedJsonPreview: expect.stringContaining('invalid'),
           initialParseError: expect.objectContaining({ name: 'SyntaxError' }),
-          repairAndParseError: expect.objectContaining({ name: expect.any(String) }),
+          repairAndParseError: expect.objectContaining({
+            name: expect.any(String),
+          }),
         }),
       })
     );
@@ -157,12 +168,16 @@ describe('LlmJsonService – real module integration', () => {
     ).rejects.toBeInstanceOf(JsonProcessingError);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('parseAndRepairJson: Failed to parse JSON even after repair attempt.'),
+      expect.stringContaining(
+        'parseAndRepairJson: Failed to parse JSON even after repair attempt.'
+      ),
       expect.objectContaining({
         cleanedJsonStringLength: expect.any(Number),
         cleanedJsonPreview: expect.any(String),
         initialParseError: expect.objectContaining({ name: 'SyntaxError' }),
-        repairAndParseError: expect.objectContaining({ name: expect.any(String) }),
+        repairAndParseError: expect.objectContaining({
+          name: expect.any(String),
+        }),
       })
     );
   });

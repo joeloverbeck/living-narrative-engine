@@ -38,7 +38,10 @@ function createValidCharacterData(overrides = {}) {
 function createGenerator(overrides = {}) {
   const testBed = createTestBed();
   const logger = testBed.createMockLogger();
-  const llmJsonService = testBed.createMock('LlmJsonService', ['clean', 'parseAndRepair']);
+  const llmJsonService = testBed.createMock('LlmJsonService', [
+    'clean',
+    'parseAndRepair',
+  ]);
   const llmStrategyFactory = testBed.createMock('ConfigurableLLMAdapter', [
     'getAIDecision',
   ]);
@@ -48,7 +51,9 @@ function createGenerator(overrides = {}) {
     'setActiveConfiguration',
   ]);
   const eventBus = testBed.createMock('ISafeEventDispatcher', ['dispatch']);
-  const tokenEstimator = testBed.createMock('ITokenEstimator', ['estimateTokens']);
+  const tokenEstimator = testBed.createMock('ITokenEstimator', [
+    'estimateTokens',
+  ]);
   const schemaValidator = testBed.createMock('ISchemaValidator', [
     'validateAgainstSchema',
     'validate',
@@ -56,10 +61,15 @@ function createGenerator(overrides = {}) {
   ]);
 
   llmJsonService.clean.mockImplementation((value) => value);
-  llmJsonService.parseAndRepair.mockImplementation(async (value) => JSON.parse(value));
+  llmJsonService.parseAndRepair.mockImplementation(async (value) =>
+    JSON.parse(value)
+  );
   llmStrategyFactory.getAIDecision.mockResolvedValue(createMockLLMResponse());
   tokenEstimator.estimateTokens.mockReturnValue(1234);
-  schemaValidator.validateAgainstSchema.mockReturnValue({ isValid: true, errors: [] });
+  schemaValidator.validateAgainstSchema.mockReturnValue({
+    isValid: true,
+    errors: [],
+  });
   schemaValidator.validate.mockReturnValue({ isValid: true, errors: [] });
   schemaValidator.isSchemaLoaded.mockReturnValue(true);
 
@@ -94,22 +104,34 @@ function createValidResponse(patternOverrides) {
   const basePatterns = [
     {
       type: 'Shares a reflective observation before offering advice',
-      examples: ['It sounds like the echo of your choices is still whispering; let us answer it together.', 'The past whispers; shall we listen together?'],
+      examples: [
+        'It sounds like the echo of your choices is still whispering; let us answer it together.',
+        'The past whispers; shall we listen together?',
+      ],
       contexts: ['When guiding someone through a dilemma'],
     },
     {
       type: 'Uses gentle humor to dissolve tension',
-      examples: ['If words were dancers, yours are still stretching; shall we help them rehearse?', 'Our thoughts need a warm-up, shall we stretch?'],
+      examples: [
+        'If words were dancers, yours are still stretching; shall we help them rehearse?',
+        'Our thoughts need a warm-up, shall we stretch?',
+      ],
       contexts: ['When easing a stressful conversation'],
     },
     {
       type: 'Builds cadence before revealing a sharp insight',
-      examples: ['Listen to the rhythm of their hesitation—it crescendos into the truth they fear.', 'The silence speaks louder than their words.'],
+      examples: [
+        'Listen to the rhythm of their hesitation—it crescendos into the truth they fear.',
+        'The silence speaks louder than their words.',
+      ],
       contexts: ['When highlighting hidden motives'],
     },
     {
       type: 'Adapts vocabulary to mirror the listener',
-      examples: ['Your language is all constellations; let me chart alongside you in matching starlight.', 'I speak your dialect of thought.'],
+      examples: [
+        'Your language is all constellations; let me chart alongside you in matching starlight.',
+        'I speak your dialect of thought.',
+      ],
       contexts: ['When creating rapport with scholars or poets'],
     },
   ];
@@ -169,7 +191,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     await expect(
       generator.generateSpeechPatterns(createValidCharacterData())
     ).rejects.toThrow(
-      new SpeechPatternsGenerationError('Failed to build prompt: prompt building exploded').message
+      new SpeechPatternsGenerationError(
+        'Failed to build prompt: prompt building exploded'
+      ).message
     );
 
     expect(promptSpy).toHaveBeenCalled();
@@ -182,7 +206,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const { generator, llmStrategyFactory, logger } = createGenerator();
     const character = createValidCharacterData();
 
-    llmStrategyFactory.getAIDecision.mockRejectedValue(new Error('Service unavailable'));
+    llmStrategyFactory.getAIDecision.mockRejectedValue(
+      new Error('Service unavailable')
+    );
 
     const failingOptions = {
       retryConfig: {
@@ -195,13 +221,16 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     };
 
     for (let i = 0; i < 5; i += 1) {
-       
       await expect(
         generator.generateSpeechPatterns(character, failingOptions)
-      ).rejects.toThrow('LLM request failed after 1 attempts: Service unavailable');
+      ).rejects.toThrow(
+        'LLM request failed after 1 attempts: Service unavailable'
+      );
     }
 
-    llmStrategyFactory.getAIDecision.mockResolvedValueOnce(createMockLLMResponse());
+    llmStrategyFactory.getAIDecision.mockResolvedValueOnce(
+      createMockLLMResponse()
+    );
 
     jest.setSystemTime(new Date('2025-06-01T00:01:01Z'));
     logger.info.mockClear();
@@ -211,7 +240,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     expect(logger.info).toHaveBeenCalledWith(
       'Circuit breaker entering half-open state, attempting reset'
     );
-    expect(logger.info).toHaveBeenCalledWith('Circuit breaker reset to closed state');
+    expect(logger.info).toHaveBeenCalledWith(
+      'Circuit breaker reset to closed state'
+    );
   });
 
   it('throws when abort signal is already aborted before LLM invocation', async () => {
@@ -230,7 +261,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
   it('throws aggregated error when retry attempts are configured to zero', async () => {
     const { generator, llmStrategyFactory } = createGenerator();
-    llmStrategyFactory.getAIDecision.mockRejectedValue(new Error('transient failure'));
+    llmStrategyFactory.getAIDecision.mockRejectedValue(
+      new Error('transient failure')
+    );
 
     await expect(
       generator.generateSpeechPatterns(createValidCharacterData(), {
@@ -266,7 +299,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
   it('does not retry validation or circuit breaker errors', async () => {
     const { generator, llmStrategyFactory } = createGenerator();
-    const validationError = new SpeechPatternsValidationError('schema mismatch');
+    const validationError = new SpeechPatternsValidationError(
+      'schema mismatch'
+    );
     const circuitError = new Error('temporarily unavailable');
     circuitError.circuitBreakerOpen = true;
 
@@ -280,7 +315,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
     await expect(
       generator.generateSpeechPatterns(createValidCharacterData())
-    ).rejects.toThrow('LLM request failed after 1 attempts: temporarily unavailable');
+    ).rejects.toThrow(
+      'LLM request failed after 1 attempts: temporarily unavailable'
+    );
 
     expect(llmStrategyFactory.getAIDecision).toHaveBeenCalledTimes(2);
   });
@@ -290,17 +327,17 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const baseCharacter = createValidCharacterData();
 
     for (let i = 0; i < 12; i += 1) {
-      llmStrategyFactory.getAIDecision.mockResolvedValueOnce(createMockLLMResponse());
-       
-      await generator.generateSpeechPatterns(
-        {
-          ...baseCharacter,
-          [`core:personality:${i}`]: {
-            description:
-              'A deeply detailed persona entry designed to ensure unique cache keys and varied speech facets for tests.',
-          },
-        }
+      llmStrategyFactory.getAIDecision.mockResolvedValueOnce(
+        createMockLLMResponse()
       );
+
+      await generator.generateSpeechPatterns({
+        ...baseCharacter,
+        [`core:personality:${i}`]: {
+          description:
+            'A deeply detailed persona entry designed to ensure unique cache keys and varied speech facets for tests.',
+        },
+      });
     }
 
     expect(logger.debug).toHaveBeenCalledWith('Cache eviction', {
@@ -313,7 +350,11 @@ describe('SpeechPatternsGenerator additional coverage', () => {
     const { generator, llmStrategyFactory } = createGenerator();
     const responseSpy = jest
       .spyOn(SpeechPatternsResponseProcessor.prototype, 'processResponse')
-      .mockResolvedValue(createValidResponse([{ type: 'One', examples: ['Two', 'Another'], contexts: ['Three'] }]));
+      .mockResolvedValue(
+        createValidResponse([
+          { type: 'One', examples: ['Two', 'Another'], contexts: ['Three'] },
+        ])
+      );
 
     llmStrategyFactory.getAIDecision.mockResolvedValue(createMockLLMResponse());
 
@@ -343,7 +384,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
     await expect(
       generator.generateSpeechPatterns(createValidCharacterData())
-    ).rejects.toThrow('Response validation failed: Too many similar patterns detected');
+    ).rejects.toThrow(
+      'Response validation failed: Too many similar patterns detected'
+    );
   });
 
   it('detects low-quality patterns according to business rules', async () => {
@@ -352,11 +395,18 @@ describe('SpeechPatternsGenerator additional coverage', () => {
       [
         { type: 'ok', examples: ['no', 'nope'], contexts: ['rare case'] },
         { type: 'tiny', examples: ['hi', 'hey'], contexts: ['quick exchange'] },
-        { type: 'unique expression', examples: ['unique example', 'another unique'], contexts: ['context'] },
+        {
+          type: 'unique expression',
+          examples: ['unique example', 'another unique'],
+          contexts: ['context'],
+        },
       ].concat(
         Array.from({ length: 3 }, (_, idx) => ({
           type: `distinct pattern ${idx}`,
-          examples: [`Example with sufficient detail ${idx}`, `Another example ${idx}`],
+          examples: [
+            `Example with sufficient detail ${idx}`,
+            `Another example ${idx}`,
+          ],
           contexts: ['contextual usage'],
         }))
       )
@@ -369,7 +419,9 @@ describe('SpeechPatternsGenerator additional coverage', () => {
 
     await expect(
       generator.generateSpeechPatterns(createValidCharacterData())
-    ).rejects.toThrow('Response validation failed: Too many low-quality patterns detected');
+    ).rejects.toThrow(
+      'Response validation failed: Too many low-quality patterns detected'
+    );
   });
 
   it('extracts character names from fallback component and direct structures', async () => {

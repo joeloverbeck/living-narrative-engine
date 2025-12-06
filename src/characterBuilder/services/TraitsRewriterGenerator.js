@@ -235,10 +235,14 @@ export class TraitsRewriterGenerator {
         // Special handling for array-based traits (goals and notes)
         if (traitKey === 'core:goals' && traitData.goals) {
           // Extract array of goal texts
-          extractedTraits[traitKey] = traitData.goals.map(goal => goal.text || goal);
+          extractedTraits[traitKey] = traitData.goals.map(
+            (goal) => goal.text || goal
+          );
         } else if (traitKey === 'core:notes' && traitData.notes) {
           // Extract array of note texts
-          extractedTraits[traitKey] = traitData.notes.map(note => note.text || note);
+          extractedTraits[traitKey] = traitData.notes.map(
+            (note) => note.text || note
+          );
         } else if (typeof traitData === 'string') {
           // Handle simple string traits
           extractedTraits[traitKey] = traitData;
@@ -340,7 +344,8 @@ export class TraitsRewriterGenerator {
           responseKeys: getSafeKeys(parsedResponse),
           hasCharacterName: !!parsedResponse?.characterName,
           hasFunctionCall: !!parsedResponse?.function_call,
-          hasNestedCharacterName: !!parsedResponse?.function_call?.characterName,
+          hasNestedCharacterName:
+            !!parsedResponse?.function_call?.characterName,
         }
       );
 

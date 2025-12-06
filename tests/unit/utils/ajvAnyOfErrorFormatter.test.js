@@ -100,7 +100,9 @@ describe('formatAjvErrorsEnhanced', () => {
       }),
     ];
 
-    const message = formatAjvErrorsEnhanced(errors, { parameters: { perception_type: 'C' } });
+    const message = formatAjvErrorsEnhanced(errors, {
+      parameters: { perception_type: 'C' },
+    });
 
     // Pattern detection now catches the enum error first
     expect(message).toContain("Invalid enum value 'C'. Allowed values: [A, B]");
@@ -160,7 +162,9 @@ describe('formatAjvErrorsEnhanced', () => {
       {}
     );
 
-    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain(
+      'Missing operation type - this operation needs a "type" field.'
+    );
   });
 
   it('returns the root payload when the failing path points directly at a top-level field', () => {
@@ -182,7 +186,9 @@ describe('formatAjvErrorsEnhanced', () => {
 
     const message = formatAjvErrorsEnhanced(errors, {});
 
-    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain(
+      'Missing operation type - this operation needs a "type" field.'
+    );
     expect(message).toContain('Common operation types:');
   });
 
@@ -205,7 +211,9 @@ describe('formatAjvErrorsEnhanced', () => {
 
     const message = formatAjvErrorsEnhanced(errors, { operations: [null] });
 
-    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain(
+      'Missing operation type - this operation needs a "type" field.'
+    );
     expect(message).toContain('For macro references, use:');
   });
 });
@@ -244,15 +252,19 @@ describe('formatStandardErrors integration', () => {
       {}
     );
 
-    expect(message).toContain("Invalid enum value 'legacy'. Allowed values: []");
-    expect(message).toContain("  - root: Validation failed");
+    expect(message).toContain(
+      "Invalid enum value 'legacy'. Allowed values: []"
+    );
+    expect(message).toContain('  - root: Validation failed');
   });
 });
 
 describe('formatAnyOfErrors', () => {
   it('returns a helpful message when invoked with no errors', () => {
     expect(formatAnyOfErrors(null, {})).toBe('No validation errors');
-    expect(formatAnyOfErrors([], { type: 'MOVE' })).toBe('No validation errors');
+    expect(formatAnyOfErrors([], { type: 'MOVE' })).toBe(
+      'No validation errors'
+    );
   });
 
   it('falls back to standard formatting when the schema is not anyOf based', () => {
@@ -298,13 +310,22 @@ describe('formatAnyOfErrors', () => {
       })
     );
 
-    const errors = [typeError, additionalPropertyError, requiredError, ...fillerErrors];
+    const errors = [
+      typeError,
+      additionalPropertyError,
+      requiredError,
+      ...fillerErrors,
+    ];
     const message = formatAnyOfErrors(errors, { type: 'GET_NAME' });
 
-    expect(message).toContain("Operation type 'GET_NAME' has invalid parameters:");
+    expect(message).toContain(
+      "Operation type 'GET_NAME' has invalid parameters:"
+    );
     expect(message).toContain("Unexpected property 'entity_id'");
     expect(message).toContain("Missing required property 'target'");
-    expect(message).toContain('Common issue detected: "entity_id" should be "entity_ref"');
+    expect(message).toContain(
+      'Common issue detected: "entity_id" should be "entity_ref"'
+    );
   });
 
   it('lists parameter errors for the intended operation branch when it exists', () => {
@@ -383,7 +404,9 @@ describe('formatAnyOfErrors', () => {
     const message = formatAnyOfErrors(errors, { macro: 'core:action' });
 
     expect(message).toContain('Invalid macro reference format detected.');
-    expect(message).toContain('Do NOT include a "type" field with macro references.');
+    expect(message).toContain(
+      'Do NOT include a "type" field with macro references.'
+    );
   });
 
   it('provides actionable guidance when the type field is missing entirely', () => {
@@ -397,7 +420,9 @@ describe('formatAnyOfErrors', () => {
 
     const message = formatAnyOfErrors(errors, {});
 
-    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain(
+      'Missing operation type - this operation needs a "type" field.'
+    );
     expect(message).toContain('  - MOVE');
   });
 
@@ -454,7 +479,9 @@ describe('formatAnyOfErrors', () => {
     );
 
     expect(message).toContain("Operation type 'FETCH' validation failed:");
-    expect(message).toContain("  - /parameters: Missing required property 'resource'");
+    expect(message).toContain(
+      "  - /parameters: Missing required property 'resource'"
+    );
     expect(message).toContain("  - root: Missing required property 'subject'");
     expect(message).not.toContain('CREATE');
   });
@@ -486,7 +513,9 @@ describe('formatAnyOfErrors', () => {
 
     const message = formatAnyOfErrors(errors, {});
 
-    expect(message).toContain('Missing operation type - this operation needs a "type" field.');
+    expect(message).toContain(
+      'Missing operation type - this operation needs a "type" field.'
+    );
     expect(message).toContain('Common operation types:');
     expect(message).toContain('  - ACTION_0');
     expect(message).toContain('  ... and 1 more');

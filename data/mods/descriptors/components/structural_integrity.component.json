@@ -26,9 +26,7 @@
         "default": "normal"
       }
     },
-    "required": [
-      "integrity"
-    ],
+    "required": ["integrity"],
     "additionalProperties": false
   },
   "validationRules": {

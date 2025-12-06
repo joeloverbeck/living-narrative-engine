@@ -172,7 +172,10 @@ describe('IsHungryOperator', () => {
         energyPercentage: 20,
       });
 
-      const result = operator.evaluate([{ var: 'event.payload.entityId' }], context);
+      const result = operator.evaluate(
+        [{ var: 'event.payload.entityId' }],
+        context
+      );
 
       expect(result).toBe(true);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(

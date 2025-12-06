@@ -559,7 +559,10 @@ describe('unionResolver', () => {
 
         it('should continue union when memory threshold is exceeded without an error handler', () => {
           const leftItems = Array.from({ length: 6000 }, (_, i) => `left-${i}`);
-          const rightItems = Array.from({ length: 5000 }, (_, i) => `right-${i}`);
+          const rightItems = Array.from(
+            { length: 5000 },
+            (_, i) => `right-${i}`
+          );
 
           dispatcher.resolve
             .mockReturnValueOnce(new Set(leftItems))

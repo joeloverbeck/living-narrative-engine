@@ -109,7 +109,9 @@ describe('Error Wrapping Integration', () => {
       }
 
       expect(caughtError).toBeInstanceOf(ScopeResolutionError);
-      expect(caughtError.context.suggestion).toContain('No scopes are currently registered');
+      expect(caughtError.context.suggestion).toContain(
+        'No scopes are currently registered'
+      );
     });
   });
 
@@ -141,7 +143,9 @@ describe('Error Wrapping Integration', () => {
     });
 
     it('should wrap JSON Logic errors', () => {
-      const error = new Error('Could not resolve condition_ref: test_condition');
+      const error = new Error(
+        'Could not resolve condition_ref: test_condition'
+      );
       mockLogicEval.evaluate.mockImplementation(() => {
         throw error;
       });
@@ -239,7 +243,9 @@ describe('Error Wrapping Integration', () => {
     });
 
     it('should preserve original evaluation error', () => {
-      const originalError = new Error('Could not resolve condition_ref: missing_condition');
+      const originalError = new Error(
+        'Could not resolve condition_ref: missing_condition'
+      );
       mockLogicEval.evaluate.mockImplementation(() => {
         throw originalError;
       });
@@ -269,7 +275,9 @@ describe('Error Wrapping Integration', () => {
 
       expect(caughtError).toBeInstanceOf(ScopeResolutionError);
       expect(caughtError.context.originalError).toBeDefined();
-      expect(caughtError.context.originalError.message).toContain('Could not resolve condition_ref');
+      expect(caughtError.context.originalError.message).toContain(
+        'Could not resolve condition_ref'
+      );
     });
   });
 
@@ -349,8 +357,14 @@ describe('Error Wrapping Integration', () => {
     it('should include hints and suggestions', () => {
       const registry = new ScopeRegistry();
       registry.initialize({
-        'test:scope1': { expr: 'test1', ast: { type: 'Source', name: 'test1' } },
-        'test:scope2': { expr: 'test2', ast: { type: 'Source', name: 'test2' } },
+        'test:scope1': {
+          expr: 'test1',
+          ast: { type: 'Source', name: 'test1' },
+        },
+        'test:scope2': {
+          expr: 'test2',
+          ast: { type: 'Source', name: 'test2' },
+        },
       });
 
       let caughtError;
@@ -369,7 +383,10 @@ describe('Error Wrapping Integration', () => {
     it('should provide actionable error messages', () => {
       const registry = new ScopeRegistry();
       registry.initialize({
-        'positioning:close': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+        'positioning:close': {
+          expr: 'close',
+          ast: { type: 'Source', name: 'close' },
+        },
       });
 
       let caughtError;
@@ -395,48 +412,41 @@ describe('Error Wrapping Integration', () => {
   describe('ScopeResolutionError context validation', () => {
     it('should serialize Error objects in originalError', () => {
       const originalError = new Error('Original error message');
-      const scopeError = new ScopeResolutionError(
-        'Wrapped error',
-        {
-          scopeName: 'test:scope',
-          phase: 'test phase',
-          originalError: originalError,
-        }
-      );
+      const scopeError = new ScopeResolutionError('Wrapped error', {
+        scopeName: 'test:scope',
+        phase: 'test phase',
+        originalError: originalError,
+      });
 
       expect(scopeError.context.originalError).toBeDefined();
-      expect(scopeError.context.originalError.message).toBe('Original error message');
+      expect(scopeError.context.originalError.message).toBe(
+        'Original error message'
+      );
       expect(scopeError.context.originalError.name).toBe('Error');
       expect(scopeError.context.originalError.stack).toBeDefined();
     });
 
     it('should handle string originalError', () => {
-      const scopeError = new ScopeResolutionError(
-        'Error message',
-        {
-          scopeName: 'test:scope',
-          phase: 'test',
-          originalError: 'String error message',
-        }
-      );
+      const scopeError = new ScopeResolutionError('Error message', {
+        scopeName: 'test:scope',
+        phase: 'test',
+        originalError: 'String error message',
+      });
 
       expect(scopeError.context.originalError).toBe('String error message');
     });
 
     it('should include all standard context fields', () => {
-      const error = new ScopeResolutionError(
-        'Test error',
-        {
-          scopeName: 'test:scope',
-          phase: 'test phase',
-          parameters: { key: 'value' },
-          expected: 'Expected value',
-          received: 'Received value',
-          hint: 'Test hint',
-          suggestion: 'Test suggestion',
-          example: 'Test example',
-        }
-      );
+      const error = new ScopeResolutionError('Test error', {
+        scopeName: 'test:scope',
+        phase: 'test phase',
+        parameters: { key: 'value' },
+        expected: 'Expected value',
+        received: 'Received value',
+        hint: 'Test hint',
+        suggestion: 'Test suggestion',
+        example: 'Test example',
+      });
 
       expect(error.context.scopeName).toBe('test:scope');
       expect(error.context.phase).toBe('test phase');
@@ -591,7 +601,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -624,7 +639,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -646,7 +666,10 @@ describe('Error Wrapping Integration', () => {
       it('should suggest similar scope names when typo detected', () => {
         const registry = new ScopeRegistry();
         registry.initialize({
-          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+          'positioning:close_actors': {
+            expr: 'close',
+            ast: { type: 'Source', name: 'close' },
+          },
         });
 
         let caughtError;
@@ -665,8 +688,14 @@ describe('Error Wrapping Integration', () => {
       it('should provide list of available scopes when scope is not found', () => {
         const registry = new ScopeRegistry();
         registry.initialize({
-          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
-          'positioning:nearby_actors': { expr: 'nearby', ast: { type: 'Source', name: 'nearby' } },
+          'positioning:close_actors': {
+            expr: 'close',
+            ast: { type: 'Source', name: 'close' },
+          },
+          'positioning:nearby_actors': {
+            expr: 'nearby',
+            ast: { type: 'Source', name: 'nearby' },
+          },
         });
 
         let caughtError;
@@ -679,7 +708,9 @@ describe('Error Wrapping Integration', () => {
 
         expect(caughtError).toBeInstanceOf(ScopeResolutionError);
         expect(caughtError.context.suggestion).toBeDefined();
-        expect(caughtError.context.example).toContain('positioning:close_actors');
+        expect(caughtError.context.example).toContain(
+          'positioning:close_actors'
+        );
       });
     });
 
@@ -691,7 +722,12 @@ describe('Error Wrapping Integration', () => {
 
         // Missing entityManager
         const incompleteRuntimeCtx = {
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -737,7 +773,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -762,7 +803,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -787,7 +833,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -807,8 +858,14 @@ describe('Error Wrapping Integration', () => {
       it('should provide actionable error messages with all context sections', () => {
         const registry = new ScopeRegistry();
         registry.initialize({
-          'core:items': { expr: 'items', ast: { type: 'Source', name: 'items' } },
-          'positioning:close_actors': { expr: 'close', ast: { type: 'Source', name: 'close' } },
+          'core:items': {
+            expr: 'items',
+            ast: { type: 'Source', name: 'items' },
+          },
+          'positioning:close_actors': {
+            expr: 'close',
+            ast: { type: 'Source', name: 'close' },
+          },
         });
 
         let caughtError;
@@ -842,7 +899,12 @@ describe('Error Wrapping Integration', () => {
             getEntity: (id) => ({ id, components: {} }),
             getEntities: () => [],
           },
-          logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() },
+          logger: {
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+          },
         };
 
         let caughtError;
@@ -857,7 +919,9 @@ describe('Error Wrapping Integration', () => {
         expect(caughtError.context.hint).toContain('action context');
 
         // Verify example shows correct usage
-        expect(caughtError.context.example).toContain('entityManager.getEntity');
+        expect(caughtError.context.example).toContain(
+          'entityManager.getEntity'
+        );
       });
     });
   });

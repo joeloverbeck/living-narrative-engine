@@ -58,7 +58,9 @@ describe('timeout middleware extended integration coverage', () => {
       }
     );
 
-    const response = await request(app).post('/precommitted-known-source').send({});
+    const response = await request(app)
+      .post('/precommitted-known-source')
+      .send({});
     expect(response.status).toBe(200);
 
     const timeoutWarning = logger.warn.mock.calls.find(([message]) =>

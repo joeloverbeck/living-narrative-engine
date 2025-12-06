@@ -1,15 +1,19 @@
 # SPEPATREW-004: Add Integration Tests for Speech Patterns System
 
 ## Objective
+
 Create comprehensive integration tests that verify the complete workflow from entity loading through prompt formatting for both legacy and new speech pattern formats.
 
 ## Priority
+
 **High** - Validates end-to-end behavior and backward compatibility
 
 ## Estimated Effort
+
 0.5 days
 
 ## Dependencies
+
 - **SPEPATREW-001** must be completed (schema updated) ✅
 - **SPEPATREW-002** must be completed (format detection) ✅
 - **SPEPATREW-003** must be completed (rendering methods) ✅
@@ -21,6 +25,7 @@ Create comprehensive integration tests that verify the complete workflow from en
 **INCORRECT ASSUMPTION**: The ticket assumed we needed to create a new file `tests/integration/prompting/speechPatternsIntegration.test.js`.
 
 **ACTUAL STATE**: Integration tests already exist in `tests/integration/prompting/CharacterDataFormatter.integration.test.js` (891 lines). This file already contains:
+
 - ✅ End-to-end formatting tests with legacy string patterns (lines 135-164)
 - ✅ Integration with AIPromptContentProvider (lines 59-199)
 - ✅ Psychological components integration (lines 201-321)
@@ -29,6 +34,7 @@ Create comprehensive integration tests that verify the complete workflow from en
 - ✅ Real-world integration scenarios (lines 785-890)
 
 **MISSING COVERAGE**: The existing tests cover legacy string patterns but do not yet cover:
+
 - ❌ Structured (object) speech patterns end-to-end
 - ❌ Mixed format speech patterns end-to-end
 - ❌ Schema validation integration
@@ -46,6 +52,7 @@ Create comprehensive integration tests that verify the complete workflow from en
 Add the following test suites to `tests/integration/prompting/CharacterDataFormatter.integration.test.js`:
 
 #### 1. Structured Speech Patterns Integration Tests (5 tests)
+
 ```javascript
 describe('Structured Speech Patterns Integration', () => {
   it('should format structured patterns end-to-end through AIPromptContentProvider', () => {
@@ -71,6 +78,7 @@ describe('Structured Speech Patterns Integration', () => {
 ```
 
 #### 2. Mixed Format Integration Tests (3 tests)
+
 ```javascript
 describe('Mixed Format Speech Patterns Integration', () => {
   it('should format mixed patterns end-to-end through AIPromptContentProvider', () => {
@@ -88,6 +96,7 @@ describe('Mixed Format Speech Patterns Integration', () => {
 ```
 
 #### 3. Schema Validation Integration Tests (4 tests)
+
 ```javascript
 describe('Speech Patterns Schema Validation Integration', () => {
   it('should validate structured patterns against schema during integration', () => {
@@ -109,6 +118,7 @@ describe('Speech Patterns Schema Validation Integration', () => {
 ```
 
 #### 4. Real Character Entity Loading Tests (3 tests)
+
 ```javascript
 describe('Real Character Entity Integration', () => {
   it('should load and format Vespera character speech patterns', () => {
@@ -127,15 +137,18 @@ describe('Real Character Entity Integration', () => {
 ```
 
 ### Total New Tests: 15 tests
+
 - Structured patterns: 5 tests
 - Mixed format: 3 tests
 - Schema validation: 4 tests
 - Real entity loading: 3 tests
 
 ## Files to Touch
+
 - `tests/integration/prompting/CharacterDataFormatter.integration.test.js` (add ~200-300 lines)
 
 ## Out of Scope
+
 - **DO NOT** modify production code in `src/`
 - **DO NOT** create new integration test files
 - **DO NOT** create new entity definition files
@@ -150,6 +163,7 @@ describe('Real Character Entity Integration', () => {
 ### Tests That Must Pass
 
 #### Structured Speech Patterns (5 tests)
+
 1. Structured patterns format end-to-end with XML tags
 2. Empty contexts array handled correctly
 3. Missing contexts field handled correctly
@@ -157,22 +171,26 @@ describe('Real Character Entity Integration', () => {
 5. Special characters in examples preserved
 
 #### Mixed Format (3 tests)
+
 6. Mixed patterns format with both sections
 7. Structured patterns appear first
 8. Single usage guidance included
 
 #### Schema Validation (4 tests)
+
 9. Valid structured patterns validate
 10. Missing type field rejected
 11. Missing examples field rejected
 12. Empty examples array rejected
 
 #### Real Character Loading (3 tests)
+
 13. Vespera character loads and formats
 14. Missing component handled gracefully
 15. Entity.getComponent() API works
 
 ### Invariants
+
 - No modifications to production code
 - All new tests isolated (no shared state)
 - Each test cleans up after itself
@@ -182,6 +200,7 @@ describe('Real Character Entity Integration', () => {
 - **All existing 891 lines of integration tests still pass**
 
 ## Validation Commands
+
 ```bash
 # Run integration tests only
 npm run test:integration -- tests/integration/prompting/CharacterDataFormatter.integration.test.js
@@ -203,6 +222,7 @@ npx eslint tests/integration/prompting/CharacterDataFormatter.integration.test.j
 ```
 
 ## Definition of Done
+
 - [x] 15 new test cases added to existing integration test file
 - [x] All 15 new tests pass
 - [x] All existing integration tests still pass (891 lines preserved)

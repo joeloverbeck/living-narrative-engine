@@ -125,7 +125,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
       goapController: setup.controller,
       dataRegistry: setup.dataRegistry,
       entityManager: setup.entityManager,
-      entityDisplayDataProvider: { getEntityDisplayData: (id) => ({ name: id }) },
+      entityDisplayDataProvider: {
+        getEntityDisplayData: (id) => ({ name: id }),
+      },
       logger,
     });
     const stateDiffViewer = new StateDiffViewer({ logger });
@@ -176,7 +178,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       relevance: { '>': [{ var: 'actor.components.core_needs.hunger' }, 50] },
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+      },
       priority: 10,
     });
 
@@ -216,7 +220,10 @@ describe('Numeric Goal Planning - Hunger System', () => {
 
       // Try to inspect plan (should show why it failed)
       const planInspection = goapDebugger.inspectPlanJSON('test_actor');
-      console.log('\nPlan Inspection:', JSON.stringify(planInspection, null, 2));
+      console.log(
+        '\nPlan Inspection:',
+        JSON.stringify(planInspection, null, 2)
+      );
 
       throw err;
     }
@@ -233,7 +240,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
 
     // Verify plan was created
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Verify goal would be satisfied after execution
@@ -253,7 +262,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       relevance: { '>': [{ var: 'actor.components.core_needs.hunger' }, 50] },
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+      },
       priority: 10,
     });
 
@@ -267,7 +278,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
 
     // Goal not relevant (hunger already low)
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(false); // No plan needed
   });
 
@@ -284,7 +297,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
     // Goal requires hunger <= 10
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -298,7 +313,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Note: Actual plan structure verification would require additional setup
@@ -318,7 +335,9 @@ describe('Numeric Goal Planning - Hunger System', () => {
     const goal = createTestGoal({
       id: 'test:reduce_hunger',
       relevance: { '>': [{ var: 'actor.components.core_needs.hunger' }, 50] },
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+      },
       priority: 10,
     });
 
@@ -333,16 +352,20 @@ describe('Numeric Goal Planning - Hunger System', () => {
     const events = setup.eventBus.getEvents();
 
     // Verify goal selection happened
-    const goalSelected = events.some(e => e.type === GOAP_EVENTS.GOAL_SELECTED);
+    const goalSelected = events.some(
+      (e) => e.type === GOAP_EVENTS.GOAL_SELECTED
+    );
     expect(goalSelected).toBe(true);
 
     // Verify planning started
-    const planningStarted = events.some(e => e.type === GOAP_EVENTS.PLANNING_STARTED);
+    const planningStarted = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_STARTED
+    );
     expect(planningStarted).toBe(true);
 
     // Verify planning completed
     const planningCompleted = events.some(
-      e => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
     );
     expect(planningCompleted).toBe(true);
   });
@@ -405,7 +428,9 @@ describe('Numeric Goal Planning - Health System', () => {
     const goal = createTestGoal({
       id: 'test:heal_self',
       relevance: { '<': [{ var: 'actor.components.core_stats.health' }, 60] },
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       priority: 10,
     });
 
@@ -418,7 +443,9 @@ describe('Numeric Goal Planning - Health System', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Verify would reach threshold: 40 + 30 + 30 = 100 >= 80
@@ -435,7 +462,9 @@ describe('Numeric Goal Planning - Health System', () => {
 
     const goal = createTestGoal({
       id: 'test:heal_self',
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -449,7 +478,9 @@ describe('Numeric Goal Planning - Health System', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Need: (80 - 10) / 30 = 2.33 → 3 heal actions
@@ -466,7 +497,9 @@ describe('Numeric Goal Planning - Health System', () => {
 
     const goal = createTestGoal({
       id: 'test:heal_self',
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -475,16 +508,26 @@ describe('Numeric Goal Planning - Health System', () => {
 
     // Default planner options (maxDepth = 20 per specs/goap-system-specs.md) must allow 3 intent steps
     const defaultDepthState = setup.buildPlanningState(actor);
-    const defaultDepthPlan = setup.planner.plan(actor.id, goal, defaultDepthState, {});
+    const defaultDepthPlan = setup.planner.plan(
+      actor.id,
+      goal,
+      defaultDepthState,
+      {}
+    );
     expect(defaultDepthPlan).not.toBeNull();
     expect(defaultDepthPlan.tasks).toHaveLength(3);
     expect(defaultDepthPlan.cost).toBe(30);
 
     // Tight depth budget (2) should fail even though cost remains unchanged
     const shallowDepthState = setup.buildPlanningState(actor);
-    const depthLimitedPlan = setup.planner.plan(actor.id, goal, shallowDepthState, {
-      maxDepth: 2,
-    });
+    const depthLimitedPlan = setup.planner.plan(
+      actor.id,
+      goal,
+      shallowDepthState,
+      {
+        maxDepth: 2,
+      }
+    );
     expect(depthLimitedPlan).toBeNull();
   });
 
@@ -500,7 +543,9 @@ describe('Numeric Goal Planning - Health System', () => {
     const goal = createTestGoal({
       id: 'test:heal_self',
       relevance: { '<': [{ var: 'actor.components.core_stats.health' }, 60] },
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       priority: 10,
     });
 
@@ -514,7 +559,9 @@ describe('Numeric Goal Planning - Health System', () => {
 
     // Goal not relevant (health already high)
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(false); // No plan needed
   });
 });
@@ -575,7 +622,9 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
-      goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -589,7 +638,9 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
     // Need: (100 - 30) / 25 = 2.8 → 3 mine actions
   });
@@ -605,7 +656,9 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
-      goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 75] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_resources.gold' }, 75],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -619,12 +672,14 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Verify plan exists
     const planningCompletedEvent = events.find(
-      e => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
     );
     expect(planningCompletedEvent).toBeDefined();
 
@@ -642,7 +697,9 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
 
     const goal = createTestGoal({
       id: 'test:accumulate_gold',
-      goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_resources.gold' }, 100],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -656,7 +713,9 @@ describe('Numeric Goal Planning - Resource Accumulation', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
 
     // Need: (100 - 50) / 25 = 2.0 → exactly 2 mine actions
@@ -721,7 +780,9 @@ describe('Numeric Goal Planning - Error Cases', () => {
 
     const goal = createTestGoal({
       id: 'test:impossible_hunger',
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 10],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -733,14 +794,19 @@ describe('Numeric Goal Planning - Error Cases', () => {
       entities: {},
     };
     // Planning should fail gracefully (cost too high for benefit)
-    await expect(setup.controller.decideTurn(actor, world)).resolves.not.toThrow();
+    await expect(
+      setup.controller.decideTurn(actor, world)
+    ).resolves.not.toThrow();
 
     const events = setup.eventBus.getEvents();
     // May be null if planning failed, or very expensive plan
-    const planningFailed = events.some(e => e.type === GOAP_EVENTS.PLANNING_FAILED);
+    const planningFailed = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_FAILED
+    );
     // Either planning failed or succeeded with expensive plan
     expect(
-      planningFailed || events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED)
+      planningFailed ||
+        events.some((e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED)
     ).toBe(true);
   });
 
@@ -754,7 +820,9 @@ describe('Numeric Goal Planning - Error Cases', () => {
 
     const goal = createTestGoal({
       id: 'test:missing_field',
-      goalState: { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
+      goalState: {
+        '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -765,7 +833,9 @@ describe('Numeric Goal Planning - Error Cases', () => {
       state: setup.buildPlanningState(actor),
       entities: {},
     };
-    await expect(setup.controller.decideTurn(actor, world)).resolves.not.toThrow();
+    await expect(
+      setup.controller.decideTurn(actor, world)
+    ).resolves.not.toThrow();
   });
 
   it('should handle invalid constraint operators safely', async () => {
@@ -794,7 +864,9 @@ describe('Numeric Goal Planning - Error Cases', () => {
       entities: {},
     };
     // Should not throw, may treat as non-numeric constraint
-    await expect(setup.controller.decideTurn(actor, world)).resolves.not.toThrow();
+    await expect(
+      setup.controller.decideTurn(actor, world)
+    ).resolves.not.toThrow();
   });
 });
 
@@ -888,7 +960,9 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
   });
 
@@ -939,9 +1013,7 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     expect(stateMissEvents.length).toBeGreaterThan(1);
 
     const missedComponents = new Set(
-      stateMissEvents
-        .map((event) => event.payload?.componentId)
-        .filter(Boolean)
+      stateMissEvents.map((event) => event.payload?.componentId).filter(Boolean)
     );
 
     expect(missedComponents.has('core:armed')).toBe(true);
@@ -979,7 +1051,9 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
 
     // Should plan for both conditions
     const events = setup.eventBus.getEvents();
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
   });
 
@@ -1014,7 +1088,9 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
     await setup.controller.decideTurn(actor, world);
 
     const events = setup.eventBus.getEvents();
-    const planCompleted = events.find(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCompleted = events.find(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCompleted).toBeDefined();
     expect(planCompleted.payload.planLength).toBeGreaterThan(0);
   });
@@ -1035,8 +1111,12 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
           { has_component: ['actor', 'core:armed'] },
           {
             and: [
-              { '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30] },
-              { '<': [{ var: 'state.actor.components.core_needs.hunger' }, 50] },
+              {
+                '<=': [{ var: 'state.actor.components.core_needs.hunger' }, 30],
+              },
+              {
+                '<': [{ var: 'state.actor.components.core_needs.hunger' }, 50],
+              },
             ],
           },
         ],
@@ -1055,7 +1135,9 @@ describe('Numeric Goal Planning - Backward Compatibility', () => {
 
     const events = setup.eventBus.getEvents();
     // Should either acquire weapon OR reduce hunger
-    const planCreated = events.some(e => e.type === GOAP_EVENTS.PLANNING_COMPLETED);
+    const planCreated = events.some(
+      (e) => e.type === GOAP_EVENTS.PLANNING_COMPLETED
+    );
     expect(planCreated).toBe(true);
   });
 });

@@ -12,6 +12,7 @@
 ## Objective
 
 Integrate `validationErrorContext.js` and `suggestionUtils.js` into `ajvAnyOfErrorFormatter.js` to provide rich error context and suggestions for validation failures, specifically:
+
 1. Add "Did you mean?" suggestions for unknown operation types
 2. Support optional file context for rich error formatting with line numbers and code snippets
 
@@ -19,15 +20,16 @@ Integrate `validationErrorContext.js` and `suggestionUtils.js` into `ajvAnyOfErr
 
 ### Original Assumptions vs Actual State
 
-| Assumption | Actual State | Impact |
-|------------|--------------|--------|
-| Create new `formatAjvErrors` function | File already has `formatAjvErrorsEnhanced` as main entry point | Enhance existing function instead |
-| Replace error grouping with `groupErrorsByPath` | Existing `groupErrorsByOperationType` serves different purpose | Keep existing, add new capability |
-| Completely new implementation | Sophisticated pattern detection already exists (`detectCommonPatterns`) | Integrate suggestions into existing patterns |
+| Assumption                                      | Actual State                                                            | Impact                                       |
+| ----------------------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------- |
+| Create new `formatAjvErrors` function           | File already has `formatAjvErrorsEnhanced` as main entry point          | Enhance existing function instead            |
+| Replace error grouping with `groupErrorsByPath` | Existing `groupErrorsByOperationType` serves different purpose          | Keep existing, add new capability            |
+| Completely new implementation                   | Sophisticated pattern detection already exists (`detectCommonPatterns`) | Integrate suggestions into existing patterns |
 
 ### Corrected Scope
 
 **Minimal changes needed:**
+
 1. Add imports for `suggestOperationType` and `createValidationErrorContext`
 2. Add optional `context` parameter to `formatAjvErrorsEnhanced`
 3. Integrate `suggestOperationType` into `formatOperationTypeSummary` for unknown types
@@ -38,8 +40,8 @@ Integrate `validationErrorContext.js` and `suggestionUtils.js` into `ajvAnyOfErr
 
 ### Files to Modify
 
-| File | Change Type |
-|------|-------------|
+| File                                  | Change Type                                               |
+| ------------------------------------- | --------------------------------------------------------- |
 | `src/utils/ajvAnyOfErrorFormatter.js` | Add imports, enhance with suggestions and context support |
 
 ### Files to Create
@@ -48,11 +50,11 @@ None
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `src/validation/validationErrorContext.js` | Created in SCHVALTESINT-012 |
-| `src/utils/suggestionUtils.js` | Created in SCHVALTESINT-013 |
-| `src/utils/preValidationUtils.js` | KNOWN_OPERATION_TYPES for suggestions |
+| File                                       | Purpose                               |
+| ------------------------------------------ | ------------------------------------- |
+| `src/validation/validationErrorContext.js` | Created in SCHVALTESINT-012           |
+| `src/utils/suggestionUtils.js`             | Created in SCHVALTESINT-013           |
+| `src/utils/preValidationUtils.js`          | KNOWN_OPERATION_TYPES for suggestions |
 
 ---
 
@@ -82,6 +84,7 @@ None
 Rather than replacing the formatter, enhance it by:
 
 1. **Add imports** at top of file:
+
    ```javascript
    import { createValidationErrorContext } from '../validation/validationErrorContext.js';
    import { suggestOperationType } from './suggestionUtils.js';
@@ -89,6 +92,7 @@ Rather than replacing the formatter, enhance it by:
    ```
 
 2. **Extend function signature** with optional context:
+
    ```javascript
    export function formatAjvErrorsEnhanced(errors, data, context = null)
    ```
@@ -112,6 +116,7 @@ Valid operation types include:
 ### Enhanced Error Format
 
 **Without context (backward compatible):**
+
 ```
 Unknown or invalid operation type: 'LOCK_GRABB'
 Did you mean "LOCK_GRABBING"?
@@ -122,6 +127,7 @@ Valid operation types include:
 ```
 
 **With context:**
+
 ```
 Validation Error in rule "handle_wield_threateningly"
   File: data/mods/weapons/rules/handle_wield_threateningly.rule.json
@@ -149,12 +155,12 @@ Validation Error in rule "handle_wield_threateningly"
 
 ### New Tests to Add
 
-| Test | Purpose |
-|------|---------|
+| Test                                              | Purpose                        |
+| ------------------------------------------------- | ------------------------------ |
 | `should suggest similar operation type for typos` | Verify "Did you mean?" appears |
-| `should not suggest when no similar types` | Verify no false suggestions |
-| `should include file context when provided` | Verify rich context output |
-| `should format without context when not provided` | Backward compatibility |
+| `should not suggest when no similar types`        | Verify no false suggestions    |
+| `should include file context when provided`       | Verify rich context output     |
+| `should format without context when not provided` | Backward compatibility         |
 
 ### Invariants That Must Remain True
 
@@ -186,6 +192,7 @@ Validation Error in rule "handle_wield_threateningly"
 ### What Was Originally Planned
 
 The ticket originally proposed:
+
 1. Creating a new `formatAjvErrors` function
 2. Replacing `groupErrorsByPath` error grouping
 3. Substantial rewrite of the formatter
@@ -211,12 +218,12 @@ After reassessing assumptions against the actual codebase, a **minimal integrati
 
 ### Key Differences from Plan
 
-| Original Plan | Actual Implementation |
-|---------------|----------------------|
+| Original Plan                  | Actual Implementation                       |
+| ------------------------------ | ------------------------------------------- |
 | New function `formatAjvErrors` | Enhanced existing `formatAjvErrorsEnhanced` |
-| Replace error grouping | Kept existing, added new capability |
-| Medium complexity | Small complexity (additive only) |
-| Potential breaking changes | 100% backward compatible |
+| Replace error grouping         | Kept existing, added new capability         |
+| Medium complexity              | Small complexity (additive only)            |
+| Potential breaking changes     | 100% backward compatible                    |
 
 ### Test Results
 

@@ -80,7 +80,10 @@ export class IsRemovalBlockedOperator extends BaseEquipmentOperator {
         return false;
       }
 
-      const targetItemId = this.#resolveTargetItemId(targetEntity, targetItemPath);
+      const targetItemId = this.#resolveTargetItemId(
+        targetEntity,
+        targetItemPath
+      );
 
       if (targetItemId === null) {
         return false;

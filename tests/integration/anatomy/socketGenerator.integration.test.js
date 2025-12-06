@@ -157,7 +157,8 @@ describe('SocketGenerator Integration Tests', () => {
     it('should generate sockets for a centaur template', () => {
       const centaurTemplate = {
         id: 'anatomy:structure_centaur',
-        description: 'Centaur with humanoid upper body and quadruped lower body',
+        description:
+          'Centaur with humanoid upper body and quadruped lower body',
         topology: {
           rootType: 'torso',
           limbSets: [
@@ -294,7 +295,8 @@ describe('SocketGenerator Integration Tests', () => {
     it('should generate sockets for a gryphon template', () => {
       const gryphonTemplate = {
         id: 'anatomy:structure_gryphon',
-        description: 'Gryphon with eagle head, wings, and quadrupedal lion body',
+        description:
+          'Gryphon with eagle head, wings, and quadrupedal lion body',
         topology: {
           rootType: 'torso',
           limbSets: [

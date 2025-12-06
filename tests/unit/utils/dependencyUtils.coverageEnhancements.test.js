@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
@@ -52,16 +59,16 @@ describe('dependencyUtils additional coverage', () => {
 
       class CustomError extends Error {}
 
-      expect(() => assertPresent(null, 'missing value', CustomError, logger)).toThrow(
-        CustomError,
-      );
+      expect(() =>
+        assertPresent(null, 'missing value', CustomError, logger)
+      ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('missing value');
     });
 
     it('falls back to throwing without logging when logger lacks error method', () => {
-      expect(() => assertPresent(undefined, 'missing value', Error, noopLogger)).toThrow(
-        Error,
-      );
+      expect(() =>
+        assertPresent(undefined, 'missing value', Error, noopLogger)
+      ).toThrow(Error);
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
   });
@@ -69,14 +76,22 @@ describe('dependencyUtils additional coverage', () => {
   describe('assertFunction', () => {
     it('accepts existing functions', () => {
       const dependency = { init: () => true };
-      expect(() => assertFunction(dependency, 'init', 'should not throw')).not.toThrow();
+      expect(() =>
+        assertFunction(dependency, 'init', 'should not throw')
+      ).not.toThrow();
     });
 
     it('throws and logs when function is missing', () => {
       const logger = createLoggerMock();
 
       expect(() =>
-        assertFunction({ init: 42 }, 'init', 'missing function', InvalidArgumentError, logger),
+        assertFunction(
+          { init: 42 },
+          'init',
+          'missing function',
+          InvalidArgumentError,
+          logger
+        )
       ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith('missing function');
@@ -84,7 +99,7 @@ describe('dependencyUtils additional coverage', () => {
 
     it('throws without logging when logger lacks an error method', () => {
       expect(() =>
-        assertFunction({}, 'init', 'missing function', Error, noopLogger),
+        assertFunction({}, 'init', 'missing function', Error, noopLogger)
       ).toThrow(Error);
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
@@ -96,7 +111,9 @@ describe('dependencyUtils additional coverage', () => {
 
       const spy = jest.spyOn(dependency, 'start');
 
-      expect(() => assertMethods(dependency, ['start', 'stop'], 'ok')).not.toThrow();
+      expect(() =>
+        assertMethods(dependency, ['start', 'stop'], 'ok')
+      ).not.toThrow();
       expect(spy).not.toHaveBeenCalled();
     });
 
@@ -104,7 +121,13 @@ describe('dependencyUtils additional coverage', () => {
       const logger = createLoggerMock();
 
       expect(() =>
-        assertMethods({ start: () => {} }, ['start', 'stop'], 'missing method', InvalidArgumentError, logger),
+        assertMethods(
+          { start: () => {} },
+          ['start', 'stop'],
+          'missing method',
+          InvalidArgumentError,
+          logger
+        )
       ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledTimes(1);
@@ -122,7 +145,9 @@ describe('dependencyUtils additional coverage', () => {
     it('logs diagnostic payload and throws when identifier is blank', () => {
       const logger = createLoggerMock();
 
-      expect(() => assertValidId('   ', 'Ctx', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId('   ', 'Ctx', logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "Ctx: Invalid ID '   '. Expected non-blank string.",
@@ -130,14 +155,16 @@ describe('dependencyUtils additional coverage', () => {
           receivedId: '   ',
           receivedType: 'string',
           context: 'Ctx',
-        }),
+        })
       );
     });
 
     it('includes type information when identifier is not a string', () => {
       const logger = createLoggerMock();
 
-      expect(() => assertValidId(42, 'Ctx', logger)).toThrow(InvalidArgumentError);
+      expect(() => assertValidId(42, 'Ctx', logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         "Ctx: Invalid ID '42'. Expected non-blank string.",
@@ -145,7 +172,7 @@ describe('dependencyUtils additional coverage', () => {
           receivedId: 42,
           receivedType: 'number',
           context: 'Ctx',
-        }),
+        })
       );
     });
   });
@@ -153,16 +180,18 @@ describe('dependencyUtils additional coverage', () => {
   describe('assertNonBlankString', () => {
     it('accepts populated strings', () => {
       const logger = createLoggerMock();
-      expect(() => assertNonBlankString('value', 'param', 'Context', logger)).not.toThrow();
+      expect(() =>
+        assertNonBlankString('value', 'param', 'Context', logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('throws with detailed diagnostics for blank strings', () => {
       const logger = createLoggerMock();
 
-      expect(() => assertNonBlankString('', 'param', 'Context', logger)).toThrow(
-        InvalidArgumentError,
-      );
+      expect(() =>
+        assertNonBlankString('', 'param', 'Context', logger)
+      ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
         "Context: Invalid param ''. Expected non-blank string.",
@@ -171,16 +200,16 @@ describe('dependencyUtils additional coverage', () => {
           receivedType: 'string',
           parameterName: 'param',
           context: 'Context',
-        }),
+        })
       );
     });
 
     it('reports the original type when provided with non-string values', () => {
       const logger = createLoggerMock();
 
-      expect(() => assertNonBlankString(99, 'param', 'Context', logger)).toThrow(
-        InvalidArgumentError,
-      );
+      expect(() =>
+        assertNonBlankString(99, 'param', 'Context', logger)
+      ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
         "Context: Invalid param '99'. Expected non-blank string.",
@@ -189,7 +218,7 @@ describe('dependencyUtils additional coverage', () => {
           receivedType: 'number',
           parameterName: 'param',
           context: 'Context',
-        }),
+        })
       );
     });
   });
@@ -198,32 +227,32 @@ describe('dependencyUtils additional coverage', () => {
     it('logs and throws when the dependency is missing using a provided logger', () => {
       const logger = createLoggerMock();
 
-      expect(() => validateDependency(undefined, 'MissingService', logger)).toThrow(
-        InvalidArgumentError,
-      );
+      expect(() =>
+        validateDependency(undefined, 'MissingService', logger)
+      ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
-        'Missing required dependency: MissingService.',
+        'Missing required dependency: MissingService.'
       );
     });
 
     it('defaults to console logging when no logger is supplied', () => {
       expect(() => validateDependency(undefined, 'ConsoleOnly')).toThrow(
-        InvalidArgumentError,
+        InvalidArgumentError
       );
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Missing required dependency: ConsoleOnly.',
+        'Missing required dependency: ConsoleOnly.'
       );
     });
 
     it('falls back to console error when the logger cannot report errors', () => {
-      expect(() => validateDependency(null, 'ConsoleService', noopLogger)).toThrow(
-        InvalidArgumentError,
-      );
+      expect(() =>
+        validateDependency(null, 'ConsoleService', noopLogger)
+      ).toThrow(InvalidArgumentError);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Missing required dependency: ConsoleService.',
+        'Missing required dependency: ConsoleService.'
       );
     });
 
@@ -231,11 +260,11 @@ describe('dependencyUtils additional coverage', () => {
       const logger = createLoggerMock();
 
       expect(() =>
-        validateDependency({}, 'Callable', logger, { isFunction: true }),
+        validateDependency({}, 'Callable', logger, { isFunction: true })
       ).toThrow(InvalidArgumentError);
 
       expect(logger.error).toHaveBeenCalledWith(
-        "Dependency 'Callable' must be a function, but got object.",
+        "Dependency 'Callable' must be a function, but got object."
       );
     });
 
@@ -244,7 +273,7 @@ describe('dependencyUtils additional coverage', () => {
       const dependency = () => true;
 
       expect(() =>
-        validateDependency(dependency, 'Callable', logger, { isFunction: true }),
+        validateDependency(dependency, 'Callable', logger, { isFunction: true })
       ).not.toThrow();
 
       expect(logger.error).not.toHaveBeenCalled();
@@ -256,11 +285,11 @@ describe('dependencyUtils additional coverage', () => {
       expect(() =>
         validateDependency(dependency, 'Service', noopLogger, {
           requiredMethods: ['run', 'stop'],
-        }),
+        })
       ).toThrow(InvalidArgumentError);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Invalid or missing method 'stop' on dependency 'Service'.",
+        "Invalid or missing method 'stop' on dependency 'Service'."
       );
     });
 
@@ -274,7 +303,7 @@ describe('dependencyUtils additional coverage', () => {
       expect(() =>
         validateDependency(dependency, 'Service', logger, {
           requiredMethods: ['run', 'stop'],
-        }),
+        })
       ).not.toThrow();
 
       expect(logger.error).not.toHaveBeenCalled();
@@ -294,10 +323,12 @@ describe('dependencyUtils additional coverage', () => {
         { dependency: {}, name: 'Second', isFunction: true },
       ];
 
-      expect(() => validateDependencies(specs, logger)).toThrow(InvalidArgumentError);
+      expect(() => validateDependencies(specs, logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenLastCalledWith(
-        "Dependency 'Second' must be a function, but got object.",
+        "Dependency 'Second' must be a function, but got object."
       );
     });
 
@@ -308,10 +339,12 @@ describe('dependencyUtils additional coverage', () => {
         { dependency: { run: 'nope' }, name: 'Broken', methods: ['run'] },
       ]);
 
-      expect(() => validateDependencies(specs, logger)).toThrow(InvalidArgumentError);
+      expect(() => validateDependencies(specs, logger)).toThrow(
+        InvalidArgumentError
+      );
 
       expect(logger.error).toHaveBeenLastCalledWith(
-        "Invalid or missing method 'run' on dependency 'Broken'.",
+        "Invalid or missing method 'run' on dependency 'Broken'."
       );
     });
 

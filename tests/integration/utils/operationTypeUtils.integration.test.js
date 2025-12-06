@@ -59,7 +59,10 @@ describe('operationTypeUtils integration', () => {
       executed.push({ params, context });
     });
 
-    await interpreter.execute({ type: '   spaced-type   ' }, { evaluationContext: {} });
+    await interpreter.execute(
+      { type: '   spaced-type   ' },
+      { evaluationContext: {} }
+    );
 
     expect(executed).toHaveLength(1);
     expect(
@@ -85,8 +88,9 @@ describe('operationTypeUtils integration', () => {
     expect(
       logger.records.error.some(
         ({ message, args }) =>
-          message.includes('OperationRegistry.register: operationType must be a non-empty string.') &&
-          args.length === 0
+          message.includes(
+            'OperationRegistry.register: operationType must be a non-empty string.'
+          ) && args.length === 0
       )
     ).toBe(true);
 
@@ -95,7 +99,9 @@ describe('operationTypeUtils integration', () => {
   });
 
   it('prevents execution when operation type normalizes to an empty string', async () => {
-    const registry = new OperationRegistry({ logger: new RecordingLogger('registry') });
+    const registry = new OperationRegistry({
+      logger: new RecordingLogger('registry'),
+    });
     const interpreterLogger = new RecordingLogger('interpreter');
     const interpreter = new OperationInterpreter({
       logger: interpreterLogger,

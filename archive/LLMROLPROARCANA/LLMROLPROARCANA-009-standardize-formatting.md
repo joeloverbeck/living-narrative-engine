@@ -12,7 +12,8 @@
 The ticket originally identified potential inconsistencies in template formatting. Upon analysis, the existing codebase already implements comprehensive formatting standards through `XmlElementBuilder` and `PromptDataFormatter`.
 
 **Original Concerns (Addressed):**
-1. Mixed emphasis (CAPS, **bold**, *italic*) - **Already standardized** in `corePromptText.json`
+
+1. Mixed emphasis (CAPS, **bold**, _italic_) - **Already standardized** in `corePromptText.json`
 2. Inconsistent example formatting - **Already uses code blocks** with markers
 3. Varied bullet point depth - **Limited to 3 levels** in practice
 4. Mixed markers - **Consistently uses ✅/❌** throughout
@@ -43,8 +44,9 @@ Document existing formatting standards and ensure consistent application across 
 The codebase uses a consistent emphasis system:
 
 ```markdown
-## SECTION NAME    # Top-level sections use markdown headers
-**Rule**: Description   # Bold for rules and key concepts
+## SECTION NAME # Top-level sections use markdown headers
+
+**Rule**: Description # Bold for rules and key concepts
 ```
 
 Implemented in: `data/prompts/corePromptText.json`
@@ -55,11 +57,11 @@ All examples use code blocks with consistent markers:
 
 ```markdown
 **Valid Examples:**
-  ✅ *crosses arms*
-  ✅ *narrows eyes*
+✅ _crosses arms_
+✅ _narrows eyes_
 
 **Invalid Examples:**
-  ❌ *feels anxious* (internal state)
+❌ _feels anxious_ (internal state)
 ```
 
 Implemented in: `data/prompts/corePromptText.json`
@@ -80,9 +82,9 @@ Three types of processing hints via `wrapWithProcessingHint()`:
 ```javascript
 // src/prompting/promptDataFormatter.js:476-488
 const hintMarkers = {
-  critical: '*** CRITICAL',  // For mandatory rules
-  reference: 'REFERENCE',    // For context information
-  system: 'SYSTEM'           // For system configuration
+  critical: '*** CRITICAL', // For mandatory rules
+  reference: 'REFERENCE', // For context information
+  system: 'SYSTEM', // For system configuration
 };
 ```
 
@@ -93,16 +95,17 @@ Four visual styles via `decoratedComment()`:
 ```javascript
 // src/prompting/xmlElementBuilder.js:103-124
 const borderChars = {
-  primary: '=',    // Identity emphasis
-  secondary: '-',  // Section headers
-  critical: '*',   // Mandatory constraints
-  reference: '.'   // Context/reference material
+  primary: '=', // Identity emphasis
+  secondary: '-', // Section headers
+  critical: '*', // Mandatory constraints
+  reference: '.', // Context/reference material
 };
 ```
 
 ### Style Guide Documentation
 
 Created at `docs/prompting/template-style-guide.md` documenting:
+
 - Emphasis conventions (headers, bold for rules)
 - Example formatting (code blocks, ✅/❌ markers)
 - Bullet point guidelines (max 3 levels)
@@ -117,6 +120,7 @@ Created at `docs/prompting/template-style-guide.md` documenting:
 All formatting utilities are comprehensively tested:
 
 **Unit Tests:**
+
 - `tests/unit/prompting/xmlElementBuilder.test.js` - 85+ test cases
   - `escape()` - XML character escaping
   - `wrap()` - Tag wrapping with indentation
@@ -145,13 +149,13 @@ All formatting utilities are comprehensively tested:
 
 ## Success Metrics
 
-| Metric | Baseline | Achieved | Notes |
-|--------|----------|----------|-------|
-| Formatting violations | Unknown | 0 | Verified via code review |
-| XML indentation | Mixed | 2 spaces | Enforced in XmlElementBuilder |
-| Marker system | Partial | ✅/❌ | Consistent throughout |
-| Style guide | None | Created | docs/prompting/template-style-guide.md |
-| Test coverage | Existing | 100% | 85+ tests for formatting utilities |
+| Metric                | Baseline | Achieved | Notes                                  |
+| --------------------- | -------- | -------- | -------------------------------------- |
+| Formatting violations | Unknown  | 0        | Verified via code review               |
+| XML indentation       | Mixed    | 2 spaces | Enforced in XmlElementBuilder          |
+| Marker system         | Partial  | ✅/❌    | Consistent throughout                  |
+| Style guide           | None     | Created  | docs/prompting/template-style-guide.md |
+| Test coverage         | Existing | 100%     | 85+ tests for formatting utilities     |
 
 ## Implementation Notes
 
@@ -160,6 +164,7 @@ All formatting utilities are comprehensively tested:
 **Original Ticket Assumption:** Proposed creating a `CharacterPromptTemplate` class with formatting methods.
 
 **Actual Architecture:**
+
 - Template is a string constant exported from `characterPromptTemplate.js`
 - Formatting utilities exist in `XmlElementBuilder` (stateless utility class)
 - Data formatting handled by `PromptDataFormatter`

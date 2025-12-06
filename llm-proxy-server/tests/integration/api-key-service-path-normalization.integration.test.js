@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -135,7 +142,9 @@ describe('ApiKeyService integration: path normalization with real collaborators'
     });
 
     const cacheHitLog = logger.debug.mock.calls.find(([message]) =>
-      message.includes('ApiKeyService._readApiKeyFromFile: Retrieved API key from cache')
+      message.includes(
+        'ApiKeyService._readApiKeyFromFile: Retrieved API key from cache'
+      )
     );
     expect(cacheHitLog).toBeDefined();
 

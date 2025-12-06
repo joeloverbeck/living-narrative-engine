@@ -57,21 +57,51 @@ describe('HEACALOVE-011: Cosmetic Entity health_calculation_weight Validation', 
   // Hair entities - weight: 0.1
   const HAIR_ENTITIES = [
     { file: 'human_hair.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_black_long_tousled.entity.json', expectedSubType: 'hair' },
+    {
+      file: 'human_hair_black_long_tousled.entity.json',
+      expectedSubType: 'hair',
+    },
     { file: 'human_hair_blonde.entity.json', expectedSubType: 'hair' },
     { file: 'human_hair_blonde_buzzed.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_blonde_long_braided.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_blonde_long_straight.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_blonde_medium_ponytail.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_blonde_medium_straight.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_brown_short_ponytail.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_medium_brown_ponytail.entity.json', expectedSubType: 'hair' },
+    {
+      file: 'human_hair_blonde_long_braided.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_blonde_long_straight.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_blonde_medium_ponytail.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_blonde_medium_straight.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_brown_short_ponytail.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_medium_brown_ponytail.entity.json',
+      expectedSubType: 'hair',
+    },
     { file: 'human_hair_raven.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_raven_medium_straight.entity.json', expectedSubType: 'hair' },
+    {
+      file: 'human_hair_raven_medium_straight.entity.json',
+      expectedSubType: 'hair',
+    },
     { file: 'human_hair_red_ponytails.entity.json', expectedSubType: 'hair' },
     { file: 'human_hair_red_tousled.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_short_brown_wavy.entity.json', expectedSubType: 'hair' },
-    { file: 'human_hair_short_dirty_blonde_wavy.entity.json', expectedSubType: 'hair' },
+    {
+      file: 'human_hair_short_brown_wavy.entity.json',
+      expectedSubType: 'hair',
+    },
+    {
+      file: 'human_hair_short_dirty_blonde_wavy.entity.json',
+      expectedSubType: 'hair',
+    },
     { file: 'human_hair_short_gray_wavy.entity.json', expectedSubType: 'hair' },
   ];
 
@@ -83,15 +113,36 @@ describe('HEACALOVE-011: Cosmetic Entity health_calculation_weight Validation', 
   // Ass cheek entities - weight: 0.2
   const ASS_CHEEK_ENTITIES = [
     { file: 'human_ass_cheek.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_bubbly.entity.json', expectedSubType: 'ass_cheek' },
+    {
+      file: 'human_ass_cheek_bubbly.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
     { file: 'human_ass_cheek_firm.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_firm_athletic_shelf.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_firm_muscular_shelf.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_firm_thick.entity.json', expectedSubType: 'ass_cheek' },
+    {
+      file: 'human_ass_cheek_firm_athletic_shelf.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
+    {
+      file: 'human_ass_cheek_firm_muscular_shelf.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
+    {
+      file: 'human_ass_cheek_firm_thick.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
     { file: 'human_ass_cheek_round.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_round_soft.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_small_bubbly.entity.json', expectedSubType: 'ass_cheek' },
-    { file: 'human_ass_cheek_small_round.entity.json', expectedSubType: 'ass_cheek' },
+    {
+      file: 'human_ass_cheek_round_soft.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
+    {
+      file: 'human_ass_cheek_small_bubbly.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
+    {
+      file: 'human_ass_cheek_small_round.entity.json',
+      expectedSubType: 'ass_cheek',
+    },
   ];
 
   // Breast entities - weight: 0.3
@@ -117,7 +168,10 @@ describe('HEACALOVE-011: Cosmetic Entity health_calculation_weight Validation', 
     { file: 'human_vagina_petite_firm.entity.json', expectedSubType: 'vagina' },
     { file: 'human_vagina_silky_tight.entity.json', expectedSubType: 'vagina' },
     { file: 'human_vagina_soft_pliant.entity.json', expectedSubType: 'vagina' },
-    { file: 'human_vagina_tight_smooth.entity.json', expectedSubType: 'vagina' },
+    {
+      file: 'human_vagina_tight_smooth.entity.json',
+      expectedSubType: 'vagina',
+    },
     { file: 'human_testicle.entity.json', expectedSubType: 'testicle' },
     { file: 'human_testicle_thick.entity.json', expectedSubType: 'testicle' },
   ];

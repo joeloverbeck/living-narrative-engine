@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "wool"

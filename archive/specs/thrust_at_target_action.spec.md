@@ -8,11 +8,11 @@ Create a new combat action `weapons:thrust_at_target` that enables actors to thr
 
 This specification is based on the existing `swing_at_target` action implementation:
 
-| Reference File | Path |
-|----------------|------|
-| Action Definition | `data/mods/weapons/actions/swing_at_target.action.json` |
-| Rule Definition | `data/mods/weapons/rules/handle_swing_at_target.rule.json` |
-| Scope Definition | `data/mods/weapons/scopes/wielded_cutting_weapons.scope` |
+| Reference File       | Path                                                                          |
+| -------------------- | ----------------------------------------------------------------------------- |
+| Action Definition    | `data/mods/weapons/actions/swing_at_target.action.json`                       |
+| Rule Definition      | `data/mods/weapons/rules/handle_swing_at_target.rule.json`                    |
+| Scope Definition     | `data/mods/weapons/scopes/wielded_cutting_weapons.scope`                      |
 | Condition Definition | `data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json` |
 
 ---
@@ -32,13 +32,8 @@ This specification is based on the existing `swing_at_target` action implementat
   "template": "thrust {weapon} at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "positioning:wielding"
-    ],
-    "primary": [
-      "weapons:weapon",
-      "damage-types:damage_capabilities"
-    ]
+    "actor": ["positioning:wielding"],
+    "primary": ["weapons:weapon", "damage-types:damage_capabilities"]
   },
   "forbidden_components": {
     "actor": [
@@ -91,6 +86,7 @@ This specification is based on the existing `swing_at_target` action implementat
 ```
 
 **Key Differences from swing_at_target:**
+
 - `id`: `"weapons:thrust_at_target"` (not `swing_at_target`)
 - `name`: `"Thrust at Target"`
 - `description`: `"Thrust a piercing weapon at a target"`
@@ -119,9 +115,11 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 ```
 
 **Key Difference from wielded_cutting_weapons.scope:**
+
 - `has_damage_capability`: `"piercing"` instead of `"slashing"`
 
 **Example Weapons with Piercing Damage:**
+
 - `fantasy:vespera_main_gauche` (piercing: 10 damage, 0.8 penetration)
 - `fantasy:vespera_rapier` (piercing: 18 damage, 0.6 penetration + slashing: 8 damage)
 
@@ -137,10 +135,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
   "id": "weapons:event-is-action-thrust-at-target",
   "description": "Checks if the event is a thrust_at_target action attempt",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "weapons:thrust_at_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "weapons:thrust_at_target"]
   }
 }
 ```
@@ -164,7 +159,10 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
@@ -223,7 +221,9 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -279,7 +279,9 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
       "type": "IF",
       "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -334,7 +336,9 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
       "type": "IF",
       "comment": "Handle FUMBLE outcome - flat structure (3 of 4)",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [
           {
             "type": "UNWIELD_ITEM",
@@ -379,7 +383,9 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
       "type": "IF",
       "comment": "Handle FAILURE outcome - flat structure (4 of 4)",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -410,15 +416,15 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 
 **Key Differences from handle_swing_at_target.rule.json:**
 
-| Aspect | swing_at_target | thrust_at_target |
-|--------|-----------------|------------------|
-| `rule_id` | `handle_swing_at_target` | `handle_thrust_at_target` |
-| `condition_ref` | `weapons:event-is-action-swing-at-target` | `weapons:event-is-action-thrust-at-target` |
-| `exclude_damage_types` (all APPLY_DAMAGE) | `["piercing"]` | `["slashing"]` |
-| CRITICAL_SUCCESS message | "...lands a devastating blow..." | "...lands a devastating thrust..." |
-| SUCCESS message | "...cutting their flesh." | "...piercing their flesh." |
-| FUMBLE message | "...swings wildly..." | "...thrusts wildly..." |
-| FAILURE message | "...but the swing fails to connect." | "...but the thrust fails to connect." |
+| Aspect                                    | swing_at_target                           | thrust_at_target                           |
+| ----------------------------------------- | ----------------------------------------- | ------------------------------------------ |
+| `rule_id`                                 | `handle_swing_at_target`                  | `handle_thrust_at_target`                  |
+| `condition_ref`                           | `weapons:event-is-action-swing-at-target` | `weapons:event-is-action-thrust-at-target` |
+| `exclude_damage_types` (all APPLY_DAMAGE) | `["piercing"]`                            | `["slashing"]`                             |
+| CRITICAL_SUCCESS message                  | "...lands a devastating blow..."          | "...lands a devastating thrust..."         |
+| SUCCESS message                           | "...cutting their flesh."                 | "...piercing their flesh."                 |
+| FUMBLE message                            | "...swings wildly..."                     | "...thrusts wildly..."                     |
+| FAILURE message                           | "...but the swing fails to connect."      | "...but the thrust fails to connect."      |
 
 ---
 
@@ -431,16 +437,19 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 **Test Cases to Cover:**
 
 #### Action Structure Validation
+
 - [ ] Action has correct `id`: `"weapons:thrust_at_target"`
 - [ ] Action has correct `template`: `"thrust {weapon} at {target} ({chance}% chance)"`
 - [ ] Action has `generateCombinations: true`
 
 #### Required Components Validation
+
 - [ ] Actor requires `positioning:wielding`
 - [ ] Primary target requires `weapons:weapon`
 - [ ] Primary target requires `damage-types:damage_capabilities`
 
 #### Forbidden Components Validation
+
 - [ ] Actor cannot have `positioning:hugging`
 - [ ] Actor cannot have `positioning:giving_blowjob`
 - [ ] Actor cannot have `positioning:doing_complex_performance`
@@ -450,12 +459,14 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Actor cannot have `positioning:fallen`
 
 #### Target Configuration Validation
+
 - [ ] Primary target scope is `weapons:wielded_piercing_weapons`
 - [ ] Primary target placeholder is `weapon`
 - [ ] Secondary target scope is `core:actors_in_location`
 - [ ] Secondary target placeholder is `target`
 
 #### Chance-Based Configuration Validation
+
 - [ ] `chanceBased.enabled` is `true`
 - [ ] `chanceBased.contestType` is `"opposed"`
 - [ ] Actor skill uses `skills:melee_skill` with default 10
@@ -466,6 +477,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Critical failure threshold is 95
 
 #### Action Discoverability
+
 - [ ] Action appears when actor wields a piercing weapon (e.g., main-gauche)
 - [ ] Action appears when actor wields a weapon with both piercing and slashing (e.g., rapier)
 - [ ] Action does NOT appear when actor wields only a slashing weapon (e.g., longsword)
@@ -473,6 +485,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Action does NOT appear when actor has any forbidden component
 
 #### Scope Validation
+
 - [ ] `wielded_piercing_weapons` scope returns only weapons with piercing damage
 - [ ] Scope correctly filters weapons via `has_damage_capability: "piercing"`
 
@@ -485,11 +498,13 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 **Test Cases to Cover:**
 
 #### Rule Structure Validation
+
 - [ ] Rule has correct `rule_id`: `"handle_thrust_at_target"`
 - [ ] Rule triggers on `event_type`: `"core:attempt_action"`
 - [ ] Rule uses correct condition reference
 
 #### Operation Types Validation
+
 - [ ] Rule uses GET_NAME for actor, target, and weapon
 - [ ] Rule uses QUERY_COMPONENT for position and damage capabilities
 - [ ] Rule uses RESOLVE_OUTCOME for skill contest
@@ -497,6 +512,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Rule uses APPLY_DAMAGE with correct exclude_damage_types
 
 #### CRITICAL_SUCCESS Outcome (1 of 4)
+
 - [ ] Dispatches perceptible event with message: "{actorName} lands a devastating thrust with their {weaponName} on {targetName}!"
 - [ ] Displays successful action result
 - [ ] Applies damage with 1.5x multiplier
@@ -504,6 +520,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Ends turn
 
 #### SUCCESS Outcome (2 of 4)
+
 - [ ] Dispatches perceptible event with message: "{actorName} thrusts their {weaponName} at {targetName}, piercing their flesh."
 - [ ] Displays successful action result
 - [ ] Applies damage without multiplier
@@ -511,6 +528,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Ends turn
 
 #### FUMBLE Outcome (3 of 4)
+
 - [ ] Unwields weapon from actor
 - [ ] Drops weapon at actor's location
 - [ ] Dispatches perceptible event with message: "{actorName} thrusts wildly and loses grip on their {weaponName}!"
@@ -518,6 +536,7 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 - [ ] Ends turn
 
 #### FAILURE Outcome (4 of 4)
+
 - [ ] Dispatches perceptible event with message: "{actorName} thrusts their {weaponName} at {targetName}, but the thrust fails to connect."
 - [ ] Does NOT apply any damage
 - [ ] Logs failure outcome
@@ -532,16 +551,19 @@ weapons:wielded_piercing_weapons := actor.components.positioning:wielding.wielde
 **Test Cases to Cover:**
 
 #### Damage Exclusion Behavior
+
 - [ ] On SUCCESS, only piercing damage is applied (slashing excluded)
 - [ ] On CRITICAL_SUCCESS, only piercing damage is applied with 1.5x multiplier
 - [ ] Using rapier (has both piercing and slashing): only piercing damage applied
 - [ ] Using main-gauche (piercing only): full damage applied
 
 #### No Damage on Failure
+
 - [ ] FAILURE outcome applies no damage
 - [ ] FUMBLE outcome applies no damage
 
 #### Damage Effects
+
 - [ ] Bleed effect from piercing damage is applied correctly
 - [ ] Health state is updated after damage application
 
@@ -605,7 +627,7 @@ import '../../common/mods/domainMatchers.js';
 expect(fixture.events).toHaveActionSuccess(message);
 expect(fixture.events).toHaveActionFailure();
 expect(entity).toHaveComponent('component:id');
-expect(actions.map(a => a.id)).toContain(ACTION_ID);
+expect(actions.map((a) => a.id)).toContain(ACTION_ID);
 ```
 
 ### Scenario Creation
@@ -615,9 +637,13 @@ expect(actions.map(a => a.id)).toContain(ACTION_ID);
 const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
 // Add wielding component with piercing weapon
-testFixture.entityManager.addComponent(scenario.actor.id, 'positioning:wielding', {
-  wielded_item_ids: ['fantasy:vespera_main_gauche']
-});
+testFixture.entityManager.addComponent(
+  scenario.actor.id,
+  'positioning:wielding',
+  {
+    wielded_item_ids: ['fantasy:vespera_main_gauche'],
+  }
+);
 
 // Register the weapon entity
 testFixture.registerEntity(mainGaucheEntity);
@@ -628,6 +654,7 @@ testFixture.registerEntity(mainGaucheEntity);
 ## Implementation Checklist
 
 ### Files to Create
+
 - [ ] `data/mods/weapons/actions/thrust_at_target.action.json`
 - [ ] `data/mods/weapons/scopes/wielded_piercing_weapons.scope`
 - [ ] `data/mods/weapons/conditions/event-is-action-thrust-at-target.condition.json`
@@ -638,6 +665,7 @@ testFixture.registerEntity(mainGaucheEntity);
 - [ ] `tests/e2e/actions/thrustAtTargetFullFlow.e2e.test.js` (optional)
 
 ### Validation Steps
+
 - [ ] Run `npm run validate` to validate JSON schemas
 - [ ] Run `npm run scope:lint` to validate scope DSL
 - [ ] Run `npm run test:integration` to verify tests pass

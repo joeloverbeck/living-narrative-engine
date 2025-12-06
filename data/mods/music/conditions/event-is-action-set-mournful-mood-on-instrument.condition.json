@@ -4,7 +4,7 @@
   "description": "Mournful mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_mournful_mood_on_instrument"
     ]
   }

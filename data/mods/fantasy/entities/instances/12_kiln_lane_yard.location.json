@@ -1,5 +1,5 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:12_kiln_lane_yard_instance",
-    "definitionId": "fantasy:12_kiln_lane_yard"
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:12_kiln_lane_yard_instance",
+  "definitionId": "fantasy:12_kiln_lane_yard"
 }

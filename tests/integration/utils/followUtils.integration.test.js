@@ -64,10 +64,7 @@ describe('followUtils integration', () => {
   });
 
   it('stops traversal when the follow chain terminates', () => {
-    entityManager.setEntities([
-      makeEntity('leaderA'),
-      makeEntity('observer'),
-    ]);
+    entityManager.setEntities([makeEntity('leaderA'), makeEntity('observer')]);
 
     expect(detectCycle('observer', 'leaderA', entityManager)).toBe(false);
   });

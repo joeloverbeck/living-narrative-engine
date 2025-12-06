@@ -20,15 +20,15 @@ function createLogger() {
  */
 function createService(overrides = {}) {
   const logger = overrides.logger ?? createLogger();
-  const entityManager = overrides.entityManager ?? { getEntityInstance: jest.fn() };
-  const actionPipelineOrchestrator =
-    overrides.actionPipelineOrchestrator ??
-    {
-      discoverActions: jest.fn().mockResolvedValue({
-        actions: [],
-        errors: [],
-      }),
-    };
+  const entityManager = overrides.entityManager ?? {
+    getEntityInstance: jest.fn(),
+  };
+  const actionPipelineOrchestrator = overrides.actionPipelineOrchestrator ?? {
+    discoverActions: jest.fn().mockResolvedValue({
+      actions: [],
+      errors: [],
+    }),
+  };
   const traceContextFactory =
     overrides.traceContextFactory ??
     jest.fn(() => ({
@@ -36,7 +36,8 @@ function createService(overrides = {}) {
       getTracedActions: jest.fn(() => new Set()),
       getTracingSummary: jest.fn(() => ({})),
     }));
-  const getActorLocationFn = overrides.getActorLocationFn ?? jest.fn(() => 'default-location');
+  const getActorLocationFn =
+    overrides.getActorLocationFn ?? jest.fn(() => 'default-location');
   const serviceSetup = overrides.serviceSetup ?? {
     setupService: jest.fn(() => logger),
   };
@@ -162,7 +163,10 @@ describe('ActionDiscoveryService.getValidActions tracing behaviour', () => {
       }),
       info: jest.fn(),
       getTracedActions: jest.fn(() => new Set()),
-      getTracingSummary: jest.fn(() => ({ totalStagesTracked: 0, sessionDuration: 0 })),
+      getTracingSummary: jest.fn(() => ({
+        totalStagesTracked: 0,
+        sessionDuration: 0,
+      })),
     };
 
     const actionAwareTraceFactory = jest.fn(() => trace);
@@ -186,7 +190,10 @@ describe('ActionDiscoveryService.getValidActions tracing behaviour', () => {
 
     expect(trace.withSpanAsync).toHaveBeenCalledTimes(1);
     expect(captured.span.name).toBe('action.discover');
-    expect(captured.span.metadata).toEqual({ actorId: actor.id, withTrace: true });
+    expect(captured.span.metadata).toEqual({
+      actorId: actor.id,
+      withTrace: true,
+    });
     expect(trace.info).toHaveBeenCalledWith(
       "Starting action discovery for actor 'hero-1'.",
       'getValidActions',
@@ -334,10 +341,13 @@ describe('ActionDiscoveryService tracing results', () => {
       })
     );
     expect(writeTrace).toHaveBeenCalledWith(trace);
-    expect(logger.warn).toHaveBeenCalledWith('Failed to write discovery trace', {
-      error: 'disk full',
-      actorId: actor.id,
-    });
+    expect(logger.warn).toHaveBeenCalledWith(
+      'Failed to write discovery trace',
+      {
+        error: 'disk full',
+        actorId: actor.id,
+      }
+    );
   });
 
   it('logs simple completion message when trace data is unavailable', async () => {

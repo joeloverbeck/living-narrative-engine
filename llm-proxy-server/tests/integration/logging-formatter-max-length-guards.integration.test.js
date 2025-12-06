@@ -8,7 +8,14 @@
  *              invalidated.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 const ORIGINAL_ENV = { ...process.env };
 
@@ -97,8 +104,8 @@ describe('log formatter maximum length guard integration', () => {
 
     expect(formatted.message).toBe(detailedMessage);
     expect(formatted.contextLines[0]).toContain('↳ Context: {');
-    expect(
-      formatted.contextLines.some((line) => line.includes('path'))
-    ).toBe(true);
+    expect(formatted.contextLines.some((line) => line.includes('path'))).toBe(
+      true
+    );
   });
 });

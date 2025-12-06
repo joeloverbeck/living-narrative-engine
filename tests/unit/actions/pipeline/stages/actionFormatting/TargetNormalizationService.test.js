@@ -26,12 +26,8 @@ describe('TargetNormalizationService', () => {
 
   it('normalizes multi-target maps into target ids and params', () => {
     const resolvedTargets = {
-      primary: [
-        { id: 'target-1', displayName: 'Enemy' },
-      ],
-      secondary: [
-        { id: 'target-2', displayName: 'Item' },
-      ],
+      primary: [{ id: 'target-1', displayName: 'Enemy' }],
+      secondary: [{ id: 'target-2', displayName: 'Item' }],
     };
 
     const result = service.normalize({
@@ -78,7 +74,6 @@ describe('TargetNormalizationService', () => {
         { entityId: 'target-5', displayName: 'Supporter', type: 'entity' },
       ],
     });
-
 
     expect(result.error).toBeNull();
     expect(result.targetIds).toEqual({ primary: ['target-5'] });
@@ -218,7 +213,9 @@ describe('TargetNormalizationService', () => {
     expect(result.targetIds).toEqual({ support: ['support-1'] });
     expect(result.primaryTargetContext).toBeNull();
     expect(result.params).toEqual({ targetIds: { support: ['support-1'] } });
-    expect(result.targetExtractionResult).toBeInstanceOf(TargetExtractionResult);
+    expect(result.targetExtractionResult).toBeInstanceOf(
+      TargetExtractionResult
+    );
   });
 
   it('ignores placeholders that provide no targets while preserving valid entries', () => {

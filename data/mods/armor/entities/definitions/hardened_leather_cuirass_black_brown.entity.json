@@ -8,22 +8,13 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "armor",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "armor", "outer"]
     },
     "core:material": {
       "material": "leather",
       "durability": 70,
-      "properties": [
-        "flexible"
-      ],
-      "careInstructions": [
-        "requires_oiling"
-      ]
+      "properties": ["flexible"],
+      "careInstructions": ["requires_oiling"]
     },
     "core:name": {
       "text": "cuirass"
@@ -38,9 +29,7 @@
       "texture": "rugged"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "armor"
     },
     "items:item": {},

@@ -164,8 +164,14 @@ export class ActionPerformanceAnalyzer {
 
     // Use reduce to avoid stack overflow with large arrays
     const durations = this.#traces.map((t) => t.duration);
-    this.#stats.minDuration = durations.reduce((min, d) => Math.min(min, d), Infinity);
-    this.#stats.maxDuration = durations.reduce((max, d) => Math.max(max, d), -Infinity);
+    this.#stats.minDuration = durations.reduce(
+      (min, d) => Math.min(min, d),
+      Infinity
+    );
+    this.#stats.maxDuration = durations.reduce(
+      (max, d) => Math.max(max, d),
+      -Infinity
+    );
 
     this.#updatePhaseStats();
   }

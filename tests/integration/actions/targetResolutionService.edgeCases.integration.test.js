@@ -72,11 +72,7 @@ describe('TargetResolutionService edge-case integration', () => {
     });
 
     expect(() =>
-      service.resolveTargets(
-        'positioning:available_furniture',
-        actor,
-        null
-      )
+      service.resolveTargets('positioning:available_furniture', actor, null)
     ).toThrow(/currentLocation/);
 
     expect(logger.debug).toHaveBeenCalledWith(

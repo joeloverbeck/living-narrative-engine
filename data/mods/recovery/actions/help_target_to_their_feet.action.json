@@ -11,15 +11,10 @@
     }
   },
   "required_components": {
-    "primary": [
-      "positioning:fallen"
-    ]
+    "primary": ["positioning:fallen"]
   },
   "forbidden_components": {
-    "actor": [
-      "positioning:being_restrained",
-      "positioning:fallen"
-    ]
+    "actor": ["positioning:being_restrained", "positioning:fallen"]
   },
   "template": "help {target} to their feet",
   "prerequisites": [],

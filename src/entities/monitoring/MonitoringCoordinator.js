@@ -8,7 +8,10 @@ import PerformanceMonitor from './PerformanceMonitor.js';
 import CircuitBreaker from './CircuitBreaker.js';
 import { validateDependency } from '../../utils/dependencyUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
-import { getCircuitBreakerConfig, getErrorConfig } from '../../config/errorHandling.config.js';
+import {
+  getCircuitBreakerConfig,
+  getErrorConfig,
+} from '../../config/errorHandling.config.js';
 import { GOAP_EVENTS } from '../../goap/events/goapEvents.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -113,7 +116,7 @@ export default class MonitoringCoordinator {
     // Use configuration for default circuit breaker options
     this.#defaultCircuitBreakerOptions = {
       ...config.circuitBreaker.default,
-      ...circuitBreakerOptions
+      ...circuitBreakerOptions,
     };
     this.#eventBus = eventBus || null;
     this.#centralErrorHandler = null;
@@ -252,7 +255,11 @@ export default class MonitoringCoordinator {
    * @param {object} recoveryStrategyManager - Recovery strategy manager
    * @param {object} errorReporter - Error reporter
    */
-  injectErrorHandlers(centralErrorHandler, recoveryStrategyManager, errorReporter) {
+  injectErrorHandlers(
+    centralErrorHandler,
+    recoveryStrategyManager,
+    errorReporter
+  ) {
     if (this.#errorHandlersInjected) {
       this.#logger.warn('Error handlers already injected');
       return;
@@ -280,27 +287,29 @@ export default class MonitoringCoordinator {
     this.#recoveryStrategyManager.registerStrategy('PerformanceError', {
       retry: {
         maxRetries: 2,
-        backoff: 'exponential'
+        backoff: 'exponential',
       },
       fallback: (error, operation) => {
-        this.#logger.warn('Performance monitoring failed, returning default metrics');
+        this.#logger.warn(
+          'Performance monitoring failed, returning default metrics'
+        );
         return {
           totalOperations: 0,
           averageTime: 0,
-          maxTime: 0
+          maxTime: 0,
         };
-      }
+      },
     });
 
     this.#recoveryStrategyManager.registerStrategy('CircuitBreakerError', {
       retry: {
         maxRetries: 1,
-        backoff: 'constant'
+        backoff: 'constant',
       },
       fallback: (error, operation) => {
         this.#logger.warn('Circuit breaker operation failed, allowing request');
         return { allowed: true, fallback: true };
-      }
+      },
     });
 
     // Listen for error events to track in monitoring
@@ -310,7 +319,9 @@ export default class MonitoringCoordinator {
       });
     }
 
-    this.#logger.info('Error handling integration established in MonitoringCoordinator');
+    this.#logger.info(
+      'Error handling integration established in MonitoringCoordinator'
+    );
   }
 
   /**
@@ -335,7 +346,10 @@ export default class MonitoringCoordinator {
     if (errorInfo.severity === 'critical') {
       this.#addAlert('error', `Critical error: ${errorInfo.message}`);
     } else if (errorInfo.severity === 'error') {
-      this.#addAlert('warning', `Error occurred: ${errorInfo.errorType || 'unknown'}`);
+      this.#addAlert(
+        'warning',
+        `Error occurred: ${errorInfo.errorType || 'unknown'}`
+      );
     }
   }
 
@@ -368,10 +382,13 @@ export default class MonitoringCoordinator {
 
   incrementValidationPipelineHealth(issue = 'unknown') {
     this.#validationPipelineHealth += 1;
-    this.#logger.debug('MonitoringCoordinator: validation pipeline guard increment', {
-      issue,
-      total: this.#validationPipelineHealth,
-    });
+    this.#logger.debug(
+      'MonitoringCoordinator: validation pipeline guard increment',
+      {
+        issue,
+        total: this.#validationPipelineHealth,
+      }
+    );
   }
 
   /**
@@ -388,7 +405,12 @@ export default class MonitoringCoordinator {
 
       const circuitBreaker = new CircuitBreaker({
         logger: this.#logger,
-        options: { ...this.#defaultCircuitBreakerOptions, ...serviceConfig, ...options, name },
+        options: {
+          ...this.#defaultCircuitBreakerOptions,
+          ...serviceConfig,
+          ...options,
+          name,
+        },
       });
       this.#circuitBreakers.set(name, circuitBreaker);
       this.#logger.debug(`Created circuit breaker: ${name}`);
@@ -438,7 +460,7 @@ export default class MonitoringCoordinator {
           return await this.#centralErrorHandler.handle(error, {
             operation: operationName,
             context,
-            monitoring: true
+            monitoring: true,
           });
         }
         throw error;
@@ -459,7 +481,7 @@ export default class MonitoringCoordinator {
               errorType: 'CircuitBreakerError',
               maxRetries: 1,
               useCircuitBreaker: false, // Don't use CB in recovery
-              useFallback: true
+              useFallback: true,
             }
           );
         }
@@ -557,18 +579,25 @@ export default class MonitoringCoordinator {
       };
 
       if (this.#memoryPressureManager) {
-        memoryStats.managementHistory = this.#memoryPressureManager.getManagementHistory(5);
+        memoryStats.managementHistory =
+          this.#memoryPressureManager.getManagementHistory(5);
       }
     }
 
     // Add error metrics if available
     let errorStats = null;
-    if (this.#centralErrorHandler && typeof this.#centralErrorHandler.getMetrics === 'function') {
+    if (
+      this.#centralErrorHandler &&
+      typeof this.#centralErrorHandler.getMetrics === 'function'
+    ) {
       errorStats = this.#centralErrorHandler.getMetrics();
     }
 
     let errorReports = null;
-    if (this.#errorReporter && typeof this.#errorReporter.getTopErrors === 'function') {
+    if (
+      this.#errorReporter &&
+      typeof this.#errorReporter.getTopErrors === 'function'
+    ) {
       errorReports = this.#errorReporter.getTopErrors(5);
     }
 
@@ -587,7 +616,7 @@ export default class MonitoringCoordinator {
       ...baseStats,
       errors: errorStats,
       topErrors: errorReports,
-      healthStatus: this.#calculateHealthStatus(baseStats, errorStats)
+      healthStatus: this.#calculateHealthStatus(baseStats, errorStats),
     };
   }
 
@@ -656,9 +685,15 @@ export default class MonitoringCoordinator {
 
     // Check pressure level
     if (pressureLevel === 'critical') {
-      this.#addAlert('error', `Critical memory pressure: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`);
+      this.#addAlert(
+        'error',
+        `Critical memory pressure: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`
+      );
     } else if (pressureLevel === 'warning') {
-      this.#addAlert('warning', `High memory usage: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`);
+      this.#addAlert(
+        'warning',
+        `High memory usage: ${(usage.usagePercent * 100).toFixed(1)}% heap usage`
+      );
     }
 
     // Check for memory leaks
@@ -796,7 +831,9 @@ export default class MonitoringCoordinator {
       if (usage) {
         report.push(`  Heap Usage: ${(usage.usagePercent * 100).toFixed(1)}%`);
         report.push(`  Heap Used: ${(usage.heapUsed / 1048576).toFixed(2)}MB`);
-        report.push(`  Heap Total: ${(usage.heapTotal / 1048576).toFixed(2)}MB`);
+        report.push(
+          `  Heap Total: ${(usage.heapTotal / 1048576).toFixed(2)}MB`
+        );
         if (usage.rss) {
           report.push(`  RSS: ${(usage.rss / 1048576).toFixed(2)}MB`);
         }
@@ -889,13 +926,17 @@ export default class MonitoringCoordinator {
     if (monitoringStats.performance.averageOperationTime > 100) {
       score -= 10;
     }
-    if (monitoringStats.performance.slowOperations > monitoringStats.performance.totalOperations * 0.1) {
+    if (
+      monitoringStats.performance.slowOperations >
+      monitoringStats.performance.totalOperations * 0.1
+    ) {
       score -= 15;
     }
 
     // Deduct for circuit breaker issues
-    const openCircuits = Object.values(monitoringStats.circuitBreakers)
-      .filter(cb => cb.state === 'OPEN').length;
+    const openCircuits = Object.values(monitoringStats.circuitBreakers).filter(
+      (cb) => cb.state === 'OPEN'
+    ).length;
     score -= openCircuits * 10;
 
     // Deduct for memory issues
@@ -907,9 +948,11 @@ export default class MonitoringCoordinator {
 
     // Deduct for error rates
     if (errorStats) {
-      const errorRate = errorStats.totalErrors > 0
-        ? (errorStats.totalErrors - errorStats.recoveredErrors) / errorStats.totalErrors
-        : 0;
+      const errorRate =
+        errorStats.totalErrors > 0
+          ? (errorStats.totalErrors - errorStats.recoveredErrors) /
+            errorStats.totalErrors
+          : 0;
       score -= Math.round(errorRate * 30);
     }
 
@@ -920,8 +963,8 @@ export default class MonitoringCoordinator {
         performance: monitoringStats.performance.averageOperationTime,
         circuitBreakers: openCircuits,
         memory: monitoringStats.memory?.pressureLevel || 'normal',
-        errorRate: errorStats ? errorStats.totalErrors : 0
-      }
+        errorRate: errorStats ? errorStats.totalErrors : 0,
+      },
     };
   }
 

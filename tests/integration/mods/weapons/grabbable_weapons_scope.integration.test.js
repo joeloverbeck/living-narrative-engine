@@ -60,7 +60,9 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
     jest.clearAllMocks();
 
     // Import mocked functions
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
     mockGetHeldItems = grabbingUtils.getHeldItems;
 
@@ -240,7 +242,9 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
     test('should exclude weapons already being held', () => {
       // Actor has 2 free hands but sword is already held
       mockCountFreeGrabbingAppendages.mockReturnValue(2);
-      mockGetHeldItems.mockReturnValue([{ itemId: 'sword-1', appendageId: 'right-hand' }]);
+      mockGetHeldItems.mockReturnValue([
+        { itemId: 'sword-1', appendageId: 'right-hand' },
+      ]);
 
       const sword = createEntityInstance('sword-1', {
         'weapons:weapon': { damage: 10 },
@@ -598,7 +602,9 @@ describe('weapons:grabbable_weapons_in_inventory scope', () => {
     test('should hide weapon that actor is currently wielding', () => {
       mockCountFreeGrabbingAppendages.mockReturnValue(2);
       // Actor is holding sword-1
-      mockGetHeldItems.mockReturnValue([{ itemId: 'sword-1', appendageId: 'right-hand' }]);
+      mockGetHeldItems.mockReturnValue([
+        { itemId: 'sword-1', appendageId: 'right-hand' },
+      ]);
 
       const sword = createEntityInstance('sword-1', {
         'weapons:weapon': { damage: 10 },

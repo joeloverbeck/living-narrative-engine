@@ -19,7 +19,10 @@ import express from 'express';
 
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import HttpAgentService from '../../src/services/httpAgentService.js';
-import { getAppConfigService, resetAppConfigServiceInstance } from '../../src/config/appConfig.js';
+import {
+  getAppConfigService,
+  resetAppConfigServiceInstance,
+} from '../../src/config/appConfig.js';
 
 const ORIGINAL_NODE_ENV = process.env.NODE_ENV;
 const ORIGINAL_HTTP_AGENT_ENABLED = process.env.HTTP_AGENT_ENABLED;
@@ -117,11 +120,15 @@ describe('HttpAgentService adaptive cleanup disabled integration', () => {
 
     const slowUrl = `http://127.0.0.1:${port}/slow`;
     const activeRequest = new Promise((resolve, reject) => {
-      const req = http.request(slowUrl, { agent: service.getAgent(slowUrl), method: 'GET' }, (res) => {
-        res.setEncoding('utf8');
-        res.on('data', () => {});
-        res.on('end', resolve);
-      });
+      const req = http.request(
+        slowUrl,
+        { agent: service.getAgent(slowUrl), method: 'GET' },
+        (res) => {
+          res.setEncoding('utf8');
+          res.on('data', () => {});
+          res.on('end', resolve);
+        }
+      );
       req.on('error', reject);
       req.end();
     });
@@ -138,7 +145,9 @@ describe('HttpAgentService adaptive cleanup disabled integration', () => {
     await new Promise((resolve) => setImmediate(resolve));
 
     const statsAfterReuse = service.getStats();
-    expect(statsAfterReuse.agentDetails[0].freeSockets).toBeGreaterThanOrEqual(1);
+    expect(statsAfterReuse.agentDetails[0].freeSockets).toBeGreaterThanOrEqual(
+      1
+    );
 
     const enhancedStats = service.getEnhancedStats();
     expect(enhancedStats.adaptiveCleanup.enabled).toBe(false);

@@ -5,7 +5,14 @@
  * Updated to use ChanceCalculationService instead of individual skill/probability services.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ActionFormattingStage } from '../../../../src/actions/pipeline/stages/ActionFormattingStage.js';
 
 describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage', () => {
@@ -146,7 +153,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       );
 
       // Verify service was called with correct parameters
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'target-1',
         actionDef,
@@ -185,7 +194,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'target-1',
         actionDef,
@@ -235,7 +246,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Service was called
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalled();
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalled();
 
       // Formatted template should be set (original actionDef.template unchanged for cache safety)
       expect(context.actionsWithTargets[0].formattedTemplate).toBe(
@@ -276,7 +289,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       );
 
       // Service should NOT be called since no placeholder
-      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -303,7 +318,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'walk to {target} ({chance}% chance)'
       );
 
-      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).not.toHaveBeenCalled();
     });
 
     it('should not modify template when chanceBased.enabled is false', async () => {
@@ -331,7 +348,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         'swing at {target} ({chance}% chance)'
       );
 
-      expect(mockChanceCalculationService.calculateForDisplay).not.toHaveBeenCalled();
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -405,7 +424,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should use resolvedTargets.primary, not targetContexts
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'resolved-target-1',
         actionDef,
@@ -452,7 +473,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should use targetContexts fallback
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'fallback-target',
         actionDef,
@@ -492,7 +515,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Service receives actionDef which contains the formula and bounds
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'target-1',
         actionDef,
@@ -522,8 +547,14 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
         id: 'weapons:swing_at_target',
         template: 'swing {weapon} at {target} ({chance}% chance)',
         targets: {
-          primary: { scope: 'weapons:wielded_cutting_weapons', placeholder: 'weapon' },
-          secondary: { scope: 'core:actors_in_location', placeholder: 'target' },
+          primary: {
+            scope: 'weapons:wielded_cutting_weapons',
+            placeholder: 'weapon',
+          },
+          secondary: {
+            scope: 'core:actors_in_location',
+            placeholder: 'target',
+          },
         },
         chanceBased: {
           enabled: true,
@@ -561,7 +592,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should use secondary target (bertram-id), not primary (rapier-weapon-id)
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'vespera-id',
         targetId: 'bertram-id', // Secondary target, not the weapon
         actionDef,
@@ -614,7 +647,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should default to secondary target
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'character-target-id', // Secondary, not primary
         actionDef,
@@ -667,7 +702,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should use primary target as specified
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'mage-id',
         targetId: 'magic-sword-id', // Primary target
         actionDef,
@@ -720,7 +757,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should fall back to primary
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'actor-1',
         targetId: 'primary-target-id', // Fallback to primary
         actionDef,
@@ -774,7 +813,9 @@ describe('swingAtTargetChanceDisplay - Chance Injection in ActionFormattingStage
       await stage.executeInternal(context);
 
       // Assert - Should use tertiary target
-      expect(mockChanceCalculationService.calculateForDisplay).toHaveBeenCalledWith({
+      expect(
+        mockChanceCalculationService.calculateForDisplay
+      ).toHaveBeenCalledWith({
         actorId: 'mage-id',
         targetId: 'magic-focus-id', // Tertiary target
         actionDef,
@@ -850,7 +891,7 @@ describe('DIAGNOSTIC: generateCombinations with REAL ChanceCalculationService', 
   function createEntityManagerWithSkills(entitySkills) {
     return {
       hasComponent: jest.fn((entityId, componentId) => {
-        return !!(entitySkills[entityId]?.[componentId]);
+        return !!entitySkills[entityId]?.[componentId];
       }),
       getComponentData: jest.fn((entityId, componentId) => {
         return entitySkills[entityId]?.[componentId] ?? null;

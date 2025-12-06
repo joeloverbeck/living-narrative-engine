@@ -122,7 +122,14 @@ class ChanceCalculationService {
    * @param {object} params.actionDef - Action definition with chanceBased config
    * @returns {DisplayResult}
    */
-  calculateForDisplay({ actorId, targetId, primaryTargetId, secondaryTargetId, tertiaryTargetId, actionDef }) {
+  calculateForDisplay({
+    actorId,
+    targetId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+    actionDef,
+  }) {
     // Support legacy targetId parameter (backward compatibility)
     const resolvedPrimaryTargetId = primaryTargetId ?? targetId;
     this.#logger.debug(
@@ -227,7 +234,15 @@ class ChanceCalculationService {
    * @param {number} [params.forcedRoll] - For testing determinism (1-100)
    * @returns {OutcomeResult}
    */
-  resolveOutcome({ actorId, targetId, primaryTargetId, secondaryTargetId, tertiaryTargetId, actionDef, forcedRoll }) {
+  resolveOutcome({
+    actorId,
+    targetId,
+    primaryTargetId,
+    secondaryTargetId,
+    tertiaryTargetId,
+    actionDef,
+    forcedRoll,
+  }) {
     this.#logger.debug(
       `ChanceCalculationService: Resolving outcome for ${actionDef?.id ?? 'unknown'}`
     );
@@ -299,7 +314,10 @@ class ChanceCalculationService {
     }
 
     return modifiers
-      .filter((mod) => mod.tag && typeof mod.tag === 'string' && mod.tag.trim().length > 0)
+      .filter(
+        (mod) =>
+          mod.tag && typeof mod.tag === 'string' && mod.tag.trim().length > 0
+      )
       .map((mod) => mod.tag);
   }
 }

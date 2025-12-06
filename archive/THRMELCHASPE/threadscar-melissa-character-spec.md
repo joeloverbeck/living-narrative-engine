@@ -22,9 +22,11 @@
 ## Character Concept
 
 ### Source Material
+
 Based on brainstorming document: `brainstorming/threadscar_melissa.md`
 
 ### Core Identity
+
 **Name**: "Threadscar" Melissa
 **Nickname Origin**: From the distinctive scar tissue patterns across her body
 **Occupation**: Veteran mercenary, professional soldier
@@ -33,6 +35,7 @@ Based on brainstorming document: `brainstorming/threadscar_melissa.md`
 ### Physical Description
 
 #### Overall Presence
+
 - **Height**: 5'11" - tall, imposing presence
 - **Build**: "Built like a siege weapon that's been maintained through decades of use"
   - Not bulky, but dense
@@ -42,6 +45,7 @@ Based on brainstorming document: `brainstorming/threadscar_melissa.md`
 - **Aging**: Violence ages differently - weathered, scarred, functional
 
 #### Key Physical Traits
+
 - **Body Type**: Dense, lean muscle - functional combat build
 - **Skin**: Weathered tan, extensive scar tissue
 - **Scars**: Visible history of violence across arms, torso, potentially face
@@ -49,9 +53,11 @@ Based on brainstorming document: `brainstorming/threadscar_melissa.md`
 - **Aesthetic**: Practical over decorative, maintained but not pampered
 
 ### Character Archetype
+
 Battle-hardened professional who has survived decades of combat through skill, pragmatism, and sheer durability. Every scar tells a story; every movement is economical. This is someone built by violence and maintained through discipline.
 
 ### Thematic Elements
+
 - **Survival over style**: Practical choices in all things
 - **Visible history**: Scars as narrative, body as ledger of violence
 - **Functional strength**: Dense, efficient muscle - not for show
@@ -63,6 +69,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Anatomy Recipe Specification
 
 ### Recipe File
+
 **Location**: `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`
 **Recipe ID**: `fantasy:threadscar_melissa_recipe`
 **Blueprint**: `anatomy:human_female`
@@ -84,14 +91,14 @@ Battle-hardened professional who has survived decades of combat through skill, p
 
 #### Descriptor Rationale
 
-| Descriptor | Value | Justification |
-|------------|-------|---------------|
-| **height** | `tall` | 5'11" places her in tall category (enum value from registry) |
-| **skinColor** | `weathered tan` | Sun-exposed, outdoor life, combat veteran (free-form string) |
-| **build** | `muscular` | Dense, functional muscle from decades of combat (enum value) |
-| **composition** | `lean` | Efficient, no excess - "dense" aesthetic (enum value) |
-| **hairDensity** | `light` | Minimal body hair, practical (enum value) |
-| **smell** | `sweat and leather` | Functional, combat-oriented (free-form string) |
+| Descriptor      | Value               | Justification                                                |
+| --------------- | ------------------- | ------------------------------------------------------------ |
+| **height**      | `tall`              | 5'11" places her in tall category (enum value from registry) |
+| **skinColor**   | `weathered tan`     | Sun-exposed, outdoor life, combat veteran (free-form string) |
+| **build**       | `muscular`          | Dense, functional muscle from decades of combat (enum value) |
+| **composition** | `lean`              | Efficient, no excess - "dense" aesthetic (enum value)        |
+| **hairDensity** | `light`             | Minimal body hair, practical (enum value)                    |
+| **smell**       | `sweat and leather` | Functional, combat-oriented (free-form string)               |
 
 ### Anatomy Slots Configuration
 
@@ -269,12 +276,14 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ### New Parts to Create
 
 #### 1. Female Muscular Scarred Torso
+
 **File**: `data/mods/anatomy/entities/definitions/human_female_torso_muscular_scarred.entity.json`
 **Entity ID**: `anatomy:human_female_torso_muscular_scarred`
 
 **Rationale**: No existing female torso entity combines `muscular` build with `scarred` texture. Essential for Melissa's battle-hardened aesthetic.
 
 **JSON Structure**:
+
 ```json
 {
   "$schema": "http://example.com/schemas/entity-definition.schema.json",
@@ -303,12 +312,14 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **Dependencies**:
+
 - Schema: `entity-definition.schema.json`
 - Components: `anatomy:part`, `descriptors:build`, `descriptors:texture`, `descriptors:composition`, `core:name`, `core:description`
 
 ### Existing Parts to Use
 
 #### From patrol/anatomy mods:
+
 1. **humanoid_arm_scarred.entity.json** ✅
    - ID: `anatomy:humanoid_arm_scarred`
    - Already exists with `texture: scarred`
@@ -351,6 +362,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ### Optional Future Parts
 
 **Scarred Leg Variant** (not critical, can use texture override):
+
 - `anatomy:human_leg_muscular_scarred.entity.json`
 - Would combine muscular build with scarred texture for thematic consistency
 - Current solution: Use `human_leg_muscular` with potential texture override if needed
@@ -360,11 +372,13 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Clothing & Equipment
 
 ### Clothing Philosophy
+
 **Practical over decorative**: Everything serves a function. No ornamental items. Battle-tested, maintained gear.
 
 ### Equipment List
 
 #### Underwear Layer
+
 1. **Graphite Wool Briefs**
    - Entity: `clothing:graphite_wool_briefs`
    - Material: Wool
@@ -382,6 +396,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
    - Slot: `torso_upper`
 
 #### Base Layer
+
 3. **Shale Gray Nylon Field Pants**
    - Entity: `clothing:shale_gray_nylon_field_pants`
    - Material: Nylon
@@ -401,6 +416,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
    - Thematic: Matches character's scarred aesthetic
 
 #### Accessories Layer
+
 5. **Black Tactical Work Belt**
    - Entity: `clothing:black_tactical_work_belt`
    - Material: Nylon
@@ -411,6 +427,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
    - Special: Has `clothing:blocks_removal` component (secures pants)
 
 #### Footwear
+
 6. **Dark Gray Wool Boot Socks**
    - Entity: `clothing:dark_gray_wool_boot_socks`
    - Material: Wool
@@ -429,6 +446,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
    - Properties: Waterproof, breathable
 
 ### Clothing Rationale
+
 - **Color Palette**: Grays, blacks, earth tones - practical camouflage, hides dirt
 - **Materials**: Nylon, wool, leather - durable, functional, low-maintenance
 - **No Frills**: Zero decorative items, no jewelry, no embellishments
@@ -441,6 +459,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Character Definition Components
 
 ### File Structure
+
 **Location**: `data/mods/fantasy/entities/definitions/threadscar_melissa.character.json`
 **Entity ID**: `fantasy:threadscar_melissa`
 **Schema**: `entity-definition.schema.json`
@@ -450,6 +469,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 #### 1. Basic Identity Components
 
 **core:name**
+
 ```json
 {
   "core:name": {
@@ -459,6 +479,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:portrait**
+
 ```json
 {
   "core:portrait": {
@@ -467,9 +488,11 @@ Battle-hardened professional who has survived decades of combat through skill, p
   }
 }
 ```
-*Note: Portrait image file would need to be created separately*
+
+_Note: Portrait image file would need to be created separately_
 
 **core:apparent_age**
+
 ```json
 {
   "core:apparent_age": {
@@ -478,11 +501,13 @@ Battle-hardened professional who has survived decades of combat through skill, p
   }
 }
 ```
-*Rationale: "Early forties, though violence ages you differently—could pass for thirty-five in certain light, fifty in others."*
+
+_Rationale: "Early forties, though violence ages you differently—could pass for thirty-five in certain light, fifty in others."_
 
 #### 2. Narrative Components
 
 **core:profile** (Summary)
+
 ```json
 {
   "core:profile": {
@@ -492,6 +517,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:personality**
+
 ```json
 {
   "core:personality": {
@@ -501,6 +527,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:strengths**
+
 ```json
 {
   "core:strengths": {
@@ -510,6 +537,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:weaknesses**
+
 ```json
 {
   "core:weaknesses": {
@@ -519,6 +547,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:likes**
+
 ```json
 {
   "core:likes": {
@@ -528,6 +557,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:dislikes**
+
 ```json
 {
   "core:dislikes": {
@@ -537,6 +567,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:fears**
+
 ```json
 {
   "core:fears": {
@@ -546,6 +577,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:goals**
+
 ```json
 {
   "core:goals": {
@@ -568,6 +600,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:secrets**
+
 ```json
 {
   "core:secrets": {
@@ -577,6 +610,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:internal_tensions**
+
 ```json
 {
   "core:internal_tensions": {
@@ -586,6 +620,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:motivations**
+
 ```json
 {
   "core:motivations": {
@@ -595,6 +630,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:dilemmas**
+
 ```json
 {
   "core:dilemmas": {
@@ -606,6 +642,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 #### 3. Speech Patterns Component
 
 **core:speech_patterns**
+
 ```json
 {
   "core:speech_patterns": {
@@ -633,6 +670,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 #### 4. Anatomy Component
 
 **anatomy:body**
+
 ```json
 {
   "anatomy:body": {
@@ -644,6 +682,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 #### 5. System Components
 
 **core:perception_log**
+
 ```json
 {
   "core:perception_log": {
@@ -654,6 +693,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:actor**
+
 ```json
 {
   "core:actor": {}
@@ -661,6 +701,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ```
 
 **core:player_type**
+
 ```json
 {
   "core:player_type": {
@@ -672,6 +713,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 #### 6. Notes Component
 
 **core:notes**
+
 ```json
 {
   "core:notes": {
@@ -736,6 +778,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Implementation Checklist
 
 ### Phase 1: Anatomy Part Creation
+
 - [ ] Create `human_female_torso_muscular_scarred.entity.json`
   - [ ] Define correct schema reference
   - [ ] Set entity ID: `anatomy:human_female_torso_muscular_scarred`
@@ -743,6 +786,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
   - [ ] Validate against entity-definition schema
 
 ### Phase 2: Recipe Creation
+
 - [ ] Create `threadscar_melissa.recipe.json`
   - [ ] Set recipe ID: `fantasy:threadscar_melissa_recipe`
   - [ ] Set blueprint: `anatomy:human_female`
@@ -753,6 +797,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
   - [ ] Validate schema compliance
 
 ### Phase 3: Character Definition Creation
+
 - [ ] Create `threadscar_melissa.character.json`
   - [ ] Set entity ID: `fantasy:threadscar_melissa`
   - [ ] Add core:name component
@@ -779,17 +824,20 @@ Battle-hardened professional who has survived decades of combat through skill, p
   - [ ] Validate against schema
 
 ### Phase 4: Optional Instance File
+
 - [ ] Create `threadscar_melissa.character.json` instance file
   - [ ] Based on definition file
   - [ ] Initialize any dynamic components
   - [ ] Place in `data/mods/fantasy/entities/instances/`
 
 ### Phase 5: Mod Manifest Update
+
 - [ ] Update `data/mods/fantasy/mod-manifest.json`
   - [ ] Verify character appears in entity lists (if applicable)
   - [ ] No explicit registration needed (entity loader handles discovery)
 
 ### Phase 6: Portrait Asset
+
 - [ ] Create portrait image: `data/mods/fantasy/portraits/threadscar_melissa.png`
   - [ ] Battle-scarred female mercenary appearance
   - [ ] Visible scar tissue
@@ -802,13 +850,16 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Validation Requirements
 
 ### Schema Validation
+
 1. **Anatomy Part Entity**
+
    ```bash
    npm run validate
    # Should validate human_female_torso_muscular_scarred.entity.json
    ```
 
 2. **Recipe Validation**
+
    ```bash
    npm run validate:recipe threadscar_melissa
    # Should validate recipe structure, slots, patterns, clothing references
@@ -823,6 +874,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ### Manual Validation Checklist
 
 #### Recipe Structure
+
 - [ ] Recipe ID follows `modId:identifier` format
 - [ ] Blueprint ID exists (`anatomy:human_female`)
 - [ ] All body descriptors use valid enum values OR are free-form where allowed
@@ -833,6 +885,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
 - [ ] No conflicting properties
 
 #### Character Definition
+
 - [ ] Entity ID follows `modId:identifier` format
 - [ ] All component schemas exist
 - [ ] All component data validates against schemas
@@ -842,12 +895,14 @@ Battle-hardened professional who has survived decades of combat through skill, p
 - [ ] No missing required components
 
 #### Cross-References
+
 - [ ] Recipe references anatomy part: `anatomy:human_female_torso_muscular_scarred` (must exist)
 - [ ] Character references recipe: `fantasy:threadscar_melissa_recipe` (must exist)
 - [ ] All clothing items exist in clothing mod
 - [ ] Portrait path corresponds to actual image file (when created)
 
 ### Functional Testing
+
 1. **Recipe Instantiation**
    - Load game with fantasy mod active
    - Verify recipe can instantiate body
@@ -867,6 +922,7 @@ Battle-hardened professional who has survived decades of combat through skill, p
    - Validate clothing renders correctly
 
 ### Error Scenarios to Test
+
 - [ ] Missing anatomy part entity (should fail validation)
 - [ ] Invalid descriptor enum value (should fail validation)
 - [ ] Non-existent clothing item (should fail validation)
@@ -878,7 +934,9 @@ Battle-hardened professional who has survived decades of combat through skill, p
 ## Notes for Implementation
 
 ### Design Philosophy
+
 This character represents:
+
 - **Survival through competence**: Skill, discipline, routine over flash
 - **Visible history**: Scars as narrative, body as ledger
 - **Functional aesthetics**: Everything serves a purpose
@@ -886,7 +944,9 @@ This character represents:
 - **Emotional isolation**: Professional detachment as identity
 
 ### Narrative Integration
+
 Melissa provides:
+
 - **Military expertise**: Tactical assessment, combat knowledge
 - **Pragmatic perspective**: Direct, unsentimental viewpoint
 - **Mentorship potential**: Training younger characters
@@ -894,6 +954,7 @@ Melissa provides:
 - **Aging narrative**: Confronting physical decline, approaching end
 
 ### Contrast with Vespera
+
 - **Vespera**: Performative, chaotic, artistic, psychologically complex
 - **Melissa**: Direct, disciplined, functional, emotionally detached
 - **Vespera**: Chases transcendence through danger and art
@@ -904,6 +965,7 @@ Melissa provides:
 Both are professionals defined by their crafts, both isolated, both questioning their humanity—but through opposite lenses.
 
 ### Future Expansion Possibilities
+
 - Backstory events (the "Threadscar incident")
 - Training scenarios (teaching combat to others)
 - Retirement arc (transitioning out of combat)
@@ -916,6 +978,7 @@ Both are professionals defined by their crafts, both isolated, both questioning 
 ## Appendix: Reference Files
 
 ### Key Reference Documents
+
 1. **Character Concept**: `brainstorming/threadscar_melissa.md`
 2. **Template Character**: `data/mods/fantasy/entities/definitions/vespera_nightwhisper.character.json`
 3. **Template Recipe**: `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json`
@@ -923,11 +986,13 @@ Both are professionals defined by their crafts, both isolated, both questioning 
 5. **Body Descriptor Registry**: `src/anatomy/registries/bodyDescriptorRegistry.js`
 
 ### Schema Locations
+
 - Entity Definition: `data/schemas/entity-definition.schema.json`
 - Anatomy Recipe: `data/schemas/anatomy.recipe.schema.json`
 - Component Schemas: `data/schemas/components/*.schema.json`
 
 ### Relevant Documentation
+
 - CLAUDE.md: Project guidelines, ECS architecture, testing requirements
 - Body Descriptors: `docs/anatomy/body-descriptors-complete.md`
 - Mod Testing Guide: `docs/testing/mod-testing-guide.md`
@@ -937,4 +1002,4 @@ Both are professionals defined by their crafts, both isolated, both questioning 
 
 **End of Specification**
 
-*This specification provides complete implementation guidance for creating 'Threadscar' Melissa character. All JSON structures, component values, and validation requirements are defined. Ready for implementation phase.*
+_This specification provides complete implementation guidance for creating 'Threadscar' Melissa character. All JSON structures, component values, and validation requirements are defined. Ready for implementation phase._

@@ -71,8 +71,7 @@ describe('deference:stand_up perceptible event fix', () => {
     );
     const commonSchema = JSON.parse(fs.readFileSync(commonSchemaPath, 'utf-8'));
     ajv.addSchema(commonSchema, commonSchema.$id);
-    perceptionTypeEnum =
-      commonSchema.definitions?.perceptionType?.enum ?? [];
+    perceptionTypeEnum = commonSchema.definitions?.perceptionType?.enum ?? [];
 
     validatePerceptibleEvent = ajv.compile(
       perceptibleEventSchema.payloadSchema

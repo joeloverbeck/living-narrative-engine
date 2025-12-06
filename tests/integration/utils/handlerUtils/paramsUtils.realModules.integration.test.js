@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   assertParamsObject,
   validateStringParam,
@@ -39,7 +46,8 @@ describe('handlerUtils/paramsUtils real module integration', () => {
     repository = new GameDataRepository(registry, logger);
 
     schemaValidator = {
-      isSchemaLoaded: (schemaId) => schemaId === `${SYSTEM_ERROR_OCCURRED_ID}#payload`,
+      isSchemaLoaded: (schemaId) =>
+        schemaId === `${SYSTEM_ERROR_OCCURRED_ID}#payload`,
       validate: (schemaId, payload) => ({
         isValid:
           schemaId === `${SYSTEM_ERROR_OCCURRED_ID}#payload` &&
@@ -121,14 +129,21 @@ describe('handlerUtils/paramsUtils real module integration', () => {
     await flushAsync();
 
     expect(received).toHaveLength(1);
-    expect(received[0].message).toContain('DispatchOp: params missing or invalid.');
+    expect(received[0].message).toContain(
+      'DispatchOp: params missing or invalid.'
+    );
     expect(received[0].details).toEqual({ params: null });
 
     unsubscribe?.();
   });
 
   it('validates string parameters and trims values when valid', () => {
-    const trimmed = validateStringParam('  hello  ', 'greeting', logger, safeDispatcher);
+    const trimmed = validateStringParam(
+      '  hello  ',
+      'greeting',
+      logger,
+      safeDispatcher
+    );
     expect(trimmed).toBe('hello');
   });
 
@@ -157,9 +172,8 @@ describe('handlerUtils/paramsUtils real module integration', () => {
     const result = validateStringParam('', 'nickname', logger, null);
     expect(result).toBeNull();
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Invalid "nickname" parameter',
-      { nickname: '' }
-    );
+    expect(warnSpy).toHaveBeenCalledWith('Invalid "nickname" parameter', {
+      nickname: '',
+    });
   });
 });

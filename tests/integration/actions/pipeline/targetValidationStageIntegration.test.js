@@ -3,7 +3,14 @@
  * @see src/actions/pipeline/stages/TargetComponentValidationStage.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TargetComponentValidationStage } from '../../../../src/actions/pipeline/stages/TargetComponentValidationStage.js';
 import { TargetComponentValidator } from '../../../../src/actions/validation/TargetComponentValidator.js';
 import { Pipeline } from '../../../../src/actions/pipeline/Pipeline.js';
@@ -16,7 +23,7 @@ import { createMockTargetRequiredComponentsValidator } from '../../../common/moc
 // Helper function to create mocks
 const createMock = (name, methods) => {
   const mock = {};
-  methods.forEach(method => {
+  methods.forEach((method) => {
     mock[method] = jest.fn();
   });
   return mock;
@@ -36,20 +43,22 @@ describe('TargetComponentValidationStage Integration', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
-    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', ['buildErrorContext']);
+    mockErrorContextBuilder = createMock('IActionErrorContextBuilder', [
+      'buildErrorContext',
+    ]);
     mockEntityManager = createMock('IEntityManager', [
       'getEntityInstance',
       'hasComponent',
-      'getAllComponentTypesForEntity'
+      'getAllComponentTypesForEntity',
     ]);
 
     // Create real validator instance
     targetComponentValidator = new TargetComponentValidator({
       logger: mockLogger,
-      entityManager: mockEntityManager
+      entityManager: mockEntityManager,
     });
 
     // Create mock TargetRequiredComponentsValidator
@@ -61,14 +70,14 @@ describe('TargetComponentValidationStage Integration', () => {
       targetComponentValidator,
       targetRequiredComponentsValidator,
       logger: mockLogger,
-      actionErrorContextBuilder: mockErrorContextBuilder
+      actionErrorContextBuilder: mockErrorContextBuilder,
     });
 
     // Setup basic context
     context = {
       actor: { id: 'test-actor', components: ['core:actor'] },
       candidateActions: [],
-      trace: null
+      trace: null,
     };
   });
 
@@ -78,27 +87,32 @@ describe('TargetComponentValidationStage Integration', () => {
 
   describe('integration with ActionPipelineOrchestrator', () => {
     it('should integrate with pipeline flow correctly', async () => {
-      const mockActionIndex = createMock('ActionIndex', ['getCandidateActions']);
-      const mockPrerequisiteService = createMock('PrerequisiteEvaluationService', ['evaluatePrerequisites']);
+      const mockActionIndex = createMock('ActionIndex', [
+        'getCandidateActions',
+      ]);
+      const mockPrerequisiteService = createMock(
+        'PrerequisiteEvaluationService',
+        ['evaluatePrerequisites']
+      );
 
       // Setup mock responses
       const candidateActions = [
         {
           id: 'action-1',
           forbidden_components: { target: ['core:immobilized'] },
-          target_entity: { id: 'target-1' }
+          target_entity: { id: 'target-1' },
         },
         {
           id: 'action-2',
           forbidden_components: null,
-          target_entity: { id: 'target-2' }
-        }
+          target_entity: { id: 'target-2' },
+        },
       ];
 
       mockActionIndex.getCandidateActions.mockReturnValue(candidateActions);
       mockPrerequisiteService.evaluatePrerequisites.mockReturnValue({
         success: true,
-        errors: []
+        errors: [],
       });
 
       // Setup entity manager to return components
@@ -120,11 +134,10 @@ describe('TargetComponentValidationStage Integration', () => {
         mockLogger
       );
 
-      pipeline = new Pipeline([
-        componentStage,
-        prerequisiteStage,
-        validationStage
-      ], mockLogger);
+      pipeline = new Pipeline(
+        [componentStage, prerequisiteStage, validationStage],
+        mockLogger
+      );
 
       const result = await pipeline.execute(context);
 
@@ -142,30 +155,30 @@ describe('TargetComponentValidationStage Integration', () => {
         {
           id: 'positioning:kneel_beside',
           forbidden_components: {
-            target: ['positioning:kneeling', 'positioning:sitting']
+            target: ['positioning:kneeling', 'positioning:sitting'],
           },
           target_entity: {
             id: 'npc-1',
-            components: ['core:actor', 'positioning:standing']
-          }
+            components: ['core:actor', 'positioning:standing'],
+          },
         },
         {
           id: 'positioning:bend_over',
           forbidden_components: {
             primary: ['positioning:bent_over'],
-            secondary: ['positioning:lying_down']
+            secondary: ['positioning:lying_down'],
           },
           target_entities: {
             primary: {
               id: 'actor-1',
-              components: ['core:actor']
+              components: ['core:actor'],
             },
             secondary: {
               id: 'surface-1',
-              components: ['positioning:surface', 'positioning:lying_down']
-            }
-          }
-        }
+              components: ['positioning:surface', 'positioning:lying_down'],
+            },
+          },
+        },
       ];
 
       context.candidateActions = positioningActions;
@@ -182,7 +195,9 @@ describe('TargetComponentValidationStage Integration', () => {
       // First action should pass (target doesn't have forbidden components)
       // Second action should fail (secondary target has forbidden component)
       expect(result.data.candidateActions).toHaveLength(1);
-      expect(result.data.candidateActions[0].id).toBe('positioning:kneel_beside');
+      expect(result.data.candidateActions[0].id).toBe(
+        'positioning:kneel_beside'
+      );
     });
 
     it('should handle complex multi-target scenarios', async () => {
@@ -191,13 +206,13 @@ describe('TargetComponentValidationStage Integration', () => {
         forbidden_components: {
           primary: ['status:unconscious'],
           secondary: ['status:hostile'],
-          tertiary: ['core:locked']
+          tertiary: ['core:locked'],
         },
         target_entities: {
           primary: { id: 'actor-1' },
           secondary: { id: 'actor-2' },
-          tertiary: { id: 'container-1' }
-        }
+          tertiary: { id: 'container-1' },
+        },
       };
 
       context.candidateActions = [complexAction];
@@ -212,7 +227,9 @@ describe('TargetComponentValidationStage Integration', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.candidateActions).toHaveLength(1);
-      expect(result.data.candidateActions[0].id).toBe('complex:threeway_interaction');
+      expect(result.data.candidateActions[0].id).toBe(
+        'complex:threeway_interaction'
+      );
     });
   });
 
@@ -224,12 +241,16 @@ describe('TargetComponentValidationStage Integration', () => {
           PipelineResult.success({
             data: {
               candidateActions: [
-                { id: 'action-1', forbidden_components: { target: ['forbidden'] }, target_entity: { id: 'target-1' } },
-                { id: 'action-2', forbidden_components: null }
-              ]
-            }
+                {
+                  id: 'action-1',
+                  forbidden_components: { target: ['forbidden'] },
+                  target_entity: { id: 'target-1' },
+                },
+                { id: 'action-2', forbidden_components: null },
+              ],
+            },
           })
-        )
+        ),
       };
 
       const mockStage2 = {
@@ -238,19 +259,23 @@ describe('TargetComponentValidationStage Integration', () => {
           // Verify it received filtered actions
           expect(ctx.candidateActions).toHaveLength(1);
           expect(ctx.candidateActions[0].id).toBe('action-2');
-          return Promise.resolve(PipelineResult.success({ data: { candidateActions: ctx.candidateActions } }));
-        })
+          return Promise.resolve(
+            PipelineResult.success({
+              data: { candidateActions: ctx.candidateActions },
+            })
+          );
+        }),
       };
 
       // Mock entity manager for validation
-      mockEntityManager.getAllComponentTypesForEntity
-        .mockReturnValueOnce(['forbidden']); // action-1 target has forbidden component
+      mockEntityManager.getAllComponentTypesForEntity.mockReturnValueOnce([
+        'forbidden',
+      ]); // action-1 target has forbidden component
 
-      pipeline = new Pipeline([
-        mockStage1,
-        validationStage,
-        mockStage2
-      ], mockLogger);
+      pipeline = new Pipeline(
+        [mockStage1, validationStage, mockStage2],
+        mockLogger
+      );
 
       const result = await pipeline.execute(context);
 
@@ -259,23 +284,29 @@ describe('TargetComponentValidationStage Integration', () => {
     });
 
     it('should stop pipeline on validation failure', async () => {
-      const errorContext = { error: 'Validation error', stage: 'target_validation' };
+      const errorContext = {
+        error: 'Validation error',
+        stage: 'target_validation',
+      };
 
       mockErrorContextBuilder.buildErrorContext.mockReturnValue(errorContext);
 
       // Force an error in validation
       const errorStage = new TargetComponentValidationStage({
         targetComponentValidator: {
-          validateTargetComponents: () => { throw new Error('Validation error'); }
+          validateTargetComponents: () => {
+            throw new Error('Validation error');
+          },
         },
-        targetRequiredComponentsValidator: createMockTargetRequiredComponentsValidator(),
+        targetRequiredComponentsValidator:
+          createMockTargetRequiredComponentsValidator(),
         logger: mockLogger,
-        actionErrorContextBuilder: mockErrorContextBuilder
+        actionErrorContextBuilder: mockErrorContextBuilder,
       });
 
       const mockNextStage = {
         name: 'NextStage',
-        execute: jest.fn()
+        execute: jest.fn(),
       };
 
       pipeline = new Pipeline([errorStage, mockNextStage], mockLogger);
@@ -297,7 +328,7 @@ describe('TargetComponentValidationStage Integration', () => {
       const mockActionTraceFilter = {
         shouldTrace: jest.fn().mockReturnValue(true),
         getAllTracedActions: jest.fn().mockReturnValue([]),
-        isEnabled: jest.fn().mockReturnValue(true)
+        isEnabled: jest.fn().mockReturnValue(true),
       };
 
       const trace = new ActionAwareStructuredTrace({
@@ -306,8 +337,8 @@ describe('TargetComponentValidationStage Integration', () => {
         logger: mockLogger,
         context: {
           enableActionCapture: true,
-          maxDepth: 10
-        }
+          maxDepth: 10,
+        },
       });
 
       context.trace = trace;
@@ -315,8 +346,8 @@ describe('TargetComponentValidationStage Integration', () => {
         {
           id: 'traced-action',
           forbidden_components: { target: ['component'] },
-          target_entity: { id: 'target' }
-        }
+          target_entity: { id: 'target' },
+        },
       ];
 
       mockEntityManager.getAllComponentTypesForEntity.mockReturnValue([]);
@@ -340,14 +371,14 @@ describe('TargetComponentValidationStage Integration', () => {
       const mockSpan = {
         setAttribute: jest.fn(),
         setStatus: jest.fn(),
-        setError: jest.fn()
+        setError: jest.fn(),
       };
 
       const trace = {
         startSpan: jest.fn().mockReturnValue(mockSpan),
         endSpan: jest.fn(),
         step: jest.fn(),
-        success: jest.fn()
+        success: jest.fn(),
       };
 
       context.trace = trace;
@@ -369,21 +400,25 @@ describe('TargetComponentValidationStage Integration', () => {
   describe('performance under load', () => {
     it('should handle large action sets efficiently', async () => {
       // Generate 500 actions
-      const actions = Array(500).fill(null).map((_, i) => ({
-        id: `action-${i}`,
-        forbidden_components: {
-          target: i % 2 === 0 ? ['forbidden'] : []
-        },
-        target_entity: { id: `target-${i}` }
-      }));
+      const actions = Array(500)
+        .fill(null)
+        .map((_, i) => ({
+          id: `action-${i}`,
+          forbidden_components: {
+            target: i % 2 === 0 ? ['forbidden'] : [],
+          },
+          target_entity: { id: `target-${i}` },
+        }));
 
       context.candidateActions = actions;
 
       // Mock entity manager responses
-      mockEntityManager.getAllComponentTypesForEntity.mockImplementation((entityId) => {
-        const index = parseInt(entityId.split('-')[1]);
-        return index % 2 === 0 ? ['forbidden'] : [];
-      });
+      mockEntityManager.getAllComponentTypesForEntity.mockImplementation(
+        (entityId) => {
+          const index = parseInt(entityId.split('-')[1]);
+          return index % 2 === 0 ? ['forbidden'] : [];
+        }
+      );
 
       const startTime = performance.now();
       const result = await validationStage.executeInternal(context);
@@ -401,11 +436,13 @@ describe('TargetComponentValidationStage Integration', () => {
     it('should cache validation results within same execution', async () => {
       // Actions with same target entity
       const sharedTarget = { id: 'shared-target' };
-      const actions = Array(10).fill(null).map((_, i) => ({
-        id: `action-${i}`,
-        forbidden_components: { target: ['component'] },
-        target_entity: sharedTarget
-      }));
+      const actions = Array(10)
+        .fill(null)
+        .map((_, i) => ({
+          id: `action-${i}`,
+          forbidden_components: { target: ['component'] },
+          target_entity: sharedTarget,
+        }));
 
       context.candidateActions = actions;
 
@@ -416,7 +453,9 @@ describe('TargetComponentValidationStage Integration', () => {
       // Should be called once per unique entity, not per action
       // In this implementation, it's called for each action
       // but this test documents the current behavior
-      expect(mockEntityManager.getAllComponentTypesForEntity).toHaveBeenCalledTimes(10);
+      expect(
+        mockEntityManager.getAllComponentTypesForEntity
+      ).toHaveBeenCalledTimes(10);
     });
   });
 
@@ -425,7 +464,7 @@ describe('TargetComponentValidationStage Integration', () => {
       const actions = [
         { id: 'action-1', forbidden_components: { target: ['comp'] } },
         { id: 'action-2', forbidden_components: { target: ['comp'] } },
-        { id: 'action-3', forbidden_components: { target: ['comp'] } }
+        { id: 'action-3', forbidden_components: { target: ['comp'] } },
       ];
 
       context.candidateActions = actions;

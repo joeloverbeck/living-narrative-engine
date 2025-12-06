@@ -101,7 +101,13 @@ class TestPersistenceService {
 }
 
 class TestSessionManager {
-  constructor({ safeEventDispatcher, logger, engineState, prepareBehavior, finalizeBehavior }) {
+  constructor({
+    safeEventDispatcher,
+    logger,
+    engineState,
+    prepareBehavior,
+    finalizeBehavior,
+  }) {
     this.safeEventDispatcher = safeEventDispatcher;
     this.logger = logger;
     this.engineState = engineState;
@@ -114,14 +120,19 @@ class TestSessionManager {
   async prepareForLoadGameSession(saveIdentifier) {
     this.prepareCalls.push(saveIdentifier);
     if (this.prepareBehavior) {
-      return await this.prepareBehavior(saveIdentifier, this.safeEventDispatcher);
+      return await this.prepareBehavior(
+        saveIdentifier,
+        this.safeEventDispatcher
+      );
     }
     const shortName = saveIdentifier.split(/[\\/]/).pop() || saveIdentifier;
     await this.safeEventDispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
       titleMessage: `Loading ${shortName}...`,
       inputDisabledMessage: `Loading game from ${shortName}...`,
     });
-    this.logger.debug(`TestSessionManager.prepareForLoadGameSession: ${saveIdentifier}`);
+    this.logger.debug(
+      `TestSessionManager.prepareForLoadGameSession: ${saveIdentifier}`
+    );
     return undefined;
   }
 
@@ -214,7 +225,8 @@ function createEnvironment({
     ? new TestPersistenceService({ saveHandler, loadHandler })
     : null;
   const failureHandler =
-    loadFailureHandler ?? new LoadFailureHandler({ safeEventDispatcher, logger, engineState });
+    loadFailureHandler ??
+    new LoadFailureHandler({ safeEventDispatcher, logger, engineState });
 
   const coordinator = new PersistenceCoordinator({
     logger,
@@ -254,17 +266,29 @@ describe('PersistenceCoordinator integration', () => {
 
     const result = await environment.coordinator.triggerManualSave('Sunrise');
 
-    expect(result).toEqual({ success: true, filePath: '/manual/initial-world/Sunrise.json' });
+    expect(result).toEqual({
+      success: true,
+      filePath: '/manual/initial-world/Sunrise.json',
+    });
     expect(environment.persistenceService.saveCalls).toEqual([
-      { saveName: 'Sunrise', includeManual: true, activeWorld: 'initial-world' },
+      {
+        saveName: 'Sunrise',
+        includeManual: true,
+        activeWorld: 'initial-world',
+      },
     ]);
-    expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
+    expect(
+      environment.validatedDispatcher.events.map((e) => e.eventName)
+    ).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       GAME_SAVED_ID,
       ENGINE_READY_UI,
     ]);
     const savedEvent = environment.validatedDispatcher.events[1];
-    expect(savedEvent.payload).toMatchObject({ saveName: 'Sunrise', type: 'manual' });
+    expect(savedEvent.payload).toMatchObject({
+      saveName: 'Sunrise',
+      type: 'manual',
+    });
   });
 
   it('propagates manual save failures while still signalling readiness', async () => {
@@ -275,7 +299,9 @@ describe('PersistenceCoordinator integration', () => {
     const result = await environment.coordinator.triggerManualSave('Evening');
 
     expect(result).toEqual({ success: false, error: 'Disk full' });
-    expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
+    expect(
+      environment.validatedDispatcher.events.map((e) => e.eventName)
+    ).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
@@ -295,14 +321,18 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'Unexpected error during save: Save operation failed',
     });
-    expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
+    expect(
+      environment.validatedDispatcher.events.map((e) => e.eventName)
+    ).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
     ]);
-    expect(environment.logger.errorLogs.some((entry) => entry.message.includes('Unexpected error during save'))).toBe(
-      true
-    );
+    expect(
+      environment.logger.errorLogs.some((entry) =>
+        entry.message.includes('Unexpected error during save')
+      )
+    ).toBe(true);
   });
 
   it('converts non-Error save exceptions into error messages', async () => {
@@ -318,7 +348,9 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'Unexpected error during save: string failure',
     });
-    expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
+    expect(
+      environment.validatedDispatcher.events.map((e) => e.eventName)
+    ).toEqual([
       ENGINE_OPERATION_IN_PROGRESS_UI,
       ENGINE_OPERATION_FAILED_UI,
       ENGINE_READY_UI,
@@ -334,10 +366,9 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'Game engine is not initialized. Cannot save game.',
     });
-    expect(environment.validatedDispatcher.events.map((event) => event.eventName)).toEqual([
-      ENGINE_OPERATION_FAILED_UI,
-      ENGINE_READY_UI,
-    ]);
+    expect(
+      environment.validatedDispatcher.events.map((event) => event.eventName)
+    ).toEqual([ENGINE_OPERATION_FAILED_UI, ENGINE_READY_UI]);
   });
 
   it('reports missing persistence service during manual save attempts', async () => {
@@ -349,10 +380,9 @@ describe('PersistenceCoordinator integration', () => {
       success: false,
       error: 'GamePersistenceService is not available. Cannot save game.',
     });
-    expect(environment.validatedDispatcher.events.map((event) => event.eventName)).toEqual([
-      ENGINE_OPERATION_FAILED_UI,
-      ENGINE_READY_UI,
-    ]);
+    expect(
+      environment.validatedDispatcher.events.map((event) => event.eventName)
+    ).toEqual([ENGINE_OPERATION_FAILED_UI, ENGINE_READY_UI]);
   });
 
   it('loads a game successfully and coordinates session finalization', async () => {
@@ -370,24 +400,32 @@ describe('PersistenceCoordinator integration', () => {
     expect(environment.sessionManager.prepareCalls).toEqual(['slot-1']);
     expect(environment.sessionManager.finalizeCalls).toHaveLength(1);
     expect(environment.engineState.activeWorld).toBe('Recovered World');
-    expect(environment.validatedDispatcher.events.map((e) => e.eventName)).toEqual([
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      ENGINE_READY_UI,
-    ]);
+    expect(
+      environment.validatedDispatcher.events.map((e) => e.eventName)
+    ).toEqual([ENGINE_OPERATION_IN_PROGRESS_UI, ENGINE_READY_UI]);
   });
 
   it('delegates load failures to the provided handler when restore fails', async () => {
     environment = createEnvironment({
-      loadHandler: async () => ({ success: false, error: 'not found', data: null }),
+      loadHandler: async () => ({
+        success: false,
+        error: 'not found',
+        data: null,
+      }),
     });
 
     const result = await environment.coordinator.loadGame('missing-slot');
 
     expect(result).toEqual({ success: false, error: 'not found', data: null });
     expect(environment.failureHandler.calls).toEqual([
-      expect.objectContaining({ saveIdentifier: 'missing-slot', message: 'not found' }),
+      expect.objectContaining({
+        saveIdentifier: 'missing-slot',
+        message: 'not found',
+      }),
     ]);
-    const dispatchedEvents = environment.validatedDispatcher.events.map((e) => e.eventName);
+    const dispatchedEvents = environment.validatedDispatcher.events.map(
+      (e) => e.eventName
+    );
     expect(dispatchedEvents).toContain(ENGINE_OPERATION_FAILED_UI);
   });
 
@@ -400,7 +438,11 @@ describe('PersistenceCoordinator integration', () => {
 
     const result = await environment.coordinator.loadGame('unstable-slot');
 
-    expect(result).toEqual({ success: false, error: 'preparation failed', data: null });
+    expect(result).toEqual({
+      success: false,
+      error: 'preparation failed',
+      data: null,
+    });
     expect(environment.failureHandler.calls).toHaveLength(1);
     const failureCall = environment.failureHandler.calls[0];
     expect(failureCall.error).toBeInstanceOf(Error);
@@ -414,9 +456,15 @@ describe('PersistenceCoordinator integration', () => {
       },
     });
 
-    const result = await environment.coordinator.loadGame('string-exception-slot');
+    const result = await environment.coordinator.loadGame(
+      'string-exception-slot'
+    );
 
-    expect(result).toEqual({ success: false, error: 'load crashed', data: null });
+    expect(result).toEqual({
+      success: false,
+      error: 'load crashed',
+      data: null,
+    });
     expect(environment.failureHandler.calls).toHaveLength(1);
     const failureCall = environment.failureHandler.calls[0];
     expect(failureCall.error).toBeInstanceOf(Error);

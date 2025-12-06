@@ -1,9 +1,14 @@
 import { describe, expect, it } from '@jest/globals';
 import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import ComponentAccessService from '../../../src/entities/componentAccessService.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DEFAULT_SUBJECT_TYPE, SUBJECT_TYPES } from '../../../src/constants/subjectTypes.js';
+import {
+  DEFAULT_SUBJECT_TYPE,
+  SUBJECT_TYPES,
+} from '../../../src/constants/subjectTypes.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 class MemoryLogger {
@@ -59,22 +64,22 @@ describe('NotesService integration edge cases', () => {
     expect(() =>
       persistNotes(
         {
-          notes: [
-            { text: 'Restore the archives', subject: 'Records Office' },
-          ],
+          notes: [{ text: 'Restore the archives', subject: 'Records Office' }],
         },
         actor,
         logger,
         dispatcher,
         notesService,
         new Date('2025-08-01T10:00:00.000Z'),
-        componentAccess,
-      ),
+        componentAccess
+      )
     ).toThrow(
       'notesComp must be an object conforming to the core:notes schema with a `notes` array.'
     );
 
-    expect(actor.components[NOTES_COMPONENT_ID].notes).toEqual({ not: 'an array' });
+    expect(actor.components[NOTES_COMPONENT_ID].notes).toEqual({
+      not: 'an array',
+    });
     expect(logger.debugMessages).toHaveLength(1);
     expect(logger.debugMessages[0].message).toContain(
       'Auto-assigned default subjectType "other" to note'
@@ -107,7 +112,11 @@ describe('NotesService integration edge cases', () => {
     persistNotes(
       {
         notes: [
-          { text: '   existing insight!!!   ', subject: 'Lorekeeper', subjectType: SUBJECT_TYPES.ENTITY },
+          {
+            text: '   existing insight!!!   ',
+            subject: 'Lorekeeper',
+            subjectType: SUBJECT_TYPES.ENTITY,
+          },
           { text: '  Fresh Perspective  ', subject: 'Archivist' },
           'not-an-object',
         ],
@@ -117,7 +126,7 @@ describe('NotesService integration edge cases', () => {
       dispatcher,
       notesService,
       timestamp,
-      componentAccess,
+      componentAccess
     );
 
     const storedComponent = actor.components[NOTES_COMPONENT_ID];
@@ -141,7 +150,7 @@ describe('NotesService integration edge cases', () => {
     expect(
       logger.debugMessages.some(({ message }) =>
         message.includes('Auto-assigned default subjectType "other" to note')
-      ),
+      )
     ).toBe(true);
 
     expect(dispatcher.events).toHaveLength(1);
@@ -157,6 +166,8 @@ describe('NotesService integration edge cases', () => {
     expect(normalizeNoteText(storedComponent.notes[0])).toBe(
       'entity:lorekeeper:existing insight'
     );
-    expect(normalizeNoteText(addedNote)).toBe('other:archivist:fresh perspective');
+    expect(normalizeNoteText(addedNote)).toBe(
+      'other:archivist:fresh perspective'
+    );
   });
 });

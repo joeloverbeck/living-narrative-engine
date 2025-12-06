@@ -180,7 +180,8 @@ describe('ActionIndexingService serialization and logging integration', () => {
     );
     expect(visualDebugLog).toBeDefined();
 
-    const [primaryAlpha, alternateAlpha, betaComposite, gammaComposite] = composites;
+    const [primaryAlpha, alternateAlpha, betaComposite, gammaComposite] =
+      composites;
 
     expect(primaryAlpha.commandString).toBe('alpha:cmd');
     expect(alternateAlpha.commandString).toBe('alpha:cmd-alt');
@@ -192,8 +193,9 @@ describe('ActionIndexingService serialization and logging integration', () => {
     expect(Object.isFrozen(betaComposite.params)).toBe(true);
     expect(Object.isFrozen(betaComposite.visual)).toBe(true);
 
-    expect(() => betaComposite.params.readOnlySet.add('new'))
-      .toThrow('Cannot modify frozen set');
+    expect(() => betaComposite.params.readOnlySet.add('new')).toThrow(
+      'Cannot modify frozen set'
+    );
     expect(() => betaComposite.params.map.set('other', 5)).toThrow(
       'Cannot modify frozen map'
     );
@@ -208,10 +210,14 @@ describe('ActionIndexingService serialization and logging integration', () => {
     expect(Number.isNaN(betaComposite.params.invalidDate.getTime())).toBe(true);
     expect(betaComposite.params.regex).not.toBe(complexParams.regex);
     expect(betaComposite.params.map).not.toBe(complexParams.map);
-    expect(betaComposite.params.readOnlySet).not.toBe(complexParams.readOnlySet);
+    expect(betaComposite.params.readOnlySet).not.toBe(
+      complexParams.readOnlySet
+    );
 
     const framesSet = betaComposite.visual.frames;
-    expect(() => framesSet.add({ frame: 2 })).toThrow('Cannot modify frozen set');
+    expect(() => framesSet.add({ frame: 2 })).toThrow(
+      'Cannot modify frozen set'
+    );
     const metadataMap = betaComposite.visual.metadata;
     expect(() => metadataMap.delete('exposure')).toThrow(
       'Cannot modify frozen map'
@@ -225,15 +231,22 @@ describe('ActionIndexingService serialization and logging integration', () => {
 
     const reused = indexingService.indexActions(actorId, []);
     expect(reused).toHaveLength(4);
-    expect(logger.debugLogs.some((entry) => entry.message.includes('reused cached actions'))).toBe(true);
+    expect(
+      logger.debugLogs.some((entry) =>
+        entry.message.includes('reused cached actions')
+      )
+    ).toBe(true);
 
     indexingService.beginTurn(actorId);
     expect(() => indexingService.getIndexedList(actorId)).toThrow();
 
-    const overflow = Array.from({ length: MAX_AVAILABLE_ACTIONS_PER_TURN }, (_, index) => ({
-      id: `overflow:${index}`,
-      command: `overflow:${index}`,
-    }));
+    const overflow = Array.from(
+      { length: MAX_AVAILABLE_ACTIONS_PER_TURN },
+      (_, index) => ({
+        id: `overflow:${index}`,
+        command: `overflow:${index}`,
+      })
+    );
     const overflowComposites = indexingService.indexActions(actorId, overflow);
     expect(overflowComposites).toHaveLength(MAX_AVAILABLE_ACTIONS_PER_TURN);
   });

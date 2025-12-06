@@ -115,7 +115,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
@@ -154,7 +160,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
@@ -195,7 +207,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
@@ -300,7 +318,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
@@ -337,7 +361,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 
@@ -372,7 +402,13 @@ describe('GoapController - Event Dispatching (GOAPIMPL-021-08)', () => {
       });
       mockDataRegistry.get.mockReturnValue({
         id: 'method_1',
-        steps: [{ stepType: 'primitive_action', actionId: 'action_1', targetBindings: {} }],
+        steps: [
+          {
+            stepType: 'primitive_action',
+            actionId: 'action_1',
+            targetBindings: {},
+          },
+        ],
       });
       mockParameterResolutionService.resolve.mockResolvedValue({});
 

@@ -112,12 +112,9 @@ describe('reportMissingActorId integration with real dispatchers', () => {
     registerEventDefinition(env.registry, SYSTEM_ERROR_OCCURRED_ID);
 
     const receivedEvents = [];
-    env.safeEventDispatcher.subscribe(
-      SYSTEM_ERROR_OCCURRED_ID,
-      (event) => {
-        receivedEvents.push(event);
-      }
-    );
+    env.safeEventDispatcher.subscribe(SYSTEM_ERROR_OCCURRED_ID, (event) => {
+      receivedEvents.push(event);
+    });
 
     reportMissingActorId(
       env.safeEventDispatcher,
@@ -180,9 +177,10 @@ describe('reportMissingActorId integration with real dispatchers', () => {
     ).not.toThrow();
 
     expect(
-      env.logger.calls.error.some(([message, details]) =>
-        message.includes('Failed to dispatch system error event') &&
-        details?.dispatchError === dispatchError
+      env.logger.calls.error.some(
+        ([message, details]) =>
+          message.includes('Failed to dispatch system error event') &&
+          details?.dispatchError === dispatchError
       )
     ).toBe(true);
 

@@ -28,7 +28,9 @@ describe('RefinementStateManager', () => {
       const state = manager.getState();
 
       expect(state).toEqual({});
-      expect(mockLogger.debug).toHaveBeenCalledWith('Refinement state initialized (empty)');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Refinement state initialized (empty)'
+      );
     });
 
     it('should clear state', () => {
@@ -185,7 +187,12 @@ describe('RefinementStateManager', () => {
     });
 
     it('should validate key format (valid JS identifier)', () => {
-      const validKeys = ['pickupResult', 'step1Result', '_privateVar', 'result_2'];
+      const validKeys = [
+        'pickupResult',
+        'step1Result',
+        '_privateVar',
+        'result_2',
+      ];
 
       validKeys.forEach((key) => {
         expect(() =>
@@ -259,7 +266,9 @@ describe('RefinementStateManager', () => {
 
       incompleteValues.forEach((value) => {
         expect(() => manager.store('key', value)).toThrow(RefinementError);
-        expect(() => manager.store('key', value)).toThrow(/missing required fields/);
+        expect(() => manager.store('key', value)).toThrow(
+          /missing required fields/
+        );
       });
     });
 
@@ -304,7 +313,9 @@ describe('RefinementStateManager', () => {
 
       invalidValues.forEach((value) => {
         expect(() => manager.store('key', value)).toThrow(RefinementError);
-        expect(() => manager.store('key', value)).toThrow(/Invalid result structure/);
+        expect(() => manager.store('key', value)).toThrow(
+          /Invalid result structure/
+        );
       });
     });
 
@@ -504,11 +515,15 @@ describe('RefinementStateManager', () => {
       // Verify all levels are frozen
       expect(Object.isFrozen(snapshot.complex.data.level1)).toBe(true);
       expect(Object.isFrozen(snapshot.complex.data.level1.level2)).toBe(true);
-      expect(Object.isFrozen(snapshot.complex.data.level1.level2.level3)).toBe(true);
-      expect(Object.isFrozen(snapshot.complex.data.level1.level2.level3.values)).toBe(true);
-      expect(Object.isFrozen(snapshot.complex.data.level1.level2.level3.metadata)).toBe(
+      expect(Object.isFrozen(snapshot.complex.data.level1.level2.level3)).toBe(
         true
       );
+      expect(
+        Object.isFrozen(snapshot.complex.data.level1.level2.level3.values)
+      ).toBe(true);
+      expect(
+        Object.isFrozen(snapshot.complex.data.level1.level2.level3.metadata)
+      ).toBe(true);
     });
 
     it('should log snapshot creation', () => {
@@ -588,7 +603,13 @@ describe('RefinementStateManager', () => {
 
       // Create circular reference (edge case)
       const state = manager.getState();
-      const obj = { success: true, data: {}, error: null, timestamp: 1, actionId: 'test:action' };
+      const obj = {
+        success: true,
+        data: {},
+        error: null,
+        timestamp: 1,
+        actionId: 'test:action',
+      };
       obj.data.circular = obj;
       state.circular = obj;
 
@@ -643,7 +664,9 @@ describe('RefinementStateManager', () => {
       // Test uninitialized state error
       expect(() => manager.getState()).toThrow(
         expect.objectContaining({
-          context: expect.objectContaining({ code: 'GOAP_REFINEMENT_STATE_NOT_INITIALIZED' }),
+          context: expect.objectContaining({
+            code: 'GOAP_REFINEMENT_STATE_NOT_INITIALIZED',
+          }),
         })
       );
 
@@ -660,7 +683,9 @@ describe('RefinementStateManager', () => {
         })
       ).toThrow(
         expect.objectContaining({
-          context: expect.objectContaining({ code: 'GOAP_REFINEMENT_INVALID_STATE_KEY' }),
+          context: expect.objectContaining({
+            code: 'GOAP_REFINEMENT_INVALID_STATE_KEY',
+          }),
         })
       );
 
@@ -911,7 +936,9 @@ describe('RefinementStateManager', () => {
       };
 
       new RefinementStateManager({ logger });
-      expect(logger.debug).toHaveBeenCalledWith('RefinementStateManager initialized');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'RefinementStateManager initialized'
+      );
     });
   });
 });

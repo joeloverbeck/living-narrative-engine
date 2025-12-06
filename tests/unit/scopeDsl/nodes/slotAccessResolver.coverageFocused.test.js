@@ -2,40 +2,45 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import createSlotAccessResolver from '../../../../src/scopeDsl/nodes/slotAccessResolver.js';
 import { ErrorCodes } from '../../../../src/scopeDsl/constants/errorCodes.js';
 
-jest.mock('../../../../src/scopeDsl/prioritySystem/priorityCalculator.js', () => {
-  const getLayersByMode = jest.fn((mode) => {
-    const mapping = {
-      topmost: ['outer', 'base', 'underwear'],
-      topmost_no_accessories: ['outer', 'base'],
-      all: ['outer', 'base', 'underwear'],
-      outer: ['outer'],
-      base: ['base', 'underwear'],
-      underwear: ['underwear'],
+jest.mock(
+  '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js',
+  () => {
+    const getLayersByMode = jest.fn((mode) => {
+      const mapping = {
+        topmost: ['outer', 'base', 'underwear'],
+        topmost_no_accessories: ['outer', 'base'],
+        all: ['outer', 'base', 'underwear'],
+        outer: ['outer'],
+        base: ['base', 'underwear'],
+        underwear: ['underwear'],
+      };
+      return mapping[mode] || ['outer', 'base', 'underwear'];
+    });
+
+    const calculatePriorityWithValidation = jest.fn(
+      (coveragePriority, layer) => {
+        const weights = {
+          outer: 30,
+          base: 20,
+          underwear: 10,
+          direct: 5,
+        };
+        return weights[coveragePriority] ?? weights[layer] ?? 0;
+      }
+    );
+
+    const sortCandidatesWithTieBreaking = jest.fn((candidates) => {
+      return [...candidates].sort((a, b) => b.priority - a.priority);
+    });
+
+    return {
+      calculatePriorityWithValidation,
+      sortCandidatesWithTieBreaking,
+      getLayersByMode,
+      getLayersByModeForTesting: getLayersByMode,
     };
-    return mapping[mode] || ['outer', 'base', 'underwear'];
-  });
-
-  const calculatePriorityWithValidation = jest.fn((coveragePriority, layer) => {
-    const weights = {
-      outer: 30,
-      base: 20,
-      underwear: 10,
-      direct: 5,
-    };
-    return weights[coveragePriority] ?? weights[layer] ?? 0;
-  });
-
-  const sortCandidatesWithTieBreaking = jest.fn((candidates) => {
-    return [...candidates].sort((a, b) => b.priority - a.priority);
-  });
-
-  return {
-    calculatePriorityWithValidation,
-    sortCandidatesWithTieBreaking,
-    getLayersByMode,
-    getLayersByModeForTesting: getLayersByMode,
-  };
-});
+  }
+);
 
 const priorityCalculator = jest.requireMock(
   '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js'
@@ -122,28 +127,32 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
       },
     });
 
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (component === 'clothing:coverage_mapping' && entityId === 'coat-coverage') {
-        return { covers: ['torso_upper'], coveragePriority: 'outer' };
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (
+          component === 'clothing:coverage_mapping' &&
+          entityId === 'coat-coverage'
+        ) {
+          return { covers: ['torso_upper'], coveragePriority: 'outer' };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
     const activeSpan = { addEvent: jest.fn(), addAttributes: jest.fn() };
     const structuredTrace = createStructuredTrace(activeSpan);
 
-    const result = resolver.resolve(
-      createClothingNode('torso_upper'),
-      { dispatcher, structuredTrace, trace: { addLog: jest.fn() } }
-    );
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+      trace: { addLog: jest.fn() },
+    });
 
     expect(Array.from(result)).toEqual(['coat-coverage']);
-    expect(priorityCalculator.calculatePriorityWithValidation).toHaveBeenCalledWith(
-      'outer',
-      'outer',
-      null
-    );
+    expect(
+      priorityCalculator.calculatePriorityWithValidation
+    ).toHaveBeenCalledWith('outer', 'outer', null);
     expect(priorityCalculator.sortCandidatesWithTieBreaking).toHaveBeenCalled();
     expect(structuredTrace.startSpan).toHaveBeenCalledWith(
       'candidate_collection',
@@ -163,15 +172,18 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     const activeSpan = { addEvent: jest.fn(), addAttributes: jest.fn() };
     const structuredTrace = createStructuredTrace(activeSpan);
 
-    const result = resolver.resolve(
-      createClothingNode('torso_upper'),
-      { dispatcher, structuredTrace }
-    );
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+      structuredTrace,
+    });
 
     expect(result.size).toBe(0);
     expect(activeSpan.addEvent).toHaveBeenCalledWith(
       'no_slot_data',
-      expect.objectContaining({ slotName: 'torso_upper', reason: 'no_candidates_found' })
+      expect.objectContaining({
+        slotName: 'torso_upper',
+        reason: 'no_candidates_found',
+      })
     );
   });
 
@@ -179,10 +191,9 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     const clothingAccess = createClothingAccess();
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
-    const result = resolver.resolve(
-      createClothingNode('not_a_slot'),
-      { dispatcher }
-    );
+    const result = resolver.resolve(createClothingNode('not_a_slot'), {
+      dispatcher,
+    });
 
     expect(result.size).toBe(0);
     expect(errorHandler.handleError).toHaveBeenCalledWith(
@@ -195,14 +206,18 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
 
   it('falls back to entity component access for string results', () => {
     dispatcher.resolve.mockReturnValue(new Set(['actor-1']));
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (entityId === 'actor-1' && component === 'torso_upper') {
-        return ['vest-layer', 'undershirt-layer'];
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (entityId === 'actor-1' && component === 'torso_upper') {
+          return ['vest-layer', 'undershirt-layer'];
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(Array.from(result)).toEqual(['vest-layer', 'undershirt-layer']);
     expect(entitiesGateway.getComponentData).toHaveBeenCalledWith(
@@ -220,26 +235,34 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
       },
     });
 
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (component === 'clothing:coverage_mapping') {
-        return { covers: ['torso_upper'], coveragePriority: 'base' };
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (component === 'clothing:coverage_mapping') {
+          return { covers: ['torso_upper'], coveragePriority: 'base' };
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(result.size).toBe(0);
-    expect(priorityCalculator.sortCandidatesWithTieBreaking).not.toHaveBeenCalled();
+    expect(
+      priorityCalculator.sortCandidatesWithTieBreaking
+    ).not.toHaveBeenCalled();
   });
 
   it('validates available equipment data before resolving', () => {
     const clothingAccess = createClothingAccess({ equipped: null });
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(result.size).toBe(0);
     expect(errorHandler.handleError).toHaveBeenCalledWith(
@@ -254,12 +277,16 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     const clothingAccess = createClothingAccess({ mode: 'stealth_mode' });
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(result.size).toBe(0);
     expect(errorHandler.handleError).toHaveBeenCalledWith(
       'Invalid clothing mode: stealth_mode',
-      expect.objectContaining({ validModes: expect.arrayContaining(['topmost']) }),
+      expect.objectContaining({
+        validModes: expect.arrayContaining(['topmost']),
+      }),
       'SlotAccessResolver',
       ErrorCodes.INVALID_DATA_GENERIC
     );
@@ -280,14 +307,18 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
   it('adds component objects returned for string parents', () => {
     dispatcher.resolve.mockReturnValue(new Set(['actor-2']));
     const componentPayload = { id: 'object-layer' };
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (entityId === 'actor-2' && component === 'torso_upper') {
-        return componentPayload;
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (entityId === 'actor-2' && component === 'torso_upper') {
+          return componentPayload;
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(result).toEqual(new Set([componentPayload]));
   });
@@ -301,10 +332,10 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
 
     dispatcher.resolve.mockReturnValue(new Set([[clothingAccess]]));
 
-    const result = resolver.resolve(
-      createClothingNode('torso_upper'),
-      { dispatcher, trace: { addLog: jest.fn() } }
-    );
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+      trace: { addLog: jest.fn() },
+    });
 
     expect(Array.from(result)).toEqual(['cape-layer']);
   });
@@ -363,7 +394,11 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
     dispatcher.resolve.mockReturnValue(new Set([clothingAccess]));
 
     const result = resolver.resolve(
-      { type: 'Step', field: null, parent: { type: 'Step', field: 'topmost_clothing' } },
+      {
+        type: 'Step',
+        field: null,
+        parent: { type: 'Step', field: 'topmost_clothing' },
+      },
       { dispatcher }
     );
 
@@ -378,14 +413,18 @@ describe('slotAccessResolver targeted coverage scenarios', () => {
 
   it('adds direct string component data to the result set', () => {
     dispatcher.resolve.mockReturnValue(new Set(['actor-3']));
-    entitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-      if (entityId === 'actor-3' && component === 'torso_upper') {
-        return 'tunic-layer';
+    entitiesGateway.getComponentData.mockImplementation(
+      (entityId, component) => {
+        if (entityId === 'actor-3' && component === 'torso_upper') {
+          return 'tunic-layer';
+        }
+        return null;
       }
-      return null;
-    });
+    );
 
-    const result = resolver.resolve(createClothingNode('torso_upper'), { dispatcher });
+    const result = resolver.resolve(createClothingNode('torso_upper'), {
+      dispatcher,
+    });
 
     expect(result).toEqual(new Set(['tunic-layer']));
   });

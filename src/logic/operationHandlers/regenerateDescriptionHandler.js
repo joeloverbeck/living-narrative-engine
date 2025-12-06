@@ -134,7 +134,7 @@ class RegenerateDescriptionHandler extends ComponentOperationHandler {
         text: newDescription,
       });
 
-      log.info('Successfully regenerated entity description', {
+      log.debug('Successfully regenerated entity description', {
         entityId,
         descriptionLength: newDescription?.length || 0,
       });

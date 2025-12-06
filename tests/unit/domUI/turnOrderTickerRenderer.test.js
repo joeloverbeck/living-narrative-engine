@@ -38,7 +38,7 @@ describe('TurnOrderTickerRenderer - Constructor', () => {
     `;
 
     mockDocumentContext = {
-      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      query: jest.fn((selector) => mockContainer.querySelector(selector)),
       create: jest.fn(),
     };
 
@@ -248,7 +248,9 @@ describe('TurnOrderTickerRenderer - Constructor', () => {
       tickerContainerElement: mockContainer,
     });
 
-    expect(mockLogger.info).toHaveBeenCalledWith('TurnOrderTickerRenderer initialized');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'TurnOrderTickerRenderer initialized'
+    );
   });
 
   it('should subscribe to round_started event', () => {
@@ -344,7 +346,9 @@ describe('TurnOrderTickerRenderer - Constructor', () => {
       tickerContainerElement: mockContainer,
     });
 
-    expect(mockDocumentContext.query).toHaveBeenCalledWith('#ticker-round-number');
+    expect(mockDocumentContext.query).toHaveBeenCalledWith(
+      '#ticker-round-number'
+    );
   });
 
   it('should cache actor queue element', () => {
@@ -358,7 +362,9 @@ describe('TurnOrderTickerRenderer - Constructor', () => {
       tickerContainerElement: mockContainer,
     });
 
-    expect(mockDocumentContext.query).toHaveBeenCalledWith('#ticker-actor-queue');
+    expect(mockDocumentContext.query).toHaveBeenCalledWith(
+      '#ticker-actor-queue'
+    );
   });
 });
 
@@ -390,7 +396,7 @@ describe('TurnOrderTickerRenderer - Dispose', () => {
     `;
 
     mockDocumentContext = {
-      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      query: jest.fn((selector) => mockContainer.querySelector(selector)),
       create: jest.fn(),
     };
 
@@ -399,7 +405,12 @@ describe('TurnOrderTickerRenderer - Dispose', () => {
     unsubscribeFn3 = jest.fn();
     unsubscribeFn4 = jest.fn();
 
-    const unsubscribeFunctions = [unsubscribeFn1, unsubscribeFn2, unsubscribeFn3, unsubscribeFn4];
+    const unsubscribeFunctions = [
+      unsubscribeFn1,
+      unsubscribeFn2,
+      unsubscribeFn3,
+      unsubscribeFn4,
+    ];
     let callCount = 0;
 
     mockValidatedEventDispatcher = {
@@ -455,7 +466,9 @@ describe('TurnOrderTickerRenderer - Dispose', () => {
 
     renderer.dispose();
 
-    expect(mockLogger.info).toHaveBeenCalledWith('TurnOrderTickerRenderer disposed');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'TurnOrderTickerRenderer disposed'
+    );
   });
 
   it('should clear unsubscribe functions array after disposal', () => {
@@ -502,7 +515,7 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     }
 
     const mockDocumentContext = {
-      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      query: jest.fn((selector) => mockContainer.querySelector(selector)),
       create: jest.fn(),
     };
 
@@ -564,14 +577,19 @@ describe('TurnOrderTickerRenderer - Public API', () => {
 
   it('render method should render empty queue message when no actors', () => {
     renderer.render([]);
-    expect(mockLogger.info).toHaveBeenCalledWith('Rendering empty turn order queue');
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Rendering empty turn order queue'
+    );
   });
 
   it('updateCurrentActor method should log debug message (stub implementation)', () => {
     renderer.updateCurrentActor('test-actor-id');
-    expect(mockLogger.debug).toHaveBeenCalledWith('updateCurrentActor() called', {
-      entityId: 'test-actor-id',
-    });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'updateCurrentActor() called',
+      {
+        entityId: 'test-actor-id',
+      }
+    );
   });
 
   it('removeActor method should handle actor not found gracefully', async () => {
@@ -579,9 +597,12 @@ describe('TurnOrderTickerRenderer - Public API', () => {
     await renderer.removeActor('test-actor-id');
 
     // Should log debug message when actor not found
-    expect(mockLogger.debug).toHaveBeenCalledWith('Actor element not found for removal', {
-      entityId: 'test-actor-id',
-    });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'Actor element not found for removal',
+      {
+        entityId: 'test-actor-id',
+      }
+    );
   });
 
   describe('updateActorParticipation method', () => {
@@ -662,7 +683,7 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
     renderer = new TurnOrderTickerRenderer({
       logger: mockLogger,
       documentContext: {
-        query: selector => mockContainer.querySelector(selector),
+        query: (selector) => mockContainer.querySelector(selector),
         create: jest.fn(),
       },
       validatedEventDispatcher: {
@@ -681,7 +702,9 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
 
   it('should extract name and portrait when both exist', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/alice.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     const result = renderer.__testGetActorDisplayData('actor-1');
@@ -695,7 +718,9 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
 
   it('should fallback to entity ID when name missing', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('actor-1');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/portrait.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/portrait.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     const result = renderer.__testGetActorDisplayData('actor-1');
@@ -763,7 +788,9 @@ describe('TurnOrderTickerRenderer - Display Data Extraction', () => {
 
   it('should log debug information for successful extraction', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/eve.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/eve.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     renderer.__testGetActorDisplayData('actor-7');
@@ -855,7 +882,9 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
   it('should create element with portrait when available', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Alice');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/alice.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/alice.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     const element = renderer.__testCreateActorElement({ id: 'actor-1' });
@@ -863,9 +892,13 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
     expect(element.classList.contains('ticker-actor')).toBe(true);
     expect(element.getAttribute('data-entity-id')).toBe('actor-1');
     expect(element.querySelector('.ticker-actor-portrait')).toBeTruthy();
-    expect(element.querySelector('.ticker-actor-portrait').src).toContain('alice.jpg');
+    expect(element.querySelector('.ticker-actor-portrait').src).toContain(
+      'alice.jpg'
+    );
     expect(element.querySelector('.ticker-actor-portrait').alt).toBe('Alice');
-    expect(element.querySelector('.ticker-actor-name').textContent).toBe('Alice');
+    expect(element.querySelector('.ticker-actor-name').textContent).toBe(
+      'Alice'
+    );
   });
 
   it('should create element with name badge when portrait missing', () => {
@@ -878,14 +911,19 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
     expect(element.classList.contains('ticker-actor')).toBe(true);
     expect(element.querySelector('.ticker-actor-portrait')).toBeFalsy();
     expect(element.querySelector('.ticker-actor-name-badge')).toBeTruthy();
-    expect(element.querySelector('.ticker-actor-name-badge .ticker-actor-name').textContent).toBe('Bob');
+    expect(
+      element.querySelector('.ticker-actor-name-badge .ticker-actor-name')
+        .textContent
+    ).toBe('Bob');
   });
 
   it('should set participation data attribute', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Charlie');
     mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(true);
-    mockEntityManager.getComponentData.mockReturnValue({ participating: false });
+    mockEntityManager.getComponentData.mockReturnValue({
+      participating: false,
+    });
 
     const element = renderer.__testCreateActorElement({ id: 'actor-3' });
 
@@ -894,7 +932,9 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
   it('should set lazy loading on portrait images', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Diana');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/diana.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/diana.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     const element = renderer.__testCreateActorElement({ id: 'actor-4' });
@@ -904,7 +944,9 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
   });
 
   it('should add title attribute for tooltip', () => {
-    mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Very Long Actor Name That Will Be Truncated');
+    mockEntityDisplayDataProvider.getEntityName.mockReturnValue(
+      'Very Long Actor Name That Will Be Truncated'
+    );
     mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(null);
     mockEntityManager.hasComponent.mockReturnValue(false);
 
@@ -916,7 +958,9 @@ describe('TurnOrderTickerRenderer - Actor Element Creation', () => {
 
   it('should handle image load failure', () => {
     mockEntityDisplayDataProvider.getEntityName.mockReturnValue('Eve');
-    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue('/path/to/invalid.jpg');
+    mockEntityDisplayDataProvider.getEntityPortraitPath.mockReturnValue(
+      '/path/to/invalid.jpg'
+    );
     mockEntityManager.hasComponent.mockReturnValue(false);
 
     const element = renderer.__testCreateActorElement({ id: 'actor-6' });
@@ -1005,7 +1049,9 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
     jest.spyOn(renderer, 'render').mockImplementation(() => {});
     jest.spyOn(renderer, 'updateCurrentActor').mockImplementation(() => {});
     jest.spyOn(renderer, 'removeActor').mockImplementation(() => {});
-    jest.spyOn(renderer, 'updateActorParticipation').mockImplementation(() => {});
+    jest
+      .spyOn(renderer, 'updateActorParticipation')
+      .mockImplementation(() => {});
   });
 
   describe('#handleRoundStarted', () => {
@@ -1197,7 +1243,10 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       renderer.__testHandleParticipationChanged(event);
 
-      expect(renderer.updateActorParticipation).toHaveBeenCalledWith('actor-1', false);
+      expect(renderer.updateActorParticipation).toHaveBeenCalledWith(
+        'actor-1',
+        false
+      );
     });
 
     it('should default to true if participating not specified', () => {
@@ -1211,7 +1260,10 @@ describe('TurnOrderTickerRenderer - Event Handlers', () => {
 
       renderer.__testHandleParticipationChanged(event);
 
-      expect(renderer.updateActorParticipation).toHaveBeenCalledWith('actor-2', true);
+      expect(renderer.updateActorParticipation).toHaveBeenCalledWith(
+        'actor-2',
+        true
+      );
     });
 
     it('should ignore non-participation component events', () => {
@@ -1262,7 +1314,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     // Mock window.matchMedia for animation tests
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(query => ({
+      value: jest.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -1284,7 +1336,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     mockContainer.appendChild(mockActorQueue);
 
     const mockDocumentContext = {
-      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      query: jest.fn((selector) => mockContainer.querySelector(selector)),
       create: jest.fn(),
     };
 
@@ -1321,7 +1373,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityName: jest.fn((id) => `Actor ${id}`),
       getEntityPortraitPath: jest.fn(),
     };
 
@@ -1340,11 +1392,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
   });
 
   it('should render all actors in order', () => {
-    const actors = [
-      { id: 'actor-1' },
-      { id: 'actor-2' },
-      { id: 'actor-3' },
-    ];
+    const actors = [{ id: 'actor-1' }, { id: 'actor-2' }, { id: 'actor-3' }];
 
     renderer.render(actors);
 
@@ -1380,8 +1428,12 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
 
     expect(mockActorQueue.children.length).toBe(1);
     expect(mockActorQueue.children[0].className).toBe('ticker-empty-message');
-    expect(mockActorQueue.children[0].textContent).toBe('No participating actors');
-    expect(mockLogger.info).toHaveBeenCalledWith('Rendering empty turn order queue');
+    expect(mockActorQueue.children[0].textContent).toBe(
+      'No participating actors'
+    );
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Rendering empty turn order queue'
+    );
   });
 
   it('should skip invalid actors and continue rendering', () => {
@@ -1389,7 +1441,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
       { id: 'actor-1' },
       null, // Invalid
       { id: 'actor-2' },
-      { }, // No id
+      {}, // No id
       { id: 'actor-3' },
     ];
 
@@ -1404,7 +1456,9 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
 
   it('should throw TypeError for non-array input', () => {
     expect(() => renderer.render('not-an-array')).toThrow(TypeError);
-    expect(() => renderer.render('not-an-array')).toThrow('render() requires an array of actors');
+    expect(() => renderer.render('not-an-array')).toThrow(
+      'render() requires an array of actors'
+    );
     expect(mockLogger.error).toHaveBeenCalledWith(
       'render() requires an array of actors',
       { receivedType: 'string' }
@@ -1421,11 +1475,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
   });
 
   it('should apply animation classes to each actor', () => {
-    const actors = [
-      { id: 'actor-1' },
-      { id: 'actor-2' },
-      { id: 'actor-3' },
-    ];
+    const actors = [{ id: 'actor-1' }, { id: 'actor-2' }, { id: 'actor-3' }];
 
     renderer.render(actors);
 
@@ -1434,9 +1484,15 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
 
     // Verify animation class was added to each actor element
     // (the stub implementation adds 'entering' class)
-    expect(mockActorQueue.children[0].classList.contains('entering')).toBe(true);
-    expect(mockActorQueue.children[1].classList.contains('entering')).toBe(true);
-    expect(mockActorQueue.children[2].classList.contains('entering')).toBe(true);
+    expect(mockActorQueue.children[0].classList.contains('entering')).toBe(
+      true
+    );
+    expect(mockActorQueue.children[1].classList.contains('entering')).toBe(
+      true
+    );
+    expect(mockActorQueue.children[2].classList.contains('entering')).toBe(
+      true
+    );
   });
 
   it('should handle display data extraction failures with fallback', () => {
@@ -1452,7 +1508,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     const failingRenderer = new TurnOrderTickerRenderer({
       logger: mockLogger,
       documentContext: {
-        query: jest.fn(selector => mockContainer.querySelector(selector)),
+        query: jest.fn((selector) => mockContainer.querySelector(selector)),
         create: jest.fn(),
       },
       validatedEventDispatcher: {
@@ -1462,7 +1518,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
       },
       domElementFactory: mockDomElementFactory,
       entityManager: {
-        getEntityInstance: jest.fn(id => ({ id })),
+        getEntityInstance: jest.fn((id) => ({ id })),
         hasComponent: jest.fn(() => false),
         getComponentData: jest.fn(),
       },
@@ -1489,10 +1545,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
   });
 
   it('should log rendering info with actor IDs', () => {
-    const actors = [
-      { id: 'actor-1' },
-      { id: 'actor-2' },
-    ];
+    const actors = [{ id: 'actor-1' }, { id: 'actor-2' }];
 
     renderer.render(actors);
 
@@ -1526,7 +1579,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     // Mock window.matchMedia for animation tests
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(query => ({
+      value: jest.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -1550,7 +1603,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     mockContainer.appendChild(mockRoundNumber);
 
     mockDocumentContext = {
-      query: jest.fn(selector => mockContainer.querySelector(selector)),
+      query: jest.fn((selector) => mockContainer.querySelector(selector)),
       create: jest.fn(),
     };
 
@@ -1561,7 +1614,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     };
 
     mockDomElementFactory = {
-      create: jest.fn(config => {
+      create: jest.fn((config) => {
         const el = document.createElement(config.tag || 'div');
         if (config.classes) el.className = config.classes.join(' ');
         if (config.attributes) {
@@ -1570,23 +1623,29 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
           });
         }
         if (config.children) {
-          config.children.forEach(child => el.appendChild(child));
+          config.children.forEach((child) => el.appendChild(child));
         }
         return el;
       }),
-      div: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'div' })),
-      span: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'span' })),
-      img: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'img' })),
+      div: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'div' })
+      ),
+      span: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'span' })
+      ),
+      img: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'img' })
+      ),
     };
 
     mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => true),
       getComponentData: jest.fn(() => ({})),
     };
 
     mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityName: jest.fn((id) => `Actor ${id}`),
       getEntityPortraitPath: jest.fn(() => '/path/to/portrait.png'),
     };
 
@@ -1650,7 +1709,9 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     );
 
     // Should not crash or throw
-    const highlightedActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const highlightedActors = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(highlightedActors.length).toBe(0);
   });
 
@@ -1677,7 +1738,9 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     );
 
     // No actors should be highlighted
-    const highlightedActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const highlightedActors = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(highlightedActors.length).toBe(0);
   });
 
@@ -1713,7 +1776,9 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     expect(currentActor.getAttribute('data-entity-id')).toBe('actor-3');
 
     // Only one actor should be highlighted at the end
-    const allHighlighted = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const allHighlighted = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(allHighlighted.length).toBe(1);
   });
 
@@ -1731,7 +1796,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     const emptyRenderer = new TurnOrderTickerRenderer({
       logger: mockLogger,
       documentContext: {
-        query: jest.fn(selector => emptyContainer.querySelector(selector)),
+        query: jest.fn((selector) => emptyContainer.querySelector(selector)),
         create: jest.fn(),
       },
       validatedEventDispatcher: mockValidatedEventDispatcher,
@@ -1764,7 +1829,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
       // Reset matchMedia mock for each test
       Object.defineProperty(window, 'matchMedia', {
         writable: true,
-        value: jest.fn().mockImplementation(query => ({
+        value: jest.fn().mockImplementation((query) => ({
           matches: false,
           media: query,
           onchange: null,
@@ -1848,7 +1913,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
 
     it('should respect prefers-reduced-motion setting', () => {
       // Mock matchMedia to return reduced motion preference
-      window.matchMedia = jest.fn().mockImplementation(query => ({
+      window.matchMedia = jest.fn().mockImplementation((query) => ({
         matches: query === '(prefers-reduced-motion: reduce)',
         media: query,
         onchange: null,
@@ -2038,8 +2103,12 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
     });
 
     it('should handle invalid element gracefully', async () => {
-      await expect(renderer.__testAnimateActorExit(null)).resolves.toBeUndefined();
-      await expect(renderer.__testAnimateActorExit('not-an-element')).resolves.toBeUndefined();
+      await expect(
+        renderer.__testAnimateActorExit(null)
+      ).resolves.toBeUndefined();
+      await expect(
+        renderer.__testAnimateActorExit('not-an-element')
+      ).resolves.toBeUndefined();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'animateActorExit requires a valid HTMLElement',
@@ -2106,7 +2175,9 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
         throw new Error('classList error');
       });
 
-      await expect(renderer.__testAnimateActorExit(element)).resolves.toBeUndefined();
+      await expect(
+        renderer.__testAnimateActorExit(element)
+      ).resolves.toBeUndefined();
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Failed to apply exit animation',
@@ -2244,7 +2315,10 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
 
         renderer.__testScrollToStart();
 
-        expect(queueElement.scrollTo).toHaveBeenCalledWith({ left: 0, behavior: 'smooth' });
+        expect(queueElement.scrollTo).toHaveBeenCalledWith({
+          left: 0,
+          behavior: 'smooth',
+        });
       });
     });
 
@@ -2308,7 +2382,7 @@ describe('TurnOrderTickerRenderer - Current Actor Highlighting', () => {
           'Actor element not found in ticker',
           expect.objectContaining({
             entityId: 'nonexistent-actor',
-            reason: 'May not be in current round or already removed'
+            reason: 'May not be in current round or already removed',
           })
         );
       });

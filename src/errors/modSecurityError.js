@@ -14,7 +14,7 @@ export const SecurityLevel = {
   LOW: 'LOW',
   MEDIUM: 'MEDIUM',
   HIGH: 'HIGH',
-  CRITICAL: 'CRITICAL'
+  CRITICAL: 'CRITICAL',
 };
 
 /**
@@ -26,7 +26,7 @@ export const SecurityLevel = {
 export class ModSecurityError extends ModValidationError {
   /**
    * Creates a new ModSecurityError instance
-   * 
+   *
    * @param {string} message - The error message describing the security violation
    * @param {string} securityLevel - Severity level (LOW, MEDIUM, HIGH, CRITICAL)
    * @param {object} context - Context information about the security violation
@@ -36,13 +36,15 @@ export class ModSecurityError extends ModValidationError {
     super(message, 'SECURITY_VIOLATION', context, false);
     this.name = 'ModSecurityError';
     this.securityLevel = securityLevel;
-    
+
     // Store security-specific context
     this._enhancedContext = {
       ...context,
       securityLevel,
       reportedAt: new Date().toISOString(),
-      requiresAudit: securityLevel === SecurityLevel.CRITICAL || securityLevel === SecurityLevel.HIGH
+      requiresAudit:
+        securityLevel === SecurityLevel.CRITICAL ||
+        securityLevel === SecurityLevel.HIGH,
     };
   }
 
@@ -59,10 +61,12 @@ export class ModSecurityError extends ModValidationError {
    * @returns {boolean} True if critical or high severity
    */
   isCritical() {
-    return this.securityLevel === SecurityLevel.CRITICAL || 
-           this.securityLevel === SecurityLevel.HIGH;
+    return (
+      this.securityLevel === SecurityLevel.CRITICAL ||
+      this.securityLevel === SecurityLevel.HIGH
+    );
   }
-  
+
   /**
    * Generates a security incident report
    *
@@ -76,10 +80,10 @@ export class ModSecurityError extends ModValidationError {
       message: this.message,
       context: this.context,
       recommendedActions: this._getRecommendedActions(),
-      requiresNotification: this.isCritical()
+      requiresNotification: this.isCritical(),
     };
   }
-  
+
   /**
    * Gets recommended actions based on security level
    *
@@ -88,7 +92,7 @@ export class ModSecurityError extends ModValidationError {
    */
   _getRecommendedActions() {
     const actions = ['Log security incident', 'Review mod source'];
-    
+
     if (this.securityLevel === SecurityLevel.CRITICAL) {
       actions.push('Quarantine mod immediately');
       actions.push('Perform security audit');
@@ -99,7 +103,7 @@ export class ModSecurityError extends ModValidationError {
     } else if (this.securityLevel === SecurityLevel.MEDIUM) {
       actions.push('Flag mod for review');
     }
-    
+
     return actions;
   }
 

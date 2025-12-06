@@ -36,7 +36,11 @@ function buildParentSocketRequirements(blueprint) {
       continue;
     }
 
-    if (!slotConfig.parent || !slotConfig.socket || slotConfig.optional === true) {
+    if (
+      !slotConfig.parent ||
+      !slotConfig.socket ||
+      slotConfig.optional === true
+    ) {
       continue;
     }
 
@@ -51,7 +55,13 @@ function buildParentSocketRequirements(blueprint) {
   return parentRequirements;
 }
 
-function collectPreferredIds(recipe, blueprint, dataRegistry, slotGenerator, logger) {
+function collectPreferredIds(
+  recipe,
+  blueprint,
+  dataRegistry,
+  slotGenerator,
+  logger
+) {
   const preferred = new Map();
 
   const slots = recipe?.slots || {};
@@ -115,7 +125,12 @@ export class PreferredPartSocketValidator extends BaseValidator {
   #logger;
   #logValidatorError;
 
-  constructor({ logger, dataRegistry, slotGenerator, anatomyBlueprintRepository }) {
+  constructor({
+    logger,
+    dataRegistry,
+    slotGenerator,
+    anatomyBlueprintRepository,
+  }) {
     super({
       name: 'preferred-part-sockets',
       priority: 23,
@@ -163,9 +178,8 @@ export class PreferredPartSocketValidator extends BaseValidator {
   async performValidation(recipe, _options, builder) {
     try {
       const blueprintId = recipe?.blueprintId;
-      const rawBlueprint = await this.#anatomyBlueprintRepository.getBlueprint(
-        blueprintId
-      );
+      const rawBlueprint =
+        await this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       if (!rawBlueprint) {
         this.#logger.warn(
@@ -198,9 +212,12 @@ export class PreferredPartSocketValidator extends BaseValidator {
       );
 
       if (preferredIds.size === 0 || parentSocketRequirements.size === 0) {
-        builder.addPassed('No preferred parts with child socket requirements to validate', {
-          check: CHECK_NAME,
-        });
+        builder.addPassed(
+          'No preferred parts with child socket requirements to validate',
+          {
+            check: CHECK_NAME,
+          }
+        );
         return;
       }
 

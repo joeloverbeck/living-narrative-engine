@@ -58,16 +58,21 @@ describe('sex-breastplay:suck_on_nipples action integration', () => {
   });
 
   it('dispatches the nipple sucking narration and perceptible event metadata', async () => {
-    const { entities, actorId, targetId, roomId } = buildSuckOnNipplesScenario();
+    const { entities, actorId, targetId, roomId } =
+      buildSuckOnNipplesScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
     await testFixture.executeAction(actorId, targetId);
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,

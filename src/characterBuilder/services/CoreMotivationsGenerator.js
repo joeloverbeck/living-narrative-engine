@@ -25,9 +25,13 @@ import { CHARACTER_BUILDER_EVENTS } from './characterBuilderService.js';
 const RETRY_CONFIG = {
   maxRetries: 2,
   baseDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 1 : 1000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 1
+      : 1000,
   maxDelayMs:
-    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test' ? 5 : 4000,
+    typeof process !== 'undefined' && process.env?.NODE_ENV === 'test'
+      ? 5
+      : 4000,
 };
 
 /**

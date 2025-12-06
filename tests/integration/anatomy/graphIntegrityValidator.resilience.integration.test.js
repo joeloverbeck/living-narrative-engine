@@ -116,20 +116,24 @@ describe('GraphIntegrityValidator catastrophic coverage', () => {
 
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('Validation error: rule chain failure');
-    expect(logger.errorMessages.some(({ message }) =>
-      message.includes('Unexpected error during validation')
-    )).toBe(true);
-    expect(logger.errorMessages.some(({ message }) =>
-      message.includes('Validation failed with 1 errors')
-    )).toBe(true);
+    expect(
+      logger.errorMessages.some(({ message }) =>
+        message.includes('Unexpected error during validation')
+      )
+    ).toBe(true);
+    expect(
+      logger.errorMessages.some(({ message }) =>
+        message.includes('Validation failed with 1 errors')
+      )
+    ).toBe(true);
   });
 
   it('requires real entity manager and logger dependencies', () => {
     const logger = new RecordingLogger();
 
-    expect(
-      () => new GraphIntegrityValidator({ logger })
-    ).toThrow(InvalidArgumentError);
+    expect(() => new GraphIntegrityValidator({ logger })).toThrow(
+      InvalidArgumentError
+    );
 
     expect(
       () =>

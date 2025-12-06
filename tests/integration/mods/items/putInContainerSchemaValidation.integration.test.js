@@ -71,11 +71,13 @@ describe('Put In Container Schema Validation', () => {
       const ruleData = JSON.parse(readFileSync(rulePath, 'utf8'));
 
       // Find PUT_IN_CONTAINER operation in the IF else_actions
-      const ifOperation = ruleData.actions.find(action => action.type === 'IF');
+      const ifOperation = ruleData.actions.find(
+        (action) => action.type === 'IF'
+      );
       expect(ifOperation).toBeDefined();
 
       const putInContainerOp = ifOperation.parameters.else_actions.find(
-        action => action.type === 'PUT_IN_CONTAINER'
+        (action) => action.type === 'PUT_IN_CONTAINER'
       );
       expect(putInContainerOp).toBeDefined();
       expect(putInContainerOp).toHaveProperty('type');
@@ -97,7 +99,7 @@ describe('Put In Container Schema Validation', () => {
       const ruleData = JSON.parse(readFileSync(rulePath, 'utf8'));
 
       const validateOp = ruleData.actions.find(
-        action => action.type === 'VALIDATE_CONTAINER_CAPACITY'
+        (action) => action.type === 'VALIDATE_CONTAINER_CAPACITY'
       );
       expect(validateOp).toBeDefined();
       expect(validateOp).toHaveProperty('type');
@@ -126,7 +128,9 @@ describe('Put In Container Schema Validation', () => {
         }
 
         if (!op.type) {
-          throw new Error(`Operation at ${path} missing type field: ${JSON.stringify(op, null, 2)}`);
+          throw new Error(
+            `Operation at ${path} missing type field: ${JSON.stringify(op, null, 2)}`
+          );
         }
 
         // Recursively check nested operations
@@ -146,7 +150,9 @@ describe('Put In Container Schema Validation', () => {
       };
 
       ruleData.actions.forEach((action, index) => {
-        expect(() => validateOperation(action, `actions[${index}]`)).not.toThrow();
+        expect(() =>
+          validateOperation(action, `actions[${index}]`)
+        ).not.toThrow();
       });
     });
   });
@@ -159,10 +165,12 @@ describe('Put In Container Schema Validation', () => {
         'schemas',
         'operation.schema.json'
       );
-      const operationSchema = JSON.parse(readFileSync(operationSchemaPath, 'utf8'));
+      const operationSchema = JSON.parse(
+        readFileSync(operationSchemaPath, 'utf8')
+      );
 
       const putInContainerRef = operationSchema.$defs.Operation.anyOf.find(
-        op => op.$ref === './operations/putInContainer.schema.json'
+        (op) => op.$ref === './operations/putInContainer.schema.json'
       );
       expect(putInContainerRef).toBeDefined();
     });
@@ -174,10 +182,12 @@ describe('Put In Container Schema Validation', () => {
         'schemas',
         'operation.schema.json'
       );
-      const operationSchema = JSON.parse(readFileSync(operationSchemaPath, 'utf8'));
+      const operationSchema = JSON.parse(
+        readFileSync(operationSchemaPath, 'utf8')
+      );
 
       const validateRef = operationSchema.$defs.Operation.anyOf.find(
-        op => op.$ref === './operations/validateContainerCapacity.schema.json'
+        (op) => op.$ref === './operations/validateContainerCapacity.schema.json'
       );
       expect(validateRef).toBeDefined();
     });
@@ -191,18 +201,25 @@ describe('Put In Container Schema Validation', () => {
         'schemas',
         'operation.schema.json'
       );
-      const operationSchema = JSON.parse(readFileSync(operationSchemaPath, 'utf8'));
+      const operationSchema = JSON.parse(
+        readFileSync(operationSchemaPath, 'utf8')
+      );
 
-      const operationsPath = join(process.cwd(), 'data', 'schemas', 'operations');
+      const operationsPath = join(
+        process.cwd(),
+        'data',
+        'schemas',
+        'operations'
+      );
       const { readdirSync, existsSync } = require('fs');
 
       // Get all registered operation references
       const registeredRefs = operationSchema.$defs.Operation.anyOf
-        .map(op => op.$ref)
-        .filter(ref => ref && ref.startsWith('./operations/'));
+        .map((op) => op.$ref)
+        .filter((ref) => ref && ref.startsWith('./operations/'));
 
       // Check each registered ref has a corresponding file
-      registeredRefs.forEach(ref => {
+      registeredRefs.forEach((ref) => {
         const filename = ref.replace('./operations/', '');
         const fullPath = join(operationsPath, filename);
         expect(existsSync(fullPath)).toBe(true);
@@ -210,13 +227,15 @@ describe('Put In Container Schema Validation', () => {
 
       // Get all operation schema files
       const operationFiles = readdirSync(operationsPath)
-        .filter(file => file.endsWith('.schema.json'))
-        .filter(file => !file.includes('base-') && !file.includes('nested-'));
+        .filter((file) => file.endsWith('.schema.json'))
+        .filter((file) => !file.includes('base-') && !file.includes('nested-'));
 
-      const registeredFiles = registeredRefs.map(ref => ref.replace('./operations/', ''));
+      const registeredFiles = registeredRefs.map((ref) =>
+        ref.replace('./operations/', '')
+      );
 
       // Check that all operation schema files are registered
-      operationFiles.forEach(file => {
+      operationFiles.forEach((file) => {
         expect(registeredFiles).toContain(file);
       });
     });

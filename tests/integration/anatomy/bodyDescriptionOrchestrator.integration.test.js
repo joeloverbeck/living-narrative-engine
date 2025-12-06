@@ -44,12 +44,17 @@ describe('BodyDescriptionOrchestrator Integration Coverage', () => {
   });
 
   const createActorEntityWithGeneratedAnatomy = async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
 
-    await testBed.entityManager.addComponent(actor.id, ANATOMY_BODY_COMPONENT_ID, {
-      recipeId: 'anatomy:human_female_balanced',
-      bodyParts: [],
-    });
+    await testBed.entityManager.addComponent(
+      actor.id,
+      ANATOMY_BODY_COMPONENT_ID,
+      {
+        recipeId: 'anatomy:human_female_balanced',
+        bodyParts: [],
+      }
+    );
 
     await testBed.anatomyGenerationService.generateAnatomyIfNeeded(actor.id);
 
@@ -90,19 +95,22 @@ describe('BodyDescriptionOrchestrator Integration Coverage', () => {
     it('returns cached description when metadata marks it current', async () => {
       const actorEntity = await createActorEntityWithGeneratedAnatomy();
 
-      await testBed.entityManager.addComponent(actorEntity.id, DESCRIPTION_COMPONENT_ID, {
-        text: 'Existing anatomy description',
-        metadata: { isCurrent: true },
-      });
+      await testBed.entityManager.addComponent(
+        actorEntity.id,
+        DESCRIPTION_COMPONENT_ID,
+        {
+          text: 'Existing anatomy description',
+          metadata: { isCurrent: true },
+        }
+      );
 
       const composeSpy = jest.spyOn(
         testBed.bodyDescriptionComposer,
         'composeDescription'
       );
 
-      const description = await orchestrator.getOrGenerateBodyDescription(
-        actorEntity
-      );
+      const description =
+        await orchestrator.getOrGenerateBodyDescription(actorEntity);
 
       expect(description).toBe('Existing anatomy description');
       expect(composeSpy).not.toHaveBeenCalled();
@@ -117,9 +125,8 @@ describe('BodyDescriptionOrchestrator Integration Coverage', () => {
         .spyOn(testBed.bodyDescriptionComposer, 'composeDescription')
         .mockResolvedValueOnce('');
 
-      const description = await orchestrator.getOrGenerateBodyDescription(
-        actorEntity
-      );
+      const description =
+        await orchestrator.getOrGenerateBodyDescription(actorEntity);
 
       expect(description).toBeNull();
       expect(composeSpy).toHaveBeenCalledWith(actorEntity);

@@ -11,14 +11,26 @@ import stepBackAction from '../../../../data/mods/positioning/actions/step_back.
 
 describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
   const positioningActions = [
-    { name: 'kneel_before', action: kneelBeforeAction, expectedId: 'deference:kneel_before' },
+    {
+      name: 'kneel_before',
+      action: kneelBeforeAction,
+      expectedId: 'deference:kneel_before',
+    },
     {
       name: 'place_yourself_behind',
       action: placeYourselfBehindAction,
       expectedId: 'positioning:place_yourself_behind',
     },
-    { name: 'turn_your_back', action: turnYourBackAction, expectedId: 'positioning:turn_your_back' },
-    { name: 'step_back', action: stepBackAction, expectedId: 'positioning:step_back' },
+    {
+      name: 'turn_your_back',
+      action: turnYourBackAction,
+      expectedId: 'positioning:turn_your_back',
+    },
+    {
+      name: 'step_back',
+      action: stepBackAction,
+      expectedId: 'positioning:step_back',
+    },
   ];
 
   describe('Mouth Availability Prerequisites', () => {

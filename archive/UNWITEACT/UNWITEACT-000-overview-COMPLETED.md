@@ -21,6 +21,7 @@ Implement the `weapons:unwield_item` action, the inverse of `weapons:wield_threa
 ## Problem Statement
 
 Currently, the `wield_threateningly` action:
+
 1. Adds items to the `positioning:wielding` component
 2. **Does NOT lock grabbing appendages** via `LOCK_GRABBING`
 
@@ -28,16 +29,16 @@ This creates an inconsistency where wielded items don't properly occupy the acto
 
 ## Ticket Index
 
-| Ticket | Phase | Description | Dependencies |
-|--------|-------|-------------|--------------|
-| UNWITEACT-001 | 1 | Create `wielded_items.scope` file | None |
-| UNWITEACT-002 | 1 | Create `event-is-action-unwield-item.condition.json` | None |
-| UNWITEACT-003 | 2 | Create `unwield_item.action.json` | UNWITEACT-001 |
-| UNWITEACT-004 | 2 | Create `handle_unwield_item.rule.json` | UNWITEACT-002 |
-| UNWITEACT-005 | 3 | Fix `handle_wield_threateningly.rule.json` to add `LOCK_GRABBING` | None |
-| UNWITEACT-006 | 4 | Create action discovery tests for `unwield_item` | UNWITEACT-003 |
-| UNWITEACT-007 | 4 | Create rule execution tests for `unwield_item` | UNWITEACT-004 |
-| UNWITEACT-008 | 4 | Add/update tests for `wield_threateningly` LOCK_GRABBING | UNWITEACT-005 |
+| Ticket        | Phase | Description                                                       | Dependencies  |
+| ------------- | ----- | ----------------------------------------------------------------- | ------------- |
+| UNWITEACT-001 | 1     | Create `wielded_items.scope` file                                 | None          |
+| UNWITEACT-002 | 1     | Create `event-is-action-unwield-item.condition.json`              | None          |
+| UNWITEACT-003 | 2     | Create `unwield_item.action.json`                                 | UNWITEACT-001 |
+| UNWITEACT-004 | 2     | Create `handle_unwield_item.rule.json`                            | UNWITEACT-002 |
+| UNWITEACT-005 | 3     | Fix `handle_wield_threateningly.rule.json` to add `LOCK_GRABBING` | None          |
+| UNWITEACT-006 | 4     | Create action discovery tests for `unwield_item`                  | UNWITEACT-003 |
+| UNWITEACT-007 | 4     | Create rule execution tests for `unwield_item`                    | UNWITEACT-004 |
+| UNWITEACT-008 | 4     | Add/update tests for `wield_threateningly` LOCK_GRABBING          | UNWITEACT-005 |
 
 ## Execution Order
 
@@ -61,20 +62,20 @@ Phase 4 (Tests - depends on Phases 2 & 3)
 
 ## Files Created by This Work
 
-| File | Ticket |
-|------|--------|
-| `data/mods/weapons/scopes/wielded_items.scope` | UNWITEACT-001 |
+| File                                                                       | Ticket        |
+| -------------------------------------------------------------------------- | ------------- |
+| `data/mods/weapons/scopes/wielded_items.scope`                             | UNWITEACT-001 |
 | `data/mods/weapons/conditions/event-is-action-unwield-item.condition.json` | UNWITEACT-002 |
-| `data/mods/weapons/actions/unwield_item.action.json` | UNWITEACT-003 |
-| `data/mods/weapons/rules/handle_unwield_item.rule.json` | UNWITEACT-004 |
-| `tests/integration/mods/weapons/unwield_item_action_discovery.test.js` | UNWITEACT-006 |
-| `tests/integration/mods/weapons/unwield_item_rule_execution.test.js` | UNWITEACT-007 |
+| `data/mods/weapons/actions/unwield_item.action.json`                       | UNWITEACT-003 |
+| `data/mods/weapons/rules/handle_unwield_item.rule.json`                    | UNWITEACT-004 |
+| `tests/integration/mods/weapons/unwield_item_action_discovery.test.js`     | UNWITEACT-006 |
+| `tests/integration/mods/weapons/unwield_item_rule_execution.test.js`       | UNWITEACT-007 |
 
 ## Files Modified by This Work
 
-| File | Ticket |
-|------|--------|
-| `data/mods/weapons/rules/handle_wield_threateningly.rule.json` | UNWITEACT-005 |
+| File                                                                              | Ticket        |
+| --------------------------------------------------------------------------------- | ------------- |
+| `data/mods/weapons/rules/handle_wield_threateningly.rule.json`                    | UNWITEACT-005 |
 | `tests/integration/mods/weapons/wield_threateningly_action.test.js` (or new file) | UNWITEACT-008 |
 
 ## Validation Commands
@@ -90,6 +91,7 @@ npm run test:integration -- tests/integration/mods/weapons/  # Weapons-specific 
 ## Rollback Strategy
 
 Each phase can be rolled back independently:
+
 1. **Scope/Condition files**: Delete the new files
 2. **Action/Rule files**: Delete the new files, revert manifest
 3. **Wield fix**: `git checkout data/mods/weapons/rules/handle_wield_threateningly.rule.json`

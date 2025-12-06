@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import ActivityDescriptionFacade from '../../../src/anatomy/services/activityDescriptionFacade.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
 import ActivityIndexManager from '../../../src/anatomy/services/activityIndexManager.js';
@@ -38,12 +33,11 @@ class ContextualGroupingAdapter {
     const actorId = entity?.id ?? null;
     const actorName = this.nlgSystem.resolveEntityName(actorId);
     const actorGender = this.nlgSystem.detectEntityGender(actorId);
-    const actorPronouns =
-      this.nlgSystem.getPronounSet(actorGender) ?? {
-        subject: actorName,
-        object: actorName,
-        reflexive: actorName,
-      };
+    const actorPronouns = this.nlgSystem.getPronounSet(actorGender) ?? {
+      subject: actorName,
+      object: actorName,
+      reflexive: actorName,
+    };
 
     return groups
       .map((group, index) => {
@@ -54,11 +48,11 @@ class ContextualGroupingAdapter {
         try {
           const primaryContext = this.contextSystem.buildActivityContext(
             actorId,
-            group.primaryActivity,
+            group.primaryActivity
           );
           const contextualPrimary = this.contextSystem.applyContextualTone(
             group.primaryActivity,
-            primaryContext,
+            primaryContext
           );
 
           const usePronounForActor = index > 0;
@@ -75,23 +69,23 @@ class ContextualGroupingAdapter {
               actorName,
               actorPronouns,
               preferReflexivePronouns: true,
-            },
+            }
           );
 
           const primaryPhrase =
             typeof primaryPhraseResult === 'string'
               ? primaryPhraseResult
-              : primaryPhraseResult?.fullPhrase ?? '';
+              : (primaryPhraseResult?.fullPhrase ?? '');
 
           const relatedFragments = (group.relatedActivities ?? []).map(
             ({ activity, conjunction }) => {
               const relatedContext = this.contextSystem.buildActivityContext(
                 actorId,
-                activity,
+                activity
               );
               const contextualRelated = this.contextSystem.applyContextualTone(
                 activity,
-                relatedContext,
+                relatedContext
               );
 
               const phraseComponents = this.nlgSystem.generateActivityPhrase(
@@ -103,7 +97,7 @@ class ContextualGroupingAdapter {
                   actorName,
                   actorPronouns,
                   omitActor: true,
-                },
+                }
               );
 
               return this.nlgSystem.buildRelatedActivityFragment(
@@ -114,9 +108,9 @@ class ContextualGroupingAdapter {
                   actorReference,
                   actorPronouns,
                   pronounsEnabled: true,
-                },
+                }
               );
-            },
+            }
           );
 
           const description = [primaryPhrase, ...relatedFragments]
@@ -186,7 +180,9 @@ async function buildFacadeEnvironment({ includeEventBus = true } = {}) {
   testBed.loadCoreTestData();
 
   testBed.loadComponents({
-    'core:name': createComponentDefinition('core:name', { text: { type: 'string' } }),
+    'core:name': createComponentDefinition('core:name', {
+      text: { type: 'string' },
+    }),
     'core:gender': createComponentDefinition('core:gender', {
       value: { type: 'string' },
     }),
@@ -252,7 +248,10 @@ async function buildFacadeEnvironment({ includeEventBus = true } = {}) {
   });
   anatomyFormattingService.initialize();
 
-  const cacheManager = new ActivityCacheManager({ logger, eventBus: eventBus ?? undefined });
+  const cacheManager = new ActivityCacheManager({
+    logger,
+    eventBus: eventBus ?? undefined,
+  });
   const indexManager = new ActivityIndexManager({ cacheManager, logger });
   const metadataCollectionSystem = new ActivityMetadataCollectionSystem({
     entityManager: testBed.entityManager,
@@ -299,15 +298,18 @@ async function buildFacadeEnvironment({ includeEventBus = true } = {}) {
   });
 
   const originalCollect = metadataCollectionSystem.collectActivityMetadata.bind(
-    metadataCollectionSystem,
+    metadataCollectionSystem
   );
-  metadataCollectionSystem.collectActivityMetadata = (entityArg, maybeEntity) => {
+  metadataCollectionSystem.collectActivityMetadata = (
+    entityArg,
+    maybeEntity
+  ) => {
     const entityInstance =
       maybeEntity || (typeof entityArg === 'object' ? entityArg : undefined);
     const entityId =
       typeof entityArg === 'string'
         ? entityArg
-        : entityInstance?.id ?? undefined;
+        : (entityInstance?.id ?? undefined);
 
     return originalCollect(entityId, entityInstance);
   };
@@ -344,7 +346,9 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
       await entityManager.addComponent(actor.id, 'core:name', {
         text: 'Heroic Wanderer',
       });
-      await entityManager.addComponent(actor.id, 'core:gender', { value: 'nonbinary' });
+      await entityManager.addComponent(actor.id, 'core:gender', {
+        value: 'nonbinary',
+      });
       await entityManager.addComponent(actor.id, 'positioning:closeness', {
         partners: [partner.id],
       });
@@ -352,7 +356,7 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
         held_entity_id: partner.id,
         initiated: true,
         activityMetadata: {
-          template: '{actor} warmly clasps {target}\'s hand',
+          template: "{actor} warmly clasps {target}'s hand",
           shouldDescribeInActivity: true,
           priority: 92,
           targetRole: 'held_entity_id',
@@ -366,14 +370,12 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
         value: 'female',
       });
 
-      expect(env.anatomyFormattingService.getActivityIntegrationConfig().prefix).toBe(
-        'Activity: ',
-      );
+      expect(
+        env.anatomyFormattingService.getActivityIntegrationConfig().prefix
+      ).toBe('Activity: ');
       expect(actor.componentTypeIds).toContain(handHoldingComponent.id);
-      const collectedMetadata = env.metadataCollectionSystem.collectActivityMetadata(
-        actor.id,
-        actor,
-      );
+      const collectedMetadata =
+        env.metadataCollectionSystem.collectActivityMetadata(actor.id, actor);
       expect(collectedMetadata).not.toHaveLength(0);
       expect(collectedMetadata[0].targetEntityId).toBe(partner.id);
 
@@ -402,7 +404,9 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
         instanceId: 'actor_silent',
       });
 
-      await entityManager.addComponent(actor.id, 'core:name', { text: 'Silent One' });
+      await entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Silent One',
+      });
       await entityManager.addComponent(actor.id, 'test:quiet_presence', {
         activityMetadata: {
           template: '{actor} observes quietly',
@@ -428,7 +432,9 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
         instanceId: 'actor_error',
       });
 
-      await entityManager.addComponent(actor.id, 'core:name', { text: 'Error Prone' });
+      await entityManager.addComponent(actor.id, 'core:name', {
+        text: 'Error Prone',
+      });
 
       jest
         .spyOn(metadataCollectionSystem, 'collectActivityMetadata')
@@ -446,7 +452,7 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
           payload: expect.objectContaining({
             errorType: 'ACTIVITY_DESCRIPTION_GENERATION_FAILED',
           }),
-        }),
+        })
       );
     } finally {
       await env.facade.destroy();
@@ -462,7 +468,10 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
 
       cacheManager.set('entityName', 'alpha', 'Alpha');
       cacheManager.set('gender', 'alpha', 'female');
-      cacheManager.set('activityIndex', 'alpha', { index: { all: [] }, signature: 'sig' });
+      cacheManager.set('activityIndex', 'alpha', {
+        index: { all: [] },
+        signature: 'sig',
+      });
       cacheManager.set('closeness', 'alpha', ['partner']);
 
       facade.invalidateCache('alpha');
@@ -522,22 +531,29 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
     const env = await buildFacadeEnvironment();
     try {
       const { testBed, facade } = env;
-      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-        instanceId: 'actor_conditions_filtered',
-      });
+      const actor = await testBed.entityManager.createEntityInstance(
+        'core:actor',
+        {
+          instanceId: 'actor_conditions_filtered',
+        }
+      );
 
       await testBed.entityManager.addComponent(actor.id, 'core:name', {
         text: 'Conditionally Silent',
       });
-      await testBed.entityManager.addComponent(actor.id, 'test:conditional_activity', {
-        activityMetadata: {
-          template: '{actor} attempts to invoke a hidden rune',
-          shouldDescribeInActivity: true,
-          conditions: {
-            requiredComponents: ['test:nonexistent_component'],
+      await testBed.entityManager.addComponent(
+        actor.id,
+        'test:conditional_activity',
+        {
+          activityMetadata: {
+            template: '{actor} attempts to invoke a hidden rune',
+            shouldDescribeInActivity: true,
+            conditions: {
+              requiredComponents: ['test:nonexistent_component'],
+            },
           },
-        },
-      });
+        }
+      );
 
       const description = await facade.generateActivityDescription(actor);
       expect(description).toBe('');
@@ -552,19 +568,26 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
     const env = await buildFacadeEnvironment();
     try {
       const { testBed, facade, groupingSystem } = env;
-      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-        instanceId: 'actor_no_groups',
-      });
+      const actor = await testBed.entityManager.createEntityInstance(
+        'core:actor',
+        {
+          instanceId: 'actor_no_groups',
+        }
+      );
 
       await testBed.entityManager.addComponent(actor.id, 'core:name', {
         text: 'Ungrouped Performer',
       });
-      await testBed.entityManager.addComponent(actor.id, 'test:simple_activity', {
-        activityMetadata: {
-          template: '{actor} hums a solitary tune',
-          shouldDescribeInActivity: true,
-        },
-      });
+      await testBed.entityManager.addComponent(
+        actor.id,
+        'test:simple_activity',
+        {
+          activityMetadata: {
+            template: '{actor} hums a solitary tune',
+            shouldDescribeInActivity: true,
+          },
+        }
+      );
 
       const groupingSpy = jest
         .spyOn(groupingSystem, 'groupActivities')
@@ -585,9 +608,12 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
     const env = await buildFacadeEnvironment({ includeEventBus: false });
     try {
       const { testBed, facade, metadataCollectionSystem } = env;
-      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-        instanceId: 'actor_no_event_bus',
-      });
+      const actor = await testBed.entityManager.createEntityInstance(
+        'core:actor',
+        {
+          instanceId: 'actor_no_event_bus',
+        }
+      );
 
       await testBed.entityManager.addComponent(actor.id, 'core:name', {
         text: 'Disconnected Actor',
@@ -612,9 +638,12 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
     const env = await buildFacadeEnvironment();
     try {
       const { testBed, facade, metadataCollectionSystem, eventBus } = env;
-      const actor = await testBed.entityManager.createEntityInstance('core:actor', {
-        instanceId: 'actor_dispatch_failure',
-      });
+      const actor = await testBed.entityManager.createEntityInstance(
+        'core:actor',
+        {
+          instanceId: 'actor_dispatch_failure',
+        }
+      );
 
       await testBed.entityManager.addComponent(actor.id, 'core:name', {
         text: 'Dispatcher',
@@ -675,9 +704,11 @@ describe('ActivityDescriptionFacade integration with real modules', () => {
     try {
       const { facade, cacheManager } = env;
       const originalDestroy = cacheManager.destroy.bind(cacheManager);
-      const destroySpy = jest.spyOn(cacheManager, 'destroy').mockImplementation(() => {
-        throw new Error('destroy failure');
-      });
+      const destroySpy = jest
+        .spyOn(cacheManager, 'destroy')
+        .mockImplementation(() => {
+          throw new Error('destroy failure');
+        });
 
       expect(() => facade.destroy()).not.toThrow();
       destroyed = true;

@@ -25,11 +25,15 @@ export const SUBJECT_TYPES = {
  * Used for documentation, validation messages, and UI tooltips.
  */
 export const SUBJECT_TYPE_DESCRIPTIONS = {
-  [SUBJECT_TYPES.ENTITY]: 'People, places, things, creatures, organizations - describing who/what/where',
+  [SUBJECT_TYPES.ENTITY]:
+    'People, places, things, creatures, organizations - describing who/what/where',
   [SUBJECT_TYPES.EVENT]: 'Past occurrences - things that already happened',
-  [SUBJECT_TYPES.PLAN]: 'Future intentions - what you intend to do (not yet executed)',
-  [SUBJECT_TYPES.KNOWLEDGE]: 'Information, theories, observations, concepts - what you know, noticed, or theorize',
-  [SUBJECT_TYPES.STATE]: 'Mental, emotional, psychological conditions - feelings or complex mental states',
+  [SUBJECT_TYPES.PLAN]:
+    'Future intentions - what you intend to do (not yet executed)',
+  [SUBJECT_TYPES.KNOWLEDGE]:
+    'Information, theories, observations, concepts - what you know, noticed, or theorize',
+  [SUBJECT_TYPES.STATE]:
+    'Mental, emotional, psychological conditions - feelings or complex mental states',
   [SUBJECT_TYPES.OTHER]: 'Fallback for uncertain or abstract concepts',
 };
 

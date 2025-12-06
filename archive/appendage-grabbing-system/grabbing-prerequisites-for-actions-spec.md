@@ -12,16 +12,17 @@ The grabbing limitation system is already implemented and operational. No new op
 
 ### Operators
 
-| Operator | Location | Purpose |
-|----------|----------|---------|
-| `hasFreeGrabbingAppendages` | `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Checks if entity has N free (unlocked) grabbing appendages |
-| `canActorGrabItem` | `src/logic/operators/canActorGrabItemOperator.js` | Checks if actor can grab specific item based on its hand requirements |
+| Operator                    | Location                                                   | Purpose                                                               |
+| --------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| `hasFreeGrabbingAppendages` | `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Checks if entity has N free (unlocked) grabbing appendages            |
+| `canActorGrabItem`          | `src/logic/operators/canActorGrabItemOperator.js`          | Checks if actor can grab specific item based on its hand requirements |
 
 ### Condition Files
 
 Both required conditions already exist in `data/mods/anatomy/conditions/`:
 
 **1 Appendage Condition** (`actor-has-free-grabbing-appendage.condition.json`):
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -34,6 +35,7 @@ Both required conditions already exist in `data/mods/anatomy/conditions/`:
 ```
 
 **2 Appendages Condition** (`actor-has-two-free-grabbing-appendages.condition.json`):
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -66,25 +68,27 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 
 ### Summary Table
 
-| Action | Mod | Appendages | Condition Ref | File Path |
-|--------|-----|------------|---------------|-----------|
-| `remove_clothing` | clothing | 2 | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/clothing/actions/remove_clothing.action.json` |
-| `remove_others_clothing` | clothing | 2 | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/clothing/actions/remove_others_clothing.action.json` |
-| `bury_face_in_hands` | distress | 2 | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/distress/actions/bury_face_in_hands.action.json` |
-| `clutch_onto_upper_clothing` | distress | 1 | `anatomy:actor-has-free-grabbing-appendage` | `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` |
-| `show_off_biceps` | exercise | 2 | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/exercise/actions/show_off_biceps.action.json` |
-| `drink_entirely` | items | 1 | `anatomy:actor-has-free-grabbing-appendage` | `data/mods/items/actions/drink_entirely.action.json` |
-| `drink_from` | items | 1 | `anatomy:actor-has-free-grabbing-appendage` | `data/mods/items/actions/drink_from.action.json` |
-| `pick_up_item` | items | 1 | `anatomy:actor-has-free-grabbing-appendage` | `data/mods/items/actions/pick_up_item.action.json` |
-| `take_from_container` | items | 1 | `anatomy:actor-has-free-grabbing-appendage` | `data/mods/items/actions/take_from_container.action.json` |
+| Action                       | Mod      | Appendages | Condition Ref                                    | File Path                                                           |
+| ---------------------------- | -------- | ---------- | ------------------------------------------------ | ------------------------------------------------------------------- |
+| `remove_clothing`            | clothing | 2          | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/clothing/actions/remove_clothing.action.json`            |
+| `remove_others_clothing`     | clothing | 2          | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/clothing/actions/remove_others_clothing.action.json`     |
+| `bury_face_in_hands`         | distress | 2          | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/distress/actions/bury_face_in_hands.action.json`         |
+| `clutch_onto_upper_clothing` | distress | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` |
+| `show_off_biceps`            | exercise | 2          | `anatomy:actor-has-two-free-grabbing-appendages` | `data/mods/exercise/actions/show_off_biceps.action.json`            |
+| `drink_entirely`             | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/drink_entirely.action.json`                |
+| `drink_from`                 | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/drink_from.action.json`                    |
+| `pick_up_item`               | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/pick_up_item.action.json`                  |
+| `take_from_container`        | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/take_from_container.action.json`           |
 
 ### Detailed Changes
 
 #### Clothing Mod (2 files)
 
 **remove_clothing.action.json**
+
 - **Rationale**: Removing clothing requires both hands to manipulate garment
 - **Add prerequisites**:
+
 ```json
 "prerequisites": [
   {
@@ -97,8 +101,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 ```
 
 **remove_others_clothing.action.json**
+
 - **Rationale**: Removing another person's clothing requires both hands
 - **Add prerequisites**:
+
 ```json
 "prerequisites": [
   {
@@ -113,8 +119,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 #### Distress Mod (2 files)
 
 **bury_face_in_hands.action.json**
+
 - **Rationale**: Action explicitly requires both hands to cover face
 - **Add prerequisites**:
+
 ```json
 "prerequisites": [
   {
@@ -127,8 +135,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 ```
 
 **clutch_onto_upper_clothing.action.json**
+
 - **Rationale**: Clutching can be done with a single hand
 - **Add prerequisites**:
+
 ```json
 "prerequisites": [
   {
@@ -143,9 +153,11 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 #### Exercise Mod (1 file)
 
 **show_off_biceps.action.json**
+
 - **Rationale**: Showing off biceps requires both arms to be free for the pose
 - **Note**: This action already has prerequisites (muscular/hulking build check). The grabbing prerequisite must be **appended** to the existing array.
 - **Append to existing prerequisites array**:
+
 ```json
 {
   "logic": {
@@ -158,8 +170,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 #### Items Mod (4 files)
 
 **drink_entirely.action.json**
+
 - **Rationale**: Drinking requires a hand to hold the container
 - **Add prerequisites key** (currently missing):
+
 ```json
 "prerequisites": [
   {
@@ -172,8 +186,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 ```
 
 **drink_from.action.json**
+
 - **Rationale**: Drinking requires a hand to hold the container
 - **Add prerequisites key** (currently missing):
+
 ```json
 "prerequisites": [
   {
@@ -186,8 +202,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 ```
 
 **pick_up_item.action.json**
+
 - **Rationale**: Picking up items requires at least one free hand
 - **Populate empty prerequisites array**:
+
 ```json
 "prerequisites": [
   {
@@ -200,8 +218,10 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 ```
 
 **take_from_container.action.json**
+
 - **Rationale**: Taking items from containers requires a free hand
 - **Add prerequisites key** (currently missing):
+
 ```json
 "prerequisites": [
   {
@@ -219,23 +239,24 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 
 Each action requires a dedicated integration test file following the pattern from `wield_threateningly_prerequisites.test.js`:
 
-| Test File Path | Action |
-|----------------|--------|
-| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js` | remove_clothing |
-| `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js` | remove_others_clothing |
-| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js` | bury_face_in_hands |
+| Test File Path                                                                     | Action                     |
+| ---------------------------------------------------------------------------------- | -------------------------- |
+| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js`            | remove_clothing            |
+| `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js`     | remove_others_clothing     |
+| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js`         | bury_face_in_hands         |
 | `tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` | clutch_onto_upper_clothing |
-| `tests/integration/mods/exercise/show_off_biceps_prerequisites.test.js` | show_off_biceps |
-| `tests/integration/mods/items/drink_entirely_prerequisites.test.js` | drink_entirely |
-| `tests/integration/mods/items/drink_from_prerequisites.test.js` | drink_from |
-| `tests/integration/mods/items/pick_up_item_prerequisites.test.js` | pick_up_item |
-| `tests/integration/mods/items/take_from_container_prerequisites.test.js` | take_from_container |
+| `tests/integration/mods/exercise/show_off_biceps_prerequisites.test.js`            | show_off_biceps            |
+| `tests/integration/mods/items/drink_entirely_prerequisites.test.js`                | drink_entirely             |
+| `tests/integration/mods/items/drink_from_prerequisites.test.js`                    | drink_from                 |
+| `tests/integration/mods/items/pick_up_item_prerequisites.test.js`                  | pick_up_item               |
+| `tests/integration/mods/items/take_from_container_prerequisites.test.js`           | take_from_container        |
 
 ### Required Test Scenarios
 
 Each test file must cover:
 
 #### 1. Action Definition Structure
+
 ```javascript
 describe('action definition structure', () => {
   test('should have prerequisites array defined');
@@ -246,6 +267,7 @@ describe('action definition structure', () => {
 ```
 
 #### 2. Success Scenarios (Free Appendages Available)
+
 ```javascript
 describe('prerequisite evaluation - free grabbing appendages available', () => {
   test('should pass when actor has exactly N free appendages');
@@ -254,6 +276,7 @@ describe('prerequisite evaluation - free grabbing appendages available', () => {
 ```
 
 #### 3. Failure Scenarios (Insufficient Appendages)
+
 ```javascript
 describe('prerequisite evaluation - insufficient free appendages', () => {
   test('should fail when actor has zero free grabbing appendages');
@@ -264,6 +287,7 @@ describe('prerequisite evaluation - insufficient free appendages', () => {
 ```
 
 #### 4. Edge Cases
+
 ```javascript
 describe('edge cases', () => {
   test('should handle missing actor gracefully');
@@ -274,6 +298,7 @@ describe('edge cases', () => {
 ### Special Case: show_off_biceps
 
 The `show_off_biceps` test must verify combined prerequisites:
+
 ```javascript
 describe('combined prerequisites', () => {
   test('should pass when actor has muscular build AND 2 free appendages');
@@ -325,44 +350,44 @@ npm run test:ci
 
 ### Files to Modify (9 action files)
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/clothing/actions/remove_clothing.action.json` | Replace empty prerequisites |
-| `data/mods/clothing/actions/remove_others_clothing.action.json` | Replace empty prerequisites |
-| `data/mods/distress/actions/bury_face_in_hands.action.json` | Replace empty prerequisites |
-| `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` | Replace empty prerequisites |
-| `data/mods/exercise/actions/show_off_biceps.action.json` | Append to existing prerequisites |
-| `data/mods/items/actions/drink_entirely.action.json` | Add prerequisites key |
-| `data/mods/items/actions/drink_from.action.json` | Add prerequisites key |
-| `data/mods/items/actions/pick_up_item.action.json` | Populate empty prerequisites |
-| `data/mods/items/actions/take_from_container.action.json` | Add prerequisites key |
+| File                                                                | Change Type                      |
+| ------------------------------------------------------------------- | -------------------------------- |
+| `data/mods/clothing/actions/remove_clothing.action.json`            | Replace empty prerequisites      |
+| `data/mods/clothing/actions/remove_others_clothing.action.json`     | Replace empty prerequisites      |
+| `data/mods/distress/actions/bury_face_in_hands.action.json`         | Replace empty prerequisites      |
+| `data/mods/distress/actions/clutch_onto_upper_clothing.action.json` | Replace empty prerequisites      |
+| `data/mods/exercise/actions/show_off_biceps.action.json`            | Append to existing prerequisites |
+| `data/mods/items/actions/drink_entirely.action.json`                | Add prerequisites key            |
+| `data/mods/items/actions/drink_from.action.json`                    | Add prerequisites key            |
+| `data/mods/items/actions/pick_up_item.action.json`                  | Populate empty prerequisites     |
+| `data/mods/items/actions/take_from_container.action.json`           | Add prerequisites key            |
 
 ### Files to Create (9 test files)
 
-| Test File |
-|-----------|
-| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js` |
-| `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js` |
-| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js` |
+| Test File                                                                          |
+| ---------------------------------------------------------------------------------- |
+| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js`            |
+| `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js`     |
+| `tests/integration/mods/distress/bury_face_in_hands_prerequisites.test.js`         |
 | `tests/integration/mods/distress/clutch_onto_upper_clothing_prerequisites.test.js` |
-| `tests/integration/mods/exercise/show_off_biceps_prerequisites.test.js` |
-| `tests/integration/mods/items/drink_entirely_prerequisites.test.js` |
-| `tests/integration/mods/items/drink_from_prerequisites.test.js` |
-| `tests/integration/mods/items/pick_up_item_prerequisites.test.js` |
-| `tests/integration/mods/items/take_from_container_prerequisites.test.js` |
+| `tests/integration/mods/exercise/show_off_biceps_prerequisites.test.js`            |
+| `tests/integration/mods/items/drink_entirely_prerequisites.test.js`                |
+| `tests/integration/mods/items/drink_from_prerequisites.test.js`                    |
+| `tests/integration/mods/items/pick_up_item_prerequisites.test.js`                  |
+| `tests/integration/mods/items/take_from_container_prerequisites.test.js`           |
 
 ### Existing Files (No Changes Required)
 
-| File | Purpose |
-|------|---------|
-| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json` | Condition for 1 appendage |
+| File                                                                                 | Purpose                    |
+| ------------------------------------------------------------------------------------ | -------------------------- |
+| `data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json`      | Condition for 1 appendage  |
 | `data/mods/anatomy/conditions/actor-has-two-free-grabbing-appendages.condition.json` | Condition for 2 appendages |
 
 ### Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/actions/wield_threateningly.action.json` | Implementation pattern |
-| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern |
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Operator implementation |
-| `src/utils/grabbingUtils.js` | Utility functions to mock |
+| File                                                                       | Purpose                   |
+| -------------------------------------------------------------------------- | ------------------------- |
+| `data/mods/weapons/actions/wield_threateningly.action.json`                | Implementation pattern    |
+| `tests/integration/mods/weapons/wield_threateningly_prerequisites.test.js` | Test pattern              |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`                 | Operator implementation   |
+| `src/utils/grabbingUtils.js`                                               | Utility functions to mock |

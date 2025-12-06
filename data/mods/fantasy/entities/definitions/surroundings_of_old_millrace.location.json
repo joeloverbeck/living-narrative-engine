@@ -1,28 +1,28 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:surroundings_of_old_millrace",
-    "components": {
-        "core:name": {
-            "text": "surroundings of old millrace"
-        },
-        "core:description": {
-            "text": "The millrace cuts a narrow, fast-moving channel along the lane, its dark water shouldering past mossy stonework and vanishing under the shadow of an old wheel. The waterwheel sits half-sunk beside a timber-framed building, heavy with age—its paddles wet, its rim stained, its axle lodged into a squat stone cradle that slicks green with moss. A dirt-and-stone track runs alongside the flow, worn smooth where countless boots have passed and freckled with tufts of grass and small yellow flowers. Short wooden posts and scattered rocks mark the canal’s edge like a lazy warning. On both sides, tall half-timbered houses loom inward, their pale plaster panels webbed with dark beams, upper stories jutting out over the lane on thick braces. Red tile roofs stack steeply above them, weathered and uneven, catching warm light where the trees open up. The lane bends away between these leaning facades, slipping into a quiet corridor of timber, shadow, and sun. Behind the roofs, a dense wall of green trees rises and softens the scene, filtering the light into a gentle haze. Everything feels damp at the edges—wood darkened near the waterline, stone slick to the touch—while the path itself stays inviting, as if it expects footfalls any moment."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/surroundings_of_old_millrace.png",
-            "altText": "Surroundings of old millrace"
-        },
-        "movement:exits": [
-            {
-                "direction": "to downtown Mudbrook-on-the-Bend",
-                "target": "fantasy:mudbrook_on_the_bend_instance",
-                "blocker": null
-            },
-            {
-                "direction": "to 12 Kiln Lane",
-                "target": "fantasy:12_kiln_lane_instance",
-                "blocker": null
-            }
-        ]
-    }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:surroundings_of_old_millrace",
+  "components": {
+    "core:name": {
+      "text": "surroundings of old millrace"
+    },
+    "core:description": {
+      "text": "The millrace cuts a narrow, fast-moving channel along the lane, its dark water shouldering past mossy stonework and vanishing under the shadow of an old wheel. The waterwheel sits half-sunk beside a timber-framed building, heavy with age—its paddles wet, its rim stained, its axle lodged into a squat stone cradle that slicks green with moss. A dirt-and-stone track runs alongside the flow, worn smooth where countless boots have passed and freckled with tufts of grass and small yellow flowers. Short wooden posts and scattered rocks mark the canal’s edge like a lazy warning. On both sides, tall half-timbered houses loom inward, their pale plaster panels webbed with dark beams, upper stories jutting out over the lane on thick braces. Red tile roofs stack steeply above them, weathered and uneven, catching warm light where the trees open up. The lane bends away between these leaning facades, slipping into a quiet corridor of timber, shadow, and sun. Behind the roofs, a dense wall of green trees rises and softens the scene, filtering the light into a gentle haze. Everything feels damp at the edges—wood darkened near the waterline, stone slick to the touch—while the path itself stays inviting, as if it expects footfalls any moment."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/surroundings_of_old_millrace.png",
+      "altText": "Surroundings of old millrace"
+    },
+    "movement:exits": [
+      {
+        "direction": "to downtown Mudbrook-on-the-Bend",
+        "target": "fantasy:mudbrook_on_the_bend_instance",
+        "blocker": null
+      },
+      {
+        "direction": "to 12 Kiln Lane",
+        "target": "fantasy:12_kiln_lane_instance",
+        "blocker": null
+      }
+    ]
+  }
 }

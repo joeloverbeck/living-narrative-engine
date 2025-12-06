@@ -39,7 +39,11 @@ describe('compareLoadSlots', () => {
   });
 
   it('treats invalid timestamps as older than valid ones', () => {
-    const invalid = { isCorrupted: false, timestamp: 'not-a-date', identifier: 'invalid' };
+    const invalid = {
+      isCorrupted: false,
+      timestamp: 'not-a-date',
+      identifier: 'invalid',
+    };
     const valid = {
       isCorrupted: false,
       timestamp: '2023-02-01T00:00:00Z',

@@ -1,21 +1,25 @@
 # Aldous Clothing Replacement Spec
 
 ## Context
+
 - Target recipe: `data/mods/fantasy/recipes/aldous.recipe.json` currently equips placeholder workwear (linen drawers/footwraps, work tunic, narrow wool-linen trousers, leather work apron, leather belt, cracked ankle boots).
 - Goal: replace placeholders with Aldous’ intended kit: close-cuff linen shirt (yellowish-brown), reinforced mud-stained wool yard trousers, dark brown waxed-leather work boots, smoke-gray quilted jerkin, smoked-glass eye shields with greenish tint and chips, and goatskin grip gloves.
 - Scope: design specs only; item JSONs and recipe changes will be implemented later, but must remain validation-ready for `npm run test validate:recipe`.
 
 ## Survey Findings
+
 - **Existing garments**: Base/outer/accessory mods have no close-cuff linen work shirt, no mud-stained reinforced trousers, no waxed leather work boots, no quilted jerkin, no head_gear eye protection, and only fingerless goatskin gloves (not grip gloves). Outer clothing skews to coats/hoodies/jackets; accessories are mostly jewelry/hats.
 - **Materials**: `data/mods/core/components/material.component.json` already covers needed materials (linen, wool, leather, goatskin, glass). Waxing can be expressed via `core:material.properties` (`waterproof`) plus description—no new material enum required.
 - **Descriptors**: `color_extended` lacks direct matches for “yellowish-brown” and “smoke-gray.” `texture` lacks “quilted” (jerkin padding) and “chipped” (glass edges). Mud staining can reuse `color_extended: mud-brown` + `texture: worn`.
 
 ## Descriptor Enum Adjustments
+
 - Extend `data/mods/descriptors/components/color_extended.component.json` with: `ochre-brown` (yellowish-brown linen) and `smoke-gray` (smoke-muted gray for the jerkin).
 - Extend `data/mods/descriptors/components/texture.component.json` with: `quilted` (stitched padding) and `chipped` (edge damage distinct from “cracked”).
 - No new descriptor components needed; existing components suffice once enums are updated.
 
 ## Planned Clothing Definitions
+
 - **Close-cuff work shirt (base)**
   - File/ID: `data/mods/base-clothing/entities/definitions/linen_close_cuff_work_shirt_ochre_brown.entity.json` / `base-clothing:linen_close_cuff_work_shirt_ochre_brown`.
   - Layer/slots: `layer: base`; `equipmentSlots.primary: torso_upper`; `secondary: [left_arm_clothing, right_arm_clothing]`; `allowedLayers: [underwear, base, outer]`.
@@ -53,10 +57,12 @@
   - Notes: Full-finger grip gloves (not fingerless), palm rough-out or resin grip pattern, built for handling hot clay tools.
 
 ## Recipe Updates
+
 - Replace current clothingEntities in `aldous.recipe.json` with the five new IDs above, keeping existing underwear (linen drawers/footwraps) unless story dictates otherwise.
 - Ensure each entry sets `"equip": true` and references the correct mod namespaces (base-clothing, outer-clothing, accessories).
 - Remove the placeholder tunic, trousers, apron, belt, and cracked boots references from the recipe.
 
 ## Validation Plan
+
 - After implementing items and recipe swap, run `npm run test validate:recipe -- data/mods/fantasy/recipes/aldous.recipe.json` (or the project’s `npm run test validate:recipe` invocation) to confirm schema and enum updates are accepted.
 - If descriptor enums are extended, rerun any descriptor component validation suites as needed (e.g., `npm run validate -- data/mods/descriptors/components/color_extended.component.json`).

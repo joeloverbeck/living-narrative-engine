@@ -75,8 +75,7 @@ export default class SchemaPhase extends LoaderPhase {
           typeof this.validator.preGenerateValidators === 'function' &&
           typeof this.validator.getLoadedComponentSchemas === 'function'
         ) {
-          const componentSchemas =
-            this.validator.getLoadedComponentSchemas();
+          const componentSchemas = this.validator.getLoadedComponentSchemas();
           if (componentSchemas && componentSchemas.length > 0) {
             this.logger.debug(
               `SchemaPhase: Pre-generating validators for ${componentSchemas.length} component schemas...`

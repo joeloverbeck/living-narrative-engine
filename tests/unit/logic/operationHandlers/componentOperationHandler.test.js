@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, test, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+  jest,
+} from '@jest/globals';
 import * as entityRefUtils from '../../../../src/utils/entityRefUtils.js';
 import * as operationValidationUtils from '../../../../src/utils/operationValidationUtils.js';
 import ComponentOperationHandler from '../../../../src/logic/operationHandlers/componentOperationHandler.js';
@@ -108,7 +115,13 @@ describe('ComponentOperationHandler utilities', () => {
     const result = handler.validateEntityRef('target', logger, 'OP', execCtx);
 
     expect(result).toBe('entity-42');
-    expect(spy).toHaveBeenCalledWith('target', execCtx, logger, undefined, 'OP');
+    expect(spy).toHaveBeenCalledWith(
+      'target',
+      execCtx,
+      logger,
+      undefined,
+      'OP'
+    );
   });
 
   describe('validateEntityAndType', () => {
@@ -119,7 +132,13 @@ describe('ComponentOperationHandler utilities', () => {
       const typeSpy = jest.spyOn(handler, 'requireComponentType');
 
       expect(
-        handler.validateEntityAndType('actor', 'core:stat', logger, 'OP', execCtx)
+        handler.validateEntityAndType(
+          'actor',
+          'core:stat',
+          logger,
+          'OP',
+          execCtx
+        )
       ).toBeNull();
       expect(entitySpy).toHaveBeenCalledTimes(1);
       expect(typeSpy).not.toHaveBeenCalled();

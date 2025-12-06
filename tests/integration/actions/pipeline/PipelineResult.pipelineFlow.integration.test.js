@@ -119,7 +119,9 @@ describe('PipelineResult pipeline flow integration', () => {
     });
     expect(result.continueProcessing).toBe(true);
     expect(
-      logger.logs.some((entry) => entry.startsWith('debug:Executing pipeline stage'))
+      logger.logs.some((entry) =>
+        entry.startsWith('debug:Executing pipeline stage')
+      )
     ).toBe(true);
   });
 

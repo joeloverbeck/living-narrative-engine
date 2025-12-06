@@ -5,13 +5,7 @@
  * event dispatch semantics using the real event infrastructure.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, afterEach, jest } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -226,7 +220,8 @@ class TestLLMStrategyFactory {
   async getAIDecision(prompt, _abortSignal, options) {
     const callIndex = this.calls.length;
     this.calls.push({ prompt, options });
-    const behavior = this._responses[Math.min(callIndex, this._responses.length - 1)];
+    const behavior =
+      this._responses[Math.min(callIndex, this._responses.length - 1)];
 
     if (behavior instanceof Error) {
       throw behavior;
@@ -287,11 +282,16 @@ class TestLLMConfigManager {
       return null;
     }
     if (behavior?.type === 'throw') {
-      this.getActiveCalls.push({ behavior: 'throw', message: behavior.message });
+      this.getActiveCalls.push({
+        behavior: 'throw',
+        message: behavior.message,
+      });
       throw new Error(behavior.message || 'Configuration lookup failed');
     }
 
-    this.getActiveCalls.push({ configId: this._activeConfig?.configId || null });
+    this.getActiveCalls.push({
+      configId: this._activeConfig?.configId || null,
+    });
     return this._activeConfig;
   }
 
@@ -496,9 +496,7 @@ describe('CoreMotivationsGenerator - real service integration', () => {
     );
 
     expect(motivations[0].metadata.promptTokens).toBe(expectedPromptTokens);
-    expect(motivations[0].metadata.responseTokens).toBe(
-      expectedResponseTokens
-    );
+    expect(motivations[0].metadata.responseTokens).toBe(expectedResponseTokens);
     expect(motivations[0].metadata.totalTokens).toBe(
       expectedPromptTokens + expectedResponseTokens
     );
@@ -565,9 +563,7 @@ describe('CoreMotivationsGenerator - real service integration', () => {
     );
 
     expect(motivations[0].metadata.promptTokens).toBe(expectedPromptTokens);
-    expect(motivations[0].metadata.responseTokens).toBe(
-      expectedResponseTokens
-    );
+    expect(motivations[0].metadata.responseTokens).toBe(expectedResponseTokens);
     expect(motivations[0].metadata.totalTokens).toBe(
       expectedPromptTokens + expectedResponseTokens
     );
@@ -576,7 +572,10 @@ describe('CoreMotivationsGenerator - real service integration', () => {
   it('recovers from token estimator outages by using fallback values', async () => {
     const validResponse = buildHighQualityResponse();
     const responseText = JSON.stringify(validResponse);
-    const tokenEstimator = new FlakyTokenEstimator({ throwOnCalls: 1, divisor: 6 });
+    const tokenEstimator = new FlakyTokenEstimator({
+      throwOnCalls: 1,
+      divisor: 6,
+    });
     const harness = await createGeneratorHarness({
       responses: [responseText],
       tokenEstimator,
@@ -600,9 +599,7 @@ describe('CoreMotivationsGenerator - real service integration', () => {
     );
 
     expect(motivations[0].metadata.promptTokens).toBe(expectedPromptTokens);
-    expect(motivations[0].metadata.responseTokens).toBe(
-      expectedResponseTokens
-    );
+    expect(motivations[0].metadata.responseTokens).toBe(expectedResponseTokens);
     expect(tokenEstimator.calls.length).toBeGreaterThanOrEqual(2);
     expect(harness.logger.warn).toHaveBeenCalledWith(
       'CoreMotivationsGenerator: Token estimation failed, using fallback',
@@ -740,12 +737,14 @@ describe('CoreMotivationsGenerator - real service integration', () => {
 
   it('derives failure stage from nested CoreMotivationsGenerationError causes', async () => {
     const harness = await createGeneratorHarness({
-      responses: [() => {
-        throw new CoreMotivationsGenerationError(
-          'outer stage',
-          new Error('Network unreachable during request')
-        );
-      }],
+      responses: [
+        () => {
+          throw new CoreMotivationsGenerationError(
+            'outer stage',
+            new Error('Network unreachable during request')
+          );
+        },
+      ],
     });
     activeCleanups.push(harness.cleanup);
 
@@ -823,9 +822,7 @@ describe('CoreMotivationsGenerator - real service integration', () => {
     };
     mutate(payload);
 
-    await expect(
-      harness.generator.generate(payload)
-    ).rejects.toThrow(error);
+    await expect(harness.generator.generate(payload)).rejects.toThrow(error);
 
     expect(harness.capturedEvents).toHaveLength(0);
   });
@@ -851,9 +848,6 @@ describe('CoreMotivationsGenerator - real service integration', () => {
     expect(harness.generator.getLLMParameters()).toEqual(
       expect.objectContaining({ temperature: expect.any(Number) })
     );
-    expect(harness.generator.getPromptVersionInfo()).toBe(
-      PROMPT_VERSION_INFO
-    );
+    expect(harness.generator.getPromptVersionInfo()).toBe(PROMPT_VERSION_INFO);
   });
 });
-

@@ -1,24 +1,30 @@
 # SPEPATREW-001: Update Speech Patterns Component Schema
 
 ## Status
+
 **✅ COMPLETED**
 
 ## Objective
+
 Update the `speech_patterns.component.json` schema to support both legacy string format and new structured object format with backward compatibility.
 
 ## Priority
+
 **Critical** - Foundation for all other tickets
 
 ## Estimated Effort
+
 0.5 days
 
 ## Files Modified
+
 - `data/mods/core/components/speech_patterns.component.json` - Updated schema with oneOf structure
 - `tests/unit/schemas/speechPatternsSchema.test.js` - **NEW** comprehensive test suite (27 tests)
 
 ## Implementation Details
 
 ### Schema Changes Implemented
+
 1. ✅ Changed `patterns.items` from simple `type: "string"` to `oneOf` structure
 2. ✅ Added object format definition with:
    - `type` (required): string with minLength: 1
@@ -28,12 +34,14 @@ Update the `speech_patterns.component.json` schema to support both legacy string
 4. ✅ Added `additionalProperties: false` to object format for strict validation
 
 ### Validation Rules Implemented
+
 - ✅ Patterns array can contain strings, objects, or mix
 - ✅ Object format requires non-empty `type` and at least 1 example
 - ✅ No `additionalProperties` on object format
 - ✅ String format continues to work (verified with existing character files)
 
 ## Out of Scope (Adhered To)
+
 - ✅ No code modified in `src/` directory
 - ✅ Component ID unchanged: `core:speech_patterns`
 - ✅ Required fields unchanged
@@ -44,6 +52,7 @@ Update the `speech_patterns.component.json` schema to support both legacy string
 ## Acceptance Criteria Results
 
 ### Tests That Pass ✅
+
 1. ✅ Schema validates string array: `["pattern1", "pattern2"]`
 2. ✅ Schema validates object array: `[{"type": "X", "examples": ["e1"]}]`
 3. ✅ Schema validates mixed array: `["string", {"type": "X", "examples": ["e1"]}]`
@@ -56,6 +65,7 @@ Update the `speech_patterns.component.json` schema to support both legacy string
 10. ✅ **BONUS**: 27 comprehensive test cases added covering edge cases and real-world usage
 
 ### Invariants Verified ✅
+
 - ✅ Component ID remains `core:speech_patterns`
 - ✅ `patterns` field remains required
 - ✅ String format continues to be valid (verified with Bertram character)
@@ -63,6 +73,7 @@ Update the `speech_patterns.component.json` schema to support both legacy string
 - ✅ Schema file remains valid JSON with proper $schema reference
 
 ## Validation Commands Results
+
 ```bash
 # Validate schema file structure
 npm run validate          # ✅ PASSED (494ms, all schemas valid)
@@ -81,6 +92,7 @@ npm run typecheck         # ✅ No new errors introduced (pre-existing errors un
 ```
 
 ## Definition of Done ✅
+
 - [x] Schema file updated with `oneOf` structure
 - [x] Schema validates all three formats (string, object, mixed)
 - [x] Schema rejects invalid object structures
@@ -93,12 +105,14 @@ npm run typecheck         # ✅ No new errors introduced (pre-existing errors un
 ### What Was Actually Changed vs Originally Planned
 
 **Exactly as Planned:**
+
 - Schema updated with `oneOf` structure supporting both legacy string and new object formats
 - All acceptance criteria met without deviation
 - Zero breaking changes to existing functionality
 - All invariants preserved
 
 **Enhancements Beyond Original Scope:**
+
 1. **Comprehensive Test Suite**: Created `tests/unit/schemas/speechPatternsSchema.test.js` with 27 test cases:
    - Legacy string format tests (3 tests)
    - New structured object format tests (13 tests)
@@ -111,6 +125,7 @@ npm run typecheck         # ✅ No new errors introduced (pre-existing errors un
 3. **Enhanced Documentation**: Schema descriptions updated to clarify both format options and their use cases
 
 **Impact:**
+
 - Zero regression: All 36,019 existing unit tests pass
 - Zero breaking changes: Existing character files (like Bertram) validate successfully
 - Foundation ready: Schema now supports future speech pattern enhancements
@@ -119,10 +134,12 @@ npm run typecheck         # ✅ No new errors introduced (pre-existing errors un
 **Total Implementation Time:** Approximately 0.5 days as estimated
 
 **Files Changed:**
+
 - `data/mods/core/components/speech_patterns.component.json` (1 modified)
 - `tests/unit/schemas/speechPatternsSchema.test.js` (1 created)
 
 **Test Coverage:**
+
 - New: 27 tests specifically for speech_patterns schema
 - Existing: 36,019 unit tests continue to pass
 - Integration: 18 character validation tests verify backward compatibility

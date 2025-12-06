@@ -26,7 +26,7 @@ class BaseFacade {
   /**
    * @param {object} deps - Dependencies
    * @param {ILogger} deps.logger - Logger service
-   * @param {IEventBus} deps.eventBus - Event bus service  
+   * @param {IEventBus} deps.eventBus - Event bus service
    * @param {IUnifiedCache} deps.unifiedCache - Unified cache service
    * @param {object} [deps.circuitBreaker] - Circuit breaker service (optional)
    */
@@ -59,10 +59,20 @@ class BaseFacade {
    * @param {number} [options.retries] - Number of retries
    * @returns {Promise<*>} Operation result or fallback result
    */
-  async executeWithResilience(operationName, operation, fallback, options = {}) {
+  async executeWithResilience(
+    operationName,
+    operation,
+    fallback,
+    options = {}
+  ) {
     try {
-      assertNonBlankString(operationName, 'Operation name', 'executeWithResilience', this.#logger);
-      
+      assertNonBlankString(
+        operationName,
+        'Operation name',
+        'executeWithResilience',
+        this.#logger
+      );
+
       if (typeof operation !== 'function') {
         throw new InvalidArgumentError('Operation must be a function');
       }
@@ -70,11 +80,15 @@ class BaseFacade {
       const { timeout = 5000, retries = 0 } = options;
 
       // Log operation start
-      this.logOperation('debug', `Starting resilient operation: ${operationName}`, { 
-        timeout, 
-        retries,
-        hasCircuitBreaker: !!this.#circuitBreaker 
-      });
+      this.logOperation(
+        'debug',
+        `Starting resilient operation: ${operationName}`,
+        {
+          timeout,
+          retries,
+          hasCircuitBreaker: !!this.#circuitBreaker,
+        }
+      );
 
       // Use circuit breaker if available
       if (this.#circuitBreaker) {
@@ -85,12 +99,15 @@ class BaseFacade {
 
       // Execute directly with timeout and retries
       return await this.#executeWithTimeout(operation, timeout, retries);
-
     } catch (error) {
-      this.logOperation('error', `Resilient operation failed: ${operationName}`, { 
-        error: error.message,
-        stack: error.stack 
-      });
+      this.logOperation(
+        'error',
+        `Resilient operation failed: ${operationName}`,
+        {
+          error: error.message,
+          stack: error.stack,
+        }
+      );
 
       // Dispatch error event
       this.dispatchEvent('FACADE_OPERATION_ERROR', {
@@ -101,13 +118,20 @@ class BaseFacade {
 
       // Use fallback if provided
       if (typeof fallback === 'function') {
-        this.logOperation('warn', `Using fallback for operation: ${operationName}`);
+        this.logOperation(
+          'warn',
+          `Using fallback for operation: ${operationName}`
+        );
         try {
           return await fallback(error);
         } catch (fallbackError) {
-          this.logOperation('error', `Fallback failed for operation: ${operationName}`, {
-            error: fallbackError.message,
-          });
+          this.logOperation(
+            'error',
+            `Fallback failed for operation: ${operationName}`,
+            {
+              error: fallbackError.message,
+            }
+          );
           throw fallbackError;
         }
       }
@@ -129,8 +153,13 @@ class BaseFacade {
    */
   async cacheableOperation(cacheKey, operation, options = {}) {
     try {
-      assertNonBlankString(cacheKey, 'Cache key', 'cacheableOperation', this.#logger);
-      
+      assertNonBlankString(
+        cacheKey,
+        'Cache key',
+        'cacheableOperation',
+        this.#logger
+      );
+
       if (typeof operation !== 'function') {
         throw new InvalidArgumentError('Operation must be a function');
       }
@@ -146,7 +175,10 @@ class BaseFacade {
         }
       }
 
-      this.logOperation('debug', `Cache miss for key: ${cacheKey}, executing operation`);
+      this.logOperation(
+        'debug',
+        `Cache miss for key: ${cacheKey}, executing operation`
+      );
 
       // Execute operation
       const result = await operation();
@@ -157,11 +189,14 @@ class BaseFacade {
       this.logOperation('debug', `Cached result for key: ${cacheKey}`);
 
       return result;
-
     } catch (error) {
-      this.logOperation('error', `Cacheable operation failed for key: ${cacheKey}`, { 
-        error: error.message 
-      });
+      this.logOperation(
+        'error',
+        `Cacheable operation failed for key: ${cacheKey}`,
+        {
+          error: error.message,
+        }
+      );
       throw error;
     }
   }
@@ -175,7 +210,12 @@ class BaseFacade {
    */
   dispatchEvent(eventType, payload) {
     try {
-      assertNonBlankString(eventType, 'Event type', 'dispatchEvent', this.#logger);
+      assertNonBlankString(
+        eventType,
+        'Event type',
+        'dispatchEvent',
+        this.#logger
+      );
 
       this.#eventBus.dispatch({
         type: eventType,
@@ -184,13 +224,12 @@ class BaseFacade {
         source: this.constructor.name,
       });
 
-      this.logOperation('debug', `Dispatched event: ${eventType}`, { 
-        payloadKeys: Object.keys(payload || {}) 
+      this.logOperation('debug', `Dispatched event: ${eventType}`, {
+        payloadKeys: Object.keys(payload || {}),
       });
-
     } catch (error) {
-      this.logOperation('error', `Failed to dispatch event: ${eventType}`, { 
-        error: error.message 
+      this.logOperation('error', `Failed to dispatch event: ${eventType}`, {
+        error: error.message,
       });
     }
   }
@@ -216,7 +255,6 @@ class BaseFacade {
       };
 
       this.#logger[level](message, logData);
-
     } catch (error) {
       // Fallback to console if logger fails
       console.error(`Logger failed in ${this.constructor.name}:`, error);
@@ -232,25 +270,34 @@ class BaseFacade {
    */
   async invalidateCache(keyOrPattern, isPattern = false) {
     try {
-      assertNonBlankString(keyOrPattern, 'Cache key or pattern', 'invalidateCache', this.#logger);
+      assertNonBlankString(
+        keyOrPattern,
+        'Cache key or pattern',
+        'invalidateCache',
+        this.#logger
+      );
 
       if (isPattern) {
         // Invalidate by pattern (if cache supports it)
         if (typeof this.#cache.invalidateByPattern === 'function') {
           await this.#cache.invalidateByPattern(keyOrPattern);
         } else {
-          this.logOperation('warn', `Cache does not support pattern invalidation: ${keyOrPattern}`);
+          this.logOperation(
+            'warn',
+            `Cache does not support pattern invalidation: ${keyOrPattern}`
+          );
         }
       } else {
         // Invalidate specific key
         await this.#cache.invalidate(keyOrPattern);
       }
 
-      this.logOperation('debug', `Invalidated cache: ${keyOrPattern}`, { isPattern });
-
+      this.logOperation('debug', `Invalidated cache: ${keyOrPattern}`, {
+        isPattern,
+      });
     } catch (error) {
-      this.logOperation('error', `Cache invalidation failed: ${keyOrPattern}`, { 
-        error: error.message 
+      this.logOperation('error', `Cache invalidation failed: ${keyOrPattern}`, {
+        error: error.message,
       });
     }
   }
@@ -272,25 +319,31 @@ class BaseFacade {
       try {
         // Create timeout promise
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error(`Operation timed out after ${timeout}ms`)), timeout);
+          setTimeout(
+            () => reject(new Error(`Operation timed out after ${timeout}ms`)),
+            timeout
+          );
         });
 
         // Race between operation and timeout
         return await Promise.race([operation(), timeoutPromise]);
-
       } catch (error) {
         lastError = error;
         attempt++;
 
         if (attempt <= retries) {
-          this.logOperation('warn', `Operation attempt ${attempt} failed, retrying...`, {
-            error: error.message,
-            attemptsRemaining: retries - attempt + 1,
-          });
-          
+          this.logOperation(
+            'warn',
+            `Operation attempt ${attempt} failed, retrying...`,
+            {
+              error: error.message,
+              attemptsRemaining: retries - attempt + 1,
+            }
+          );
+
           // Exponential backoff delay
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }

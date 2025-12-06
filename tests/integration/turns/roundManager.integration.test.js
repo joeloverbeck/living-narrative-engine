@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import RoundManager from '../../../src/turns/roundManager.js';
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
@@ -138,7 +133,9 @@ describe('RoundManager integration with real turn order service', () => {
 
     const warnMessages = logger.warnLogs
       .map((entry) => entry.message)
-      .filter((message) => message.startsWith('RoundManager.startRound(): Unknown strategy'));
+      .filter((message) =>
+        message.startsWith('RoundManager.startRound(): Unknown strategy')
+      );
 
     expect(warnMessages).toContain(
       "RoundManager.startRound(): Unknown strategy 'mystery'. Falling back to 'initiative' because initiative data was provided."
@@ -163,7 +160,9 @@ describe('RoundManager integration with real turn order service', () => {
 
     const warnMessages = logger.warnLogs
       .map((entry) => entry.message)
-      .filter((message) => message.startsWith('RoundManager.startRound(): Unknown strategy'));
+      .filter((message) =>
+        message.startsWith('RoundManager.startRound(): Unknown strategy')
+      );
 
     expect(warnMessages).toContain(
       "RoundManager.startRound(): Unknown strategy 'mystery'. Falling back to 'round-robin'."
@@ -223,13 +222,17 @@ describe('RoundManager integration with real turn order service', () => {
   it('rejects initiative rounds when normalisation produces no usable entries', async () => {
     entityManager.setEntities([createActor('actor1')]);
 
-    await expect(roundManager.startRound('initiative', new Map())).rejects.toThrow(
+    await expect(
+      roundManager.startRound('initiative', new Map())
+    ).rejects.toThrow(
       'Cannot start an initiative round: initiativeData Map is required.'
     );
 
     expect(
       logger.errorLogs.some((entry) =>
-        entry.message.includes('Cannot start an initiative round: initiativeData Map is required.')
+        entry.message.includes(
+          'Cannot start an initiative round: initiativeData Map is required.'
+        )
       )
     ).toBe(true);
   });
@@ -243,7 +246,9 @@ describe('RoundManager integration with real turn order service', () => {
 
     expect(
       logger.errorLogs.some((entry) =>
-        entry.message.includes('Cannot start a new round: No active entities with an Actor component found.')
+        entry.message.includes(
+          'Cannot start a new round: No active entities with an Actor component found.'
+        )
       )
     ).toBe(true);
   });

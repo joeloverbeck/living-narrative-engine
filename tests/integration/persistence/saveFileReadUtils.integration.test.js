@@ -57,7 +57,11 @@ describe('saveFileReadUtils integration', () => {
       },
     };
 
-    const result = await readSaveFile(storageProvider, logger, '/tmp/save-slot.sav');
+    const result = await readSaveFile(
+      storageProvider,
+      logger,
+      '/tmp/save-slot.sav'
+    );
 
     expect(result.success).toBe(false);
     expect(result.userFriendlyError).toBe(MSG_FILE_READ_ERROR);
@@ -76,14 +80,20 @@ describe('saveFileReadUtils integration', () => {
       },
     };
 
-    const result = await readSaveFile(storageProvider, logger, '/tmp/empty-slot.sav');
+    const result = await readSaveFile(
+      storageProvider,
+      logger,
+      '/tmp/empty-slot.sav'
+    );
 
     expect(result.success).toBe(false);
     expect(result.userFriendlyError).toBe(MSG_EMPTY_FILE);
     expect(result.error.code).toBe(PersistenceErrorCodes.EMPTY_FILE);
 
     const [warnMessage] = logger.warnLogs.at(-1);
-    expect(warnMessage).toContain('File is empty or could not be read: /tmp/empty-slot.sav');
+    expect(warnMessage).toContain(
+      'File is empty or could not be read: /tmp/empty-slot.sav'
+    );
   });
 
   it('falls back to error messages when storage provider exceptions omit codes', async () => {
@@ -93,7 +103,11 @@ describe('saveFileReadUtils integration', () => {
       },
     };
 
-    const result = await readSaveFile(storageProvider, logger, '/tmp/faulty-slot.sav');
+    const result = await readSaveFile(
+      storageProvider,
+      logger,
+      '/tmp/faulty-slot.sav'
+    );
 
     expect(result.success).toBe(false);
     expect(result.error.message).toContain('Disk detached unexpectedly');
@@ -108,7 +122,11 @@ describe('saveFileReadUtils integration', () => {
       },
     };
 
-    const result = await readSaveFile(storageProvider, logger, '/tmp/blank-slot.sav');
+    const result = await readSaveFile(
+      storageProvider,
+      logger,
+      '/tmp/blank-slot.sav'
+    );
 
     expect(result.success).toBe(false);
     expect(result.error.message).toBe(MSG_FILE_READ_ERROR);
@@ -136,9 +154,8 @@ describe('saveFileReadUtils integration', () => {
       },
     };
 
-    const { compressedData, finalSaveObject } = await serializer.serializeAndCompress(
-      sampleSaveObject
-    );
+    const { compressedData, finalSaveObject } =
+      await serializer.serializeAndCompress(sampleSaveObject);
 
     const storageProvider = {
       async readFile(requestedPath) {
@@ -162,7 +179,9 @@ describe('saveFileReadUtils integration', () => {
     );
 
     const [debugMessage] = logger.debugLogs[0];
-    expect(debugMessage).toContain('Attempting to read and deserialize file: /tmp/full-slot.sav');
+    expect(debugMessage).toContain(
+      'Attempting to read and deserialize file: /tmp/full-slot.sav'
+    );
   });
 
   it('propagates read failures without invoking serializer pipelines', async () => {
@@ -201,13 +220,19 @@ describe('saveFileReadUtils integration', () => {
     });
 
     const malformedBuffer = new Uint8Array([0x01, 0x02, 0x03]);
-    const result = deserializeAndDecompress(serializer, logger, malformedBuffer);
+    const result = deserializeAndDecompress(
+      serializer,
+      logger,
+      malformedBuffer
+    );
 
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
     expect(result.userFriendlyError).toBe(MSG_DECOMPRESSION_FAILED);
 
     const [contextMessage] = serializerLogger.errorLogs.at(-1);
-    expect(contextMessage).toBe('GameStateSerializer: Gzip decompression failed:');
+    expect(contextMessage).toBe(
+      'GameStateSerializer: Gzip decompression failed:'
+    );
   });
 });

@@ -8,16 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base"
-      ]
+      "allowedLayers": ["base"]
     },
     "core:material": {
       "material": "foam",
-      "properties": [
-        "waterproof",
-        "flexible"
-      ]
+      "properties": ["waterproof", "flexible"]
     },
     "core:name": {
       "text": "slide sandals"
@@ -32,9 +27,7 @@
       "texture": "matte"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

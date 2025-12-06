@@ -34,7 +34,9 @@ describe('ModTestHandlerFactory - Completeness', () => {
       deleteEntity: jest.fn(),
       getEntityIds: jest.fn(() => []),
       // Required by TransferItemHandler and other item handlers
-      batchAddComponentsOptimized: jest.fn().mockResolvedValue({ results: [], errors: [], updateCount: 0 }),
+      batchAddComponentsOptimized: jest
+        .fn()
+        .mockResolvedValue({ results: [], errors: [], updateCount: 0 }),
       removeEntityInstance: jest.fn(),
       hasEntity: jest.fn().mockReturnValue(true),
       getEntitiesInLocation: jest.fn().mockReturnValue(new Set()),
@@ -177,12 +179,13 @@ describe('ModTestHandlerFactory - Completeness', () => {
 
   describe('createHandlersWithPerceptionLogging completeness', () => {
     it('should register all positioning and closeness handlers', () => {
-      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
-        mockEntityManager,
-        mockEventBus,
-        mockLogger,
-        mockGameDataRepository
-      );
+      const handlers =
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
       const positioningHandlers = [
         'MERGE_CLOSENESS_CIRCLE',
@@ -203,12 +206,13 @@ describe('ModTestHandlerFactory - Completeness', () => {
     });
 
     it('should register perception and logging handlers', () => {
-      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
-        mockEntityManager,
-        mockEventBus,
-        mockLogger,
-        mockGameDataRepository
-      );
+      const handlers =
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
       expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
       expect(handlers).toHaveProperty('REGENERATE_DESCRIPTION');
@@ -216,12 +220,13 @@ describe('ModTestHandlerFactory - Completeness', () => {
     });
 
     it('should register component modification handlers', () => {
-      const handlers = ModTestHandlerFactory.createHandlersWithPerceptionLogging(
-        mockEntityManager,
-        mockEventBus,
-        mockLogger,
-        mockGameDataRepository
-      );
+      const handlers =
+        ModTestHandlerFactory.createHandlersWithPerceptionLogging(
+          mockEntityManager,
+          mockEventBus,
+          mockLogger,
+          mockGameDataRepository
+        );
 
       const modificationHandlers = [
         'ADD_COMPONENT',
@@ -492,7 +497,7 @@ describe('ModTestHandlerFactory - Completeness', () => {
         expect(handlers).toHaveProperty('ADD_COMPONENT');
         expect(handlers).toHaveProperty('REMOVE_COMPONENT');
       });
-      });
+    });
 
     it('should return superset handlers for unknown categories', () => {
       const factory =
@@ -529,7 +534,8 @@ describe('ModTestHandlerFactory - Completeness', () => {
     });
 
     it('should pull item handlers when item operations are present', () => {
-      const factory = ModTestHandlerFactory.getHandlerFactoryForCategory('items');
+      const factory =
+        ModTestHandlerFactory.getHandlerFactoryForCategory('items');
       const handlers = factory(
         mockEntityManager,
         mockEventBus,
@@ -554,7 +560,12 @@ describe('ModTestHandlerFactory - Completeness', () => {
       };
 
       const env = createRuleTestEnvironment({
-        createHandlers: (entityManager, eventBus, capturedLogger, dataRegistry) =>
+        createHandlers: (
+          entityManager,
+          eventBus,
+          capturedLogger,
+          dataRegistry
+        ) =>
           ModTestHandlerFactory.createStandardHandlers(
             entityManager,
             eventBus,
@@ -568,8 +579,10 @@ describe('ModTestHandlerFactory - Completeness', () => {
       });
 
       const warningMessages = warn.mock.calls.map((call) => call[0]);
-      const duplicateWarnings = warningMessages.filter((message) =>
-        typeof message === 'string' && message.includes('duplicate registrations')
+      const duplicateWarnings = warningMessages.filter(
+        (message) =>
+          typeof message === 'string' &&
+          message.includes('duplicate registrations')
       );
 
       expect(duplicateWarnings).toHaveLength(1);

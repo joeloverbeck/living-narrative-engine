@@ -174,7 +174,9 @@ describe('anatomy-visualizer initialize', () => {
       'Anatomy Visualizer: Initialization complete'
     );
 
-    expect(mockBootstrapperInstance.displayFatalStartupError).not.toHaveBeenCalled();
+    expect(
+      mockBootstrapperInstance.displayFatalStartupError
+    ).not.toHaveBeenCalled();
 
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'click',
@@ -198,8 +200,12 @@ describe('anatomy-visualizer initialize', () => {
         throw clothingError;
       }
       return {
-        [tokensMock.AnatomyDescriptionService]: { id: 'anatomyDescriptionService' },
-        [tokensMock.VisualizerStateController]: { id: 'visualizerStateController' },
+        [tokensMock.AnatomyDescriptionService]: {
+          id: 'anatomyDescriptionService',
+        },
+        [tokensMock.VisualizerStateController]: {
+          id: 'visualizerStateController',
+        },
         [tokensMock.VisualizationComposer]: { id: 'visualizationComposer' },
       }[token];
     });
@@ -231,7 +237,9 @@ describe('anatomy-visualizer initialize', () => {
     const module = await import('../../../src/anatomy-visualizer.js');
     await module.initialize();
 
-    expect(mockBootstrapperInstance.displayFatalStartupError).toHaveBeenCalledWith(
+    expect(
+      mockBootstrapperInstance.displayFatalStartupError
+    ).toHaveBeenCalledWith(
       'Failed to initialize anatomy visualizer: UI init failure',
       failure
     );

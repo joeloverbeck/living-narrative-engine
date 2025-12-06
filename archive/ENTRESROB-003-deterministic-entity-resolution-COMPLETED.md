@@ -115,7 +115,7 @@ async function resolveEntityId(partType, dataRegistry) {
   }
 
   // Find all entities with matching subType
-  const candidates = allEntities.filter(entity => {
+  const candidates = allEntities.filter((entity) => {
     const partComponent = entity?.components?.['anatomy:part'];
     return partComponent?.subType === partType;
   });
@@ -144,7 +144,7 @@ async function resolveEntityId(partType, dataRegistry) {
     // Rule 2: Alphabetical for determinism and to prefer humanoid_head over kraken_head
     const alpha = aId.localeCompare(bId);
     if (alpha !== 0) {
-        return alpha;
+      return alpha;
     }
 
     // Rule 3: Shorter ID = higher priority (fallback)

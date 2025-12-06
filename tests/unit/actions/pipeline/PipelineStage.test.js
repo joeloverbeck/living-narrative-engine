@@ -181,11 +181,14 @@ describe('PipelineStage', () => {
 
         await stage.execute(contextWithCandidates);
 
-        expect(mockTrace.startSpan).toHaveBeenCalledWith('CandidateStageStage', {
-          stage: 'CandidateStage',
-          actor: 'test-actor',
-          candidateCount: 2,
-        });
+        expect(mockTrace.startSpan).toHaveBeenCalledWith(
+          'CandidateStageStage',
+          {
+            stage: 'CandidateStage',
+            actor: 'test-actor',
+            candidateCount: 2,
+          }
+        );
       });
 
       it('should set error status on span when result indicates failure', async () => {
@@ -261,8 +264,16 @@ describe('PipelineStage', () => {
 
         await stage.execute(mockContext);
 
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', true);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 3);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          1,
+          'success',
+          true
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          2,
+          'processedCount',
+          3
+        );
         expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
           'errorCount',
           expect.any(Number)
@@ -282,8 +293,16 @@ describe('PipelineStage', () => {
 
         await stage.execute(mockContext);
 
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', true);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 0);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          1,
+          'success',
+          true
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          2,
+          'processedCount',
+          0
+        );
         expect(mockSpan.setStatus).toHaveBeenCalledWith('success');
       });
 
@@ -303,9 +322,21 @@ describe('PipelineStage', () => {
 
         await stage.execute(mockContext);
 
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 4);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(3, 'errorCount', 2);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          1,
+          'success',
+          false
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          2,
+          'processedCount',
+          4
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          3,
+          'errorCount',
+          2
+        );
         expect(mockSpan.setError).toHaveBeenCalledWith(expect.any(Error));
       });
 
@@ -368,8 +399,16 @@ describe('PipelineStage', () => {
 
         const result = await stage.execute(mockContext);
 
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 1);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          1,
+          'success',
+          false
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          2,
+          'processedCount',
+          1
+        );
         expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
           'errorCount',
           expect.any(Number)
@@ -392,8 +431,16 @@ describe('PipelineStage', () => {
 
         const result = await stage.execute(mockContext);
 
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(1, 'success', false);
-        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(2, 'processedCount', 2);
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          1,
+          'success',
+          false
+        );
+        expect(mockSpan.setAttribute).toHaveBeenNthCalledWith(
+          2,
+          'processedCount',
+          2
+        );
         expect(mockSpan.setAttribute).not.toHaveBeenCalledWith(
           'errorCount',
           expect.any(Number)

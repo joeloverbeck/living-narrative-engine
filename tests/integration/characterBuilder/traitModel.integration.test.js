@@ -21,18 +21,41 @@ function buildValidTraitData(overrides = {}) {
   return {
     id: 'trait-001',
     names: [
-      { name: 'Elara Quinn', justification: 'Reflects her poetic academic background' },
-      { name: 'Mara Vell', justification: 'Evokes an explorer with mythic undertones' },
+      {
+        name: 'Elara Quinn',
+        justification: 'Reflects her poetic academic background',
+      },
+      {
+        name: 'Mara Vell',
+        justification: 'Evokes an explorer with mythic undertones',
+      },
       { name: 'Tess Avari', justification: 'Suggests a patient strategist' },
     ],
     physicalDescription,
     personality: [
-      { trait: 'Observant', explanation: 'Notices micro-reactions in every negotiation' },
-      { trait: 'Empathetic', explanation: 'Absorbs the emotional cadence of a room' },
-      { trait: 'Methodical', explanation: 'Catalogues every find with ritual precision' },
+      {
+        trait: 'Observant',
+        explanation: 'Notices micro-reactions in every negotiation',
+      },
+      {
+        trait: 'Empathetic',
+        explanation: 'Absorbs the emotional cadence of a room',
+      },
+      {
+        trait: 'Methodical',
+        explanation: 'Catalogues every find with ritual precision',
+      },
     ],
-    strengths: ['Analytical courage', 'Diplomatic patience', 'Inventive problem solving'],
-    weaknesses: ['Overextends herself', 'Keeps secrets for too long', 'Struggles to delegate'],
+    strengths: [
+      'Analytical courage',
+      'Diplomatic patience',
+      'Inventive problem solving',
+    ],
+    weaknesses: [
+      'Overextends herself',
+      'Keeps secrets for too long',
+      'Struggles to delegate',
+    ],
     likes: ['Field sketching', 'Quiet archives', 'Deep conversations'],
     dislikes: ['Sensationalism', 'Rash decisions', 'Atmospheric pollution'],
     fears: ['Losing her findings'],
@@ -40,7 +63,10 @@ function buildValidTraitData(overrides = {}) {
       shortTerm: ['Broker peace between rival expeditions'],
       longTerm: 'Document ecosystems that prove cooperation is possible',
     },
-    notes: ['Keeps letters from former students', 'Collects stories about first encounters'],
+    notes: [
+      'Keeps letters from former students',
+      'Collects stories about first encounters',
+    ],
     profile,
     secrets: ['Protects a hidden sanctuary'],
     generatedAt: '2024-01-01T00:00:00.000Z',
@@ -118,13 +144,23 @@ describe('Trait model integration', () => {
 
     const rawResponse = {
       names: [
-        { name: 'Jonah Slate', justification: 'His resolve feels carved from stone' },
-        { name: 'Iris Lumen', justification: 'Radiates insight wherever she stands' },
-        { name: 'Sera Vale', justification: 'Soft voice hiding a fierce tactician' },
+        {
+          name: 'Jonah Slate',
+          justification: 'His resolve feels carved from stone',
+        },
+        {
+          name: 'Iris Lumen',
+          justification: 'Radiates insight wherever she stands',
+        },
+        {
+          name: 'Sera Vale',
+          justification: 'Soft voice hiding a fierce tactician',
+        },
       ],
-      physical: 'Wrapped in adaptable fabrics, always carrying modular scouting gear perfect for harsh climates.'.repeat(
-        2
-      ),
+      physical:
+        'Wrapped in adaptable fabrics, always carrying modular scouting gear perfect for harsh climates.'.repeat(
+          2
+        ),
       personality: [
         { trait: 'Tactical', explanation: 'Reads social cues like maps' },
         { trait: 'Resilient', explanation: 'Keeps moving during storms' },
@@ -139,10 +175,14 @@ describe('Trait model integration', () => {
         shortTerm: ['Unite survey teams', 'Map the converging storms'],
         longTerm: 'Publish coordinates that keep colonists safe',
       },
-      notes: ['Speaks five trade creoles', 'Uses coded sketches to share intel'],
-      summary: 'An envoy who bridges pragmatic engineers and idealistic diplomats with poetic reconnaissance briefs.'.repeat(
-        2
-      ),
+      notes: [
+        'Speaks five trade creoles',
+        'Uses coded sketches to share intel',
+      ],
+      summary:
+        'An envoy who bridges pragmatic engineers and idealistic diplomats with poetic reconnaissance briefs.'.repeat(
+          2
+        ),
       secrets: ['Shields a defecting pilot'],
     };
 
@@ -164,12 +204,21 @@ describe('Trait model integration', () => {
         names: [
           { name: '   ', justification: 'Placeholder needs refinement' },
           { name: 'Waypoint Advocate', justification: '   ' },
-          { name: 'Cartographer Lyss', justification: 'Complete entry for control case' },
+          {
+            name: 'Cartographer Lyss',
+            justification: 'Complete entry for control case',
+          },
         ],
         personality: [
-          { trait: '   ', explanation: 'Absorbs nuances but never shares them' },
+          {
+            trait: '   ',
+            explanation: 'Absorbs nuances but never shares them',
+          },
           { trait: 'Diplomatic', explanation: '   ' },
-          { trait: 'Patient', explanation: 'Balances mission urgency with empathy' },
+          {
+            trait: 'Patient',
+            explanation: 'Balances mission urgency with empathy',
+          },
         ],
         strengths: ['Analytical courage', '   '],
         weaknesses: ['Keeps secrets for too long', '   '],
@@ -251,8 +300,18 @@ describe('Trait model integration', () => {
   it('produces readable exports, concise summaries, and searchable content', () => {
     const trait = new Trait(
       buildValidTraitData({
-        likes: ['Field sketching', 'Quiet archives', 'Deep conversations', 'Experimental cuisine'],
-        dislikes: ['Sensationalism', 'Rash decisions', 'Atmospheric pollution', 'False reports'],
+        likes: [
+          'Field sketching',
+          'Quiet archives',
+          'Deep conversations',
+          'Experimental cuisine',
+        ],
+        dislikes: [
+          'Sensationalism',
+          'Rash decisions',
+          'Atmospheric pollution',
+          'False reports',
+        ],
       })
     );
 
@@ -261,7 +320,9 @@ describe('Trait model integration', () => {
     expect(exportText).toContain('PHYSICAL DESCRIPTION:');
     expect(exportText).toContain('PERSONALITY TRAITS:');
     expect(exportText).toContain('GOALS:');
-    expect(exportText).toContain('Long-term: Document ecosystems that prove cooperation is possible');
+    expect(exportText).toContain(
+      'Long-term: Document ecosystems that prove cooperation is possible'
+    );
     expect(exportText).toContain('SECRETS:');
 
     const summary = trait.getSummary(50);
@@ -289,7 +350,10 @@ describe('Trait model integration', () => {
     expect(Object.isFrozen(cloned)).toBe(true);
 
     const stored = trait.toJSON();
-    stored.names.push({ name: 'Extra', justification: 'Added after serialization' });
+    stored.names.push({
+      name: 'Extra',
+      justification: 'Added after serialization',
+    });
     const restored = Trait.fromRawData(stored);
     expect(restored.names).toHaveLength(4);
     expect(restored.matchesSearch('Added after serialization')).toBe(true);

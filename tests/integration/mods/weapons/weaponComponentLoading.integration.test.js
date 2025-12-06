@@ -166,9 +166,9 @@ describe('weapons:weapon Component - Integration', () => {
       const itemsItem = JSON.parse(fs.readFileSync(itemsItemPath, 'utf8'));
 
       // Both should mention "Marker component" in their descriptions
-      expect(
-        weaponComponent.description.toLowerCase().includes('marker')
-      ).toBe(true);
+      expect(weaponComponent.description.toLowerCase().includes('marker')).toBe(
+        true
+      );
       expect(itemsItem.description.toLowerCase().includes('marker')).toBe(true);
     });
   });

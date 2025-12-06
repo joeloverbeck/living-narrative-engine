@@ -19,7 +19,11 @@ describe('thematic-direction-main bootstrap orchestration', () => {
       addEventListener.mockRestore();
       removeEventListener.mockRestore();
       if (originalReadyStateDescriptor) {
-        Object.defineProperty(document, 'readyState', originalReadyStateDescriptor);
+        Object.defineProperty(
+          document,
+          'readyState',
+          originalReadyStateDescriptor
+        );
       } else {
         delete document.readyState;
       }
@@ -63,7 +67,9 @@ describe('thematic-direction-main bootstrap orchestration', () => {
       LlmConfigLoader: Symbol('LlmConfigLoader'),
     };
 
-    const schemaLoader = { loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined) };
+    const schemaLoader = {
+      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+    };
     const llmConfigLoader = { id: 'config' };
     const llmAdapter = { init: jest.fn().mockResolvedValue(undefined) };
     const logger = { info: jest.fn(), warn: jest.fn() };
@@ -92,13 +98,18 @@ describe('thematic-direction-main bootstrap orchestration', () => {
     const bootstrapInstance = { bootstrap: jest.fn() };
     const controllerCtor = jest.fn();
 
-    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({
+      tokens,
+    }));
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => registrarInstance),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: controllerCtor })
@@ -184,13 +195,18 @@ describe('thematic-direction-main bootstrap orchestration', () => {
 
     const bootstrapInstance = { bootstrap: jest.fn() };
 
-    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({
+      tokens,
+    }));
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => ({ singletonFactory: jest.fn() })),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: jest.fn() })
@@ -227,13 +243,18 @@ describe('thematic-direction-main bootstrap orchestration', () => {
       bootstrap: jest.fn().mockRejectedValue(new Error('bootstrap exploded')),
     };
 
-    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({
+      tokens,
+    }));
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => ({ singletonFactory: jest.fn() })),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: jest.fn() })
@@ -262,9 +283,12 @@ describe('thematic-direction-main bootstrap orchestration', () => {
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => ({ singletonFactory: jest.fn() })),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: jest.fn() })),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: jest.fn() })),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: jest.fn() })
@@ -299,9 +323,12 @@ describe('thematic-direction-main bootstrap orchestration', () => {
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => ({ singletonFactory: jest.fn() })),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: jest.fn() })),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => ({ bootstrap: jest.fn() })),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: jest.fn() })
@@ -342,13 +369,18 @@ describe('thematic-direction-main bootstrap orchestration', () => {
       }),
     };
 
-    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({ tokens }));
+    jest.doMock('../../../src/dependencyInjection/tokens.js', () => ({
+      tokens,
+    }));
     jest.doMock('../../../src/utils/registrarHelpers.js', () => ({
       Registrar: jest.fn(() => ({ singletonFactory: jest.fn() })),
     }));
-    jest.doMock('../../../src/characterBuilder/CharacterBuilderBootstrap.js', () => ({
-      CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
-    }));
+    jest.doMock(
+      '../../../src/characterBuilder/CharacterBuilderBootstrap.js',
+      () => ({
+        CharacterBuilderBootstrap: jest.fn(() => bootstrapInstance),
+      })
+    );
     jest.doMock(
       '../../../src/thematicDirection/controllers/thematicDirectionController.js',
       () => ({ ThematicDirectionController: jest.fn() })

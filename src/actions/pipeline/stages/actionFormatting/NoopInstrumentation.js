@@ -13,31 +13,31 @@ export class NoopInstrumentation extends ActionFormattingInstrumentation {
   /**
    * @inheritdoc
    */
-   
+
   stageStarted(_context) {}
 
   /**
    * @inheritdoc
    */
-   
+
   actionStarted(_context) {}
 
   /**
    * @inheritdoc
    */
-   
+
   actionCompleted(_context) {}
 
   /**
    * @inheritdoc
    */
-   
+
   actionFailed(_context) {}
 
   /**
    * @inheritdoc
    */
-   
+
   stageCompleted(_context) {}
 }
 

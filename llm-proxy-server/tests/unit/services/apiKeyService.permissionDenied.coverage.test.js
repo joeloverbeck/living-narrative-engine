@@ -59,7 +59,9 @@ describe('ApiKeyService permission denied coverage', () => {
   test('reports detailed all sources failure when file system denies access', async () => {
     process.env.RESTRICTED_API_KEY = '   ';
 
-    const permissionError = new Error('Permission denied while reading key file');
+    const permissionError = new Error(
+      'Permission denied while reading key file'
+    );
     permissionError.code = 'EPERM';
 
     fileReader.readFile.mockRejectedValue(permissionError);
@@ -94,9 +96,10 @@ describe('ApiKeyService permission denied coverage', () => {
     );
     expect(envWarning).toBeDefined();
 
-    const fileWarning = logger.warn.mock.calls.find(([message]) =>
-      message.includes("Path: '/var/secure/cloud-provider.key'") &&
-      message.includes('EPERM')
+    const fileWarning = logger.warn.mock.calls.find(
+      ([message]) =>
+        message.includes("Path: '/var/secure/cloud-provider.key'") &&
+        message.includes('EPERM')
     );
     expect(fileWarning).toBeDefined();
   });

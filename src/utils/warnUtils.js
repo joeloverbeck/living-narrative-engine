@@ -41,9 +41,7 @@ export function warnNoActiveTurn(logger, stateName, methodName, actorId) {
     methodLabel.startsWith('handleTurnEndedEvent');
 
   const requiresSeparator = !/[\s(]$/.test(methodLabel);
-  const formattedMethod = requiresSeparator
-    ? `${methodLabel} `
-    : methodLabel;
+  const formattedMethod = requiresSeparator ? `${methodLabel} ` : methodLabel;
 
   const message = `${stateLabel}: ${formattedMethod}${actorLabel} but no turn is active${
     needsIdleNote ? ' (handler is Idle).' : '.'

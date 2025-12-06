@@ -1,8 +1,18 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
-import { createSecureLogger, ensureValidLogger } from '../../src/utils/loggerUtils.js';
+import {
+  createSecureLogger,
+  ensureValidLogger,
+} from '../../src/utils/loggerUtils.js';
 import { sendProxyError } from '../../src/utils/responseUtils.js';
 
 /**
@@ -124,14 +134,20 @@ describe('logger utils default behaviour integration', () => {
     fallbackLogger.debug('debug-no-context');
     fallbackLogger.info('info-no-context');
 
-    const debugCall = debugSpy.mock.calls.find(([prefix]) => prefix === 'FallbackLogger: ');
+    const debugCall = debugSpy.mock.calls.find(
+      ([prefix]) => prefix === 'FallbackLogger: '
+    );
     expect(debugCall).toBeDefined();
 
-    const errorCall = errorSpy.mock.calls.find(([prefix]) => prefix === 'FallbackLogger: ');
+    const errorCall = errorSpy.mock.calls.find(
+      ([prefix]) => prefix === 'FallbackLogger: '
+    );
     expect(errorCall).toBeDefined();
     const loggedContext = errorCall[2];
     expect(loggedContext.errorDetailsSentToClient.apiKey).toBe('[MASKED]');
-    expect(loggedContext.errorDetailsSentToClient.nested.token).toBe('[MASKED]');
+    expect(loggedContext.errorDetailsSentToClient.nested.token).toBe(
+      '[MASKED]'
+    );
 
     warnSpy.mockRestore();
     errorSpy.mockRestore();

@@ -24,7 +24,9 @@ describe('AnatomyStructureTemplateLoader Integration Tests', () => {
 
     // Configure schema validator to report schema as loaded
     schemaValidator.isSchemaLoaded = jest.fn().mockReturnValue(true);
-    schemaValidator.validate = jest.fn().mockReturnValue({ isValid: true, errors: null });
+    schemaValidator.validate = jest
+      .fn()
+      .mockReturnValue({ isValid: true, errors: null });
 
     dataRegistry = createSimpleMockDataRegistry();
     logger = createMockLogger();
@@ -454,7 +456,12 @@ describe('AnatomyStructureTemplateLoader Integration Tests', () => {
                 idTemplate: 'leg_{{position}}',
                 orientationScheme: 'custom',
                 allowedTypes: ['leg'],
-                positions: ['front_left', 'front_right', 'rear_left', 'rear_right'],
+                positions: [
+                  'front_left',
+                  'front_right',
+                  'rear_left',
+                  'rear_right',
+                ],
               },
               optional: false,
               arrangementHint: 'quadrupedal stance',
@@ -668,7 +675,8 @@ describe('AnatomyStructureTemplateLoader Integration Tests', () => {
     it('loads multi-limb-set template with mixed arrangements', async () => {
       const templateData = {
         id: 'anatomy:structure_centaur',
-        description: 'Centaur structure with humanoid upper body and equine lower body',
+        description:
+          'Centaur structure with humanoid upper body and equine lower body',
         topology: {
           rootType: 'torso',
           limbSets: [

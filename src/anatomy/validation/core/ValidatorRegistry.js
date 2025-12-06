@@ -159,7 +159,8 @@ export class ValidatorRegistry {
       return true;
     }
 
-    const environment = options.environment || process?.env?.NODE_ENV || 'development';
+    const environment =
+      options.environment || process?.env?.NODE_ENV || 'development';
     const summary = issues
       .map((issue) => `${issue.name}:${issue.type}`)
       .join(', ');

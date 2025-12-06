@@ -145,7 +145,10 @@ class DrinkEntirelyHandler extends BaseOperationHandler {
         log.warn('Actor does not have position component', {
           actorEntity,
         });
-        return { success: false, error: 'Actor does not have position component' };
+        return {
+          success: false,
+          error: 'Actor does not have position component',
+        };
       }
 
       // Check container components
@@ -217,19 +220,22 @@ class DrinkEntirelyHandler extends BaseOperationHandler {
       );
 
       // Set volume to 0
-      await this.#entityManager.batchAddComponentsOptimized([
-        {
-          instanceId: containerEntity,
-          componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
-          componentData: {
-            currentVolumeMilliliters: 0,
-            maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
-            servingSizeMilliliters: liquidData.servingSizeMilliliters,
-            isRefillable: liquidData.isRefillable,
-            flavorText: liquidData.flavorText || '',
+      await this.#entityManager.batchAddComponentsOptimized(
+        [
+          {
+            instanceId: containerEntity,
+            componentTypeId: LIQUID_CONTAINER_COMPONENT_ID,
+            componentData: {
+              currentVolumeMilliliters: 0,
+              maxCapacityMilliliters: liquidData.maxCapacityMilliliters,
+              servingSizeMilliliters: liquidData.servingSizeMilliliters,
+              isRefillable: liquidData.isRefillable,
+              flavorText: liquidData.flavorText || '',
+            },
           },
-        },
-      ], true);
+        ],
+        true
+      );
 
       log.debug('Container completely emptied', {
         containerEntity,
@@ -251,7 +257,11 @@ class DrinkEntirelyHandler extends BaseOperationHandler {
       };
 
       // Store result in context if result_variable provided
-      if (result_variable && typeof result_variable === 'string' && result_variable.trim()) {
+      if (
+        result_variable &&
+        typeof result_variable === 'string' &&
+        result_variable.trim()
+      ) {
         tryWriteContextVariable(
           result_variable.trim(),
           result,

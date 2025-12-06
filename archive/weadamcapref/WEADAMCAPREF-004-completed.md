@@ -13,10 +13,10 @@ Modify `DamageTypeEffectsService` to accept a damage entry object directly inste
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/anatomy/services/damageTypeEffectsService.js` | UPDATE | Change method signature and remove registry lookup |
-| `tests/unit/anatomy/services/damageTypeEffectsService.test.js` | UPDATE | Update tests for new signature |
+| File                                                           | Action | Description                                        |
+| -------------------------------------------------------------- | ------ | -------------------------------------------------- |
+| `src/anatomy/services/damageTypeEffectsService.js`             | UPDATE | Change method signature and remove registry lookup |
+| `tests/unit/anatomy/services/damageTypeEffectsService.test.js` | UPDATE | Update tests for new signature                     |
 
 ## Out of Scope
 
@@ -31,11 +31,13 @@ Modify `DamageTypeEffectsService` to accept a damage entry object directly inste
 ### Method Signature Change
 
 **Before**:
+
 ```javascript
 async applyEffectsForDamage({ entityId, partId, amount, damageType, maxHealth, currentHealth })
 ```
 
 **After**:
+
 ```javascript
 async applyEffectsForDamage({ entityId, partId, damageEntry, maxHealth, currentHealth })
 ```
@@ -43,6 +45,7 @@ async applyEffectsForDamage({ entityId, partId, damageEntry, maxHealth, currentH
 ### Remove Registry Lookup
 
 **Before**:
+
 ```javascript
 const damageTypeDef = this.#dataRegistry.get('damageTypes', damageType);
 if (!damageTypeDef) {
@@ -52,6 +55,7 @@ if (!damageTypeDef) {
 ```
 
 **After**:
+
 ```javascript
 // damageEntry is passed directly - no lookup needed
 if (!damageEntry) {
@@ -91,6 +95,7 @@ All `#checkAndApply*` methods receive `damageEntry` directly:
 1. `npm run test:unit -- tests/unit/anatomy/services/damageTypeEffectsService.test.js`
 
 Test cases:
+
 - Service accepts full damage entry object
 - Each effect type works (bleed, fracture, burn, poison, dismember)
 - Missing optional fields use defaults
@@ -123,6 +128,7 @@ Test cases:
 ### Changes Made
 
 #### `src/anatomy/services/damageTypeEffectsService.js`
+
 - Removed `IDataRegistry` dependency from constructor
 - Changed `applyEffectsForDamage` signature from `{entityId, partId, amount, damageType, maxHealth, currentHealth}` to `{entityId, partId, damageEntry, maxHealth, currentHealth}`
 - Removed registry lookup logic - now uses `damageEntry` directly
@@ -131,6 +137,7 @@ Test cases:
 - Added validation: logs warning and returns early when `damageEntry` is null/undefined
 
 #### `tests/unit/anatomy/services/damageTypeEffectsService.test.js`
+
 - Removed `mockDataRegistry` from test setup
 - Updated constructor tests (removed dataRegistry validation test case)
 - Changed `baseParams` to use `damageEntry` object structure
@@ -148,6 +155,7 @@ Test cases:
 ### Test Results
 
 All 40 tests pass:
+
 ```
 PASS  tests/unit/anatomy/services/damageTypeEffectsService.test.js
 Test Suites: 1 passed, 1 total

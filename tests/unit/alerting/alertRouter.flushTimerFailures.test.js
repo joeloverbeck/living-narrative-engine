@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import AlertRouter from '../../../src/alerting/alertRouter.js';
 import {
   SYSTEM_WARNING_OCCURRED_ID,
@@ -44,13 +51,18 @@ describe('AlertRouter hard-to-reach error branches', () => {
       throw new Error('forward failure');
     });
 
-    handlers.get(SYSTEM_WARNING_OCCURRED_ID)({ payload: { message: 'ignored' } });
+    handlers.get(SYSTEM_WARNING_OCCURRED_ID)({
+      payload: { message: 'ignored' },
+    });
 
     expect(router.forwardToUI).toHaveBeenCalledWith(
       SYSTEM_WARNING_OCCURRED_ID,
-      { message: 'ignored' },
+      { message: 'ignored' }
     );
-    expect(errorSpy).toHaveBeenCalledWith('AlertRouter error:', expect.any(Error));
+    expect(errorSpy).toHaveBeenCalledWith(
+      'AlertRouter error:',
+      expect.any(Error)
+    );
   });
 
   it('flushes queued events, logging malformed payloads and continuing', () => {
@@ -60,7 +72,10 @@ describe('AlertRouter hard-to-reach error branches', () => {
     router.queue = [
       { name: SYSTEM_WARNING_OCCURRED_ID, payload: { message: 'warn me' } },
       { name: SYSTEM_ERROR_OCCURRED_ID, payload: { message: 'fail loudly' } },
-      { name: SYSTEM_WARNING_OCCURRED_ID, payload: { details: 'missing message' } },
+      {
+        name: SYSTEM_WARNING_OCCURRED_ID,
+        payload: { details: 'missing message' },
+      },
     ];
 
     router.startFlushTimer();
@@ -70,8 +85,9 @@ describe('AlertRouter hard-to-reach error branches', () => {
     expect(errorSpy).toHaveBeenCalledWith('fail loudly');
     expect(
       errorSpy.mock.calls.some(
-        ([label, err]) => label === 'AlertRouter flush error:' && err instanceof Error,
-      ),
+        ([label, err]) =>
+          label === 'AlertRouter flush error:' && err instanceof Error
+      )
     ).toBe(true);
     expect(router.queue).toEqual([]);
     expect(router.flushTimer).toBeNull();
@@ -91,7 +107,10 @@ describe('AlertRouter hard-to-reach error branches', () => {
     router.startFlushTimer();
     jest.runOnlyPendingTimers();
 
-    expect(errorSpy).toHaveBeenCalledWith('AlertRouter flush error:', catastrophic);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'AlertRouter flush error:',
+      catastrophic
+    );
     expect(router.queue).toEqual([]);
     expect(router.flushTimer).toBeNull();
   });
@@ -114,7 +133,7 @@ describe('AlertRouter hard-to-reach error branches', () => {
     expect(router.uiReady).toBe(true);
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter error forwarding queued event:',
-      expect.any(Error),
+      expect.any(Error)
     );
   });
 
@@ -127,6 +146,9 @@ describe('AlertRouter hard-to-reach error branches', () => {
     const router = new AlertRouter({ safeEventDispatcher: dispatcher });
     router.forwardToUI(SYSTEM_ERROR_OCCURRED_ID, { message: 'live error' });
 
-    expect(errorSpy).toHaveBeenCalledWith('AlertRouter dispatch error:', dispatchFailure);
+    expect(errorSpy).toHaveBeenCalledWith(
+      'AlertRouter dispatch error:',
+      dispatchFailure
+    );
   });
 });

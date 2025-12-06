@@ -33,17 +33,21 @@ describe('ScopeResolutionError', () => {
         parameters: {
           contextType: 'object',
           hasActorEntity: true,
-          hasActor: false
+          hasActor: false,
         },
         expected: 'Entity instance with id property',
         received: 'Full context object',
         hint: 'Extract actorEntity from context before passing',
         suggestion: 'Use: const actorEntity = context.actorEntity',
-        example: 'const actorEntity = context.actorEntity;\nconst result = scopeEngine.resolve(ast, actorEntity);',
-        originalError
+        example:
+          'const actorEntity = context.actorEntity;\nconst result = scopeEngine.resolve(ast, actorEntity);',
+        originalError,
       };
 
-      const error = new ScopeResolutionError('Invalid parameter passed to scope resolver', context);
+      const error = new ScopeResolutionError(
+        'Invalid parameter passed to scope resolver',
+        context
+      );
 
       expect(error.message).toBe('Invalid parameter passed to scope resolver');
       expect(error.context.scopeName).toBe('positioning:close_actors');
@@ -51,18 +55,24 @@ describe('ScopeResolutionError', () => {
       expect(error.context.parameters).toEqual({
         contextType: 'object',
         hasActorEntity: true,
-        hasActor: false
+        hasActor: false,
       });
       expect(error.context.expected).toBe('Entity instance with id property');
       expect(error.context.received).toBe('Full context object');
-      expect(error.context.hint).toBe('Extract actorEntity from context before passing');
-      expect(error.context.suggestion).toBe('Use: const actorEntity = context.actorEntity');
-      expect(error.context.example).toContain('const actorEntity = context.actorEntity;');
+      expect(error.context.hint).toBe(
+        'Extract actorEntity from context before passing'
+      );
+      expect(error.context.suggestion).toBe(
+        'Use: const actorEntity = context.actorEntity'
+      );
+      expect(error.context.example).toContain(
+        'const actorEntity = context.actorEntity;'
+      );
       // Original error should be serialized
       expect(error.context.originalError).toEqual({
         name: 'Error',
         message: 'Parameter validation failed',
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
     });
 
@@ -144,17 +154,19 @@ describe('ScopeResolutionError', () => {
 
     it('should include scope name section', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        scopeName: 'positioning:close_actors_facing_each_other'
+        scopeName: 'positioning:close_actors_facing_each_other',
       });
 
       const result = error.toString();
 
-      expect(result).toContain('Scope: positioning:close_actors_facing_each_other');
+      expect(result).toContain(
+        'Scope: positioning:close_actors_facing_each_other'
+      );
     });
 
     it('should include phase section', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        phase: 'parameter extraction'
+        phase: 'parameter extraction',
       });
 
       const result = error.toString();
@@ -167,8 +179,8 @@ describe('ScopeResolutionError', () => {
         parameters: {
           contextType: 'object',
           hasActorEntity: true,
-          hasActor: false
-        }
+          hasActor: false,
+        },
       });
 
       const result = error.toString();
@@ -184,13 +196,13 @@ describe('ScopeResolutionError', () => {
         parameters: {
           context: {
             actor: 'entity1',
-            target: 'entity2'
+            target: 'entity2',
           },
           options: {
             strict: true,
-            verbose: false
-          }
-        }
+            verbose: false,
+          },
+        },
       });
 
       const result = error.toString();
@@ -207,90 +219,111 @@ describe('ScopeResolutionError', () => {
     it('should include expected/received', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
         expected: 'Entity instance with id property',
-        received: 'Full context object with actor, targets properties'
+        received: 'Full context object with actor, targets properties',
       });
 
       const result = error.toString();
 
       expect(result).toContain('Expected: Entity instance with id property');
-      expect(result).toContain('Received: Full context object with actor, targets properties');
+      expect(result).toContain(
+        'Received: Full context object with actor, targets properties'
+      );
     });
 
     it('should include hint with emoji', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()'
+        hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
       });
 
       const result = error.toString();
 
-      expect(result).toContain('💡 Hint: Extract actorEntity from context before passing to ScopeEngine.resolve()');
+      expect(result).toContain(
+        '💡 Hint: Extract actorEntity from context before passing to ScopeEngine.resolve()'
+      );
     });
 
     it('should include suggestion', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        suggestion: 'Use: const actorEntity = context.actorEntity || context.actor'
+        suggestion:
+          'Use: const actorEntity = context.actorEntity || context.actor',
       });
 
       const result = error.toString();
 
-      expect(result).toContain('Suggestion: Use: const actorEntity = context.actorEntity || context.actor');
+      expect(result).toContain(
+        'Suggestion: Use: const actorEntity = context.actorEntity || context.actor'
+      );
     });
 
     it('should include multiline example', () => {
       const error = new ScopeResolutionError('Scope resolution failed', {
-        example: 'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);'
+        example:
+          'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
       });
 
       const result = error.toString();
 
       expect(result).toContain('Example:');
-      expect(result).toContain('const actorEntity = context.actorEntity || context.actor;');
-      expect(result).toContain('const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);');
+      expect(result).toContain(
+        'const actorEntity = context.actorEntity || context.actor;'
+      );
+      expect(result).toContain(
+        'const result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);'
+      );
     });
 
     it('should include original error message', () => {
       const originalError = new Error('actorEntity has invalid id property');
       originalError.name = 'ParameterValidationError';
       const error = new ScopeResolutionError('Scope resolution failed', {
-        originalError
+        originalError,
       });
 
       const result = error.toString();
 
-      expect(result).toContain('Original Error: ParameterValidationError: actorEntity has invalid id property');
+      expect(result).toContain(
+        'Original Error: ParameterValidationError: actorEntity has invalid id property'
+      );
     });
 
     it('should include stack trace excerpt', () => {
       const originalError = new Error('Original error');
       const error = new ScopeResolutionError('Scope resolution failed', {
-        originalError
+        originalError,
       });
 
       const result = error.toString();
 
       expect(result).toContain('Stack Trace:');
       // Should contain some stack trace lines
-      expect(result.split('\n').filter(line => line.includes('at ')).length).toBeGreaterThan(0);
+      expect(
+        result.split('\n').filter((line) => line.includes('at ')).length
+      ).toBeGreaterThan(0);
     });
 
     it('should format all sections in correct order', () => {
       const originalError = new Error('Original validation error');
-      const error = new ScopeResolutionError('Invalid parameter passed to scope resolver', {
-        scopeName: 'positioning:close_actors_facing_each_other',
-        phase: 'parameter extraction',
-        parameters: {
-          contextType: 'object',
-          hasActorEntity: true,
-          hasActor: false,
-          extractedType: 'object'
-        },
-        expected: 'Entity instance with id property',
-        received: 'Full context object with actor, targets properties',
-        hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
-        suggestion: 'Use: const actorEntity = context.actorEntity || context.actor',
-        example: 'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
-        originalError
-      });
+      const error = new ScopeResolutionError(
+        'Invalid parameter passed to scope resolver',
+        {
+          scopeName: 'positioning:close_actors_facing_each_other',
+          phase: 'parameter extraction',
+          parameters: {
+            contextType: 'object',
+            hasActorEntity: true,
+            hasActor: false,
+            extractedType: 'object',
+          },
+          expected: 'Entity instance with id property',
+          received: 'Full context object with actor, targets properties',
+          hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
+          suggestion:
+            'Use: const actorEntity = context.actorEntity || context.actor',
+          example:
+            'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
+          originalError,
+        }
+      );
 
       const result = error.toString();
 
@@ -335,7 +368,7 @@ describe('ScopeResolutionError', () => {
 
     it('should handle multiline hints with proper indentation', () => {
       const error = new ScopeResolutionError('Test', {
-        hint: 'First line of hint\nSecond line of hint\nThird line of hint'
+        hint: 'First line of hint\nSecond line of hint\nThird line of hint',
       });
 
       const result = error.toString();
@@ -347,7 +380,7 @@ describe('ScopeResolutionError', () => {
 
     it('should handle multiline suggestions with proper indentation', () => {
       const error = new ScopeResolutionError('Test', {
-        suggestion: 'First line of suggestion\nSecond line of suggestion'
+        suggestion: 'First line of suggestion\nSecond line of suggestion',
       });
 
       const result = error.toString();
@@ -371,17 +404,20 @@ describe('ScopeResolutionError', () => {
 
     it('should handle original error as string', () => {
       const error = new ScopeResolutionError('Test error', {
-        originalError: 'ParameterValidationError: actorEntity has invalid id property'
+        originalError:
+          'ParameterValidationError: actorEntity has invalid id property',
       });
 
       const result = error.toString();
 
-      expect(result).toContain('Original Error: ParameterValidationError: actorEntity has invalid id property');
+      expect(result).toContain(
+        'Original Error: ParameterValidationError: actorEntity has invalid id property'
+      );
     });
 
     it('should use own stack trace if original error has no stack', () => {
       const error = new ScopeResolutionError('Test error', {
-        originalError: 'Simple error string'
+        originalError: 'Simple error string',
       });
 
       const result = error.toString();
@@ -396,7 +432,7 @@ describe('ScopeResolutionError', () => {
       const context = {
         scopeName: 'positioning:close_actors',
         phase: 'filter evaluation',
-        hint: 'Check your filter logic'
+        hint: 'Check your filter logic',
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -411,7 +447,7 @@ describe('ScopeResolutionError', () => {
         scopeName: 'positioning:close_actors',
         phase: 'filter evaluation',
         expected: 'boolean result',
-        received: 'undefined'
+        received: 'undefined',
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -434,11 +470,11 @@ describe('ScopeResolutionError', () => {
         phase: 'parameter extraction',
         parameters: {
           contextType: 'object',
-          hasActorEntity: true
+          hasActorEntity: true,
         },
         hint: 'Extract entity first',
         suggestion: 'Use context.actorEntity',
-        example: 'const entity = context.actorEntity;'
+        example: 'const entity = context.actorEntity;',
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -459,36 +495,40 @@ describe('ScopeResolutionError', () => {
     it('should preserve original error message in context.originalError', () => {
       const originalError = new Error('Parameter validation failed');
       const error = new ScopeResolutionError('Scope resolution failed', {
-        originalError
+        originalError,
       });
 
       // Error should be serialized to preserve across deep copy
       expect(error.context.originalError).toEqual({
         name: 'Error',
         message: 'Parameter validation failed',
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
-      expect(error.context.originalError.message).toBe('Parameter validation failed');
+      expect(error.context.originalError.message).toBe(
+        'Parameter validation failed'
+      );
     });
 
     it('should preserve original error stack in context', () => {
       const originalError = new Error('Parameter validation failed');
       const error = new ScopeResolutionError('Scope resolution failed', {
-        originalError
+        originalError,
       });
 
       expect(error.context.originalError.stack).toBeDefined();
       expect(typeof error.context.originalError.stack).toBe('string');
-      expect(error.context.originalError.stack).toContain('Parameter validation failed');
+      expect(error.context.originalError.stack).toContain(
+        'Parameter validation failed'
+      );
     });
 
     it('should maintain error chain', () => {
       const rootError = new Error('Root cause');
       const intermediateError = new ScopeResolutionError('Intermediate error', {
-        originalError: rootError
+        originalError: rootError,
       });
       const finalError = new ScopeResolutionError('Final error', {
-        originalError: intermediateError
+        originalError: intermediateError,
       });
 
       // Intermediate error is serialized as a ScopeResolutionError instance
@@ -496,14 +536,14 @@ describe('ScopeResolutionError', () => {
       expect(finalError.context.originalError).toEqual({
         name: 'ScopeResolutionError',
         message: 'Intermediate error',
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
 
       // The intermediate error's context should contain the root error (serialized)
       expect(intermediateError.context.originalError).toEqual({
         name: 'Error',
         message: 'Root cause',
-        stack: expect.any(String)
+        stack: expect.any(String),
       });
     });
   });
@@ -512,7 +552,7 @@ describe('ScopeResolutionError', () => {
     it('should expose context via getContext()', () => {
       const context = {
         scopeName: 'positioning:close_actors',
-        phase: 'filter evaluation'
+        phase: 'filter evaluation',
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -524,7 +564,7 @@ describe('ScopeResolutionError', () => {
     it('should return deep copy of context (defensive)', () => {
       const context = {
         scopeName: 'positioning:close_actors',
-        nested: { value: 'original' }
+        nested: { value: 'original' },
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -543,7 +583,7 @@ describe('ScopeResolutionError', () => {
       const context = {
         scopeName: 'positioning:close_actors',
         phase: 'filter evaluation',
-        hint: 'Check your logic'
+        hint: 'Check your logic',
       };
 
       const error = new ScopeResolutionError('Test error', context);
@@ -555,7 +595,7 @@ describe('ScopeResolutionError', () => {
 
     it('should support addContext() for fluent interface', () => {
       const error = new ScopeResolutionError('Test error', {
-        scopeName: 'positioning:close_actors'
+        scopeName: 'positioning:close_actors',
       });
 
       const result = error.addContext('phase', 'parameter extraction');
@@ -568,7 +608,9 @@ describe('ScopeResolutionError', () => {
 
   describe('Real-world usage scenarios', () => {
     it('should create comprehensive error for scope resolution failure', () => {
-      const originalError = new Error('ParameterValidationError: actorEntity has invalid \'id\' property: undefined');
+      const originalError = new Error(
+        "ParameterValidationError: actorEntity has invalid 'id' property: undefined"
+      );
       const error = new ScopeResolutionError(
         'Invalid parameter passed to scope resolver',
         {
@@ -578,25 +620,31 @@ describe('ScopeResolutionError', () => {
             contextType: 'object',
             hasActorEntity: true,
             hasActor: false,
-            extractedType: 'object'
+            extractedType: 'object',
           },
           expected: 'Entity instance with id property',
           received: 'Full context object with actor, targets properties',
           hint: 'Extract actorEntity from context before passing to ScopeEngine.resolve()',
-          suggestion: 'Use: const actorEntity = context.actorEntity || context.actor',
-          example: 'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
-          originalError
+          suggestion:
+            'Use: const actorEntity = context.actorEntity || context.actor',
+          example:
+            'const actorEntity = context.actorEntity || context.actor;\nconst result = scopeEngine.resolve(scopeData.ast, actorEntity, runtimeCtx);',
+          originalError,
         }
       );
 
       expect(error.message).toBe('Invalid parameter passed to scope resolver');
-      expect(error.context.scopeName).toBe('positioning:close_actors_facing_each_other');
+      expect(error.context.scopeName).toBe(
+        'positioning:close_actors_facing_each_other'
+      );
       expect(error.context.phase).toBe('parameter extraction');
       expect(error.severity).toBe('error');
       expect(error.recoverable).toBe(false);
 
       const formatted = error.toString();
-      expect(formatted).toContain('Scope: positioning:close_actors_facing_each_other');
+      expect(formatted).toContain(
+        'Scope: positioning:close_actors_facing_each_other'
+      );
       expect(formatted).toContain('Phase: parameter extraction');
       expect(formatted).toContain('Parameters:');
       expect(formatted).toContain('💡 Hint:');
@@ -615,7 +663,7 @@ describe('ScopeResolutionError', () => {
           expected: 'boolean or array of entities',
           received: 'null',
           hint: 'Filter must return a boolean (true/false) or an array of entity IDs',
-          example: 'return entities.filter(e => e.distance < 2);'
+          example: 'return entities.filter(e => e.distance < 2);',
         }
       );
 
@@ -628,15 +676,12 @@ describe('ScopeResolutionError', () => {
     });
 
     it('should create detailed error for missing scope', () => {
-      const error = new ScopeResolutionError(
-        'Scope not found in registry',
-        {
-          scopeName: 'custom:nonexistent_scope',
-          phase: 'scope lookup',
-          hint: 'Make sure the scope is defined in your mod and loaded correctly',
-          suggestion: 'Check data/mods/[modId]/scopes/ for scope definitions'
-        }
-      );
+      const error = new ScopeResolutionError('Scope not found in registry', {
+        scopeName: 'custom:nonexistent_scope',
+        phase: 'scope lookup',
+        hint: 'Make sure the scope is defined in your mod and loaded correctly',
+        suggestion: 'Check data/mods/[modId]/scopes/ for scope definitions',
+      });
 
       expect(error.context.scopeName).toBe('custom:nonexistent_scope');
       expect(error.severity).toBe('error');

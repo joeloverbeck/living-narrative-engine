@@ -3,9 +3,6 @@
   "id": "items:event-is-action-read-item",
   "description": "True when event is attempting the read_item action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "items:read_item"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "items:read_item"]
   }
 }

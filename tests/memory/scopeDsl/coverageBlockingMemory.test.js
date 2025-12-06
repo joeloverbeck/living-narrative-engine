@@ -2,13 +2,13 @@
  * @file Memory tests for clothing coverage blocking system
  * @description Tests memory usage patterns and leak detection for coverage analysis
  * with large wardrobes and repeated queries.
- * 
+ *
  * Memory Targets:
  * - Memory growth < 1KB per iteration during sustained operations
  * - Total memory growth < 10MB for 1000 iterations
  * - Efficient caching without memory leaks
  * - Memory stabilization within 2x threshold to account for GC timing variability
- * 
+ *
  * Note: This test uses the dedicated 'npm run test:memory' runner with --expose-gc flag
  * @see tests/performance/scopeDsl/coverageBlockingPerformance.test.js for performance tests
  */
@@ -65,8 +65,16 @@ describe('Coverage Blocking Memory Tests', () => {
 
     // Define all possible slots and layers
     const slots = [
-      'head', 'neck', 'torso_upper', 'torso_lower', 
-      'hands', 'feet', 'wrists', 'waist', 'back', 'legs'
+      'head',
+      'neck',
+      'torso_upper',
+      'torso_lower',
+      'hands',
+      'feet',
+      'wrists',
+      'waist',
+      'back',
+      'legs',
     ];
     const layers = ['outer', 'base', 'underwear', 'accessories'];
 
@@ -78,7 +86,7 @@ describe('Coverage Blocking Memory Tests', () => {
       equipment[slot] = {};
       for (const layer of layers) {
         if (itemIndex >= itemCount) break;
-        
+
         const itemId = `${entityId}:item_${itemIndex}`;
         equipment[slot][layer] = itemId;
 
@@ -115,7 +123,7 @@ describe('Coverage Blocking Memory Tests', () => {
     };
 
     entityManager = new SimpleEntityManager([]);
-    
+
     // Create entities gateway
     entitiesGateway = {
       getComponentData: (entityId, componentType) => {
@@ -126,20 +134,20 @@ describe('Coverage Blocking Memory Tests', () => {
 
     // Create coverage analyzer
     coverageAnalyzer = createCoverageAnalyzer({ entitiesGateway });
-    
+
     // Setup scope registry
     const parsedScopes = parseScopeDefinitions(
       targetTopMostTorsoLowerNoAccessoriesScopeContent,
       'test-scope.scope'
     );
-    
+
     scopeRegistry = new ScopeRegistry();
     const scopeDefinitions = {};
     Array.from(parsedScopes.entries()).forEach(([name, scopeData]) => {
       scopeDefinitions[name] = scopeData;
     });
     scopeRegistry.initialize(scopeDefinitions);
-    
+
     scopeEngine = new ScopeEngine({ scopeRegistry });
   });
 
@@ -167,9 +175,15 @@ describe('Coverage Blocking Memory Tests', () => {
       // Perform many iterations
       const iterations = 1000;
       for (let i = 0; i < iterations; i++) {
-        const equipment = entityManager.getComponentData(entityId, 'clothing:equipment').equipped;
-        const analysis = coverageAnalyzer.analyzeCoverageBlocking(equipment, entityId);
-        
+        const equipment = entityManager.getComponentData(
+          entityId,
+          'clothing:equipment'
+        ).equipped;
+        const analysis = coverageAnalyzer.analyzeCoverageBlocking(
+          equipment,
+          entityId
+        );
+
         // Use the analysis to prevent optimization
         analysis.isAccessible('dummy', 'torso_lower', 'base');
       }
@@ -186,7 +200,7 @@ describe('Coverage Blocking Memory Tests', () => {
 
       // Should have minimal memory growth per iteration
       expect(growthPerIteration).toBeLessThan(1024); // Less than 1KB per iteration
-      
+
       // Total growth should be reasonable
       expect(memoryGrowth).toBeLessThan(10 * 1024 * 1024); // Less than 10MB total
 
@@ -199,7 +213,10 @@ describe('Coverage Blocking Memory Tests', () => {
       const entityId = 'memory:cache_test';
       createLargeWardrobe(entityId, 25);
 
-      const equipment = entityManager.getComponentData(entityId, 'clothing:equipment').equipped;
+      const equipment = entityManager.getComponentData(
+        entityId,
+        'clothing:equipment'
+      ).equipped;
 
       // Force GC before measuring
       if (global.gc) {
@@ -209,7 +226,10 @@ describe('Coverage Blocking Memory Tests', () => {
 
       // First analysis (cold)
       const coldStart = performance.now();
-      const analysis1 = coverageAnalyzer.analyzeCoverageBlocking(equipment, entityId);
+      const analysis1 = coverageAnalyzer.analyzeCoverageBlocking(
+        equipment,
+        entityId
+      );
       const coldEnd = performance.now();
       const coldTime = coldEnd - coldStart;
 
@@ -221,7 +241,10 @@ describe('Coverage Blocking Memory Tests', () => {
       const warmTimes = [];
       for (let i = 0; i < 100; i++) {
         const warmStart = performance.now();
-        const analysis = coverageAnalyzer.analyzeCoverageBlocking(equipment, entityId);
+        const analysis = coverageAnalyzer.analyzeCoverageBlocking(
+          equipment,
+          entityId
+        );
         const warmEnd = performance.now();
         warmTimes.push(warmEnd - warmStart);
       }
@@ -233,7 +256,8 @@ describe('Coverage Blocking Memory Tests', () => {
       const finalMemory = process.memoryUsage().heapUsed;
       const totalMemoryGrowth = finalMemory - baselineMemory;
 
-      const avgWarmTime = warmTimes.reduce((a, b) => a + b, 0) / warmTimes.length;
+      const avgWarmTime =
+        warmTimes.reduce((a, b) => a + b, 0) / warmTimes.length;
 
       // Memory shouldn't grow significantly for cached operations
       expect(totalMemoryGrowth).toBeLessThan(firstAnalysisMemory * 2); // Should not double
@@ -263,9 +287,15 @@ describe('Coverage Blocking Memory Tests', () => {
       const snapshotInterval = 50;
 
       for (let i = 0; i < iterations; i++) {
-        const equipment = entityManager.getComponentData(entityId, 'clothing:equipment').equipped;
-        const analysis = coverageAnalyzer.analyzeCoverageBlocking(equipment, entityId);
-        
+        const equipment = entityManager.getComponentData(
+          entityId,
+          'clothing:equipment'
+        ).equipped;
+        const analysis = coverageAnalyzer.analyzeCoverageBlocking(
+          equipment,
+          entityId
+        );
+
         // Use the analysis
         analysis.isAccessible('dummy', 'torso_lower', 'base');
 
@@ -293,13 +323,17 @@ describe('Coverage Blocking Memory Tests', () => {
       const totalGrowth = finalMemory - initialMemory;
 
       // Memory should stabilize, not grow linearly
-      const firstHalfAvg = memorySnapshots
-        .slice(0, Math.floor(memorySnapshots.length / 2))
-        .reduce((sum, s) => sum + s.memory, 0) / Math.floor(memorySnapshots.length / 2);
-      
-      const secondHalfAvg = memorySnapshots
-        .slice(Math.floor(memorySnapshots.length / 2))
-        .reduce((sum, s) => sum + s.memory, 0) / (memorySnapshots.length - Math.floor(memorySnapshots.length / 2));
+      const firstHalfAvg =
+        memorySnapshots
+          .slice(0, Math.floor(memorySnapshots.length / 2))
+          .reduce((sum, s) => sum + s.memory, 0) /
+        Math.floor(memorySnapshots.length / 2);
+
+      const secondHalfAvg =
+        memorySnapshots
+          .slice(Math.floor(memorySnapshots.length / 2))
+          .reduce((sum, s) => sum + s.memory, 0) /
+        (memorySnapshots.length - Math.floor(memorySnapshots.length / 2));
 
       // Second half shouldn't be significantly higher than first half (indicates stabilization)
       // Using 2.0x threshold to account for GC timing variability and JIT optimization effects

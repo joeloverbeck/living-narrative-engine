@@ -140,12 +140,12 @@
   background: rgba(52, 152, 219, 0.05);
 }
 
-.filter-group input[type="radio"] {
+.filter-group input[type='radio'] {
   cursor: pointer;
   accent-color: var(--primary-color, #3498db);
 }
 
-.filter-group input[type="radio"]:focus {
+.filter-group input[type='radio']:focus {
   outline: 2px solid var(--primary-color, #3498db);
   outline-offset: 2px;
 }
@@ -167,7 +167,9 @@
   border: none;
   border-radius: var(--border-radius-sm, 4px);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease;
 }
 
 #send-perceptible-event-button:hover:not(:disabled) {

@@ -4,7 +4,14 @@
  * validating DOM interactions, UI state transitions, event flows, and service integration
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 
 describe('Character Builder Controllers E2E Smoke Tests', () => {
@@ -45,7 +52,8 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
     };
 
     // Create basic DOM structure
-    dom = new JSDOM(`
+    dom = new JSDOM(
+      `
       <!DOCTYPE html>
       <html>
         <body>
@@ -77,27 +85,29 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
           </div>
         </body>
       </html>
-    `, {
-      url: 'http://localhost',
-      runScripts: 'outside-only',
-      beforeParse(window) {
-        window.fetch = jest.fn();
-        window.setTimeout = jest.fn((fn) => {
-          if (typeof fn === 'function') fn();
-          return 123;
-        });
-        window.clearTimeout = jest.fn();
-        
-        if (window.performance && window.performance.now) {
-          jest.spyOn(window.performance, 'now').mockReturnValue(Date.now());
-        } else {
-          Object.defineProperty(window, 'performance', {
-            value: { now: jest.fn(() => Date.now()) },
-            configurable: true,
+    `,
+      {
+        url: 'http://localhost',
+        runScripts: 'outside-only',
+        beforeParse(window) {
+          window.fetch = jest.fn();
+          window.setTimeout = jest.fn((fn) => {
+            if (typeof fn === 'function') fn();
+            return 123;
           });
-        }
-      },
-    });
+          window.clearTimeout = jest.fn();
+
+          if (window.performance && window.performance.now) {
+            jest.spyOn(window.performance, 'now').mockReturnValue(Date.now());
+          } else {
+            Object.defineProperty(window, 'performance', {
+              value: { now: jest.fn(() => Date.now()) },
+              configurable: true,
+            });
+          }
+        },
+      }
+    );
 
     window = dom.window;
     document = window.document;
@@ -117,25 +127,39 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       // Step 1: Initial page load - empty state
       const emptyState = document.getElementById('empty-state');
       const generateButton = document.getElementById('generate-btn');
-      
+
       expect(emptyState.style.display).not.toBe('none');
       expect(generateButton.disabled).toBe(true);
       workflow.push('page-loaded-empty-state');
 
       // Step 2: User fills in form
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      const internalContradictionInput = document.getElementById('internal-contradiction-input');
-      const centralQuestionInput = document.getElementById('central-question-input');
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+      const internalContradictionInput = document.getElementById(
+        'internal-contradiction-input'
+      );
+      const centralQuestionInput = document.getElementById(
+        'central-question-input'
+      );
 
       coreMotivationInput.value = 'To protect the innocent';
-      coreMotivationInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      
-      internalContradictionInput.value = 'Wants justice but uses brutal methods';
-      internalContradictionInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      
-      centralQuestionInput.value = 'Can I protect without becoming the villain?';
-      centralQuestionInput.dispatchEvent(new window.Event('input', { bubbles: true }));
-      
+      coreMotivationInput.dispatchEvent(
+        new window.Event('input', { bubbles: true })
+      );
+
+      internalContradictionInput.value =
+        'Wants justice but uses brutal methods';
+      internalContradictionInput.dispatchEvent(
+        new window.Event('input', { bubbles: true })
+      );
+
+      centralQuestionInput.value =
+        'Can I protect without becoming the villain?';
+      centralQuestionInput.dispatchEvent(
+        new window.Event('input', { bubbles: true })
+      );
+
       workflow.push('form-filled');
 
       // Step 3: Validation passes - button becomes enabled
@@ -144,25 +168,28 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       workflow.push('validation-passed');
 
       // Step 4: User clicks generate
-      generateButton.dispatchEvent(new window.Event('click', { bubbles: true }));
+      generateButton.dispatchEvent(
+        new window.Event('click', { bubbles: true })
+      );
       workflow.push('generate-clicked');
 
       // Step 5: UI transitions to loading state
       const loadingState = document.getElementById('loading-state');
       emptyState.style.display = 'none';
       loadingState.style.display = 'block';
-      
+
       expect(emptyState.style.display).toBe('none');
       expect(loadingState.style.display).toBe('block');
       workflow.push('loading-state-active');
 
       // Step 6: Generation completes successfully
-      const generatedTraits = await mockServices.characterBuilderService.generateTraits({
-        coreMotivation: coreMotivationInput.value,
-        internalContradiction: internalContradictionInput.value,
-        centralQuestion: centralQuestionInput.value,
-      });
-      
+      const generatedTraits =
+        await mockServices.characterBuilderService.generateTraits({
+          coreMotivation: coreMotivationInput.value,
+          internalContradiction: internalContradictionInput.value,
+          centralQuestion: centralQuestionInput.value,
+        });
+
       expect(generatedTraits).toBeDefined();
       expect(generatedTraits.traits.length).toBeGreaterThan(0);
       workflow.push('generation-completed');
@@ -171,12 +198,12 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       const resultsState = document.getElementById('results-state');
       const resultsContainer = document.getElementById('results-container');
       const exportButton = document.getElementById('export-btn');
-      
+
       loadingState.style.display = 'none';
       resultsState.style.display = 'block';
       exportButton.style.display = 'inline-block';
       resultsContainer.innerHTML = `<div>${generatedTraits.traits.join(', ')}</div>`;
-      
+
       expect(loadingState.style.display).toBe('none');
       expect(resultsState.style.display).toBe('block');
       expect(exportButton.style.display).toBe('inline-block');
@@ -206,7 +233,9 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       // Fill form and trigger generation
       const inputs = {
         coreMotivation: document.getElementById('core-motivation-input'),
-        internalContradiction: document.getElementById('internal-contradiction-input'),
+        internalContradiction: document.getElementById(
+          'internal-contradiction-input'
+        ),
         centralQuestion: document.getElementById('central-question-input'),
       };
 
@@ -218,7 +247,9 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       // Trigger generation
       const generateButton = document.getElementById('generate-btn');
       generateButton.disabled = false;
-      generateButton.dispatchEvent(new window.Event('click', { bubbles: true }));
+      generateButton.dispatchEvent(
+        new window.Event('click', { bubbles: true })
+      );
       workflow.push('generate-clicked');
 
       // Transition to loading
@@ -233,11 +264,11 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
         // Transition to error state
         const errorState = document.getElementById('error-state');
         const errorMessage = document.getElementById('error-message');
-        
+
         loadingState.style.display = 'none';
         errorState.style.display = 'block';
         errorMessage.textContent = error.message;
-        
+
         expect(errorState.style.display).toBe('block');
         expect(errorMessage.textContent).toContain('Generation failed');
         workflow.push('error-state-displayed');
@@ -252,16 +283,16 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       const errorState = document.getElementById('error-state');
       const loadingState = document.getElementById('loading-state');
       const retryButton = document.getElementById('retry-btn');
-      
+
       errorState.style.display = 'block';
-      
+
       // User clicks retry
       retryButton.dispatchEvent(new window.Event('click', { bubbles: true }));
-      
+
       // Transition back to loading
       errorState.style.display = 'none';
       loadingState.style.display = 'block';
-      
+
       expect(errorState.style.display).toBe('none');
       expect(loadingState.style.display).toBe('block');
 
@@ -269,8 +300,10 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       mockServices.characterBuilderService.generateTraits.mockResolvedValue({
         traits: ['Success Trait'],
       });
-      
-      const result = await mockServices.characterBuilderService.generateTraits({});
+
+      const result = await mockServices.characterBuilderService.generateTraits(
+        {}
+      );
       expect(result.traits).toContain('Success Trait');
     });
   });
@@ -278,17 +311,17 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
   describe('UI State Transitions and DOM Caching', () => {
     it('should cache DOM elements for performance', () => {
       const cache = new Map();
-      
+
       // Simulate controller caching elements on init
       cache.set('empty-state', document.getElementById('empty-state'));
       cache.set('loading-state', document.getElementById('loading-state'));
       cache.set('results-state', document.getElementById('results-state'));
       cache.set('error-state', document.getElementById('error-state'));
-      
+
       // Verify cache
       expect(cache.size).toBe(4);
       expect(cache.get('empty-state')).toBeTruthy();
-      
+
       // Second access should use cached element
       const cachedElement = cache.get('empty-state');
       const directElement = document.getElementById('empty-state');
@@ -335,15 +368,15 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
     it('should cleanup state containers on controller destroy', () => {
       const resultsContainer = document.getElementById('results-container');
       const errorMessage = document.getElementById('error-message');
-      
+
       // Add content
       resultsContainer.innerHTML = '<div>Results</div>';
       errorMessage.textContent = 'Error message';
-      
+
       // Cleanup on destroy
       resultsContainer.innerHTML = '';
       errorMessage.textContent = '';
-      
+
       expect(resultsContainer.innerHTML).toBe('');
       expect(errorMessage.textContent).toBe('');
     });
@@ -352,8 +385,10 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
   describe('Event Listener Integration', () => {
     it('should register and handle form input events', () => {
       const eventLog = [];
-      const coreMotivationInput = document.getElementById('core-motivation-input');
-      
+      const coreMotivationInput = document.getElementById(
+        'core-motivation-input'
+      );
+
       coreMotivationInput.addEventListener('input', (e) => {
         eventLog.push({
           type: e.type,
@@ -362,7 +397,9 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
       });
 
       coreMotivationInput.value = 'Test motivation';
-      coreMotivationInput.dispatchEvent(new window.Event('input', { bubbles: true }));
+      coreMotivationInput.dispatchEvent(
+        new window.Event('input', { bubbles: true })
+      );
 
       expect(eventLog).toHaveLength(1);
       expect(eventLog[0].value).toBe('Test motivation');
@@ -371,16 +408,16 @@ describe('Character Builder Controllers E2E Smoke Tests', () => {
     it('should cleanup event listeners on destroy', () => {
       const generateButton = document.getElementById('generate-btn');
       const handler = jest.fn();
-      
+
       generateButton.addEventListener('click', handler);
-      
+
       // Trigger event
       generateButton.dispatchEvent(new window.Event('click'));
       expect(handler).toHaveBeenCalledTimes(1);
-      
+
       // Cleanup
       generateButton.removeEventListener('click', handler);
-      
+
       // Event should no longer trigger handler
       generateButton.dispatchEvent(new window.Event('click'));
       expect(handler).toHaveBeenCalledTimes(1); // Still 1, not 2

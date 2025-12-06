@@ -1,10 +1,4 @@
-import {
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test
-} from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { BaseTurnHandler } from '../../../../src/turns/handlers/baseTurnHandler.js';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
 import { ITurnStateFactory } from '../../../../src/turns/interfaces/ITurnStateFactory.js';
@@ -19,7 +13,7 @@ const createLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 });
 
 class RecordingState extends AbstractTurnState {
@@ -130,7 +124,12 @@ class IntegrationTurnStateFactory extends ITurnStateFactory {
   }
 
   createProcessingCommandState(handler, commandString, turnAction, resolver) {
-    const state = new ProcessingState(handler, commandString, turnAction, resolver);
+    const state = new ProcessingState(
+      handler,
+      commandString,
+      turnAction,
+      resolver
+    );
     this.createdProcessingStates.push(state);
     return state;
   }
@@ -144,7 +143,7 @@ class IntegrationTurnHandler extends BaseTurnHandler {
   constructor({ logger, turnStateFactory }) {
     super({ logger, turnStateFactory });
     this.turnEndPort = {
-      notifyTurnEnded: jest.fn(async () => {})
+      notifyTurnEnded: jest.fn(async () => {}),
     };
     this.safeEventDispatcher = { dispatch: jest.fn() };
     this._setInitialState(this._turnStateFactory.createInitialState(this));
@@ -160,7 +159,7 @@ const createContext = ({
   logger,
   dispatcher = { dispatch: jest.fn() },
   handler,
-  overrides = {}
+  overrides = {},
 }) => {
   const actor = { id: actorId };
   const base = {
@@ -174,11 +173,13 @@ const createContext = ({
     requestProcessingCommandStateTransition: jest.fn((command, action) =>
       handler.requestProcessingCommandStateTransition(command, action)
     ),
-    requestIdleStateTransition: jest.fn(() => handler.requestIdleStateTransition()),
+    requestIdleStateTransition: jest.fn(() =>
+      handler.requestIdleStateTransition()
+    ),
     requestAwaitingExternalTurnEndStateTransition: jest.fn(() =>
       handler.requestAwaitingExternalTurnEndStateTransition()
     ),
-    endTurn: jest.fn(() => Promise.resolve())
+    endTurn: jest.fn(() => Promise.resolve()),
   };
   return { ...base, ...overrides };
 };
@@ -200,7 +201,7 @@ describe('BaseTurnHandler integration coverage', () => {
       () =>
         new IntegrationTurnHandler({
           logger: null,
-          turnStateFactory
+          turnStateFactory,
         })
     ).toThrow('logger is required');
 
@@ -208,7 +209,7 @@ describe('BaseTurnHandler integration coverage', () => {
       () =>
         new IntegrationTurnHandler({
           logger,
-          turnStateFactory: null
+          turnStateFactory: null,
         })
     ).toThrow('turnStateFactory is required');
   });
@@ -265,7 +266,11 @@ describe('BaseTurnHandler integration coverage', () => {
 
   test('getSafeEventDispatcher resolves from context, handler fallback, and warning when unavailable', () => {
     const dispatcherFromContext = { dispatch: jest.fn() };
-    const context = createContext({ logger, handler, dispatcher: dispatcherFromContext });
+    const context = createContext({
+      logger,
+      handler,
+      dispatcher: dispatcherFromContext,
+    });
     handler._setCurrentTurnContextInternal(context);
 
     expect(handler.getSafeEventDispatcher()).toBe(dispatcherFromContext);
@@ -291,9 +296,13 @@ describe('BaseTurnHandler integration coverage', () => {
   test('_setCurrentActorInternal and _setCurrentTurnContextInternal align actors', () => {
     const actor = { id: 'actor-initial' };
     const contextActor = { id: 'context-actor' };
-    const context = createContext({ logger, handler, overrides: {
-      getActor: jest.fn(() => contextActor)
-    } });
+    const context = createContext({
+      logger,
+      handler,
+      overrides: {
+        getActor: jest.fn(() => contextActor),
+      },
+    });
 
     handler._setCurrentActorInternal(actor);
     expect(handler._currentActor).toBe(actor);
@@ -359,7 +368,9 @@ describe('BaseTurnHandler integration coverage', () => {
     await handler._transitionToState(idleState);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to enter TurnIdleState even after an error.')
+      expect.stringContaining(
+        'Failed to enter TurnIdleState even after an error.'
+      )
     );
   });
 
@@ -379,7 +390,9 @@ describe('BaseTurnHandler integration coverage', () => {
     await handler._transitionToState(failingState);
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL - Failed to transition to TurnIdleState after error.'),
+      expect.stringContaining(
+        'CRITICAL - Failed to transition to TurnIdleState after error.'
+      ),
       expect.any(Error)
     );
     expect(handler.getCurrentState()).toBeInstanceOf(IdleState);
@@ -432,9 +445,13 @@ describe('BaseTurnHandler integration coverage', () => {
   });
 
   test('_handleTurnEnd transitions to ending state with actor resolution', async () => {
-    const context = createContext({ logger, handler, overrides: {
-      getActor: jest.fn(() => ({ id: 'ctx-actor' }))
-    } });
+    const context = createContext({
+      logger,
+      handler,
+      overrides: {
+        getActor: jest.fn(() => ({ id: 'ctx-actor' })),
+      },
+    });
     handler._setCurrentTurnContextInternal(context);
     const activeState = new AwaitingState(handler);
     handler._currentState = activeState;
@@ -466,19 +483,27 @@ describe('BaseTurnHandler integration coverage', () => {
 
     await handler._handleTurnEnd(null);
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Could not determine actor ID for TurnEndingState')
+      expect.stringContaining(
+        'Could not determine actor ID for TurnEndingState'
+      )
     );
 
-    const mismatchContext = createContext({ logger, handler, overrides: {
-      getActor: jest.fn(() => ({ id: 'ctx-1' }))
-    } });
+    const mismatchContext = createContext({
+      logger,
+      handler,
+      overrides: {
+        getActor: jest.fn(() => ({ id: 'ctx-1' })),
+      },
+    });
     handler._setCurrentTurnContextInternal(mismatchContext);
     handler._currentState = new AwaitingState(handler);
     logger.warn.mockClear();
 
     await handler._handleTurnEnd('ended-actor');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("called for actor 'ended-actor', but TurnContext is for 'ctx-1'")
+      expect.stringContaining(
+        "called for actor 'ended-actor', but TurnContext is for 'ctx-1'"
+      )
     );
 
     handler._setCurrentTurnContextInternal(null);
@@ -487,7 +512,9 @@ describe('BaseTurnHandler integration coverage', () => {
 
     await handler._handleTurnEnd('ended-actor');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("no active TurnContext, but handler's _currentActor is 'handler-actor'")
+      expect.stringContaining(
+        "no active TurnContext, but handler's _currentActor is 'handler-actor'"
+      )
     );
 
     handler._setCurrentTurnContextInternal(createContext({ logger, handler }));
@@ -496,7 +523,9 @@ describe('BaseTurnHandler integration coverage', () => {
 
     await handler._handleTurnEnd('handler-actor', new Error('idle failure'));
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error will be logged but no new transition initiated')
+      expect.stringContaining(
+        'Error will be logged but no new transition initiated'
+      )
     );
 
     const originalAssert = handler._assertHandlerActiveUnlessDestroying;
@@ -508,7 +537,9 @@ describe('BaseTurnHandler integration coverage', () => {
     handler._currentState = new AwaitingState(handler);
     await handler._handleTurnEnd('late-call');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('handler is already destroyed and call is not from destroy process')
+      expect.stringContaining(
+        'handler is already destroyed and call is not from destroy process'
+      )
     );
     handler._assertHandlerActiveUnlessDestroying = originalAssert;
     handler._isDestroyed = false;
@@ -567,7 +598,9 @@ describe('BaseTurnHandler integration coverage', () => {
     handler.resetStateAndResources('wrap-reset');
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error during cancelActivePrompt: cancel failure'),
+      expect.stringContaining(
+        'Error during cancelActivePrompt: cancel failure'
+      ),
       expect.any(Error)
     );
     expect(handler._currentTurnContext).toBeNull();
@@ -614,19 +647,27 @@ describe('BaseTurnHandler integration coverage', () => {
     await handler.destroy();
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('destroy: Error during cancelActivePrompt: cancel error'),
+      expect.stringContaining(
+        'destroy: Error during cancelActivePrompt: cancel error'
+      ),
       expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error during AwaitingState.destroy(): state destroy error'),
+      expect.stringContaining(
+        'Error during AwaitingState.destroy(): state destroy error'
+      ),
       expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error while transitioning to TurnIdleState during destroy'),
+      expect.stringContaining(
+        'Error while transitioning to TurnIdleState during destroy'
+      ),
       expect.any(Error)
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Forcibly set state to TurnIdleState due to transition error')
+      expect.stringContaining(
+        'Forcibly set state to TurnIdleState due to transition error'
+      )
     );
     expect(handler.getCurrentState()).toBeInstanceOf(IdleState);
 
@@ -670,7 +711,7 @@ describe('BaseTurnHandler integration coverage', () => {
     await handler.requestAwaitingInputStateTransition();
     await handler.requestAwaitingExternalTurnEndStateTransition();
     await handler.requestProcessingCommandStateTransition('command', {
-      id: 'action'
+      id: 'action',
     });
 
     expect(spy).toHaveBeenCalledTimes(4);

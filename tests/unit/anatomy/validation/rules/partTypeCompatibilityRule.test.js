@@ -82,21 +82,23 @@ describe('PartTypeCompatibilityRule', () => {
         'explicitAllowed',
       ];
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        const components = componentMap[entityId];
-        return components ? components[componentId] : undefined;
-      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          const components = componentMap[entityId];
+          return components ? components[componentId] : undefined;
+        }
+      );
 
       const issues = await rule.validate(context);
 
       expect(issues).toEqual([]);
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         1,
-        `PartTypeCompatibilityRule: Validating part type compatibility for ${context.entityIds.length} entities`,
+        `PartTypeCompatibilityRule: Validating part type compatibility for ${context.entityIds.length} entities`
       );
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         2,
-        'PartTypeCompatibilityRule: Found 0 part type compatibility violations',
+        'PartTypeCompatibilityRule: Found 0 part type compatibility violations'
       );
     });
 
@@ -114,10 +116,12 @@ describe('PartTypeCompatibilityRule', () => {
       };
 
       context.entityIds = ['mismatchedPart'];
-      mockEntityManager.getComponentData.mockImplementation((entityId, componentId) => {
-        const components = componentMap[entityId];
-        return components ? components[componentId] : undefined;
-      });
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, componentId) => {
+          const components = componentMap[entityId];
+          return components ? components[componentId] : undefined;
+        }
+      );
 
       const issues = await rule.validate(context);
 
@@ -125,7 +129,9 @@ describe('PartTypeCompatibilityRule', () => {
       const [issue] = issues;
       expect(issue.severity).toBe('error');
       expect(issue.ruleId).toBe(rule.ruleId);
-      expect(issue.message).toContain("Part type 'wing' not allowed in socket 'socket-arm'");
+      expect(issue.message).toContain(
+        "Part type 'wing' not allowed in socket 'socket-arm'"
+      );
       expect(issue.context).toEqual({
         entityId: 'mismatchedPart',
         partType: 'wing',
@@ -135,11 +141,11 @@ describe('PartTypeCompatibilityRule', () => {
       });
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         1,
-        'PartTypeCompatibilityRule: Validating part type compatibility for 1 entities',
+        'PartTypeCompatibilityRule: Validating part type compatibility for 1 entities'
       );
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         2,
-        'PartTypeCompatibilityRule: Found 1 part type compatibility violations',
+        'PartTypeCompatibilityRule: Found 1 part type compatibility violations'
       );
     });
   });

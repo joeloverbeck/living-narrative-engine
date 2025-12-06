@@ -24,13 +24,13 @@
 
 The service mock synchronization issue spans test infrastructure and production service implementations:
 
-| Module | File Path | Purpose |
-|--------|-----------|---------|
-| **Mock Factory** | `tests/common/mods/ModTestHandlerFactory.js` | Creates mock services for DI container in integration tests |
-| **Test Fixture** | `tests/common/mods/ModTestFixture.js` | Wires mocks into test execution environment |
-| **Production Service** | `src/anatomy/services/deathCheckService.js` | Actual implementation with 4 public methods |
-| **Handler Consumer** | `src/logic/operationHandlers/applyDamageHandler.js` | Calls service methods via DI |
-| **DI Registration** | `src/dependencyInjection/registrations/` | Defines service interfaces via tokens |
+| Module                 | File Path                                           | Purpose                                                     |
+| ---------------------- | --------------------------------------------------- | ----------------------------------------------------------- |
+| **Mock Factory**       | `tests/common/mods/ModTestHandlerFactory.js`        | Creates mock services for DI container in integration tests |
+| **Test Fixture**       | `tests/common/mods/ModTestFixture.js`               | Wires mocks into test execution environment                 |
+| **Production Service** | `src/anatomy/services/deathCheckService.js`         | Actual implementation with 4 public methods                 |
+| **Handler Consumer**   | `src/logic/operationHandlers/applyDamageHandler.js` | Calls service methods via DI                                |
+| **DI Registration**    | `src/dependencyInjection/registrations/`            | Defines service interfaces via tokens                       |
 
 ### What the Module Does
 
@@ -91,11 +91,13 @@ Service Interface Change
 **Issue**: Integration tests for `applyDamageRecipeBasedAnatomy.integration.test.js` failed with TypeError because the `deathCheckService` mock was missing the `evaluateDeathConditions` method.
 
 **Affected Tests**:
+
 - `tests/integration/mods/weapons/applyDamageRecipeBasedAnatomy.integration.test.js`
   - "should resolve target part when hit_probability_weight is undefined (defaults to 1.0)"
   - "should select target part when hit_probability_weight is explicitly 0"
 
 **Error Message**:
+
 ```
 TypeError: this[#deathCheckService].evaluateDeathConditions is not a function
     at ApplyDamageHandler.execute (src/logic/operationHandlers/applyDamageHandler.js:725:53)
@@ -114,6 +116,7 @@ TypeError: this[#deathCheckService].evaluateDeathConditions is not a function
 7. **Failure**: Mock doesn't have `evaluateDeathConditions` → TypeError
 
 **Stack Trace**:
+
 ```
 ApplyDamageHandler.execute (src/logic/operationHandlers/applyDamageHandler.js:725:53)
 └─ calls deathCheckService.evaluateDeathConditions()
@@ -134,19 +137,21 @@ ApplyDamageHandler.execute (src/logic/operationHandlers/applyDamageHandler.js:72
 
 **Comparison**:
 
-| Aspect | Production Service | Mock Service |
-|--------|-------------------|--------------|
-| `checkDeathConditions` | ✅ Implemented | ✅ Mocked |
-| `evaluateDeathConditions` | ✅ Implemented | ❌ Missing → **FIXED** |
-| `finalizeDeathFromEvaluation` | ✅ Implemented | ❌ Missing → **FIXED** |
-| `processDyingTurn` | ✅ Implemented | ⚠️ Not verified |
+| Aspect                        | Production Service | Mock Service           |
+| ----------------------------- | ------------------ | ---------------------- |
+| `checkDeathConditions`        | ✅ Implemented     | ✅ Mocked              |
+| `evaluateDeathConditions`     | ✅ Implemented     | ❌ Missing → **FIXED** |
+| `finalizeDeathFromEvaluation` | ✅ Implemented     | ❌ Missing → **FIXED** |
+| `processDyingTurn`            | ✅ Implemented     | ⚠️ Not verified        |
 
 ### Test Links
 
 **Primary Failing Tests**:
+
 - `tests/integration/mods/weapons/applyDamageRecipeBasedAnatomy.integration.test.js:43-123`
 
 **Related Test Infrastructure**:
+
 - `tests/common/mods/ModTestHandlerFactory.js:1268-1278` (mock definition)
 - `tests/common/mods/ModTestFixture.js` (fixture wiring)
 
@@ -242,6 +247,7 @@ class DeathCheckService {
 **Source**: `src/dependencyInjection/tokens/`
 
 **Relevant Tokens**:
+
 - `IDeathCheckService` - Interface token for death check service
 
 ### 4. Handler Consumer Code
@@ -249,6 +255,7 @@ class DeathCheckService {
 **Source**: `src/logic/operationHandlers/applyDamageHandler.js:717-740`
 
 **Usage Pattern**:
+
 ```javascript
 // Step 1: EVALUATE death conditions (no events dispatched yet)
 let deathEvaluation;
@@ -264,7 +271,7 @@ try {
     isDying: false,
     shouldFinalize: false,
     finalizationParams: null,
-    deathInfo: null
+    deathInfo: null,
   };
 }
 ```
@@ -280,25 +287,26 @@ try {
 **Requirement**: Every public method on the production service MUST have a corresponding mock method.
 
 **Expected Mock Definition** (ModTestHandlerFactory.js):
+
 ```javascript
 const deathCheckService = {
   checkDeathConditions: jest.fn(() => ({
     isDead: false,
     isDying: false,
-    deathInfo: null
+    deathInfo: null,
   })),
   evaluateDeathConditions: jest.fn(() => ({
     isDead: false,
     isDying: false,
     shouldFinalize: false,
     finalizationParams: null,
-    deathInfo: null
+    deathInfo: null,
   })),
   finalizeDeathFromEvaluation: jest.fn(),
   processDyingTurn: jest.fn(() => ({
     actionTaken: 'none',
-    stillDying: false
-  }))
+    stillDying: false,
+  })),
 };
 ```
 
@@ -307,18 +315,19 @@ const deathCheckService = {
 **Requirement**: Default mock return values must conform to JSDoc typedef shapes.
 
 **Verification**:
+
 ```javascript
 // checkDeathConditions returns DeathCheckResult
 expect(mockService.checkDeathConditions()).toMatchObject({
   isDead: expect.any(Boolean),
-  isDying: expect.any(Boolean)
+  isDying: expect.any(Boolean),
 });
 
 // evaluateDeathConditions returns DeathEvaluation
 expect(mockService.evaluateDeathConditions()).toMatchObject({
   isDead: expect.any(Boolean),
   isDying: expect.any(Boolean),
-  shouldFinalize: expect.any(Boolean)
+  shouldFinalize: expect.any(Boolean),
 });
 ```
 
@@ -327,6 +336,7 @@ expect(mockService.evaluateDeathConditions()).toMatchObject({
 **Requirement**: Handler should not be able to distinguish mock from production service.
 
 **Pattern**:
+
 ```javascript
 // Production
 const handler = new ApplyDamageHandler({ deathCheckService: realService });
@@ -345,11 +355,12 @@ await handler.execute(context);
 **Scenario**: Service method has default behavior, consumer may or may not call it.
 
 **Handling**:
+
 ```javascript
 // Always mock all public methods, even optional ones
 const mockService = {
   requiredMethod: jest.fn(),
-  optionalMethod: jest.fn(() => defaultValue) // Still mock it
+  optionalMethod: jest.fn(() => defaultValue), // Still mock it
 };
 ```
 
@@ -358,6 +369,7 @@ const mockService = {
 **Scenario**: Method returns deeply nested objects.
 
 **Handling**:
+
 ```javascript
 // Provide complete default structure
 evaluateDeathConditions: jest.fn(() => ({
@@ -368,9 +380,9 @@ evaluateDeathConditions: jest.fn(() => ({
   deathInfo: {
     causeOfDeath: null,
     killerEntityId: null,
-    timestamp: null
-  }
-}))
+    timestamp: null,
+  },
+}));
 ```
 
 #### 3. Methods Added in Patch Releases
@@ -378,6 +390,7 @@ evaluateDeathConditions: jest.fn(() => ({
 **Scenario**: Service gains new method between minor versions.
 
 **Handling**:
+
 - Add method to mock in same PR that adds production method
 - Create test that verifies mock completeness
 - Document in PR description that mock was updated
@@ -387,11 +400,13 @@ evaluateDeathConditions: jest.fn(() => ({
 #### 1. Clear Error When Mock Is Incomplete
 
 **Current Behavior** (problematic):
+
 ```
 TypeError: this[#deathCheckService].evaluateDeathConditions is not a function
 ```
 
 **Desired Behavior** (proposed enhancement):
+
 ```
 MockIncompleteError: Service 'deathCheckService' mock is missing method 'evaluateDeathConditions'
   Expected methods (from IDeathCheckService):
@@ -408,13 +423,14 @@ MockIncompleteError: Service 'deathCheckService' mock is missing method 'evaluat
 #### 2. Runtime Validation That Mock Implements Expected Interface
 
 **Proposed Enhancement**:
+
 ```javascript
 // In ModTestHandlerFactory.js
 function createMock(interfaceId, mockDefinition) {
   const expectedMethods = getExpectedMethods(interfaceId);
   const actualMethods = Object.keys(mockDefinition);
 
-  const missing = expectedMethods.filter(m => !actualMethods.includes(m));
+  const missing = expectedMethods.filter((m) => !actualMethods.includes(m));
   if (missing.length > 0) {
     throw new MockIncompleteError(
       `Mock for ${interfaceId} missing methods: ${missing.join(', ')}`
@@ -474,8 +490,12 @@ processDyingTurn(entityId: string): TurnResult
 
 ```javascript
 // STABLE - these properties must always be present
-DeathCheckResult: { isDead, isDying }
-DeathEvaluation: { isDead, isDying, shouldFinalize }
+DeathCheckResult: {
+  (isDead, isDying);
+}
+DeathEvaluation: {
+  (isDead, isDying, shouldFinalize);
+}
 ```
 
 **3. Mock Factory Method Signatures**
@@ -538,15 +558,16 @@ describe('ModTestHandlerFactory Mock Completeness', () => {
   describe('deathCheckService mock', () => {
     it('should have all public methods from DeathCheckService', () => {
       // Get production class public methods
-      const productionMethods = Object.getOwnPropertyNames(DeathCheckService.prototype)
-        .filter(name => !name.startsWith('#') && name !== 'constructor');
+      const productionMethods = Object.getOwnPropertyNames(
+        DeathCheckService.prototype
+      ).filter((name) => !name.startsWith('#') && name !== 'constructor');
 
       // Get mock methods from factory
       const mockService = createDeathCheckServiceMock();
       const mockMethods = Object.keys(mockService);
 
       // Every production method should be in mock
-      productionMethods.forEach(method => {
+      productionMethods.forEach((method) => {
         expect(mockMethods).toContain(method);
       });
     });
@@ -557,7 +578,7 @@ describe('ModTestHandlerFactory Mock Completeness', () => {
 
       expect(result).toMatchObject({
         isDead: expect.any(Boolean),
-        isDying: expect.any(Boolean)
+        isDying: expect.any(Boolean),
       });
     });
 
@@ -570,7 +591,7 @@ describe('ModTestHandlerFactory Mock Completeness', () => {
         isDying: expect.any(Boolean),
         shouldFinalize: expect.any(Boolean),
         finalizationParams: expect.anything(),
-        deathInfo: expect.anything()
+        deathInfo: expect.anything(),
       });
     });
   });
@@ -598,7 +619,9 @@ describe('All Service Mocks - Interface Completeness', () => {
         const mockService = getMockFromFactory(mockName);
         const mockMethods = Object.keys(mockService);
 
-        const missing = productionMethods.filter(m => !mockMethods.includes(m));
+        const missing = productionMethods.filter(
+          (m) => !mockMethods.includes(m)
+        );
 
         expect(missing).toHaveLength(0);
       });
@@ -628,7 +651,7 @@ describe('APPLY_DAMAGE - DeathCheckService Integration', () => {
     // This should NOT throw TypeError
     await expect(
       fixture.executeAction(actor.id, weapon.id, {
-        additionalPayload: { secondaryId: target.id }
+        additionalPayload: { secondaryId: target.id },
       })
     ).resolves.not.toThrow(TypeError);
 
@@ -642,24 +665,27 @@ describe('APPLY_DAMAGE - DeathCheckService Integration', () => {
     );
 
     // Configure mock to return death evaluation
-    fixture.getMock('deathCheckService').evaluateDeathConditions.mockReturnValue({
-      isDead: true,
-      isDying: false,
-      shouldFinalize: true,
-      finalizationParams: { cause: 'damage' },
-      deathInfo: { killerEntityId: 'attacker' }
-    });
+    fixture
+      .getMock('deathCheckService')
+      .evaluateDeathConditions.mockReturnValue({
+        isDead: true,
+        isDying: false,
+        shouldFinalize: true,
+        finalizationParams: { cause: 'damage' },
+        deathInfo: { killerEntityId: 'attacker' },
+      });
 
     const { actor, target } = fixture.createStandardActorTarget();
     const weapon = fixture.createWeapon('sword', { damage: 100 });
 
     await fixture.executeAction(actor.id, weapon.id, {
-      additionalPayload: { secondaryId: target.id }
+      additionalPayload: { secondaryId: target.id },
     });
 
     // Verify mock was called
-    expect(fixture.getMock('deathCheckService').evaluateDeathConditions)
-      .toHaveBeenCalledWith(expect.any(String), expect.any(String));
+    expect(
+      fixture.getMock('deathCheckService').evaluateDeathConditions
+    ).toHaveBeenCalledWith(expect.any(String), expect.any(String));
 
     fixture.cleanup();
   });
@@ -673,11 +699,13 @@ describe('APPLY_DAMAGE - DeathCheckService Integration', () => {
 **File**: `tests/unit/common/mods/ModTestHandlerFactory.test.js`
 
 **Changes**:
+
 ```javascript
 // ADD: Test for mock method completeness
 describe('Service Mock Definitions', () => {
   it('should define all deathCheckService methods', () => {
-    const handlerSet = ModTestHandlerFactory.getHandlerFactoryForCategory('weapons');
+    const handlerSet =
+      ModTestHandlerFactory.getHandlerFactoryForCategory('weapons');
     const deathCheckMock = handlerSet.services.deathCheckService;
 
     expect(deathCheckMock.checkDeathConditions).toBeDefined();
@@ -744,11 +772,14 @@ fc.assert(
   fc.property(
     fc.record({
       entityId: fc.string(),
-      attackerId: fc.string()
+      attackerId: fc.string(),
     }),
     (params) => {
       const mockService = createDeathCheckServiceMock();
-      const result = mockService.evaluateDeathConditions(params.entityId, params.attackerId);
+      const result = mockService.evaluateDeathConditions(
+        params.entityId,
+        params.attackerId
+      );
 
       // Must have required properties
       expect(result).toHaveProperty('isDead');
@@ -770,18 +801,19 @@ fc.assert(
 **Rule**: When creating a mock, list ALL public methods from the production class.
 
 **Pattern**:
+
 ```javascript
 // ✅ CORRECT: All methods defined
 const deathCheckService = {
   checkDeathConditions: jest.fn(() => defaultResult),
   evaluateDeathConditions: jest.fn(() => defaultEval),
   finalizeDeathFromEvaluation: jest.fn(),
-  processDyingTurn: jest.fn(() => defaultTurn)
+  processDyingTurn: jest.fn(() => defaultTurn),
 };
 
 // ❌ WRONG: Missing methods
 const deathCheckService = {
-  checkDeathConditions: jest.fn(() => defaultResult)
+  checkDeathConditions: jest.fn(() => defaultResult),
   // Missing other methods!
 };
 ```
@@ -791,20 +823,21 @@ const deathCheckService = {
 **Rule**: Mock return values should match JSDoc typedef shapes with safe defaults.
 
 **Pattern**:
+
 ```javascript
 // ✅ CORRECT: Returns complete shape with safe defaults
 evaluateDeathConditions: jest.fn(() => ({
-  isDead: false,        // Safe default: not dead
-  isDying: false,       // Safe default: not dying
-  shouldFinalize: false,// Safe default: don't finalize
+  isDead: false, // Safe default: not dead
+  isDying: false, // Safe default: not dying
+  shouldFinalize: false, // Safe default: don't finalize
   finalizationParams: null,
-  deathInfo: null
-}))
+  deathInfo: null,
+}));
 
 // ❌ WRONG: Returns incomplete or dangerous defaults
 evaluateDeathConditions: jest.fn(() => ({
-  isDead: true  // Dangerous: entities will die unexpectedly
-}))
+  isDead: true, // Dangerous: entities will die unexpectedly
+}));
 ```
 
 #### 3. Update Mocks in Same PR as Interface Changes
@@ -812,6 +845,7 @@ evaluateDeathConditions: jest.fn(() => ({
 **Rule**: When adding/changing service methods, update mocks atomically.
 
 **Git Workflow**:
+
 ```bash
 # Single commit for interface change
 git add src/anatomy/services/deathCheckService.js  # New method
@@ -821,6 +855,7 @@ git commit -m "Add evaluateDeathConditions to deathCheckService with mock"
 ```
 
 **PR Checklist**:
+
 - [ ] New/changed method in production service
 - [ ] Mock updated in ModTestHandlerFactory.js
 - [ ] Mock return value matches typedef
@@ -832,6 +867,7 @@ git commit -m "Add evaluateDeathConditions to deathCheckService with mock"
 #### 1. Consider Interface Validation Helper
 
 **Proposed Enhancement** (optional):
+
 ```javascript
 // In ModTestHandlerFactory.js
 function validateMockCompleteness(mockName, mock, interfaceSpec) {
@@ -873,10 +909,10 @@ const deathCheckService = {
     isDying: false,
     shouldFinalize: false,
     finalizationParams: null,
-    deathInfo: null
+    deathInfo: null,
   })),
   finalizeDeathFromEvaluation: jest.fn(),
-  processDyingTurn: jest.fn(() => ({ actionTaken: 'none', stillDying: false }))
+  processDyingTurn: jest.fn(() => ({ actionTaken: 'none', stillDying: false })),
 };
 ```
 
@@ -887,6 +923,7 @@ const deathCheckService = {
 **Rule**: Don't remove service methods without deprecation period.
 
 **Pattern**:
+
 ```javascript
 /**
  * @deprecated Use evaluateDeathConditions + finalizeDeathFromEvaluation instead
@@ -903,12 +940,13 @@ checkDeathConditions(entityId, attackerId) {
 **Rule**: When adding new methods, provide mock defaults that don't break existing tests.
 
 **Pattern**:
+
 ```javascript
 // New method with safe default
 newMethod: jest.fn(() => ({
   success: true,
-  data: null  // Safe: doesn't trigger side effects
-}))
+  data: null, // Safe: doesn't trigger side effects
+}));
 ```
 
 ---
@@ -924,11 +962,13 @@ This specification establishes guidelines for maintaining synchronization betwee
 5. **Clear Documentation**: Mock requirements are documented inline
 
 **Fix Applied**:
+
 - Added `evaluateDeathConditions` and `finalizeDeathFromEvaluation` to deathCheckService mock
 - All 4 failing tests now pass
 - All 496 weapons integration tests pass
 
 **Next Steps**:
+
 1. Add mock completeness test for deathCheckService
 2. Verify `processDyingTurn` is also mocked
 3. Consider implementing mock validation helper
@@ -937,4 +977,5 @@ This specification establishes guidelines for maintaining synchronization betwee
 ---
 
 **Document History**:
+
 - 2025-12-05: Initial version (1.0) - Created after deathCheckService mock fix

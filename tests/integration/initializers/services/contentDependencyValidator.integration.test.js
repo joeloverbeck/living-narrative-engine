@@ -14,7 +14,9 @@ class RecordingLogger {
 
   #record(target, values) {
     const message = values
-      .map((value) => (typeof value === 'string' ? value : JSON.stringify(value)))
+      .map((value) =>
+        typeof value === 'string' ? value : JSON.stringify(value)
+      )
       .join(' ')
       .trim();
     target.push(message);
@@ -116,12 +118,16 @@ describe('ContentDependencyValidator integration', () => {
 
     expect(
       logger.debugMessages.filter((message) =>
-        message.includes('ContentDependencyValidator: Validating content dependencies...')
+        message.includes(
+          'ContentDependencyValidator: Validating content dependencies...'
+        )
       ).length
     ).toBe(1);
     expect(
       logger.debugMessages.filter((message) =>
-        message.includes('ContentDependencyValidator: Content dependency validation complete.')
+        message.includes(
+          'ContentDependencyValidator: Content dependency validation complete.'
+        )
       ).length
     ).toBe(1);
 
@@ -138,7 +144,9 @@ describe('ContentDependencyValidator integration', () => {
 
   it('gracefully skips validation when repository configuration is incomplete', async () => {
     const defaultValidator = new ContentDependencyValidator();
-    await expect(defaultValidator.validate('world:test')).resolves.toBeUndefined();
+    await expect(
+      defaultValidator.validate('world:test')
+    ).resolves.toBeUndefined();
 
     const validator = new ContentDependencyValidator({
       gameDataRepository: {
@@ -155,7 +163,9 @@ describe('ContentDependencyValidator integration', () => {
     expect(logger.errorMessages).toEqual([]);
     expect(
       logger.debugMessages.filter((message) =>
-        message.includes('ContentDependencyValidator: Content dependency validation complete.')
+        message.includes(
+          'ContentDependencyValidator: Content dependency validation complete.'
+        )
       ).length
     ).toBe(0);
   });
@@ -182,12 +192,16 @@ describe('ContentDependencyValidator integration', () => {
 
     expect(
       logger.debugMessages.filter((message) =>
-        message.includes('ContentDependencyValidator: Validating content dependencies...')
+        message.includes(
+          'ContentDependencyValidator: Validating content dependencies...'
+        )
       ).length
     ).toBe(1);
     expect(
       logger.debugMessages.filter((message) =>
-        message.includes('ContentDependencyValidator: Content dependency validation complete.')
+        message.includes(
+          'ContentDependencyValidator: Content dependency validation complete.'
+        )
       ).length
     ).toBe(1);
     expect(logger.errorMessages).toEqual([]);

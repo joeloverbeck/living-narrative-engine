@@ -186,7 +186,8 @@ describe('ValidatorGenerator', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Custom error: {{property}} = {{value}} not in [{{validValues}}]',
+            invalidEnum:
+              'Custom error: {{property}} = {{value}} not in [{{validValues}}]',
           },
         },
       };
@@ -427,7 +428,8 @@ describe('ValidatorGenerator', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidType: 'Type mismatch: {{field}} must be {{expected}}, not {{actual}}',
+            invalidType:
+              'Type mismatch: {{field}} must be {{expected}}, not {{actual}}',
           },
         },
       };
@@ -511,7 +513,9 @@ describe('ValidatorGenerator', () => {
       // null triggers type validation first (invalidType) and also required validation (missingRequired)
       expect(result.errors.length).toBeGreaterThan(0);
       const hasTypeError = result.errors.some((e) => e.type === 'invalidType');
-      const hasRequiredError = result.errors.some((e) => e.type === 'missingRequired');
+      const hasRequiredError = result.errors.some(
+        (e) => e.type === 'missingRequired'
+      );
       expect(hasTypeError || hasRequiredError).toBe(true);
     });
 
@@ -558,7 +562,9 @@ describe('ValidatorGenerator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.errors).toHaveLength(3);
-      expect(result.errors.every((e) => e.type === 'missingRequired')).toBe(true);
+      expect(result.errors.every((e) => e.type === 'missingRequired')).toBe(
+        true
+      );
     });
 
     it('should use custom error message for missing required fields', () => {
@@ -582,7 +588,9 @@ describe('ValidatorGenerator', () => {
       const validator = generator.generate(schema);
       const result = validator({});
 
-      expect(result.errors[0].message).toContain('Required field name is missing');
+      expect(result.errors[0].message).toContain(
+        'Required field name is missing'
+      );
     });
   });
 
@@ -615,7 +623,9 @@ describe('ValidatorGenerator', () => {
       expect(validator({ texture: 'invalid', density: 5 }).valid).toBe(false);
 
       // Invalid type
-      expect(validator({ texture: 'smooth', density: 'not a number' }).valid).toBe(false);
+      expect(
+        validator({ texture: 'smooth', density: 'not a number' }).valid
+      ).toBe(false);
 
       // Missing required
       expect(validator({ density: 5 }).valid).toBe(false);

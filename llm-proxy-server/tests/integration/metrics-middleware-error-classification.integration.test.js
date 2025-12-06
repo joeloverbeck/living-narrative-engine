@@ -80,22 +80,29 @@ describe('Metrics middleware error classification hardening', () => {
   });
 
   it('classifies 409 responses as conflict client errors with low severity while tolerating header lookups that throw', async () => {
-    const recordHttpRequestSpy = jest.spyOn(metricsService, 'recordHttpRequest');
+    const recordHttpRequestSpy = jest.spyOn(
+      metricsService,
+      'recordHttpRequest'
+    );
     const recordErrorSpy = jest.spyOn(metricsService, 'recordError');
 
-    const app = buildMetricsApp((expressApp) => {
-      expressApp.get('/conflict-resource', (req, res) => {
-        const originalGet = res.get.bind(res);
-        res.get = (header) => {
-          if (header && header.toLowerCase() === 'content-length') {
-            throw new Error('content length unavailable');
-          }
-          return originalGet(header);
-        };
+    const app = buildMetricsApp(
+      (expressApp) => {
+        expressApp.get('/conflict-resource', (req, res) => {
+          const originalGet = res.get.bind(res);
+          res.get = (header) => {
+            if (header && header.toLowerCase() === 'content-length') {
+              throw new Error('content length unavailable');
+            }
+            return originalGet(header);
+          };
 
-        res.status(409).json({ error: 'conflict' });
-      });
-    }, metricsService, logger);
+          res.status(409).json({ error: 'conflict' });
+        });
+      },
+      metricsService,
+      logger
+    );
 
     await request(app).get('/conflict-resource').expect(409);
 
@@ -127,11 +134,15 @@ describe('Metrics middleware error classification hardening', () => {
   it('treats non-standard 599 responses as server errors with high severity for observability', async () => {
     const recordErrorSpy = jest.spyOn(metricsService, 'recordError');
 
-    const app = buildMetricsApp((expressApp) => {
-      expressApp.get('/upstream-proxy', (_req, res) => {
-        res.status(599).json({ error: 'network timeout' });
-      });
-    }, metricsService, logger);
+    const app = buildMetricsApp(
+      (expressApp) => {
+        expressApp.get('/upstream-proxy', (_req, res) => {
+          res.status(599).json({ error: 'network timeout' });
+        });
+      },
+      metricsService,
+      logger
+    );
 
     await request(app).get('/upstream-proxy').expect(599);
 
@@ -146,16 +157,23 @@ describe('Metrics middleware error classification hardening', () => {
   });
 
   it('continues recording metrics when responses reuse the same socket and finish without explicit res.end payloads', async () => {
-    const recordHttpRequestSpy = jest.spyOn(metricsService, 'recordHttpRequest');
+    const recordHttpRequestSpy = jest.spyOn(
+      metricsService,
+      'recordHttpRequest'
+    );
 
-    const app = buildMetricsApp((expressApp) => {
-      expressApp.get('/streamed', (req, res) => {
-        res.status(502);
-        res.setHeader('transfer-encoding', 'chunked');
-        res.write('partial-data');
-        res.end();
-      });
-    }, metricsService, logger);
+    const app = buildMetricsApp(
+      (expressApp) => {
+        expressApp.get('/streamed', (req, res) => {
+          res.status(502);
+          res.setHeader('transfer-encoding', 'chunked');
+          res.write('partial-data');
+          res.end();
+        });
+      },
+      metricsService,
+      logger
+    );
 
     await request(app).get('/streamed').expect(502);
 

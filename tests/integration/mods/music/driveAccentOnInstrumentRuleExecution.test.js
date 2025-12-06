@@ -34,7 +34,10 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
 
   describe('Successfully executes drive_accent_on_instrument action', () => {
     it('should dispatch perceptible event with mood-adjective-flavored message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Draven')
@@ -74,8 +77,12 @@ describe('music:drive_accent_on_instrument - Rule Execution', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('Draven');
       expect(perceptibleEvent.payload.descriptionText).toContain('hard-edged');
       expect(perceptibleEvent.payload.descriptionText).toContain('accent');
-      expect(perceptibleEvent.payload.descriptionText).toContain('electric guitar');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/drives a.*accent on/);
+      expect(perceptibleEvent.payload.descriptionText).toContain(
+        'electric guitar'
+      );
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /drives a.*accent on/
+      );
     });
 
     it('should dispatch action success event', async () => {

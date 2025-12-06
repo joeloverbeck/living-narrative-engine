@@ -8,16 +8,16 @@ Create comprehensive integration tests that verify the entire throw item action 
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                                          | Purpose                           |
+| ----------------------------------------------------------------------------- | --------------------------------- |
 | `tests/integration/mods/ranged/throw_item_at_target_action_discovery.test.js` | Action discovery tests (48 tests) |
-| `tests/integration/mods/ranged/throw_item_at_target_rule_execution.test.js` | Rule execution tests (41 tests) |
-| `tests/common/mods/ranged/throwItemFixtures.js` | Shared test fixtures |
+| `tests/integration/mods/ranged/throw_item_at_target_rule_execution.test.js`   | Rule execution tests (41 tests)   |
+| `tests/common/mods/ranged/throwItemFixtures.js`                               | Shared test fixtures              |
 
 ## Files Fixed (Data Bug)
 
-| File | Issue | Fix |
-|------|-------|-----|
+| File                                                                              | Issue                                                        | Fix                             |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------- |
 | `data/mods/ranged/conditions/event-is-action-throw-item-at-target.condition.json` | Used `"rule"` instead of `"logic"` for JSON Logic definition | Changed `"rule":` to `"logic":` |
 
 ## Implementation Notes
@@ -40,6 +40,7 @@ The tests were implemented following the `swingAtTargetOutcomeResolution.test.js
 ### Key Test Coverage
 
 **Action Discovery Tests (48 tests)**:
+
 - Action structure (ID, name, description, template)
 - Required components (actor: empty, primary: items:portable)
 - Forbidden components (7 states that prevent throwing)
@@ -51,6 +52,7 @@ The tests were implemented following the `swingAtTargetOutcomeResolution.test.js
 - Condition structure validation
 
 **Rule Execution Tests (41 tests)**:
+
 - Rule structure (rule_id, event_type, condition_ref)
 - Operations (GET_NAME x3, QUERY_COMPONENT, GET_DAMAGE_CAPABILITIES, RESOLVE_OUTCOME)
 - All 4 outcome branches (CRITICAL_SUCCESS, SUCCESS, FUMBLE, FAILURE)
@@ -86,12 +88,14 @@ npm run test:integration -- tests/integration/mods/ranged/throw_item_at_target_r
 ## Acceptance Criteria Met
 
 ### Tests That Pass
+
 - [x] `npm run test:integration tests/integration/mods/ranged/` passes all tests (89/89)
 - [x] Test cases cover action structure, rule execution, and outcome scenarios
 - [x] Tests follow established patterns from weapons mod
 - [x] Tests validate schema compliance
 
 ### Invariants Maintained
+
 - [x] All existing integration tests continue to pass
 - [x] Tests follow project test patterns
 - [x] Tests do not pollute global state

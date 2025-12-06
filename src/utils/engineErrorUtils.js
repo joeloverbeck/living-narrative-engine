@@ -27,7 +27,13 @@ export function getReadableErrorMessage(error) {
   }
 
   if (error && typeof error === 'object') {
-    const messageCandidates = ['message', 'error', 'details', 'reason', 'description'];
+    const messageCandidates = [
+      'message',
+      'error',
+      'details',
+      'reason',
+      'description',
+    ];
     for (const key of messageCandidates) {
       const value = /** @type {Record<string, unknown>} */ (error)[key];
       if (typeof value === 'string') {
@@ -182,8 +188,7 @@ export async function processOperationFailure(
     normalizedError
   );
 
-  const trimmedPrefix =
-    typeof userPrefix === 'string' ? userPrefix.trim() : '';
+  const trimmedPrefix = typeof userPrefix === 'string' ? userPrefix.trim() : '';
   let userFacingMessage = sanitizedMessage;
 
   if (trimmedPrefix) {

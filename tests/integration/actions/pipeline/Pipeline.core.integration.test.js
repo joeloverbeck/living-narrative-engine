@@ -92,7 +92,10 @@ describe('Pipeline integration behaviour', () => {
       }
     );
 
-    const pipeline = new Pipeline([componentFiltering, formattingStage], logger);
+    const pipeline = new Pipeline(
+      [componentFiltering, formattingStage],
+      logger
+    );
     const result = await pipeline.execute(createBaseContext({ trace }));
 
     expect(stageOrder).toEqual(['ComponentFiltering', 'ActionFormatting']);
@@ -129,16 +132,22 @@ describe('Pipeline integration behaviour', () => {
   });
 
   it('halts execution when a stage marks continueProcessing=false', async () => {
-    const haltingStage = new DelegatingStage('PrerequisiteEvaluation', async () => {
-      return PipelineResult.success({
-        data: { reason: 'no candidates' },
-        continueProcessing: false,
-      });
-    });
+    const haltingStage = new DelegatingStage(
+      'PrerequisiteEvaluation',
+      async () => {
+        return PipelineResult.success({
+          data: { reason: 'no candidates' },
+          continueProcessing: false,
+        });
+      }
+    );
 
-    const downstreamStage = new DelegatingStage('TargetValidation', async () => {
-      throw new Error('Should not execute after halting');
-    });
+    const downstreamStage = new DelegatingStage(
+      'TargetValidation',
+      async () => {
+        throw new Error('Should not execute after halting');
+      }
+    );
 
     const pipeline = new Pipeline([haltingStage, downstreamStage], logger);
     const result = await pipeline.execute(createBaseContext({ trace }));
@@ -177,13 +186,16 @@ describe('Pipeline integration behaviour', () => {
       }
     );
 
-    const recoveryStage = new DelegatingStage('ActionFormatting', async (context) => {
-      expect(context.validation).toBe('failed');
-      return PipelineResult.success({
-        actions: [{ id: 'recovery:action' }],
-        data: { formatted: true },
-      });
-    });
+    const recoveryStage = new DelegatingStage(
+      'ActionFormatting',
+      async (context) => {
+        expect(context.validation).toBe('failed');
+        return PipelineResult.success({
+          actions: [{ id: 'recovery:action' }],
+          data: { formatted: true },
+        });
+      }
+    );
 
     const pipeline = new Pipeline([failureStage, recoveryStage], logger);
     const result = await pipeline.execute(createBaseContext({ trace }));
@@ -254,7 +266,9 @@ describe('Pipeline integration behaviour', () => {
     );
 
     const pipeline = new Pipeline([stageA, stageB], logger);
-    const result = await pipeline.execute(createBaseContext({ trace: structuredTrace }));
+    const result = await pipeline.execute(
+      createBaseContext({ trace: structuredTrace })
+    );
 
     expect(result.success).toBe(true);
     expect(structuredTrace.withSpanAsync).toHaveBeenCalledTimes(1);

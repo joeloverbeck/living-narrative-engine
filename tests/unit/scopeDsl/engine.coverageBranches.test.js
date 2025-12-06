@@ -25,7 +25,9 @@ describe('ScopeEngine coverage branches', () => {
   });
 
   it('builds strategy from debug strategyFactory when none is injected', () => {
-    const candidateStrategy = { resolve: jest.fn().mockReturnValue('from-factory') };
+    const candidateStrategy = {
+      resolve: jest.fn().mockReturnValue('from-factory'),
+    };
     const strategyFactory = jest.fn().mockReturnValue(candidateStrategy);
     const engine = new ScopeEngine();
 
@@ -98,7 +100,11 @@ describe('ScopeEngine coverage branches', () => {
     };
 
     const ast = { type: 'Parent', child: { type: 'Child' } };
-    const result = engine.resolve(ast, { id: 'actor-1', components: {} }, runtimeCtx);
+    const result = engine.resolve(
+      ast,
+      { id: 'actor-1', components: {} },
+      runtimeCtx
+    );
 
     expect(result).toEqual(new Set(['child-result']));
     expect(tracer.logStep).toHaveBeenCalledTimes(2);

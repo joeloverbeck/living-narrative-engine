@@ -25,10 +25,12 @@ Create and register the JSON schema for the `ESTABLISH_BIDIRECTIONAL_CLOSENESS` 
 ## Files to Touch
 
 ### New Files
+
 - `data/schemas/operations/establishBidirectionalCloseness.schema.json`
 - `src/logic/operationHandlers/establishBidirectionalClosenessHandler.js` (stub for validation completeness)
 
 ### Modified Files
+
 - `data/schemas/operation.schema.json` (add `$ref` entry)
 - `src/utils/preValidationUtils.js` (add to whitelist)
 - `src/dependencyInjection/tokens/tokens-core.js` (add handler token)
@@ -99,7 +101,12 @@ Create `data/schemas/operations/establishBidirectionalCloseness.schema.json`:
               "description": "Whether to regenerate entity descriptions after relationship change"
             }
           },
-          "required": ["actor_component_type", "target_component_type", "actor_data", "target_data"],
+          "required": [
+            "actor_component_type",
+            "target_component_type",
+            "actor_data",
+            "target_data"
+          ],
           "additionalProperties": false
         }
       },

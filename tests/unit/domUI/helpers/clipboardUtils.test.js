@@ -85,7 +85,9 @@ describe('clipboardUtils', () => {
     });
 
     it('should handle errors thrown by fallback copy mechanism', async () => {
-      navigator.clipboard.writeText.mockRejectedValue(new Error('Primary failed'));
+      navigator.clipboard.writeText.mockRejectedValue(
+        new Error('Primary failed')
+      );
       document.execCommand.mockImplementation(() => {
         throw new Error('execCommand blew up');
       });
@@ -310,10 +312,12 @@ describe('clipboardUtils', () => {
 
   describe('assembleCopyAllPayload', () => {
     it('assembles speech only with quotes and strips HTML when allowed', () => {
-      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload({
-        speechContent: '<b>Hello</b> *wave*',
-        allowSpeechHtml: true,
-      });
+      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload(
+        {
+          speechContent: '<b>Hello</b> *wave*',
+          allowSpeechHtml: true,
+        }
+      );
 
       expect(text).toBe('Unknown says: "Hello *wave*"');
       expect(hasSpeech).toBe(true);
@@ -327,17 +331,21 @@ describe('clipboardUtils', () => {
         thoughts: 'Inner',
       });
 
-      expect(text).toBe('Unknown\'s thoughts:\nInner\n\nUnknown says: "Hi there"');
+      expect(text).toBe(
+        'Unknown\'s thoughts:\nInner\n\nUnknown says: "Hi there"'
+      );
       expect(hasSpeech).toBe(true);
     });
 
     it('assembles speech, thoughts, and notes in order with blank lines', () => {
-      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload({
-        speechContent: 'Hello',
-        thoughts: 'Thinking...',
-        notes: { text: 'Note here' },
-        speakerName: 'Iris',
-      });
+      const { text, hasSpeech, hasThoughts, hasNotes } = assembleCopyAllPayload(
+        {
+          speechContent: 'Hello',
+          thoughts: 'Thinking...',
+          notes: { text: 'Note here' },
+          speakerName: 'Iris',
+        }
+      );
 
       expect(text).toBe(
         'Iris\'s thoughts:\nThinking...\n\nIris says: "Hello"\n\nNote here'

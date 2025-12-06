@@ -90,7 +90,10 @@ export function buildBreatheTeasinglyOnPenisSittingCloseScenario(options = {}) {
     .atLocation(ROOM_ID)
     .withLocationComponent(ROOM_ID)
     .withComponent('positioning:allows_sitting', {
-      spots: [includeActorSitting ? ACTOR_ID : null, includePrimarySitting ? PRIMARY_ID : null],
+      spots: [
+        includeActorSitting ? ACTOR_ID : null,
+        includePrimarySitting ? PRIMARY_ID : null,
+      ],
     })
     .build();
 
@@ -221,9 +224,14 @@ export function installSittingCloseUncoveredPenisScopeOverride(testFixture) {
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
       const actorSitting = actor?.components?.['positioning:sitting_on'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
-      if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      if (
+        !actorSitting ||
+        !Array.isArray(closenessPartners) ||
+        closenessPartners.length === 0
+      ) {
         return { success: true, value: new Set() };
       }
 
@@ -290,9 +298,14 @@ export function installSittingCloseCoveredPenisScopeOverride(testFixture) {
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
       const actorSitting = actor?.components?.['positioning:sitting_on'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
-      if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      if (
+        !actorSitting ||
+        !Array.isArray(closenessPartners) ||
+        closenessPartners.length === 0
+      ) {
         return { success: true, value: new Set() };
       }
 

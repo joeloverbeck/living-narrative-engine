@@ -414,9 +414,7 @@ describe('traitsGenerationPrompt integration', () => {
         'Museum plaques that omit labor strikes.',
         'Uniforms that pretend neutrality equals safety.',
       ],
-      fears: [
-        'Being remembered only through curated propaganda.',
-      ],
+      fears: ['Being remembered only through curated propaganda.'],
       goals: {
         shortTerm: [
           'Secure the final witness testimony before it is weaponised.',
@@ -461,8 +459,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.names = response.names.slice(0, 2);
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Names array must contain 3-5 items',
+        message: 'TraitsGenerationPrompt: Names array must contain 3-5 items',
       },
       {
         label: 'uses a primitive for a name entry',
@@ -470,8 +467,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.names[0] = 'Cipher';
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Name at index 0 must be an object',
+        message: 'TraitsGenerationPrompt: Name at index 0 must be an object',
       },
       {
         label: 'includes a blank name string',
@@ -617,8 +613,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.likes;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain likes array',
+        message: 'TraitsGenerationPrompt: Response must contain likes array',
       },
       {
         label: 'provides too few likes',
@@ -626,8 +621,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.likes = response.likes.slice(0, 2);
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Likes array must contain 3-8 items',
+        message: 'TraitsGenerationPrompt: Likes array must contain 3-8 items',
       },
       {
         label: 'includes an empty like entry',
@@ -644,8 +638,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.dislikes;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain dislikes array',
+        message: 'TraitsGenerationPrompt: Response must contain dislikes array',
       },
       {
         label: 'provides too few dislikes',
@@ -671,8 +664,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.fears;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain fears array',
+        message: 'TraitsGenerationPrompt: Response must contain fears array',
       },
       {
         label: 'provides an empty fears array',
@@ -680,8 +672,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.fears = [];
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Fears array must contain 1-2 items',
+        message: 'TraitsGenerationPrompt: Fears array must contain 1-2 items',
       },
       {
         label: 'includes an empty fear entry',
@@ -698,8 +689,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.goals = null;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain goals object',
+        message: 'TraitsGenerationPrompt: Response must contain goals object',
       },
       {
         label: 'is missing the short-term goals array',
@@ -707,8 +697,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.goals.shortTerm = null;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Goals must contain shortTerm array',
+        message: 'TraitsGenerationPrompt: Goals must contain shortTerm array',
       },
       {
         label: 'provides too many or too few short-term goals',
@@ -743,8 +732,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.notes;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain notes array',
+        message: 'TraitsGenerationPrompt: Response must contain notes array',
       },
       {
         label: 'provides too few notes',
@@ -752,8 +740,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.notes = ['Only'];
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Notes array must contain 2-6 items',
+        message: 'TraitsGenerationPrompt: Notes array must contain 2-6 items',
       },
       {
         label: 'includes an empty note entry',
@@ -770,8 +757,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.profile;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain profile string',
+        message: 'TraitsGenerationPrompt: Response must contain profile string',
       },
       {
         label: 'provides an undersized profile',
@@ -788,8 +774,7 @@ describe('traitsGenerationPrompt integration', () => {
           delete response.secrets;
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Response must contain secrets array',
+        message: 'TraitsGenerationPrompt: Response must contain secrets array',
       },
       {
         label: 'provides too many or too few secrets',
@@ -797,8 +782,7 @@ describe('traitsGenerationPrompt integration', () => {
           response.secrets = [];
           return response;
         },
-        message:
-          'TraitsGenerationPrompt: Secrets array must contain 1-2 items',
+        message: 'TraitsGenerationPrompt: Secrets array must contain 1-2 items',
       },
       {
         label: 'includes an empty secret entry',
@@ -815,9 +799,9 @@ describe('traitsGenerationPrompt integration', () => {
       'rejects responses when the payload $label',
       ({ mutate, message }) => {
         const candidate = mutate(buildValidResponse());
-        expect(() =>
-          validateTraitsGenerationResponse(candidate)
-        ).toThrow(message);
+        expect(() => validateTraitsGenerationResponse(candidate)).toThrow(
+          message
+        );
       }
     );
   });

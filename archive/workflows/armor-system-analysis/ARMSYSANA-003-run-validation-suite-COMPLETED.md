@@ -8,6 +8,7 @@
 ## Context
 
 After updating the clothing component schemas to include "armor" as a layer (ARMSYSANA-001 and ARMSYSANA-002), it's essential to verify that:
+
 1. The schema changes are syntactically correct
 2. All existing clothing entities remain valid
 3. No unintended side effects were introduced
@@ -22,6 +23,7 @@ Run the complete validation suite to verify that the schema changes for armor su
 ## Prerequisites
 
 The following tickets must be completed first:
+
 - ✅ ARMSYSANA-001: Update Wearable Component Schema
 - ✅ ARMSYSANA-002: Update Coverage Mapping Schema
 
@@ -38,6 +40,7 @@ npm run validate
 **Expected Result**: No validation errors. All mods should load successfully.
 
 **What This Tests**:
+
 - Schema syntax is valid
 - All component schemas are well-formed
 - Mod manifests are correct
@@ -52,6 +55,7 @@ npm run test:unit -- tests/unit/clothing/
 **Expected Result**: All clothing-related unit tests pass.
 
 **What This Tests**:
+
 - Clothing component logic
 - Wearable component handling
 - Coverage mapping logic
@@ -66,6 +70,7 @@ npm run test:integration -- tests/integration/clothing/
 **Expected Result**: All clothing-related integration tests pass.
 
 **What This Tests**:
+
 - Clothing system integration
 - Equipment slot assignments
 - Coverage resolution
@@ -80,6 +85,7 @@ npm run typecheck
 **Expected Result**: No type errors.
 
 **What This Tests**:
+
 - TypeScript type definitions are consistent
 - No type mismatches in clothing system
 
@@ -116,6 +122,7 @@ npm run typecheck
 ### If Validation Fails
 
 1. **Check JSON syntax**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/clothing/components/wearable.component.json'))"
    node -e "JSON.parse(require('fs').readFileSync('data/mods/clothing/components/coverage_mapping.component.json'))"
@@ -151,6 +158,7 @@ npm run typecheck
 ### What Should Work
 
 After this validation:
+
 - All existing clothing entities should load correctly
 - The system should recognize "armor" as a valid layer
 - No new validation errors should appear
@@ -231,12 +239,14 @@ If validation fails, stop and fix issues before proceeding to Phase 2.
 ### Validation Results
 
 #### 1. General Validation (`npm run validate`)
+
 - ✅ **Status**: PASSED
 - **Result**: 7 violations found in core mod (unrelated to armor changes)
 - **Armor Impact**: No validation errors related to armor layer support
 - **Conclusion**: Schema changes are syntactically correct and backward compatible
 
 #### 2. Unit Tests (`tests/unit/clothing/`)
+
 - ✅ **Status**: ALL PASSED (29 test suites, 713 tests)
 - **Initial Run**: 1 failure in `clothingUnequippedEventValidation.test.js`
 - **Root Cause**: Event schema missing "armor" in layer enum
@@ -244,6 +254,7 @@ If validation fails, stop and fix issues before proceeding to Phase 2.
 - **Final Run**: All tests pass
 
 #### 3. Integration Tests (`tests/integration/clothing/`)
+
 - ✅ **Status**: ALL PASSED (30 test suites, 277 tests)
 - **Initial Run**: 1 failure in `coverageMappingComponent.integration.test.js`
 - **Root Cause**: Test expected old priority list without "armor"
@@ -251,6 +262,7 @@ If validation fails, stop and fix issues before proceeding to Phase 2.
 - **Final Run**: All tests pass
 
 #### 4. Type Checking (`npm run typecheck`)
+
 - ✅ **Status**: NO NEW ERRORS INTRODUCED
 - **Result**: Pre-existing type errors in validation files (unrelated to armor)
 - **Armor Impact**: No type errors related to armor layer support
@@ -264,6 +276,7 @@ The ticket assumed that only the component schemas (wearable and coverage_mappin
 **Reality**: Event schemas (`clothing:equipped` and `clothing:unequipped`) also had hardcoded layer enums that needed updating.
 
 **Impact**: This discovery is valuable for future schema changes - layer enums exist in multiple locations and must be updated consistently:
+
 - Component schemas (wearable, coverage_mapping) ✅ Updated in ARMSYSANA-001/002
 - Event schemas (equipped, unequipped) ✅ Updated in ARMSYSANA-003
 - Event schemas (layer_conflict, instantiation_completed) ✅ Already flexible (no enum constraints)
@@ -289,6 +302,7 @@ The ticket assumed that only the component schemas (wearable and coverage_mappin
 Phase 1 (Schema Updates) is now **complete**. All schemas, events, and tests support the armor layer.
 
 Ready to proceed to:
+
 - **ARMSYSANA-004**: Update Slot Access Resolver (Priority System)
 
 ### Summary

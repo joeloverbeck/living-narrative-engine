@@ -72,7 +72,8 @@ class RecordingCache {
   }
 
   prune(level = 'normal') {
-    const label = level === true ? 'aggressive' : level === false ? 'normal' : level;
+    const label =
+      level === true ? 'aggressive' : level === false ? 'normal' : level;
     this.prunedLevels.push(label);
     return 0;
   }
@@ -116,15 +117,33 @@ describe('dependencyUtils integration across memory monitoring stack', () => {
     cache = new RecordingCache();
 
     const usageSequence = [
-      { heapUsed: 150 * 1024 * 1024, heapTotal: 400 * 1024 * 1024, rss: 400 * 1024 * 1024 },
-      { heapUsed: 320 * 1024 * 1024, heapTotal: 400 * 1024 * 1024, rss: 700 * 1024 * 1024 },
-      { heapUsed: 360 * 1024 * 1024, heapTotal: 400 * 1024 * 1024, rss: 950 * 1024 * 1024 },
-      { heapUsed: 200 * 1024 * 1024, heapTotal: 400 * 1024 * 1024, rss: 600 * 1024 * 1024 },
+      {
+        heapUsed: 150 * 1024 * 1024,
+        heapTotal: 400 * 1024 * 1024,
+        rss: 400 * 1024 * 1024,
+      },
+      {
+        heapUsed: 320 * 1024 * 1024,
+        heapTotal: 400 * 1024 * 1024,
+        rss: 700 * 1024 * 1024,
+      },
+      {
+        heapUsed: 360 * 1024 * 1024,
+        heapTotal: 400 * 1024 * 1024,
+        rss: 950 * 1024 * 1024,
+      },
+      {
+        heapUsed: 200 * 1024 * 1024,
+        heapTotal: 400 * 1024 * 1024,
+        rss: 600 * 1024 * 1024,
+      },
     ];
     let callCount = 0;
     usageSpy = jest
       .spyOn(environmentUtils, 'getMemoryUsage')
-      .mockImplementation(() => usageSequence[Math.min(callCount++, usageSequence.length - 1)]);
+      .mockImplementation(
+        () => usageSequence[Math.min(callCount++, usageSequence.length - 1)]
+      );
 
     usageBytesSpy = jest
       .spyOn(environmentUtils, 'getMemoryUsageBytes')
@@ -179,19 +198,28 @@ describe('dependencyUtils integration across memory monitoring stack', () => {
     expect(warningHandler).toHaveBeenCalledTimes(1);
     expect(criticalHandler).toHaveBeenCalledTimes(1);
     const pressureEvents = eventBus.events.filter(
-      (event) => event.type === 'MEMORY_PRESSURE_CHANGED',
+      (event) => event.type === 'MEMORY_PRESSURE_CHANGED'
     );
     expect(pressureEvents.length).toBeGreaterThan(0);
-    expect(pressureEvents.some((event) => event.payload.newLevel === 'critical')).toBe(true);
+    expect(
+      pressureEvents.some((event) => event.payload.newLevel === 'critical')
+    ).toBe(true);
 
-    const pruningResult = await pressureManager.triggerCachePruning('aggressive');
+    const pruningResult =
+      await pressureManager.triggerCachePruning('aggressive');
     expect(pruningResult).toBe(0);
     expect(cache.prunedLevels).toContain('aggressive');
 
     const targetManager = new TargetManager({ logger });
-    expect(() => targetManager.addTarget('   ', 'entity-x')).toThrow(InvalidArgumentError);
-    expect(() => targetManager.addTarget('secondary', '   ')).toThrow(InvalidArgumentError);
-    expect(() => targetManager.setTargets(null)).toThrow('Targets object is required');
+    expect(() => targetManager.addTarget('   ', 'entity-x')).toThrow(
+      InvalidArgumentError
+    );
+    expect(() => targetManager.addTarget('secondary', '   ')).toThrow(
+      InvalidArgumentError
+    );
+    expect(() => targetManager.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
   });
 
   it('profiles synchronous and asynchronous operations tied to the pressure manager', async () => {
@@ -218,7 +246,7 @@ describe('dependencyUtils integration across memory monitoring stack', () => {
       {
         snapshotInterval: 5,
         trackPeakMemory: true,
-      },
+      }
     );
 
     const result = profiler.measureOperation(() => {
@@ -237,7 +265,9 @@ describe('dependencyUtils integration across memory monitoring stack', () => {
     }, 'async_pruning');
 
     profiler.trackObjectAllocation('CacheEntry');
-    expect(() => profiler.measureOperation(null, 'missing')).toThrow(/Operation function/);
+    expect(() => profiler.measureOperation(null, 'missing')).toThrow(
+      /Operation function/
+    );
 
     profiler.destroy();
   });

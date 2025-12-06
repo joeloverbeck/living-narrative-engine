@@ -21,9 +21,7 @@
     {
       "matchesGroup": "limbSet:leg",
       "partType": "spider_leg",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:texture": {
           "texture": "chitinous"
@@ -36,17 +34,13 @@
     {
       "matchesGroup": "appendage:pedipalp",
       "partType": "spider_pedipalp",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {}
     },
     {
       "matchesGroup": "appendage:torso",
       "partType": "spider_abdomen",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:texture": {
           "texture": "ridged"
@@ -57,10 +51,7 @@
   "constraints": {
     "requires": [
       {
-        "partTypes": [
-          "spider_abdomen",
-          "spinneret"
-        ]
+        "partTypes": ["spider_abdomen", "spinneret"]
       }
     ]
   }

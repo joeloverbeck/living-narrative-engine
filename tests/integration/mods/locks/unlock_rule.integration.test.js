@@ -97,7 +97,10 @@ describe('locks:unlock_connection rule (integration)', () => {
       actionId: 'locks:unlock_connection',
       targetId: scenario.blockerId,
       secondaryId: scenario.requiredKeyId,
-      targets: { primary: scenario.blockerId, secondary: scenario.requiredKeyId },
+      targets: {
+        primary: scenario.blockerId,
+        secondary: scenario.requiredKeyId,
+      },
       originalInput: 'unlock',
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -131,7 +134,10 @@ describe('locks:unlock_connection rule (integration)', () => {
       actionId: 'locks:unlock_connection',
       targetId: scenario.blockerId,
       secondaryId: scenario.requiredKeyId,
-      targets: { primary: scenario.blockerId, secondary: scenario.requiredKeyId },
+      targets: {
+        primary: scenario.blockerId,
+        secondary: scenario.requiredKeyId,
+      },
       originalInput: 'unlock',
     });
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -160,7 +166,10 @@ describe('locks:unlock_connection rule (integration)', () => {
       actionId: 'locks:unlock_connection',
       targetId: scenario.blockerId,
       secondaryId: scenario.requiredKeyId,
-      targets: { primary: scenario.blockerId, secondary: scenario.requiredKeyId },
+      targets: {
+        primary: scenario.blockerId,
+        secondary: scenario.requiredKeyId,
+      },
       originalInput: 'unlock',
     });
     await new Promise((resolve) => setTimeout(resolve, 20));

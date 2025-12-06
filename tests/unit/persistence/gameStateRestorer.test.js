@@ -113,7 +113,9 @@ describe('GameStateRestorer', () => {
 
     expect(result).toEqual({ success: true });
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error during reconstructEntity for instanceId: entity-1'),
+      expect.stringContaining(
+        'Error during reconstructEntity for instanceId: entity-1'
+      ),
       recoverableError
     );
     expect(entityManager.reconstructEntity).toHaveBeenCalledTimes(2);
@@ -129,9 +131,13 @@ describe('GameStateRestorer', () => {
 
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
-    expect(result.error.message).toContain('Critical error during state clearing');
+    expect(result.error.message).toContain(
+      'Critical error during state clearing'
+    );
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to clear existing entity state: clear-failure'),
+      expect.stringContaining(
+        'Failed to clear existing entity state: clear-failure'
+      ),
       clearError
     );
   });
@@ -149,8 +155,14 @@ describe('GameStateRestorer', () => {
     const result = await restorer.restoreGameState(data);
 
     expect(result).toEqual({ success: true });
-    expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenNthCalledWith(1, 123);
-    expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenNthCalledWith(2, 0);
+    expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenNthCalledWith(
+      1,
+      123
+    );
+    expect(playtimeTracker.setAccumulatedPlaytime).toHaveBeenNthCalledWith(
+      2,
+      0
+    );
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Error setting accumulated playtime'),
       expect.any(Error)
@@ -170,4 +182,3 @@ describe('GameStateRestorer', () => {
     );
   });
 });
-

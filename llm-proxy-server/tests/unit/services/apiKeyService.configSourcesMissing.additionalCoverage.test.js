@@ -56,14 +56,18 @@ describe('ApiKeyService additional coverage: configuration edge cases', () => {
   });
 
   test('provides rich error details when no API key sources are configured', async () => {
-    const result = await service.getApiKey({ apiType: 'openai' }, 'llm-missing-sources');
+    const result = await service.getApiKey(
+      { apiType: 'openai' },
+      'llm-missing-sources'
+    );
 
     expect(result.apiKey).toBeNull();
     expect(result.source).toBe('N/A');
     expect(result.errorDetails).toEqual(
       expect.objectContaining({
         stage: 'api_key_config_sources_missing',
-        message: 'No API key source (apiKeyEnvVar or apiKeyFileName) configured for cloud LLM.',
+        message:
+          'No API key source (apiKeyEnvVar or apiKeyFileName) configured for cloud LLM.',
         details: expect.objectContaining({
           llmId: 'llm-missing-sources',
           reason: expect.stringContaining(
@@ -79,7 +83,9 @@ describe('ApiKeyService additional coverage: configuration edge cases', () => {
     const fileSpy = jest
       .spyOn(service, '_readApiKeyFromFile')
       .mockImplementation(() => {
-        throw new Error('File fallback should not be invoked when env var succeeds');
+        throw new Error(
+          'File fallback should not be invoked when env var succeeds'
+        );
       });
     const errorSpy = jest.spyOn(service, '_createErrorDetails');
 

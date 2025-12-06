@@ -64,15 +64,11 @@ describe('CharacterConceptsManagerController interactive behaviors', () => {
     jest.useFakeTimers();
     const { card, conceptText, date } = setupConceptCard();
 
-    jest
-      .spyOn(controller, '_getDisplayText')
-      .mockReturnValue('formatted-text');
+    jest.spyOn(controller, '_getDisplayText').mockReturnValue('formatted-text');
     jest
       .spyOn(controller, '_formatRelativeDate')
       .mockReturnValue('moments ago');
-    jest
-      .spyOn(controller, '_formatFullDate')
-      .mockReturnValue('2024-01-02');
+    jest.spyOn(controller, '_formatFullDate').mockReturnValue('2024-01-02');
 
     controller._updateConceptCard(
       { id: 'concept-1', concept: 'Example', updatedAt: '2024-01-02' },
@@ -100,7 +96,11 @@ describe('CharacterConceptsManagerController interactive behaviors', () => {
 
     controller._testExports.conceptsData = [
       {
-        concept: { id: 'concept-1', concept: 'Original', updatedAt: '2024-01-02' },
+        concept: {
+          id: 'concept-1',
+          concept: 'Original',
+          updatedAt: '2024-01-02',
+        },
         directionCount: 3,
       },
     ];
@@ -170,9 +170,7 @@ describe('CharacterConceptsManagerController interactive behaviors', () => {
     const helpSpy = jest
       .spyOn(controller, '_showKeyboardHelp')
       .mockImplementation(() => {});
-    const undoSpy = jest
-      .spyOn(controller, '_undoLastEdit')
-      .mockResolvedValue();
+    const undoSpy = jest.spyOn(controller, '_undoLastEdit').mockResolvedValue();
     const clearSpy = jest
       .spyOn(controller, '_clearSearch')
       .mockImplementation(() => {});
@@ -469,10 +467,7 @@ describe('CharacterConceptsManagerController interactive behaviors', () => {
     const broadcastSpy = jest
       .spyOn(controller, '_broadcastMessage')
       .mockImplementation(() => {});
-    const registerCleanupSpy = jest.spyOn(
-      controller,
-      '_registerCleanupTask'
-    );
+    const registerCleanupSpy = jest.spyOn(controller, '_registerCleanupTask');
     const addEventSpy = jest.spyOn(window, 'addEventListener');
 
     controller._testExports.searchFilter = 'hero';
@@ -517,9 +512,7 @@ describe('CharacterConceptsManagerController interactive behaviors', () => {
 
   it('reports errors when undoing last edit fails', async () => {
     const failure = new Error('update failed');
-    jest
-      .spyOn(controller, '_updateConcept')
-      .mockRejectedValue(failure);
+    jest.spyOn(controller, '_updateConcept').mockRejectedValue(failure);
     const showErrorSpy = jest
       .spyOn(controller, '_showError')
       .mockImplementation(() => {});

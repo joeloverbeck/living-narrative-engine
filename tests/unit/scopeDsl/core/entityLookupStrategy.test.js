@@ -118,7 +118,9 @@ describe('createEntityLookupStrategy', () => {
       getEntityInstance: jest.fn((entityId) => ({ id: `next-${entityId}` })),
     };
 
-    const strategy = createEntityLookupStrategy({ entityManager: firstManager });
+    const strategy = createEntityLookupStrategy({
+      entityManager: firstManager,
+    });
 
     expect(strategy.resolve('alpha')).toEqual({ id: 'legacy-alpha' });
 

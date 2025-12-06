@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-010: Add Timeout Scenarios Integration Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-010
 - **Phase:** 2 - Standard Patterns
 - **Priority:** Medium
@@ -15,19 +16,21 @@ Create end-to-end integration tests that verify timeout behavior works correctly
 ## Files to Create
 
 ### New Test File
+
 - `tests/integration/turns/states/awaitingExternalTurnEndState.timeoutScenarios.integration.test.js` (NEW)
 
 ## CORRECTED ASSUMPTIONS (Updated after code review)
 
 ### Constructor Pattern
+
 ```javascript
 // ✅ CORRECT: Handler-based pattern with options object
 const handler = new TestTurnHandler({ logger, dispatcher });
 const state = new AwaitingExternalTurnEndState(handler, {
-  timeoutMs: 5_000,                    // Optional override
-  environmentProvider: testProvider,    // Optional DI
-  setTimeoutFn: customSetTimeout,       // Optional DI (for testing)
-  clearTimeoutFn: customClearTimeout,   // Optional DI (for testing)
+  timeoutMs: 5_000, // Optional override
+  environmentProvider: testProvider, // Optional DI
+  setTimeoutFn: customSetTimeout, // Optional DI (for testing)
+  clearTimeoutFn: customClearTimeout, // Optional DI (for testing)
 });
 
 // ❌ INCORRECT (from original ticket):
@@ -35,6 +38,7 @@ const state = new AwaitingExternalTurnEndState(handler, {
 ```
 
 ### Import Paths
+
 ```javascript
 // ✅ CORRECT imports
 import { TURN_ENDED_ID } from '../../../../src/constants/eventIds.js';
@@ -45,14 +49,15 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/systemEventI
 ```
 
 ### Event Structure
+
 ```javascript
 // ✅ CORRECT: Events have { type, payload } structure
 const turnEndedEvent = {
   type: TURN_ENDED_ID,
   payload: {
     entityId: 'actor-id',
-    error: null
-  }
+    error: null,
+  },
 };
 
 // Dispatch via eventBus
@@ -63,6 +68,7 @@ await eventBus.dispatch(TURN_ENDED_ID, { entityId: 'actor-id', error: null });
 ```
 
 ### Test Setup Pattern
+
 ```javascript
 // ✅ CORRECT: Use TestTurnHandler + TurnContext pattern
 const logger = createMockLogger();
@@ -99,6 +105,7 @@ handler.setTurnContext(context);
 ```
 
 ### Timeout Configuration
+
 ```javascript
 // ✅ CORRECT: Environment-based defaults
 // Production: 30_000ms (30 seconds) - DEFAULT_TIMEOUT_PRODUCTION
@@ -107,14 +114,24 @@ handler.setTurnContext(context);
 
 // Use TestEnvironmentProvider for DI
 const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
-const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+const developmentProvider = new TestEnvironmentProvider({
+  IS_PRODUCTION: false,
+});
 ```
 
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TurnContext } from '../../../../src/turns/context/turnContext.js';
 import { SafeEventDispatcher } from '../../../../src/events/safeEventDispatcher.js';
@@ -131,10 +148,18 @@ class TestTurnHandler {
     this.resetStateAndResources = jest.fn();
     this.requestIdleStateTransition = jest.fn();
   }
-  setTurnContext(ctx) { this._context = ctx; }
-  getTurnContext() { return this._context; }
-  getLogger() { return this._logger; }
-  getSafeEventDispatcher() { return this._dispatcher; }
+  setTurnContext(ctx) {
+    this._context = ctx;
+  }
+  getTurnContext() {
+    return this._context;
+  }
+  getLogger() {
+    return this._logger;
+  }
+  getSafeEventDispatcher() {
+    return this._dispatcher;
+  }
 }
 
 describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
@@ -163,10 +188,13 @@ describe('AwaitingExternalTurnEndState - Timeout Scenarios Integration', () => {
 ## Required Test Cases (Minimum 4)
 
 ### Test 1: Production Timeout Fires at 30 Seconds
+
 ```javascript
 it('should fire timeout at 30 seconds with production configuration', async () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const logger = createMockLogger();
   const eventBus = createEventBus({ captureEvents: true });
   const safeDispatcher = new SafeEventDispatcher({
@@ -225,10 +253,13 @@ it('should fire timeout at 30 seconds with production configuration', async () =
 ```
 
 ### Test 2: Development Timeout Fires at 3 Seconds
+
 ```javascript
 it('should fire timeout at 3 seconds with development configuration', async () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const logger = createMockLogger();
   const eventBus = createEventBus({ captureEvents: true });
   const safeDispatcher = new SafeEventDispatcher({
@@ -285,6 +316,7 @@ it('should fire timeout at 3 seconds with development configuration', async () =
 ```
 
 ### Test 3: Event Arrival Prevents Timeout
+
 ```javascript
 it('should clear timeout when turn end event arrives before timeout', async () => {
   // Arrange
@@ -354,6 +386,7 @@ it('should clear timeout when turn end event arrives before timeout', async () =
 ```
 
 ### Test 4: Resource Cleanup at Scale (100 Instances)
+
 ```javascript
 it('should clean up resources correctly across 100 state instances', async () => {
   // Arrange
@@ -401,7 +434,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
     });
 
     await state.enterState(handler, null);
-    
+
     states.push(state);
     handlers.push(handler);
     contexts.push(context);
@@ -411,7 +444,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
   expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(100);
 
   // Verify all contexts are awaiting
-  contexts.forEach(ctx => {
+  contexts.forEach((ctx) => {
     expect(ctx.isAwaitingExternalEvent()).toBe(true);
   });
 
@@ -424,7 +457,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
   expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
 
   // All contexts should no longer be awaiting
-  contexts.forEach(ctx => {
+  contexts.forEach((ctx) => {
     expect(ctx.isAwaitingExternalEvent()).toBe(false);
   });
 
@@ -442,6 +475,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ## Out of Scope
 
 ### Must NOT Include
+
 - Timeout consistency tests (Ticket 011)
 - Property-based tests (Phase 3)
 - Performance benchmarks (beyond basic scale test)
@@ -450,6 +484,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 - Unit-level timer tests (existing unit tests)
 
 ### Must NOT Change
+
 - Production code (already updated in Ticket 007)
 - Timer implementations
 - Event handling logic
@@ -458,6 +493,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ## Acceptance Criteria
 
 ### AC1: All 4 Test Cases Pass
+
 ```javascript
 // GIVEN: Integration test suite with 4 test cases
 // WHEN: npm run test:integration -- timeoutScenarios.integration.test.js
@@ -468,6 +504,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ```
 
 ### AC2: Production Timeout Verified End-to-End
+
 ```javascript
 // GIVEN: Test 1 with production configuration
 // WHEN: Fake timers advanced to 30 seconds
@@ -479,6 +516,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ```
 
 ### AC3: Development Timeout Verified
+
 ```javascript
 // GIVEN: Test 2 with development configuration
 // WHEN: Fake timers advanced to 3 seconds
@@ -490,6 +528,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ```
 
 ### AC4: Event Prevents Timeout
+
 ```javascript
 // GIVEN: Test 3 with 5s timeout
 // WHEN: Event arrives at 2s, timers advance to 7s
@@ -501,6 +540,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ```
 
 ### AC5: Scale Cleanup Verified
+
 ```javascript
 // GIVEN: Test 4 with 100 instances
 // WHEN: All instances created, entered, and destroyed
@@ -515,18 +555,21 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ## Invariants
 
 ### Timeout Guarantees (Must Verify)
+
 1. **Bounded Wait**: Turn ends within timeout period
 2. **Cleanup After Fire**: Timeout callback clears its own ID
 3. **No Orphan Timers**: Timer cleared in all exit paths
 4. **Correct Duration**: Production=30s, Development=3s, Custom=specified
 
 ### Resource Cleanup Guarantees (Must Verify)
+
 1. **Event Listener Cleanup**: Unsubscribe called for all subscriptions
 2. **Timer Cleanup**: No timers remain after destroy
 3. **Scale Stability**: Cleanup works for many instances
 4. **No Double-Cleanup**: Cleanup safe to call multiple times
 
 ### Test Quality Standards (Must Maintain)
+
 1. **Fake Timers**: All tests use jest.useFakeTimers
 2. **Fast**: Tests complete in <2 seconds total
 3. **Deterministic**: No race conditions, predictable results
@@ -535,6 +578,7 @@ it('should clean up resources correctly across 100 state instances', async () =>
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run timeout scenarios test
 npm run test:integration -- timeoutScenarios.integration.test.js
@@ -550,6 +594,7 @@ npm run test:integration -- timeoutScenarios.integration.test.js --watch
 ```
 
 ### Validation
+
 ```bash
 # Verify fast execution with fake timers
 time npm run test:integration -- timeoutScenarios.integration.test.js
@@ -565,6 +610,7 @@ npm run test:ci
 ## Implementation Notes
 
 ### Fake Timers Pattern
+
 ```javascript
 beforeEach(() => {
   jest.useFakeTimers();
@@ -579,6 +625,7 @@ await jest.advanceTimersByTimeAsync(30_000); // Advance 30 seconds instantly
 ```
 
 ### Event Dispatch Pattern
+
 ```javascript
 // Dispatch turn ended event
 await eventBus.dispatch(TURN_ENDED_ID, {
@@ -593,6 +640,7 @@ const systemErrors = eventBus.events.filter(
 ```
 
 ### Scale Test Pattern
+
 ```javascript
 // Track resource creation
 const states = [];
@@ -602,11 +650,13 @@ const contexts = [];
 // Create many instances
 for (let i = 0; i < 100; i++) {
   const handler = new TestTurnHandler({ logger, dispatcher: safeDispatcher });
-  const context = new TurnContext({ /* ... */ });
+  const context = new TurnContext({
+    /* ... */
+  });
   handler.setTurnContext(context);
   const state = new AwaitingExternalTurnEndState(handler, { timeoutMs: 1_000 });
   await state.enterState(handler, null);
-  
+
   states.push(state);
   handlers.push(handler);
   contexts.push(context);
@@ -645,9 +695,11 @@ expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
 **Implementation Status**: ✅ COMPLETE
 
 **Files Created**:
+
 - `tests/integration/turns/states/awaitingExternalTurnEndState.timeoutScenarios.integration.test.js`
 
 **What Was Changed**:
+
 1. Created comprehensive timeout scenarios integration test file with 4 test cases
 2. All tests use fake timers for fast, deterministic execution
 3. Tests verify production (30s) and development (3s) timeout configurations
@@ -655,6 +707,7 @@ expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
 5. Tests verify resource cleanup at scale (100 instances)
 
 **Differences from Original Plan**:
+
 1. **Constructor pattern corrected**: Updated from direct parameter injection to handler-based pattern
 2. **Import paths corrected**: Fixed event ID import paths to match actual code structure
 3. **Event structure corrected**: Updated to use `{ type, payload }` event structure with `eventBus.dispatch(type, payload)`
@@ -663,6 +716,7 @@ expect(eventBus.listenerCount(TURN_ENDED_ID)).toBe(0);
 6. **Event bus verification**: Used `eventBus.listenerCount()` for subscription tracking instead of manual set
 
 **Test Results**:
+
 - All 4 test cases pass ✅
 - Tests complete in <2 seconds ✅
 - Fake timers used correctly ✅

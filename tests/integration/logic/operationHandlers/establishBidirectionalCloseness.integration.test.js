@@ -69,11 +69,16 @@ describe('ESTABLISH_BIDIRECTIONAL_CLOSENESS Integration', () => {
       });
 
       // Add the corresponding component to actor manually to simulate existing state
-      await fixture.modifyComponent(actor, 'hugging:hugging', { embraced_entity_id: 'third-party-1' });
+      await fixture.modifyComponent(actor, 'hugging:hugging', {
+        embraced_entity_id: 'third-party-1',
+      });
 
       // Verify initial state
       let actorData = fixture.getComponent(actor, 'hugging:hugging');
-      let thirdPartyData = fixture.getComponent(thirdParty, 'hugging:being_hugged');
+      let thirdPartyData = fixture.getComponent(
+        thirdParty,
+        'hugging:being_hugged'
+      );
       expect(actorData).toEqual({ embraced_entity_id: 'third-party-1' });
       expect(thirdPartyData).toEqual({ hugging_entity_id: 'actor-1' });
 
@@ -91,7 +96,10 @@ describe('ESTABLISH_BIDIRECTIONAL_CLOSENESS Integration', () => {
           actor_data: { embraced_entity_id: '{event.payload.targetId}' },
           target_data: { hugging_entity_id: '{event.payload.actorId}' },
           clean_existing: true,
-          existing_component_types_to_clean: ['hugging:hugging', 'hugging:being_hugged']
+          existing_component_types_to_clean: [
+            'hugging:hugging',
+            'hugging:being_hugged',
+          ],
         },
       });
 
@@ -102,7 +110,7 @@ describe('ESTABLISH_BIDIRECTIONAL_CLOSENESS Integration', () => {
 
       // Actor should now hug Target
       expect(actorData).toEqual({ embraced_entity_id: 'target-1' });
-      
+
       // Target should be hugged by Actor
       expect(targetData).toEqual({ hugging_entity_id: 'actor-1' });
 
@@ -125,15 +133,15 @@ describe('ESTABLISH_BIDIRECTIONAL_CLOSENESS Integration', () => {
         parameters: {
           actor_component_type: 'test:linked_to',
           target_component_type: 'test:linked_from',
-          actor_data: { 
+          actor_data: {
             target_ref: '{event.payload.targetId}',
-            static_val: 'static'
+            static_val: 'static',
           },
-          target_data: { 
+          target_data: {
             actor_ref: '{event.payload.actorId}',
             nested: {
-                back_ref: '{event.payload.actorId}'
-            }
+              back_ref: '{event.payload.actorId}',
+            },
           },
         },
       });
@@ -141,16 +149,16 @@ describe('ESTABLISH_BIDIRECTIONAL_CLOSENESS Integration', () => {
       const actorComp = fixture.getComponent(actor, 'test:linked_to');
       const targetComp = fixture.getComponent(target, 'test:linked_from');
 
-      expect(actorComp).toEqual({ 
+      expect(actorComp).toEqual({
         target_ref: 'target-2',
-        static_val: 'static'
+        static_val: 'static',
       });
 
       expect(targetComp).toEqual({
         actor_ref: 'actor-2',
         nested: {
-            back_ref: 'actor-2'
-        }
+          back_ref: 'actor-2',
+        },
       });
     });
   });

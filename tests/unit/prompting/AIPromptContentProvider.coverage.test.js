@@ -75,7 +75,9 @@ describe('AIPromptContentProvider - Coverage Improvements', () => {
 
     // Setup mock for CharacterDataXmlBuilder
     mockCharacterDataXmlBuilder = {
-      buildCharacterDataXml: jest.fn().mockReturnValue('<character_data>Formatted persona</character_data>'),
+      buildCharacterDataXml: jest
+        .fn()
+        .mockReturnValue('<character_data>Formatted persona</character_data>'),
     };
 
     mockActionCategorizationService = {

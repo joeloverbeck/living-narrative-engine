@@ -30,12 +30,15 @@ describe('Sitting Closeness Establishment Integration', () => {
     // Create mock entity manager with furniture and actors
     mockEntityManager = {
       getComponentData: jest.fn((entityId, componentId) => {
-        if (entityId === 'test:sofa' && componentId === 'positioning:allows_sitting') {
+        if (
+          entityId === 'test:sofa' &&
+          componentId === 'positioning:allows_sitting'
+        ) {
           return {
             spots: [
-              'test:actor1',  // spot 0 occupied by actor1
-              'test:actor2',  // spot 1 occupied by actor2
-              null,           // spot 2 empty
+              'test:actor1', // spot 0 occupied by actor1
+              'test:actor2', // spot 1 occupied by actor2
+              null, // spot 2 empty
             ],
           };
         }
@@ -107,7 +110,8 @@ describe('Sitting Closeness Establishment Integration', () => {
     // Verify it was called with the correct format: event name as first param, payload as second
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
       'positioning:sitting_closeness_established', // First arg should be event name string
-      expect.objectContaining({ // Second arg should be payload object
+      expect.objectContaining({
+        // Second arg should be payload object
         actorId: 'test:actor2',
         furnitureId: 'test:sofa',
         adjacentActors: ['test:actor1'],

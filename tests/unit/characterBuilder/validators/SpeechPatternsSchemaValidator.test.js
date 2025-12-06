@@ -107,24 +107,29 @@ describe('SpeechPatternsSchemaValidator', () => {
         characterName: 'Sarah Mitchell',
         speechPatterns: [
           {
-            type:
-              'Uses elaborate metaphors when explaining complex emotions',
+            type: 'Uses elaborate metaphors when explaining complex emotions',
             examples: [
               "It's like... imagine your favorite song being played backwards on a broken record player.",
-              "Emotions are like a tangled ball of yarn..."
+              'Emotions are like a tangled ball of yarn...',
             ],
             contexts: ['When trying to articulate deep emotional pain'],
           },
           {
-            type:
-              'Switches to clipped, military-style speech under pressure',
-            examples: ['Copy that. Moving to position. ETA two minutes.', 'Roger. Executing now.'],
-            contexts:
-              ['During high-stress situations requiring quick decisions'],
+            type: 'Switches to clipped, military-style speech under pressure',
+            examples: [
+              'Copy that. Moving to position. ETA two minutes.',
+              'Roger. Executing now.',
+            ],
+            contexts: [
+              'During high-stress situations requiring quick decisions',
+            ],
           },
           {
             type: 'Tends to use technical jargon as emotional armor',
-            examples: ['I need to recalibrate my approach to this situation.', 'My protocols need adjustment.'],
+            examples: [
+              'I need to recalibrate my approach to this situation.',
+              'My protocols need adjustment.',
+            ],
           },
         ],
         generatedAt: '2025-08-25T10:30:00Z',
@@ -262,7 +267,7 @@ describe('SpeechPatternsSchemaValidator', () => {
         type: 'Uses elaborate metaphors when explaining complex emotions',
         examples: [
           "It's like... imagine your favorite song being played backwards on a broken record player.",
-          "Emotions are like a tangled ball of yarn..."
+          'Emotions are like a tangled ball of yarn...',
         ],
         contexts: ['When trying to articulate deep emotional pain'],
       };
@@ -455,13 +460,17 @@ describe('SpeechPatternsSchemaValidator', () => {
           },
           {
             type: 'Safe pattern',
-            examples: ['Malicious<iframe src="evil.com"></iframe>example', 'Another example'],
+            examples: [
+              'Malicious<iframe src="evil.com"></iframe>example',
+              'Another example',
+            ],
           },
           {
             type: 'Another safe pattern',
             examples: ['Safe example', 'Another safe example'],
-            contexts:
-              ['Safe<script>alert("circumstances")</script>circumstances'],
+            contexts: [
+              'Safe<script>alert("circumstances")</script>circumstances',
+            ],
           },
         ],
       };
@@ -473,9 +482,9 @@ describe('SpeechPatternsSchemaValidator', () => {
       expect(result.sanitizedResponse.speechPatterns[0].type).not.toContain(
         '<script>'
       );
-      expect(result.sanitizedResponse.speechPatterns[1].examples[0]).not.toContain(
-        '<iframe>'
-      );
+      expect(
+        result.sanitizedResponse.speechPatterns[1].examples[0]
+      ).not.toContain('<iframe>');
       expect(
         result.sanitizedResponse.speechPatterns[2].contexts[0]
       ).not.toContain('<script>');
@@ -547,7 +556,8 @@ describe('SpeechPatternsSchemaValidator', () => {
         errors: [],
       });
 
-      const result = await validator.validateAndSanitizeResponse(malformedResponse);
+      const result =
+        await validator.validateAndSanitizeResponse(malformedResponse);
 
       expect(result.isValid).toBe(true);
       expect(result.errors).toEqual([]);

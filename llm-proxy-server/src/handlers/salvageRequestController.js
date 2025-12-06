@@ -32,7 +32,8 @@ export class SalvageRequestController {
    * @param {ResponseSalvageService} salvageService - Response salvage service
    */
   constructor(logger, salvageService) {
-    if (!logger) throw new Error('SalvageRequestController: logger is required');
+    if (!logger)
+      throw new Error('SalvageRequestController: logger is required');
     if (!salvageService)
       throw new Error('SalvageRequestController: salvageService is required');
 
@@ -62,16 +63,22 @@ export class SalvageRequestController {
       });
     }
 
-    this.#logger.debug(`SalvageRequestController: Attempting to retrieve salvaged response`, {
-      requestId,
-    });
+    this.#logger.debug(
+      `SalvageRequestController: Attempting to retrieve salvaged response`,
+      {
+        requestId,
+      }
+    );
 
     const salvaged = this.#salvageService.retrieveByRequestId(requestId);
 
     if (!salvaged) {
-      this.#logger.warn(`SalvageRequestController: No salvaged response found`, {
-        requestId,
-      });
+      this.#logger.warn(
+        `SalvageRequestController: No salvaged response found`,
+        {
+          requestId,
+        }
+      );
 
       return res.status(404).json({
         error: true,
@@ -79,16 +86,20 @@ export class SalvageRequestController {
         stage: 'salvage_not_found',
         details: {
           requestId,
-          reason: 'Response may have expired, never existed, or was already retrieved',
+          reason:
+            'Response may have expired, never existed, or was already retrieved',
         },
       });
     }
 
-    this.#logger.info(`SalvageRequestController: Salvaged response retrieved successfully`, {
-      requestId,
-      llmId: salvaged.llmId,
-      ageMs: Date.now() - salvaged.salvageTimestamp,
-    });
+    this.#logger.info(
+      `SalvageRequestController: Salvaged response retrieved successfully`,
+      {
+        requestId,
+        llmId: salvaged.llmId,
+        ageMs: Date.now() - salvaged.salvageTimestamp,
+      }
+    );
 
     // Return salvaged response with metadata
     return res.status(salvaged.statusCode).json({
@@ -112,7 +123,10 @@ export class SalvageRequestController {
   async handleSalvageStats(req, res) {
     const stats = this.#salvageService.getStats();
 
-    this.#logger.debug(`SalvageRequestController: Salvage stats requested`, stats);
+    this.#logger.debug(
+      `SalvageRequestController: Salvage stats requested`,
+      stats
+    );
 
     return res.status(200).json({
       stats,

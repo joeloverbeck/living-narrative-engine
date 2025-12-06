@@ -10,6 +10,7 @@
 ## Objective
 
 Implement the `PrepareActionContextHandler` class that consolidates the common context setup pattern:
+
 1. Resolve actor name → `context.actorName`
 2. Resolve target name → `context.targetName`
 3. Query actor position → `context.locationId`
@@ -22,9 +23,11 @@ Implement the `PrepareActionContextHandler` class that consolidates the common c
 ## Files to Touch
 
 ### New Files
+
 - `src/logic/operationHandlers/prepareActionContextHandler.js`
 
 ### Files NOT to Touch
+
 - DI registration files (OPEHANARCANA-003)
 - Test files (OPEHANARCANA-004)
 - preValidationUtils.js (OPEHANARCANA-003)
@@ -34,6 +37,7 @@ Implement the `PrepareActionContextHandler` class that consolidates the common c
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing operation handlers
 - Any rule files
 - DI container or token files
@@ -110,9 +114,7 @@ class PrepareActionContextHandler extends BaseOperationHandler {
 
     // 5. Optionally resolve secondary name
     if (include_secondary && event.payload.secondaryId) {
-      const secondaryName = this.#resolveEntityName(
-        event.payload.secondaryId
-      );
+      const secondaryName = this.#resolveEntityName(event.payload.secondaryId);
       context[secondary_name_variable] = secondaryName;
     }
 
@@ -179,11 +181,13 @@ export default PrepareActionContextHandler;
 ### Tests That Must Pass
 
 1. **File compiles without errors:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **ESLint passes:**
+
    ```bash
    npx eslint src/logic/operationHandlers/prepareActionContextHandler.js
    ```

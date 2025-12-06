@@ -30,8 +30,8 @@ async function getModDirectories() {
   const modsDir = path.join(process.cwd(), 'data', 'mods');
   const entries = await fs.readdir(modsDir, { withFileTypes: true });
   return entries
-    .filter(entry => entry.isDirectory())
-    .map(entry => entry.name);
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
 }
 
 /**
@@ -87,20 +87,24 @@ describe('Manifest File Existence Validation', () => {
         'conditions',
         'components',
         'scopes',
-        'entities'
+        'entities',
       ];
 
       for (const category of categories) {
         const files = content[category];
         if (!files) continue;
 
-        const { missing } = await validateContentCategory(modId, category, files);
+        const { missing } = await validateContentCategory(
+          modId,
+          category,
+          files
+        );
 
         if (missing.length > 0) {
           allIssues.push({
             modId,
             category,
-            missing
+            missing,
           });
         }
       }
@@ -108,12 +112,14 @@ describe('Manifest File Existence Validation', () => {
 
     // Build detailed error message if issues found
     if (allIssues.length > 0) {
-      const errorMessages = allIssues.map(issue => {
-        const fileList = issue.missing.map(f => `    - ${f}`).join('\n');
+      const errorMessages = allIssues.map((issue) => {
+        const fileList = issue.missing.map((f) => `    - ${f}`).join('\n');
         return `\n  Mod: ${issue.modId}\n  Category: ${issue.category}\n  Missing files:\n${fileList}`;
       });
 
-      throw new Error(`Manifest references files that don't exist:${errorMessages.join('\n')}`);
+      throw new Error(
+        `Manifest references files that don't exist:${errorMessages.join('\n')}`
+      );
     }
 
     // If we get here, all files exist
@@ -135,7 +141,14 @@ describe('Manifest File Existence Validation', () => {
       }
 
       const content = manifest.content || {};
-      const categories = ['actions', 'rules', 'conditions', 'components', 'scopes', 'entities'];
+      const categories = [
+        'actions',
+        'rules',
+        'conditions',
+        'components',
+        'scopes',
+        'entities',
+      ];
 
       for (const category of categories) {
         const files = content[category];
@@ -161,7 +174,7 @@ describe('Manifest File Existence Validation', () => {
                   category,
                   manifestRef: file,
                   actualFile: hyphenatedFile,
-                  issue: 'Manifest uses underscores but file uses hyphens'
+                  issue: 'Manifest uses underscores but file uses hyphens',
                 });
               } catch {
                 // Neither exists, will be caught by main test
@@ -173,11 +186,14 @@ describe('Manifest File Existence Validation', () => {
     }
 
     if (namingIssues.length > 0) {
-      const errorMessages = namingIssues.map(issue =>
-        `\n  Mod: ${issue.modId}\n  Category: ${issue.category}\n  Manifest ref: ${issue.manifestRef}\n  Actual file: ${issue.actualFile}\n  Issue: ${issue.issue}`
+      const errorMessages = namingIssues.map(
+        (issue) =>
+          `\n  Mod: ${issue.modId}\n  Category: ${issue.category}\n  Manifest ref: ${issue.manifestRef}\n  Actual file: ${issue.actualFile}\n  Issue: ${issue.issue}`
       );
 
-      throw new Error(`Naming convention mismatches found:${errorMessages.join('\n')}`);
+      throw new Error(
+        `Naming convention mismatches found:${errorMessages.join('\n')}`
+      );
     }
 
     expect(namingIssues).toHaveLength(0);
@@ -222,11 +238,20 @@ const CONTENT_CATEGORIES = {
   libraries: { directory: 'libraries', pattern: /\.json$/i },
   lookups: { directory: 'lookups', pattern: /\.json$/i },
   parts: { directory: 'parts', pattern: /\.json$/i },
-  'structure-templates': { directory: 'structure-templates', pattern: /\.json$/i },
+  'structure-templates': {
+    directory: 'structure-templates',
+    pattern: /\.json$/i,
+  },
   scopes: { directory: 'scopes', pattern: /\.scope$/i },
-  'refinement-methods': { directory: 'refinement-methods', pattern: /\.refinement\.json$/i },
+  'refinement-methods': {
+    directory: 'refinement-methods',
+    pattern: /\.refinement\.json$/i,
+  },
   tasks: { directory: 'tasks', pattern: /\.task\.json$/i },
-  portraits: { directory: 'portraits', pattern: /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i },
+  portraits: {
+    directory: 'portraits',
+    pattern: /\.(png|jpg|jpeg|gif|webp|svg|bmp)$/i,
+  },
 };
 
 /**
@@ -245,7 +270,8 @@ function isIgnoredFile(filename) {
   }
 
   // Ignore files starting with . (hidden files) except those we explicitly handle
-  if (filename.startsWith('.') && !IGNORED_FILES.includes(filename)) return true;
+  if (filename.startsWith('.') && !IGNORED_FILES.includes(filename))
+    return true;
 
   // Ignore files ending with ~ (backup files)
   if (filename.endsWith('~')) return true;
@@ -309,15 +335,22 @@ describe('Unregistered Files Validation', () => {
       const content = manifest.content || {};
 
       // Check each content category
-      for (const [categoryKey, categoryConfig] of Object.entries(CONTENT_CATEGORIES)) {
+      for (const [categoryKey, categoryConfig] of Object.entries(
+        CONTENT_CATEGORIES
+      )) {
         const categoryDir = path.join(modPath, categoryConfig.directory);
 
         // Get files registered in manifest for this category
         const registeredFiles = content[categoryKey];
-        const registeredSet = new Set(Array.isArray(registeredFiles) ? registeredFiles : []);
+        const registeredSet = new Set(
+          Array.isArray(registeredFiles) ? registeredFiles : []
+        );
 
         // Scan directory for actual files
-        const filesOnDisk = await scanDirectory(categoryDir, categoryConfig.pattern);
+        const filesOnDisk = await scanDirectory(
+          categoryDir,
+          categoryConfig.pattern
+        );
 
         // Find unregistered files
         for (const file of filesOnDisk) {
@@ -406,11 +439,16 @@ describe('Unregistered Files Validation', () => {
         const categoryDir = path.join(modPath, categoryConfig.directory);
 
         try {
-          const entries = await fs.readdir(categoryDir, { withFileTypes: true });
+          const entries = await fs.readdir(categoryDir, {
+            withFileTypes: true,
+          });
           for (const entry of entries) {
             if (entry.isFile() && IGNORED_FILES.includes(entry.name)) {
               // Found a system file - verify it's being ignored
-              const filesOnDisk = await scanDirectory(categoryDir, categoryConfig.pattern);
+              const filesOnDisk = await scanDirectory(
+                categoryDir,
+                categoryConfig.pattern
+              );
               if (filesOnDisk.includes(entry.name)) {
                 systemFilesDetected.push({
                   modId,

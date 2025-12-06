@@ -102,7 +102,9 @@ export function formatScopeEvaluationSummary(traceContext) {
       }
 
       if (resolvedCount > 0) {
-        lines.push(`  Resolved entities: ${evaluation.resolvedEntities.join(', ')}`);
+        lines.push(
+          `  Resolved entities: ${evaluation.resolvedEntities.join(', ')}`
+        );
       }
     } else {
       lines.push(`  ❌ Failed: ${evaluation.error}`);
@@ -124,7 +126,12 @@ export function formatScopeEvaluationSummary(traceContext) {
  * @param {object} [options.context] - Additional context
  * @returns {object} Evaluation result with trace
  */
-export function traceScopeEvaluation({ scopeId, actor, scopeResolver, context = {} }) {
+export function traceScopeEvaluation({
+  scopeId,
+  actor,
+  scopeResolver,
+  context = {},
+}) {
   const traceContext = new TraceContext();
   const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
 

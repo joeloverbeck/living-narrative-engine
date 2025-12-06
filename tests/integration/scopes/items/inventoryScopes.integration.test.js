@@ -12,7 +12,6 @@ import { parseDslExpression } from '../../../../src/scopeDsl/parser/parser.js';
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 
-
 describe('Items - Inventory Scopes Integration', () => {
   let entityManager;
   let scopeEngine;
@@ -164,10 +163,7 @@ describe('Items - Inventory Scopes Integration', () => {
           components: {
             'core:actor': { name: 'Test Actor' },
             'items:inventory': {
-              items: [
-                { itemId: 'item-1' },
-                { itemId: 'item-2' },
-              ],
+              items: [{ itemId: 'item-1' }, { itemId: 'item-2' }],
               capacity: { maxWeight: 50, maxItems: 10 },
             },
           },

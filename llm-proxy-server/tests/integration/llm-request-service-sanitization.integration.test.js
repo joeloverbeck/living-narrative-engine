@@ -4,12 +4,7 @@
  * and error response preview handling that previously lacked instrumentation hits.
  */
 
-import {
-  describe,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, test, expect, jest } from '@jest/globals';
 import express from 'express';
 import http from 'http';
 
@@ -202,9 +197,9 @@ describe('LlmRequestService sanitization and preview integration', () => {
       );
       expect(sanitizedPreviewCall).toBeDefined();
       const sanitizedPayload = sanitizedPreviewCall[1].payload;
-      expect(sanitizedPayload.prompt.endsWith(PAYLOAD_SANITIZATION_ELLIPSIS)).toBe(
-        true
-      );
+      expect(
+        sanitizedPayload.prompt.endsWith(PAYLOAD_SANITIZATION_ELLIPSIS)
+      ).toBe(true);
       expect(sanitizedPayload.prompt.length).toBe(
         PAYLOAD_SANITIZATION_MAX_LENGTH + PAYLOAD_SANITIZATION_ELLIPSIS.length
       );

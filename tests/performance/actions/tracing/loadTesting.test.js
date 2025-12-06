@@ -85,11 +85,16 @@ describe('High-Frequency Action Tracing Load Tests', () => {
   describe('Rapid Fire Load Testing', () => {
     it('should handle 50 rapid dual-format traces without blocking', async () => {
       const traces = await Promise.all(
-        Array.from({ length: 50 }, async (_, i) => // Reduced from 100
-          testBed.createActionAwareTrace({
-            actorId: `rapid-actor-${i}`,
-            tracedActions: [`rapid_action_${i}`],
-          })
+        Array.from(
+          { length: 50 },
+          async (
+            _,
+            i // Reduced from 100
+          ) =>
+            testBed.createActionAwareTrace({
+              actorId: `rapid-actor-${i}`,
+              tracedActions: [`rapid_action_${i}`],
+            })
         )
       );
 

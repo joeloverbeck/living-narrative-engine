@@ -11,7 +11,7 @@ import eventIsActionLungeBiteNeckViolently from '../../../../data/mods/vampirism
 
 const ACTION_ID = 'vampirism:lunge_bite_neck_violently';
 const EXPECTED_MESSAGE_TEMPLATE =
-  '{actor} lunges at {target} and sinks their teeth on {target}\'s neck predatorily.';
+  "{actor} lunges at {target} and sinks their teeth on {target}'s neck predatorily.";
 
 describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
   let testFixture;
@@ -31,10 +31,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
 
   describe('Component Addition', () => {
     it('adds biting_neck component to vampire actor with correct target reference', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Nosferatu', 'Ellen'],
-        { location: 'ship_deck' }
-      );
+      const scenario = testFixture.createCloseActors(['Nosferatu', 'Ellen'], {
+        location: 'ship_deck',
+      });
 
       // Remove closeness for distance attack (lunge doesn't require it)
       delete scenario.actor.components['positioning:closeness'];
@@ -44,10 +43,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
@@ -60,10 +56,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
     });
 
     it('adds being_bitten_in_neck component to target with correct vampire reference', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Vampire', 'Victim'],
-        { location: 'dark_alley' }
-      );
+      const scenario = testFixture.createCloseActors(['Vampire', 'Victim'], {
+        location: 'dark_alley',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -72,10 +67,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const targetInstance = testFixture.entityManager.getEntityInstance(
         scenario.target.id
@@ -90,10 +82,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
     });
 
     it('adds both components in single predatory attack execution', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Predator', 'Prey'],
-        { location: 'forest_clearing' }
-      );
+      const scenario = testFixture.createCloseActors(['Predator', 'Prey'], {
+        location: 'forest_clearing',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -102,10 +93,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const actorInstance = testFixture.entityManager.getEntityInstance(
         scenario.actor.id
@@ -115,14 +103,15 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       );
 
       expect(actorInstance).toHaveComponent('positioning:biting_neck');
-      expect(targetInstance).toHaveComponent('positioning:being_bitten_in_neck');
+      expect(targetInstance).toHaveComponent(
+        'positioning:being_bitten_in_neck'
+      );
     });
 
     it('rejects the action when actor is not a vampire', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Human', 'Mortal'],
-        { location: 'village_square' }
-      );
+      const scenario = testFixture.createCloseActors(['Human', 'Mortal'], {
+        location: 'village_square',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -138,10 +127,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
 
   describe('Event Generation', () => {
     it('generates correct perceptible event message with predatory language', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Dracula', 'Jonathan'],
-        { location: 'castle_hall' }
-      );
+      const scenario = testFixture.createCloseActors(['Dracula', 'Jonathan'], {
+        location: 'castle_hall',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -150,10 +138,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const expectedMessage = EXPECTED_MESSAGE_TEMPLATE.replace(
         '{actor}',
@@ -170,10 +155,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
     });
 
     it('generates matching success action message with predatory language', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Lestat', 'Louis'],
-        { location: 'theatre_box' }
-      );
+      const scenario = testFixture.createCloseActors(['Lestat', 'Louis'], {
+        location: 'theatre_box',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -182,10 +166,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const expectedMessage = EXPECTED_MESSAGE_TEMPLATE.replace(
         '{actor}',
@@ -196,10 +177,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
     });
 
     it('includes correct event metadata for predatory bite', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Vampire', 'Mortal'],
-        { location: 'crypt' }
-      );
+      const scenario = testFixture.createCloseActors(['Vampire', 'Mortal'], {
+        location: 'crypt',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -208,10 +188,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const expectedMessage = EXPECTED_MESSAGE_TEMPLATE.replace(
         '{actor}',
@@ -228,10 +205,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
     });
 
     it('generates consistent perceptible and success messages for violent attack', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Predator', 'Victim'],
-        { location: 'abandoned_warehouse' }
-      );
+      const scenario = testFixture.createCloseActors(['Predator', 'Victim'], {
+        location: 'abandoned_warehouse',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -240,10 +216,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const expectedMessage = EXPECTED_MESSAGE_TEMPLATE.replace(
         '{actor}',
@@ -263,10 +236,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
 
   describe('Turn Management', () => {
     it('ends turn with success status for violent vampire attack', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Vampire', 'Human'],
-        { location: 'dungeon' }
-      );
+      const scenario = testFixture.createCloseActors(['Vampire', 'Human'], {
+        location: 'dungeon',
+      });
 
       // Remove closeness for distance attack
       delete scenario.actor.components['positioning:closeness'];
@@ -275,10 +247,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-      await testFixture.executeAction(
-        scenario.actor.id,
-        scenario.target.id
-      );
+      await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const turnEndedEvent = testFixture.events.find(
         (event) => event.eventType === 'core:turn_ended'
@@ -310,10 +279,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         scenario.actor.components['vampirism:is_vampire'] = {};
         testFixture.reset([scenario.room, scenario.actor, scenario.target]);
 
-        await testFixture.executeAction(
-          scenario.actor.id,
-          scenario.target.id
-        );
+        await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
         const expectedMessage = EXPECTED_MESSAGE_TEMPLATE.replace(
           '{actor}',
@@ -338,10 +304,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       scenario1.actor.components['vampirism:is_vampire'] = {};
       testFixture.reset([scenario1.room, scenario1.actor, scenario1.target]);
 
-      await testFixture.executeAction(
-        scenario1.actor.id,
-        scenario1.target.id
-      );
+      await testFixture.executeAction(scenario1.actor.id, scenario1.target.id);
 
       const actor1 = testFixture.entityManager.getEntityInstance(
         scenario1.actor.id
@@ -362,10 +325,9 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
 
   describe('Rule Isolation', () => {
     it('does not fire for different actions', async () => {
-      const scenario = testFixture.createCloseActors(
-        ['Vampire', 'Mortal'],
-        { location: 'cemetery' }
-      );
+      const scenario = testFixture.createCloseActors(['Vampire', 'Mortal'], {
+        location: 'cemetery',
+      });
 
       const payload = {
         eventName: 'core:attempt_action',

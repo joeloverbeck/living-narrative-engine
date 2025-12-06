@@ -52,8 +52,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          actor: ['positioning:kneeling_before', 'positioning:sitting_on']
-        }
+          actor: ['positioning:kneeling_before', 'positioning:sitting_on'],
+        },
       };
 
       const isValid = validate(action);
@@ -67,7 +67,7 @@ describe('Action Schema Target Forbidden Components', () => {
         name: 'Test No Forbidden',
         description: 'Test action without forbidden components',
         template: 'test action',
-        targets: 'test:scope'
+        targets: 'test:scope',
       };
 
       const isValid = validate(action);
@@ -82,7 +82,7 @@ describe('Action Schema Target Forbidden Components', () => {
         description: 'Test action with empty forbidden components',
         template: 'test action',
         targets: 'test:scope',
-        forbidden_components: {}
+        forbidden_components: {},
       };
 
       const isValid = validate(action);
@@ -102,8 +102,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test {target}',
         targets: 'test:scope',
         forbidden_components: {
-          target: ['positioning:sitting_on', 'positioning:laying_down']
-        }
+          target: ['positioning:sitting_on', 'positioning:laying_down'],
+        },
       };
 
       const isValid = validate(action);
@@ -115,13 +115,14 @@ describe('Action Schema Target Forbidden Components', () => {
       const action = {
         id: 'test:both_forbidden',
         name: 'Test Both Forbidden',
-        description: 'Test action with both actor and target forbidden components',
+        description:
+          'Test action with both actor and target forbidden components',
         template: 'test {target}',
         targets: 'test:scope',
         forbidden_components: {
           actor: ['positioning:kneeling_before'],
-          target: ['positioning:sitting_on']
-        }
+          target: ['positioning:sitting_on'],
+        },
       };
 
       const isValid = validate(action);
@@ -137,8 +138,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test {target}',
         targets: 'test:scope',
         forbidden_components: {
-          target: ['invalid-format', 'also:invalid:format']
-        }
+          target: ['invalid-format', 'also:invalid:format'],
+        },
       };
 
       const isValid = validate(action);
@@ -160,12 +161,12 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: {
           primary: {
             scope: 'test:primary_scope',
-            placeholder: 'primary'
-          }
+            placeholder: 'primary',
+          },
         },
         forbidden_components: {
-          primary: ['positioning:kneeling_before', 'positioning:sitting_on']
-        }
+          primary: ['positioning:kneeling_before', 'positioning:sitting_on'],
+        },
       };
 
       const isValid = validate(action);
@@ -182,23 +183,23 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: {
           primary: {
             scope: 'test:primary_scope',
-            placeholder: 'primary'
+            placeholder: 'primary',
           },
           secondary: {
             scope: 'test:secondary_scope',
-            placeholder: 'secondary'
+            placeholder: 'secondary',
           },
           tertiary: {
             scope: 'test:tertiary_scope',
-            placeholder: 'tertiary'
-          }
+            placeholder: 'tertiary',
+          },
         },
         forbidden_components: {
           actor: ['positioning:running'],
           primary: ['positioning:kneeling_before'],
           secondary: ['positioning:sitting_on'],
-          tertiary: ['positioning:laying_down']
-        }
+          tertiary: ['positioning:laying_down'],
+        },
       };
 
       const isValid = validate(action);
@@ -215,17 +216,17 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: {
           primary: {
             scope: 'test:primary_scope',
-            placeholder: 'primary'
+            placeholder: 'primary',
           },
           secondary: {
             scope: 'test:secondary_scope',
-            placeholder: 'secondary'
-          }
+            placeholder: 'secondary',
+          },
         },
         forbidden_components: {
-          primary: ['positioning:kneeling_before']
+          primary: ['positioning:kneeling_before'],
           // secondary has no forbidden components
-        }
+        },
       };
 
       const isValid = validate(action);
@@ -242,12 +243,12 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: {
           primary: {
             scope: 'test:primary_scope',
-            placeholder: 'primary'
-          }
+            placeholder: 'primary',
+          },
         },
         forbidden_components: {
-          primary: ['invalid_no_colon', 'too:many:colons']
-        }
+          primary: ['invalid_no_colon', 'too:many:colons'],
+        },
       };
 
       const isValid = validate(action);
@@ -269,8 +270,8 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: 'test:scope',
         forbidden_components: {
           actor: ['positioning:kneeling_before'],
-          unknownProperty: ['some:component']
-        }
+          unknownProperty: ['some:component'],
+        },
       };
 
       const isValid = validate(action);
@@ -291,8 +292,8 @@ describe('Action Schema Target Forbidden Components', () => {
           target: [],
           primary: [],
           secondary: [],
-          tertiary: []
-        }
+          tertiary: [],
+        },
       };
 
       const isValid = validate(action);
@@ -308,8 +309,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          target: 'not_an_array'
-        }
+          target: 'not_an_array',
+        },
       };
 
       const isValid = validate(action);
@@ -326,8 +327,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope',
         forbidden_components: {
-          target: [123, true, { not: 'a string' }]
-        }
+          target: [123, true, { not: 'a string' }],
+        },
       };
 
       const isValid = validate(action);
@@ -349,7 +350,7 @@ describe('Action Schema Target Forbidden Components', () => {
         'mod-name:component-name',
         'MOD123:COMPONENT456',
         'a:b',
-        'very_long_mod_name:very_long_component_name'
+        'very_long_mod_name:very_long_component_name',
       ];
 
       validPatterns.forEach((pattern) => {
@@ -360,8 +361,8 @@ describe('Action Schema Target Forbidden Components', () => {
           template: 'test action',
           targets: 'test:scope',
           forbidden_components: {
-            target: [pattern]
-          }
+            target: [pattern],
+          },
         };
 
         const isValid = validate(action);
@@ -383,7 +384,7 @@ describe('Action Schema Target Forbidden Components', () => {
         '',
         ':',
         'mod:',
-        ':component'
+        ':component',
       ];
 
       invalidPatterns.forEach((pattern) => {
@@ -394,8 +395,8 @@ describe('Action Schema Target Forbidden Components', () => {
           template: 'test action',
           targets: 'test:scope',
           forbidden_components: {
-            target: [pattern]
-          }
+            target: [pattern],
+          },
         };
 
         const isValid = validate(action);
@@ -421,8 +422,8 @@ describe('Action Schema Target Forbidden Components', () => {
         targets: 'test:scope',
         forbidden_components: {
           target: ['positioning:sitting_on'],
-          primary: ['positioning:kneeling_before']
-        }
+          primary: ['positioning:kneeling_before'],
+        },
       };
 
       // The schema allows this, but it's semantically incorrect
@@ -441,8 +442,8 @@ describe('Action Schema Target Forbidden Components', () => {
         template: 'test action',
         targets: 'test:scope', // single target
         forbidden_components: {
-          secondary: ['positioning:sitting_on'] // multi-target role
-        }
+          secondary: ['positioning:sitting_on'], // multi-target role
+        },
       };
 
       const isValid = validate(action);
@@ -459,40 +460,41 @@ describe('Action Schema Target Forbidden Components', () => {
         $schema: 'schema://living-narrative-engine/action.schema.json',
         id: 'test:complex_action',
         name: 'Complex Test Action',
-        description: 'A complex action testing all forbidden component features',
+        description:
+          'A complex action testing all forbidden component features',
         targets: {
           primary: {
             scope: 'test:primary_scope',
             placeholder: 'target1',
-            description: 'Primary target'
+            description: 'Primary target',
           },
           secondary: {
             scope: 'test:secondary_scope',
             placeholder: 'target2',
-            description: 'Secondary target'
-          }
+            description: 'Secondary target',
+          },
         },
         required_components: {
-          actor: ['core:actor', 'positioning:positioned']
+          actor: ['core:actor', 'positioning:positioned'],
         },
         forbidden_components: {
           actor: ['positioning:kneeling_before', 'positioning:sitting_on'],
           primary: ['positioning:laying_down', 'positioning:running'],
-          secondary: ['positioning:invisible', 'positioning:immobile']
+          secondary: ['positioning:invisible', 'positioning:immobile'],
         },
         template: 'perform complex action on {target1} and {target2}',
         prerequisites: [
           {
             logic: {
-              condition_ref: 'core:actor-mouth-available'
+              condition_ref: 'core:actor-mouth-available',
             },
-            failure_message: 'Cannot perform action while mouth is engaged'
-          }
+            failure_message: 'Cannot perform action while mouth is engaged',
+          },
         ],
         visual: {
           backgroundColor: '#1976d2',
-          textColor: '#ffffff'
-        }
+          textColor: '#ffffff',
+        },
       };
 
       const isValid = validate(action);

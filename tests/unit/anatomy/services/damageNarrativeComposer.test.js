@@ -204,7 +204,9 @@ describe('DamageNarrativeComposer', () => {
         const result = composer.compose(entries);
 
         // Unknown effect is filtered out
-        expect(result).toBe("Rill's leg suffers slashing damage and is bleeding.");
+        expect(result).toBe(
+          "Rill's leg suffers slashing damage and is bleeding."
+        );
       });
 
       it('should handle part types with underscores', () => {
@@ -409,7 +411,9 @@ describe('DamageNarrativeComposer', () => {
 
         const result = composer.compose(entries);
 
-        expect(result).toContain('his heart and left lung suffer bludgeoning damage');
+        expect(result).toContain(
+          'his heart and left lung suffer bludgeoning damage'
+        );
       });
     });
 
@@ -453,7 +457,9 @@ describe('DamageNarrativeComposer', () => {
 
         const result = composer.compose(entries);
 
-        expect(result).toContain('her left lung and right lung suffer fire damage');
+        expect(result).toContain(
+          'her left lung and right lung suffer fire damage'
+        );
       });
 
       it('should format three+ parts with Oxford comma', () => {
@@ -800,10 +806,14 @@ describe('DamageNarrativeComposer', () => {
         const result = composer.compose(entries);
 
         // Primary damage with effect
-        expect(result).toContain("Rill's head suffers piercing damage and is bleeding.");
+        expect(result).toContain(
+          "Rill's head suffers piercing damage and is bleeding."
+        );
 
         // Propagated damage with combined sentence
-        expect(result).toContain('As a result, her brain and left eye suffer piercing damage');
+        expect(result).toContain(
+          'As a result, her brain and left eye suffer piercing damage'
+        );
 
         // Effects from propagated entries
         expect(result).toContain('is fractured');
@@ -850,7 +860,9 @@ describe('DamageNarrativeComposer', () => {
         const result = composer.compose(entries);
 
         expect(result).toContain("Fighter's torso suffers slashing damage.");
-        expect(result).toContain('his left lung and heart suffer slashing damage');
+        expect(result).toContain(
+          'his left lung and heart suffer slashing damage'
+        );
       });
 
       it('should handle missing effectsTriggered array in entry', () => {

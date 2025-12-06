@@ -381,9 +381,12 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         );
 
         await new Promise((resolve) => setTimeout(resolve, 25));
-        const createdEntity = await entityManager.createEntityInstance('test:actor', {
-          instanceId: deferredEntityId,
-        });
+        const createdEntity = await entityManager.createEntityInstance(
+          'test:actor',
+          {
+            instanceId: deferredEntityId,
+          }
+        );
         await entityManager.addComponent(
           createdEntity.id,
           'anatomy:body',
@@ -434,7 +437,10 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
         });
 
       try {
-        anatomyLoadingDetector.waitForEntityCreation('entity-for-dispose', () => {});
+        anatomyLoadingDetector.waitForEntityCreation(
+          'entity-for-dispose',
+          () => {}
+        );
         anatomyLoadingDetector.dispose();
 
         expect(warnSpy).toHaveBeenCalledWith(

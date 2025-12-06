@@ -221,7 +221,9 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(result.errorDetails?.details?.reason).toContain(
       "File 'primitive.key' retrieval also failed (Reason: storage backend refused the connection)."
     );
-    expect(result.errorDetails?.details?.reason).not.toContain('permission denied');
+    expect(result.errorDetails?.details?.reason).not.toContain(
+      'permission denied'
+    );
   });
 
   it("uses 'see previous logs' fallback when no file error context is provided", async () => {
@@ -341,9 +343,7 @@ describe('ApiKeyService error consolidation coverage', () => {
     const createErrorDetailsSpy = jest
       .spyOn(apiKeyService, '_createErrorDetails')
       .mockImplementationOnce(() => null)
-      .mockImplementation((...args) =>
-        originalCreateErrorDetails(...args)
-      );
+      .mockImplementation((...args) => originalCreateErrorDetails(...args));
 
     jest
       .spyOn(apiKeyService, '_readApiKeyFromFile')
@@ -529,13 +529,17 @@ describe('ApiKeyService error consolidation coverage', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Stage: api_key_all_sources_failed'),
       expect.objectContaining({
-        details: expect.objectContaining({ attemptedEnvVar: 'UNDEFINED_ENV_KEY' }),
+        details: expect.objectContaining({
+          attemptedEnvVar: 'UNDEFINED_ENV_KEY',
+        }),
       })
     );
   });
 
   it('escalates missing project root path errors into the combined failure summary', async () => {
-    appConfigService.getProxyProjectRootPathForApiKeyFiles.mockReturnValue('   ');
+    appConfigService.getProxyProjectRootPathForApiKeyFiles.mockReturnValue(
+      '   '
+    );
 
     const fileReadSpy = jest.spyOn(apiKeyService, '_readApiKeyFromFile');
 
@@ -587,7 +591,10 @@ describe('ApiKeyService error consolidation coverage', () => {
       'llm-dual-source'
     );
 
-    expect(fsReader.readFile).toHaveBeenCalledWith('/configs/missing.key', 'utf-8');
+    expect(fsReader.readFile).toHaveBeenCalledWith(
+      '/configs/missing.key',
+      'utf-8'
+    );
     expect(result.apiKey).toBeNull();
     expect(result.errorDetails?.stage).toBe('api_key_all_sources_failed');
     expect(result.errorDetails?.details).toEqual(
@@ -597,12 +604,18 @@ describe('ApiKeyService error consolidation coverage', () => {
         attemptedFile: 'missing.key',
       })
     );
-    expect(result.errorDetails?.details?.reason).toContain('Environment variable');
-    expect(result.errorDetails?.details?.reason).toContain("File 'missing.key' retrieval also failed");
+    expect(result.errorDetails?.details?.reason).toContain(
+      'Environment variable'
+    );
+    expect(result.errorDetails?.details?.reason).toContain(
+      "File 'missing.key' retrieval also failed"
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Stage: api_key_all_sources_failed'),
       expect.objectContaining({
-        details: expect.objectContaining({ attemptedEnvVar: 'DUAL_SOURCE_ENV_KEY' }),
+        details: expect.objectContaining({
+          attemptedEnvVar: 'DUAL_SOURCE_ENV_KEY',
+        }),
       })
     );
   });
@@ -732,5 +745,4 @@ describe('ApiKeyService error consolidation coverage', () => {
       })
     );
   });
-
 });

@@ -50,7 +50,9 @@ describe('Tag Removal Memory Efficiency Tests', () => {
       ),
     },
     characterDataXmlBuilder: {
-      buildCharacterDataXml: jest.fn(() => '<character><name>Test Character</name></character>'),
+      buildCharacterDataXml: jest.fn(
+        () => '<character><name>Test Character</name></character>'
+      ),
     },
     modActionMetadataProvider: {
       getMetadataForMod: jest.fn(() => null),

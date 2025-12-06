@@ -15,7 +15,11 @@ describe('anatomy:visibility_rules component schema', () => {
   let validateComponentData;
 
   beforeAll(() => {
-    const ajv = new Ajv({ schemas: [commonSchema], strict: true, allErrors: true });
+    const ajv = new Ajv({
+      schemas: [commonSchema],
+      strict: true,
+      allErrors: true,
+    });
     addFormats(ajv);
 
     validateComponentDefinition = ajv.compile(componentSchema);

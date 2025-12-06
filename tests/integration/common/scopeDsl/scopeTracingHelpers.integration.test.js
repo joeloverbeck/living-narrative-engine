@@ -38,8 +38,14 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
   describe('Trace successful scope resolution', () => {
     it('should trace scope with multiple candidates', () => {
       // Setup: Add entities that will be candidates
-      const target1 = { id: 'target1', components: { 'core:name': { text: 'Bob' } } };
-      const target2 = { id: 'target2', components: { 'core:name': { text: 'Carol' } } };
+      const target1 = {
+        id: 'target1',
+        components: { 'core:name': { text: 'Bob' } },
+      };
+      const target2 = {
+        id: 'target2',
+        components: { 'core:name': { text: 'Carol' } },
+      };
       entityManager.addEntity(target1);
       entityManager.addEntity(target2);
 
@@ -47,7 +53,10 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
       scopeResolver.resolve.mockReturnValue(['target1', 'target2']);
 
       const traceContext = new TraceContext();
-      const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
+      const tracedResolver = createTracedScopeResolver(
+        scopeResolver,
+        traceContext
+      );
 
       // Act: Resolve scope
       const result = tracedResolver.resolve('test:close_actors', {
@@ -81,7 +90,10 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
       });
 
       const traceContext = new TraceContext();
-      const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
+      const tracedResolver = createTracedScopeResolver(
+        scopeResolver,
+        traceContext
+      );
 
       // Act: Resolve scope with filters
       const result = tracedResolver.resolve('test:filtered_scope', {
@@ -106,7 +118,10 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
       scopeResolver.resolve.mockReturnValue([]);
 
       const traceContext = new TraceContext();
-      const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
+      const tracedResolver = createTracedScopeResolver(
+        scopeResolver,
+        traceContext
+      );
 
       // Act: Resolve scope
       const result = tracedResolver.resolve('test:empty_scope', {
@@ -136,7 +151,10 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
       });
 
       const traceContext = new TraceContext();
-      const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
+      const tracedResolver = createTracedScopeResolver(
+        scopeResolver,
+        traceContext
+      );
 
       // Act & Assert: Error is thrown
       expect(() => {
@@ -168,7 +186,10 @@ describe('scopeTracingHelpers - Integration with Real Resolver', () => {
         });
 
       const traceContext = new TraceContext();
-      const tracedResolver = createTracedScopeResolver(scopeResolver, traceContext);
+      const tracedResolver = createTracedScopeResolver(
+        scopeResolver,
+        traceContext
+      );
 
       // Act: Perform multiple resolutions
       tracedResolver.resolve('test:scope1', {

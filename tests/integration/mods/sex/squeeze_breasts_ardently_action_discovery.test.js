@@ -3,7 +3,14 @@
  * @description Validates action availability across face-to-face and actor-behind orientations with uncovered breasts.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import {
   SQUEEZE_BREASTS_ARDENTLY_ACTION_ID as ACTION_ID,
@@ -39,9 +46,8 @@ describe('sex-breastplay:squeeze_breasts_ardently action discovery', () => {
       }
     );
 
-    restoreScopeResolver = installSqueezeBreastsArdentlyScopeOverride(
-      testFixture
-    );
+    restoreScopeResolver =
+      installSqueezeBreastsArdentlyScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -59,7 +65,9 @@ describe('sex-breastplay:squeeze_breasts_ardently action discovery', () => {
   describe('Action definition alignment', () => {
     it('matches the expected action structure and presentation', () => {
       expect(squeezeBreastsArdentlyAction.id).toBe(ACTION_ID);
-      expect(squeezeBreastsArdentlyAction.name).toBe('Squeeze Breasts Ardently');
+      expect(squeezeBreastsArdentlyAction.name).toBe(
+        'Squeeze Breasts Ardently'
+      );
       expect(squeezeBreastsArdentlyAction.description).toBe(
         "Grip your partner's breasts firmly and squeeze them with fervor."
       );
@@ -68,9 +76,7 @@ describe('sex-breastplay:squeeze_breasts_ardently action discovery', () => {
       );
       expect(squeezeBreastsArdentlyAction.prerequisites).toEqual([]);
 
-      expect(squeezeBreastsArdentlyAction.targets.primary.scope).toBe(
-        SCOPE_ID
-      );
+      expect(squeezeBreastsArdentlyAction.targets.primary.scope).toBe(SCOPE_ID);
       expect(squeezeBreastsArdentlyAction.targets.primary.placeholder).toBe(
         'target'
       );

@@ -227,7 +227,8 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
 
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-      const expectedMessage = 'Nosferatu bares their fangs menacingly at Hutter.';
+      const expectedMessage =
+        'Nosferatu bares their fangs menacingly at Hutter.';
 
       testFixture.assertActionSuccess(expectedMessage);
       testFixture.assertPerceptibleEvent({

@@ -89,14 +89,26 @@ describe('Pipeline integration', () => {
 
     expect(result.success).toBe(true);
     expect(result.actions).toEqual([{ id: 'A1' }, { id: 'B1' }]);
-    expect(result.errors).toEqual([{ message: 'warning', stageName: 'StageB' }]);
+    expect(result.errors).toEqual([
+      { message: 'warning', stageName: 'StageB' },
+    ]);
     expect(result.data).toEqual({ stageData: ['stageA', 'stageB', 'stageC'] });
-    expect(stageOrder.map((entry) => entry.name)).toEqual(['StageA', 'StageB', 'StageC']);
+    expect(stageOrder.map((entry) => entry.name)).toEqual([
+      'StageA',
+      'StageB',
+      'StageC',
+    ]);
 
     // Logger should record each stage execution
-    expect(logger.debugMessages.some((log) => /StageA/.test(log.message))).toBe(true);
-    expect(logger.debugMessages.some((log) => /StageB/.test(log.message))).toBe(true);
-    expect(logger.debugMessages.some((log) => /StageC/.test(log.message))).toBe(true);
+    expect(logger.debugMessages.some((log) => /StageA/.test(log.message))).toBe(
+      true
+    );
+    expect(logger.debugMessages.some((log) => /StageB/.test(log.message))).toBe(
+      true
+    );
+    expect(logger.debugMessages.some((log) => /StageC/.test(log.message))).toBe(
+      true
+    );
   });
 
   it('stops processing when a stage returns continueProcessing=false', async () => {

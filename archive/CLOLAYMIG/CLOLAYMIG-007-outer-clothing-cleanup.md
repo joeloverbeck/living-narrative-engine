@@ -47,6 +47,7 @@ Remove these 10 entries from the `entities.definitions` array:
 ```
 
 **Entity count after this ticket depends on prior completions:**
+
 - If CLOLAYMIG-004 (accessories) is complete: 111 - 10 = **101 entities**
 - If only this ticket: 125 - 10 = 115 entities
 
@@ -60,10 +61,10 @@ Remove these 10 entries from the `entities.definitions` array:
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/clothing/mod-manifest.json` | Remove 10 entries from definitions |
-| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 10 files |
+| File                                                    | Action                             |
+| ------------------------------------------------------- | ---------------------------------- |
+| `data/mods/clothing/mod-manifest.json`                  | Remove 10 entries from definitions |
+| `data/mods/clothing/entities/definitions/*.entity.json` | Delete 10 files                    |
 
 ## Acceptance Criteria
 
@@ -102,6 +103,7 @@ grep -r '"id": "clothing:battle_scarred_leather_jacket"' data/mods/
 ## Post-Completion State
 
 After this ticket:
+
 - **Outer-clothing migration is complete**
 - `outer-clothing` mod: 10 entities
 - All outer-clothing references point to `outer-clothing:*`

@@ -2,7 +2,14 @@
  * @file Integration tests for the cliches-generator entry point using the real bootstrap workflow.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -51,7 +58,9 @@ function createFileFetchMock() {
     }
 
     const sanitizedPath = requestInfo.split('?')[0];
-    const relativePath = sanitizedPath.replace(/^\.\/+/, '').replace(/^\/+/, '');
+    const relativePath = sanitizedPath
+      .replace(/^\.\/+/, '')
+      .replace(/^\/+/, '');
     const absolutePath = path.resolve(REPO_ROOT, relativePath);
 
     let fileText;
@@ -326,7 +335,9 @@ describe('cliches-generator entry point (real modules)', () => {
       const errorContainer = document.getElementById(
         'cliches-generator-container'
       );
-      expect(errorContainer.innerHTML).toContain('Unable to Load Clichés Generator');
+      expect(errorContainer.innerHTML).toContain(
+        'Unable to Load Clichés Generator'
+      );
     },
     DEFAULT_TIMEOUT_MS
   );

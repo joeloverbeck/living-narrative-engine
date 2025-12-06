@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
 
@@ -27,8 +34,9 @@ function createServiceFixture({ generationImplementation } = {}) {
   };
 
   const anatomyGenerationService = {
-    generateAnatomyIfNeeded: jest
-      .fn(generationImplementation || (() => Promise.resolve(false))),
+    generateAnatomyIfNeeded: jest.fn(
+      generationImplementation || (() => Promise.resolve(false))
+    ),
   };
 
   const service = new AnatomyInitializationService({
@@ -75,12 +83,12 @@ describe('AnatomyInitializationService test helper integration', () => {
       processing: true,
     });
 
-    await fixture.service.__TEST_ONLY__processQueue({ ensureProcessingFlag: true });
+    await fixture.service.__TEST_ONLY__processQueue({
+      ensureProcessingFlag: true,
+    });
 
     expect(processed).toEqual(['entity-1', 'entity-2']);
-    expect(
-      fixture.logger.info
-    ).toHaveBeenCalledWith(
+    expect(fixture.logger.info).toHaveBeenCalledWith(
       "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
     );
     expect(fixture.service.hasPendingGenerations()).toBe(false);
@@ -127,7 +135,9 @@ describe('AnatomyInitializationService test helper integration', () => {
   });
 
   it('rejects waiters when waitForEntityGeneration times out', async () => {
-    fixture.service.__TEST_ONLY__setInternalState({ pending: ['stuck-entity'] });
+    fixture.service.__TEST_ONLY__setInternalState({
+      pending: ['stuck-entity'],
+    });
 
     await expect(
       fixture.service.waitForEntityGeneration('stuck-entity', 5)

@@ -4,9 +4,16 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency, assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
-import { triggerGarbageCollection, getMemoryUsageBytes } from '../../utils/environmentUtils.js';
+import {
+  triggerGarbageCollection,
+  getMemoryUsageBytes,
+} from '../../utils/environmentUtils.js';
 import LowMemoryStrategy from './strategies/LowMemoryStrategy.js';
 import CriticalMemoryStrategy from './strategies/CriticalMemoryStrategy.js';
 
@@ -66,7 +73,11 @@ export default class MemoryPressureManager extends BaseService {
       requiredMethods: ['dispatch'],
     });
     validateDependency(monitor, 'MemoryMonitor', logger, {
-      requiredMethods: ['getCurrentUsage', 'getPressureLevel', 'onThresholdExceeded'],
+      requiredMethods: [
+        'getCurrentUsage',
+        'getPressureLevel',
+        'onThresholdExceeded',
+      ],
     });
 
     if (cache) {
@@ -180,9 +191,10 @@ export default class MemoryPressureManager extends BaseService {
     this.#currentPressureLevel = level;
 
     this.#logger.info(`Memory pressure changed to: ${level}`, {
-      value: alert.type === 'heap'
-        ? (alert.value * 100).toFixed(1) + '%'
-        : (alert.value / 1048576).toFixed(2) + 'MB',
+      value:
+        alert.type === 'heap'
+          ? (alert.value * 100).toFixed(1) + '%'
+          : (alert.value / 1048576).toFixed(2) + 'MB',
     });
 
     if (this.#automaticManagementEnabled) {
@@ -233,7 +245,10 @@ export default class MemoryPressureManager extends BaseService {
         memoryFreed: (result.memoryFreed / 1048576).toFixed(2) + 'MB',
       });
     } catch (error) {
-      this.#logger.error(`Automatic management failed for level ${level}:`, error);
+      this.#logger.error(
+        `Automatic management failed for level ${level}:`,
+        error
+      );
     }
   }
 
@@ -492,7 +507,7 @@ export default class MemoryPressureManager extends BaseService {
     });
 
     // Simulate some work
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     this.#logger.info('Heap compaction completed (simulated)');
 
@@ -521,7 +536,9 @@ export default class MemoryPressureManager extends BaseService {
 
     const strategy = this.#strategies.get(level);
     if (!strategy) {
-      throw new InvalidArgumentError(`No strategy registered for level: ${level}`);
+      throw new InvalidArgumentError(
+        `No strategy registered for level: ${level}`
+      );
     }
 
     this.#logger.info(`Manually executing strategy for level: ${level}`);

@@ -53,12 +53,12 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1'); // First in
       fifoStrategy.set('key2', 'value2'); // Second in
       fifoStrategy.set('key3', 'value3'); // Third in
-      
+
       expect(fifoStrategy.size).toBe(3);
-      
+
       // Add fourth item, should evict key1 (first in, first out)
       fifoStrategy.set('key4', 'value4');
-      
+
       expect(fifoStrategy.size).toBe(3);
       expect(fifoStrategy.has('key1')).toBe(false); // Evicted
       expect(fifoStrategy.has('key2')).toBe(true);
@@ -70,15 +70,15 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key3', 'value3');
-      
+
       // Access key1 multiple times (should not affect eviction order in FIFO)
       fifoStrategy.get('key1');
       fifoStrategy.get('key1');
       fifoStrategy.get('key1');
-      
+
       // Add key4, should still evict key1 (oldest insertion)
       fifoStrategy.set('key4', 'value4');
-      
+
       expect(fifoStrategy.has('key1')).toBe(false); // Still evicted despite access
       expect(fifoStrategy.has('key2')).toBe(true);
       expect(fifoStrategy.has('key3')).toBe(true);
@@ -89,7 +89,7 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key3', 'value3');
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
-      
+
       const keys = Array.from(fifoStrategy.keys());
       expect(keys).toEqual(['key3', 'key1', 'key2']); // Insertion order preserved
     });
@@ -100,7 +100,7 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key3', 'value3');
-      
+
       const stats = fifoStrategy.getInsertionStats();
       expect(stats.oldestKey).toBe('key1');
       expect(stats.newestKey).toBe('key3');
@@ -124,7 +124,7 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key1', 'updated_value1'); // Update existing key
-      
+
       const stats = fifoStrategy.getInsertionStats();
       // key1 should now be at the end since it was updated
       expect(stats.insertionOrder).toEqual(['key2', 'key1']);
@@ -210,12 +210,12 @@ describe('FIFOStrategy', () => {
 
     it('should respect max size limit', () => {
       expect(fifoStrategy.maxSize).toBe(3);
-      
+
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key3', 'value3');
       fifoStrategy.set('key4', 'value4'); // Should evict key1
-      
+
       expect(fifoStrategy.size).toBe(3);
     });
 
@@ -259,7 +259,7 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key3', 'value3');
-      
+
       const entries = Array.from(fifoStrategy.entries());
       expect(entries).toHaveLength(3);
       expect(entries[0]).toEqual(['key1', 'value1']); // First inserted
@@ -271,7 +271,7 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key3', 'value3');
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
-      
+
       const keys = Array.from(fifoStrategy.keys());
       expect(keys).toEqual(['key3', 'key1', 'key2']); // Insertion order
     });
@@ -314,10 +314,10 @@ describe('FIFOStrategy', () => {
     it('should support aggressive pruning', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
-      
+
       const sizeBefore = fifoStrategy.size;
       const pruned = fifoStrategy.prune(true);
-      
+
       expect(pruned).toBe(sizeBefore);
       expect(fifoStrategy.size).toBe(0);
     });
@@ -325,9 +325,9 @@ describe('FIFOStrategy', () => {
     it('should not prune non-expired entries in normal pruning', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
-      
+
       const pruned = fifoStrategy.prune(false);
-      
+
       expect(pruned).toBe(0);
       expect(fifoStrategy.size).toBe(2);
     });
@@ -364,7 +364,7 @@ describe('FIFOStrategy', () => {
         fifoStrategy.set(key, `value${i}`);
         keys.push(key);
       }
-      
+
       // Should only keep the most recent 3 due to maxSize (FIFO eviction)
       expect(fifoStrategy.size).toBe(3);
       expect(fifoStrategy.has('key7')).toBe(true); // 8th inserted
@@ -377,10 +377,10 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key1', 'updated_value1'); // Update moves to end
-      
+
       expect(fifoStrategy.size).toBe(2);
       expect(fifoStrategy.get('key1')).toBe('updated_value1');
-      
+
       const stats = fifoStrategy.getInsertionStats();
       expect(stats.insertionOrder).toEqual(['key2', 'key1']); // key1 moved to end
     });
@@ -389,9 +389,9 @@ describe('FIFOStrategy', () => {
       fifoStrategy.set('key1', 'value1');
       fifoStrategy.set('key2', 'value2');
       fifoStrategy.set('key3', 'value3');
-      
+
       fifoStrategy.delete('key2'); // Delete middle item
-      
+
       const stats = fifoStrategy.getInsertionStats();
       expect(stats.insertionOrder).toEqual(['key1', 'key3']);
       expect(stats.orderIntegrity).toBe(true);
@@ -402,7 +402,7 @@ describe('FIFOStrategy', () => {
       expect(fifoStrategy.get('key1')).toBeUndefined();
       expect(fifoStrategy.delete('key1')).toBe(false);
       expect(fifoStrategy.has('key1')).toBe(false);
-      
+
       const stats = fifoStrategy.getInsertionStats();
       expect(stats.oldestKey).toBeNull();
       expect(stats.newestKey).toBeNull();

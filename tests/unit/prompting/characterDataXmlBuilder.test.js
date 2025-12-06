@@ -3,7 +3,14 @@
  * @description Tests XML generation from character data with all section types
  */
 
-import { describe, it, expect, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import CharacterDataXmlBuilder from '../../../src/prompting/characterDataXmlBuilder.js';
 import XmlElementBuilder from '../../../src/prompting/xmlElementBuilder.js';
 import {
@@ -309,7 +316,9 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     it('should omit psychology section when all elements empty', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMPTY_SECTIONS);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_EMPTY_SECTIONS
+      );
       expect(result).not.toContain('<psychology>');
       expect(result).not.toContain('<core_motivations>');
       expect(result).not.toContain('<internal_tensions>');
@@ -324,7 +333,9 @@ describe('CharacterDataXmlBuilder', () => {
         coreDilemmas: '',
       });
       expect(result).toContain('<psychology>');
-      expect(result).toContain('<core_motivations>Has motivations</core_motivations>');
+      expect(result).toContain(
+        '<core_motivations>Has motivations</core_motivations>'
+      );
       expect(result).not.toContain('<internal_tensions>');
       expect(result).not.toContain('<dilemmas>');
     });
@@ -349,7 +360,9 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     it('should omit individual empty traits', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMPTY_SECTIONS);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_EMPTY_SECTIONS
+      );
       expect(result).toContain('<traits>');
       expect(result).toContain('<strengths>Good listener</strengths>');
       expect(result).not.toMatch(/<weaknesses>\s*<\/weaknesses>/);
@@ -373,13 +386,17 @@ describe('CharacterDataXmlBuilder', () => {
   describe('Speech Patterns Section', () => {
     describe('Legacy String Format', () => {
       it('should detect and format legacy string patterns', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_LEGACY_SPEECH);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_LEGACY_SPEECH
+        );
         expect(result).toContain('<speech_patterns>');
         expect(result).toContain('(when happy) Big smile and wave');
       });
 
       it('should format each pattern on separate line', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_LEGACY_SPEECH);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_LEGACY_SPEECH
+        );
         expect(result).toContain('- (when happy)');
         expect(result).toContain('- (when sad)');
         expect(result).toContain('- (when angry)');
@@ -427,7 +444,9 @@ describe('CharacterDataXmlBuilder', () => {
 
     describe('Mixed Format', () => {
       it('should handle mixed string and structured patterns', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_MIXED_SPEECH);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_MIXED_SPEECH
+        );
         expect(result).toContain('<speech_patterns>');
         expect(result).toContain('(casual) Uses relaxed language');
         expect(result).toContain('Formal Speech');
@@ -514,7 +533,9 @@ describe('CharacterDataXmlBuilder', () => {
       });
 
       it('should include guidance even with legacy string patterns', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_LEGACY_SPEECH);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_LEGACY_SPEECH
+        );
         expect(result).toContain('USAGE GUIDANCE');
         expect(result).toContain('DO NOT cycle through patterns mechanically');
       });
@@ -546,7 +567,9 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     it('should omit current_state when no goals/notes/shortTermMemory', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITHOUT_CURRENT_STATE);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITHOUT_CURRENT_STATE
+      );
       expect(result).not.toContain('<current_state>');
       expect(result).not.toContain('<goals>');
       expect(result).not.toContain('<notes>');
@@ -554,12 +577,16 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     it('should omit current_state when arrays are empty', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_EMPTY_CURRENT_STATE);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_EMPTY_CURRENT_STATE
+      );
       expect(result).not.toContain('<current_state>');
     });
 
     it('should handle notes with missing optional fields', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_PARTIAL_NOTES);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_PARTIAL_NOTES
+      );
       expect(result).toContain('<notes>');
       expect(result).toContain('Note without subject or type');
       expect(result).toContain('Note with subject only');
@@ -598,7 +625,11 @@ describe('CharacterDataXmlBuilder', () => {
     it('should drop notes entries without text content', () => {
       const result = builder.buildCharacterDataXml({
         name: 'Note Filter',
-        notes: [{ text: 'Valid note' }, { text: '   ' }, { subject: 'No text' }],
+        notes: [
+          { text: 'Valid note' },
+          { text: '   ' },
+          { subject: 'No text' },
+        ],
       });
 
       expect(result).toContain('Valid note');
@@ -627,7 +658,9 @@ describe('CharacterDataXmlBuilder', () => {
 
   describe('Special Character Escaping', () => {
     it('should escape XML special characters in name', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_SPECIAL_CHARS
+      );
       expect(result).toContain('&lt;Character&gt;');
       expect(result).toContain('&amp;');
       // Quotes are NOT escaped for LLM readability
@@ -635,13 +668,17 @@ describe('CharacterDataXmlBuilder', () => {
     });
 
     it('should escape special characters in description', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_SPECIAL_CHARS
+      );
       expect(result).toContain('&lt;brackets&gt;');
       expect(result).toContain('&amp; ampersands');
     });
 
     it('should preserve apostrophes for readability', () => {
-      const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS);
+      const result = builder.buildCharacterDataXml(
+        CHARACTER_WITH_SPECIAL_CHARS
+      );
       // Apostrophes are NOT escaped for LLM readability
       expect(result).toContain("Quote's here");
     });
@@ -941,7 +978,9 @@ describe('CharacterDataXmlBuilder', () => {
         const result = builder.buildCharacterDataXml(CHARACTER_CRITICAL);
 
         expect(result).toContain('<critical_warning>');
-        expect(result).toContain('You are critically injured and may die soon.');
+        expect(result).toContain(
+          'You are critically injured and may die soon.'
+        );
         expect(result).toContain('</critical_warning>');
       });
 
@@ -968,7 +1007,9 @@ describe('CharacterDataXmlBuilder', () => {
       });
 
       it('should map "wounded" status to "You are wounded"', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EFFECTS_ONLY);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_EFFECTS_ONLY
+        );
         expect(result).toContain('You are wounded');
       });
 
@@ -992,7 +1033,9 @@ describe('CharacterDataXmlBuilder', () => {
 
     describe('Empty or Partial Health Data', () => {
       it('should include injuries when firstPersonNarrative is present even with empty injuries array', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_EFFECTS_ONLY);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_EFFECTS_ONLY
+        );
 
         // Should have physical_condition section
         expect(result).toContain('<physical_condition>');
@@ -1023,7 +1066,15 @@ describe('CharacterDataXmlBuilder', () => {
           healthState: {
             overallHealthPercentage: 80,
             overallStatus: 'scratched',
-            injuries: [{ partName: 'hand', partType: 'hand', state: 'scratched', healthPercent: 85, effects: [] }],
+            injuries: [
+              {
+                partName: 'hand',
+                partType: 'hand',
+                state: 'scratched',
+                healthPercent: 85,
+                effects: [],
+              },
+            ],
             activeEffects: [],
             isDying: false,
             turnsUntilDeath: null,
@@ -1042,7 +1093,9 @@ describe('CharacterDataXmlBuilder', () => {
 
     describe('XML Escaping in Health Data', () => {
       it('should escape special characters in injuries narrative', () => {
-        const result = builder.buildCharacterDataXml(CHARACTER_WITH_SPECIAL_CHARS_INJURY);
+        const result = builder.buildCharacterDataXml(
+          CHARACTER_WITH_SPECIAL_CHARS_INJURY
+        );
 
         // The injuries tag now contains firstPersonNarrative, which should be escaped
         expect(result).toContain('<injuries>');

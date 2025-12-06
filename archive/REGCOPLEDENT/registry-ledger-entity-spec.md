@@ -9,6 +9,7 @@ This specification documents the design of a registry ledger entity for Registra
 ### Character Context: Registrar Copperplate
 
 **Core Characteristics:**
+
 - **Age & Experience**: 312 years old, 147 years of service at Mudbrook Aid Registry
 - **Operational Speed**: Glacially slow, operates on geological timescales
 - **Professional Focus**: Procedurally obsessed, rules are absolute, no exceptions
@@ -18,12 +19,14 @@ This specification documents the design of a registry ledger entity for Registra
 - **Biological Constraints**: Cold weather slows processing speed further
 
 **Speech Pattern** (NOT reflected in writing):
+
 - Extensive ellipses and pauses
 - Formal archaic phrasing
 - Bureaucratic passive voice
 - Maddeningly literal interpretations
 
 **Writing Style** (polished final product):
+
 - Bureaucratic precision without ellipses
 - Institutional formality
 - Archival permanence
@@ -33,10 +36,12 @@ This specification documents the design of a registry ledger entity for Registra
 ### Reference Pattern: Field Notebook (patrol mod)
 
 **Source Files Analyzed:**
+
 - `data/mods/patrol/entities/definitions/len_amezua.character.json`
 - `data/mods/patrol/entities/definitions/field_notebook.entity.json`
 
 **Pattern Identified:**
+
 ```json
 {
   "components": {
@@ -51,6 +56,7 @@ This specification documents the design of a registry ledger entity for Registra
 ```
 
 **Key Insights from Field Notebook:**
+
 - `items:readable` contains rich, character-appropriate text
 - Content reflects character's voice, concerns, and documentation style
 - Personal commentary mixed with professional observations
@@ -59,10 +65,12 @@ This specification documents the design of a registry ledger entity for Registra
 ### Thematic Requirements
 
 **Thematic Contrast:**
+
 - **Field Notebook** (Len Amezua): Personal, urgent, unauthorized, whistleblowing tone
 - **Registry Ledger** (Copperplate): Official, glacial, authorized, institutionally neutral
 
 **Functional Requirements:**
+
 1. Must be portable (carried/moved by Copperplate)
 2. Must contain readable text accessible to players
 3. Must reflect bureaucratic nature and archival purpose
@@ -80,6 +88,7 @@ This specification documents the design of a registry ledger entity for Registra
 ### Component Structure
 
 #### 1. core:name
+
 ```json
 {
   "text": "registry ledger"
@@ -89,6 +98,7 @@ This specification documents the design of a registry ledger entity for Registra
 **Rationale**: Simple, official terminology. "Registry" emphasizes institutional purpose; "ledger" suggests permanent record-keeping (vs. temporary "notebook").
 
 #### 2. core:description
+
 ```json
 {
   "text": "A massive leather-bound ledger with copper-plated corners and spine reinforcements. The pages are yellowed with age, filled with meticulous handwriting in faded brown ink. Numerous colored bookmarks protrude from the edges, marking sections of particular bureaucratic importance. The cover bears the embossed seal of the Mudbrook Aid Registry, worn smooth by centuries of handling."
@@ -96,6 +106,7 @@ This specification documents the design of a registry ledger entity for Registra
 ```
 
 **Design Elements:**
+
 - **Materials**: Leather-bound, copper-plated (matches "Copperplate" name, suggests durability)
 - **Age Indicators**: Yellowed pages, faded ink, worn seal (centuries of use)
 - **Organization**: Colored bookmarks (meticulous filing system)
@@ -103,6 +114,7 @@ This specification documents the design of a registry ledger entity for Registra
 - **Weight**: "Massive" sets expectation for physical heft
 
 #### 3. items:item
+
 ```json
 {}
 ```
@@ -110,6 +122,7 @@ This specification documents the design of a registry ledger entity for Registra
 **Purpose**: Marks entity as a portable item in the game system.
 
 #### 4. items:portable
+
 ```json
 {}
 ```
@@ -117,6 +130,7 @@ This specification documents the design of a registry ledger entity for Registra
 **Purpose**: Indicates entity can be carried/moved by characters.
 
 #### 5. items:weight
+
 ```json
 {
   "weight": 2.5
@@ -124,6 +138,7 @@ This specification documents the design of a registry ledger entity for Registra
 ```
 
 **Rationale**:
+
 - 2.5 kg vs. 0.3 kg for field notebook
 - Reflects official, permanent nature
 - Large format ledger with many pages
@@ -235,16 +250,16 @@ The writing contains **NO ellipses**. This reflects the polished final product o
 
 ### Contrast with Field Notebook
 
-| Aspect | Field Notebook (Len) | Registry Ledger (Copperplate) |
-|--------|---------------------|------------------------------|
-| **Purpose** | Personal documentation | Official record-keeping |
-| **Authority** | Unauthorized, whistleblowing | Authorized, institutional |
-| **Tone** | Urgent, concerned, emotional | Glacial, neutral, procedural |
-| **Timeframe** | Days and weeks | Decades and centuries |
-| **Content** | Warning, documentation of failures | Routine filing, archival duty |
-| **Audience** | Future investigators | Future archivists |
-| **Weight** | 0.3 kg (portable, urgent) | 2.5 kg (substantial, permanent) |
-| **Emotion** | Fear, frustration, duty | None, pure procedure |
+| Aspect        | Field Notebook (Len)               | Registry Ledger (Copperplate)   |
+| ------------- | ---------------------------------- | ------------------------------- |
+| **Purpose**   | Personal documentation             | Official record-keeping         |
+| **Authority** | Unauthorized, whistleblowing       | Authorized, institutional       |
+| **Tone**      | Urgent, concerned, emotional       | Glacial, neutral, procedural    |
+| **Timeframe** | Days and weeks                     | Decades and centuries           |
+| **Content**   | Warning, documentation of failures | Routine filing, archival duty   |
+| **Audience**  | Future investigators               | Future archivists               |
+| **Weight**    | 0.3 kg (portable, urgent)          | 2.5 kg (substantial, permanent) |
+| **Emotion**   | Fear, frustration, duty            | None, pure procedure            |
 
 ### Character Coherence
 
@@ -278,6 +293,7 @@ The registry ledger reinforces Copperplate's character through:
 ### Testing Recommendations
 
 1. **Schema Validation**
+
    ```bash
    npm run validate
    ```

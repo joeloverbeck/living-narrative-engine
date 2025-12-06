@@ -16,7 +16,9 @@ describe('ValidatorGenerator - Integration Tests', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    similarityCalculator = new StringSimilarityCalculator({ logger: mockLogger });
+    similarityCalculator = new StringSimilarityCalculator({
+      logger: mockLogger,
+    });
     generator = new ValidatorGenerator({
       logger: mockLogger,
       similarityCalculator,
@@ -101,7 +103,8 @@ describe('ValidatorGenerator - Integration Tests', () => {
         validationRules: {
           generateValidator: true,
           errorMessages: {
-            invalidEnum: 'Invalid texture: {{value}}. Use one of: {{validValues}}',
+            invalidEnum:
+              'Invalid texture: {{value}}. Use one of: {{validValues}}',
           },
         },
       };
@@ -321,7 +324,9 @@ describe('ValidatorGenerator - Integration Tests', () => {
         build: 'muscular',
       });
       expect(result2.valid).toBe(false);
-      const missingError = result2.errors.find((e) => e.type === 'missingRequired');
+      const missingError = result2.errors.find(
+        (e) => e.type === 'missingRequired'
+      );
       expect(missingError).toBeDefined();
       expect(missingError.property).toBe('skin_color');
     });
@@ -426,7 +431,9 @@ describe('ValidatorGenerator - Integration Tests', () => {
       // Step 4: Detect type mismatch
       const typeResult = validator({ value: 123 });
       expect(typeResult.valid).toBe(false);
-      const hasTypeError = typeResult.errors.some((e) => e.type === 'invalidType');
+      const hasTypeError = typeResult.errors.some(
+        (e) => e.type === 'invalidType'
+      );
       expect(hasTypeError).toBe(true);
     });
 

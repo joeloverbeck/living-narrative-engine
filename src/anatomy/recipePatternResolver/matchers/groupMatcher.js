@@ -4,7 +4,10 @@
  * @see src/anatomy/recipePatternResolver.js - Parent resolver
  */
 
-import { assertNonBlankString, assertPresent } from '../../../utils/dependencyUtils.js';
+import {
+  assertNonBlankString,
+  assertPresent,
+} from '../../../utils/dependencyUtils.js';
 import { ValidationError } from '../../../errors/validationError.js';
 
 /**
@@ -22,12 +25,7 @@ export function resolveSlotGroup(groupRef, blueprint, options = {}, deps) {
   const { throwOnZeroMatches = true, allowMissing = false } = options;
   const { dataRegistry, slotGenerator, logger } = deps;
 
-  assertNonBlankString(
-    groupRef,
-    'Group reference',
-    'resolveSlotGroup',
-    logger
-  );
+  assertNonBlankString(groupRef, 'Group reference', 'resolveSlotGroup', logger);
 
   if (!blueprint.structureTemplate) {
     const message = `Cannot resolve slot group '${groupRef}': blueprint has no structure template`;
@@ -72,8 +70,8 @@ export function resolveSlotGroup(groupRef, blueprint, options = {}, deps) {
     const limbSets = Array.isArray(template.topology?.limbSets)
       ? template.topology.limbSets
       : [];
-    const matchingLimbSets = limbSets.filter(ls => ls.type === groupName);
-    availableGroups = limbSets.map(ls => `limbSet:${ls.type}`);
+    const matchingLimbSets = limbSets.filter((ls) => ls.type === groupName);
+    availableGroups = limbSets.map((ls) => `limbSet:${ls.type}`);
     hasMatchingDefinitions = matchingLimbSets.length > 0;
 
     logger.debug(
@@ -88,8 +86,8 @@ export function resolveSlotGroup(groupRef, blueprint, options = {}, deps) {
     const appendages = Array.isArray(template.topology?.appendages)
       ? template.topology.appendages
       : [];
-    const matchingAppendages = appendages.filter(a => a.type === groupName);
-    availableGroups = appendages.map(a => `appendage:${a.type}`);
+    const matchingAppendages = appendages.filter((a) => a.type === groupName);
+    availableGroups = appendages.map((a) => `appendage:${a.type}`);
     hasMatchingDefinitions = matchingAppendages.length > 0;
 
     logger.debug(
@@ -110,7 +108,7 @@ export function resolveSlotGroup(groupRef, blueprint, options = {}, deps) {
       const availableSummary =
         availableGroups.length > 0
           ? ` Available groups: ${availableGroups
-              .map(group => `'${group}'`)
+              .map((group) => `'${group}'`)
               .join(', ')}.`
           : '';
 
@@ -173,27 +171,22 @@ export function validateMatchesGroup(pattern, blueprint, patternIndex, deps) {
   const topology = template?.topology;
 
   if (groupType === 'limbSet') {
-    const limbSets = Array.isArray(topology?.limbSets)
-      ? topology.limbSets
-      : [];
-    groupExists = limbSets.some(ls => ls.type === groupName);
-    availableGroups.push(
-      ...limbSets.map(ls => `limbSet:${ls.type}`)
-    );
+    const limbSets = Array.isArray(topology?.limbSets) ? topology.limbSets : [];
+    groupExists = limbSets.some((ls) => ls.type === groupName);
+    availableGroups.push(...limbSets.map((ls) => `limbSet:${ls.type}`));
   } else {
     const appendages = Array.isArray(topology?.appendages)
       ? topology.appendages
       : [];
-    groupExists = appendages.some(a => a.type === groupName);
-    availableGroups.push(
-      ...appendages.map(a => `appendage:${a.type}`)
-    );
+    groupExists = appendages.some((a) => a.type === groupName);
+    availableGroups.push(...appendages.map((a) => `appendage:${a.type}`));
   }
 
   if (!groupExists) {
-    const availableStr = availableGroups.length > 0
-      ? ` Available groups: ${availableGroups.map(g => `'${g}'`).join(', ')}`
-      : '';
+    const availableStr =
+      availableGroups.length > 0
+        ? ` Available groups: ${availableGroups.map((g) => `'${g}'`).join(', ')}`
+        : '';
     throw new ValidationError(
       `Pattern ${patternIndex + 1}: Slot group '${groupRef}' not found in structure template '${blueprint.structureTemplate}'.${availableStr}`
     );
@@ -201,10 +194,15 @@ export function validateMatchesGroup(pattern, blueprint, patternIndex, deps) {
 
   try {
     // Need to pass slotGenerator for validation
-    resolveSlotGroup(groupRef, blueprint, {
-      throwOnZeroMatches: false,
-      allowMissing: true,
-    }, deps);
+    resolveSlotGroup(
+      groupRef,
+      blueprint,
+      {
+        throwOnZeroMatches: false,
+        allowMissing: true,
+      },
+      deps
+    );
   } catch (error) {
     if (error instanceof ValidationError) {
       throw new ValidationError(

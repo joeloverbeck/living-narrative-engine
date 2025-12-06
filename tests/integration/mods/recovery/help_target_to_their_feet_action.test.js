@@ -31,7 +31,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
           'core:position': { locationId },
           'core:actor': {},
           ...(options.actorFallen ? { 'positioning:fallen': {} } : {}),
-          ...(options.actorRestrained ? { 'positioning:being_restrained': {} } : {}),
+          ...(options.actorRestrained
+            ? { 'positioning:being_restrained': {} }
+            : {}),
         },
       },
       {
@@ -40,7 +42,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
           'core:name': { text: options.targetName || 'Faller' },
           'core:position': { locationId },
           'core:actor': {},
-          ...(options.targetFallen === false ? {} : { 'positioning:fallen': {} }),
+          ...(options.targetFallen === false
+            ? {}
+            : { 'positioning:fallen': {} }),
         },
       },
     ];
@@ -61,13 +65,14 @@ describe('recovery:help_target_to_their_feet action integration', () => {
       }
     );
     testFixture.testEnv.actionIndex.buildIndex([helpAction]);
-    const actorsInLocationResolver = ScopeResolverHelpers.createLocationMatchResolver(
-      'core:actors_in_location',
-      {
-        filterFn: (entityId, source, context, em) =>
-          em.hasComponent(entityId, 'core:actor'),
-      }
-    );
+    const actorsInLocationResolver =
+      ScopeResolverHelpers.createLocationMatchResolver(
+        'core:actors_in_location',
+        {
+          filterFn: (entityId, source, context, em) =>
+            em.hasComponent(entityId, 'core:actor'),
+        }
+      );
     ScopeResolverHelpers._registerResolvers(
       testFixture.testEnv,
       testFixture.testEnv.entityManager,
@@ -87,7 +92,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     const { actorId } = setupScenario();
 
     const actions = await testFixture.testEnv.getAvailableActions(actorId);
-    const helpActions = actions.filter((action) => action.id === HELP_ACTION_ID);
+    const helpActions = actions.filter(
+      (action) => action.id === HELP_ACTION_ID
+    );
 
     expect(helpActions.length).toBeGreaterThan(0);
   });
@@ -96,7 +103,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     const { actorId } = setupScenario({ targetFallen: false });
 
     const actions = await testFixture.testEnv.getAvailableActions(actorId);
-    const helpActions = actions.filter((action) => action.id === HELP_ACTION_ID);
+    const helpActions = actions.filter(
+      (action) => action.id === HELP_ACTION_ID
+    );
 
     expect(helpActions.length).toBe(0);
   });
@@ -137,7 +146,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     expect(perceptibleEvent.payload.locationId).toBe(locationId);
     expect(perceptibleEvent.payload.actorId).toBe(actorId);
     expect(perceptibleEvent.payload.targetId).toBe(targetId);
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_target_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe(
+      'action_target_general'
+    );
 
     expect(testFixture.events).toHaveActionSuccess(
       'Clara helps Dana to their feet.'
@@ -150,7 +161,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
       targetFallen: false,
     });
 
-    await testFixture.executeAction(actorId, targetId, { skipValidation: true });
+    await testFixture.executeAction(actorId, targetId, {
+      skipValidation: true,
+    });
 
     const failureEvent = testFixture.events.find(
       (event) => event.eventType === 'core:display_failed_action_result'
@@ -168,7 +181,9 @@ describe('recovery:help_target_to_their_feet action integration', () => {
       targetName: 'Harper',
     });
 
-    await testFixture.executeAction(actorId, targetId, { skipValidation: true });
+    await testFixture.executeAction(actorId, targetId, {
+      skipValidation: true,
+    });
 
     const target = testFixture.entityManager.getEntityInstance(targetId);
     expect(target).toHaveComponent('positioning:fallen');

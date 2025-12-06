@@ -104,7 +104,10 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
       // Validate required_components structure
       if (obj.required_components) {
         errors.push(
-          ...this.validateComponentConstraints(obj.required_components, 'required')
+          ...this.validateComponentConstraints(
+            obj.required_components,
+            'required'
+          )
         );
       }
 
@@ -142,8 +145,10 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
           type: 'invalid_structure',
           property: 'targets',
           value: targets,
-          message: 'Targets must be either a scope string or an object keyed by target role.',
-          suggestion: 'Use a string for single-target actions or { "primary": { "scope": "mod:scope" } } for multi-target actions.',
+          message:
+            'Targets must be either a scope string or an object keyed by target role.',
+          suggestion:
+            'Use a string for single-target actions or { "primary": { "scope": "mod:scope" } } for multi-target actions.',
         });
         return errors;
       }
@@ -166,7 +171,8 @@ export function createActionValidationProxy(actionDef, context = 'Action') {
             type: 'invalid_property',
             property: `targets.${targetType}.target_id`,
             message: `targets.${targetType}.target_id should not be defined in action file`,
-            suggestion: 'Remove this property - target_id is resolved at runtime',
+            suggestion:
+              'Remove this property - target_id is resolved at runtime',
           });
         }
 

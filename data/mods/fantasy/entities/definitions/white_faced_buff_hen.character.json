@@ -1,40 +1,40 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:white_faced_buff_hen",
-    "components": {
-        "core:name": {
-            "text": "white-faced buff hen"
-        },
-        "core:gender": {
-            "value": "male"
-        },
-        "core:portrait": {
-            "imagePath": "portraits/white_faced_buff_hen.png",
-            "altText": "White-faced buff hen"
-        },
-        "anatomy:body": {
-            "recipeId": "fantasy:white_faced_buff_hen_recipe"
-        },
-        "core:actor": {},
-        "core:player_type": {
-            "type": "human"
-        },
-        "core:perception_log": {
-            "maxEntries": 50,
-            "logEntries": []
-        },
-        "warding:corrupted": {},
-        "skills:melee_skill": {
-            "value": 52
-        },
-        "skills:defense_skill": {
-            "value": 42
-        },
-        "skills:grappling_skill": {
-            "value": 37
-        },
-        "skills:resolve_skill": {
-            "value": 57
-        }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:white_faced_buff_hen",
+  "components": {
+    "core:name": {
+      "text": "white-faced buff hen"
+    },
+    "core:gender": {
+      "value": "male"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/white_faced_buff_hen.png",
+      "altText": "White-faced buff hen"
+    },
+    "anatomy:body": {
+      "recipeId": "fantasy:white_faced_buff_hen_recipe"
+    },
+    "core:actor": {},
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "warding:corrupted": {},
+    "skills:melee_skill": {
+      "value": 52
+    },
+    "skills:defense_skill": {
+      "value": 42
+    },
+    "skills:grappling_skill": {
+      "value": 37
+    },
+    "skills:resolve_skill": {
+      "value": 57
     }
+  }
 }

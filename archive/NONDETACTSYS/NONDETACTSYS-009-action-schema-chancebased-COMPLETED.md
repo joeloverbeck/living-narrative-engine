@@ -31,20 +31,21 @@ During implementation, the following discrepancies were identified and the ticke
 
 ### Files Modified
 
-| File | Change |
-|------|--------|
-| `data/schemas/action.schema.json` | Added `chanceModifier` definition and `chanceBased` property |
-| `tickets/NONDETACTSYS-009-action-schema-chancebased.md` | Fixed `$defs` → `definitions`, added test file to scope |
+| File                                                    | Change                                                       |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| `data/schemas/action.schema.json`                       | Added `chanceModifier` definition and `chanceBased` property |
+| `tickets/NONDETACTSYS-009-action-schema-chancebased.md` | Fixed `$defs` → `definitions`, added test file to scope      |
 
 ### Files Created
 
-| File | Purpose |
-|------|---------|
+| File                                                   | Purpose                                                                                                                          |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
 | `tests/unit/schemas/action.chanceBased.schema.test.js` | 32 schema validation tests covering backward compatibility, valid configs, invalid configs, and additionalProperties enforcement |
 
 ### Test Coverage
 
 The new test file covers:
+
 - **Backward compatibility** (2 tests): Actions without `chanceBased` continue to validate
 - **Valid configurations** (12 tests): Minimal, full, all formula types, bounds, outcomes, modifiers
 - **Missing required fields** (6 tests): `enabled`, `contestType`, `actorSkill`, `actorSkill.component`, modifier `condition`/`modifier`
@@ -57,8 +58,8 @@ The new test file covers:
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                              | Change                                                     |
+| --------------------------------- | ---------------------------------------------------------- |
 | `data/schemas/action.schema.json` | Add `chanceBased` property and `chanceModifier` definition |
 
 ## Implementation Details
@@ -225,8 +226,8 @@ Add to `definitions` section (this schema uses `definitions` not `$defs`):
 
 ## Test Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                                   | Purpose                                          |
+| ------------------------------------------------------ | ------------------------------------------------ |
 | `tests/unit/schemas/action.chanceBased.schema.test.js` | Schema validation tests for chanceBased property |
 
 ## Acceptance Criteria
@@ -331,9 +332,9 @@ The following action definition should pass validation:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/action.schema.json` | File to modify |
-| `data/schemas/common.schema.json` | Contains namespacedId definition |
-| `data/schemas/condition-container.schema.json` | Condition reference |
-| `data/mods/weapons/actions/wield_weapon.action.json` | Existing action pattern |
+| File                                                 | Purpose                          |
+| ---------------------------------------------------- | -------------------------------- |
+| `data/schemas/action.schema.json`                    | File to modify                   |
+| `data/schemas/common.schema.json`                    | Contains namespacedId definition |
+| `data/schemas/condition-container.schema.json`       | Condition reference              |
+| `data/mods/weapons/actions/wield_weapon.action.json` | Existing action pattern          |

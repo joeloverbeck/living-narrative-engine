@@ -100,20 +100,24 @@ describe('Physical Condition State Detection - Integration', () => {
       });
 
       // Set up body part with wounded state
-      setupEntity('rill-left-leg', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'leg',
-          orientation: 'left',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-left-leg',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'leg',
+            orientation: 'left',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 60,
+            maxHealth: 100,
+            state: 'wounded', // 60% health = wounded
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 60,
-          maxHealth: 100,
-          state: 'wounded', // 60% health = wounded
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 
@@ -127,20 +131,24 @@ describe('Physical Condition State Detection - Integration', () => {
         [BODY_COMPONENT_ID]: { rootPartId: 'rill-torso' },
       });
 
-      setupEntity('rill-torso', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'torso',
-          orientation: null,
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-torso',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'torso',
+            orientation: null,
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 40,
+            maxHealth: 100,
+            state: 'wounded', // 40% health = wounded
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 40,
-          maxHealth: 100,
-          state: 'wounded', // 40% health = wounded
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 
@@ -154,20 +162,24 @@ describe('Physical Condition State Detection - Integration', () => {
         [BODY_COMPONENT_ID]: { rootPartId: 'rill-arm' },
       });
 
-      setupEntity('rill-arm', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'arm',
-          orientation: 'right',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-arm',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'arm',
+            orientation: 'right',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 80,
+            maxHealth: 100,
+            state: 'healthy', // 80% health = healthy (above 76%)
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 80,
-          maxHealth: 100,
-          state: 'healthy', // 80% health = healthy (above 76%)
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 
@@ -181,65 +193,81 @@ describe('Physical Condition State Detection - Integration', () => {
       });
 
       // Multiple damaged parts
-      setupEntity('rill-left-leg', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'leg',
-          orientation: 'left',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-left-leg',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'leg',
+            orientation: 'left',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 60,
+            maxHealth: 100,
+            state: 'wounded',
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 60,
-          maxHealth: 100,
-          state: 'wounded',
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
-      setupEntity('rill-ass_cheek', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'ass_cheek',
-          orientation: 'left',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-ass_cheek',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'ass_cheek',
+            orientation: 'left',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 45,
+            maxHealth: 100,
+            state: 'wounded',
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 45,
-          maxHealth: 100,
-          state: 'wounded',
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
-      setupEntity('rill-torso', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'torso',
-          orientation: null,
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-torso',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'torso',
+            orientation: null,
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 30,
+            maxHealth: 100,
+            state: 'wounded',
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 30,
-          maxHealth: 100,
-          state: 'wounded',
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
-      setupEntity('rill-heart', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'heart',
-          orientation: null,
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-heart',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'heart',
+            orientation: null,
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 20,
+            maxHealth: 100,
+            state: 'critical',
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 20,
-          maxHealth: 100,
-          state: 'critical',
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 
@@ -253,20 +281,24 @@ describe('Physical Condition State Detection - Integration', () => {
       });
 
       // Healthy part only
-      setupEntity('rill-arm', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'arm',
-          orientation: 'right',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-arm',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'arm',
+            orientation: 'right',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 100,
+            maxHealth: 100,
+            state: 'healthy',
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 100,
-          maxHealth: 100,
-          state: 'healthy',
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 
@@ -282,20 +314,24 @@ describe('Physical Condition State Detection - Integration', () => {
         [BODY_COMPONENT_ID]: { rootPartId: 'rill-arm' },
       });
 
-      setupEntity('rill-arm', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'arm',
-          orientation: 'right',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-arm',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'arm',
+            orientation: 'right',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 76,
+            maxHealth: 100,
+            state: 'healthy', // Exactly at threshold
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 76,
-          maxHealth: 100,
-          state: 'healthy', // Exactly at threshold
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
       expect(summary.injuredParts.length).toBe(0);
@@ -307,20 +343,24 @@ describe('Physical Condition State Detection - Integration', () => {
         [BODY_COMPONENT_ID]: { rootPartId: 'rill-arm' },
       });
 
-      setupEntity('rill-arm', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'arm',
-          orientation: 'right',
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-arm',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'arm',
+            orientation: 'right',
+            ownerEntityId: 'rill-entity',
+          },
+          [PART_HEALTH_COMPONENT_ID]: {
+            currentHealth: 75,
+            maxHealth: 100,
+            state: 'scratched', // 75% health = scratched (61-80%)
+            turnsInState: 0,
+          },
         },
-        [PART_HEALTH_COMPONENT_ID]: {
-          currentHealth: 75,
-          maxHealth: 100,
-          state: 'scratched', // 75% health = scratched (61-80%)
-          turnsInState: 0,
-        },
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
       expect(summary.injuredParts.length).toBe(1);
@@ -336,15 +376,19 @@ describe('Physical Condition State Detection - Integration', () => {
       });
 
       // Part without health component
-      setupEntity('rill-hair', {
-        [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
-        [PART_COMPONENT_ID]: {
-          subType: 'hair',
-          orientation: null,
-          ownerEntityId: 'rill-entity',
+      setupEntity(
+        'rill-hair',
+        {
+          [BODY_PART_MARKER_ID]: { ownerEntityId: 'rill-entity' },
+          [PART_COMPONENT_ID]: {
+            subType: 'hair',
+            orientation: null,
+            ownerEntityId: 'rill-entity',
+          },
+          // No PART_HEALTH_COMPONENT_ID!
         },
-        // No PART_HEALTH_COMPONENT_ID!
-      }, 'rill-entity');
+        'rill-entity'
+      );
 
       const summary = service.aggregateInjuries('rill-entity');
 

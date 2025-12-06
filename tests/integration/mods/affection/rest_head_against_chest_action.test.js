@@ -85,7 +85,10 @@ describe('affection:rest_head_against_chest action integration', () => {
     const successEvent = findSuccessEvent();
     expect(successEvent).toBeDefined();
     expect(successEvent.payload.message).toBe(
-      EXPECTED_MESSAGE.replace('{actor}', 'Serena').replace('{primary}', 'Valeria')
+      EXPECTED_MESSAGE.replace('{actor}', 'Serena').replace(
+        '{primary}',
+        'Valeria'
+      )
     );
   });
 
@@ -101,7 +104,10 @@ describe('affection:rest_head_against_chest action integration', () => {
     const perceptibleEvent = findPerceptibleEvent();
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      EXPECTED_MESSAGE.replace('{actor}', 'Maya').replace('{primary}', 'Natalie')
+      EXPECTED_MESSAGE.replace('{actor}', 'Maya').replace(
+        '{primary}',
+        'Natalie'
+      )
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'

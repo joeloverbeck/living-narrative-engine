@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-015: Add State Lifecycle Property-Based Tests
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-015
 - **Phase:** 3 - Robustness (Optional Future Enhancement)
 - **Priority:** Low
@@ -17,13 +18,22 @@ Create property-based tests for state lifecycle invariants using fast-check to v
 ## Files to Create
 
 ### New Test File
+
 - `tests/property/turns/states/awaitingExternalTurnEndState.lifecycle.property.test.js` (NEW)
 
 ## Test Structure Required
 
 ### File Organization
+
 ```javascript
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fc from 'fast-check';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
@@ -59,6 +69,7 @@ describe('AwaitingExternalTurnEndState - Lifecycle Properties', () => {
 ## Required Property Tests (Minimum 4)
 
 ### Property 1: enterState Always Creates Exactly One Timeout
+
 ```javascript
 it('should always create exactly one timeout when enterState called', () => {
   fc.assert(
@@ -69,7 +80,12 @@ it('should always create exactly one timeout when enterState called', () => {
       fc.string({ minLength: 1, maxLength: 50 }), // Arbitrary turn ID
       (timeoutMs, isProduction, actorId, turnId) => {
         // Arrange
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+        const mockLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
         const mockEventBus = {
           dispatch: jest.fn(),
           subscribe: jest.fn(() => 'subscription-id'),
@@ -92,7 +108,9 @@ it('should always create exactly one timeout when enterState called', () => {
 
         const state = new AwaitingExternalTurnEndState(mockHandler, {
           timeoutMs,
-          environmentProvider: new TestEnvironmentProvider({ IS_PRODUCTION: isProduction }),
+          environmentProvider: new TestEnvironmentProvider({
+            IS_PRODUCTION: isProduction,
+          }),
           setTimeoutFn: mockSetTimeout,
           clearTimeoutFn: mockClearTimeout,
         });
@@ -117,6 +135,7 @@ it('should always create exactly one timeout when enterState called', () => {
 ```
 
 ### Property 2: exitState Always Clears All Resources
+
 ```javascript
 it('should always clear timeout and unsubscribe when exitState called', () => {
   fc.assert(
@@ -127,7 +146,12 @@ it('should always clear timeout and unsubscribe when exitState called', () => {
       fc.string({ minLength: 1, maxLength: 50 }), // Subscription ID
       (timeoutMs, actorId, turnId, subscriptionId) => {
         // Arrange
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+        const mockLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
         const timeoutIdValue = `timeout-${Math.random()}`;
         const mockEventBus = {
           dispatch: jest.fn(),
@@ -170,6 +194,7 @@ it('should always clear timeout and unsubscribe when exitState called', () => {
 ```
 
 ### Property 3: destroy Is Always Idempotent
+
 ```javascript
 it('should be idempotent - multiple destroy calls safe', () => {
   fc.assert(
@@ -178,7 +203,12 @@ it('should be idempotent - multiple destroy calls safe', () => {
       fc.integer({ min: 1, max: 10 }), // Number of destroy calls
       (timeoutMs, destroyCallCount) => {
         // Arrange
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+        const mockLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
         const mockEventBus = {
           dispatch: jest.fn(),
           subscribe: jest.fn(() => 'sub-id'),
@@ -218,6 +248,7 @@ it('should be idempotent - multiple destroy calls safe', () => {
 ```
 
 ### Property 4: Cleanup Never Throws (Resilience)
+
 ```javascript
 it('should never throw during cleanup even with corrupted state', () => {
   fc.assert(
@@ -228,7 +259,7 @@ it('should never throw during cleanup even with corrupted state', () => {
         fc.constant(''),
         fc.string(),
         fc.integer(),
-        fc.boolean(),
+        fc.boolean()
       ),
       fc.oneof(
         fc.constant(null), // Subscription ID corruption
@@ -236,11 +267,16 @@ it('should never throw during cleanup even with corrupted state', () => {
         fc.constant(''),
         fc.string(),
         fc.integer(),
-        fc.boolean(),
+        fc.boolean()
       ),
       (corruptedTimeoutId, corruptedSubscriptionId) => {
         // Arrange - Create state with potentially corrupted IDs
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+        const mockLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
         const mockEventBus = {
           dispatch: jest.fn(),
           subscribe: jest.fn(() => corruptedSubscriptionId),
@@ -278,6 +314,7 @@ it('should never throw during cleanup even with corrupted state', () => {
 ## Additional Recommended Tests (Not Required But Valuable)
 
 ### Property 5: State Transitions Are Always Valid
+
 ```javascript
 it('should enforce valid state transitions for all sequences', () => {
   fc.assert(
@@ -292,7 +329,12 @@ it('should enforce valid state transitions for all sequences', () => {
       ),
       (transitionSequence) => {
         // Arrange
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
+        const mockLogger = {
+          info: jest.fn(),
+          warn: jest.fn(),
+          error: jest.fn(),
+          debug: jest.fn(),
+        };
         const mockEventBus = {
           dispatch: jest.fn(),
           subscribe: jest.fn(() => 'sub-id'),
@@ -331,56 +373,59 @@ it('should enforce valid state transitions for all sequences', () => {
 ```
 
 ### Property 6: Resource Count Invariant
+
 ```javascript
 it('should maintain resource count invariant across lifecycle', () => {
   fc.assert(
-    fc.property(
-      fc.integer({ min: 1, max: 100_000 }),
-      (timeoutMs) => {
-        // Arrange - Track resource creation/cleanup
-        let timeoutCount = 0;
-        let subscriptionCount = 0;
+    fc.property(fc.integer({ min: 1, max: 100_000 }), (timeoutMs) => {
+      // Arrange - Track resource creation/cleanup
+      let timeoutCount = 0;
+      let subscriptionCount = 0;
 
-        const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-        const mockEventBus = {
-          dispatch: jest.fn(),
-          subscribe: jest.fn(() => {
-            subscriptionCount++;
-            return `sub-${subscriptionCount}`;
-          }),
-          unsubscribe: jest.fn(() => {
-            subscriptionCount--;
-          }),
-        };
-        const mockSetTimeout = jest.fn(() => {
-          timeoutCount++;
-          return `timeout-${timeoutCount}`;
-        });
-        const mockClearTimeout = jest.fn(() => {
-          timeoutCount--;
-        });
+      const mockLogger = {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      };
+      const mockEventBus = {
+        dispatch: jest.fn(),
+        subscribe: jest.fn(() => {
+          subscriptionCount++;
+          return `sub-${subscriptionCount}`;
+        }),
+        unsubscribe: jest.fn(() => {
+          subscriptionCount--;
+        }),
+      };
+      const mockSetTimeout = jest.fn(() => {
+        timeoutCount++;
+        return `timeout-${timeoutCount}`;
+      });
+      const mockClearTimeout = jest.fn(() => {
+        timeoutCount--;
+      });
 
-        const state = new AwaitingExternalTurnEndState({
-          context: { actorId: 'test-actor', turn: { id: 'test-turn' } },
-          logger: mockLogger,
-          eventBus: mockEventBus,
-          endTurn: jest.fn(),
-          timeoutMs,
-          setTimeoutFn: mockSetTimeout,
-          clearTimeoutFn: mockClearTimeout,
-        });
+      const state = new AwaitingExternalTurnEndState({
+        context: { actorId: 'test-actor', turn: { id: 'test-turn' } },
+        logger: mockLogger,
+        eventBus: mockEventBus,
+        endTurn: jest.fn(),
+        timeoutMs,
+        setTimeoutFn: mockSetTimeout,
+        clearTimeoutFn: mockClearTimeout,
+      });
 
-        // Act
-        state.enterState();
-        state.destroy();
+      // Act
+      state.enterState();
+      state.destroy();
 
-        // Assert - Property: Created resources = Cleaned resources
-        expect(timeoutCount).toBe(0); // All timers cleared
-        expect(subscriptionCount).toBe(0); // All subscriptions removed
+      // Assert - Property: Created resources = Cleaned resources
+      expect(timeoutCount).toBe(0); // All timers cleared
+      expect(subscriptionCount).toBe(0); // All subscriptions removed
 
-        // Invariant: No resource leaks
-      }
-    ),
+      // Invariant: No resource leaks
+    }),
     { numRuns: 100 }
   );
 });
@@ -389,12 +434,14 @@ it('should maintain resource count invariant across lifecycle', () => {
 ## Out of Scope
 
 ### Must NOT Include
+
 - Configuration property tests (Ticket 014)
 - Unit tests for specific scenarios (covered in Tickets 005, 008)
 - Integration tests (Tickets 009-010)
 - Regression tests (Tickets 006, 011)
 
 ### Must NOT Change
+
 - Production code (state implementation from previous tickets)
 - Other test files
 - Configuration classes
@@ -402,6 +449,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ## Acceptance Criteria
 
 ### AC1: All 4 Required Property Tests Pass
+
 ```javascript
 // GIVEN: Property test suite with 4 core lifecycle properties
 // WHEN: npm run test:property -- lifecycle.property.test.js
@@ -412,6 +460,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ```
 
 ### AC2: enterState Timeout Creation Property Verified
+
 ```javascript
 // GIVEN: Property 1 with 100 random configurations
 // WHEN: Tests executed
@@ -423,6 +472,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ```
 
 ### AC3: exitState Resource Cleanup Property Verified
+
 ```javascript
 // GIVEN: Property 2 with 100 random states
 // WHEN: exitState called
@@ -434,6 +484,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ```
 
 ### AC4: destroy Idempotency Property Verified
+
 ```javascript
 // GIVEN: Property 3 with 1-10 destroy calls
 // WHEN: destroy called multiple times
@@ -445,6 +496,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ```
 
 ### AC5: Cleanup Resilience Property Verified
+
 ```javascript
 // GIVEN: Property 4 with corrupted state IDs
 // WHEN: Cleanup attempted with arbitrary corrupted values
@@ -458,18 +510,21 @@ it('should maintain resource count invariant across lifecycle', () => {
 ## Invariants
 
 ### Lifecycle Guarantees (Must Verify)
+
 1. **Single Timeout**: enterState creates exactly one timeout, never zero or multiple
 2. **Complete Cleanup**: exitState clears all resources (timeout + subscription)
 3. **Idempotent Destroy**: Multiple destroy calls equivalent to single call
 4. **Exception Safety**: Cleanup never throws, even with corrupted state
 
 ### Property Test Quality (Must Maintain)
+
 1. **Universal Quantification**: Properties hold for ALL inputs in domain
 2. **High Confidence**: 100+ test cases per property
 3. **Counterexample Detection**: fast-check finds violations if they exist
 4. **Reproducibility**: Seed-based for debugging failures
 
 ### State Integrity (Must Preserve)
+
 1. **Resource Balance**: Created resources = Cleaned resources
 2. **State Transitions**: All transition sequences safe and valid
 3. **Corruption Resilience**: Cleanup safe with arbitrary corrupted state
@@ -478,6 +533,7 @@ it('should maintain resource count invariant across lifecycle', () => {
 ## Testing Commands
 
 ### Development
+
 ```bash
 # Run lifecycle property tests
 npm run test:property -- lifecycle.property.test.js
@@ -493,6 +549,7 @@ npm run test:property -- lifecycle.property.test.js --verbose
 ```
 
 ### Validation
+
 ```bash
 # Verify fast-check installed
 npm list fast-check
@@ -530,11 +587,7 @@ fc.oneof(
 
 // State transition sequences
 fc.array(
-  fc.oneof(
-    fc.constant('enter'),
-    fc.constant('exit'),
-    fc.constant('destroy')
-  ),
+  fc.oneof(fc.constant('enter'), fc.constant('exit'), fc.constant('destroy')),
   { minLength: 1, maxLength: 10 }
 );
 
@@ -609,13 +662,19 @@ const trackingClearTimeout = jest.fn(() => {
 
 ```javascript
 // Start with 100 runs per property
-{ numRuns: 100 }
+{
+  numRuns: 100;
+}
 
 // Increase for critical properties
-{ numRuns: 1000 } // High confidence, slower
+{
+  numRuns: 1000;
+} // High confidence, slower
 
 // Decrease for expensive properties
-{ numRuns: 50 } // Quick smoke test
+{
+  numRuns: 50;
+} // Quick smoke test
 
 // Balance coverage vs execution time
 // Target: All property tests < 10 seconds

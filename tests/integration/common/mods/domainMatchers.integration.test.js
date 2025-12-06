@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { registerDomainMatchers } from '../../../common/mods/domainMatchers.js';
@@ -10,7 +17,10 @@ describe('Domain Matchers - Integration Tests', () => {
   beforeAll(async () => {
     registerDomainMatchers();
     // Create fixture once for all tests - heavy I/O operation
-    sharedFixture = await ModTestFixture.forAction('deference', 'deference:kneel_before');
+    sharedFixture = await ModTestFixture.forAction(
+      'deference',
+      'deference:kneel_before'
+    );
   });
 
   beforeEach(() => {
@@ -54,11 +64,14 @@ describe('Domain Matchers - Integration Tests', () => {
       await testFixture.executeAction('test:actor1', 'test:target1');
 
       // Assert with domain matchers - much clearer!
-      expect(testFixture.events).toHaveActionSuccess('Alice kneels before Bob.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice kneels before Bob.'
+      );
       expect(testFixture.events).toDispatchEvent('core:perceptible_event');
 
       // Verify entity state
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
       expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
         entityId: 'test:target1',
@@ -84,9 +97,12 @@ describe('Domain Matchers - Integration Tests', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      expect(testFixture.events).toHaveActionSuccess('Carol kneels before Queen.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Carol kneels before Queen.'
+      );
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
       expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
         entityId: 'test:target1',
@@ -112,7 +128,9 @@ describe('Domain Matchers - Integration Tests', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      expect(testFixture.events).toHaveActionSuccess('Dave kneels before Lord.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Dave kneels before Lord.'
+      );
       expect(testFixture.events).toDispatchEvent('core:perceptible_event');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
       expect(testFixture.events).toDispatchEvent('core:attempt_action');
@@ -137,7 +155,8 @@ describe('Domain Matchers - Integration Tests', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Check component exists and has correct data
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
@@ -167,7 +186,8 @@ describe('Domain Matchers - Integration Tests', () => {
 
       expect(testFixture.events).toHaveActionSuccess('Bob kneels before King.');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toBeAt('room1');
       expect(updatedActor).not.toBeAt('room2');
     });
@@ -202,8 +222,11 @@ describe('Domain Matchers - Integration Tests', () => {
       // expect(actor.components['positioning:standing']).toBeUndefined();
 
       // NEW WAY - clear domain language
-      expect(testFixture.events).toHaveActionSuccess('Alice kneels before Lord.');
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice kneels before Lord.'
+      );
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');
     });
@@ -215,7 +238,9 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // NOTE: Actor already kneeling - cannot kneel before another target
-        .withComponent('positioning:kneeling_before', { entityId: 'test:other' })
+        .withComponent('positioning:kneeling_before', {
+          entityId: 'test:other',
+        })
         .build();
       const target = new ModEntityBuilder('test:target1')
         .withName('Lord')
@@ -227,12 +252,13 @@ describe('Domain Matchers - Integration Tests', () => {
       testFixture.reset([room, actor, target]);
 
       // Action should throw validation error because actor is already kneeling
-      await expect(testFixture.executeAction('test:actor1', 'test:target1')).rejects.toThrow(
-        'ACTION EXECUTION VALIDATION FAILED'
-      );
+      await expect(
+        testFixture.executeAction('test:actor1', 'test:target1')
+      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
 
       // Verify component wasn't changed
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
         entityId: 'test:other',
       });
@@ -264,7 +290,9 @@ describe('Domain Matchers - Integration Tests', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      expect(testFixture.events).toHaveActionSuccess('Knight kneels before Lord.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Knight kneels before Lord.'
+      );
 
       // Verify perceptible event was dispatched (witness should see it)
       const perceptibleEvent = testFixture.events.find(
@@ -294,7 +322,8 @@ describe('Domain Matchers - Integration Tests', () => {
       // Execute kneel before action
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');
       expect(updatedActor).toHaveComponentData('positioning:kneeling_before', {
@@ -311,7 +340,9 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // Actor already kneeling - cannot kneel again
-        .withComponent('positioning:kneeling_before', { entityId: 'test:other' })
+        .withComponent('positioning:kneeling_before', {
+          entityId: 'test:other',
+        })
         .build();
       const target = new ModEntityBuilder('test:target1')
         .withName('Lord')
@@ -323,9 +354,9 @@ describe('Domain Matchers - Integration Tests', () => {
       testFixture.reset([room, actor, target]);
 
       // Should throw validation error because actor is already kneeling
-      await expect(testFixture.executeAction('test:actor1', 'test:target1')).rejects.toThrow(
-        'ACTION EXECUTION VALIDATION FAILED'
-      );
+      await expect(
+        testFixture.executeAction('test:actor1', 'test:target1')
+      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
     });
 
     it('should verify component data for empty values', async () => {
@@ -387,7 +418,8 @@ describe('Domain Matchers - Integration Tests', () => {
 
       await testFixture.executeAction('test:actor1', 'test:target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
 
       // Both forms should work
       expect(updatedActor).not.toHaveComponent('positioning:standing');
@@ -401,7 +433,9 @@ describe('Domain Matchers - Integration Tests', () => {
         .atLocation('room1')
         .asActor()
         // Actor already kneeling - action will fail
-        .withComponent('positioning:kneeling_before', { entityId: 'test:other' })
+        .withComponent('positioning:kneeling_before', {
+          entityId: 'test:other',
+        })
         .build();
       const target = new ModEntityBuilder('test:target1')
         .withName('Lord')
@@ -413,9 +447,9 @@ describe('Domain Matchers - Integration Tests', () => {
       testFixture.reset([room, actor, target]);
 
       // Should throw validation error because actor is already kneeling
-      await expect(testFixture.executeAction('test:actor1', 'test:target1')).rejects.toThrow(
-        'ACTION EXECUTION VALIDATION FAILED'
-      );
+      await expect(
+        testFixture.executeAction('test:actor1', 'test:target1')
+      ).rejects.toThrow('ACTION EXECUTION VALIDATION FAILED');
     });
   });
 
@@ -440,11 +474,14 @@ describe('Domain Matchers - Integration Tests', () => {
       await testFixture.executeAction('test:actor1', 'test:target1');
 
       // Complete workflow validation
-      expect(testFixture.events).toHaveActionSuccess('Alice kneels before King.');
+      expect(testFixture.events).toHaveActionSuccess(
+        'Alice kneels before King.'
+      );
       expect(testFixture.events).toDispatchEvent('core:perceptible_event');
       expect(testFixture.events).toDispatchEvent('core:turn_ended');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('test:actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('test:actor1');
       expect(updatedActor).toBeAt('room1');
       expect(updatedActor).toHaveComponent('positioning:kneeling_before');
       expect(updatedActor).toNotHaveComponent('positioning:standing');

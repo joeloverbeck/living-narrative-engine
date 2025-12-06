@@ -23,7 +23,10 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
   });
 
   it('should wrap scope resolver without modifying original', () => {
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
 
     expect(tracedResolver).not.toBe(mockScopeResolver);
     expect(tracedResolver.someOtherProperty).toBe('value');
@@ -31,7 +34,10 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
   });
 
   it('should capture successful resolution', () => {
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = {
       actor: { id: 'actor1' },
       candidates: ['entity1', 'entity2', 'entity3'],
@@ -40,7 +46,10 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
     const result = tracedResolver.resolve('test:scope', context);
 
     expect(result).toEqual(['entity1', 'entity2']);
-    expect(mockScopeResolver.resolve).toHaveBeenCalledWith('test:scope', context);
+    expect(mockScopeResolver.resolve).toHaveBeenCalledWith(
+      'test:scope',
+      context
+    );
 
     const scopeEvals = traceContext.getScopeEvaluations();
     expect(scopeEvals).toHaveLength(1);
@@ -59,7 +68,10 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
       throw error;
     });
 
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = { actor: { id: 'actor1' } };
 
     expect(() => {
@@ -77,20 +89,28 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
   });
 
   it('should add trace logs for resolution steps', () => {
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = { actor: { id: 'actor1' } };
 
     tracedResolver.resolve('test:scope', context);
 
     const logs = traceContext.logs;
-    expect(logs.some((log) => log.message.includes('Resolving scope: test:scope'))).toBe(
-      true
-    );
-    expect(logs.some((log) => log.message.includes('Resolved 2 entities'))).toBe(true);
+    expect(
+      logs.some((log) => log.message.includes('Resolving scope: test:scope'))
+    ).toBe(true);
+    expect(
+      logs.some((log) => log.message.includes('Resolved 2 entities'))
+    ).toBe(true);
   });
 
   it('should call original resolver with correct arguments', () => {
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = {
       actor: { id: 'actor1' },
       filters: [{ test: true }],
@@ -99,12 +119,18 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
 
     tracedResolver.resolve('test:scope', context);
 
-    expect(mockScopeResolver.resolve).toHaveBeenCalledWith('test:scope', context);
+    expect(mockScopeResolver.resolve).toHaveBeenCalledWith(
+      'test:scope',
+      context
+    );
     expect(mockScopeResolver.resolve).toHaveBeenCalledTimes(1);
   });
 
   it('should handle missing actor in context', () => {
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = { candidates: ['entity1'] };
 
     const result = tracedResolver.resolve('test:scope', context);
@@ -116,7 +142,10 @@ describe('scopeTracingHelpers - createTracedScopeResolver', () => {
 
   it('should handle empty result', () => {
     mockScopeResolver.resolve.mockReturnValue([]);
-    const tracedResolver = createTracedScopeResolver(mockScopeResolver, traceContext);
+    const tracedResolver = createTracedScopeResolver(
+      mockScopeResolver,
+      traceContext
+    );
     const context = { actor: { id: 'actor1' } };
 
     const result = tracedResolver.resolve('test:scope', context);

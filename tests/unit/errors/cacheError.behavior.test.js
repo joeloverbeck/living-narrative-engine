@@ -52,7 +52,9 @@ describe('cacheError hierarchy', () => {
     expect(keyContext).toHaveProperty('cause');
     expect(keyContext.cause).toEqual({});
 
-    const validationError = new CacheValidationError('Cache contents corrupted');
+    const validationError = new CacheValidationError(
+      'Cache contents corrupted'
+    );
     expect(validationError).toBeInstanceOf(CacheError);
     expect(validationError.name).toBe('CacheValidationError');
     expect(validationError.getSeverity()).toBe('warning');

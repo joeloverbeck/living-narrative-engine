@@ -60,26 +60,36 @@ class IfHandler {
   constructor({ operationInterpreter, jsonLogic, logger }) {
     // Accept both function (lazy resolver) and object (direct instance)
     if (!operationInterpreter) {
-      throw new Error('IfHandler requires a valid OperationInterpreter resolver or instance.');
+      throw new Error(
+        'IfHandler requires a valid OperationInterpreter resolver or instance.'
+      );
     }
 
     // Validate based on type
     const isFunction = typeof operationInterpreter === 'function';
-    const isObject = typeof operationInterpreter === 'object' && typeof operationInterpreter.execute === 'function';
+    const isObject =
+      typeof operationInterpreter === 'object' &&
+      typeof operationInterpreter.execute === 'function';
 
     if (!isFunction && !isObject) {
-      throw new Error('IfHandler requires operationInterpreter to be either a resolver function or an object with execute() method.');
+      throw new Error(
+        'IfHandler requires operationInterpreter to be either a resolver function or an object with execute() method.'
+      );
     }
 
     if (!jsonLogic || typeof jsonLogic.evaluate !== 'function') {
-      throw new Error('IfHandler requires a valid JsonLogicEvaluationService instance.');
+      throw new Error(
+        'IfHandler requires a valid JsonLogicEvaluationService instance.'
+      );
     }
     if (!logger || typeof logger.debug !== 'function') {
       throw new Error('IfHandler requires a valid ILogger instance.');
     }
 
     // Normalize to always use a resolver function
-    this.#operationInterpreterResolver = isFunction ? operationInterpreter : () => operationInterpreter;
+    this.#operationInterpreterResolver = isFunction
+      ? operationInterpreter
+      : () => operationInterpreter;
     this.#jsonLogic = jsonLogic;
     this.#logger = logger;
   }
@@ -95,7 +105,10 @@ class IfHandler {
     const logger = this.#logger;
 
     if (!params || typeof params !== 'object') {
-      logger.error('IfHandler: Invalid parameters object. IF operation cancelled.', { params });
+      logger.error(
+        'IfHandler: Invalid parameters object. IF operation cancelled.',
+        { params }
+      );
       return;
     }
 

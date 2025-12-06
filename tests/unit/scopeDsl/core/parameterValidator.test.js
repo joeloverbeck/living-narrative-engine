@@ -410,7 +410,9 @@ describe('ParameterValidator', () => {
 
         expect(error).toBeInstanceOf(ParameterValidationError);
         expect(error.message).toContain('runtimeCtx must be an object');
-        expect(error.context.expected).toBe('runtimeCtx with required services');
+        expect(error.context.expected).toBe(
+          'runtimeCtx with required services'
+        );
         expect(error.context.received).toBe('undefined');
       });
 

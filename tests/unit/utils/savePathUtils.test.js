@@ -117,9 +117,7 @@ describe('savePathUtils', () => {
     });
 
     it('should skip blank segments and empty candidates while scanning', () => {
-      expect(
-        extractSaveName('manual_saves/   /manual_save_.sav')
-      ).toBe('');
+      expect(extractSaveName('manual_saves/   /manual_save_.sav')).toBe('');
     });
   });
 

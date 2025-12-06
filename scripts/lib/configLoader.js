@@ -208,7 +208,10 @@ export async function createDefaultConfigFile(type = 'project') {
   let filePath;
   switch (type) {
     case 'global':
-      filePath = path.join(process.env.HOME || '', '.living-narrative-validate.json');
+      filePath = path.join(
+        process.env.HOME || '',
+        '.living-narrative-validate.json'
+      );
       break;
     case 'local':
       await fs.mkdir('.validate', { recursive: true });
@@ -232,29 +235,39 @@ export async function createDefaultConfigFile(type = 'project') {
  */
 export function validateConfig(config) {
   const errors = [];
-  
+
   // Validate format
   if (config.output?.format) {
-    const validFormats = ['console', 'json', 'html', 'markdown', 'junit', 'csv'];
+    const validFormats = [
+      'console',
+      'json',
+      'html',
+      'markdown',
+      'junit',
+      'csv',
+    ];
     if (!validFormats.includes(config.output.format)) {
       errors.push(`Invalid format: ${config.output.format}`);
     }
   }
-  
+
   // Validate concurrency
   if (config.performance?.concurrency) {
-    if (config.performance.concurrency < 1 || config.performance.concurrency > 20) {
+    if (
+      config.performance.concurrency < 1 ||
+      config.performance.concurrency > 20
+    ) {
       errors.push('Concurrency must be between 1 and 20');
     }
   }
-  
+
   // Validate timeout
   if (config.performance?.timeout) {
     if (config.performance.timeout < 1000) {
       errors.push('Timeout must be at least 1000ms');
     }
   }
-  
+
   // Validate severity filter
   if (config.filters?.severity) {
     const validSeverities = ['critical', 'high', 'medium', 'low'];
@@ -262,9 +275,9 @@ export function validateConfig(config) {
       errors.push(`Invalid severity: ${config.filters.severity}`);
     }
   }
-  
+
   return {
     valid: errors.length === 0,
-    errors
+    errors,
   };
 }

@@ -74,10 +74,10 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     expect(orchestrator.generateAllDescriptions).toHaveBeenCalledWith(entity);
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'entity-1',
-      'body-desc',
+      'body-desc'
     );
     expect(persistence.updateMultipleDescriptions).toHaveBeenCalledWith(
-      partDescriptions,
+      partDescriptions
     );
   });
 
@@ -93,7 +93,7 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     });
 
     await expect(
-      service.generateAllDescriptions({ id: 'entity-noop' }),
+      service.generateAllDescriptions({ id: 'entity-noop' })
     ).resolves.toEqual({
       bodyDescription: 'body-desc',
       partDescriptions: expect.any(Map),
@@ -113,12 +113,12 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
 
     service.generatePartDescription('arm-1');
 
-    expect(partDescriptionGenerator.generatePartDescription).toHaveBeenCalledWith(
-      'arm-1',
-    );
+    expect(
+      partDescriptionGenerator.generatePartDescription
+    ).toHaveBeenCalledWith('arm-1');
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'arm-1',
-      'arm-ready',
+      'arm-ready'
     );
   });
 
@@ -134,9 +134,9 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
 
     service.generatePartDescription('arm-2');
 
-    expect(partDescriptionGenerator.generatePartDescription).toHaveBeenCalledWith(
-      'arm-2',
-    );
+    expect(
+      partDescriptionGenerator.generatePartDescription
+    ).toHaveBeenCalledWith('arm-2');
     expect(persistence.updateDescription).not.toHaveBeenCalled();
   });
 
@@ -152,11 +152,11 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     await service.generateBodyDescription(bodyEntity);
 
     expect(orchestrator.generateBodyDescription).toHaveBeenCalledWith(
-      bodyEntity,
+      bodyEntity
     );
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'entity-2',
-      'full-body',
+      'full-body'
     );
   });
 
@@ -190,11 +190,11 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
 
     expect(result).toBe('current-desc');
     expect(orchestrator.getOrGenerateBodyDescription).toHaveBeenCalledWith(
-      entity,
+      entity
     );
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'entity-3',
-      'current-desc',
+      'current-desc'
     );
   });
 
@@ -228,13 +228,17 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBe('cached-summary');
-    expect(dependencies.bodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+    expect(
+      dependencies.bodyDescriptionComposer.composeDescription
+    ).not.toHaveBeenCalled();
     expect(dependencies.componentManager.addComponent).not.toHaveBeenCalled();
   });
 
   it('returns null when fallback composition does not produce a description', async () => {
     const { service, dependencies } = createService();
-    dependencies.bodyDescriptionComposer.composeDescription.mockResolvedValue('');
+    dependencies.bodyDescriptionComposer.composeDescription.mockResolvedValue(
+      ''
+    );
 
     const entity = createEntity('entity-9', {
       [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'root-node' } },
@@ -255,7 +259,9 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBe('non-anatomy description');
-    expect(dependencies.bodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+    expect(
+      dependencies.bodyDescriptionComposer.composeDescription
+    ).not.toHaveBeenCalled();
   });
 
   it('returns null for non-anatomy entities without existing descriptions', async () => {
@@ -265,7 +271,9 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     const result = await service.getOrGenerateBodyDescription(entity);
 
     expect(result).toBeNull();
-    expect(dependencies.bodyDescriptionComposer.composeDescription).not.toHaveBeenCalled();
+    expect(
+      dependencies.bodyDescriptionComposer.composeDescription
+    ).not.toHaveBeenCalled();
   });
 
   it('delegates updateDescription to the persistence service when available', () => {
@@ -277,7 +285,7 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
 
     expect(persistence.updateDescription).toHaveBeenCalledWith(
       'entity-5',
-      'stored',
+      'stored'
     );
   });
 
@@ -295,7 +303,7 @@ describe('AnatomyDescriptionService orchestrator and persistence integration', (
     service.regenerateDescriptions('entity-6');
 
     expect(dependencies.entityFinder.getEntityInstance).toHaveBeenCalledWith(
-      'entity-6',
+      'entity-6'
     );
     expect(generateAllSpy).toHaveBeenCalledWith(entity);
   });

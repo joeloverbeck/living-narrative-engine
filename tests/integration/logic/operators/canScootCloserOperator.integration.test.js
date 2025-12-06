@@ -22,9 +22,13 @@ describe('CanScootCloserOperator integration with EntityManager', () => {
       { instanceId }
     );
     if (spots) {
-      await entityManager.addComponent(instance.id, 'positioning:allows_sitting', {
-        spots,
-      });
+      await entityManager.addComponent(
+        instance.id,
+        'positioning:allows_sitting',
+        {
+          spots,
+        }
+      );
     }
     return instance;
   };

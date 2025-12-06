@@ -6,7 +6,14 @@
  * of profiling, tracing, and developer tools integration.
  */
 
-import { describe, beforeAll, beforeEach, afterAll, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  test,
+  expect,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createPerformanceContainer,
@@ -48,7 +55,9 @@ describe('Developer Experience Performance', () => {
     registry = sharedContainer.resolve(tokens.IDataRegistry);
     const dslParser = sharedContainer.resolve(tokens.DslParser);
     logger = sharedContainer.resolve(tokens.ILogger);
-    jsonLogicService = sharedContainer.resolve(tokens.JsonLogicEvaluationService);
+    jsonLogicService = sharedContainer.resolve(
+      tokens.JsonLogicEvaluationService
+    );
 
     scopeDefinitions = ScopeTestUtilities.createTestScopes({
       dslParser,

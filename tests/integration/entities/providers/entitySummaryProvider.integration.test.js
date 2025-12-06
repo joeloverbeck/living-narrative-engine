@@ -3,7 +3,9 @@ import { EntitySummaryProvider } from '../../../../src/data/providers/entitySumm
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../../src/entities/entityInstanceData.js';
 import Entity from '../../../../src/entities/entity.js';
-import ConsoleLogger, { LogLevel } from '../../../../src/logging/consoleLogger.js';
+import ConsoleLogger, {
+  LogLevel,
+} from '../../../../src/logging/consoleLogger.js';
 import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
@@ -86,11 +88,7 @@ describe('EntitySummaryProvider integration', () => {
     const defaultValue = 'unknown';
 
     expect(
-      provider._getComponentText(
-        null,
-        NAME_COMPONENT_ID,
-        defaultValue
-      )
+      provider._getComponentText(null, NAME_COMPONENT_ID, defaultValue)
     ).toBe(defaultValue);
 
     expect(

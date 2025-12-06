@@ -17,7 +17,10 @@ import {
   TRACE_STEP,
   TRACE_DATA,
 } from '../../../../src/actions/tracing/traceContext.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 
 class RecordingLogger {
@@ -172,11 +175,10 @@ describe('UnifiedErrorHandler multi-phase integration', () => {
     const targetId = 'friend-1';
 
     const discoveryTrace = new TraceContext();
-    discoveryTrace.step(
-      'Collecting nearby actors',
-      'ScopeResolutionStage',
-      { input: { actorId }, output: { candidates: [] } }
-    );
+    discoveryTrace.step('Collecting nearby actors', 'ScopeResolutionStage', {
+      input: { actorId },
+      output: { candidates: [] },
+    });
     discoveryTrace.failure(
       'No valid targets discovered',
       'ScopeResolutionStage',
@@ -199,9 +201,7 @@ describe('UnifiedErrorHandler multi-phase integration', () => {
     expect(discoveryContext.actorId).toBe(actorId);
     expect(discoveryContext.additionalContext.stage).toBe('discovery');
     expect(discoveryContext.evaluationTrace.steps).toHaveLength(2);
-    expect(
-      discoveryContext.suggestedFixes.map((fix) => fix.type)
-    ).toEqual(
+    expect(discoveryContext.suggestedFixes.map((fix) => fix.type)).toEqual(
       expect.arrayContaining([
         FIX_TYPES.INVALID_TARGET,
         FIX_TYPES.SCOPE_RESOLUTION,
@@ -257,9 +257,7 @@ describe('UnifiedErrorHandler multi-phase integration', () => {
     expect(validationContext.evaluationTrace.finalContext).toEqual(
       expect.objectContaining({ component: 'core:friend', state: 'absent' })
     );
-    expect(
-      validationContext.suggestedFixes.map((fix) => fix.type)
-    ).toEqual(
+    expect(validationContext.suggestedFixes.map((fix) => fix.type)).toEqual(
       expect.arrayContaining([
         FIX_TYPES.MISSING_COMPONENT,
         FIX_TYPES.MISSING_PREREQUISITE,
@@ -271,7 +269,9 @@ describe('UnifiedErrorHandler multi-phase integration', () => {
       { actorId, actionDef: actionDefinition }
     );
     expect(validationDefaults.targetId).toBeNull();
-    expect(validationDefaults.additionalContext).toEqual({ stage: 'validation' });
+    expect(validationDefaults.additionalContext).toEqual({
+      stage: 'validation',
+    });
 
     const executionError = new Error(
       'Invalid state: actor stamina depleted while targeting friend-1'
@@ -287,11 +287,13 @@ describe('UnifiedErrorHandler multi-phase integration', () => {
 
     expect(executionContext.phase).toBe(ERROR_PHASES.EXECUTION);
     expect(executionContext.additionalContext.stage).toBe('execution');
-    expect(
-      executionContext.suggestedFixes.map((fix) => fix.type)
-    ).toEqual(expect.arrayContaining([FIX_TYPES.INVALID_STATE]));
+    expect(executionContext.suggestedFixes.map((fix) => fix.type)).toEqual(
+      expect.arrayContaining([FIX_TYPES.INVALID_STATE])
+    );
 
-    const processingError = new Error('Directive pipeline rejected the command');
+    const processingError = new Error(
+      'Directive pipeline rejected the command'
+    );
 
     const processingContext = handler.handleProcessingError(processingError, {
       actorId,

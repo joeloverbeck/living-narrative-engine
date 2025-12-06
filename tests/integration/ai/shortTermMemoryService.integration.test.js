@@ -18,9 +18,7 @@ describe('ShortTermMemoryService integration', () => {
 
   it('ignores blank inputs after trimming', () => {
     const mem = {
-      thoughts: [
-        { text: 'keep me', timestamp: '2024-01-01T00:00:00.000Z' },
-      ],
+      thoughts: [{ text: 'keep me', timestamp: '2024-01-01T00:00:00.000Z' }],
       maxEntries: 3,
       entityId: 'npc-1',
     };
@@ -82,8 +80,14 @@ describe('ShortTermMemoryService integration', () => {
 
     expect(result.wasAdded).toBe(true);
     expect(mem.thoughts).toHaveLength(2);
-    expect(mem.thoughts[0]).toEqual({ text: 'newer', timestamp: '2024-01-01T11:00:00.000Z' });
-    expect(mem.thoughts[1]).toEqual({ text: 'latest', timestamp: now.toISOString() });
+    expect(mem.thoughts[0]).toEqual({
+      text: 'newer',
+      timestamp: '2024-01-01T11:00:00.000Z',
+    });
+    expect(mem.thoughts[1]).toEqual({
+      text: 'latest',
+      timestamp: now.toISOString(),
+    });
   });
 
   it('falls back to defaultMaxEntries when mem.maxEntries is invalid', () => {
@@ -103,7 +107,10 @@ describe('ShortTermMemoryService integration', () => {
     expect(result.wasAdded).toBe(true);
     expect(mem.thoughts).toHaveLength(2);
     expect(mem.thoughts[0].text).toBe('second');
-    expect(mem.thoughts[1]).toEqual({ text: 'third', timestamp: now.toISOString() });
+    expect(mem.thoughts[1]).toEqual({
+      text: 'third',
+      timestamp: now.toISOString(),
+    });
   });
 
   it('dispatches ThoughtAdded events when a dispatcher is provided', () => {

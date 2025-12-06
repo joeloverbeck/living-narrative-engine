@@ -161,7 +161,10 @@ describe('PredictedEnergyOperator', () => {
         buffer_capacity: 100,
       });
 
-      const result = operator.evaluate([{ var: 'event.payload.actorId' }], context);
+      const result = operator.evaluate(
+        [{ var: 'event.payload.actorId' }],
+        context
+      );
 
       expect(result).toBe(500);
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(

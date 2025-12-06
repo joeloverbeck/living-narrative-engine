@@ -2,8 +2,19 @@
  * @file Integration tests covering error and edge branches for anatomy-visualizer.js.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { createFileFetchMock, waitForCondition, TEST_TIMEOUT_MS } from '../../common/visualizer/visualizerTestUtils.js';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
+import {
+  createFileFetchMock,
+  waitForCondition,
+  TEST_TIMEOUT_MS,
+} from '../../common/visualizer/visualizerTestUtils.js';
 
 const VISUALIZER_HTML = `
   <div id="anatomy-visualizer-container">
@@ -51,10 +62,14 @@ describe('anatomy-visualizer entrypoint error handling', () => {
       global.fetch = fetchMock;
       window.fetch = fetchMock;
 
-      const tokensModule = await import('../../../src/dependencyInjection/tokens.js');
+      const tokensModule = await import(
+        '../../../src/dependencyInjection/tokens.js'
+      );
       const { tokens } = tokensModule;
 
-      const bootstrapperModule = await import('../../../src/bootstrapper/CommonBootstrapper.js');
+      const bootstrapperModule = await import(
+        '../../../src/bootstrapper/CommonBootstrapper.js'
+      );
       const { CommonBootstrapper } = bootstrapperModule;
       const originalBootstrap = CommonBootstrapper.prototype.bootstrap;
 
@@ -65,11 +80,14 @@ describe('anatomy-visualizer entrypoint error handling', () => {
           const wrappedHook =
             typeof postInitHook === 'function'
               ? async (services, container) => {
-                  container.setOverride(tokens.ClothingManagementService, () => {
-                    throw new Error(
-                      'Clothing service unavailable for integration coverage test.'
-                    );
-                  });
+                  container.setOverride(
+                    tokens.ClothingManagementService,
+                    () => {
+                      throw new Error(
+                        'Clothing service unavailable for integration coverage test.'
+                      );
+                    }
+                  );
                   try {
                     return await postInitHook(services, container);
                   } finally {
@@ -84,14 +102,19 @@ describe('anatomy-visualizer entrypoint error handling', () => {
           });
         });
 
-      const loggerStrategyModule = await import('../../../src/logging/loggerStrategy.js');
+      const loggerStrategyModule = await import(
+        '../../../src/logging/loggerStrategy.js'
+      );
       const LoggerStrategy = loggerStrategyModule.default;
       const warnSpy = jest.spyOn(LoggerStrategy.prototype, 'warn');
 
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
       );
-      const uiInitializeSpy = jest.spyOn(AnatomyVisualizerUI.prototype, 'initialize');
+      const uiInitializeSpy = jest.spyOn(
+        AnatomyVisualizerUI.prototype,
+        'initialize'
+      );
 
       await import('../../../src/anatomy-visualizer.js');
 
@@ -119,7 +142,10 @@ describe('anatomy-visualizer entrypoint error handling', () => {
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
       );
-      const uiInitializeSpy = jest.spyOn(AnatomyVisualizerUI.prototype, 'initialize');
+      const uiInitializeSpy = jest.spyOn(
+        AnatomyVisualizerUI.prototype,
+        'initialize'
+      );
 
       await import('../../../src/anatomy-visualizer.js');
 
@@ -146,7 +172,9 @@ describe('anatomy-visualizer entrypoint error handling', () => {
           throw new Error('UI initialization failed');
         });
 
-      const bootstrapperModule = await import('../../../src/bootstrapper/CommonBootstrapper.js');
+      const bootstrapperModule = await import(
+        '../../../src/bootstrapper/CommonBootstrapper.js'
+      );
       const { CommonBootstrapper } = bootstrapperModule;
       const fatalSpy = jest.spyOn(
         CommonBootstrapper.prototype,
@@ -158,7 +186,9 @@ describe('anatomy-visualizer entrypoint error handling', () => {
       await waitForCondition(() => fatalSpy.mock.calls.length === 1);
 
       const [message, error] = fatalSpy.mock.calls[0];
-      expect(message).toContain('Failed to initialize anatomy visualizer: UI initialization failed');
+      expect(message).toContain(
+        'Failed to initialize anatomy visualizer: UI initialization failed'
+      );
       expect(error).toBeInstanceOf(Error);
       expect(error.message).toBe('UI initialization failed');
     },

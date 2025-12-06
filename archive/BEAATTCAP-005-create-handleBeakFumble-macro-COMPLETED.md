@@ -12,10 +12,10 @@ Beaks are natural weapons that cannot be dropped. When a peck attack fumbles, th
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `data/mods/violence/macros/handleBeakFumble.macro.json` | **Create** |
-| `data/mods/violence/macros/.gitkeep` | **Create** (if directory doesn't exist) |
+| File                                                    | Change Type                             |
+| ------------------------------------------------------- | --------------------------------------- |
+| `data/mods/violence/macros/handleBeakFumble.macro.json` | **Create**                              |
+| `data/mods/violence/macros/.gitkeep`                    | **Create** (if directory doesn't exist) |
 
 ## Out of Scope
 
@@ -73,6 +73,7 @@ Beaks are natural weapons that cannot be dropped. When a peck attack fumbles, th
 ### Directory Structure
 
 Create directory if needed:
+
 ```
 data/mods/violence/macros/
 ├── .gitkeep
@@ -81,16 +82,17 @@ data/mods/violence/macros/
 
 ### Comparison with `weapons:handleMeleeFumble`
 
-| Aspect | handleMeleeFumble | handleBeakFumble |
-|--------|-------------------|------------------|
-| UNWIELD_ITEM | ✓ (drops weapon) | ✗ (no weapon to drop) |
-| DROP_ITEM_AT_LOCATION | ✓ | ✗ |
-| ADD_COMPONENT fallen | ✗ | ✓ |
-| Narrative | "loses grip on weapon" | "loses balance and falls" |
+| Aspect                | handleMeleeFumble      | handleBeakFumble          |
+| --------------------- | ---------------------- | ------------------------- |
+| UNWIELD_ITEM          | ✓ (drops weapon)       | ✗ (no weapon to drop)     |
+| DROP_ITEM_AT_LOCATION | ✓                      | ✗                         |
+| ADD_COMPONENT fallen  | ✗                      | ✓                         |
+| Narrative             | "loses grip on weapon" | "loses balance and falls" |
 
 ### Expected Context Variables
 
 The macro expects these variables to be set by the rule before invocation:
+
 - `context.actorName` - Name of the attacking actor
 - `context.targetName` - Name of the target (for potential future use)
 - `context.attackVerbPast` - Past tense of attack verb (e.g., "pecked")
@@ -101,6 +103,7 @@ The macro expects these variables to be set by the rule before invocation:
 ### Tests That Must Pass
 
 1. **Schema Validation**:
+
    ```bash
    npm run validate:mod:violence
    ```
@@ -112,6 +115,7 @@ The macro expects these variables to be set by the rule before invocation:
    - All parameter references use valid syntax
 
 3. **Unit Tests** (create `tests/unit/mods/violence/handleBeakFumbleMacro.test.js`):
+
    ```javascript
    describe('violence:handleBeakFumble macro', () => {
      it('should have valid macro schema structure');
@@ -171,11 +175,13 @@ npm run test:unit -- --testPathPattern="handleBeakFumble" --verbose
 ### Design Decision: Fall vs Other Fumble Effects
 
 The spec chose "falling" as the fumble effect because:
+
 1. It's physically realistic for overextending a peck attack
 2. It has meaningful gameplay consequences (must get up)
 3. It differs from weapon fumbles (makes natural weapons feel different)
 
 Alternative fumble effects considered but rejected:
+
 - "Stunned" - no existing component for this
 - "Disoriented" - too abstract
 - "Hurt self" - would require damage to self logic
@@ -204,11 +210,11 @@ The `positioning:fallen` component should already exist in the positioning mod. 
 
 ### Deviations from Original Plan
 
-| Planned | Actual | Reason |
-|---------|--------|--------|
-| Use `data: { reason: "lost_balance_attacking" }` | Use `value: {}` | The `positioning:fallen` component schema doesn't support a `reason` property; it only accepts `activityMetadata` (optional) or empty object |
-| Test path: `handleBeakFumbleMacro.test.js` | Test path: `macros/handleBeakFumble.test.js` | Better organization matching existing test structure |
-| `.gitkeep` file | Not created | Directory creation handled automatically; .gitkeep unnecessary when actual files exist |
+| Planned                                          | Actual                                       | Reason                                                                                                                                       |
+| ------------------------------------------------ | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Use `data: { reason: "lost_balance_attacking" }` | Use `value: {}`                              | The `positioning:fallen` component schema doesn't support a `reason` property; it only accepts `activityMetadata` (optional) or empty object |
+| Test path: `handleBeakFumbleMacro.test.js`       | Test path: `macros/handleBeakFumble.test.js` | Better organization matching existing test structure                                                                                         |
+| `.gitkeep` file                                  | Not created                                  | Directory creation handled automatically; .gitkeep unnecessary when actual files exist                                                       |
 
 ### Validation Results
 

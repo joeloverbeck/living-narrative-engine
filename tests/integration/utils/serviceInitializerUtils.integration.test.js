@@ -43,9 +43,12 @@ describe('ServiceSetup integration', () => {
     prefixed.error('failed');
 
     expect(baseLogger.info).toHaveBeenCalledWith('InventoryService: loaded');
-    expect(baseLogger.warn).toHaveBeenCalledWith('InventoryService: low stock', {
-      itemId: 'item-1',
-    });
+    expect(baseLogger.warn).toHaveBeenCalledWith(
+      'InventoryService: low stock',
+      {
+        itemId: 'item-1',
+      }
+    );
     expect(baseLogger.debug).toHaveBeenCalledWith(
       'InventoryService: checking quantities'
     );
@@ -93,14 +96,19 @@ describe('ServiceSetup integration', () => {
   it('setupService returns a prefixed logger and tolerates missing dependency maps', () => {
     const orchestrator = { discoverActions: jest.fn() };
     const returnedLogger = setup.setupService('DiscoveryService', baseLogger, {
-      orchestrator: { value: orchestrator, requiredMethods: ['discoverActions'] },
+      orchestrator: {
+        value: orchestrator,
+        requiredMethods: ['discoverActions'],
+      },
       traceFactory: { value: jest.fn(), isFunction: true },
     });
 
     returnedLogger.info('ready');
     expect(baseLogger.info).toHaveBeenCalledWith('DiscoveryService: ready');
 
-    expect(() => setup.setupService('LoggerOnlyService', baseLogger)).not.toThrow();
+    expect(() =>
+      setup.setupService('LoggerOnlyService', baseLogger)
+    ).not.toThrow();
   });
 
   it('resolveExecutionLogger prefers the context logger when provided', () => {

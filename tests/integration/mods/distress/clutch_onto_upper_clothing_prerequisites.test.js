@@ -39,7 +39,9 @@ describe('distress:clutch_onto_upper_clothing prerequisites', () => {
     jest.clearAllMocks();
 
     // Import mocked function
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
 
     mockLogger = {
@@ -117,9 +119,9 @@ describe('distress:clutch_onto_upper_clothing prerequisites', () => {
     });
 
     test('should reference anatomy:actor-has-free-grabbing-appendage condition', () => {
-      expect(clutchOntoUpperClothingAction.prerequisites.length).toBeGreaterThan(
-        0
-      );
+      expect(
+        clutchOntoUpperClothingAction.prerequisites.length
+      ).toBeGreaterThan(0);
       const prerequisite = clutchOntoUpperClothingAction.prerequisites[0];
       expect(prerequisite.logic).toBeDefined();
       expect(prerequisite.logic.condition_ref).toBe(

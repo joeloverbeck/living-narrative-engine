@@ -16,9 +16,11 @@ Create the event schema for `anatomy:part_state_changed`, which is dispatched on
 ## Files to Touch
 
 ### New Files
+
 - `data/mods/anatomy/events/part_state_changed.event.json`
 
 ### Modified Files
+
 - None (mod manifest update in separate ticket)
 
 ---
@@ -26,6 +28,7 @@ Create the event schema for `anatomy:part_state_changed`, which is dispatched on
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any existing event schemas
 - Any operation handler files
 - The mod manifest (covered in PERPARHEAANDNARTHR-011)
@@ -122,6 +125,7 @@ Create `data/mods/anatomy/events/part_state_changed.event.json`:
 ### Tests That Must Pass
 
 1. **JSON validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/events/part_state_changed.event.json'))"
    ```
@@ -184,9 +188,11 @@ npm run test:ci
 ### What Changed vs. Originally Planned
 
 **Ticket Correction:**
+
 - Changed `additionalProperties: true` → `additionalProperties: false` to match existing anatomy event patterns (`limb_detached.event.json`, `part_health_changed.event.json`)
 
 **Implementation:**
+
 - Created `data/mods/anatomy/events/part_state_changed.event.json` as specified
 
 ### Verification Results
@@ -199,8 +205,8 @@ npm run test:ci
 
 ### Files Created
 
-| File | Description |
-|------|-------------|
+| File                                                     | Description                                       |
+| -------------------------------------------------------- | ------------------------------------------------- |
 | `data/mods/anatomy/events/part_state_changed.event.json` | Event schema for health state threshold crossings |
 
 ### Completion Date

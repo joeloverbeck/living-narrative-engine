@@ -8,7 +8,14 @@
  * @see tickets/DISBODPARSPA-002-body-part-spawned-event.md
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
@@ -32,7 +39,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
     );
 
     if (!schemaValidator.isSchemaLoaded(eventSchema.$id || EVENT_SCHEMA_PATH)) {
-      await schemaValidator.addSchema(eventSchema, eventSchema.$id || EVENT_SCHEMA_PATH);
+      await schemaValidator.addSchema(
+        eventSchema,
+        eventSchema.$id || EVENT_SCHEMA_PATH
+      );
     }
   });
 
@@ -171,7 +181,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -190,7 +203,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -209,7 +225,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -224,11 +243,45 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       expect(result.isValid).toBe(true);
     });
 
+    it('should accept damage_applied payload emitted by ApplyDamageHandler with metadata and damageTags', async () => {
+      const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
+
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
+
+      const productionPayloadShape = {
+        entityId: 'fantasy:rill_instance',
+        entityName: 'Rill',
+        entityPronoun: 'she',
+        partId: '880b414b-e9d4-41af-8d58-a7c2e262bae4',
+        partType: 'breast',
+        orientation: 'left',
+        amount: 2,
+        damageType: 'piercing',
+        propagatedFrom: null,
+        metadata: {},
+        damageTags: [],
+        timestamp: 1765042590344,
+      };
+
+      const result = schemaValidator.validate(
+        payloadSchemaId,
+        productionPayloadShape
+      );
+      expect(result.isValid).toBe(true);
+      expect(result.errors).toBeNull();
+    });
+
     it('should reject damage_applied payload missing required entityId', async () => {
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         // missing entityId
@@ -250,7 +303,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -269,7 +325,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(damageAppliedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -297,7 +356,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bleedingStartedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bleedingStartedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bleedingStartedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -315,7 +377,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bleedingStartedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bleedingStartedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bleedingStartedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const severityLevels = ['minor', 'moderate', 'severe', 'critical'];
 
@@ -336,7 +401,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bleedingStartedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bleedingStartedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bleedingStartedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -357,7 +425,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bleedingStartedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bleedingStartedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bleedingStartedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -375,7 +446,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bleedingStartedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bleedingStartedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bleedingStartedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -402,7 +476,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${partDestroyedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(partDestroyedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        partDestroyedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -419,7 +496,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${partDestroyedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(partDestroyedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        partDestroyedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         // missing entityId
@@ -439,7 +519,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${partDestroyedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(partDestroyedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        partDestroyedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -459,7 +542,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${partDestroyedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(partDestroyedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        partDestroyedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -485,7 +571,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        dismemberedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -503,7 +592,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        dismemberedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       // This is the full payload that damageTypeEffectsService.js dispatches
       const validPayload = {
@@ -526,7 +618,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        dismemberedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -539,7 +634,9 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'damageTypeId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'damageTypeId'
+        )
       ).toBe(true);
     });
 
@@ -547,7 +644,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        dismemberedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -568,7 +668,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${dismemberedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(dismemberedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        dismemberedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       // Use a truly unknown field that is NOT part of the schema
       // (entityName, entityPronoun, partType, orientation are now allowed)
@@ -643,7 +746,12 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const severitySchema = eventDef.payloadSchema.properties.severity;
 
       expect(severitySchema.type).toBe('string');
-      expect(severitySchema.enum).toEqual(['minor', 'moderate', 'severe', 'critical']);
+      expect(severitySchema.enum).toEqual([
+        'minor',
+        'moderate',
+        'severe',
+        'critical',
+      ]);
     });
 
     it('part_destroyed event schema should match applyDamageHandler dispatch payload', () => {
@@ -724,7 +832,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bodyPartSpawnedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-sarah-123',
@@ -745,7 +856,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bodyPartSpawnedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const validPayload = {
         entityId: 'entity-123',
@@ -766,7 +880,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bodyPartSpawnedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         // missing entityId
@@ -790,7 +907,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bodyPartSpawnedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',
@@ -806,7 +926,9 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       expect(result.isValid).toBe(false);
       expect(result.errors).toBeDefined();
       expect(
-        result.errors.some((err) => err.params?.missingProperty === 'spawnedEntityId')
+        result.errors.some(
+          (err) => err.params?.missingProperty === 'spawnedEntityId'
+        )
       ).toBe(true);
     });
 
@@ -814,7 +936,10 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
       const payloadSchemaId = `${bodyPartSpawnedEvent.id}#payload`;
 
       // Register the payload schema
-      await schemaValidator.addSchema(bodyPartSpawnedEvent.payloadSchema, payloadSchemaId);
+      await schemaValidator.addSchema(
+        bodyPartSpawnedEvent.payloadSchema,
+        payloadSchemaId
+      );
 
       const invalidPayload = {
         entityId: 'entity-123',

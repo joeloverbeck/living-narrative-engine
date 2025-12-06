@@ -78,10 +78,14 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
       additionalPayload: { primaryId: 'beth' },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
   });
 
   it('removes fucking_vaginally component from actor', async () => {
@@ -89,7 +93,10 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     testFixture.reset(scenario);
 
     expect(
-      testFixture.entityManager.hasComponent('alice', 'positioning:fucking_vaginally')
+      testFixture.entityManager.hasComponent(
+        'alice',
+        'positioning:fucking_vaginally'
+      )
     ).toBe(true);
 
     await testFixture.executeAction('alice', 'beth', {
@@ -97,7 +104,10 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     });
 
     expect(
-      testFixture.entityManager.hasComponent('alice', 'positioning:fucking_vaginally')
+      testFixture.entityManager.hasComponent(
+        'alice',
+        'positioning:fucking_vaginally'
+      )
     ).toBe(false);
   });
 
@@ -106,7 +116,10 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     testFixture.reset(scenario);
 
     expect(
-      testFixture.entityManager.hasComponent('beth', 'positioning:being_fucked_vaginally')
+      testFixture.entityManager.hasComponent(
+        'beth',
+        'positioning:being_fucked_vaginally'
+      )
     ).toBe(true);
 
     await testFixture.executeAction('alice', 'beth', {
@@ -114,7 +127,10 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     });
 
     expect(
-      testFixture.entityManager.hasComponent('beth', 'positioning:being_fucked_vaginally')
+      testFixture.entityManager.hasComponent(
+        'beth',
+        'positioning:being_fucked_vaginally'
+      )
     ).toBe(false);
   });
 
@@ -156,10 +172,16 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
     });
 
     expect(
-      testFixture.entityManager.hasComponent('alice', 'positioning:fucking_vaginally')
+      testFixture.entityManager.hasComponent(
+        'alice',
+        'positioning:fucking_vaginally'
+      )
     ).toBe(false);
     expect(
-      testFixture.entityManager.hasComponent('beth', 'positioning:being_fucked_vaginally')
+      testFixture.entityManager.hasComponent(
+        'beth',
+        'positioning:being_fucked_vaginally'
+      )
     ).toBe(false);
   });
 });

@@ -61,7 +61,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       mockResolver,
       'UnifiedScopeResolver',
       undefined,
-      { requiredMethods: ['resolve'] },
+      { requiredMethods: ['resolve'] }
     );
 
     expect(serviceSetup.setupService).toHaveBeenCalledWith(
@@ -72,7 +72,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
           value: mockResolver,
           requiredMethods: ['resolve'],
         }),
-      }),
+      })
     );
   });
 
@@ -101,7 +101,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       actor,
       discoveryContext,
       trace,
-      'positioning:sit_down',
+      'positioning:sit_down'
     );
 
     expect(mockResolver.resolve).toHaveBeenCalledWith(
@@ -112,20 +112,20 @@ describe('TargetResolutionService tracing and empty result handling', () => {
         actionContext: discoveryContext,
         trace,
         actionId: 'positioning:sit_down',
-      },
+      }
     );
 
     expect(trace.withSpan).toHaveBeenCalledTimes(1);
     expect(trace.info).toHaveBeenNthCalledWith(
       1,
       "Delegating scope resolution for 'positioning:available_furniture' to UnifiedScopeResolver.",
-      'TargetResolutionService.resolveTargets',
+      'TargetResolutionService.resolveTargets'
     );
     expect(trace.info).toHaveBeenNthCalledWith(
       2,
       "Scope 'positioning:available_furniture' resolved to 2 target(s).",
       'TargetResolutionService.resolveTargets',
-      { targetIds: ['chair-1', 'chair-2'] },
+      { targetIds: ['chair-1', 'chair-2'] }
     );
 
     expect(prefixedLogger.debug).toHaveBeenNthCalledWith(
@@ -135,7 +135,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
         scopeName: 'positioning:available_furniture',
         actionId: 'positioning:sit_down',
         actorId: 'actor-1',
-      }),
+      })
     );
     expect(prefixedLogger.debug).toHaveBeenNthCalledWith(
       2,
@@ -144,7 +144,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
         hasActor: true,
         actorId: 'actor-1',
         actorLocation: 'atrium',
-      }),
+      })
     );
     expect(prefixedLogger.debug).toHaveBeenNthCalledWith(
       3,
@@ -154,7 +154,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
         hasValue: true,
         valueSize: 2,
         entities: ['chair-1', 'chair-2'],
-      }),
+      })
     );
 
     expect(result.success).toBe(true);
@@ -175,14 +175,14 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       { id: 'actor-2' },
       { currentLocation: 'void' },
       trace,
-      'action-2',
+      'action-2'
     );
 
     expect(result).toBe(failure);
     expect(trace.info).toHaveBeenCalledTimes(1);
     expect(trace.info).toHaveBeenCalledWith(
       "Delegating scope resolution for 'story:missing_scope' to UnifiedScopeResolver.",
-      'TargetResolutionService.resolveTargets',
+      'TargetResolutionService.resolveTargets'
     );
     expect(prefixedLogger.debug).not.toHaveBeenCalled();
   });
@@ -198,7 +198,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       { id: 'actor-5' },
       { currentLocation: 'lobby' },
       trace,
-      'positioning:sit_down',
+      'positioning:sit_down'
     );
 
     expect(result).toBe(failure);
@@ -210,7 +210,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
         hasValue: false,
         valueSize: 0,
         entities: [],
-      }),
+      })
     );
   });
 
@@ -224,7 +224,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       { id: 'actor-3' },
       { currentLocation: 'hall' },
       trace,
-      'action-3',
+      'action-3'
     );
 
     expect(result.success).toBe(true);
@@ -232,7 +232,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
     expect(trace.info).toHaveBeenNthCalledWith(
       2,
       "Scope 'none' resolved to no targets - returning noTarget context.",
-      'TargetResolutionService.resolveTargets',
+      'TargetResolutionService.resolveTargets'
     );
   });
 
@@ -246,7 +246,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       { id: 'actor-4' },
       { currentLocation: 'cavern' },
       trace,
-      'action-4',
+      'action-4'
     );
 
     expect(result.success).toBe(true);
@@ -254,7 +254,7 @@ describe('TargetResolutionService tracing and empty result handling', () => {
     expect(trace.info).toHaveBeenNthCalledWith(
       2,
       "Scope 'exploration:empty' resolved to no targets.",
-      'TargetResolutionService.resolveTargets',
+      'TargetResolutionService.resolveTargets'
     );
   });
 
@@ -264,22 +264,26 @@ describe('TargetResolutionService tracing and empty result handling', () => {
       .mockReturnValue(prefixedLogger);
 
     const service = createService({ useDefaultSetup: true });
-    mockResolver.resolve.mockReturnValue(ActionResult.success(new Set(['solo-target'])));
+    mockResolver.resolve.mockReturnValue(
+      ActionResult.success(new Set(['solo-target']))
+    );
 
     const result = service.resolveTargets(
       'exploration:solo',
       { id: 'actor-6' },
-      { currentLocation: 'arena' },
+      { currentLocation: 'arena' }
     );
 
     expect(result.success).toBe(true);
-    expect(result.value).toEqual([ActionTargetContext.forEntity('solo-target')]);
+    expect(result.value).toEqual([
+      ActionTargetContext.forEntity('solo-target'),
+    ]);
     expect(setupSpy).toHaveBeenCalledWith(
       'TargetResolutionService',
       baseLogger,
       expect.objectContaining({
         unifiedScopeResolver: expect.objectContaining({ value: mockResolver }),
-      }),
+      })
     );
 
     setupSpy.mockRestore();

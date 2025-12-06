@@ -10,10 +10,15 @@ describe('GameEngineSaveAdapter additional coverage', () => {
     };
     const adapter = new GameEngineSaveAdapter(engine);
 
-    await expect(adapter.save('slot-1', 'first save')).resolves.toBe(savedState);
+    await expect(adapter.save('slot-1', 'first save')).resolves.toBe(
+      savedState
+    );
 
     expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-    expect(engine.triggerManualSave).toHaveBeenCalledWith('first save', 'slot-1');
+    expect(engine.triggerManualSave).toHaveBeenCalledWith(
+      'first save',
+      'slot-1'
+    );
   });
 
   it('propagates synchronous errors thrown by the engine', async () => {
@@ -28,7 +33,10 @@ describe('GameEngineSaveAdapter additional coverage', () => {
     await expect(adapter.save('slot-2', 'second save')).rejects.toBe(error);
 
     expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-    expect(engine.triggerManualSave).toHaveBeenCalledWith('second save', 'slot-2');
+    expect(engine.triggerManualSave).toHaveBeenCalledWith(
+      'second save',
+      'slot-2'
+    );
   });
 
   it('implements ISaveService and maintains ordering across multiple invocations', async () => {
@@ -49,8 +57,16 @@ describe('GameEngineSaveAdapter additional coverage', () => {
     });
 
     expect(engine.triggerManualSave).toHaveBeenCalledTimes(2);
-    expect(engine.triggerManualSave).toHaveBeenNthCalledWith(1, 'first', 'alpha');
-    expect(engine.triggerManualSave).toHaveBeenNthCalledWith(2, 'second', 'beta');
+    expect(engine.triggerManualSave).toHaveBeenNthCalledWith(
+      1,
+      'first',
+      'alpha'
+    );
+    expect(engine.triggerManualSave).toHaveBeenNthCalledWith(
+      2,
+      'second',
+      'beta'
+    );
   });
 
   it('rejects with a TypeError when the engine is missing triggerManualSave', async () => {

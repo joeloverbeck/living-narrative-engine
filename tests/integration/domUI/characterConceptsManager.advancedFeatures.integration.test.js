@@ -227,7 +227,9 @@ describe('Character Concepts Manager - advanced integration flows', () => {
     await new Promise((resolve) => setTimeout(resolve, 360));
     await flushPromises();
 
-    const highlightedCard = document.querySelector('.concept-card .concept-text');
+    const highlightedCard = document.querySelector(
+      '.concept-card .concept-text'
+    );
     expect(highlightedCard.innerHTML).toContain('<mark>mysterious</mark>');
 
     const statusElement = document.querySelector('.search-status');
@@ -310,13 +312,15 @@ describe('Character Concepts Manager - advanced integration flows', () => {
 
     const channel = RecordingBroadcastChannel.instances.at(-1);
     expect(channel).toBeTruthy();
-    expect(channel.messages.some((msg) => msg.type === 'tab-opened')).toBe(true);
+    expect(channel.messages.some((msg) => msg.type === 'tab-opened')).toBe(
+      true
+    );
     expect(channel.messages.some((msg) => msg.type === 'leader-elected')).toBe(
       true
     );
 
-    const initialCalls = singleConceptService.getAllCharacterConcepts.mock.calls
-      .length;
+    const initialCalls =
+      singleConceptService.getAllCharacterConcepts.mock.calls.length;
     channel.postMessage({
       type: 'data-changed',
       tabId: 'other-tab',
@@ -331,9 +335,9 @@ describe('Character Concepts Manager - advanced integration flows', () => {
     ).toBeGreaterThan(initialCalls);
 
     const conceptCard = document.querySelector('.concept-card');
-    expect(conceptCard.querySelector('.direction-count strong').textContent).toBe(
-      '0'
-    );
+    expect(
+      conceptCard.querySelector('.direction-count strong').textContent
+    ).toBe('0');
 
     eventBus.dispatch('core:thematic_directions_generated', {
       conceptId: 'concept-existing',
@@ -388,7 +392,9 @@ describe('Character Concepts Manager - advanced integration flows', () => {
     ).map((node) => node.textContent);
     expect(
       deletionMessages.some((message) =>
-        message.includes('🗑️ Character concept deleted (2 directions also removed)')
+        message.includes(
+          '🗑️ Character concept deleted (2 directions also removed)'
+        )
       )
     ).toBe(true);
 

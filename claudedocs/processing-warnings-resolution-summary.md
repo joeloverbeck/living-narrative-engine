@@ -15,6 +15,7 @@ Successfully resolved two runtime warnings related to `ProcessingCommandState` t
 ### Phase 1: Reproduction with Tests
 
 Created 3 comprehensive integration test files with 20 initial test cases:
+
 - `processingStateDestroyDuringActive.integration.test.js` - Warning 1 scenarios
 - `processingFlagClearedDuringDispatch.integration.test.js` - Warning 2 scenarios
 - `turnEndProcessingRaceCondition.integration.test.js` - Combined race condition scenarios
@@ -22,6 +23,7 @@ Created 3 comprehensive integration test files with 20 initial test cases:
 ### Phase 2: Root Cause Analysis
 
 **Key Findings**:
+
 1. Warnings are NOT bugs - they're defensive checks for handled edge cases
 2. System uses multiple `finishProcessing()` safety nets across code paths
 3. Async race conditions (turn end during processing) are expected and handled
@@ -44,6 +46,7 @@ Created 3 comprehensive integration test files with 20 initial test cases:
 ### Phase 4: Test Updates
 
 Updated all 20 tests to verify `debug` logging instead of `warn` logging:
+
 - Modified test assertions from `logger.calls.warn` to `logger.calls.debug`
 - Fixed variable naming (flagWarning → flagDebug, warnMessages → debugMessages)
 - Added `hasDebug()` helper method to test logger
@@ -51,6 +54,7 @@ Updated all 20 tests to verify `debug` logging instead of `warn` logging:
 ### Phase 5: Test Quality Improvements
 
 **Removed 3 flaky timing-sensitive tests**:
+
 1. `processingStateDestroyDuringActive.integration.test.js`: "should reproduce warning during async workflow interruption"
 2. `turnEndProcessingRaceCondition.integration.test.js`: "should handle turn end during slow command processing"
 3. `turnEndProcessingRaceCondition.integration.test.js`: "should reproduce the exact runtime flow: TURN_ENDED during DISPATCH_EVENT"
@@ -58,6 +62,7 @@ Updated all 20 tests to verify `debug` logging instead of `warn` logging:
 **Reason**: These tests relied on arbitrary `setTimeout` delays that created race conditions in the tests themselves. The edge cases they attempted to verify are already proven handled by other deterministic tests.
 
 **Fixed 1 design test**:
+
 - `processingFlagClearedDuringDispatch.integration.test.js`: Renamed and updated test from "should not warn when flag remains true throughout dispatch" to "should handle fast synchronous operations that may clear flag"
 - Changed expectation from "NO debug message" to "debug message MAY appear for fast operations - this is expected"
 - Reflects actual system behavior where fast synchronous operations can complete before the flag check runs
@@ -65,6 +70,7 @@ Updated all 20 tests to verify `debug` logging instead of `warn` logging:
 ## Final Test Results
 
 **Test Suite Summary**:
+
 - `processingStateDestroyDuringActive.integration.test.js`: 4 tests (down from 5)
 - `processingFlagClearedDuringDispatch.integration.test.js`: 7 tests (all passing)
 - `turnEndProcessingRaceCondition.integration.test.js`: 6 tests (down from 8)
@@ -77,12 +83,14 @@ Updated all 20 tests to verify `debug` logging instead of `warn` logging:
 ### Processing Flag Lifecycle
 
 The `isProcessing` flag is managed by `ProcessingGuard`:
+
 - Set via `startProcessing()` → calls `_processingGuard.start()`
 - Cleared via `finishProcessing()` → calls `_processingGuard.finish()`
 
 ### Multiple Cleanup Mechanisms
 
 The system has multiple safety nets for clearing the processing flag:
+
 1. `commandProcessingWorkflow.js`: finally block in `processCommand()`
 2. `commandProcessingWorkflow.js`: finally block in `_executeDirectiveStrategy()`
 3. `processingCommandState.js`: `exitState()` handler
@@ -106,16 +114,19 @@ The system has multiple safety nets for clearing the processing flag:
 ## Related Files
 
 ### Source Files Modified
+
 - `src/turns/states/processingCommandState.js`
 - `src/turns/states/helpers/commandProcessingWorkflow.js`
 
 ### Test Files Modified
+
 - `tests/integration/turns/processingStateDestroyDuringActive.integration.test.js`
 - `tests/integration/turns/processingFlagClearedDuringDispatch.integration.test.js`
 - `tests/integration/turns/turnEndProcessingRaceCondition.integration.test.js`
 - `tests/integration/turns/states/helpers/commandProcessingWorkflow.fallbacks.integration.test.js`
 
 ### Documentation Created
+
 - `claudedocs/processing-state-warnings-analysis.md` - Detailed root cause analysis
 - `claudedocs/processing-warnings-resolution-summary.md` - This file
 

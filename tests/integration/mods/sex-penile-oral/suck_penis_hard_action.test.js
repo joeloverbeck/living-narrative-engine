@@ -90,7 +90,8 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const givingBlowjob = actor?.components?.['positioning:giving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!givingBlowjob || !Array.isArray(closenessPartners)) {
         return { success: true, value: new Set() };
@@ -101,12 +102,14 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
         return { success: true, value: new Set() };
       }
 
-      const receivingEntity = fixture.entityManager.getEntityInstance(receivingEntityId);
+      const receivingEntity =
+        fixture.entityManager.getEntityInstance(receivingEntityId);
       if (!receivingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const receivingBlowjob = receivingEntity.components?.['positioning:receiving_blowjob'];
+      const receivingBlowjob =
+        receivingEntity.components?.['positioning:receiving_blowjob'];
       if (!receivingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -134,8 +137,12 @@ describe('sex-penile-oral:suck_penis_hard action integration', () => {
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installReceivingBlowjobFromActorScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-penile-oral',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installReceivingBlowjobFromActorScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -152,7 +159,8 @@ describe('sex-penile-oral:suck_penis_hard action integration', () => {
 
   // eslint-disable-next-line jest/expect-expect -- Uses ModAssertionHelpers which internally uses expect
   it('successfully executes suck penis hard action with correct perceptible event', async () => {
-    const { entities, actorId, primaryId, roomId } = buildSuckPenisHardScenario();
+    const { entities, actorId, primaryId, roomId } =
+      buildSuckPenisHardScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -160,10 +168,14 @@ describe('sex-penile-oral:suck_penis_hard action integration', () => {
       additionalPayload: { primaryId },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -203,9 +215,12 @@ describe('sex-penile-oral:suck_penis_hard action integration', () => {
 
     // Verify components exist before action
     const actorBefore = testFixture.entityManager.getEntityInstance(actorId);
-    const primaryBefore = testFixture.entityManager.getEntityInstance(primaryId);
+    const primaryBefore =
+      testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorBefore.components['positioning:giving_blowjob']).toBeDefined();
-    expect(primaryBefore.components['positioning:receiving_blowjob']).toBeDefined();
+    expect(
+      primaryBefore.components['positioning:receiving_blowjob']
+    ).toBeDefined();
 
     await testFixture.executeAction(actorId, primaryId, {
       additionalPayload: { primaryId },
@@ -215,7 +230,9 @@ describe('sex-penile-oral:suck_penis_hard action integration', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance(actorId);
     const primaryAfter = testFixture.entityManager.getEntityInstance(primaryId);
     expect(actorAfter.components['positioning:giving_blowjob']).toBeDefined();
-    expect(primaryAfter.components['positioning:receiving_blowjob']).toBeDefined();
+    expect(
+      primaryAfter.components['positioning:receiving_blowjob']
+    ).toBeDefined();
   });
 
   it('does not trigger rule for different action IDs', async () => {

@@ -14,7 +14,14 @@
  * - Resource protection and monitoring overhead validation
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+} from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Monitoring & Circuit Breaker E2E Workflow', () => {
@@ -28,7 +35,9 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
     await testBed.initialize();
 
     // Import MonitoringCoordinator once for all tests
-    MonitoringCoordinator = (await import('../../../src/entities/monitoring/MonitoringCoordinator.js')).default;
+    MonitoringCoordinator = (
+      await import('../../../src/entities/monitoring/MonitoringCoordinator.js')
+    ).default;
   });
 
   beforeEach(() => {
@@ -76,7 +85,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
       // Act - Perform monitored entity operations
       const startTime = performance.now();
-      
+
       // Create entities with monitoring
       const entityIds = [];
       for (let i = 0; i < 5; i++) {
@@ -111,7 +120,9 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
       // Assert monitoring overhead is minimal (<5ms per operation target)
       const avgTimePerOperation = totalTime / 5;
-      const monitoringOverhead = avgTimePerOperation - (finalStats.performance.averageOperationTime || 0);
+      const monitoringOverhead =
+        avgTimePerOperation -
+        (finalStats.performance.averageOperationTime || 0);
       expect(Math.abs(monitoringOverhead)).toBeLessThan(5);
 
       // Assert entities were created successfully
@@ -133,7 +144,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
       // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
-      
+
       // Set a very low threshold to trigger slow operation detection
       performanceMonitor.setSlowOperationThreshold(1); // 1ms threshold
 
@@ -146,27 +157,34 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
           'slowOperation',
           async () => {
             // Simulate slow operation
-            await new Promise(resolve => setTimeout(resolve, 2));
-            return await testBed.entityManager.createEntityInstance(definitionId, {
-              instanceId: `slow_entity_${i + 1}`,
-            });
+            await new Promise((resolve) => setTimeout(resolve, 2));
+            return await testBed.entityManager.createEntityInstance(
+              definitionId,
+              {
+                instanceId: `slow_entity_${i + 1}`,
+              }
+            );
           },
           { context: `Slow operation ${i + 1}` }
         );
       }
 
       // Wait for health check to process
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Assert slow operations were detected
       const finalStats = monitoringCoordinator.getStats();
-      expect(finalStats.performance.slowOperations).toBeGreaterThan(initialSlowOperations);
-      expect(finalStats.performance.slowOperationsByType['slowOperation']).toBeGreaterThanOrEqual(3);
+      expect(finalStats.performance.slowOperations).toBeGreaterThan(
+        initialSlowOperations
+      );
+      expect(
+        finalStats.performance.slowOperationsByType['slowOperation']
+      ).toBeGreaterThanOrEqual(3);
 
       // Assert performance monitor logged warnings
       const slowOps = performanceMonitor.getSlowOperations(10);
       expect(slowOps.length).toBeGreaterThanOrEqual(3);
-      
+
       for (const slowOp of slowOps.slice(0, 3)) {
         expect(slowOp.operation).toBe('slowOperation');
         expect(slowOp.duration).toBeGreaterThan(1);
@@ -179,14 +197,17 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
 
       const initialStats = monitoringCoordinator.getStats();
-      const initialMemoryWarnings = initialStats.performance.memoryUsageWarnings;
+      const initialMemoryWarnings =
+        initialStats.performance.memoryUsageWarnings;
 
       // Act - Trigger memory usage check
       performanceMonitor.checkMemoryUsage();
 
       // Assert memory usage is being monitored
       const finalStats = monitoringCoordinator.getStats();
-      expect(finalStats.performance.memoryUsageWarnings).toBeGreaterThanOrEqual(initialMemoryWarnings);
+      expect(finalStats.performance.memoryUsageWarnings).toBeGreaterThanOrEqual(
+        initialMemoryWarnings
+      );
 
       // Memory warnings depend on actual memory usage, so we just verify the system is working
       const metrics = performanceMonitor.getMetrics();
@@ -202,14 +223,11 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       // Use shared monitoring coordinator (already reset in beforeEach)
 
       // Act - Perform some operations for reporting
-      await monitoringCoordinator.executeMonitored(
-        'reportTest',
-        async () => {
-          return await testBed.entityManager.createEntityInstance(definitionId, {
-            instanceId: 'report_test_entity',
-          });
-        }
-      );
+      await monitoringCoordinator.executeMonitored('reportTest', async () => {
+        return await testBed.entityManager.createEntityInstance(definitionId, {
+          instanceId: 'report_test_entity',
+        });
+      });
 
       // Assert monitoring report generation
       const report = monitoringCoordinator.getMonitoringReport();
@@ -233,13 +251,16 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
     it('should transition through circuit breaker states correctly', async () => {
       // Arrange
       // Use shared monitoring coordinator (already reset in beforeEach)
-      
+
       // Create a circuit breaker with low thresholds for testing
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('testOperation', {
-        failureThreshold: 2,
-        timeout: 50, // 50ms timeout for faster testing
-        successThreshold: 1,
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'testOperation',
+        {
+          failureThreshold: 2,
+          timeout: 50, // 50ms timeout for faster testing
+          successThreshold: 1,
+        }
+      );
 
       // Assert initial state
       expect(circuitBreaker.getState()).toBe('CLOSED');
@@ -247,7 +268,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
       // Act & Assert - Trigger failures to open circuit
       let failureCount = 0;
-      
+
       // First failure
       try {
         await circuitBreaker.execute(async () => {
@@ -257,9 +278,9 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
         failureCount++;
         expect(error.message).toBe('Test failure 1');
       }
-      
+
       expect(circuitBreaker.getState()).toBe('CLOSED'); // Still closed after 1 failure
-      
+
       // Second failure should open the circuit
       try {
         await circuitBreaker.execute(async () => {
@@ -269,7 +290,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
         failureCount++;
         expect(error.message).toBe('Test failure 2');
       }
-      
+
       expect(circuitBreaker.getState()).toBe('OPEN');
       expect(circuitBreaker.isOpen()).toBe(true);
       expect(failureCount).toBe(2);
@@ -286,7 +307,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Wait for timeout to allow transition to HALF_OPEN
-      await new Promise(resolve => setTimeout(resolve, 60));
+      await new Promise((resolve) => setTimeout(resolve, 60));
 
       // Next successful request should transition to HALF_OPEN and then CLOSED
       const result = await circuitBreaker.execute(async () => {
@@ -301,10 +322,13 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
     it('should handle synchronous operations with circuit breaker protection', async () => {
       // Arrange
       // Use shared monitoring coordinator (already reset in beforeEach)
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('syncOperation', {
-        failureThreshold: 1,
-        timeout: 50,
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'syncOperation',
+        {
+          failureThreshold: 1,
+          timeout: 50,
+        }
+      );
 
       // Act & Assert - Test synchronous failure
       expect(circuitBreaker.getState()).toBe('CLOSED');
@@ -330,7 +354,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Wait for timeout and test recovery
-      await new Promise(resolve => setTimeout(resolve, 60));
+      await new Promise((resolve) => setTimeout(resolve, 60));
 
       const result = circuitBreaker.executeSync(() => {
         return 'sync success';
@@ -344,15 +368,18 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
     it('should provide detailed circuit breaker statistics and reports', async () => {
       // Arrange
       // Use shared monitoring coordinator (already reset in beforeEach)
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('statsTest', {
-        failureThreshold: 3,
-        successThreshold: 2,
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'statsTest',
+        {
+          failureThreshold: 3,
+          successThreshold: 2,
+        }
+      );
 
       // Act - Execute operations to generate statistics
       // Success
       await circuitBreaker.execute(async () => 'success1');
-      
+
       // Failure
       try {
         await circuitBreaker.execute(async () => {
@@ -394,9 +421,12 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
     it('should handle circuit breaker reset and enable/disable operations', async () => {
       // Arrange
       // Use shared monitoring coordinator (already reset in beforeEach)
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('resetTest', {
-        failureThreshold: 1,
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'resetTest',
+        {
+          failureThreshold: 1,
+        }
+      );
 
       // Act - Trigger failure and open circuit
       try {
@@ -440,15 +470,18 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       await testBed.ensureEntityDefinitionExists(definitionId);
 
       // Use shared monitoring coordinator (already reset in beforeEach)
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('loadTest', {
-        failureThreshold: 5,
-        timeout: 100,
-      });
+      const circuitBreaker = monitoringCoordinator.getCircuitBreaker(
+        'loadTest',
+        {
+          failureThreshold: 5,
+          timeout: 100,
+        }
+      );
 
       // Act - Perform high-volume operations with some failures mixed in
       const operations = [];
       const results = [];
-      
+
       for (let i = 0; i < 20; i++) {
         const operation = monitoringCoordinator.executeMonitored(
           'loadTest',
@@ -457,18 +490,21 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
             if (i % 4 === 3) {
               throw new Error(`Load test failure ${i}`);
             }
-            
-            return await testBed.entityManager.createEntityInstance(definitionId, {
-              instanceId: `load_entity_${i + 1}`,
-            });
+
+            return await testBed.entityManager.createEntityInstance(
+              definitionId,
+              {
+                instanceId: `load_entity_${i + 1}`,
+              }
+            );
           },
           {
             context: `Load test operation ${i + 1}`,
             useCircuitBreaker: true,
-            circuitBreakerOptions: { name: 'loadTest' }
+            circuitBreakerOptions: { name: 'loadTest' },
           }
         );
-        
+
         operations.push(operation);
       }
 
@@ -483,9 +519,9 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       }
 
       // Assert system handled load appropriately
-      const successfulOperations = results.filter(r => r.success);
-      const failedOperations = results.filter(r => !r.success);
-      
+      const successfulOperations = results.filter((r) => r.success);
+      const failedOperations = results.filter((r) => !r.success);
+
       // Should have some successes and some failures as designed
       expect(successfulOperations.length).toBeGreaterThan(10); // Most should succeed
       expect(failedOperations.length).toBeGreaterThan(3); // Some failures expected
@@ -510,37 +546,42 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       await testBed.ensureEntityDefinitionExists(definitionId);
 
       // Use shared monitoring coordinator (already reset in beforeEach)
-      
+
       // Reset monitoring for clean test
       monitoringCoordinator.reset();
       const initialStats = monitoringCoordinator.getStats();
 
       // Act - Execute concurrent operations
       const concurrentOperations = [];
-      
+
       for (let i = 0; i < 10; i++) {
         const operation = monitoringCoordinator.executeMonitored(
           `concurrentOp${i}`,
           async () => {
             // Simulate varying operation times
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 10));
-            return await testBed.entityManager.createEntityInstance(definitionId, {
-              instanceId: `concurrent_entity_${i + 1}`,
-            });
+            await new Promise((resolve) =>
+              setTimeout(resolve, Math.random() * 10)
+            );
+            return await testBed.entityManager.createEntityInstance(
+              definitionId,
+              {
+                instanceId: `concurrent_entity_${i + 1}`,
+              }
+            );
           },
           { context: `Concurrent operation ${i + 1}` }
         );
-        
+
         concurrentOperations.push(operation);
       }
 
       // Wait for all operations to complete
       const results = await Promise.allSettled(concurrentOperations);
-      
+
       // Assert all operations completed successfully
-      const fulfilled = results.filter(r => r.status === 'fulfilled');
-      const rejected = results.filter(r => r.status === 'rejected');
-      
+      const fulfilled = results.filter((r) => r.status === 'fulfilled');
+      const rejected = results.filter((r) => r.status === 'rejected');
+
       expect(fulfilled.length).toBe(10);
       expect(rejected.length).toBe(0);
 
@@ -551,11 +592,15 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
 
       // Note: Circuit breakers were created for each operation name, which is expected behavior
       // The test was assuming no circuit breakers would be created, but that's not the case
-      expect(Object.keys(finalStats.circuitBreakers).length).toBeGreaterThanOrEqual(0); // Circuit breakers created per operation
+      expect(
+        Object.keys(finalStats.circuitBreakers).length
+      ).toBeGreaterThanOrEqual(0); // Circuit breakers created per operation
 
       // Assert entities were created successfully
       for (let i = 0; i < 10; i++) {
-        const entity = await testBed.entityManager.getEntityInstance(`concurrent_entity_${i + 1}`);
+        const entity = await testBed.entityManager.getEntityInstance(
+          `concurrent_entity_${i + 1}`
+        );
         expect(entity).toBeDefined();
       }
     });
@@ -564,7 +609,7 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       // Arrange
       // Use shared monitoring coordinator (already reset in beforeEach)
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
-      
+
       // Set very low threshold to trigger alerts
       performanceMonitor.setSlowOperationThreshold(1);
 
@@ -577,32 +622,37 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
           'degradedPerformance',
           async () => {
             // Simulate degraded performance
-            await new Promise(resolve => setTimeout(resolve, 2));
+            await new Promise((resolve) => setTimeout(resolve, 2));
             return `Degraded operation ${i + 1}`;
           }
         );
       }
 
       // Trigger manual health check to process alerts
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Assert health check system detected performance degradation
       const finalStats = monitoringCoordinator.getStats();
-      
+
       // Note: Health check alerts may not be generated immediately in test environment
       // The main goal is to verify that slow operations were detected
-      expect(finalStats.recentAlerts.length).toBeGreaterThanOrEqual(initialAlertCount);
-      
-      // Check for performance degradation alerts
-      const performanceAlerts = finalStats.recentAlerts.filter(alert => 
-        alert.message.includes('operation time') || 
-        alert.message.includes('slow operation')
+      expect(finalStats.recentAlerts.length).toBeGreaterThanOrEqual(
+        initialAlertCount
       );
-      
+
+      // Check for performance degradation alerts
+      const performanceAlerts = finalStats.recentAlerts.filter(
+        (alert) =>
+          alert.message.includes('operation time') ||
+          alert.message.includes('slow operation')
+      );
+
       // Note: In test environment, health check alerts may not be generated immediately
       // The primary verification is that slow operations were detected
       expect(finalStats.performance.slowOperations).toBeGreaterThan(0);
-      expect(finalStats.performance.slowOperationsByType['degradedPerformance']).toBeGreaterThanOrEqual(3);
+      expect(
+        finalStats.performance.slowOperationsByType['degradedPerformance']
+      ).toBeGreaterThanOrEqual(3);
     });
   });
 
@@ -613,11 +663,12 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       const performanceMonitor = monitoringCoordinator.getPerformanceMonitor();
 
       // Measure resource usage before operations
-      const initialMemoryWarnings = performanceMonitor.getMetrics().memoryUsageWarnings;
+      const initialMemoryWarnings =
+        performanceMonitor.getMetrics().memoryUsageWarnings;
 
       // Act - Perform operations that generate monitoring data
       const startTime = performance.now();
-      
+
       for (let i = 0; i < 50; i++) {
         await monitoringCoordinator.executeMonitored(
           'resourceTest',
@@ -633,17 +684,19 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       // Assert monitoring overhead is minimal
       const metrics = performanceMonitor.getMetrics();
       expect(metrics.totalOperations).toBe(50);
-      
+
       // Calculate average monitoring overhead per operation
       const avgTimePerOperation = totalTime / 50;
-      const monitoringOverhead = avgTimePerOperation - (metrics.averageOperationTime || 0);
-      
+      const monitoringOverhead =
+        avgTimePerOperation - (metrics.averageOperationTime || 0);
+
       // Monitoring overhead should be less than 5ms per operation
       expect(Math.abs(monitoringOverhead)).toBeLessThan(5);
 
       // Assert memory usage is being monitored
       performanceMonitor.checkMemoryUsage();
-      const finalMemoryWarnings = performanceMonitor.getMetrics().memoryUsageWarnings;
+      const finalMemoryWarnings =
+        performanceMonitor.getMetrics().memoryUsageWarnings;
       expect(finalMemoryWarnings).toBeGreaterThanOrEqual(initialMemoryWarnings);
 
       // Assert no excessive resource usage
@@ -658,11 +711,14 @@ describe('Monitoring & Circuit Breaker E2E Workflow', () => {
       // Act - Create and clean up multiple circuit breakers
       const circuitBreakers = [];
       for (let i = 0; i < 5; i++) {
-        const cb = monitoringCoordinator.getCircuitBreaker(`cleanup_test_${i}`, {
-          failureThreshold: 3,
-        });
+        const cb = monitoringCoordinator.getCircuitBreaker(
+          `cleanup_test_${i}`,
+          {
+            failureThreshold: 3,
+          }
+        );
         circuitBreakers.push(cb);
-        
+
         // Use each circuit breaker
         await cb.execute(async () => `Test ${i}`);
       }

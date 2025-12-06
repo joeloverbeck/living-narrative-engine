@@ -12,18 +12,18 @@ Copy 10 outer-layer entity files from `clothing` mod to `outer-clothing` mod and
 
 ## Entity List (10 items)
 
-| Current File | Current ID | New ID |
-|--------------|-----------|--------|
-| `battle_scarred_leather_jacket.entity.json` | `clothing:battle_scarred_leather_jacket` | `outer-clothing:battle_scarred_leather_jacket` |
-| `charcoal_heather_zip_up_hoodie.entity.json` | `clothing:charcoal_heather_zip_up_hoodie` | `outer-clothing:charcoal_heather_zip_up_hoodie` |
-| `dark_olive_cotton_twill_chore_jacket.entity.json` | `clothing:dark_olive_cotton_twill_chore_jacket` | `outer-clothing:dark_olive_cotton_twill_chore_jacket` |
-| `floor_length_black_leather_coat.entity.json` | `clothing:floor_length_black_leather_coat` | `outer-clothing:floor_length_black_leather_coat` |
-| `flowing_cape_blood_red.entity.json` | `clothing:flowing_cape_blood_red` | `outer-clothing:flowing_cape_blood_red` |
-| `indigo_denim_trucker_jacket.entity.json` | `clothing:indigo_denim_trucker_jacket` | `outer-clothing:indigo_denim_trucker_jacket` |
-| `leather_work_apron.entity.json` | `clothing:leather_work_apron` | `outer-clothing:leather_work_apron` |
+| Current File                                              | Current ID                                             | New ID                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------ |
+| `battle_scarred_leather_jacket.entity.json`               | `clothing:battle_scarred_leather_jacket`               | `outer-clothing:battle_scarred_leather_jacket`               |
+| `charcoal_heather_zip_up_hoodie.entity.json`              | `clothing:charcoal_heather_zip_up_hoodie`              | `outer-clothing:charcoal_heather_zip_up_hoodie`              |
+| `dark_olive_cotton_twill_chore_jacket.entity.json`        | `clothing:dark_olive_cotton_twill_chore_jacket`        | `outer-clothing:dark_olive_cotton_twill_chore_jacket`        |
+| `floor_length_black_leather_coat.entity.json`             | `clothing:floor_length_black_leather_coat`             | `outer-clothing:floor_length_black_leather_coat`             |
+| `flowing_cape_blood_red.entity.json`                      | `clothing:flowing_cape_blood_red`                      | `outer-clothing:flowing_cape_blood_red`                      |
+| `indigo_denim_trucker_jacket.entity.json`                 | `clothing:indigo_denim_trucker_jacket`                 | `outer-clothing:indigo_denim_trucker_jacket`                 |
+| `leather_work_apron.entity.json`                          | `clothing:leather_work_apron`                          | `outer-clothing:leather_work_apron`                          |
 | `military_coat_midnight_blue_gold_epaulettes.entity.json` | `clothing:military_coat_midnight_blue_gold_epaulettes` | `outer-clothing:military_coat_midnight_blue_gold_epaulettes` |
-| `pale_pink_fleece_hoodie_heart_patches.entity.json` | `clothing:pale_pink_fleece_hoodie_heart_patches` | `outer-clothing:pale_pink_fleece_hoodie_heart_patches` |
-| `white_structured_linen_blazer.entity.json` | `clothing:white_structured_linen_blazer` | `outer-clothing:white_structured_linen_blazer` |
+| `pale_pink_fleece_hoodie_heart_patches.entity.json`       | `clothing:pale_pink_fleece_hoodie_heart_patches`       | `outer-clothing:pale_pink_fleece_hoodie_heart_patches`       |
+| `white_structured_linen_blazer.entity.json`               | `clothing:white_structured_linen_blazer`               | `outer-clothing:white_structured_linen_blazer`               |
 
 ## Files to Create
 

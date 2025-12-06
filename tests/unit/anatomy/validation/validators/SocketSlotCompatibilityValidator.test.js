@@ -24,10 +24,7 @@ const createEntityDefinition = (overrides = {}) => ({
   id: 'anatomy:test_root',
   components: {
     'anatomy:sockets': {
-      sockets: [
-        { id: 'torso_socket' },
-        { id: 'arm_socket' },
-      ],
+      sockets: [{ id: 'torso_socket' }, { id: 'arm_socket' }],
     },
   },
   _sourceFile: 'data/mods/core/entities/definitions/test_root.entity.json',
@@ -42,26 +39,26 @@ describe('SocketSlotCompatibilityValidator', () => {
     logger = testBed.createMockLogger();
   });
 
-const createValidator = ({
-  blueprint = createBlueprint(),
-  entityDefinition = createEntityDefinition(),
-  blueprintOverride,
-  dataRegistryOverride,
-  useLegacyRegistry = false,
-} = {}) => {
-  const anatomyBlueprintRepository = {
-    getBlueprint: jest.fn().mockResolvedValue(blueprint),
-    ...blueprintOverride,
-  };
+  const createValidator = ({
+    blueprint = createBlueprint(),
+    entityDefinition = createEntityDefinition(),
+    blueprintOverride,
+    dataRegistryOverride,
+    useLegacyRegistry = false,
+  } = {}) => {
+    const anatomyBlueprintRepository = {
+      getBlueprint: jest.fn().mockResolvedValue(blueprint),
+      ...blueprintOverride,
+    };
 
-  const registryBase = useLegacyRegistry
-    ? { get: jest.fn().mockReturnValue(entityDefinition) }
-    : { getEntityDefinition: jest.fn().mockReturnValue(entityDefinition) };
+    const registryBase = useLegacyRegistry
+      ? { get: jest.fn().mockReturnValue(entityDefinition) }
+      : { getEntityDefinition: jest.fn().mockReturnValue(entityDefinition) };
 
-  const dataRegistry = {
-    ...registryBase,
-    ...dataRegistryOverride,
-  };
+    const dataRegistry = {
+      ...registryBase,
+      ...dataRegistryOverride,
+    };
 
     const validator = new SocketSlotCompatibilityValidator({
       logger,
@@ -236,7 +233,8 @@ const createValidator = ({
         type: 'SOCKET_NOT_FOUND',
         severity: 'error',
         slotName: 'torso',
-        message: "Socket 'torso_soket' not found on root entity 'anatomy:test_root'",
+        message:
+          "Socket 'torso_soket' not found on root entity 'anatomy:test_root'",
       });
       expect(result.errors[0].fix).toContain("Did you mean 'torso_socket'");
     });
@@ -366,8 +364,11 @@ const createValidator = ({
   });
 
   describe('__testables__ helpers', () => {
-    const { findSimilarSocketName, suggestSocketFix, validateStructureTemplateSockets } =
-      __testables__;
+    const {
+      findSimilarSocketName,
+      suggestSocketFix,
+      validateStructureTemplateSockets,
+    } = __testables__;
 
     it('findSimilarSocketName returns null when requested socket is missing', () => {
       expect(findSimilarSocketName('', ['torso'])).toBeNull();
@@ -389,7 +390,9 @@ const createValidator = ({
 
     it('validateStructureTemplateSockets currently returns an empty list', () => {
       expect(
-        validateStructureTemplateSockets({ id: 'bp' }, new Map(), { id: 'entity' })
+        validateStructureTemplateSockets({ id: 'bp' }, new Map(), {
+          id: 'entity',
+        })
       ).toEqual([]);
     });
   });

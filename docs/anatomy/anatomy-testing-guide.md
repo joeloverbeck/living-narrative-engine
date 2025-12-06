@@ -5,12 +5,12 @@ paths below reflect the repository as it exists today.
 
 ## Test Locations and Commands
 
-| Suite       | Path prefix                  | How to run                                                                 |
-| ----------- | ---------------------------- | --------------------------------------------------------------------------- |
-| Unit        | `tests/unit/anatomy/`        | `npm run test:unit -- --testPathPattern=tests/unit/anatomy`                 |
-| Integration | `tests/integration/anatomy/` | `npm run test:integration -- --testPathPattern=tests/integration/anatomy`   |
-| End-to-End  | `tests/e2e/anatomy/`         | `npm run test:e2e -- --testPathPattern=tests/e2e/anatomy`                   |
-| Performance | `tests/performance/anatomy/` | `npm run test:performance -- --testPathPattern=tests/performance/anatomy`   |
+| Suite       | Path prefix                  | How to run                                                                        |
+| ----------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| Unit        | `tests/unit/anatomy/`        | `npm run test:unit -- --testPathPattern=tests/unit/anatomy`                       |
+| Integration | `tests/integration/anatomy/` | `npm run test:integration -- --testPathPattern=tests/integration/anatomy`         |
+| End-to-End  | `tests/e2e/anatomy/`         | `npm run test:e2e -- --testPathPattern=tests/e2e/anatomy`                         |
+| Performance | `tests/performance/anatomy/` | `npm run test:performance -- --testPathPattern=tests/performance/anatomy`         |
 | Regression  | `tests/regression/anatomy/`  | `npm run test:single -- --runTestsByPath tests/regression/anatomy/<file>.test.js` |
 
 > Jest pattern flags allow you to run only the anatomy-related files while still using the standard npm scripts.
@@ -109,15 +109,15 @@ update the recorded baselines when altering algorithms.
 
 ## Fixtures, Builders, and Utilities
 
-| Helper                                                  | Purpose                                                                                     |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `tests/common/anatomy/anatomyIntegrationTestBed.js`     | Full-stack integration harness with real services and in-memory registry.                  |
-| `tests/common/anatomy/enhancedAnatomyTestBed.js`        | Variant exposing additional hooks for graph manipulation and cache inspection.             |
-| `tests/common/anatomy/simplifiedAnatomyTestBed.js`      | Lightweight harness for tests that only require slot/socket generation.                    |
-| `tests/common/anatomy/complexBlueprintDataGenerator.js` | Pre-built complex templates and recipes for stress or regression scenarios.                |
-| `tests/common/anatomy/anatomyVisualizerTestBed.js`      | DOM-oriented setup used by the anatomy visualizer unit tests.                              |
-| `tests/common/mods/ModTestFixture.js`                   | Auto-loads action rules, conditions, and scope categories for mod-driven scenarios.        |
-| `tests/common/mods/ModEntityBuilder.js`                 | Fluent builder for entities; provides `.withBody`, `.asBodyPart`, and clothing helpers.    |
+| Helper                                                  | Purpose                                                                                 |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `tests/common/anatomy/anatomyIntegrationTestBed.js`     | Full-stack integration harness with real services and in-memory registry.               |
+| `tests/common/anatomy/enhancedAnatomyTestBed.js`        | Variant exposing additional hooks for graph manipulation and cache inspection.          |
+| `tests/common/anatomy/simplifiedAnatomyTestBed.js`      | Lightweight harness for tests that only require slot/socket generation.                 |
+| `tests/common/anatomy/complexBlueprintDataGenerator.js` | Pre-built complex templates and recipes for stress or regression scenarios.             |
+| `tests/common/anatomy/anatomyVisualizerTestBed.js`      | DOM-oriented setup used by the anatomy visualizer unit tests.                           |
+| `tests/common/mods/ModTestFixture.js`                   | Auto-loads action rules, conditions, and scope categories for mod-driven scenarios.     |
+| `tests/common/mods/ModEntityBuilder.js`                 | Fluent builder for entities; provides `.withBody`, `.asBodyPart`, and clothing helpers. |
 
 Re-use these utilities to avoid duplicating boilerplate and to keep tests aligned with existing patterns.
 

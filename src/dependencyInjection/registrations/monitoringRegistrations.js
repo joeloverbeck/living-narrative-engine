@@ -24,7 +24,7 @@ const defaultErrorReportingConfig = {
   enabled: getEnvironmentMode() !== 'production',
   endpoint: null, // Set via environment or configuration
   batchSize: 50,
-  flushInterval: 30000
+  flushInterval: 30000,
 };
 
 /**
@@ -97,15 +97,21 @@ export function registerMemoryMonitoring(container) {
       return new MonitoringCoordinator({
         logger: c.resolve(tokens.ILogger),
         eventBus: c.resolve(tokens.IEventBus),
-        memoryMonitor: c.isRegistered(tokens.IMemoryMonitor) ? c.resolve(tokens.IMemoryMonitor) : null,
-        memoryPressureManager: c.isRegistered(tokens.IMemoryPressureManager) ? c.resolve(tokens.IMemoryPressureManager) : null,
-        memoryReporter: c.isRegistered(tokens.IMemoryReporter) ? c.resolve(tokens.IMemoryReporter) : null,
+        memoryMonitor: c.isRegistered(tokens.IMemoryMonitor)
+          ? c.resolve(tokens.IMemoryMonitor)
+          : null,
+        memoryPressureManager: c.isRegistered(tokens.IMemoryPressureManager)
+          ? c.resolve(tokens.IMemoryPressureManager)
+          : null,
+        memoryReporter: c.isRegistered(tokens.IMemoryReporter)
+          ? c.resolve(tokens.IMemoryReporter)
+          : null,
         enabled: true,
         checkInterval: 30000,
         circuitBreakerOptions: {
           failureThreshold: 5,
-          timeout: 60000
-        }
+          timeout: 60000,
+        },
       });
     },
     { singleton: true }
@@ -117,7 +123,10 @@ export function registerMemoryMonitoring(container) {
   safeDebug(`Registered ${String(tokens.IErrorReportingConfig)}.`);
 
   // Register memory monitoring configuration
-  registrar.instance(tokens.IMemoryMonitoringConfig, defaultMemoryMonitoringConfig);
+  registrar.instance(
+    tokens.IMemoryMonitoringConfig,
+    defaultMemoryMonitoringConfig
+  );
   safeDebug(`Registered ${String(tokens.IMemoryMonitoringConfig)}.`);
 
   // Register MemoryMonitor
@@ -145,9 +154,10 @@ export function registerMemoryMonitoring(container) {
   // Register MemoryAnalyzer
   container.register(
     tokens.IMemoryAnalyzer,
-    (c) => new MemoryAnalyzer({
-      logger: c.resolve(tokens.ILogger),
-    }),
+    (c) =>
+      new MemoryAnalyzer({
+        logger: c.resolve(tokens.ILogger),
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.IMemoryAnalyzer)}.`);
@@ -155,9 +165,10 @@ export function registerMemoryMonitoring(container) {
   // Register MemoryProfiler
   container.register(
     tokens.IMemoryProfiler,
-    (c) => new MemoryProfiler({
-      logger: c.resolve(tokens.ILogger),
-    }),
+    (c) =>
+      new MemoryProfiler({
+        logger: c.resolve(tokens.ILogger),
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.IMemoryProfiler)}.`);
@@ -165,11 +176,14 @@ export function registerMemoryMonitoring(container) {
   // Register LowMemoryStrategy
   container.register(
     tokens.ILowMemoryStrategy,
-    (c) => new LowMemoryStrategy({
-      logger: c.resolve(tokens.ILogger),
-      eventBus: c.resolve(tokens.IEventBus),
-      cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
-    }),
+    (c) =>
+      new LowMemoryStrategy({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        cache: c.isRegistered(tokens.IUnifiedCache)
+          ? c.resolve(tokens.IUnifiedCache)
+          : null,
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.ILowMemoryStrategy)}.`);
@@ -177,11 +191,14 @@ export function registerMemoryMonitoring(container) {
   // Register CriticalMemoryStrategy
   container.register(
     tokens.ICriticalMemoryStrategy,
-    (c) => new CriticalMemoryStrategy({
-      logger: c.resolve(tokens.ILogger),
-      eventBus: c.resolve(tokens.IEventBus),
-      cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
-    }),
+    (c) =>
+      new CriticalMemoryStrategy({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        cache: c.isRegistered(tokens.IUnifiedCache)
+          ? c.resolve(tokens.IUnifiedCache)
+          : null,
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.ICriticalMemoryStrategy)}.`);
@@ -191,15 +208,20 @@ export function registerMemoryMonitoring(container) {
     tokens.IMemoryPressureManager,
     (c) => {
       const config = c.resolve(tokens.IMemoryMonitoringConfig);
-      return new MemoryPressureManager({
-        logger: c.resolve(tokens.ILogger),
-        eventBus: c.resolve(tokens.IEventBus),
-        monitor: c.resolve(tokens.IMemoryMonitor),
-        cache: c.isRegistered(tokens.IUnifiedCache) ? c.resolve(tokens.IUnifiedCache) : null,
-      }, {
-        automaticManagement: config.automaticResponse.enabled,
-        aggressiveGC: config.automaticResponse.gcTrigger.critical,
-      });
+      return new MemoryPressureManager(
+        {
+          logger: c.resolve(tokens.ILogger),
+          eventBus: c.resolve(tokens.IEventBus),
+          monitor: c.resolve(tokens.IMemoryMonitor),
+          cache: c.isRegistered(tokens.IUnifiedCache)
+            ? c.resolve(tokens.IUnifiedCache)
+            : null,
+        },
+        {
+          automaticManagement: config.automaticResponse.enabled,
+          aggressiveGC: config.automaticResponse.gcTrigger.critical,
+        }
+      );
     },
     { singleton: true }
   );
@@ -209,13 +231,14 @@ export function registerMemoryMonitoring(container) {
   if (typeof MemoryReporter !== 'undefined') {
     container.register(
       tokens.IMemoryReporter,
-      (c) => new MemoryReporter({
-        logger: c.resolve(tokens.ILogger),
-        monitor: c.resolve(tokens.IMemoryMonitor),
-        analyzer: c.resolve(tokens.IMemoryAnalyzer),
-        profiler: c.resolve(tokens.IMemoryProfiler),
-        pressureManager: c.resolve(tokens.IMemoryPressureManager),
-      }),
+      (c) =>
+        new MemoryReporter({
+          logger: c.resolve(tokens.ILogger),
+          monitor: c.resolve(tokens.IMemoryMonitor),
+          analyzer: c.resolve(tokens.IMemoryAnalyzer),
+          profiler: c.resolve(tokens.IMemoryProfiler),
+          pressureManager: c.resolve(tokens.IMemoryPressureManager),
+        }),
       { singleton: true }
     );
     safeDebug(`Registered ${String(tokens.IMemoryReporter)}.`);
@@ -224,11 +247,12 @@ export function registerMemoryMonitoring(container) {
   // Register CentralErrorHandler
   container.register(
     tokens.ICentralErrorHandler,
-    (c) => new CentralErrorHandler({
-      logger: c.resolve(tokens.ILogger),
-      eventBus: c.resolve(tokens.IEventBus),
-      monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
-    }),
+    (c) =>
+      new CentralErrorHandler({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.ICentralErrorHandler)}.`);
@@ -236,10 +260,11 @@ export function registerMemoryMonitoring(container) {
   // Register RecoveryStrategyManager
   container.register(
     tokens.IRecoveryStrategyManager,
-    (c) => new RecoveryStrategyManager({
-      logger: c.resolve(tokens.ILogger),
-      monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
-    }),
+    (c) =>
+      new RecoveryStrategyManager({
+        logger: c.resolve(tokens.ILogger),
+        monitoringCoordinator: c.resolve(tokens.IMonitoringCoordinator),
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.IRecoveryStrategyManager)}.`);
@@ -247,14 +272,15 @@ export function registerMemoryMonitoring(container) {
   // Register ErrorReporter
   container.register(
     tokens.IErrorReporter,
-    (c) => new ErrorReporter({
-      logger: c.resolve(tokens.ILogger),
-      eventBus: c.resolve(tokens.IEventBus),
-      endpoint: defaultErrorReportingConfig.endpoint,
-      batchSize: defaultErrorReportingConfig.batchSize,
-      flushInterval: defaultErrorReportingConfig.flushInterval,
-      enabled: defaultErrorReportingConfig.enabled
-    }),
+    (c) =>
+      new ErrorReporter({
+        logger: c.resolve(tokens.ILogger),
+        eventBus: c.resolve(tokens.IEventBus),
+        endpoint: defaultErrorReportingConfig.endpoint,
+        batchSize: defaultErrorReportingConfig.batchSize,
+        flushInterval: defaultErrorReportingConfig.flushInterval,
+        enabled: defaultErrorReportingConfig.enabled,
+      }),
     { singleton: true }
   );
   safeDebug(`Registered ${String(tokens.IErrorReporter)}.`);
@@ -262,19 +288,28 @@ export function registerMemoryMonitoring(container) {
   // Perform deferred injection to resolve circular dependency
   // This must happen after all services are registered
   try {
-    const monitoringCoordinator = container.resolve(tokens.IMonitoringCoordinator);
+    const monitoringCoordinator = container.resolve(
+      tokens.IMonitoringCoordinator
+    );
     const centralErrorHandler = container.resolve(tokens.ICentralErrorHandler);
-    const recoveryStrategyManager = container.resolve(tokens.IRecoveryStrategyManager);
+    const recoveryStrategyManager = container.resolve(
+      tokens.IRecoveryStrategyManager
+    );
     const errorReporter = container.resolve(tokens.IErrorReporter);
 
     // Check if MonitoringCoordinator has the injection method
-    if (monitoringCoordinator && typeof monitoringCoordinator.injectErrorHandlers === 'function') {
+    if (
+      monitoringCoordinator &&
+      typeof monitoringCoordinator.injectErrorHandlers === 'function'
+    ) {
       monitoringCoordinator.injectErrorHandlers(
         centralErrorHandler,
         recoveryStrategyManager,
         errorReporter
       );
-      safeDebug('Injected error handlers into MonitoringCoordinator (deferred injection).');
+      safeDebug(
+        'Injected error handlers into MonitoringCoordinator (deferred injection).'
+      );
     }
   } catch (error) {
     // If we can't resolve the services, it's okay - they may not be needed

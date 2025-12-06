@@ -16,17 +16,17 @@ Add prerequisites to the `wield_threateningly` action to ensure the actor has at
 
 ### Original Assumptions vs Reality
 
-| Assumption | Reality | Correction Required |
-|------------|---------|---------------------|
-| Action has simple structure | Action has `generateCombinations`, `required_components`, `placeholder`, and `visual` properties | ✅ Updated "Before" section below |
-| Prerequisites format is string array | Schema requires objects with `logic.condition_ref` and optional `failure_message` | ✅ Updated "After" section below |
-| Description: "Brandish a weapon..." | Description: "Wield a weapon in a threatening manner to intimidate" | ✅ Corrected |
-| No visual styling | Has Arctic Steel color scheme (`#112a46`, `#e6f1ff`, etc.) | ✅ Corrected |
+| Assumption                           | Reality                                                                                          | Correction Required               |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------------- |
+| Action has simple structure          | Action has `generateCombinations`, `required_components`, `placeholder`, and `visual` properties | ✅ Updated "Before" section below |
+| Prerequisites format is string array | Schema requires objects with `logic.condition_ref` and optional `failure_message`                | ✅ Updated "After" section below  |
+| Description: "Brandish a weapon..."  | Description: "Wield a weapon in a threatening manner to intimidate"                              | ✅ Corrected                      |
+| No visual styling                    | Has Arctic Steel color scheme (`#112a46`, `#e6f1ff`, etc.)                                       | ✅ Corrected                      |
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                                        | Change                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------- |
 | `data/mods/weapons/actions/wield_threateningly.action.json` | Add `prerequisites` array with grabbing condition reference |
 
 ## Out of Scope
@@ -53,9 +53,7 @@ Add prerequisites to the `wield_threateningly` action to ensure the actor has at
   "description": "Wield a weapon in a threatening manner to intimidate",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "targets": {
     "primary": {
@@ -84,9 +82,7 @@ Add prerequisites to the `wield_threateningly` action to ensure the actor has at
   "description": "Wield a weapon in a threatening manner to intimidate",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "prerequisites": [
     {
@@ -116,6 +112,7 @@ Add prerequisites to the `wield_threateningly` action to ensure the actor has at
 ### Prerequisites Logic
 
 The prerequisite `anatomy:actor-has-free-grabbing-appendage` will:
+
 1. Check if the actor has at least one grabbing appendage (hand, tentacle, etc.)
 2. Verify at least one such appendage is not locked (i.e., not already holding an item)
 3. If both conditions are met, the action is available
@@ -124,6 +121,7 @@ The prerequisite `anatomy:actor-has-free-grabbing-appendage` will:
 ### Schema Compliance Note
 
 The `prerequisites` array requires objects with:
+
 - `logic` (required): Either inline JSON Logic or `{ "condition_ref": "namespace:condition-id" }`
 - `failure_message` (optional): Human-readable message for debugging/UI feedback
 
@@ -190,9 +188,9 @@ npm run test:integration -- --testPathPattern="weapons"
 
 ### What Was Changed vs Originally Planned
 
-| Originally Planned | Actual Change |
-|-------------------|---------------|
-| Add simple prerequisite string array | Added object-format prerequisites with `logic.condition_ref` and `failure_message` per schema requirements |
+| Originally Planned                     | Actual Change                                                                                                |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Add simple prerequisite string array   | Added object-format prerequisites with `logic.condition_ref` and `failure_message` per schema requirements   |
 | Ticket assumed simple action structure | Ticket corrected to document actual structure (with `generateCombinations`, `required_components`, `visual`) |
 
 ### Files Modified

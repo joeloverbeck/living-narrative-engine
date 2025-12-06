@@ -24,10 +24,7 @@
       "properties": {
         "entity_ref": {
           "description": "Reference to the entity with metabolic_store component",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "activity_multiplier": {
           "type": "number",

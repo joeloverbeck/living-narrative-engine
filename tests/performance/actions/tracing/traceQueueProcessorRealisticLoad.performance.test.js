@@ -485,7 +485,8 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
     // Use pre-generated pools for common sizes
     if (count === 15 && tracePools.light) return tracePools.light;
     if (count === 35 && tracePools.typical) return tracePools.typical;
-    if (count === 50 && tracePools.typical) return tracePools.typical.slice(0, 50);
+    if (count === 50 && tracePools.typical)
+      return tracePools.typical.slice(0, 50);
     if (count === 70 && tracePools.heavy) return tracePools.heavy;
     if (count === 140 && tracePools.burst) return tracePools.burst;
     if (count === 200 && tracePools.mixed200) return tracePools.mixed200;
@@ -557,7 +558,11 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
    * @param {number} [maxWait] - Maximum wait time in milliseconds
    * @returns {Promise} Promise that resolves when processing is complete or timeout
    */
-  async function waitForProcessingCompletion(processor, expectedCount, maxWait = 500) {
+  async function waitForProcessingCompletion(
+    processor,
+    expectedCount,
+    maxWait = 500
+  ) {
     const pollInterval = 10; // Check every 10ms for faster response
     const startTime = Date.now();
     let lastProcessedCount = 0;
@@ -570,7 +575,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
       // Check if processing is complete
       if (!stats.isProcessing && stats.totalSize === 0) {
         // Give a tiny buffer for final metric updates
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
         return;
       }
 
@@ -588,7 +593,7 @@ describe('TraceQueueProcessor - Realistic Load Performance Tests', () => {
         }
       }
 
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
     // Timeout reached, return anyway

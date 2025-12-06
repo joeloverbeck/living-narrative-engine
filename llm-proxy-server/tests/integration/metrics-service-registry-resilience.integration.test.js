@@ -147,7 +147,7 @@ describe('metrics service registry resilience integration', () => {
     await expect(metricsService.getMetrics()).rejects.toThrow('registry down');
     expect(logger.error).toHaveBeenCalledWith(
       'Error getting metrics',
-      metricsFailure,
+      metricsFailure
     );
     logger.error.mockClear();
 
@@ -158,7 +158,7 @@ describe('metrics service registry resilience integration', () => {
     metricsService.reset();
     expect(logger.error).toHaveBeenCalledWith(
       'Error resetting metrics',
-      resetFailure,
+      resetFailure
     );
     logger.error.mockClear();
     register.resetMetrics = ORIGINAL_REGISTER_METHODS.resetMetrics;
@@ -170,7 +170,7 @@ describe('metrics service registry resilience integration', () => {
     metricsService.clear();
     expect(logger.error).toHaveBeenCalledWith(
       'Error clearing metrics',
-      clearFailure,
+      clearFailure
     );
     logger.error.mockClear();
     register.clear = ORIGINAL_REGISTER_METHODS.clear;
@@ -184,7 +184,7 @@ describe('metrics service registry resilience integration', () => {
     expect(statsResult).toEqual({ enabled: true, error: 'stats failed' });
     expect(logger.error).toHaveBeenCalledWith(
       'Error getting metrics stats',
-      statsFailure,
+      statsFailure
     );
   });
 });

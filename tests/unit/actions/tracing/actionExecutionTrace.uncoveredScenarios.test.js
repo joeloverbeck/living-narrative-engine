@@ -24,10 +24,7 @@ describe('ActionExecutionTrace uncovered scenarios', () => {
 
   it('handles error analysis failures while still recording error details', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const addMarkerSpy = jest.spyOn(
-      ExecutionPhaseTimer.prototype,
-      'addMarker'
-    );
+    const addMarkerSpy = jest.spyOn(ExecutionPhaseTimer.prototype, 'addMarker');
     const endExecutionSpy = jest.spyOn(
       ExecutionPhaseTimer.prototype,
       'endExecution'
@@ -173,10 +170,14 @@ describe('ActionExecutionTrace uncovered scenarios', () => {
     followUpError.stack = `Error: retry failure\n    at performDangerousOperation (${process.cwd()}/src/services/doThing.js:45:11)`;
     trace.updateError(followUpError, { phase: 'retry', retryCount: 3 });
 
-    trace.addErrorToHistory(new Error('background issue'), { phase: 'cleanup' });
+    trace.addErrorToHistory(new Error('background issue'), {
+      phase: 'cleanup',
+    });
 
     const json = trace.toJSON();
-    expect(json.turnAction.parameters).toEqual(baseOptions.turnAction.parameters);
+    expect(json.turnAction.parameters).toEqual(
+      baseOptions.turnAction.parameters
+    );
     expect(json.eventPayload).toEqual({
       token: '[REDACTED]',
       nested: { password: '[REDACTED]' },
@@ -230,4 +231,3 @@ describe('ActionExecutionTrace uncovered scenarios', () => {
     expect(trace.isErrorRecoverable()).toBe(true);
   });
 });
-

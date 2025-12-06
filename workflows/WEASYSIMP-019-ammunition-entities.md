@@ -22,6 +22,7 @@ All files in `data/mods/weapons/entities/`:
    - 6-round speed loader for revolvers, containerType: "speed_loader"
 
 Each needs:
+
 - core:name, core:description
 - items:item, items:portable, items:weight
 - weapons:ammo_container

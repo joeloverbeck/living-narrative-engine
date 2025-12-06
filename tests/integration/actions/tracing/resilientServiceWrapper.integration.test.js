@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, afterEach, jest } from '@jest/globals';
 import { ResilientServiceWrapper } from '../../../../src/actions/tracing/resilience/resilientServiceWrapper.js';
 import {
   TraceErrorHandler,
@@ -41,7 +35,11 @@ class RecordingLogger {
 
 const createWrapperContext = (
   service,
-  { serviceName = 'TracingService', recoveryConfig, errorHandlerClass = TraceErrorHandler } = {}
+  {
+    serviceName = 'TracingService',
+    recoveryConfig,
+    errorHandlerClass = TraceErrorHandler,
+  } = {}
 ) => {
   const logger = new RecordingLogger();
   const metrics = new ErrorMetricsService({ logger });
@@ -65,7 +63,13 @@ const createWrapperContext = (
     serviceName,
   });
 
-  return { wrapper, proxy: wrapper.createResilientProxy(), logger, metrics, recoveryManager };
+  return {
+    wrapper,
+    proxy: wrapper.createResilientProxy(),
+    logger,
+    metrics,
+    recoveryManager,
+  };
 };
 
 describe('ResilientServiceWrapper integration', () => {
@@ -108,9 +112,10 @@ describe('ResilientServiceWrapper integration', () => {
     expect(wrapper.isEnabled()).toBe(false);
 
     expect(
-      logger.warnLogs.some(([message, context]) =>
-        message.includes('Service disabled: TracingService') &&
-        context.reason === 'Error pattern threshold exceeded'
+      logger.warnLogs.some(
+        ([message, context]) =>
+          message.includes('Service disabled: TracingService') &&
+          context.reason === 'Error pattern threshold exceeded'
       )
     ).toBe(true);
 
@@ -118,11 +123,15 @@ describe('ResilientServiceWrapper integration', () => {
     expect(wrapper.isEnabled()).toBe(true);
     expect(wrapper.getFallbackMode()).toBeNull();
     expect(
-      logger.infoLogs.some(([message]) => message.includes('Service re-enabled: TracingService'))
+      logger.infoLogs.some(([message]) =>
+        message.includes('Service re-enabled: TracingService')
+      )
     ).toBe(true);
 
     const metricsSummary = metrics.getMetrics();
-    expect(metricsSummary.errorsByType[TraceErrorType.MEMORY]).toBeGreaterThanOrEqual(1);
+    expect(
+      metricsSummary.errorsByType[TraceErrorType.MEMORY]
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('recovers from fallback via retry and clears fallback mode using real collaborators', async () => {
@@ -242,9 +251,10 @@ describe('ResilientServiceWrapper integration', () => {
 
     expect(wrapper.isEnabled()).toBe(false);
     expect(
-      logger.warnLogs.some(([message, context]) =>
-        message.includes('Service disabled: TracingService') &&
-        context.reason === 'Error handler requested disable'
+      logger.warnLogs.some(
+        ([message, context]) =>
+          message.includes('Service disabled: TracingService') &&
+          context.reason === 'Error handler requested disable'
       )
     ).toBe(true);
 
@@ -314,13 +324,12 @@ describe('ResilientServiceWrapper integration', () => {
     expect(
       metrics.getMetrics().errorsByType[TraceErrorType.SERIALIZATION]
     ).toBeGreaterThan(0);
+    expect(metrics.getMetrics().totalErrors >= 7).toBe(true);
     expect(
-      metrics.getMetrics().totalErrors >= 7
-    ).toBe(true);
-    expect(
-      logger.warnLogs.some(([message, context]) =>
-        message.includes('Service disabled: TracingService') &&
-        context.reason === 'Error threshold exceeded'
+      logger.warnLogs.some(
+        ([message, context]) =>
+          message.includes('Service disabled: TracingService') &&
+          context.reason === 'Error threshold exceeded'
       )
     ).toBe(true);
   });

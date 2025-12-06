@@ -448,7 +448,9 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
         jsonLogicCustomOperators.clearCaches();
       }
 
-      const { clearEntityCache } = require('../../../src/scopeDsl/core/entityHelpers.js');
+      const {
+        clearEntityCache,
+      } = require('../../../src/scopeDsl/core/entityHelpers.js');
       clearEntityCache();
 
       // Clear scope registry and re-register to ensure clean state

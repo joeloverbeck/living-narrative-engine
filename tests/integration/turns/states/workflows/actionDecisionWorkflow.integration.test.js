@@ -147,7 +147,10 @@ function createEnvironment({ decideAction }) {
 
 describe('ActionDecisionWorkflow integration', () => {
   it('records decisions and transitions when the strategy returns a command', async () => {
-    const extractedData = { thoughts: 'pondering', notes: [{ text: 'note', subject: 'testing' }] };
+    const extractedData = {
+      thoughts: 'pondering',
+      notes: [{ text: 'note', subject: 'testing' }],
+    };
     const action = {
       actionDefinitionId: 'core:wave',
       commandString: 'perform-wave',
@@ -212,7 +215,10 @@ describe('ActionDecisionWorkflow integration', () => {
     const invalidAction = { commandString: 'broken' };
 
     const env = createEnvironment({
-      decideAction: async () => ({ action: invalidAction, extractedData: null }),
+      decideAction: async () => ({
+        action: invalidAction,
+        extractedData: null,
+      }),
     });
 
     await env.state._handleActionDecision(
@@ -224,12 +230,16 @@ describe('ActionDecisionWorkflow integration', () => {
     expect(env.handler.processingTransitions).toHaveLength(0);
     expect(env.dispatcher.dispatched).toHaveLength(0);
     expect(env.turnContext.getChosenAction()).toBeNull();
-    expect(env.contextLogger.calls.warn.some(([message]) =>
-      String(message).includes('returned an invalid or null ITurnAction')
-    )).toBe(true);
+    expect(
+      env.contextLogger.calls.warn.some(([message]) =>
+        String(message).includes('returned an invalid or null ITurnAction')
+      )
+    ).toBe(true);
     expect(env.endTurnCalls).toHaveLength(1);
     expect(env.endTurnCalls[0]).toBeInstanceOf(Error);
-    expect(env.endTurnCalls[0].message).toContain('returned an invalid or null ITurnAction');
+    expect(env.endTurnCalls[0].message).toContain(
+      'returned an invalid or null ITurnAction'
+    );
   });
 
   it('gracefully ends the turn when the strategy aborts', async () => {
@@ -250,9 +260,11 @@ describe('ActionDecisionWorkflow integration', () => {
     expect(env.endTurnCalls).toEqual([null]);
     expect(env.handler.processingTransitions).toHaveLength(0);
     expect(env.dispatcher.dispatched).toHaveLength(0);
-    expect(env.contextLogger.calls.debug.some(([message]) =>
-      String(message).includes('was cancelled (aborted)')
-    )).toBe(true);
+    expect(
+      env.contextLogger.calls.debug.some(([message]) =>
+        String(message).includes('was cancelled (aborted)')
+      )
+    ).toBe(true);
   });
 
   it('wraps unexpected errors and ends the turn with failure details', async () => {
@@ -274,8 +286,10 @@ describe('ActionDecisionWorkflow integration', () => {
     expect(error.message).toContain('Error during action decision');
     expect(error.cause).toBeInstanceOf(Error);
     expect(error.cause.message).toBe('database offline');
-    expect(env.contextLogger.calls.error.some(([message]) =>
-      String(message).includes('Error during action decision')
-    )).toBe(true);
+    expect(
+      env.contextLogger.calls.error.some(([message]) =>
+        String(message).includes('Error during action decision')
+      )
+    ).toBe(true);
   });
 });

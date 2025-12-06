@@ -27,7 +27,10 @@ describe('ActionExecutionTrace advanced integration coverage', () => {
   });
 
   it('handles classification/analysis failures and maintains detailed error history', () => {
-    const trace = createTrace({ enableTiming: true, enableErrorAnalysis: true });
+    const trace = createTrace({
+      enableTiming: true,
+      enableErrorAnalysis: true,
+    });
     trace.captureDispatchStart();
     trace.captureEventPayload({ source: 'integration', step: 'initial' });
 
@@ -139,8 +142,14 @@ describe('ActionExecutionTrace advanced integration coverage', () => {
       { type: 'simulate', parameters: { attempt: 1 } },
       0
     );
-    trace.captureOperationResult({ success: false, error: 'Validation failed' });
-    trace.captureDispatchResult({ success: false, metadata: { reason: 'Validation' } });
+    trace.captureOperationResult({
+      success: false,
+      error: 'Validation failed',
+    });
+    trace.captureDispatchResult({
+      success: false,
+      metadata: { reason: 'Validation' },
+    });
 
     const operations = trace.getOperations();
     expect(operations).toHaveLength(1);
@@ -150,9 +159,13 @@ describe('ActionExecutionTrace advanced integration coverage', () => {
     });
 
     const phases = trace.getExecutionPhases();
-    const payloadPhase = phases.find((phase) => phase.phase === 'payload_captured');
+    const payloadPhase = phases.find(
+      (phase) => phase.phase === 'payload_captured'
+    );
     expect(payloadPhase.payloadSize).toBe(0);
-    expect(phases.some((phase) => phase.phase === 'operation_completed')).toBe(true);
+    expect(phases.some((phase) => phase.phase === 'operation_completed')).toBe(
+      true
+    );
 
     expect(trace.getTimingSummary()).toBeNull();
     expect(trace.duration).not.toBeNull();

@@ -34,7 +34,10 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
 
   describe('Successfully executes play_ostinato_on_instrument action', () => {
     it('should dispatch perceptible event with mood-noun-flavored message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Kael')
@@ -75,7 +78,9 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('tight');
       expect(perceptibleEvent.payload.descriptionText).toContain('ostinato');
       expect(perceptibleEvent.payload.descriptionText).toContain('war drums');
-      expect(perceptibleEvent.payload.descriptionText).toMatch(/locks into a.*ostinato on/);
+      expect(perceptibleEvent.payload.descriptionText).toMatch(
+        /locks into a.*ostinato on/
+      );
     });
 
     it('should dispatch action success event', async () => {
@@ -152,7 +157,9 @@ describe('music:play_ostinato_on_instrument - Rule Execution', () => {
         expect(perceptibleEvents.length).toBeGreaterThan(0);
 
         const perceptibleEvent = perceptibleEvents[0];
-        expect(perceptibleEvent.payload.descriptionText).toContain(expectedNoun);
+        expect(perceptibleEvent.payload.descriptionText).toContain(
+          expectedNoun
+        );
         expect(perceptibleEvent.payload.descriptionText).toContain('ostinato');
 
         // Clear events for next iteration

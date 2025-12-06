@@ -121,7 +121,9 @@ describe('Numeric Planning Memory Tests', () => {
       const goal = createTestGoal({
         id: 'test:gather_gold',
         priority: 10,
-        goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 10] },
+        goalState: {
+          '>=': [{ var: 'state.actor.components.core_resources.gold' }, 10],
+        },
       });
 
       setup.dataRegistry.register('goals', goal.id, goal);
@@ -164,7 +166,9 @@ describe('Numeric Planning Memory Tests', () => {
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryGrowth = (finalMemory - initialMemory) / 1024 / 1024; // MB
 
-      console.log(`Memory growth after 1000 planning iterations: ${memoryGrowth.toFixed(2)}MB`);
+      console.log(
+        `Memory growth after 1000 planning iterations: ${memoryGrowth.toFixed(2)}MB`
+      );
       console.log(`Initial: ${(initialMemory / 1024 / 1024).toFixed(2)}MB`);
       console.log(`Final: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`);
 
@@ -212,7 +216,9 @@ describe('Numeric Planning Memory Tests', () => {
         createTestGoal({
           id: 'goal:gold',
           priority: 10,
-          goalState: { '>=': [{ var: 'state.actor.components.core_resources.gold' }, 50] },
+          goalState: {
+            '>=': [{ var: 'state.actor.components.core_resources.gold' }, 50],
+          },
         }),
       ];
 
@@ -257,13 +263,18 @@ describe('Numeric Planning Memory Tests', () => {
       const firstAverage = firstHalf.reduce((a, b) => a + b) / 5;
       const secondAverage = secondHalf.reduce((a, b) => a + b) / 5;
 
-      const percentageIncrease = ((secondAverage - firstAverage) / firstAverage) * 100;
+      const percentageIncrease =
+        ((secondAverage - firstAverage) / firstAverage) * 100;
 
       console.log(
         `Memory snapshots (MB): ${memorySnapshots.map((m) => (m / 1024 / 1024).toFixed(2)).join(', ')}`
       );
-      console.log(`First half average: ${(firstAverage / 1024 / 1024).toFixed(2)}MB`);
-      console.log(`Second half average: ${(secondAverage / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `First half average: ${(firstAverage / 1024 / 1024).toFixed(2)}MB`
+      );
+      console.log(
+        `Second half average: ${(secondAverage / 1024 / 1024).toFixed(2)}MB`
+      );
       console.log(`Percentage increase: ${percentageIncrease.toFixed(2)}%`);
 
       expect(percentageIncrease).toBeLessThan(5); // < 5% growth

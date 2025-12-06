@@ -64,7 +64,12 @@ describe('DropItemAtLocationHandler instantiation', () => {
   describe('handler creation during bootstrap', () => {
     it('should successfully instantiate handler from DI container', async () => {
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       // This test verifies the handler can be created without throwing
       // The act of executing the action triggers handler instantiation
@@ -75,7 +80,12 @@ describe('DropItemAtLocationHandler instantiation', () => {
 
     it('should not throw validation errors during handler resolution', async () => {
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       // Execute - should not throw any DI validation errors
       await expect(
@@ -88,13 +98,20 @@ describe('DropItemAtLocationHandler instantiation', () => {
 
     it('should successfully execute drop operation', async () => {
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       await testFixture.executeAction('actor-1', 'crate-1');
 
       // Verify item was dropped
       const actor = testFixture.entityManager.getEntityInstance('actor-1');
-      expect(actor.components['items:inventory'].items).not.toContain('crate-1');
+      expect(actor.components['items:inventory'].items).not.toContain(
+        'crate-1'
+      );
 
       // Verify item has position
       const crate = testFixture.entityManager.getEntityInstance('crate-1');
@@ -106,7 +123,12 @@ describe('DropItemAtLocationHandler instantiation', () => {
   describe('EntityManager method availability', () => {
     it('should have batchAddComponentsOptimized method available', async () => {
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       // Verify EntityManager has the method
       const entityManager = testFixture.entityManager;
@@ -116,7 +138,12 @@ describe('DropItemAtLocationHandler instantiation', () => {
 
     it('should successfully call batchAddComponentsOptimized during drop', async () => {
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       // Spy on batchAddComponentsOptimized to verify it's called
       const entityManager = testFixture.entityManager;
@@ -142,7 +169,12 @@ describe('DropItemAtLocationHandler instantiation', () => {
     it('should successfully execute without DI errors', async () => {
       // This test documents expected behavior: handler creation should succeed
       const scenario = createCompleteScenario();
-      testFixture.reset([scenario.room, scenario.actor, ...scenario.handEntities, scenario.crate]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        ...scenario.handEntities,
+        scenario.crate,
+      ]);
 
       // Should execute successfully without DI container errors
       await expect(

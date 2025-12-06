@@ -31,10 +31,7 @@ export function resolvePropertyFilter(filter, blueprintSlots, logger) {
     let matches = true;
 
     // Filter by slotType (exact match on partType requirement)
-    if (
-      filter.slotType &&
-      slotDef.requirements?.partType !== filter.slotType
-    ) {
+    if (filter.slotType && slotDef.requirements?.partType !== filter.slotType) {
       matches = false;
     }
 
@@ -87,7 +84,7 @@ export function validateMatchesAll(pattern, blueprint, patternIndex, logger) {
 
   // Check at least one filter property
   const filterProps = ['slotType', 'orientation', 'socketId'];
-  const presentProps = filterProps.filter(p => filter[p] !== undefined);
+  const presentProps = filterProps.filter((p) => filter[p] !== undefined);
 
   if (presentProps.length === 0) {
     throw new ValidationError(
@@ -96,7 +93,11 @@ export function validateMatchesAll(pattern, blueprint, patternIndex, logger) {
   }
 
   // Validate wildcard restrictions: slotType doesn't support wildcards
-  if (filter.slotType && typeof filter.slotType === 'string' && filter.slotType.includes('*')) {
+  if (
+    filter.slotType &&
+    typeof filter.slotType === 'string' &&
+    filter.slotType.includes('*')
+  ) {
     throw new ValidationError(
       `Pattern ${patternIndex + 1}: matchesAll wildcard pattern on 'slotType' is not supported. Wildcards only work on 'orientation' and 'socketId'.`
     );

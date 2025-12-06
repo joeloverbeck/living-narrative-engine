@@ -2887,8 +2887,16 @@ describe('CharacterDatabase', () => {
       });
 
       it('should resolve after processing when all motivations fail', async () => {
-        const putRequest1 = { onsuccess: null, onerror: null, error: { message: 'fail-1' } };
-        const putRequest2 = { onsuccess: null, onerror: null, error: { message: 'fail-2' } };
+        const putRequest1 = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'fail-1' },
+        };
+        const putRequest2 = {
+          onsuccess: null,
+          onerror: null,
+          error: { message: 'fail-2' },
+        };
         mockObjectStore.put
           .mockReturnValueOnce(putRequest1)
           .mockReturnValueOnce(putRequest2);
@@ -2904,7 +2912,9 @@ describe('CharacterDatabase', () => {
 
         expect(result).toEqual([]);
         expect(mockLogger.warn).toHaveBeenCalledTimes(2);
-        expect(mockLogger.info).toHaveBeenCalledWith('Saved 0 core motivations');
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'Saved 0 core motivations'
+        );
       });
 
       it('should reject when transaction creation fails', async () => {
@@ -3418,12 +3428,10 @@ describe('CharacterDatabase', () => {
       });
 
       it('should reject when transaction creation fails', async () => {
-        jest
-          .spyOn(database, 'getCoreMotivationById')
-          .mockResolvedValue({
-            id: 'motivation-1',
-            createdAt: '2024-01-01T00:00:00Z',
-          });
+        jest.spyOn(database, 'getCoreMotivationById').mockResolvedValue({
+          id: 'motivation-1',
+          createdAt: '2024-01-01T00:00:00Z',
+        });
         database.close();
 
         await expect(

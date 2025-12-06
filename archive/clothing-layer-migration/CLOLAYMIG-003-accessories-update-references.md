@@ -14,13 +14,13 @@ Update all recipe files that reference accessory entities to use the new `access
 
 ### Recipe Files to Modify
 
-| Recipe File | Entity References to Update |
-|------------|----------------------------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | `black_tactical_work_belt` |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | `dark_brown_leather_belt` |
-| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | `black_leather_collar_silver_bell` |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | `black_tactical_work_belt`, `slate_nylon_baseball_cap` |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | `black_tactical_work_belt`, `slate_nylon_baseball_cap` |
+| Recipe File                                                  | Entity References to Update                            |
+| ------------------------------------------------------------ | ------------------------------------------------------ |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | `black_tactical_work_belt`                             |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | `dark_brown_leather_belt`                              |
+| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | `black_leather_collar_silver_bell`                     |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | `black_tactical_work_belt`, `slate_nylon_baseball_cap` |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | `black_tactical_work_belt`, `slate_nylon_baseball_cap` |
 
 ### Exact Changes Per File
 
@@ -102,15 +102,15 @@ Add to `dependencies` array:
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
-| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | Update 1 reference |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | Update 1 reference |
-| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | Update 1 reference |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | Update 2 references |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | Update 2 references |
-| `data/mods/fantasy/mod-manifest.json` | Add dependency |
-| `data/mods/patrol/mod-manifest.json` | Add dependency |
+| File                                                         | Action              |
+| ------------------------------------------------------------ | ------------------- |
+| `data/mods/fantasy/recipes/threadscar_melissa.recipe.json`   | Update 1 reference  |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`    | Update 1 reference  |
+| `data/mods/fantasy/recipes/vespera_nightwhisper.recipe.json` | Update 1 reference  |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`           | Update 2 references |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`            | Update 2 references |
+| `data/mods/fantasy/mod-manifest.json`                        | Add dependency      |
+| `data/mods/patrol/mod-manifest.json`                         | Add dependency      |
 
 **Total: 7 references across 5 recipe files, 2 manifest updates**
 
@@ -178,6 +178,7 @@ git checkout data/mods/patrol/mod-manifest.json
 ### No ticket corrections required
 
 The ticket assumptions were verified against the actual codebase before implementation:
+
 - All 5 recipe files existed at the specified paths
 - All recipe files contained the expected `clothing:*` entity references
 - The `accessories` mod with 14 entities (including all 4 referenced items) was already created by CLOLAYMIG-002

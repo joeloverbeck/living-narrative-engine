@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 import { fetchWithRetry } from '../../../src/utils';
 
@@ -43,7 +50,9 @@ describe('LoggerConfigLoader', () => {
         new LoggerConfigLoader({
           safeEventDispatcher: {},
         })
-    ).toThrow('LoggerConfigLoader requires a valid ISafeEventDispatcher instance.');
+    ).toThrow(
+      'LoggerConfigLoader requires a valid ISafeEventDispatcher instance.'
+    );
   });
 
   it('allows overriding the default configuration path when provided', async () => {
@@ -119,10 +128,14 @@ describe('LoggerConfigLoader', () => {
       expect.objectContaining({ error: true, stage: 'fetch', path: 'err.json' })
     );
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to load or parse logger configuration from err.json'),
+      expect.stringContaining(
+        'Failed to load or parse logger configuration from err.json'
+      ),
       expect.objectContaining({
         path: 'err.json',
-        originalError: expect.objectContaining({ message: 'Network status 500' }),
+        originalError: expect.objectContaining({
+          message: 'Network status 500',
+        }),
       })
     );
   });
@@ -133,7 +146,11 @@ describe('LoggerConfigLoader', () => {
     const result = await loader.loadConfig('missing.json');
 
     expect(result).toEqual(
-      expect.objectContaining({ error: true, stage: 'fetch', path: 'missing.json' })
+      expect.objectContaining({
+        error: true,
+        stage: 'fetch',
+        path: 'missing.json',
+      })
     );
   });
 
@@ -143,7 +160,11 @@ describe('LoggerConfigLoader', () => {
     const result = await loader.loadConfig('status.json');
 
     expect(result).toEqual(
-      expect.objectContaining({ error: true, stage: 'fetch', path: 'status.json' })
+      expect.objectContaining({
+        error: true,
+        stage: 'fetch',
+        path: 'status.json',
+      })
     );
   });
 

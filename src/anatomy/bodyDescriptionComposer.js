@@ -112,7 +112,10 @@ export class BodyDescriptionComposer {
       allParts && allParts.length > 0
         ? this.groupPartsByType(allParts)
         : new Map();
-    const visiblePartsByType = this.#filterVisibleParts(partsByType, bodyEntity);
+    const visiblePartsByType = this.#filterVisibleParts(
+      partsByType,
+      bodyEntity
+    );
 
     // Build structured description following configured order
     const lines = [];
@@ -138,7 +141,7 @@ export class BodyDescriptionComposer {
     }
 
     // THEN: Process parts in configured order (existing logic continues)
-    this.#logger.info('DIAGNOSTIC: Starting part processing loop', {
+    this.#logger.debug('DIAGNOSTIC: Starting part processing loop', {
       descriptionOrderLength: descriptionOrder.length,
       descriptionOrder: descriptionOrder,
       hasActivityInOrder: descriptionOrder.includes('activity'),
@@ -184,7 +187,7 @@ export class BodyDescriptionComposer {
 
       // DIAGNOSTIC: Check if we reach activity partType
       if (partType === 'activity') {
-        this.#logger.info('DIAGNOSTIC: Reached activity partType', {
+        this.#logger.debug('DIAGNOSTIC: Reached activity partType', {
           partType,
           hasActivityService: !!this.activityDescriptionService,
           activityServiceType: typeof this.activityDescriptionService,
@@ -193,17 +196,20 @@ export class BodyDescriptionComposer {
 
       // Handle activity descriptions
       if (partType === 'activity' && this.activityDescriptionService) {
-        this.#logger.info('Activity description: calling service with entity', {
-          entityId: bodyEntity.id,
-          componentTypeIds: bodyEntity.componentTypeIds || 'not available',
-        });
+        this.#logger.debug(
+          'Activity description: calling service with entity',
+          {
+            entityId: bodyEntity.id,
+            componentTypeIds: bodyEntity.componentTypeIds || 'not available',
+          }
+        );
 
         const activityDescription =
           await this.activityDescriptionService.generateActivityDescription(
             bodyEntity.id
           );
 
-        this.#logger.info('Activity description: service returned', {
+        this.#logger.debug('Activity description: service returned', {
           entityId: bodyEntity.id,
           hasDescription: !!activityDescription,
           descriptionLength: activityDescription?.length || 0,
@@ -218,9 +224,8 @@ export class BodyDescriptionComposer {
 
       // Handle inventory descriptions
       if (partType === 'inventory') {
-        const inventoryDescription = await this.#generateInventoryDescription(
-          bodyEntity
-        );
+        const inventoryDescription =
+          await this.#generateInventoryDescription(bodyEntity);
         if (inventoryDescription) {
           lines.push(inventoryDescription);
         }
@@ -622,7 +627,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.height.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const heightComponent = bodyEntity.getComponentData('descriptors:height');
 
       if (heightComponent?.height) {
@@ -652,7 +661,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.build.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const buildComponent = bodyEntity.getComponentData('descriptors:build');
       if (buildComponent?.build) {
         // eslint-disable-next-line no-console
@@ -680,7 +693,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.composition.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const compositionComponent = bodyEntity.getComponentData(
         'descriptors:body_composition'
       );
@@ -710,7 +727,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.hairDensity.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const bodyHairComponent = bodyEntity.getComponentData(
         'descriptors:body_hair'
       );
@@ -790,7 +811,10 @@ export class BodyDescriptionComposer {
     );
 
     // Defensive: ensure height is first if present in registry but missing from config
-    if (registryDisplayKeys.includes('height') && !filtered.includes('height')) {
+    if (
+      registryDisplayKeys.includes('height') &&
+      !filtered.includes('height')
+    ) {
       filtered.unshift('height');
     }
 
@@ -809,7 +833,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.skinColor.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const skinColorComponent = bodyEntity.getComponentData(
         'descriptors:skin_color'
       );
@@ -839,7 +867,11 @@ export class BodyDescriptionComposer {
     const value = BODY_DESCRIPTOR_REGISTRY.smell.extractor(bodyComponent);
 
     // Fallback to entity-level component for backward compatibility
-    if (!value && bodyEntity && typeof bodyEntity.getComponentData === 'function') {
+    if (
+      !value &&
+      bodyEntity &&
+      typeof bodyEntity.getComponentData === 'function'
+    ) {
       const smellComponent = bodyEntity.getComponentData('descriptors:smell');
       if (smellComponent?.smell) {
         // eslint-disable-next-line no-console
@@ -932,9 +964,8 @@ export class BodyDescriptionComposer {
       const summary = this.injuryAggregationService.aggregateInjuries(
         bodyEntity.id
       );
-      const narrative = this.injuryNarrativeFormatterService.formatThirdPersonVisible(
-        summary
-      );
+      const narrative =
+        this.injuryNarrativeFormatterService.formatThirdPersonVisible(summary);
 
       if (!narrative) {
         return '';

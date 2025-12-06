@@ -1,10 +1,14 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import { DEFAULT_SUBJECT_TYPE } from '../../../src/constants/subjectTypes.js';
 
 describe('normalizeNoteText – completeness edge cases', () => {
   it('trims, lowercases, and collapses whitespace when no subject metadata is provided', () => {
-    const normalized = normalizeNoteText({ text: '  Mixed\nSpacing  And Punctuation!!!  ' });
+    const normalized = normalizeNoteText({
+      text: '  Mixed\nSpacing  And Punctuation!!!  ',
+    });
     expect(normalized).toBe('mixed spacing and punctuation');
   });
 
@@ -20,7 +24,9 @@ describe('NotesService.addNotes – duplicate and validation handling', () => {
   it('throws when the notes component is missing or malformed', () => {
     const service = createService();
     expect(() => service.addNotes(null, [])).toThrow(TypeError);
-    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(TypeError);
+    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(
+      TypeError
+    );
   });
 
   it('skips invalid entries and duplicates while appending a normalized structured note', () => {
@@ -46,7 +52,11 @@ describe('NotesService.addNotes – duplicate and validation handling', () => {
         { text: '   ', subject: 'EmptyThought', subjectType: 'concept' },
         null,
         5,
-        { text: 'Fresh Idea!', subject: 'Alliance', context: 'council meeting' },
+        {
+          text: 'Fresh Idea!',
+          subject: 'Alliance',
+          context: 'council meeting',
+        },
       ],
       now
     );

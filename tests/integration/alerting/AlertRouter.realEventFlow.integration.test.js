@@ -70,8 +70,14 @@ function createEnvironment({
   const schemaValidator = new PermissiveSchemaValidator();
 
   const definitions = [
-    [SYSTEM_WARNING_OCCURRED_ID, { id: SYSTEM_WARNING_OCCURRED_ID, payloadSchema: null }],
-    [SYSTEM_ERROR_OCCURRED_ID, { id: SYSTEM_ERROR_OCCURRED_ID, payloadSchema: null }],
+    [
+      SYSTEM_WARNING_OCCURRED_ID,
+      { id: SYSTEM_WARNING_OCCURRED_ID, payloadSchema: null },
+    ],
+    [
+      SYSTEM_ERROR_OCCURRED_ID,
+      { id: SYSTEM_ERROR_OCCURRED_ID, payloadSchema: null },
+    ],
     [DISPLAY_WARNING_ID, { id: DISPLAY_WARNING_ID, payloadSchema: null }],
     [DISPLAY_ERROR_ID, { id: DISPLAY_ERROR_ID, payloadSchema: null }],
   ];
@@ -153,7 +159,9 @@ describe('AlertRouter real event flow coverage', () => {
     expect(errorSpy).toHaveBeenCalledWith('error: shard offline');
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter flush error:',
-      expect.objectContaining({ message: 'Missing or invalid `message` in payload' })
+      expect.objectContaining({
+        message: 'Missing or invalid `message` in payload',
+      })
     );
     expect(router.queue).toEqual([]);
     expect(router.flushTimer).toBeNull();
@@ -187,7 +195,9 @@ describe('AlertRouter real event flow coverage', () => {
     expect(deliveredPayloads).toEqual([{ message: 'queued warning needs UI' }]);
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter dispatch error:',
-      expect.objectContaining({ message: `forced failure for ${DISPLAY_WARNING_ID}` })
+      expect.objectContaining({
+        message: `forced failure for ${DISPLAY_WARNING_ID}`,
+      })
     );
     expect(router.queue).toEqual([]);
     expect(router.uiReady).toBe(true);
@@ -214,7 +224,9 @@ describe('AlertRouter real event flow coverage', () => {
 
     expect(errorSpy).toHaveBeenCalledWith(
       'AlertRouter error forwarding queued event:',
-      expect.objectContaining({ message: 'UI forwarding failure for core:system_warning_occurred' })
+      expect.objectContaining({
+        message: 'UI forwarding failure for core:system_warning_occurred',
+      })
     );
     expect(router.queue).toEqual([]);
     expect(router.uiReady).toBe(true);

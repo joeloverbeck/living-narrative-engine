@@ -8,16 +8,16 @@ Create the `SkillResolverService` that retrieves skill values from entity compon
 
 ## Files Created
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/SkillResolverService.js` | Service implementation |
-| `src/combat/index.js` | Module exports for combat services |
-| `tests/unit/combat/services/SkillResolverService.test.js` | Unit tests (32 tests) |
+| File                                                      | Purpose                            |
+| --------------------------------------------------------- | ---------------------------------- |
+| `src/combat/services/SkillResolverService.js`             | Service implementation             |
+| `src/combat/index.js`                                     | Module exports for combat services |
+| `tests/unit/combat/services/SkillResolverService.test.js` | Unit tests (32 tests)              |
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
+| File                                            | Change                             |
+| ----------------------------------------------- | ---------------------------------- |
 | `src/dependencyInjection/tokens/tokens-core.js` | Added `SkillResolverService` token |
 
 ## Implementation Details
@@ -73,12 +73,13 @@ export default SkillResolverService;
  * @param {number} [defaultValue] - Fallback if component/property missing (defaults to 0)
  * @returns {{ baseValue: number, hasComponent: boolean }}
  */
-getSkillValue(entityId, skillComponentId, defaultValue = 0)
+getSkillValue(entityId, skillComponentId, (defaultValue = 0));
 ```
 
 ### DI Token
 
 Added to `tokens-core.js`:
+
 ```javascript
 // Combat Services (NONDETACTSYS)
 SkillResolverService: 'SkillResolverService',
@@ -162,11 +163,11 @@ tests/unit/combat/
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/clothing/services/clothingAccessibilityService.js` | Service pattern reference |
-| `src/logic/operationHandlers/baseOperationHandler.js` | DI validation pattern |
-| `tests/unit/clothing/services/clothingAccessibilityService.test.js` | Test pattern |
+| File                                                                | Purpose                   |
+| ------------------------------------------------------------------- | ------------------------- |
+| `src/clothing/services/clothingAccessibilityService.js`             | Service pattern reference |
+| `src/logic/operationHandlers/baseOperationHandler.js`               | DI validation pattern     |
+| `tests/unit/clothing/services/clothingAccessibilityService.test.js` | Test pattern              |
 
 ---
 
@@ -175,12 +176,14 @@ tests/unit/combat/
 ### What Was Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create `SkillResolverService` with skill value retrieval
 - Create `src/combat/index.js` module exports
 - Create unit tests
 - Add DI token
 
 **Actually Changed:**
+
 - ✅ All planned changes implemented exactly as specified
 - The ticket assumptions about:
   - The service pattern (followed `ClothingAccessibilityService` pattern)
@@ -191,6 +194,7 @@ tests/unit/combat/
   Were all accurate and required no corrections.
 
 **Test Coverage:**
+
 - 32 unit tests covering:
   - Constructor validation (7 tests)
   - Successful skill retrieval (3 tests)
@@ -202,14 +206,17 @@ tests/unit/combat/
   - Edge cases (3 tests)
 
 **Files Created:**
+
 1. `src/combat/services/SkillResolverService.js` - Service implementation
 2. `src/combat/index.js` - Module exports
 3. `tests/unit/combat/services/SkillResolverService.test.js` - 32 unit tests
 
 **Files Modified:**
+
 1. `src/dependencyInjection/tokens/tokens-core.js` - Added `SkillResolverService` token
 
 **Validation:**
+
 - All 32 unit tests pass
 - All 393 DI tests pass (no regressions)
 - ESLint passes with no errors

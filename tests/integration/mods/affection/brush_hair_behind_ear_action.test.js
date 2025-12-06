@@ -103,8 +103,8 @@ describe('affection:brush_hair_behind_ear action integration', () => {
       'affection:ruffle_hair_playfully'
     );
 
-    const ruleEvents = testFixture.events.filter(
-      (event) => event.payload?.logMessage?.includes('brushes a stray lock')
+    const ruleEvents = testFixture.events.filter((event) =>
+      event.payload?.logMessage?.includes('brushes a stray lock')
     );
 
     expect(ruleEvents).toHaveLength(0);

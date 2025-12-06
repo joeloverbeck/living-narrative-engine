@@ -31,7 +31,9 @@ class TestEntityManager extends SimpleEntityManager {
   getEntitiesWithComponent(componentId) {
     const matches = [];
     for (const entity of this.entitiesMap.values()) {
-      if (Object.prototype.hasOwnProperty.call(entity.components, componentId)) {
+      if (
+        Object.prototype.hasOwnProperty.call(entity.components, componentId)
+      ) {
         matches.push({ id: entity.id, components: entity.components });
       }
     }
@@ -266,7 +268,9 @@ describe('TargetResolutionService with UnifiedScopeResolver (real integration)',
     expect(result.success).toBe(true);
     const resolvedIds = result.value.map((ctx) => ctx.entityId);
     expect(resolvedIds).toEqual(['friend-1', 'friend-2']);
-    result.value.forEach((ctx) => expect(ctx).toBeInstanceOf(ActionTargetContext));
+    result.value.forEach((ctx) =>
+      expect(ctx).toBeInstanceOf(ActionTargetContext)
+    );
 
     expect(harness.logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Resolving scope for sit_down'),
@@ -336,7 +340,9 @@ describe('TargetResolutionService with UnifiedScopeResolver (real integration)',
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].name).toBe('ScopeNotFoundError');
-    expect(result.errors[0].additionalContext.scopeName).toBe('social:missing_scope');
+    expect(result.errors[0].additionalContext.scopeName).toBe(
+      'social:missing_scope'
+    );
   });
 
   it('supports the sit_down debug logging path even when the scope resolves through direct ids', () => {

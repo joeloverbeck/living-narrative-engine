@@ -52,7 +52,7 @@ describe('StepExecutionError', () => {
         reason: 'Item not accessible',
         methodId: 'acquire_item_method',
         taskId: 'get_food',
-        actorId: 'actor-player'
+        actorId: 'actor-player',
       };
       const error = new StepExecutionError('Step execution failed', context);
       expect(error.message).toBe('Step execution failed');
@@ -61,7 +61,11 @@ describe('StepExecutionError', () => {
 
     it('should create error with correlation ID option', () => {
       const correlationId = 'custom-correlation-id';
-      const error = new StepExecutionError('Step execution failed', {}, { correlationId });
+      const error = new StepExecutionError(
+        'Step execution failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -125,7 +129,7 @@ describe('StepExecutionError', () => {
         reason: 'Test failure',
         methodId: 'test_method',
         taskId: 'test_task',
-        actorId: 'actor-test'
+        actorId: 'actor-test',
       };
       const error = new StepExecutionError('Step execution failed', context);
       expect(error.context).toEqual(context);
@@ -152,7 +156,7 @@ describe('StepExecutionError', () => {
         stepIndex: 2,
         stepType: 'action',
         actionId: 'test_action',
-        actorId: 'actor-123'
+        actorId: 'actor-123',
       };
       const error = new StepExecutionError('Step execution failed', context);
       const json = error.toJSON();
@@ -188,7 +192,9 @@ describe('StepExecutionError', () => {
     it('should have ISO format timestamp', () => {
       const error = new StepExecutionError('Step execution failed');
       expect(error.timestamp).toBeDefined();
-      expect(error.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(error.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+      );
     });
 
     it('should generate correlation ID automatically', () => {
@@ -200,7 +206,11 @@ describe('StepExecutionError', () => {
 
     it('should use custom correlation ID if provided', () => {
       const correlationId = 'custom-id-101';
-      const error = new StepExecutionError('Step execution failed', {}, { correlationId });
+      const error = new StepExecutionError(
+        'Step execution failed',
+        {},
+        { correlationId }
+      );
       expect(error.correlationId).toBe(correlationId);
     });
   });
@@ -215,7 +225,7 @@ describe('StepExecutionError', () => {
         reason: 'Chair is occupied',
         methodId: 'sit_down_method',
         taskId: 'rest_in_chair',
-        actorId: 'actor-player'
+        actorId: 'actor-player',
       };
       const error = new StepExecutionError(
         'Action step "sit_down" failed: Chair is occupied',
@@ -236,7 +246,7 @@ describe('StepExecutionError', () => {
         reason: 'Subtask refinement failed',
         methodId: 'consume_food_method',
         taskId: 'reduce_hunger',
-        actorId: 'actor-npc-01'
+        actorId: 'actor-npc-01',
       };
       const error = new StepExecutionError(
         'Subtask step failed at index 3',
@@ -255,7 +265,7 @@ describe('StepExecutionError', () => {
         reason: 'Condition evaluation threw exception',
         methodId: 'check_resources_method',
         taskId: 'craft_item',
-        actorId: 'actor-player'
+        actorId: 'actor-player',
       };
       const error = new StepExecutionError(
         'Condition check failed at step 0',
@@ -275,7 +285,7 @@ describe('StepExecutionError', () => {
         reason: 'Failed to bind target parameter "item"',
         methodId: 'acquire_item_method',
         taskId: 'get_food',
-        actorId: 'actor-123'
+        actorId: 'actor-123',
       };
       const error = new StepExecutionError(
         'Step execution failed due to parameter binding error',
@@ -294,12 +304,12 @@ describe('StepExecutionError', () => {
         targetBindings: {
           actor: 'actor-warrior',
           target: 'enemy-goblin',
-          weapon: 'sword-iron'
+          weapon: 'sword-iron',
         },
         reason: 'Target out of range',
         methodId: 'melee_attack_method',
         taskId: 'defeat_enemy',
-        actorId: 'actor-warrior'
+        actorId: 'actor-warrior',
       };
       const error = new StepExecutionError(
         'Attack action failed: Target out of range',

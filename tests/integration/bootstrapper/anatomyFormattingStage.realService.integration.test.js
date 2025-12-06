@@ -58,12 +58,14 @@ describe('initializeAnatomyFormattingStage integration', () => {
    * Registers the real AnatomyFormattingService using the prepared dependencies.
    */
   function registerAnatomyFormattingService() {
-    registrar.singletonFactory(tokens.AnatomyFormattingService, () =>
-      new AnatomyFormattingService({
-        dataRegistry,
-        logger,
-        safeEventDispatcher,
-      })
+    registrar.singletonFactory(
+      tokens.AnatomyFormattingService,
+      () =>
+        new AnatomyFormattingService({
+          dataRegistry,
+          logger,
+          safeEventDispatcher,
+        })
     );
   }
 
@@ -154,12 +156,14 @@ describe('initializeAnatomyFormattingStage integration', () => {
       }
     }
 
-    registrar.singletonFactory(tokens.AnatomyFormattingService, () =>
-      new ExplodingAnatomyFormattingService({
-        dataRegistry,
-        logger,
-        safeEventDispatcher,
-      })
+    registrar.singletonFactory(
+      tokens.AnatomyFormattingService,
+      () =>
+        new ExplodingAnatomyFormattingService({
+          dataRegistry,
+          logger,
+          safeEventDispatcher,
+        })
     );
 
     dataRegistry.store('meta', FINAL_MOD_ORDER_KEY, ['onlyMod']);
@@ -183,17 +187,23 @@ describe('initializeAnatomyFormattingStage integration', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(StageError);
-    expect(result.error.phase).toBe('Anatomy Formatting Service Initialization');
+    expect(result.error.phase).toBe(
+      'Anatomy Formatting Service Initialization'
+    );
     expect(result.error.message).toContain(
       'Failed to initialize AnatomyFormattingService: Injected failure for stage coverage'
     );
     expect(result.error.cause).toBeInstanceOf(Error);
-    expect(result.error.cause.message).toBe('Injected failure for stage coverage');
+    expect(result.error.cause.message).toBe(
+      'Injected failure for stage coverage'
+    );
 
     const errorLog = logger.entries.error.find(
       ([message]) =>
         typeof message === 'string' &&
-        message.includes('Bootstrap Stage: Anatomy Formatting Service Initialization failed.')
+        message.includes(
+          'Bootstrap Stage: Anatomy Formatting Service Initialization failed.'
+        )
     );
     expect(errorLog).toBeTruthy();
     expect(errorLog[1]).toBeInstanceOf(Error);

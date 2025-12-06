@@ -53,9 +53,14 @@ export class CacheInvalidationManager extends BaseService {
 
     this.#logger = this._init('CacheInvalidationManager', logger);
 
-    validateDependency(validatedEventDispatcher, 'IValidatedEventDispatcher', logger, {
-      requiredMethods: ['dispatch']
-    });
+    validateDependency(
+      validatedEventDispatcher,
+      'IValidatedEventDispatcher',
+      logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
     this.#config = {
@@ -71,8 +76,8 @@ export class CacheInvalidationManager extends BaseService {
 
     this.#logger.info(
       `CacheInvalidationManager initialized: ` +
-      `dependency tracking=${this.#config.enableDependencyTracking}, ` +
-      `event integration=${this.#config.enableEventIntegration}`
+        `dependency tracking=${this.#config.enableDependencyTracking}, ` +
+        `event integration=${this.#config.enableEventIntegration}`
     );
   }
 
@@ -93,9 +98,12 @@ export class CacheInvalidationManager extends BaseService {
     });
 
     // Listen for explicit cache invalidation requests
-    this.#addEventListener(CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED, (event) => {
-      this.#handleInvalidationRequest(event);
-    });
+    this.#addEventListener(
+      CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED,
+      (event) => {
+        this.#handleInvalidationRequest(event);
+      }
+    );
 
     // Listen for entity deletion/creation events
     this.#addEventListener('ENTITY_CREATED', (event) => {
@@ -165,8 +173,10 @@ export class CacheInvalidationManager extends BaseService {
 
     // Validate cache interface
     const requiredMethods = ['invalidate', 'clear'];
-    const missingMethods = requiredMethods.filter(method => typeof cache[method] !== 'function');
-    
+    const missingMethods = requiredMethods.filter(
+      (method) => typeof cache[method] !== 'function'
+    );
+
     if (missingMethods.length > 0) {
       throw new InvalidArgumentError(
         `Cache must implement methods: ${missingMethods.join(', ')}`
@@ -186,8 +196,8 @@ export class CacheInvalidationManager extends BaseService {
 
     this.#logger.info(
       `Cache registered for invalidation: ${cacheId} ` +
-      `(entities: ${metadata.entityTypes?.length || 0}, ` +
-      `components: ${metadata.componentTypes?.length || 0})`
+        `(entities: ${metadata.entityTypes?.length || 0}, ` +
+        `components: ${metadata.componentTypes?.length || 0})`
     );
   }
 
@@ -270,7 +280,10 @@ export class CacheInvalidationManager extends BaseService {
       this.#dependencyMappings.delete(dependencyKey);
     }
 
-    this.#logger.debug(`Removed dependency: ${dependencyKey}` + (cacheId ? ` -> ${cacheId}` : ' (all)'));
+    this.#logger.debug(
+      `Removed dependency: ${dependencyKey}` +
+        (cacheId ? ` -> ${cacheId}` : ' (all)')
+    );
   }
 
   /**
@@ -287,14 +300,18 @@ export class CacheInvalidationManager extends BaseService {
     for (const cacheId of targetCaches) {
       const cacheInfo = this.#registeredCaches.get(cacheId);
       if (!cacheInfo) {
-        this.#logger.warn(`Cache not found for pattern invalidation: ${cacheId}`);
+        this.#logger.warn(
+          `Cache not found for pattern invalidation: ${cacheId}`
+        );
         continue;
       }
 
       try {
         const invalidated = cacheInfo.cache.invalidate(pattern);
         results[cacheId] = { success: true, invalidated };
-        this.#logger.debug(`Pattern invalidation in ${cacheId}: ${invalidated} entries`);
+        this.#logger.debug(
+          `Pattern invalidation in ${cacheId}: ${invalidated} entries`
+        );
       } catch (error) {
         results[cacheId] = { success: false, error: error.message };
         this.#logger.error(`Pattern invalidation failed in ${cacheId}:`, error);
@@ -304,11 +321,14 @@ export class CacheInvalidationManager extends BaseService {
     this.#stats.invalidationsProcessed++;
 
     // Dispatch invalidation event
-    this.#dispatchInvalidationEvent(CacheInvalidationEvents.CACHE_PATTERN_INVALIDATION, {
-      pattern: pattern.toString(),
-      cacheIds: targetCaches,
-      results,
-    });
+    this.#dispatchInvalidationEvent(
+      CacheInvalidationEvents.CACHE_PATTERN_INVALIDATION,
+      {
+        pattern: pattern.toString(),
+        cacheIds: targetCaches,
+        results,
+      }
+    );
 
     return results;
   }
@@ -348,14 +368,19 @@ export class CacheInvalidationManager extends BaseService {
       }
     }
 
-    this.#logger.info(`Entity invalidation completed for ${entityId}: ${Object.keys(results).length} caches affected`);
+    this.#logger.info(
+      `Entity invalidation completed for ${entityId}: ${Object.keys(results).length} caches affected`
+    );
 
     // Dispatch invalidation event
-    this.#dispatchInvalidationEvent(CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION, {
-      entityId,
-      cacheIds: cacheIds || Array.from(this.#registeredCaches.keys()),
-      results,
-    });
+    this.#dispatchInvalidationEvent(
+      CacheInvalidationEvents.CACHE_ENTITY_INVALIDATION,
+      {
+        entityId,
+        cacheIds: cacheIds || Array.from(this.#registeredCaches.keys()),
+        results,
+      }
+    );
 
     return results;
   }
@@ -399,7 +424,7 @@ export class CacheInvalidationManager extends BaseService {
    */
   #handleComponentModified(event) {
     this.#stats.eventsHandled++;
-    
+
     const { entityId, componentId } = event.payload || {};
     if (!entityId || !componentId) {
       return;
@@ -408,8 +433,10 @@ export class CacheInvalidationManager extends BaseService {
     // Find caches that handle this component type
     const affectedCaches = [];
     for (const [cacheId, cacheInfo] of this.#registeredCaches.entries()) {
-      if (cacheInfo.metadata.componentTypes.includes(componentId) ||
-          cacheInfo.metadata.entityTypes.includes(entityId)) {
+      if (
+        cacheInfo.metadata.componentTypes.includes(componentId) ||
+        cacheInfo.metadata.entityTypes.includes(entityId)
+      ) {
         affectedCaches.push(cacheId);
       }
     }
@@ -418,7 +445,7 @@ export class CacheInvalidationManager extends BaseService {
       this.invalidateEntity(entityId, affectedCaches);
       this.#logger.debug(
         `Component modification invalidation: ${componentId} on ${entityId} ` +
-        `(${affectedCaches.length} caches affected)`
+          `(${affectedCaches.length} caches affected)`
       );
     }
   }
@@ -431,17 +458,21 @@ export class CacheInvalidationManager extends BaseService {
    */
   #handleEntityMoved(event) {
     this.#stats.eventsHandled++;
-    
+
     const { entityId, fromLocation, toLocation } = event.payload || {};
     if (!entityId) {
       return;
     }
 
     // Invalidate caches that might be affected by position changes
-    const locationPattern = new RegExp(`(${fromLocation}|${toLocation}|${entityId})`);
+    const locationPattern = new RegExp(
+      `(${fromLocation}|${toLocation}|${entityId})`
+    );
     this.invalidatePattern(locationPattern);
 
-    this.#logger.debug(`Entity movement invalidation: ${entityId} (${fromLocation} -> ${toLocation})`);
+    this.#logger.debug(
+      `Entity movement invalidation: ${entityId} (${fromLocation} -> ${toLocation})`
+    );
   }
 
   /**
@@ -452,9 +483,9 @@ export class CacheInvalidationManager extends BaseService {
    */
   #handleInvalidationRequest(event) {
     this.#stats.eventsHandled++;
-    
+
     const { pattern, entityId, cacheIds } = event.payload || {};
-    
+
     if (pattern) {
       this.invalidatePattern(pattern, cacheIds);
     } else if (entityId) {
@@ -471,7 +502,7 @@ export class CacheInvalidationManager extends BaseService {
    */
   #handleEntityChanged(event, changeType) {
     this.#stats.eventsHandled++;
-    
+
     const { entityId } = event.payload || {};
     if (!entityId) {
       return;
@@ -499,7 +530,10 @@ export class CacheInvalidationManager extends BaseService {
         },
       });
     } catch (error) {
-      this.#logger.error(`Failed to dispatch invalidation event: ${eventType}`, error);
+      this.#logger.error(
+        `Failed to dispatch invalidation event: ${eventType}`,
+        error
+      );
     }
   }
 

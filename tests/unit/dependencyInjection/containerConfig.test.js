@@ -266,16 +266,20 @@ describe('configureContainer', () => {
       throw failure;
     });
 
-    await expect(
-      configureContainer(container, mockUiElements)
-    ).rejects.toBe(failure);
+    await expect(configureContainer(container, mockUiElements)).rejects.toBe(
+      failure
+    );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[ContainerConfig] Base container configuration failed:'),
+      expect.stringContaining(
+        '[ContainerConfig] Base container configuration failed:'
+      ),
       failure
     );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[ContainerConfig] Container configuration failed:'),
+      expect.stringContaining(
+        '[ContainerConfig] Container configuration failed:'
+      ),
       failure
     );
   });
@@ -284,14 +288,14 @@ describe('configureContainer', () => {
     const missingService = String(tokens.IEntityManager);
     registerWorldAndEntity.mockImplementationOnce(() => {});
 
-    await expect(
-      configureContainer(container, mockUiElements)
-    ).rejects.toThrow(
+    await expect(configureContainer(container, mockUiElements)).rejects.toThrow(
       `[ContainerConfig] Critical service ${missingService} was not registered`
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[ContainerConfig] Container configuration failed:'),
+      expect.stringContaining(
+        '[ContainerConfig] Container configuration failed:'
+      ),
       expect.any(Error)
     );
   });

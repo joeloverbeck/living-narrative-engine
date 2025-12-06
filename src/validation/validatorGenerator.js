@@ -39,11 +39,16 @@ class ValidatorGenerator {
    */
   generate(componentSchema) {
     assertPresent(componentSchema, 'Component schema is required');
-    assertPresent(componentSchema.dataSchema, 'Component schema must have dataSchema');
+    assertPresent(
+      componentSchema.dataSchema,
+      'Component schema must have dataSchema'
+    );
 
     // Check if validator generation is enabled
     if (!componentSchema.validationRules?.generateValidator) {
-      this.#logger.debug(`Validator generation disabled for ${componentSchema.id}`);
+      this.#logger.debug(
+        `Validator generation disabled for ${componentSchema.id}`
+      );
       return null;
     }
 
@@ -54,7 +59,9 @@ class ValidatorGenerator {
     const validationRules = componentSchema.validationRules;
 
     // Generate validators for each property
-    for (const [propName, propSchema] of Object.entries(dataSchema.properties || {})) {
+    for (const [propName, propSchema] of Object.entries(
+      dataSchema.properties || {}
+    )) {
       // Enum validation
       if (propSchema.enum) {
         validators.push(
@@ -94,8 +101,9 @@ class ValidatorGenerator {
     const validValues = schema.enum;
     const errorTemplate =
       validationRules?.errorMessages?.invalidEnum ||
-      "Invalid {{property}}: {{value}}. Valid options: {{validValues}}";
-    const enableSuggestions = validationRules?.suggestions?.enableSimilarity !== false;
+      'Invalid {{property}}: {{value}}. Valid options: {{validValues}}';
+    const enableSuggestions =
+      validationRules?.suggestions?.enableSimilarity !== false;
     const maxDistance = validationRules?.suggestions?.maxDistance || 3;
 
     return (data) => {
@@ -154,7 +162,7 @@ class ValidatorGenerator {
     const expectedType = schema.type;
     const errorTemplate =
       validationRules?.errorMessages?.invalidType ||
-      "Invalid type for {{field}}: expected {{expected}}, got {{actual}}";
+      'Invalid type for {{field}}: expected {{expected}}, got {{actual}}';
 
     return (data) => {
       const value = data[propertyName];
@@ -201,7 +209,7 @@ class ValidatorGenerator {
   #generateRequiredValidator(requiredFields, validationRules) {
     const errorTemplate =
       validationRules?.errorMessages?.missingRequired ||
-      "Missing required field: {{field}}";
+      'Missing required field: {{field}}';
 
     return (data) => {
       const errors = [];

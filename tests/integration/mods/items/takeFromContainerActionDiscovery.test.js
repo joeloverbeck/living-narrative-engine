@@ -162,9 +162,8 @@ describe('items:take_from_container action definition', () => {
       testFixture.reset([room, actor, container, sword]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor_no_inventory'
-      );
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor_no_inventory');
       const hasTakeAction = availableActions.some(
         (action) => action.id === ACTION_ID
       );
@@ -275,7 +274,8 @@ describe('items:take_from_container action definition', () => {
       testFixture.reset([room, armchair, actor, bookcase, book]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('reader1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('reader1');
       const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );

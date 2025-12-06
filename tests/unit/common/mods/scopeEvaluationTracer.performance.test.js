@@ -17,7 +17,12 @@ describe('ScopeEvaluationTracer - Performance Metrics', () => {
     it('should capture step duration', () => {
       tracer.enable();
 
-      tracer.logStep('SourceResolver', "resolve(kind='actor')", { kind: 'actor' }, new Set(['actor-1']));
+      tracer.logStep(
+        'SourceResolver',
+        "resolve(kind='actor')",
+        { kind: 'actor' },
+        new Set(['actor-1'])
+      );
 
       const trace = tracer.getTrace();
       const step = trace.steps[0];
@@ -54,7 +59,7 @@ describe('ScopeEvaluationTracer - Performance Metrics', () => {
 
       // Note: High-resolution timing from performance.now() is used
       // Verify that all durations are non-negative
-      expect(trace.steps.every(step => step.duration >= 0)).toBe(true);
+      expect(trace.steps.every((step) => step.duration >= 0)).toBe(true);
     });
   });
 
@@ -71,8 +76,12 @@ describe('ScopeEvaluationTracer - Performance Metrics', () => {
       expect(metrics.resolverStats).toBeDefined();
       expect(metrics.resolverStats.length).toBe(2);
 
-      const sourceResolver = metrics.resolverStats.find(r => r.resolver === 'SourceResolver');
-      const filterResolver = metrics.resolverStats.find(r => r.resolver === 'FilterResolver');
+      const sourceResolver = metrics.resolverStats.find(
+        (r) => r.resolver === 'SourceResolver'
+      );
+      const filterResolver = metrics.resolverStats.find(
+        (r) => r.resolver === 'FilterResolver'
+      );
 
       expect(sourceResolver).toBeDefined();
       expect(filterResolver).toBeDefined();
@@ -312,11 +321,13 @@ describe('ScopeEvaluationTracer - Performance Metrics', () => {
 
       const metrics = tracer.getPerformanceMetrics();
 
-      const testResolverStat = metrics.resolverStats.find(r => r.resolver === 'TestResolver');
+      const testResolverStat = metrics.resolverStats.find(
+        (r) => r.resolver === 'TestResolver'
+      );
 
       // Total time should equal sum of individual step times
       const individualStepSum = metrics.slowestOperations.steps
-        .filter(s => s.resolver === 'TestResolver')
+        .filter((s) => s.resolver === 'TestResolver')
         .reduce((sum, s) => sum + s.duration, 0);
 
       expect(testResolverStat.totalTime).toBeCloseTo(individualStepSum, 5);
@@ -365,7 +376,9 @@ describe('ScopeEvaluationTracer - Performance Metrics', () => {
       tracer.logStep('TestResolver', 'step3', {}, {});
 
       const metrics = tracer.getPerformanceMetrics();
-      const testResolverStat = metrics.resolverStats.find(r => r.resolver === 'TestResolver');
+      const testResolverStat = metrics.resolverStats.find(
+        (r) => r.resolver === 'TestResolver'
+      );
 
       expect(testResolverStat.stepCount).toBe(3);
       expect(testResolverStat.averageTime).toBeCloseTo(

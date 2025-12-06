@@ -9,6 +9,7 @@ Numeric constraints enable GOAP (Goal-Oriented Action Planning) to handle goals 
 Numeric constraints are goal conditions that compare numeric values using operators like `>`, `<`, `>=`, `<=`, and `==`. Instead of simply checking if a component exists or has a specific boolean value, numeric constraints allow the planner to reason about quantities and find actions that move those quantities in the desired direction.
 
 **Example:**
+
 ```json
 {
   "goalState": {
@@ -16,17 +17,20 @@ Numeric constraints are goal conditions that compare numeric values using operat
   }
 }
 ```
+
 This goal is satisfied when the actor's hunger value is less than or equal to 30.
 
 ### When to Use Numeric Constraints vs Component-Based Goals
 
 **Use Numeric Constraints When:**
+
 - Goals involve quantities (health points, hunger levels, resource counts)
 - You need to reduce or increase a numeric value
 - The exact numeric threshold matters
 - Multiple actions may be needed to reach the goal
 
 **Use Component-Based Goals When:**
+
 - Goals are binary states (has weapon / doesn't have weapon)
 - Checking for presence or absence of components
 - No numeric thresholds are involved
@@ -50,17 +54,18 @@ This goal is satisfied when the actor's hunger value is less than or equal to 30
 
 The GOAP planner supports the following numeric comparison operators:
 
-| Operator | Meaning | Example | Distance Calculation |
-|----------|---------|---------|---------------------|
-| `>` | Greater than | `hunger > 50` | `target - current` (if not satisfied) |
-| `>=` | Greater than or equal | `health >= 80` | `target - current` (if not satisfied) |
-| `<` | Less than | `hunger < 30` | `current - target` (if not satisfied) |
-| `<=` | Less than or equal | `hunger <= 30` | `current - target` (if not satisfied) |
-| `==` | Equal to | `count == 5` | `|current - target|` |
+| Operator | Meaning               | Example        | Distance Calculation                  |
+| -------- | --------------------- | -------------- | ------------------------------------- | ---------------- | --- |
+| `>`      | Greater than          | `hunger > 50`  | `target - current` (if not satisfied) |
+| `>=`     | Greater than or equal | `health >= 80` | `target - current` (if not satisfied) |
+| `<`      | Less than             | `hunger < 30`  | `current - target` (if not satisfied) |
+| `<=`     | Less than or equal    | `hunger <= 30` | `current - target` (if not satisfied) |
+| `==`     | Equal to              | `count == 5`   | `                                     | current - target | `   |
 
 **Distance Calculation**: When a constraint is already satisfied, distance is 0. When not satisfied, distance represents how far the current value is from satisfying the constraint.
 
 **Examples:**
+
 - Current hunger: 80, Goal: `hunger <= 30` → Distance: 50
 - Current health: 40, Goal: `health >= 80` → Distance: 40
 - Current gold: 25, Goal: `gold == 100` → Distance: 75
@@ -85,6 +90,7 @@ A numeric goal consists of a relevance condition and a goal state with numeric c
 ```
 
 **Explanation:**
+
 - **id**: Unique identifier for the goal
 - **relevance**: Goal becomes relevant when hunger > 50 (actor is getting hungry)
 - **goalState**: Goal is satisfied when hunger <= 30 (actor is no longer hungry)
@@ -116,6 +122,7 @@ You can combine multiple numeric constraints using JSON Logic operators like `an
 ```
 
 **Explanation:**
+
 - Goal becomes relevant if health is critically low OR hunger is very high
 - Goal is satisfied when BOTH health is at least 50 AND hunger is at most 40
 - High priority (1.0) ensures this goal takes precedence
@@ -129,12 +136,14 @@ Numeric goals use JSON Logic `var` expressions to reference component fields. Th
 ```
 
 **Path Components:**
+
 - `actor`: Entity identifier (can be `actor`, `target`, or specific entity IDs)
 - `components`: Indicates we're accessing component data
 - `core:needs`: Component ID (format: `modId:componentName`)
 - `hunger`: Field name within the component
 
 **Alternative Formats:**
+
 ```json
 // Using flattened format (underscore instead of colon)
 { "var": "actor.components.core_needs.hunger" }
@@ -166,6 +175,7 @@ Sets a component field to an exact value, regardless of the previous value.
 **Result**: Hunger becomes exactly 20, regardless of previous value.
 
 **Use Cases:**
+
 - Resetting values to defaults
 - Setting values based on external state
 - Overriding calculated values
@@ -189,6 +199,7 @@ Adds a value to the existing field value.
 **Result**: Health increases by 30 (e.g., 40 + 30 = 70).
 
 **Use Cases:**
+
 - Healing/restoration effects
 - Resource accumulation
 - Stat buffs
@@ -212,6 +223,7 @@ Subtracts a value from the existing field value.
 **Result**: Hunger decreases by 60 (e.g., 80 - 60 = 20).
 
 **Use Cases:**
+
 - Consuming resources
 - Satisfying needs
 - Damage mitigation
@@ -221,6 +233,7 @@ Subtracts a value from the existing field value.
 ### Hunger/Thirst System
 
 **Goal Definition:**
+
 ```json
 {
   "id": "core:reduce_hunger",
@@ -235,6 +248,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Task Effect:**
+
 ```json
 {
   "id": "core:eat_food",
@@ -253,6 +267,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Planning Scenario:**
+
 - Current hunger: 80
 - Goal: hunger <= 30
 - Task effect: -40 hunger
@@ -262,6 +277,7 @@ Subtracts a value from the existing field value.
 ### Health Management
 
 **Goal Definition:**
+
 ```json
 {
   "id": "core:heal_injuries",
@@ -276,6 +292,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Task Effect:**
+
 ```json
 {
   "id": "core:use_medikit",
@@ -294,6 +311,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Planning Scenario:**
+
 - Current health: 40
 - Goal: health >= 80
 - Task effect: +30 health
@@ -303,6 +321,7 @@ Subtracts a value from the existing field value.
 ### Resource Accumulation
 
 **Goal Definition:**
+
 ```json
 {
   "id": "core:gather_gold",
@@ -317,6 +336,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Task Effect:**
+
 ```json
 {
   "id": "core:mine_gold",
@@ -335,6 +355,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Planning Scenario:**
+
 - Current gold: 0
 - Goal: gold >= 100
 - Task effect: +25 gold
@@ -343,6 +364,7 @@ Subtracts a value from the existing field value.
 ### Exact Value Goals
 
 **Goal Definition:**
+
 ```json
 {
   "id": "core:calibrate_device",
@@ -357,6 +379,7 @@ Subtracts a value from the existing field value.
 ```
 
 **Task Effect:**
+
 ```json
 {
   "id": "core:adjust_power",
@@ -383,11 +406,13 @@ Subtracts a value from the existing field value.
 Match the operator to the direction of change:
 
 - **For reducing values** (hunger, damage, temperature): Use `<=` or `<`
+
   ```json
   { "<=": [{ "var": "actor.components.core:needs.hunger" }, 30] }
   ```
 
 - **For increasing values** (health, resources, experience): Use `>=` or `>`
+
   ```json
   { ">=": [{ "var": "actor.components.core:stats.health" }, 80] }
   ```
@@ -402,21 +427,25 @@ Match the operator to the direction of change:
 Make goals relevant before they become critical to allow proactive planning.
 
 **Good Example:**
+
 ```json
 {
   "relevance": { ">": [{ "var": "actor.components.core:needs.hunger" }, 50] },
   "goalState": { "<=": [{ "var": "actor.components.core:needs.hunger" }, 30] }
 }
 ```
+
 Goal becomes relevant at hunger 50, well before critical levels.
 
 **Bad Example:**
+
 ```json
 {
   "relevance": { ">": [{ "var": "actor.components.core:needs.hunger" }, 90] },
   "goalState": { "<=": [{ "var": "actor.components.core:needs.hunger" }, 30] }
 }
 ```
+
 Goal only becomes relevant when hunger is critically high (90), leaving little time to act.
 
 ### 3. Ensure Tasks Can Satisfy Goals
@@ -424,28 +453,32 @@ Goal only becomes relevant when hunger is critically high (90), leaving little t
 Verify that your tasks have sufficient effect magnitude to make meaningful progress toward goals.
 
 **Considerations:**
+
 - Task effects should be large enough to reduce distance significantly
 - Multiple task applications may be needed (ensure `maxReuse` allows this)
 - Task costs should be reasonable relative to goal priority
 - Preconditions should not prevent the task from being applicable
 
 **Example:**
+
 ```json
 {
   "goalState": { "<=": [{ "var": "hunger" }, 30] },
   "task": {
     "id": "eat_snack",
-    "planningEffects": [{
-      "type": "MODIFY_COMPONENT",
-      "parameters": {
-        "entityId": "actor",
-        "componentId": "core:needs",
-        "modifications": { "hunger": 5 },  // Only reduces by 5
-        "mode": "decrement"
+    "planningEffects": [
+      {
+        "type": "MODIFY_COMPONENT",
+        "parameters": {
+          "entityId": "actor",
+          "componentId": "core:needs",
+          "modifications": { "hunger": 5 }, // Only reduces by 5
+          "mode": "decrement"
+        }
       }
-    }],
+    ],
     "cost": 1,
-    "maxReuse": 20  // Allows multiple applications
+    "maxReuse": 20 // Allows multiple applications
   }
 }
 ```
@@ -460,6 +493,7 @@ Ensure numeric operations work with actual numeric values:
 - **Avoid division by zero**: In custom calculations, validate inputs
 
 **Example Schema:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
@@ -482,8 +516,8 @@ Limit plan complexity using goal-level constraints:
 {
   "id": "core:reduce_hunger",
   "goalState": { "<=": [{ "var": "hunger" }, 30] },
-  "maxCost": 50,      // Don't spend more than 50 cost units
-  "maxActions": 5,    // Don't chain more than 5 actions
+  "maxCost": 50, // Don't spend more than 50 cost units
+  "maxActions": 5, // Don't chain more than 5 actions
   "priority": 0.7
 }
 ```
@@ -498,15 +532,17 @@ When possible, design tasks to be safely repeatable:
   "planningPreconditions": {
     ">": [{ "var": "actor.components.core:needs.fatigue" }, 20]
   },
-  "planningEffects": [{
-    "type": "MODIFY_COMPONENT",
-    "parameters": {
-      "entityId": "actor",
-      "componentId": "core:needs",
-      "modifications": { "fatigue": 30 },
-      "mode": "decrement"
+  "planningEffects": [
+    {
+      "type": "MODIFY_COMPONENT",
+      "parameters": {
+        "entityId": "actor",
+        "componentId": "core:needs",
+        "modifications": { "fatigue": 30 },
+        "mode": "decrement"
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -519,6 +555,7 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Symptom**: Goal is relevant but no plan is created.
 
 **Possible Causes:**
+
 1. Task doesn't reduce distance to goal
 2. Task preconditions are not satisfied
 3. Task cost is too high relative to goal priority
@@ -527,17 +564,20 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Debug Steps:**
 
 1. **Verify task has MODIFY_COMPONENT effect:**
+
    ```json
    {
-     "planningEffects": [{
-       "type": "MODIFY_COMPONENT",
-       "parameters": {
-         "entityId": "actor",
-         "componentId": "core:needs",
-         "modifications": { "hunger": 40 },
-         "mode": "decrement"
+     "planningEffects": [
+       {
+         "type": "MODIFY_COMPONENT",
+         "parameters": {
+           "entityId": "actor",
+           "componentId": "core:needs",
+           "modifications": { "hunger": 40 },
+           "mode": "decrement"
+         }
        }
-     }]
+     ]
    }
    ```
 
@@ -546,6 +586,7 @@ The precondition prevents the task from being applied when it wouldn't help.
    - Goal: `hunger <= 30`, Current: 80, Effect: `+20` → New: 100 (wrong direction ✗)
 
 3. **Verify preconditions are satisfiable:**
+
    ```json
    {
      "planningPreconditions": {
@@ -553,6 +594,7 @@ The precondition prevents the task from being applied when it wouldn't help.
      }
    }
    ```
+
    Ensure the actor has the required components in the planning state.
 
 4. **Review task cost vs priority:**
@@ -563,7 +605,7 @@ The precondition prevents the task from being applied when it wouldn't help.
 5. **Check maxReuse setting:**
    ```json
    {
-     "maxReuse": 10  // Allows task to be used up to 10 times
+     "maxReuse": 10 // Allows task to be used up to 10 times
    }
    ```
 
@@ -572,6 +614,7 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Symptom**: Planner reports unexpected distance values or makes poor decisions.
 
 **Possible Causes:**
+
 1. Operator mismatch (using `>` when you need `<`)
 2. Field is not numeric (string, boolean, or missing)
 3. Component doesn't exist on entity
@@ -584,6 +627,7 @@ The precondition prevents the task from being applied when it wouldn't help.
    - Verify: Does the operator match your intent?
 
 2. **Verify field exists and is numeric:**
+
    ```json
    // In component definition
    {
@@ -592,6 +636,7 @@ The precondition prevents the task from being applied when it wouldn't help.
    ```
 
 3. **Check component exists on entity:**
+
    ```json
    {
      "planningPreconditions": {
@@ -608,6 +653,7 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Symptom**: Plan executes but goal remains unsatisfied.
 
 **Possible Causes:**
+
 1. Effect mode incorrect (`set` vs `increment`/`decrement`)
 2. Modification value is wrong or too small
 3. Multiple task applications needed but maxReuse is too low
@@ -629,12 +675,14 @@ The precondition prevents the task from being applied when it wouldn't help.
    - Solution: Allow multiple applications or increase effect magnitude
 
 3. **Check maxReuse allows sufficient applications:**
+
    ```json
    {
-     "maxReuse": 2,  // May not be enough!
+     "maxReuse": 2, // May not be enough!
      "cost": 10
    }
    ```
+
    If 2 applications aren't enough, increase maxReuse.
 
 4. **For equality goals, ensure exact value is achievable:**
@@ -642,13 +690,15 @@ The precondition prevents the task from being applied when it wouldn't help.
    {
      "goalState": { "==": [{ "var": "count" }, 100] },
      "task": {
-       "planningEffects": [{
-         "type": "MODIFY_COMPONENT",
-         "parameters": {
-           "modifications": { "count": 100 },
-           "mode": "set"  // Use set mode for exact values
+       "planningEffects": [
+         {
+           "type": "MODIFY_COMPONENT",
+           "parameters": {
+             "modifications": { "count": 100 },
+             "mode": "set" // Use set mode for exact values
+           }
          }
-       }]
+       ]
      }
    }
    ```
@@ -658,6 +708,7 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Symptom**: Planning phase times out or takes excessive time.
 
 **Possible Causes:**
+
 1. Too many available tasks in the task library
 2. Large numeric distances requiring many task applications
 3. Complex goal conditions with many numeric constraints
@@ -671,6 +722,7 @@ The precondition prevents the task from being applied when it wouldn't help.
    - Avoid tasks with overly broad applicability
 
 2. **Use larger effect magnitudes:**
+
    ```json
    // Instead of: -5 hunger per task (requires many applications)
    // Use: -40 hunger per task (requires fewer applications)
@@ -681,11 +733,12 @@ The precondition prevents the task from being applied when it wouldn't help.
    ```
 
 3. **Set maxActions limit:**
+
    ```json
    {
      "goalState": { "<=": [{ "var": "hunger" }, 30] },
-     "maxActions": 5,  // Stop after 5 actions
-     "maxCost": 100    // Or cost limit
+     "maxActions": 5, // Stop after 5 actions
+     "maxCost": 100 // Or cost limit
    }
    ```
 
@@ -700,25 +753,30 @@ The precondition prevents the task from being applied when it wouldn't help.
 **Solution**: This is expected behavior for inequality constraints (`<=`, `>=`). The planner allows overshoot because it's still valid.
 
 **If exact values are needed:**
+
 1. Use equality constraints: `"=="`
 2. Use `set` mode to assign exact values
 3. Add preconditions to prevent over-application
 
 **Example:**
+
 ```json
 {
   "planningPreconditions": {
     ">": [{ "var": "actor.components.core:needs.hunger" }, 30]
   },
-  "planningEffects": [{
-    "type": "MODIFY_COMPONENT",
-    "parameters": {
-      "modifications": { "hunger": 40 },
-      "mode": "decrement"
+  "planningEffects": [
+    {
+      "type": "MODIFY_COMPONENT",
+      "parameters": {
+        "modifications": { "hunger": 40 },
+        "mode": "decrement"
+      }
     }
-  }]
+  ]
 }
 ```
+
 Precondition prevents task from being applied when hunger is already <= 30.
 
 ## See Also

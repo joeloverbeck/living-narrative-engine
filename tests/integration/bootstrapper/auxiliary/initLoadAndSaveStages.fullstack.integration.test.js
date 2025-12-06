@@ -208,7 +208,10 @@ function createStageEnvironment() {
   const entityDisplayDataProvider = { getEntityName: jest.fn() };
 
   const ensureRegistered = (token, value) => {
-    if (typeof container.isRegistered === 'function' && container.isRegistered(token)) {
+    if (
+      typeof container.isRegistered === 'function' &&
+      container.isRegistered(token)
+    ) {
       return;
     }
     container.register(token, value);

@@ -409,7 +409,9 @@ describe('BlueprintSlotStrategy', () => {
           orientation: 'neutral',
         },
       ]);
-      expect(mockAnatomySocketIndex.findEntityWithSocket).not.toHaveBeenCalled();
+      expect(
+        mockAnatomySocketIndex.findEntityWithSocket
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -863,7 +865,10 @@ describe('BlueprintSlotStrategy', () => {
     it('should continue searching when joint type does not match blueprint slot', async () => {
       const mockBlueprint = {
         slots: {
-          unmatched_slot: { type: 'unmatched_type', socket: 'unmatched_socket' },
+          unmatched_slot: {
+            type: 'unmatched_type',
+            socket: 'unmatched_socket',
+          },
         },
       };
 
@@ -878,9 +883,7 @@ describe('BlueprintSlotStrategy', () => {
           if (componentType === 'anatomy:sockets') {
             if (entityId === 'fallback_entity') {
               return Promise.resolve({
-                sockets: [
-                  { id: 'unmatched_socket', orientation: 'neutral' },
-                ],
+                sockets: [{ id: 'unmatched_socket', orientation: 'neutral' }],
               });
             }
             return Promise.resolve({ sockets: [] });

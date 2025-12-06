@@ -103,9 +103,14 @@ class ActivityDescriptionFacade {
       requiredMethods: ['formatActivityDescription'],
     });
 
-    validateDependency(groupingSystem, 'IActivityGroupingSystem', this.#logger, {
-      requiredMethods: ['groupActivities', 'sortByPriority'],
-    });
+    validateDependency(
+      groupingSystem,
+      'IActivityGroupingSystem',
+      this.#logger,
+      {
+        requiredMethods: ['groupActivities', 'sortByPriority'],
+      }
+    );
 
     validateDependency(
       contextBuildingSystem,
@@ -182,7 +187,8 @@ class ActivityDescriptionFacade {
   async generateActivityDescription(entity, _options = {}) {
     try {
       // Step 1: Collect activity metadata
-      const allMetadata = this.#metadataCollectionSystem.collectActivityMetadata(entity);
+      const allMetadata =
+        this.#metadataCollectionSystem.collectActivityMetadata(entity);
 
       if (!allMetadata || allMetadata.length === 0) {
         return '';
@@ -199,17 +205,19 @@ class ActivityDescriptionFacade {
       }
 
       // Step 3: Group activities with priority-based conjunction selection
-      const groupedActivities = this.#groupingSystem.groupActivities(filteredMetadata);
+      const groupedActivities =
+        this.#groupingSystem.groupActivities(filteredMetadata);
 
       if (!groupedActivities || groupedActivities.length === 0) {
         return '';
       }
 
       // Step 4: Build context with tone adjustments
-      const activitiesWithContext = this.#contextBuildingSystem.buildActivityContext(
-        groupedActivities,
-        entity
-      );
+      const activitiesWithContext =
+        this.#contextBuildingSystem.buildActivityContext(
+          groupedActivities,
+          entity
+        );
 
       // Step 5: Format final description using NLG system
       const config = this.#getActivityIntegrationConfig();
@@ -222,7 +230,11 @@ class ActivityDescriptionFacade {
       return formattedDescription;
     } catch (error) {
       this.#logger.error('Failed to generate activity description', error);
-      this.#dispatchError('ACTIVITY_DESCRIPTION_GENERATION_FAILED', error, entity);
+      this.#dispatchError(
+        'ACTIVITY_DESCRIPTION_GENERATION_FAILED',
+        error,
+        entity
+      );
       return '';
     }
   }
@@ -356,7 +368,10 @@ class ActivityDescriptionFacade {
       this.#eventUnsubscribers = [];
 
       // Destroy cache manager
-      if (this.#cacheManager && typeof this.#cacheManager.destroy === 'function') {
+      if (
+        this.#cacheManager &&
+        typeof this.#cacheManager.destroy === 'function'
+      ) {
         this.#cacheManager.destroy();
       }
 
@@ -375,11 +390,11 @@ class ActivityDescriptionFacade {
   getTestHooks() {
     return {
       // Delegate to each service's test hooks
-      ...this.#nlgSystem.getTestHooks?.() || {},
-      ...this.#groupingSystem.getTestHooks?.() || {},
-      ...this.#contextBuildingSystem.getTestHooks?.() || {},
-      ...this.#filteringSystem.getTestHooks?.() || {},
-      ...this.#metadataCollectionSystem.getTestHooks?.() || {},
+      ...(this.#nlgSystem.getTestHooks?.() || {}),
+      ...(this.#groupingSystem.getTestHooks?.() || {}),
+      ...(this.#contextBuildingSystem.getTestHooks?.() || {}),
+      ...(this.#filteringSystem.getTestHooks?.() || {}),
+      ...(this.#metadataCollectionSystem.getTestHooks?.() || {}),
 
       // Facade-specific hooks
       clearAllCaches: () => this.clearAllCaches(),

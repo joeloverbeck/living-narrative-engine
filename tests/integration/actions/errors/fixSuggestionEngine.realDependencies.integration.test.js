@@ -8,7 +8,10 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
-import { ERROR_PHASES, FIX_TYPES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  ERROR_PHASES,
+  FIX_TYPES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import { SimpleEntityManager } from '../../../common/entities/index.js';
 
 class RecordingLogger {

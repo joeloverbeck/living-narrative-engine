@@ -255,7 +255,15 @@ describe('Put In Container Action Discovery Integration Tests', () => {
       .withComponent('items:openable', {})
       .build();
 
-    testFixture.reset([location, actor, ...handEntities, item1, item2, chest1, chest2]);
+    testFixture.reset([
+      location,
+      actor,
+      ...handEntities,
+      item1,
+      item2,
+      chest1,
+      chest2,
+    ]);
     configureActionDiscovery();
 
     // Act: Get available actions
@@ -282,7 +290,9 @@ describe('Put In Container Action Discovery Integration Tests', () => {
         scopeContext
       );
     expect(containerResult.success).toBe(true);
-    expect(new Set(containerResult.value)).toEqual(new Set(['chest1', 'chest2']));
+    expect(new Set(containerResult.value)).toEqual(
+      new Set(['chest1', 'chest2'])
+    );
 
     const inventoryResult =
       testFixture.testEnv.unifiedScopeResolver.resolveSync(

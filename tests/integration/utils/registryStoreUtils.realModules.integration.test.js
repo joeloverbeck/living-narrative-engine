@@ -54,10 +54,14 @@ describe('storeItemInRegistry integration with real registry', () => {
     });
 
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("ComponentLoader [core]: Storing item in registry")
+      expect.stringContaining(
+        'ComponentLoader [core]: Storing item in registry'
+      )
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("ComponentLoader [core]: Item 'core:vision' (Base: 'vision') stored successfully")
+      expect.stringContaining(
+        "ComponentLoader [core]: Item 'core:vision' (Base: 'vision') stored successfully"
+      )
     );
   });
 
@@ -97,7 +101,9 @@ describe('storeItemInRegistry integration with real registry', () => {
     }
 
     expect(capturedError).toBeInstanceOf(DuplicateContentError);
-    expect(capturedError.message).toContain("Duplicate action identifier 'core:dash'");
+    expect(capturedError.message).toContain(
+      "Duplicate action identifier 'core:dash'"
+    );
     expect(capturedError.context).toMatchObject({
       contentType: 'action',
       qualifiedId: 'core:dash',
@@ -150,20 +156,12 @@ describe('storeItemInRegistry integration with real registry', () => {
     };
 
     it.each([
-      [
-        'category',
-        { category: '' },
-        "Category must be a non-empty string",
-      ],
-      [
-        'modId',
-        { modId: '' },
-        "ModId must be a non-empty string",
-      ],
+      ['category', { category: '' }, 'Category must be a non-empty string'],
+      ['modId', { modId: '' }, 'ModId must be a non-empty string'],
       [
         'baseItemId',
         { baseItemId: '' },
-        "BaseItemId must be a non-empty string",
+        'BaseItemId must be a non-empty string',
       ],
       [
         'dataToStore',
@@ -187,7 +185,9 @@ describe('storeItemInRegistry integration with real registry', () => {
         )
       ).toThrow(TypeError);
 
-      expect(logger.error).toHaveBeenCalledWith(expect.stringContaining(expectedMessage));
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining(expectedMessage)
+      );
       expect(storeSpy).not.toHaveBeenCalled();
     });
   });
@@ -243,5 +243,4 @@ describe('storeItemInRegistry integration with real registry', () => {
       contentType: 'custom',
     });
   });
-
 });

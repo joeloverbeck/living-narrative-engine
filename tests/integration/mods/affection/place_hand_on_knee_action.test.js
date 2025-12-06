@@ -91,7 +91,10 @@ describe('affection:place_hand_on_knee action integration', () => {
     const perceptibleEvent = findPerceptibleEvent();
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      EXPECTED_SENTENCE.replace('{actor}', 'Serena').replace('{target}', 'Miguel')
+      EXPECTED_SENTENCE.replace('{actor}', 'Serena').replace(
+        '{target}',
+        'Miguel'
+      )
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
       'action_target_general'

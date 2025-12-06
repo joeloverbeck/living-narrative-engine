@@ -7,24 +7,14 @@
       "layer": "armor",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": [
-          "left_arm_clothing",
-          "right_arm_clothing"
-        ]
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base",
-        "armor",
-        "outer"
-      ]
+      "allowedLayers": ["underwear", "base", "armor", "outer"]
     },
     "core:material": {
       "material": "iron",
       "durability": 75,
-      "properties": [
-        "flexible"
-      ]
+      "properties": ["flexible"]
     },
     "core:name": {
       "text": "chainmail hauberk"

@@ -12,8 +12,8 @@ Register the new `wielding.component.json` in the positioning mod manifest.
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                      | Action | Description                                     |
+| ----------------------------------------- | ------ | ----------------------------------------------- |
 | `data/mods/positioning/mod-manifest.json` | MODIFY | Add wielding.component.json to components array |
 
 ## Out of Scope
@@ -98,6 +98,7 @@ npm run validate:mod:positioning  # if this script exists
 ### Manual Verification
 
 After implementation, run:
+
 ```bash
 # Verify component count increased by 1
 grep -c "component.json" data/mods/positioning/mod-manifest.json
@@ -136,19 +137,20 @@ The diff should be minimal - approximately 1-2 lines added:
 
 ### Verification Results
 
-| Check | Result |
-|-------|--------|
-| Valid JSON syntax | ✅ Pass |
-| Component count (21 → 22) | ✅ Pass |
-| `wielding.component.json` present | ✅ Pass |
-| `npm run validate` | ✅ Pass (0 violations, 37 mods) |
-| Positioning tests | ✅ Pass (114 suites, 938 tests) |
-| Mod loader integration tests | ✅ Pass (7 tests) |
-| Schema loading integrity | ✅ Pass (5 tests) |
+| Check                             | Result                          |
+| --------------------------------- | ------------------------------- |
+| Valid JSON syntax                 | ✅ Pass                         |
+| Component count (21 → 22)         | ✅ Pass                         |
+| `wielding.component.json` present | ✅ Pass                         |
+| `npm run validate`                | ✅ Pass (0 violations, 37 mods) |
+| Positioning tests                 | ✅ Pass (114 suites, 938 tests) |
+| Mod loader integration tests      | ✅ Pass (7 tests)               |
+| Schema loading integrity          | ✅ Pass (5 tests)               |
 
 ### No Tests Added
 
 No new tests were added because:
+
 - This ticket only involves a manifest configuration change
 - The existing validation infrastructure (`npm run validate`) already covers manifest integrity
 - The 938 positioning tests validate that the mod loads correctly

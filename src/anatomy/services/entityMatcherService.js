@@ -142,7 +142,9 @@ class EntityMatcherService extends BaseService {
     const merged = { ...patternProperties };
 
     // Deep merge blueprint properties into pattern properties
-    for (const [componentId, blueprintProps] of Object.entries(blueprintProperties)) {
+    for (const [componentId, blueprintProps] of Object.entries(
+      blueprintProperties
+    )) {
       if (merged[componentId]) {
         // Component exists in both - merge the property constraints
         merged[componentId] = {
@@ -197,7 +199,9 @@ class EntityMatcherService extends BaseService {
       return true;
     }
 
-    for (const [componentId, requiredProps] of Object.entries(propertyRequirements)) {
+    for (const [componentId, requiredProps] of Object.entries(
+      propertyRequirements
+    )) {
       const component = entityDef.components?.[componentId];
       if (!component) {
         return false;

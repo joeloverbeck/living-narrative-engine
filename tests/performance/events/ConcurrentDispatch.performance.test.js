@@ -43,11 +43,13 @@ class ConcurrencyPerformanceProfiler {
     this.metrics.memorySnapshots.push({
       timestamp: Date.now(),
       // Browser performance timing (limited memory information)
-      performance: performance.memory ? {
-        usedJSHeapSize: performance.memory.usedJSHeapSize,
-        totalJSHeapSize: performance.memory.totalJSHeapSize,
-        jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
-      } : null,
+      performance: performance.memory
+        ? {
+            usedJSHeapSize: performance.memory.usedJSHeapSize,
+            totalJSHeapSize: performance.memory.totalJSHeapSize,
+            jsHeapSizeLimit: performance.memory.jsHeapSizeLimit,
+          }
+        : null,
     });
   }
 
@@ -78,7 +80,7 @@ class ConcurrencyPerformanceProfiler {
     if (this.metrics.memorySnapshots.length < 2) return null;
 
     // Browser-compatible memory stats (limited information)
-    const snapshots = this.metrics.memorySnapshots.filter(s => s.performance);
+    const snapshots = this.metrics.memorySnapshots.filter((s) => s.performance);
     if (snapshots.length < 2) return null;
 
     const first = snapshots[0].performance;
@@ -86,9 +88,13 @@ class ConcurrencyPerformanceProfiler {
 
     return {
       heapGrowth: last.usedJSHeapSize - first.usedJSHeapSize,
-      heapGrowthPercent: ((last.usedJSHeapSize - first.usedJSHeapSize) / first.usedJSHeapSize) * 100,
-      peakHeap: Math.max(...snapshots.map(s => s.performance.usedJSHeapSize)),
-      avgHeap: snapshots.reduce((sum, s) => sum + s.performance.usedJSHeapSize, 0) / snapshots.length,
+      heapGrowthPercent:
+        ((last.usedJSHeapSize - first.usedJSHeapSize) / first.usedJSHeapSize) *
+        100,
+      peakHeap: Math.max(...snapshots.map((s) => s.performance.usedJSHeapSize)),
+      avgHeap:
+        snapshots.reduce((sum, s) => sum + s.performance.usedJSHeapSize, 0) /
+        snapshots.length,
     };
   }
 }
@@ -149,14 +155,16 @@ describe('Concurrent Event Dispatch Performance', () => {
 
       // Act
       const startTime = Date.now();
-      await Promise.all(dispatchers.map(d => d()));
+      await Promise.all(dispatchers.map((d) => d()));
       const totalDuration = Date.now() - startTime;
 
       // Assert
       const stats = profiler.calculateStatistics();
 
       expect(totalDuration).toBeLessThan(performanceThresholds.totalDuration);
-      expect(stats.dispatch.mean).toBeLessThan(performanceThresholds.avgLatency);
+      expect(stats.dispatch.mean).toBeLessThan(
+        performanceThresholds.avgLatency
+      );
       expect(stats.dispatch.p95).toBeLessThan(performanceThresholds.p95Latency);
       expect(processedCount).toBe(eventCount);
 
@@ -179,11 +187,13 @@ describe('Concurrent Event Dispatch Performance', () => {
       for (const count of testCases) {
         const dispatchers = [];
         for (let i = 0; i < count; i++) {
-          dispatchers.push(() => eventBus.dispatch(ACTION_DECIDED_ID, { index: i }));
+          dispatchers.push(() =>
+            eventBus.dispatch(ACTION_DECIDED_ID, { index: i })
+          );
         }
 
         const startTime = performance.now();
-        await Promise.all(dispatchers.map(d => d()));
+        await Promise.all(dispatchers.map((d) => d()));
         const endTime = performance.now();
 
         const durationMs = endTime - startTime;
@@ -222,18 +232,25 @@ describe('Concurrent Event Dispatch Performance', () => {
       // Arrange
       const targetThroughput = 500; // events per second (conservative for browser)
       const testDurationMs = 1000;
-      const expectedEvents = Math.floor(targetThroughput * (testDurationMs / 1000));
+      const expectedEvents = Math.floor(
+        targetThroughput * (testDurationMs / 1000)
+      );
 
-      const benchmark = performanceTracker.startBenchmark('Simple Event Throughput');
+      const benchmark = performanceTracker.startBenchmark(
+        'Simple Event Throughput'
+      );
 
       let dispatchedCount = 0;
       const startTime = performance.now();
 
       // Act - dispatch as many events as possible within time limit
-      while (performance.now() - startTime < testDurationMs && dispatchedCount < expectedEvents * 2) {
+      while (
+        performance.now() - startTime < testDurationMs &&
+        dispatchedCount < expectedEvents * 2
+      ) {
         await eventBus.dispatch(ENTITY_CREATED_ID, {
           index: dispatchedCount,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         });
         dispatchedCount++;
       }
@@ -261,7 +278,9 @@ describe('Concurrent Event Dispatch Performance', () => {
       const burstCount = 10;
       const interBurstDelayMs = 10;
 
-      const benchmark = performanceTracker.startBenchmark('Burst Pattern Performance');
+      const benchmark = performanceTracker.startBenchmark(
+        'Burst Pattern Performance'
+      );
 
       const burstTimings = [];
 
@@ -271,10 +290,12 @@ describe('Concurrent Event Dispatch Performance', () => {
 
         const promises = [];
         for (let i = 0; i < burstSize; i++) {
-          promises.push(eventBus.dispatch(COMPONENT_ADDED_ID, {
-            burstId: burst,
-            eventId: i,
-          }));
+          promises.push(
+            eventBus.dispatch(COMPONENT_ADDED_ID, {
+              burstId: burst,
+              eventId: i,
+            })
+          );
         }
 
         await Promise.all(promises);
@@ -283,14 +304,17 @@ describe('Concurrent Event Dispatch Performance', () => {
 
         // Inter-burst delay
         if (burst < burstCount - 1) {
-          await new Promise(resolve => setTimeout(resolve, interBurstDelayMs));
+          await new Promise((resolve) =>
+            setTimeout(resolve, interBurstDelayMs)
+          );
         }
       }
 
       benchmark.end();
 
       // Assert - burst handling should be consistent
-      const avgBurstTime = burstTimings.reduce((a, b) => a + b, 0) / burstTimings.length;
+      const avgBurstTime =
+        burstTimings.reduce((a, b) => a + b, 0) / burstTimings.length;
       const maxBurstTime = Math.max(...burstTimings);
       const minBurstTime = Math.min(...burstTimings);
 
@@ -324,17 +348,19 @@ describe('Concurrent Event Dispatch Performance', () => {
       for (let iter = 0; iter < iterations; iter++) {
         const promises = [];
         for (let i = 0; i < eventsPerIteration; i++) {
-          promises.push(eventBus.dispatch(ENTITY_CREATED_ID, {
-            iteration: iter,
-            index: i,
-            data: new Array(100).fill(i), // Some payload to stress memory
-          }));
+          promises.push(
+            eventBus.dispatch(ENTITY_CREATED_ID, {
+              iteration: iter,
+              index: i,
+              data: new Array(100).fill(i), // Some payload to stress memory
+            })
+          );
         }
 
         await Promise.all(promises);
 
         // Small delay between iterations
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         profiler.takeMemorySnapshot();
       }

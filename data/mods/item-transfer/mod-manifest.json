@@ -27,14 +27,8 @@
     }
   ],
   "content": {
-    "actions": [
-      "give_item.action.json"
-    ],
-    "conditions": [
-      "event-is-action-give-item.condition.json"
-    ],
-    "rules": [
-      "handle_give_item.rule.json"
-    ]
+    "actions": ["give_item.action.json"],
+    "conditions": ["event-is-action-give-item.condition.json"],
+    "rules": ["handle_give_item.rule.json"]
   }
 }

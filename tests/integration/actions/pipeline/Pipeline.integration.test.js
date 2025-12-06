@@ -173,7 +173,6 @@ describe('Pipeline integration', () => {
         'Pipeline execution completed. Actions: 3, Errors: 1',
       ])
     );
-
   });
 
   it('returns failure result when a stage throws an error', async () => {

@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import DocumentContext from '../../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../../src/domUI/domElementFactory.js';
@@ -73,7 +80,7 @@ function setupDomContainer() {
     portraitVisuals,
     descriptionDisplay,
     exitsDisplay,
-    charactersDisplay,
+    charactersDisplay
   );
 
   document.body.appendChild(container);
@@ -211,7 +218,7 @@ describe('renderLocationLists integration', () => {
 
     expect(domElements.exitsDisplay.textContent).toContain('(None visible)');
     expect(domElements.charactersDisplay.textContent).toContain(
-      '(None else here)',
+      '(None else here)'
     );
   });
 });

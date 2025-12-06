@@ -48,6 +48,8 @@ describe('items:lower_aim action definition', () => {
 
   it('should require actor to have inventory', () => {
     expect(lowerAimAction.required_components).toBeDefined();
-    expect(lowerAimAction.required_components.actor).toEqual(['items:inventory']);
+    expect(lowerAimAction.required_components.actor).toEqual([
+      'items:inventory',
+    ]);
   });
 });

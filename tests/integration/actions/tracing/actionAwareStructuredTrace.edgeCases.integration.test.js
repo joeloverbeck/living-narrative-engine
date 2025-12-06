@@ -48,7 +48,7 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
 
     expect(throwingLogger.error).toHaveBeenCalledWith(
       'ActionAwareStructuredTrace: Error capturing operator evaluation',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     trace.captureLegacyConversion('legacy:none', {
@@ -75,22 +75,21 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
       error: new Error('conversion warning'),
     });
 
-    const noneStage = trace
-      .getActionTrace('legacy:none')
-      .stages.legacy_processing.data;
-    const typeStage = trace
-      .getActionTrace('legacy:type')
-      .stages.legacy_processing.data;
-    const miscStage = trace
-      .getActionTrace('legacy:misc')
-      .stages.legacy_processing.data;
+    const noneStage =
+      trace.getActionTrace('legacy:none').stages.legacy_processing.data;
+    const typeStage =
+      trace.getActionTrace('legacy:type').stages.legacy_processing.data;
+    const miscStage =
+      trace.getActionTrace('legacy:misc').stages.legacy_processing.data;
 
     expect(noneStage.originalFormat).toBe('unknown');
     expect(typeStage.originalFormat).toBe('legacy_target_type');
     expect(miscStage.originalFormat).toBe('unknown');
 
     expect(trace.isMultiTargetAction({ scope: 'world' })).toBe(true);
-    expect(trace.isMultiTargetAction({ targetQuery: { type: 'ally' } })).toBe(true);
+    expect(trace.isMultiTargetAction({ targetQuery: { type: 'ally' } })).toBe(
+      true
+    );
   });
 
   it('respects guard clauses, fallback verbosity, and summarization shortcuts', () => {
@@ -128,7 +127,9 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
       totalTargets: 1,
       relationships: [{ from: 'primary', to: 'secondary' }],
     });
-    trace.captureEnhancedActionData('guard_stage', 'blocked:action', { foo: 'bar' });
+    trace.captureEnhancedActionData('guard_stage', 'blocked:action', {
+      foo: 'bar',
+    });
     expect(trace.getActionTrace('blocked:action')).toBeNull();
 
     trace.captureEnhancedScopeEvaluation('allowed:action', 'primary', null);
@@ -160,7 +161,7 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Unknown verbosity level"),
+      expect.stringContaining('Unknown verbosity level')
     );
 
     filter.getVerbosityLevel = () => 'detailed';
@@ -171,14 +172,11 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
 
     actionTrace = trace.getActionTrace('allowed:action');
     expect(actionTrace.stages.target_resolution.data.resolvedTargets).toBe(
-      'not-array',
+      'not-array'
     );
 
     trace.captureActionData('target_resolution', 'allowed:action', {
-      resolvedTargets: [
-        { id: 'target-1' },
-        { id: 'target-2' },
-      ],
+      resolvedTargets: [{ id: 'target-1' }, { id: 'target-2' }],
       duration: 5,
     });
 
@@ -216,18 +214,24 @@ describe('ActionAwareStructuredTrace edge case integration', () => {
     expect(trace.isMultiTargetAction({ scope: 'global' })).toBe(true);
     expect(trace.isMultiTargetAction({ targetQuery: {} })).toBe(true);
 
-    trace.captureEnhancedActionData('string_stage', 'allowed:action', 'payload', {
-      summarize: true,
-      targetVerbosity: 'minimal',
-      category: 'diagnostic',
-    });
+    trace.captureEnhancedActionData(
+      'string_stage',
+      'allowed:action',
+      'payload',
+      {
+        summarize: true,
+        targetVerbosity: 'minimal',
+        category: 'diagnostic',
+      }
+    );
 
-    const stringStage = trace.getActionTrace('allowed:action').stages.string_stage;
+    const stringStage =
+      trace.getActionTrace('allowed:action').stages.string_stage;
     expect(stringStage.data._enhanced.category).toBe('diagnostic');
 
     trace.addDynamicTraceRule('non-enhanced', () => true);
     expect(logger.warn).toHaveBeenCalledWith(
-      'Dynamic rules require EnhancedActionTraceFilter',
+      'Dynamic rules require EnhancedActionTraceFilter'
     );
   });
 });

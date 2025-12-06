@@ -108,7 +108,12 @@ class DeterministicOrchestrator {
         })
       );
 
-      const actions = [baseAction, duplicateAction, locationAction, ...overflowActions];
+      const actions = [
+        baseAction,
+        duplicateAction,
+        locationAction,
+        ...overflowActions,
+      ];
       return {
         actions,
         errors: [
@@ -242,12 +247,16 @@ describe('AvailableActionsProvider integration coverage', () => {
 
     expect(
       logger.logs.warn.some(([message]) =>
-        message.includes('Encountered 1 formatting error(s) during action discovery')
+        message.includes(
+          'Encountered 1 formatting error(s) during action discovery'
+        )
       )
     ).toBe(true);
     expect(
       logger.logs.warn.some(([message]) =>
-        message.includes("Action 'broken:action' (Target: target-99): Formatting failed")
+        message.includes(
+          "Action 'broken:action' (Target: target-99): Formatting failed"
+        )
       )
     ).toBe(true);
     expect(
@@ -270,7 +279,9 @@ describe('AvailableActionsProvider integration coverage', () => {
     expect(orchestrator.callHistory).toHaveLength(1);
     expect(
       logger.logs.debug.some(([message]) =>
-        message.includes('[Cache Hit] Returning cached actions for actor actor-1')
+        message.includes(
+          '[Cache Hit] Returning cached actions for actor actor-1'
+        )
       )
     ).toBe(true);
 
@@ -378,12 +389,18 @@ describe('AvailableActionsProvider integration coverage', () => {
       logger: failingLogger,
     });
 
-    const result = await failingProvider.get(throwActor, { game: { turn: 1 } }, failingLogger);
+    const result = await failingProvider.get(
+      throwActor,
+      { game: { turn: 1 } },
+      failingLogger
+    );
     expect(result).toEqual([]);
     expect(failingOrchestrator.calls).toBe(1);
     expect(
       failingLogger.logs.error.some(([message]) =>
-        message.includes('AvailableActionsProvider: Error discovering/indexing actions for actor-throw: discovery failed')
+        message.includes(
+          'AvailableActionsProvider: Error discovering/indexing actions for actor-throw: discovery failed'
+        )
       )
     ).toBe(true);
 

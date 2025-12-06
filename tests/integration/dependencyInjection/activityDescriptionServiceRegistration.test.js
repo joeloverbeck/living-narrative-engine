@@ -11,7 +11,9 @@ describe('ActivityDescriptionService DI Registration (ACTDESC-004)', () => {
   it('should have ActivityDescriptionService token defined', () => {
     // Assert
     expect(tokens.ActivityDescriptionService).toBeDefined();
-    expect(tokens.ActivityDescriptionService).toBe('ActivityDescriptionService');
+    expect(tokens.ActivityDescriptionService).toBe(
+      'ActivityDescriptionService'
+    );
   });
 
   it('should have ActivityDescriptionService class available for import', () => {

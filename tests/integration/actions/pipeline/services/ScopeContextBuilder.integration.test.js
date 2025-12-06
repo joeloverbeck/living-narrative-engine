@@ -401,7 +401,9 @@ describe('ScopeContextBuilder Integration Tests', () => {
       const validation = scopeContextBuilder.validateContext({});
 
       expect(validation.success).toBe(false);
-      expect(validation.errors).toContain('Context missing required actor field');
+      expect(validation.errors).toContain(
+        'Context missing required actor field'
+      );
     });
 
     it('should warn when target is missing components', () => {

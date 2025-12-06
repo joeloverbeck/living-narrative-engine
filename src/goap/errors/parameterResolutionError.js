@@ -35,7 +35,17 @@ class ParameterResolutionError extends GoapError {
    * @param {object} [options] - Additional options passed to GoapError
    * @param {string} [options.correlationId] - Custom correlation ID
    */
-  constructor({ reference, partialPath, failedStep, availableKeys, contextType, stepIndex }, options = {}) {
+  constructor(
+    {
+      reference,
+      partialPath,
+      failedStep,
+      availableKeys,
+      contextType,
+      stepIndex,
+    },
+    options = {}
+  ) {
     const message = ParameterResolutionError.#formatMessage({
       reference,
       partialPath,
@@ -67,12 +77,24 @@ class ParameterResolutionError extends GoapError {
   }
 
   // Getters for backward compatibility
-  get reference() { return this.#reference; }
-  get partialPath() { return this.#partialPath; }
-  get failedStep() { return this.#failedStep; }
-  get availableKeys() { return this.#availableKeys; }
-  get contextType() { return this.#contextType; }
-  get stepIndex() { return this.#stepIndex; }
+  get reference() {
+    return this.#reference;
+  }
+  get partialPath() {
+    return this.#partialPath;
+  }
+  get failedStep() {
+    return this.#failedStep;
+  }
+  get availableKeys() {
+    return this.#availableKeys;
+  }
+  get contextType() {
+    return this.#contextType;
+  }
+  get stepIndex() {
+    return this.#stepIndex;
+  }
 
   /**
    * Format error message with detailed diagnostic information
@@ -86,7 +108,14 @@ class ParameterResolutionError extends GoapError {
    * @param {number} [details.stepIndex] - Optional step index in refinement
    * @returns {string} Formatted error message
    */
-  static #formatMessage({ reference, partialPath, failedStep, availableKeys, contextType, stepIndex }) {
+  static #formatMessage({
+    reference,
+    partialPath,
+    failedStep,
+    availableKeys,
+    contextType,
+    stepIndex,
+  }) {
     let message = `Parameter '${reference}' not found in context`;
 
     if (partialPath) {

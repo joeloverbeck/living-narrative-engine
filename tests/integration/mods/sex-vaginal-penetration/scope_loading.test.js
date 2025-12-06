@@ -26,7 +26,8 @@ describe('Scope Loading - sex-vaginal-penetration', () => {
 
   it('should load actors_being_fucked_vaginally_by_me scope from disk', () => {
     // DO NOT install scope override - test real loading
-    const scopeName = 'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
+    const scopeName =
+      'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
 
     // Verify scope is registered in the resolver
     const resolver = testFixture.testEnv.unifiedScopeResolver;
@@ -45,7 +46,8 @@ describe('Scope Loading - sex-vaginal-penetration', () => {
   });
 
   it('should load actors_with_uncovered_penis_facing_each_other_or_target_facing_away scope from disk', () => {
-    const scopeName = 'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away';
+    const scopeName =
+      'sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away';
 
     const dataRegistry = testFixture.testEnv.dataRegistry;
     const scope = dataRegistry.get(scopeName);
@@ -56,7 +58,8 @@ describe('Scope Loading - sex-vaginal-penetration', () => {
   });
 
   it('should load actors_with_uncovered_vagina_facing_each_other_or_target_facing_away scope from disk', () => {
-    const scopeName = 'sex-vaginal-penetration:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away';
+    const scopeName =
+      'sex-vaginal-penetration:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away';
 
     const dataRegistry = testFixture.testEnv.dataRegistry;
     const scope = dataRegistry.get(scopeName);
@@ -82,7 +85,8 @@ describe('Scope Loading - sex-vaginal-penetration', () => {
   });
 
   it('should have valid JSON Logic AST for actors_being_fucked_vaginally_by_me scope', () => {
-    const scopeName = 'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
+    const scopeName =
+      'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me';
     const dataRegistry = testFixture.testEnv.dataRegistry;
     const scope = dataRegistry.get(scopeName);
 

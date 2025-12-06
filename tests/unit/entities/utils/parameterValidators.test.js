@@ -137,7 +137,9 @@ describe('parameterValidators', () => {
     });
 
     it('passes for valid instanceId', () => {
-      expect(() => validateGetEntityInstanceParams('inst', logger)).not.toThrow();
+      expect(() =>
+        validateGetEntityInstanceParams('inst', logger)
+      ).not.toThrow();
       expect(logger.warn).not.toHaveBeenCalled();
     });
   });
@@ -152,7 +154,9 @@ describe('parameterValidators', () => {
 
   describe('validateHasComponentParams', () => {
     it('allows valid ids', () => {
-      expect(() => validateHasComponentParams('inst', 'comp', logger)).not.toThrow();
+      expect(() =>
+        validateHasComponentParams('inst', 'comp', logger)
+      ).not.toThrow();
     });
   });
 
@@ -195,7 +199,9 @@ describe('parameterValidators', () => {
     });
 
     it('allows valid instanceId', () => {
-      expect(() => validateRemoveEntityInstanceParams('inst', logger)).not.toThrow();
+      expect(() =>
+        validateRemoveEntityInstanceParams('inst', logger)
+      ).not.toThrow();
       expect(logger.warn).not.toHaveBeenCalled();
     });
   });

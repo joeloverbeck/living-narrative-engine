@@ -562,9 +562,10 @@ describe('HttpAgentService', () => {
         const [, nextInterval] = setTimeoutSpy.mock.calls[1];
 
         expect(nextInterval).toBeGreaterThan(baseInterval);
-        const adjustmentLog = mockLogger.debug.mock.calls.find(([message]) =>
-          typeof message === 'string' &&
-          message.includes('Adaptive cleanup interval adjusted')
+        const adjustmentLog = mockLogger.debug.mock.calls.find(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes('Adaptive cleanup interval adjusted')
         );
         expect(adjustmentLog).toBeDefined();
       } finally {
@@ -604,9 +605,10 @@ describe('HttpAgentService', () => {
         const [, nextInterval] = setTimeoutSpy.mock.calls[1];
 
         expect(nextInterval).toBe(baseInterval);
-        const adjustmentLog = mockLogger.debug.mock.calls.find(([message]) =>
-          typeof message === 'string' &&
-          message.includes('Adaptive cleanup interval adjusted')
+        const adjustmentLog = mockLogger.debug.mock.calls.find(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.includes('Adaptive cleanup interval adjusted')
         );
         expect(adjustmentLog).toBeUndefined();
       } finally {

@@ -8,10 +8,7 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "leather"
@@ -32,9 +29,7 @@
       "length": "very-long"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "feet"
-      ],
+      "covers": ["feet"],
       "coveragePriority": "base"
     },
     "items:item": {},

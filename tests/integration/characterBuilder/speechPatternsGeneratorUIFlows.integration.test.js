@@ -1,7 +1,12 @@
-import { beforeEach, describe, it, afterEach, expect, jest } from '@jest/globals';
 import {
-  SpeechPatternsGeneratorController,
-} from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+  beforeEach,
+  describe,
+  it,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
+import { SpeechPatternsGeneratorController } from '../../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 import SpeechPatternsDisplayEnhancer from '../../../src/characterBuilder/services/SpeechPatternsDisplayEnhancer.js';
 import {
   ERROR_CATEGORIES,
@@ -77,27 +82,23 @@ function buildDom(includeExportControls = true) {
  * @param overrides
  */
 function createMinimalDependencies(overrides = {}) {
-  const logger =
-    overrides.logger ||
-    {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+  const logger = overrides.logger || {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
-  const characterBuilderService =
-    overrides.characterBuilderService ||
-    {
-      initialize: jest.fn().mockResolvedValue(),
-      getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
-      createCharacterConcept: jest.fn().mockResolvedValue({ id: 'test-id' }),
-      updateCharacterConcept: jest.fn().mockResolvedValue(),
-      deleteCharacterConcept: jest.fn().mockResolvedValue(),
-      getCharacterConcept: jest.fn().mockResolvedValue(null),
-      generateThematicDirections: jest.fn().mockResolvedValue([]),
-      getThematicDirections: jest.fn().mockResolvedValue([]),
-    };
+  const characterBuilderService = overrides.characterBuilderService || {
+    initialize: jest.fn().mockResolvedValue(),
+    getAllCharacterConcepts: jest.fn().mockResolvedValue([]),
+    createCharacterConcept: jest.fn().mockResolvedValue({ id: 'test-id' }),
+    updateCharacterConcept: jest.fn().mockResolvedValue(),
+    deleteCharacterConcept: jest.fn().mockResolvedValue(),
+    getCharacterConcept: jest.fn().mockResolvedValue(null),
+    generateThematicDirections: jest.fn().mockResolvedValue([]),
+    getThematicDirections: jest.fn().mockResolvedValue([]),
+  };
 
   const eventBus =
     overrides.eventBus ||
@@ -145,12 +146,10 @@ function createMinimalDependencies(overrides = {}) {
       };
     })();
 
-  const schemaValidator =
-    overrides.schemaValidator ||
-    {
-      validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
-      isSchemaLoaded: jest.fn().mockReturnValue(false),
-    };
+  const schemaValidator = overrides.schemaValidator || {
+    validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+    isSchemaLoaded: jest.fn().mockReturnValue(false),
+  };
 
   const asyncUtilitiesToolkit =
     overrides.asyncUtilitiesToolkit || new AsyncUtilitiesToolkit({ logger });
@@ -201,7 +200,8 @@ function createMinimalDependencies(overrides = {}) {
     new ValidationService({
       schemaValidator,
       logger,
-      handleError: (error, context) => logger.error('Validation error', error, context),
+      handleError: (error, context) =>
+        logger.error('Validation error', error, context),
       errorCategories: ERROR_CATEGORIES,
     });
 
@@ -230,7 +230,8 @@ function createMinimalDependencies(overrides = {}) {
  *
  */
 function createValidCharacterDefinition() {
-  const detailedProfile = 'A character with deeply developed background and motivations '.repeat(5);
+  const detailedProfile =
+    'A character with deeply developed background and motivations '.repeat(5);
   return {
     components: {
       'core:name': { text: 'Professor Ada Lovette' },
@@ -291,7 +292,10 @@ async function advanceTimersByTime(duration) {
  * @param root0.interval
  * @param root0.timeout
  */
-async function waitForCondition(predicate, { interval = 50, timeout = 2000 } = {}) {
+async function waitForCondition(
+  predicate,
+  { interval = 50, timeout = 2000 } = {}
+) {
   const attempts = Math.ceil(timeout / interval);
   for (let i = 0; i < attempts; i += 1) {
     if (predicate()) {
@@ -319,44 +323,51 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
 
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest.fn().mockImplementation(async (_definition, options = {}) => {
-        if (options.progressCallback) {
-          [10, 55, 100].forEach((value) => {
-            options.progressCallback(value);
-          });
-        }
+      generateSpeechPatterns: jest
+        .fn()
+        .mockImplementation(async (_definition, options = {}) => {
+          if (options.progressCallback) {
+            [10, 55, 100].forEach((value) => {
+              options.progressCallback(value);
+            });
+          }
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
 
-        const generatedAt = new Date('2024-01-01T12:00:00Z').toISOString();
-        const speechPatterns = [
-          {
-            pattern: 'Speaks in precise academic terminology.',
-            example: 'Allow me to delineate the primary hypothesis underpinning this study.',
-            circumstances: 'During formal lectures',
-          },
-          {
-            pattern: 'Uses warm encouragement when mentoring students.',
-            example: 'You have articulated your argument beautifully; keep refining it.',
-            circumstances: 'Mentorship sessions',
-          },
-          {
-            pattern: 'Adds a whimsical metaphor when excited.',
-            example: 'This discovery sparkles like a prism catching morning light!',
-            circumstances: 'Upon unexpected breakthroughs',
-          },
-        ];
+          const generatedAt = new Date('2024-01-01T12:00:00Z').toISOString();
+          const speechPatterns = [
+            {
+              pattern: 'Speaks in precise academic terminology.',
+              example:
+                'Allow me to delineate the primary hypothesis underpinning this study.',
+              circumstances: 'During formal lectures',
+            },
+            {
+              pattern: 'Uses warm encouragement when mentoring students.',
+              example:
+                'You have articulated your argument beautifully; keep refining it.',
+              circumstances: 'Mentorship sessions',
+            },
+            {
+              pattern: 'Adds a whimsical metaphor when excited.',
+              example:
+                'This discovery sparkles like a prism catching morning light!',
+              circumstances: 'Upon unexpected breakthroughs',
+            },
+          ];
 
-        return {
-          characterName: 'Professor Ada Lovette',
-          generatedAt,
-          speechPatterns,
-        };
-      }),
+          return {
+            characterName: 'Professor Ada Lovette',
+            generatedAt,
+            speechPatterns,
+          };
+        }),
     };
 
     const dependencies = createMinimalDependencies({ speechPatternsGenerator });
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     await controller.initialize();
 
     const textarea = document.getElementById('character-definition');
@@ -378,7 +389,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
 
     const renderedPatterns = document.querySelectorAll('.speech-pattern-item');
     expect(renderedPatterns).toHaveLength(3);
-    expect(renderedPatterns[0].innerHTML).toContain('Speaks in precise academic terminology');
+    expect(renderedPatterns[0].innerHTML).toContain(
+      'Speaks in precise academic terminology'
+    );
     expect(renderedPatterns[1].innerHTML).toContain('Mentorship sessions');
 
     const patternCount = document.getElementById('pattern-count');
@@ -395,9 +408,13 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     expect(['none', 'block']).toContain(timeEstimate.style.display);
 
     const announcement = document.getElementById('screen-reader-announcement');
-    expect(announcement.textContent).toContain('Generated 3 speech patterns for Professor Ada Lovette');
+    expect(announcement.textContent).toContain(
+      'Generated 3 speech patterns for Professor Ada Lovette'
+    );
 
-    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
+    expect(
+      speechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalledTimes(1);
   });
 
   it('exports generated content using the display enhancer formatting options', async () => {
@@ -425,7 +442,8 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
           },
           {
             pattern: 'Includes historical anecdotes when teaching.',
-            example: 'In 1843, Ada Lovelace anticipated modern computing in her notes.',
+            example:
+              'In 1843, Ada Lovelace anticipated modern computing in her notes.',
             circumstances: 'Undergraduate lectures',
           },
         ],
@@ -443,7 +461,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     const formatJsonSpy = jest.spyOn(displayEnhancer, 'formatAsJson');
     const applyTemplateSpy = jest.spyOn(displayEnhancer, 'applyTemplate');
 
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     await controller.initialize();
 
     const exportFormat = document.getElementById('exportFormat');
@@ -459,14 +479,20 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     await advanceTimersByTime(350);
 
-    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('generate-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(500);
 
-    const urlSpy = jest.spyOn(URL, 'createObjectURL').mockImplementation((blob) => {
-      urlSpy.mock.blob = blob;
-      return 'blob:integration';
-    });
-    const revokeSpy = jest.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const urlSpy = jest
+      .spyOn(URL, 'createObjectURL')
+      .mockImplementation((blob) => {
+        urlSpy.mock.blob = blob;
+        return 'blob:integration';
+      });
+    const revokeSpy = jest
+      .spyOn(URL, 'revokeObjectURL')
+      .mockImplementation(() => {});
 
     let capturedDownloadName = '';
     const clickSpy = jest
@@ -479,7 +505,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     exportFormat.dispatchEvent(new Event('change', { bubbles: true }));
     expect(templateGroup.style.display).toBe('none');
 
-    document.getElementById('export-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('export-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(revokeSpy).toHaveBeenCalledTimes(1);
@@ -494,7 +522,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     exportFormat.dispatchEvent(new Event('change', { bubbles: true }));
     exportTemplate.value = 'summary';
 
-    document.getElementById('export-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('export-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(applyTemplateSpy).toHaveBeenCalledWith(
@@ -550,26 +580,34 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     await advanceTimersByTime(350);
 
-    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('generate-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(400);
 
     const errorState = document.getElementById('error-state');
     expect(['block', 'flex']).toContain(errorState.style.display);
 
     const errorMessage = document.getElementById('error-message');
-    expect(errorMessage.textContent).toBe('Generation timed out. Please try again.');
+    expect(errorMessage.textContent).toBe(
+      'Generation timed out. Please try again.'
+    );
 
     const announcement = document.getElementById('screen-reader-announcement');
     expect(announcement.textContent).toContain('Generation timed out');
 
-    document.getElementById('retry-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('retry-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(600);
 
     const resultsState = document.getElementById('results-state');
     expect(resultsState.style.display).toBe('block');
     expect(document.querySelectorAll('.speech-pattern-item')).toHaveLength(1);
 
-    document.getElementById('clear-all-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('clear-all-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(50);
 
     expect(textarea.value).toBe('');
@@ -597,14 +635,12 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
 
     const speechPatternsGenerator = {
       getServiceInfo: jest.fn().mockReturnValue({ version: 'integration' }),
-      generateSpeechPatterns: jest
-        .fn()
-        .mockImplementation(
-          () =>
-            new Promise((resolve) => {
-              setTimeout(() => resolve(generationResult), 250);
-            })
-        ),
+      generateSpeechPatterns: jest.fn().mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve(generationResult), 250);
+          })
+      ),
     };
 
     const dependencies = createMinimalDependencies({ speechPatternsGenerator });
@@ -624,7 +660,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     generateBtn.dispatchEvent(new Event('click', { bubbles: true }));
 
     await advanceTimersByTime(400);
-    expect(speechPatternsGenerator.generateSpeechPatterns).toHaveBeenCalledTimes(1);
+    expect(
+      speechPatternsGenerator.generateSpeechPatterns
+    ).toHaveBeenCalledTimes(1);
 
     await advanceTimersByTime(600);
 
@@ -658,7 +696,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     };
 
     const dependencies = createMinimalDependencies({ speechPatternsGenerator });
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     await controller.initialize();
 
     const textarea = document.getElementById('character-definition');
@@ -666,7 +706,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     await advanceTimersByTime(350);
 
-    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('generate-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(700);
 
     const firstPattern = document.querySelector('.speech-pattern-item');
@@ -720,7 +762,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
       exportBtn.dispatchEvent(new Event('click', { bubbles: true }));
 
       expect(clickSpy).toHaveBeenCalledTimes(1);
-      expect(capturedDownloadName).toMatch(/speech_patterns_professor_ada_lovette_/);
+      expect(capturedDownloadName).toMatch(
+        /speech_patterns_professor_ada_lovette_/
+      );
       expect(capturedBlob).not.toBeNull();
       expect(capturedBlob.type).toBe('text/plain;charset=utf-8');
 
@@ -728,8 +772,12 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
       expect(exportedText).toContain('Character Definition:');
       expect(exportedText).toContain('Speaks in precise academic terminology.');
 
-      const announcement = document.getElementById('screen-reader-announcement');
-      expect(announcement.textContent).toContain('Speech patterns exported as TXT');
+      const announcement = document.getElementById(
+        'screen-reader-announcement'
+      );
+      expect(announcement.textContent).toContain(
+        'Speech patterns exported as TXT'
+      );
     } finally {
       clickSpy.mockRestore();
       urlSpy.mockRestore();
@@ -747,7 +795,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     };
 
     const dependencies = createMinimalDependencies({ speechPatternsGenerator });
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     await controller.initialize();
 
     const exportBtn = document.getElementById('export-btn');
@@ -796,7 +846,9 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
       speechPatternsDisplayEnhancer: displayEnhancer,
     });
 
-    const controller = new ExportAwareSpeechPatternsGeneratorController(dependencies);
+    const controller = new ExportAwareSpeechPatternsGeneratorController(
+      dependencies
+    );
     await controller.initialize();
 
     const textarea = document.getElementById('character-definition');
@@ -804,12 +856,19 @@ describe('SpeechPatternsGeneratorController integration UI flows', () => {
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     await advanceTimersByTime(350);
 
-    document.getElementById('generate-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('generate-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
     await advanceTimersByTime(600);
 
-    document.getElementById('export-btn').dispatchEvent(new Event('click', { bubbles: true }));
+    document
+      .getElementById('export-btn')
+      .dispatchEvent(new Event('click', { bubbles: true }));
 
-    expect(logger.error).toHaveBeenCalledWith('Export failed:', expect.any(Error));
+    expect(logger.error).toHaveBeenCalledWith(
+      'Export failed:',
+      expect.any(Error)
+    );
     const errorMessage = document.getElementById('error-message');
     expect(errorMessage.textContent).toBe('Failed to export speech patterns');
 

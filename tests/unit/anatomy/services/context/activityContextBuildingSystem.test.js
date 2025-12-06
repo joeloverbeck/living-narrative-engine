@@ -27,7 +27,9 @@ describe('ActivityContextBuildingSystem', () => {
     mockNLGSystem = {
       detectEntityGender: jest.fn(),
       mergeAdverb: jest.fn((current, injected) => `${current} ${injected}`),
-      injectSoftener: jest.fn((template, descriptor) => `${template} [${descriptor}]`),
+      injectSoftener: jest.fn(
+        (template, descriptor) => `${template} [${descriptor}]`
+      ),
     };
 
     system = new ActivityContextBuildingSystem({
@@ -368,7 +370,10 @@ describe('ActivityContextBuildingSystem', () => {
 
       const adjusted = system.applyContextualTone(activity, context);
 
-      expect(mockNLGSystem.mergeAdverb).toHaveBeenCalledWith('quickly', 'fiercely');
+      expect(mockNLGSystem.mergeAdverb).toHaveBeenCalledWith(
+        'quickly',
+        'fiercely'
+      );
       expect(adjusted.adverb).toBe('quickly fiercely');
     });
 
@@ -401,7 +406,10 @@ describe('ActivityContextBuildingSystem', () => {
 
       const adjusted = system.applyContextualTone(activity, context);
 
-      expect(mockNLGSystem.injectSoftener).toHaveBeenCalledWith('test template', 'fiercely');
+      expect(mockNLGSystem.injectSoftener).toHaveBeenCalledWith(
+        'test template',
+        'fiercely'
+      );
       expect(adjusted.template).toBe('test template [fiercely]');
     });
 

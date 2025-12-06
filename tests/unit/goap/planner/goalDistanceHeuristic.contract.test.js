@@ -34,12 +34,16 @@ describe('GoalDistanceHeuristic (adapter contract)', () => {
   });
 
   it('passes adapter-provided metadata and stateView to NumericConstraintEvaluator', () => {
-    const mockJsonLogic = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    const mockJsonLogic = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
     const mockNumericEvaluator = {
       isNumericConstraint: jest.fn().mockReturnValue(true),
       calculateDistance: jest.fn().mockReturnValue(5),
     };
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
 
     const heuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator: mockJsonLogic,
@@ -57,7 +61,9 @@ describe('GoalDistanceHeuristic (adapter contract)', () => {
       },
       {
         id: 'goal:eat',
-        goalState: { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 30] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 30],
+        },
       }
     );
 
@@ -77,7 +83,9 @@ describe('GoalDistanceHeuristic (adapter contract)', () => {
   });
 
   it('dispatches numeric constraint fallback events when distance calculation fails', () => {
-    const jsonLogicEvaluator = new JsonLogicEvaluationService({ logger: mockLogger });
+    const jsonLogicEvaluator = new JsonLogicEvaluationService({
+      logger: mockLogger,
+    });
     const fallbackEventDispatcher = {
       dispatch: jest.fn(),
     };
@@ -86,7 +94,9 @@ describe('GoalDistanceHeuristic (adapter contract)', () => {
       logger: mockLogger,
       goapEventDispatcher: fallbackEventDispatcher,
     });
-    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', ['simulateEffects']);
+    const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
+      'simulateEffects',
+    ]);
     const heuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator,
       numericConstraintEvaluator,
@@ -103,7 +113,9 @@ describe('GoalDistanceHeuristic (adapter contract)', () => {
       },
       {
         id: 'goal:eat',
-        goalState: { '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 10] },
+        goalState: {
+          '<=': [{ var: 'state.actor.components.core:needs.hunger' }, 10],
+        },
       }
     );
 

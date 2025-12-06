@@ -42,7 +42,13 @@ None of the caressing rules currently use `PREPARE_ACTION_CONTEXT`; they manuall
 {
   "actions": [
     { "type": "PREPARE_ACTION_CONTEXT", "parameters": {} },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "logMessage", "value": "{context.actorName} softly caresses {context.targetName}'s cheek." } },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} softly caresses {context.targetName}'s cheek."
+      }
+    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }
@@ -53,8 +59,17 @@ None of the caressing rules currently use `PREPARE_ACTION_CONTEXT`; they manuall
 ```json
 {
   "actions": [
-    { "type": "PREPARE_ACTION_CONTEXT", "parameters": { "include_secondary": true } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "logMessage", "value": "{context.actorName} wraps their arms around {context.targetName}, and sensually caresses {context.targetName}'s abdomen over the {context.secondaryName}." } },
+    {
+      "type": "PREPARE_ACTION_CONTEXT",
+      "parameters": { "include_secondary": true }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} wraps their arms around {context.targetName}, and sensually caresses {context.targetName}'s abdomen over the {context.secondaryName}."
+      }
+    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

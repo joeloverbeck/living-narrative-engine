@@ -685,7 +685,9 @@ describe('ResolveOutcomeHandler', () => {
 
     test('does not modify event payload', () => {
       const ctx = buildExecutionContext(mockLogger);
-      const originalPayload = JSON.stringify(ctx.evaluationContext.event.payload);
+      const originalPayload = JSON.stringify(
+        ctx.evaluationContext.event.payload
+      );
 
       const params = {
         actor_skill_component: 'skills:melee',

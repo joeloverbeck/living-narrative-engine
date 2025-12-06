@@ -71,12 +71,15 @@ jest.mock('../../../../src/formatting/perceptionLogFormatter.js', () => ({
   PerceptionLogFormatter: mockCreateClass('PerceptionLogFormatter'),
 }));
 
-jest.mock('../../../../src/validation/gameStateValidationServiceForPrompting.js', () => ({
-  __esModule: true,
-  GameStateValidationServiceForPrompting: mockCreateClass(
-    'GameStateValidationServiceForPrompting'
-  ),
-}));
+jest.mock(
+  '../../../../src/validation/gameStateValidationServiceForPrompting.js',
+  () => ({
+    __esModule: true,
+    GameStateValidationServiceForPrompting: mockCreateClass(
+      'GameStateValidationServiceForPrompting'
+    ),
+  })
+);
 
 jest.mock('../../../../src/configuration/httpConfigurationProvider.js', () => ({
   __esModule: true,
@@ -205,10 +208,13 @@ jest.mock('../../../../src/turns/handlers/actorTurnHandler.js', () => ({
   default: mockCreateClass('ActorTurnHandler'),
 }));
 
-jest.mock('../../../../src/dependencyInjection/registrations/registerActorAwareStrategy.js', () => ({
-  __esModule: true,
-  registerActorAwareStrategy: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/dependencyInjection/registrations/registerActorAwareStrategy.js',
+  () => ({
+    __esModule: true,
+    registerActorAwareStrategy: jest.fn(),
+  })
+);
 
 const { RetryHttpClient: RetryHttpClientMock } = jest.requireMock(
   '../../../../src/llms/retryHttpClient.js'
@@ -225,9 +231,8 @@ const { ClientApiKeyProvider: ClientApiKeyProviderMock } = jest.requireMock(
 const { LLMStrategyFactory: LLMStrategyFactoryMock } = jest.requireMock(
   '../../../../src/llms/LLMStrategyFactory.js'
 );
-const { LLMConfigurationManager: LLMConfigurationManagerMock } = jest.requireMock(
-  '../../../../src/llms/services/llmConfigurationManager.js'
-);
+const { LLMConfigurationManager: LLMConfigurationManagerMock } =
+  jest.requireMock('../../../../src/llms/services/llmConfigurationManager.js');
 const { LLMRequestExecutor: LLMRequestExecutorMock } = jest.requireMock(
   '../../../../src/llms/services/llmRequestExecutor.js'
 );
@@ -237,20 +242,21 @@ const { LLMErrorMapper: LLMErrorMapperMock } = jest.requireMock(
 const { TokenEstimator: TokenEstimatorMock } = jest.requireMock(
   '../../../../src/llms/services/tokenEstimator.js'
 );
-const { PromptStaticContentService: PromptStaticContentServiceMock } = jest.requireMock(
-  '../../../../src/prompting/promptStaticContentService.js'
-);
+const { PromptStaticContentService: PromptStaticContentServiceMock } =
+  jest.requireMock('../../../../src/prompting/promptStaticContentService.js');
 const { PerceptionLogFormatter: PerceptionLogFormatterMock } = jest.requireMock(
   '../../../../src/formatting/perceptionLogFormatter.js'
 );
 const {
-  GameStateValidationServiceForPrompting: GameStateValidationServiceForPromptingMock,
+  GameStateValidationServiceForPrompting:
+    GameStateValidationServiceForPromptingMock,
 } = jest.requireMock(
   '../../../../src/validation/gameStateValidationServiceForPrompting.js'
 );
-const { HttpConfigurationProvider: HttpConfigurationProviderMock } = jest.requireMock(
-  '../../../../src/configuration/httpConfigurationProvider.js'
-);
+const { HttpConfigurationProvider: HttpConfigurationProviderMock } =
+  jest.requireMock(
+    '../../../../src/configuration/httpConfigurationProvider.js'
+  );
 const { LlmConfigLoader: LlmConfigLoaderMock } = jest.requireMock(
   '../../../../src/llms/services/llmConfigLoader.js'
 );
@@ -272,30 +278,27 @@ const XmlElementBuilderMock = jest.requireMock(
 const CharacterDataXmlBuilderMock = jest.requireMock(
   '../../../../src/prompting/characterDataXmlBuilder.js'
 ).default;
-const { ModActionMetadataProvider: ModActionMetadataProviderMock } = jest.requireMock(
-  '../../../../src/prompting/modActionMetadataProvider.js'
-);
+const { ModActionMetadataProvider: ModActionMetadataProviderMock } =
+  jest.requireMock('../../../../src/prompting/modActionMetadataProvider.js');
 const { ActorDataExtractor: ActorDataExtractorMock } = jest.requireMock(
   '../../../../src/turns/services/actorDataExtractor.js'
 );
-const { AvailableActionsProvider: AvailableActionsProviderMock } = jest.requireMock(
-  '../../../../src/data/providers/availableActionsProvider.js'
-);
-const { LocationSummaryProvider: LocationSummaryProviderMock } = jest.requireMock(
-  '../../../../src/data/providers/locationSummaryProvider.js'
-);
+const { AvailableActionsProvider: AvailableActionsProviderMock } =
+  jest.requireMock(
+    '../../../../src/data/providers/availableActionsProvider.js'
+  );
+const { LocationSummaryProvider: LocationSummaryProviderMock } =
+  jest.requireMock('../../../../src/data/providers/locationSummaryProvider.js');
 const { AIGameStateProvider: AIGameStateProviderMock } = jest.requireMock(
   '../../../../src/turns/services/AIGameStateProvider.js'
 );
-const { AIPromptContentProvider: AIPromptContentProviderMock } = jest.requireMock(
-  '../../../../src/prompting/AIPromptContentProvider.js'
-);
+const { AIPromptContentProvider: AIPromptContentProviderMock } =
+  jest.requireMock('../../../../src/prompting/AIPromptContentProvider.js');
 const { LLMResponseProcessor: LLMResponseProcessorMock } = jest.requireMock(
   '../../../../src/turns/services/LLMResponseProcessor.js'
 );
-const { AIFallbackActionFactory: AIFallbackActionFactoryMock } = jest.requireMock(
-  '../../../../src/turns/services/AIFallbackActionFactory.js'
-);
+const { AIFallbackActionFactory: AIFallbackActionFactoryMock } =
+  jest.requireMock('../../../../src/turns/services/AIFallbackActionFactory.js');
 const { AIPromptPipeline: AIPromptPipelineMock } = jest.requireMock(
   '../../../../src/prompting/AIPromptPipeline.js'
 );
@@ -320,7 +323,10 @@ const { registerActorAwareStrategy } = jest.requireMock(
 );
 
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { INITIALIZABLE, SHUTDOWNABLE } from '../../../../src/dependencyInjection/tags.js';
+import {
+  INITIALIZABLE,
+  SHUTDOWNABLE,
+} from '../../../../src/dependencyInjection/tags.js';
 import { Registrar } from '../../../../src/utils/registrarHelpers.js';
 import {
   registerAI,
@@ -528,9 +534,7 @@ describe('aiRegistrations', () => {
           [tokens.ISafeEventDispatcher]: { dispatcher: true },
         })
       );
-      expect(
-        GameStateValidationServiceForPromptingMock
-      ).toHaveBeenCalledWith({
+      expect(GameStateValidationServiceForPromptingMock).toHaveBeenCalledWith({
         logger,
         safeEventDispatcher: { dispatcher: true },
       });
@@ -725,7 +729,9 @@ describe('aiRegistrations', () => {
           [tokens.ILogger]: logger,
           [tokens.IPromptStaticContentService]: { static: true },
           [tokens.IPerceptionLogFormatter]: { formatter: true },
-          [tokens.IGameStateValidationServiceForPrompting]: { validation: true },
+          [tokens.IGameStateValidationServiceForPrompting]: {
+            validation: true,
+          },
           [tokens.IActionCategorizationService]: { categorization: true },
           [tokens.CharacterDataXmlBuilder]: { xmlBuilder: true },
           [tokens.IModActionMetadataProvider]: { metadataProvider: true },
@@ -900,7 +906,9 @@ describe('aiRegistrations', () => {
 
       expect(container.register).toHaveBeenCalled();
       expect(registerActorAwareStrategy).toHaveBeenCalledWith(container);
-      expect(logger.debug).toHaveBeenCalledWith('AI Systems Registration: All registrations complete.');
+      expect(logger.debug).toHaveBeenCalledWith(
+        'AI Systems Registration: All registrations complete.'
+      );
     });
   });
 

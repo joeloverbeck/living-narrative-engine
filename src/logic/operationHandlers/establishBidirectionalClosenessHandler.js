@@ -9,7 +9,10 @@
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { isPlainObject, resolvePath } from '../../utils/objectUtils.js';
 
@@ -39,7 +42,11 @@ class EstablishBidirectionalClosenessHandler extends BaseOperationHandler {
       logger: { value: logger },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'addComponent', 'removeComponent'],
+        requiredMethods: [
+          'getComponentData',
+          'addComponent',
+          'removeComponent',
+        ],
       },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -79,14 +86,20 @@ class EstablishBidirectionalClosenessHandler extends BaseOperationHandler {
       return null;
     }
 
-    const actorId = executionContext?.evaluationContext?.event?.payload?.actorId;
-    const targetId = executionContext?.evaluationContext?.event?.payload?.targetId;
+    const actorId =
+      executionContext?.evaluationContext?.event?.payload?.actorId;
+    const targetId =
+      executionContext?.evaluationContext?.event?.payload?.targetId;
 
     if (!actorId || !targetId) {
       await safeDispatchError(
         this.#dispatcher,
         `${OPERATION_NAME}: actorId or targetId missing from event payload`,
-        { actorId, targetId, payload: executionContext?.evaluationContext?.event?.payload },
+        {
+          actorId,
+          targetId,
+          payload: executionContext?.evaluationContext?.event?.payload,
+        },
         log
       );
       return null;
@@ -246,9 +259,12 @@ class EstablishBidirectionalClosenessHandler extends BaseOperationHandler {
     try {
       return recurse(data);
     } catch (error) {
-      logger?.warn?.(`${OPERATION_NAME}: Failed to resolve template variables`, {
-        error: error?.message,
-      });
+      logger?.warn?.(
+        `${OPERATION_NAME}: Failed to resolve template variables`,
+        {
+          error: error?.message,
+        }
+      );
       return data;
     }
   }
@@ -257,7 +273,10 @@ class EstablishBidirectionalClosenessHandler extends BaseOperationHandler {
     for (const componentType of componentTypes) {
       let componentData;
       try {
-        componentData = this.#entityManager.getComponentData(entityId, componentType);
+        componentData = this.#entityManager.getComponentData(
+          entityId,
+          componentType
+        );
       } catch (error) {
         logger?.debug?.(
           `${OPERATION_NAME}: Unable to read component ${componentType} for ${entityId}`,
@@ -291,7 +310,10 @@ class EstablishBidirectionalClosenessHandler extends BaseOperationHandler {
 
   async #safeRemoveComponent(entityId, componentType, logger) {
     try {
-      const existing = this.#entityManager.getComponentData(entityId, componentType);
+      const existing = this.#entityManager.getComponentData(
+        entityId,
+        componentType
+      );
       if (existing) {
         await this.#entityManager.removeComponent(entityId, componentType);
       }

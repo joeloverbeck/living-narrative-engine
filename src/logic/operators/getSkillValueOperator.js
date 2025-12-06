@@ -39,9 +39,7 @@ export class GetSkillValueOperator {
    */
   constructor({ entityManager, logger }) {
     if (!entityManager || !logger) {
-      throw new Error(
-        'GetSkillValueOperator: Missing required dependencies'
-      );
+      throw new Error('GetSkillValueOperator: Missing required dependencies');
     }
 
     this.#entityManager = entityManager;
@@ -65,7 +63,12 @@ export class GetSkillValueOperator {
         return 0;
       }
 
-      const [entityPath, componentId, propertyPath = 'value', defaultValue = 0] = params;
+      const [
+        entityPath,
+        componentId,
+        propertyPath = 'value',
+        defaultValue = 0,
+      ] = params;
 
       // Resolve entity using standard pattern
       let entity;
@@ -150,7 +153,12 @@ export class GetSkillValueOperator {
         return defaultValue;
       }
 
-      return this.#evaluateInternal(entityId, componentId, propertyPath, defaultValue);
+      return this.#evaluateInternal(
+        entityId,
+        componentId,
+        propertyPath,
+        defaultValue
+      );
     } catch (error) {
       this.#logger.error(
         `${this.#operatorName}: Error during evaluation`,
@@ -209,7 +217,10 @@ export class GetSkillValueOperator {
    */
   #evaluateInternal(entityId, componentId, propertyPath, defaultValue) {
     // Get component data
-    const componentData = this.#entityManager.getComponentData(entityId, componentId);
+    const componentData = this.#entityManager.getComponentData(
+      entityId,
+      componentId
+    );
 
     if (componentData === null || componentData === undefined) {
       this.#logger.debug(

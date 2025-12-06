@@ -19,18 +19,14 @@ function createLogger() {
  */
 function createDependencies(overrides = {}) {
   const logger = overrides.logger ?? createLogger();
-  const entityManager =
-    overrides.entityManager ??
-    {
-      getEntityInstance: jest.fn(() => ({ id: 'actor-1', type: 'npc' })),
-      getComponentData: jest.fn(() => ({ id: 'actor-1' })),
-    };
+  const entityManager = overrides.entityManager ?? {
+    getEntityInstance: jest.fn(() => ({ id: 'actor-1', type: 'npc' })),
+    getComponentData: jest.fn(() => ({ id: 'actor-1' })),
+  };
 
-  const actionPipelineOrchestrator =
-    overrides.actionPipelineOrchestrator ??
-    {
-      discoverActions: jest.fn(async () => ({ actions: [], errors: [] })),
-    };
+  const actionPipelineOrchestrator = overrides.actionPipelineOrchestrator ?? {
+    discoverActions: jest.fn(async () => ({ actions: [], errors: [] })),
+  };
 
   const traceContextFactory =
     overrides.traceContextFactory ??
@@ -61,7 +57,9 @@ describe('ActionDiscoveryService additional coverage', () => {
     const logger = createLogger();
     const dependencies = createDependencies({
       logger,
-      actionAwareTraceFactory: jest.fn(() => ({ captureActionData: jest.fn() })),
+      actionAwareTraceFactory: jest.fn(() => ({
+        captureActionData: jest.fn(),
+      })),
       actionTraceFilter: {
         isEnabled: jest.fn(() => true),
         shouldTrace: jest.fn(() => true),
@@ -115,17 +113,20 @@ describe('ActionDiscoveryService additional coverage', () => {
 
   it('injects discovery context helpers when base context is sparse', async () => {
     const dependencies = createDependencies();
-    const { actionPipelineOrchestrator, getActorLocationFn, entityManager } = dependencies;
+    const { actionPipelineOrchestrator, getActorLocationFn, entityManager } =
+      dependencies;
     const service = new ActionDiscoveryService(dependencies);
     const actor = { id: 'hero-7' };
 
-    actionPipelineOrchestrator.discoverActions.mockImplementation(async (incomingActor, ctx) => {
-      expect(incomingActor).toBe(actor);
-      expect(typeof ctx.getActor).toBe('function');
-      expect(ctx.getActor()).toBe(actor);
-      expect(ctx.currentLocation).toBe('fallback-location');
-      return { actions: [{ id: 'action-x' }], errors: [] };
-    });
+    actionPipelineOrchestrator.discoverActions.mockImplementation(
+      async (incomingActor, ctx) => {
+        expect(incomingActor).toBe(actor);
+        expect(typeof ctx.getActor).toBe('function');
+        expect(ctx.getActor()).toBe(actor);
+        expect(ctx.currentLocation).toBe('fallback-location');
+        return { actions: [{ id: 'action-x' }], errors: [] };
+      }
+    );
 
     const result = await service.getValidActions(actor, {});
 
@@ -195,7 +196,9 @@ describe('ActionDiscoveryService additional coverage', () => {
 
     expect(writeTrace).toHaveBeenCalledWith(actionAwareTrace);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(`Created ActionAwareStructuredTrace for actor ${actor.id}`),
+      expect.stringContaining(
+        `Created ActionAwareStructuredTrace for actor ${actor.id}`
+      ),
       expect.objectContaining({ traceType: 'ActionAwareStructuredTrace' })
     );
     expect(logger.debug).toHaveBeenCalledWith(
@@ -294,7 +297,8 @@ describe('ActionDiscoveryService additional coverage', () => {
       expect.stringContaining('Failed to create trace context'),
       traceFactoryError
     );
-    const [, , options] = actionPipelineOrchestrator.discoverActions.mock.calls[0];
+    const [, , options] =
+      actionPipelineOrchestrator.discoverActions.mock.calls[0];
     expect(options.trace).toBe(fallbackTrace);
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining(`Created UnknownTrace for actor ${actor.id}`),
@@ -326,7 +330,8 @@ describe('ActionDiscoveryService additional coverage', () => {
       expect.stringContaining('Failed to create fallback trace context'),
       traceFactoryError
     );
-    const [, , options] = actionPipelineOrchestrator.discoverActions.mock.calls[0];
+    const [, , options] =
+      actionPipelineOrchestrator.discoverActions.mock.calls[0];
     expect(options.trace).toBeNull();
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining(`Finished action discovery for actor ${actor.id}`)
@@ -350,7 +355,9 @@ describe('ActionDiscoveryService additional coverage', () => {
     await service.getValidActions(actor);
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error checking action tracing status, assuming disabled'),
+      expect.stringContaining(
+        'Error checking action tracing status, assuming disabled'
+      ),
       filterError
     );
     expect(service.getActionTracingStatus()).toEqual({

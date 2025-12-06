@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ProcessEnvironmentProvider } from '../../../src/configuration/ProcessEnvironmentProvider.js';
 
 describe('ProcessEnvironmentProvider', () => {
@@ -34,10 +41,19 @@ describe('ProcessEnvironmentProvider', () => {
     });
 
     it.each([
-      ['production', { IS_PRODUCTION: true, IS_DEVELOPMENT: false, IS_TEST: false }],
-      ['development', { IS_PRODUCTION: false, IS_DEVELOPMENT: true, IS_TEST: false }],
+      [
+        'production',
+        { IS_PRODUCTION: true, IS_DEVELOPMENT: false, IS_TEST: false },
+      ],
+      [
+        'development',
+        { IS_PRODUCTION: false, IS_DEVELOPMENT: true, IS_TEST: false },
+      ],
       ['test', { IS_PRODUCTION: false, IS_DEVELOPMENT: false, IS_TEST: true }],
-      ['staging', { IS_PRODUCTION: false, IS_DEVELOPMENT: false, IS_TEST: false }],
+      [
+        'staging',
+        { IS_PRODUCTION: false, IS_DEVELOPMENT: false, IS_TEST: false },
+      ],
     ])('returns correct flags for %s environment', (env, expectedFlags) => {
       process.env.NODE_ENV = env;
 

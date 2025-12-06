@@ -88,7 +88,14 @@ export default class ITargetResolutionCoordinator {
    * @param {TraceLike|undefined} [_trace] - Optional trace context.
    * @returns {Promise<Array<ResolvedTarget>>} Collection of resolved targets scoped per primary context.
    */
-  resolveDependentTargets(_targetKey, _targetDef, _primaryTargets, _actor, _actionContext, _trace) {
+  resolveDependentTargets(
+    _targetKey,
+    _targetDef,
+    _primaryTargets,
+    _actor,
+    _actionContext,
+    _trace
+  ) {
     throw new Error('Method must be implemented by concrete class');
   }
 }

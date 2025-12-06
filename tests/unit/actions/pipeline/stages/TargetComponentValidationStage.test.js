@@ -544,11 +544,13 @@ describe('TargetComponentValidationStage', () => {
 
       expect(result.success).toBe(true);
       expect(result.data.actionsWithTargets).toHaveLength(1);
-      expect(result.data.actionsWithTargets[0].resolvedTargets.primary).toEqual([
-        { id: 'allowed' },
-      ]);
+      expect(result.data.actionsWithTargets[0].resolvedTargets.primary).toEqual(
+        [{ id: 'allowed' }]
+      );
       expect(
-        result.data.actionsWithTargets[0].targetContexts.map((ctx) => ctx.entityId)
+        result.data.actionsWithTargets[0].targetContexts.map(
+          (ctx) => ctx.entityId
+        )
       ).toEqual(['allowed']);
     });
 

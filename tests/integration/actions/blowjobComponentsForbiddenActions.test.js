@@ -149,7 +149,8 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
 
     scopeResolver.resolveSync = (scopeName, context) => {
       if (
-        scopeName === 'kissing:actors_with_arms_facing_each_other_or_behind_target' ||
+        scopeName ===
+          'kissing:actors_with_arms_facing_each_other_or_behind_target' ||
         scopeName === 'caressing:close_actors_facing_each_other'
       ) {
         const actorId = context?.actor?.id;
@@ -231,7 +232,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     it('should reject when target has giving_blowjob component', async () => {
       const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
+      testFixture.reset([
+        room,
+        actor,
+        targetGiving,
+        targetNormal,
+        ...bodyParts,
+      ]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([kissNeckSensuallyAction]);
@@ -245,7 +252,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     it('should allow when target does NOT have giving_blowjob component', async () => {
       const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
+      testFixture.reset([
+        room,
+        actor,
+        targetGiving,
+        targetNormal,
+        ...bodyParts,
+      ]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([kissNeckSensuallyAction]);
@@ -274,7 +287,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     it('should reject when target has giving_blowjob component', async () => {
       const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
+      testFixture.reset([
+        room,
+        actor,
+        targetGiving,
+        targetNormal,
+        ...bodyParts,
+      ]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([lickLipsAction]);
@@ -288,7 +307,13 @@ describe('Blowjob Components - Forbidden Actions Validation', () => {
     it('should allow when target does NOT have giving_blowjob component', async () => {
       const { actor, targetGiving, targetNormal, room, bodyParts } =
         createBlowjobScenario();
-      testFixture.reset([room, actor, targetGiving, targetNormal, ...bodyParts]);
+      testFixture.reset([
+        room,
+        actor,
+        targetGiving,
+        targetNormal,
+        ...bodyParts,
+      ]);
 
       const { testEnv } = testFixture;
       testEnv.actionIndex.buildIndex([lickLipsAction]);

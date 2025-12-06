@@ -1,19 +1,24 @@
 # SPEPATREW-003: Implement Format-Specific Rendering Methods
 
 ## Objective
+
 Implement three private methods in `CharacterDataFormatter` to render speech patterns in XML format based on detected format type.
 
 ## Priority
+
 **High** - Core functionality for improved LLM prompts
 
 ## Estimated Effort
+
 1 day
 
 ## Dependencies
+
 - **SPEPATREW-001** must be completed (schema updated)
 - **SPEPATREW-002** must be completed (format detection implemented)
 
 ## Files to Touch
+
 - `src/prompting/CharacterDataFormatter.js` (add 4 private methods, update 1 public method)
 - `tests/unit/prompting/CharacterDataFormatter.test.js` (add extensive test suites)
 
@@ -22,6 +27,7 @@ Implement three private methods in `CharacterDataFormatter` to render speech pat
 ### Methods to Implement
 
 #### 1. `#formatStructuredPatterns(patterns)`
+
 - Filter for object patterns only
 - Output XML structure with `<speech_patterns>` tags
 - Include usage comment
@@ -31,26 +37,31 @@ Implement three private methods in `CharacterDataFormatter` to render speech pat
 - Return with usage guidance
 
 #### 2. `#formatLegacyPatterns(patterns)`
+
 - Filter for string patterns only
 - Output XML structure with `<speech_patterns>` tags
 - Simple bulleted list format
 - Return with usage guidance
 
 #### 3. `#formatMixedPatterns(patterns)`
+
 - Call `#formatStructuredPatterns()` for object patterns
 - Insert "Additional Patterns" section for string patterns
 - Combine before closing `</speech_patterns>` tag
 - Return single unified output with usage guidance
 
 #### 4. `#getUsageGuidance()`
+
 - Return fixed usage guidance text in XML format
 - No parameters, always returns same text
 - Include instructions about natural usage
 
 ### Update Public Method
+
 **CORRECTED ASSUMPTION**: After reviewing the existing code and tests, the `formatSpeechPatterns()` method currently accepts `speechPatterns` (Array|string) parameter, NOT an entity. Changing to accept an `entity` parameter would be a **breaking API change** that would break all existing tests and callers.
 
 **Revised approach**: Keep the existing signature and update the internal logic to support both patterns:
+
 ```javascript
 formatSpeechPatterns(speechPatterns) {
   // Handle both direct patterns array and entity object for backward compatibility
@@ -87,12 +98,14 @@ formatSpeechPatterns(speechPatterns) {
 ```
 
 This approach:
+
 - ✅ Maintains backward compatibility with existing tests
 - ✅ Preserves the public API (no breaking changes)
 - ✅ Adds support for entity objects (new optional behavior)
 - ✅ Satisfies acceptance criterion #24: "All existing unit tests continue to pass"
 
 ## Out of Scope
+
 - **DO NOT** modify schema files
 - **DO NOT** change character entity files
 - **DO NOT** modify speech patterns generator code
@@ -106,6 +119,7 @@ This approach:
 ### Tests That Must Pass
 
 #### Structured Format Tests
+
 1. Object patterns render with `<speech_patterns>` tags
 2. Pattern type appears as bold markdown (`**Type**`)
 3. Contexts line appears when contexts array has values
@@ -116,12 +130,14 @@ This approach:
 8. Comment appears at top about natural usage
 
 #### Legacy Format Tests
+
 9. String patterns render with `<speech_patterns>` tags
 10. Each pattern prefixed with `- ` (bullet point)
 11. Usage guidance appears at end
 12. Original string content preserved exactly
 
 #### Mixed Format Tests
+
 13. Object patterns render first with structured format
 14. "Additional Patterns" section added for string patterns
 15. String patterns use bullet format
@@ -130,17 +146,20 @@ This approach:
 18. Order preserved: structured then legacy
 
 #### Edge Cases
+
 19. Empty patterns array returns empty string
 20. Null patterns returns empty string
 21. Patterns with empty contexts array don't show contexts line
 22. Whitespace in examples preserved
 
 #### Backward Compatibility
+
 23. Existing Vespera character loads and formats correctly
 24. All existing unit tests continue to pass
 25. No breaking changes to prompt structure
 
 ### Invariants
+
 - All methods are private (prefixed with `#`)
 - XML tags properly opened and closed
 - Usage guidance identical across all formats
@@ -150,6 +169,7 @@ This approach:
 - No external dependencies beyond logger
 
 ## Validation Commands
+
 ```bash
 # Run specific test file with verbose output
 npm run test:unit -- tests/unit/prompting/CharacterDataFormatter.test.js --verbose
@@ -168,6 +188,7 @@ npx eslint src/prompting/CharacterDataFormatter.js tests/unit/prompting/Characte
 ```
 
 ## Definition of Done
+
 - [x] All 4 private methods implemented
 - [x] `formatSpeechPatterns()` uses switch statement
 - [x] All 25 test cases pass (106 total tests passing)

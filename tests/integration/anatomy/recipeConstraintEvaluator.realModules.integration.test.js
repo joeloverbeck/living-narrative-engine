@@ -118,7 +118,9 @@ describe('RecipeConstraintEvaluator integration', () => {
       'Constraint explanation: Arms and torso must share fusion implants.'
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('RecipeConstraintEvaluator: Evaluating constraints')
+      expect.stringContaining(
+        'RecipeConstraintEvaluator: Evaluating constraints'
+      )
     );
     expect(logger.debug).not.toHaveBeenCalledWith(
       'RecipeConstraintEvaluator: All constraints satisfied'

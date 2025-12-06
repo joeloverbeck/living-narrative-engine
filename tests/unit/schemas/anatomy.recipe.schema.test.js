@@ -883,7 +883,12 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
 
     test('should validate all valid limbSet slot group formats', () => {
-      const slotGroups = ['limbSet:leg', 'limbSet:arm', 'limbSet:tentacle', 'limbSet:wing_123'];
+      const slotGroups = [
+        'limbSet:leg',
+        'limbSet:arm',
+        'limbSet:tentacle',
+        'limbSet:wing_123',
+      ];
 
       slotGroups.forEach((group) => {
         const validRecipe = {
@@ -906,7 +911,12 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
 
     test('should validate all valid appendage slot group formats', () => {
-      const slotGroups = ['appendage:tail', 'appendage:head', 'appendage:stinger', 'appendage:abdomen_9'];
+      const slotGroups = [
+        'appendage:tail',
+        'appendage:head',
+        'appendage:stinger',
+        'appendage:abdomen_9',
+      ];
 
       slotGroups.forEach((group) => {
         const validRecipe = {
@@ -1551,7 +1561,8 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     });
 
     test('enhancedPatternDefinition properties field description clarifies filtering semantics', () => {
-      const enhancedPattern = anatomyRecipeSchema.definitions.enhancedPatternDefinition;
+      const enhancedPattern =
+        anatomyRecipeSchema.definitions.enhancedPatternDefinition;
       expect(enhancedPattern.properties.properties.description).toContain(
         'Filters entities by exact component property values'
       );
@@ -1562,7 +1573,8 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
 
     test('clothingEntities properties field description allows overrides (different semantics)', () => {
       const clothingEntity =
-        anatomyRecipeSchema.properties.clothingEntities.items.properties.properties;
+        anatomyRecipeSchema.properties.clothingEntities.items.properties
+          .properties;
       // clothingEntities.properties IS for overrides - verify it does NOT have the filtering language
       expect(clothingEntity.description).toContain('override');
       expect(clothingEntity.description).not.toContain(

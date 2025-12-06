@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 /**
  * @file logging-formatter-string-context.integration.test.js
@@ -80,7 +87,10 @@ describe('Enhanced console logger string context integration', () => {
     );
     const logger = getEnhancedConsoleLogger();
 
-    logger.info('Masking primitive context', 'apiKey=sk-1234567890abcdef123456');
+    logger.info(
+      'Masking primitive context',
+      'apiKey=sk-1234567890abcdef123456'
+    );
 
     expect(infoSpy).toHaveBeenCalledTimes(1);
     const [output] = infoSpy.mock.calls[0];

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import {
   setupDIContainerStage,
   resolveLoggerStage,
@@ -93,7 +100,9 @@ describe('containerStages integration with real container wiring', () => {
     expect(stageResult.success).toBe(false);
     expect(stageResult.error).toBeInstanceOf(StageError);
     expect(stageResult.error.phase).toBe('DI Container Setup');
-    expect(stageResult.error.message).toContain('Fatal Error during service registration');
+    expect(stageResult.error.message).toContain(
+      'Fatal Error during service registration'
+    );
     expect(stageResult.error.cause?.message).toBe('registration exploded');
   });
 
@@ -104,7 +113,9 @@ describe('containerStages integration with real container wiring', () => {
     expect(stageResult.success).toBe(false);
     expect(stageResult.error).toBeInstanceOf(StageError);
     expect(stageResult.error.phase).toBe('Core Services Resolution');
-    expect(stageResult.error.message).toContain('Could not resolve essential ILogger service');
+    expect(stageResult.error.message).toContain(
+      'Could not resolve essential ILogger service'
+    );
   });
 
   it('returns a StageError when ILogger resolves to an invalid object', async () => {
@@ -116,6 +127,8 @@ describe('containerStages integration with real container wiring', () => {
 
     expect(stageResult.success).toBe(false);
     expect(stageResult.error).toBeInstanceOf(StageError);
-    expect(stageResult.error.message).toContain('ILogger resolved to an invalid object');
+    expect(stageResult.error.message).toContain(
+      'ILogger resolved to an invalid object'
+    );
   });
 });

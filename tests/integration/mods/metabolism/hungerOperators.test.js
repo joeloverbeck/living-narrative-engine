@@ -112,11 +112,7 @@ describe('metabolism hunger operators integration', () => {
    * @param config
    */
   const createFoodItem = async (instanceId, config = {}) => {
-    const {
-      bulk = 2,
-      energyContent = 20,
-      fuelTags = ['food'],
-    } = config;
+    const { bulk = 2, energyContent = 20, fuelTags = ['food'] } = config;
 
     const food = await entityManager.createEntityInstance(foodDefinition.id, {
       instanceId,
@@ -205,9 +201,12 @@ describe('metabolism hunger operators integration', () => {
     });
 
     it('returns false for entity without hunger_state component', async () => {
-      const actor = await entityManager.createEntityInstance(actorDefinition.id, {
-        instanceId: 'no-metabolism-actor',
-      });
+      const actor = await entityManager.createEntityInstance(
+        actorDefinition.id,
+        {
+          instanceId: 'no-metabolism-actor',
+        }
+      );
 
       const context = { actor: { id: actor.id } };
       const result = isHungryOperator.evaluate(['actor'], context);
@@ -221,10 +220,7 @@ describe('metabolism hunger operators integration', () => {
       });
 
       const context = { entityId: actor.id };
-      const result = isHungryOperator.evaluate(
-        [{ var: 'entityId' }],
-        context
-      );
+      const result = isHungryOperator.evaluate([{ var: 'entityId' }], context);
 
       expect(result).toBe(true);
     });
@@ -293,7 +289,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(true);
       });
@@ -312,7 +311,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: potion.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -331,7 +333,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: apple.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(true);
       });
@@ -353,7 +358,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(true);
       });
@@ -373,7 +381,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: largeMeal.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -393,7 +404,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -413,7 +427,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(true);
       });
@@ -421,14 +438,21 @@ describe('metabolism hunger operators integration', () => {
 
     describe('missing components', () => {
       it('returns false when consumer lacks fuel_converter', async () => {
-        const actor = await entityManager.createEntityInstance(actorDefinition.id, {
-          instanceId: 'no-converter',
-        });
+        const actor = await entityManager.createEntityInstance(
+          actorDefinition.id,
+          {
+            instanceId: 'no-converter',
+          }
+        );
 
-        await entityManager.addComponent(actor.id, 'metabolism:metabolic_store', {
-          buffer_storage: [],
-          buffer_capacity: 10,
-        });
+        await entityManager.addComponent(
+          actor.id,
+          'metabolism:metabolic_store',
+          {
+            buffer_storage: [],
+            buffer_capacity: 10,
+          }
+        );
         // No fuel_converter component
 
         const food = await createFoodItem('food-1', { fuelTags: ['food'] });
@@ -437,19 +461,29 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
 
       it('returns false when consumer lacks metabolic_store', async () => {
-        const actor = await entityManager.createEntityInstance(actorDefinition.id, {
-          instanceId: 'no-store',
-        });
+        const actor = await entityManager.createEntityInstance(
+          actorDefinition.id,
+          {
+            instanceId: 'no-store',
+          }
+        );
 
-        await entityManager.addComponent(actor.id, 'metabolism:fuel_converter', {
-          accepted_fuel_tags: ['food'],
-        });
+        await entityManager.addComponent(
+          actor.id,
+          'metabolism:fuel_converter',
+          {
+            accepted_fuel_tags: ['food'],
+          }
+        );
         // No metabolic_store component
 
         const food = await createFoodItem('food-1', { fuelTags: ['food'] });
@@ -458,7 +492,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -476,7 +513,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: nonConsumable.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -497,7 +537,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: { id: actor.id },
           item: { id: food.id },
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });
@@ -507,7 +550,10 @@ describe('metabolism hunger operators integration', () => {
           consumer: null,
           item: null,
         };
-        const result = canConsumeOperator.evaluate(['consumer', 'item'], context);
+        const result = canConsumeOperator.evaluate(
+          ['consumer', 'item'],
+          context
+        );
 
         expect(result).toBe(false);
       });

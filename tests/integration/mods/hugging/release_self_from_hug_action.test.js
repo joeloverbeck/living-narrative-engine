@@ -65,8 +65,8 @@ describe('hugging:release_self_from_hug action integration', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
-          [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
 
         return closeness.reduce((acc, partnerId) => {
           const partner = entityManager.getEntityInstance(partnerId);
@@ -75,7 +75,8 @@ describe('hugging:release_self_from_hug action integration', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
             !partnerFacingAway.includes(actorId);
@@ -149,7 +150,10 @@ describe('hugging:release_self_from_hug action integration', () => {
     }
   });
 
-  const primeBeingHuggedScenario = (names = ['Aster', 'Briar'], options = {}) => {
+  const primeBeingHuggedScenario = (
+    names = ['Aster', 'Briar'],
+    options = {}
+  ) => {
     const scenario = testFixture.createCloseActors(names, options);
     scenario.actor.components['positioning:being_hugged'] = {
       hugging_entity_id: scenario.target.id,

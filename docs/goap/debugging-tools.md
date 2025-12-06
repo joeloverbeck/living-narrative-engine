@@ -91,10 +91,12 @@ it('should debug GOAP behavior', async () => {
 **Purpose**: Display active GOAP plans with task details and parameters.
 
 **Methods**:
+
 - `inspect(actorId)` - Returns formatted plan text
 - `inspectJSON(actorId)` - Returns plan as JSON object
 
 **Example Output**:
+
 ```
 === GOAP Plan: Achieve 'stay_fed' ===
 Actor: actor-123
@@ -123,6 +125,7 @@ Failure Tracking:
 ```
 
 **Key Features**:
+
 - Shows task execution status (COMPLETED/CURRENT/PENDING)
 - Resolves entity IDs to human-readable names
 - Displays failure tracking metrics
@@ -136,11 +139,13 @@ Failure Tracking:
 **Purpose**: Capture the raw task registry state the planner saw for a given actor.
 
 **What it shows**:
+
 - Number of tasks discovered per namespace after structural gates.
 - Warnings emitted by the normalization guardrails (deprecated `component_id`, missing namespaces, etc.).
 - Actor IDs that failed to register with `SimpleEntityManager` before planning began.
 
 **Where to find it**:
+
 - The GOAP debugger report now prints a `Task Library Diagnostics` section, and `generateReportJSON()` returns a `taskLibraryDiagnostics` payload.
 - `GOAP_EVENTS.PLANNING_FAILED` includes a `code` property so CI and content tooling can distinguish setup violations (e.g., `GOAP_SETUP_MISSING_ACTOR`) from genuine search exhaustion.
 - When the controller returns `null`, GOAPDebugger now emits a single `GOAP_DEBUGGER_DIAGNOSTICS_MISSING` warning per actor/section and annotates the report with an empty state so downstream tooling can alert on missing instrumentation.
@@ -160,11 +165,13 @@ Failure Tracking:
 **IMPORTANT**: Works with **planning state hashes** (symbolic key-value pairs), not ECS components.
 
 **Methods**:
+
 - `diff(beforeState, afterState)` - Returns diff object
 - `visualize(beforeState, afterState, options)` - Returns formatted diff text
 - `diffJSON(beforeState, afterState)` - Returns diff as JSON
 
 **Example Output**:
+
 ```
 === State Diff: Before Task → After Task ===
 Task Applied: consume_nourishing_item (params: {"item":"food-1"})
@@ -185,6 +192,7 @@ Total Changes: 4 (1 added, 2 modified, 1 removed)
 ```
 
 **Use Cases**:
+
 - Verify task planning effects are correct
 - Debug unexpected state changes
 - Understand task preconditions/effects
@@ -241,12 +249,14 @@ When you add diagnostics:
 **Purpose**: Capture step-by-step refinement method execution.
 
 **Methods**:
+
 - `startCapture(actorId)` - Begin capturing events
 - `stopCapture(actorId)` - Stop and return trace
 - `getTrace(actorId)` - Get current trace without stopping
 - `format(trace)` - Format trace as text
 
 **Example Output**:
+
 ```
 === Refinement Trace: actor-123 ===
 Capture Duration: 250 ms
@@ -270,6 +280,7 @@ Summary:
 ```
 
 **Use Cases**:
+
 - Debug refinement method execution
 - Verify action generation
 - Track local state updates
@@ -362,16 +373,16 @@ console.log(diff);
 
 Plan Inspector and GOAPDebugger now prefix each failure entry with the planner's structured code. These codes map directly to `src/goap/planner/goapPlannerFailureReasons.js` and the guardrails outlined in `specs/goap-system-specs.md`:
 
-| Code | Meaning |
-| --- | --- |
-| `TASK_LIBRARY_EXHAUSTED` | No planning tasks were available for the actor; check mod/task registrations. |
-| `ESTIMATED_COST_EXCEEDS_LIMIT` | The heuristic estimate exceeded `goal.maxCost` before search began. |
-| `TIME_LIMIT_EXCEEDED` | Search exceeded the configured time budget. |
-| `NODE_LIMIT_REACHED` | Search hit `maxNodes` without producing a plan. |
-| `DEPTH_LIMIT_REACHED` | All branches hit the depth cap (`options.maxDepth` or `goal.maxActions`). |
-| `DISTANCE_GUARD_BLOCKED` | Numeric distance guard rejected every applicable task (pure numeric goals only). |
-| `NO_APPLICABLE_TASKS` | The planner never found a task that passed parameter binding and preconditions. |
-| `NO_VALID_PLAN` | Catch-all for “open list exhausted” after exploring valid branches. |
+| Code                           | Meaning                                                                          |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| `TASK_LIBRARY_EXHAUSTED`       | No planning tasks were available for the actor; check mod/task registrations.    |
+| `ESTIMATED_COST_EXCEEDS_LIMIT` | The heuristic estimate exceeded `goal.maxCost` before search began.              |
+| `TIME_LIMIT_EXCEEDED`          | Search exceeded the configured time budget.                                      |
+| `NODE_LIMIT_REACHED`           | Search hit `maxNodes` without producing a plan.                                  |
+| `DEPTH_LIMIT_REACHED`          | All branches hit the depth cap (`options.maxDepth` or `goal.maxActions`).        |
+| `DISTANCE_GUARD_BLOCKED`       | Numeric distance guard rejected every applicable task (pure numeric goals only). |
+| `NO_APPLICABLE_TASKS`          | The planner never found a task that passed parameter binding and preconditions.  |
+| `NO_VALID_PLAN`                | Catch-all for “open list exhausted” after exploring valid branches.              |
 
 Task/refinement failures reuse the same formatting but use `TASK_FAILURE`, `REFINEMENT_FAILURE_REPLAN`, etc., so you can distinguish controller-level fallbacks from planner issues at a glance.
 
@@ -427,11 +438,13 @@ debugger.stopTrace('actor-456');
 **Problem**: `inspectPlan()` returns "No active plan" message.
 
 **Causes**:
+
 - Actor has no current goal selected
 - Planning failed (check failure history)
 - Plan was invalidated
 
 **Solution**:
+
 ```javascript
 // Check if actor has goals
 const goals = await goalSelectionService.selectGoal(actor);
@@ -449,11 +462,13 @@ if (failures.failedGoals.length > 0) {
 **Problem**: Trace has no events after execution.
 
 **Causes**:
+
 - Trace started after execution completed
 - Wrong actor ID
 - No refinement occurred (plan is empty)
 
 **Solution**:
+
 ```javascript
 // Start trace BEFORE executing turn
 debugger.startTrace('actor-123');
@@ -487,11 +502,13 @@ Use the event payload and structured log to confirm a "goal satisfied" completio
 **Problem**: State diff shows changes that don't match task effects.
 
 **Causes**:
+
 - Planning effects are incorrect in task definition
 - Parameter substitution failed
 - Multiple tasks applied simultaneously
 
 **Solution**:
+
 ```javascript
 // Verify task definition
 const task = dataRegistry.getTask(taskId);
@@ -516,6 +533,7 @@ for (const task of plan.tasks) {
 - **Refinement Tracer**: Grows with events (~ 1KB per event)
 
 **Best Practices**:
+
 - Stop traces when not needed
 - Don't enable tracing in production
 - Clear old traces periodically
@@ -564,7 +582,7 @@ it('should trace refinement execution', async () => {
 
 ### Integration Test Pattern
 
-```javascript
+````javascript
 it('should debug complete GOAP workflow', async () => {
   const debugger = container.resolve(tokens.IGOAPDebugger);
 
@@ -595,11 +613,12 @@ expect(trace.events.length).toBeGreaterThan(0);
 
 ```bash
 GOAP_STATE_ASSERT=1 npm run test:integration -- goap
-```
+````
 
 This flag causes `PlanningStateView` to throw as soon as it records a miss, making it trivial to pinpoint which goal/heuristic referenced the bad path. The event log and debugger output both link back to this section so future contributors know how to enable the stricter mode.
 `generateReportJSON()` mirrors this metadata via `diagnosticsMeta.planningState`, letting dashboards show that a miss just occurred (fresh) versus no misses being observed recently (stale = `true`).
-```
+
+````
 
 ## Implementation Notes
 
@@ -717,7 +736,7 @@ console.log('Distance Reduced:', newDistance < initialDistance);
 const debugger = container.resolve(tokens.IGOAPDebugger);
 const plan = debugger.inspectPlan(actorId);
 console.log(plan);
-```
+````
 
 ### Multi-Action Debugging Workflow
 

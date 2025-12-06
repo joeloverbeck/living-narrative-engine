@@ -89,8 +89,9 @@ export class BodyDescriptorValidator {
       return { valid: false, errors, warnings };
     }
 
-    const registeredDisplayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY)
-      .map(meta => meta.displayKey);
+    const registeredDisplayKeys = Object.values(BODY_DESCRIPTOR_REGISTRY).map(
+      (meta) => meta.displayKey
+    );
 
     const orderSet = new Set(formattingConfig.descriptionOrder);
 
@@ -99,7 +100,7 @@ export class BodyDescriptorValidator {
       if (!orderSet.has(displayKey)) {
         warnings.push(
           `Body descriptor '${displayKey}' defined in registry but missing from descriptionOrder. ` +
-          `Descriptor will not appear in generated descriptions.`
+            `Descriptor will not appear in generated descriptions.`
         );
       }
     }
@@ -140,15 +141,21 @@ export class BodyDescriptorValidator {
     for (const recipeId of sampleRecipes) {
       const recipe = dataRegistry.get('anatomyRecipes', recipeId);
       if (recipe?.bodyDescriptors) {
-        const recipeResult = this.validateRecipeDescriptors(recipe.bodyDescriptors);
+        const recipeResult = this.validateRecipeDescriptors(
+          recipe.bodyDescriptors
+        );
         if (!recipeResult.valid) {
-          issues.warnings.push(`Recipe ${recipeId}: ${recipeResult.errors.join(', ')}`);
+          issues.warnings.push(
+            `Recipe ${recipeId}: ${recipeResult.errors.join(', ')}`
+          );
         }
       }
     }
 
     // 3. Info: report registered descriptors
-    issues.info.push(`Total registered descriptors: ${getAllDescriptorNames().length}`);
+    issues.info.push(
+      `Total registered descriptors: ${getAllDescriptorNames().length}`
+    );
     issues.info.push(`Registered: ${getAllDescriptorNames().join(', ')}`);
 
     return issues;

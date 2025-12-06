@@ -12,7 +12,10 @@ describe('GameEngineLoadAdapter behavioural coverage', () => {
 
     expect(adapter).toBeInstanceOf(ILoadService);
 
-    await expect(adapter.load('alpha')).resolves.toEqual({ slot: 'alpha', restored: true });
+    await expect(adapter.load('alpha')).resolves.toEqual({
+      slot: 'alpha',
+      restored: true,
+    });
     expect(engine.loadGame).toHaveBeenCalledTimes(1);
     expect(engine.loadGame).toHaveBeenCalledWith('alpha');
   });

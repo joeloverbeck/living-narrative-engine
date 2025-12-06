@@ -27,13 +27,14 @@ Items can include a `clothing:blocks_removal` component that declares what they 
   "clothing:blocks_removal": {
     "blockedSlots": [
       {
-        "slot": "legs",                    // Equipment slot to block
-        "layers": ["base", "outer"],       // Layers to block in that slot
-        "blockType": "must_remove_first",  // Type of blocking
-        "reason": "Belt secures pants"     // Optional explanation
+        "slot": "legs", // Equipment slot to block
+        "layers": ["base", "outer"], // Layers to block in that slot
+        "blockType": "must_remove_first", // Type of blocking
+        "reason": "Belt secures pants" // Optional explanation
       }
     ],
-    "blocksRemovalOf": [                   // Optional: explicit item IDs
+    "blocksRemovalOf": [
+      // Optional: explicit item IDs
       "some_mod:specific_item_id"
     ]
   }
@@ -115,6 +116,7 @@ Items can include a `clothing:blocks_removal` component that declares what they 
 **Implementation**:
 
 **Belt**:
+
 ```json
 {
   "clothing:blocks_removal": {
@@ -130,6 +132,7 @@ Items can include a `clothing:blocks_removal` component that declares what they 
 ```
 
 **Suspenders**:
+
 ```json
 {
   "clothing:blocks_removal": {
@@ -163,9 +166,7 @@ Both items block pants independently. Player must remove both before pants becom
       }
     },
     "clothing:blocks_removal": {
-      "blocksRemovalOf": [
-        "magic:artifact_glove"
-      ]
+      "blocksRemovalOf": ["magic:artifact_glove"]
     }
   }
 }
@@ -178,6 +179,7 @@ Both items block pants independently. Player must remove both before pants becom
 This item must be removed before blocked items become accessible.
 
 **Use Cases**:
+
 - Belts blocking pants
 - Boots blocking socks
 - Outer jackets blocking inner layers
@@ -189,6 +191,7 @@ This item must be removed before blocked items become accessible.
 This item must be loosened but not fully removed.
 
 **Use Cases**:
+
 - Belt can be loosened to allow pants removal
 - Tie can be loosened to unbutton shirt
 
@@ -201,6 +204,7 @@ This item must be loosened but not fully removed.
 Complete blocking - items are fully inaccessible.
 
 **Use Cases**:
+
 - Heavy armor over clothing
 - Sealed suits
 - Restraints
@@ -214,12 +218,14 @@ Complete blocking - items are fully inaccessible.
 Array of slot/layer combinations to block.
 
 **Fields**:
+
 - `slot` (required): Equipment slot name (e.g., "legs", "torso_upper")
 - `layers` (required): Array of layer names (e.g., ["base", "outer"])
 - `blockType` (required): Type of blocking (see Block Types)
 - `reason` (optional): Human-readable explanation
 
 **Valid Slots**:
+
 - `torso_upper`
 - `torso_lower`
 - `legs`
@@ -230,6 +236,7 @@ Array of slot/layer combinations to block.
 - `right_arm_clothing`
 
 **Valid Layers**:
+
 - `underwear` (innermost)
 - `base`
 - `outer`
@@ -274,6 +281,7 @@ window.game.setLogLevel('debug');
 ```
 
 Look for messages like:
+
 - "Filtering blocked item from topmost_clothing"
 - "Item removal blocked by slot rules"
 
@@ -288,6 +296,7 @@ Look for messages like:
 **Solution**: Ensure blocking rules target different slots or layers than the item occupies.
 
 **Example**:
+
 ```json
 // WRONG: Belt blocks itself
 {
@@ -366,6 +375,7 @@ npm run validate:strict
 ### 1. Use Slot-Based Blocking When Possible
 
 ✅ **Good**: Block all pants with belt
+
 ```json
 {
   "blockedSlots": [
@@ -378,12 +388,13 @@ npm run validate:strict
 ```
 
 ❌ **Bad**: Block each pants entity individually
+
 ```json
 {
   "blocksRemovalOf": [
     "clothing:jeans",
     "clothing:slacks",
-    "clothing:shorts",
+    "clothing:shorts"
     // ... hundreds of items
   ]
 }
@@ -392,6 +403,7 @@ npm run validate:strict
 ### 2. Provide Reason Field
 
 ✅ **Good**:
+
 ```json
 {
   "blockType": "must_remove_first",
@@ -400,6 +412,7 @@ npm run validate:strict
 ```
 
 ❌ **Bad**:
+
 ```json
 {
   "blockType": "must_remove_first"
@@ -410,6 +423,7 @@ npm run validate:strict
 ### 3. Match Real-World Physics
 
 Design blocking based on how clothing actually works:
+
 - Accessories block outer layers (belts, buttons)
 - Outer layers block base layers (jackets block shirts)
 - Base layers block underwear (shirts block undershirts)
@@ -424,6 +438,7 @@ Design blocking based on how clothing actually works:
 ## Performance Considerations
 
 The blocking system is optimized for performance:
+
 - Checks only equipped items (not all game items)
 - Early exits when no blocking component found
 - O(n × m) complexity where n = equipped items, m = blocking rules
@@ -437,6 +452,7 @@ The blocking system is optimized for performance:
 ### Loosening Actions
 
 Currently planned:
+
 - `loosen_belt` action
 - `must_loosen_first` block type implementation
 - State-based blocking (buttoned/unbuttoned)
@@ -444,12 +460,14 @@ Currently planned:
 ### Dynamic Blocking
 
 State-dependent blocking rules:
+
 - Buttoned jacket blocks shirt, unbuttoned doesn't
 - Zipped dress blocks underwear, unzipped allows access
 
 ### Assistance Requirements
 
 Some items require help to remove:
+
 - Back-zippered dress
 - Corset lacing
 - Complex armor
@@ -466,6 +484,7 @@ Some items require help to remove:
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review test examples in `tests/integration/clothing/`
 3. Review specification: `specs/clothing-removal-blocking-system.spec.md`

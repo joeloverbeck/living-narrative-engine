@@ -81,8 +81,14 @@ describe('TraceAwareInstrumentation', () => {
       formattingPath: 'per-action',
       actor,
       actions: [
-        { actionDef: firstAction.actionDef, metadata: { hasPerActionMetadata: true } },
-        { actionDef: secondAction.actionDef, metadata: { hasPerActionMetadata: false } },
+        {
+          actionDef: firstAction.actionDef,
+          metadata: { hasPerActionMetadata: true },
+        },
+        {
+          actionDef: secondAction.actionDef,
+          metadata: { hasPerActionMetadata: false },
+        },
       ],
     });
 

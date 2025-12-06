@@ -123,7 +123,8 @@ class ValidationIntegrationPipeline {
   }
 
   #resolveDefaultKey(context) {
-    const baseId = context.id || context.modId || context.componentId || context.name;
+    const baseId =
+      context.id || context.modId || context.componentId || context.name;
     return baseId ? `${context.type}.${baseId}` : null;
   }
 
@@ -160,9 +161,22 @@ function createHarness() {
     ['/mods/seeded.json', { id: 'seeded:cached', cached: true }],
   ]);
   const defaults = {
-    'mod.alpha': { id: 'alpha', references: new Map(), errors: [], partial: true },
-    'component.core:actor': { id: 'core:actor', data: { slots: [] }, partial: true },
-    'validation.alpha': { valid: false, errors: ['Alpha degraded'], partial: true },
+    'mod.alpha': {
+      id: 'alpha',
+      references: new Map(),
+      errors: [],
+      partial: true,
+    },
+    'component.core:actor': {
+      id: 'core:actor',
+      data: { slots: [] },
+      partial: true,
+    },
+    'validation.alpha': {
+      valid: false,
+      errors: ['Alpha degraded'],
+      partial: true,
+    },
   };
 
   const degradation = new GracefulDegradationClass({ logger, cache, defaults });
@@ -190,7 +204,15 @@ describe('GracefulDegradation integration pipeline', () => {
   });
 
   it('recovers across diverse validation failures with caches, defaults, and parsing fallbacks', () => {
-    const { logger, eventBus, cache, defaults, degradation, handler, pipeline } = harness;
+    const {
+      logger,
+      eventBus,
+      cache,
+      defaults,
+      degradation,
+      handler,
+      pipeline,
+    } = harness;
 
     // Scenario 1: missing mod definition falls back to configured defaults
     const missingModError = new ModAccessError(
@@ -205,7 +227,10 @@ describe('GracefulDegradation integration pipeline', () => {
       id: 'alpha',
       hasDefault: true,
     };
-    const missingMod = pipeline.processExtraction(missingModError, missingModContext);
+    const missingMod = pipeline.processExtraction(
+      missingModError,
+      missingModContext
+    );
     expect(missingMod.recovery.strategy).toBe(RecoveryStrategy.USE_DEFAULT);
     expect(missingMod.degradation.strategy).toBe(DegradationStrategy.SKIP_FILE);
     expect(missingMod.degradation).toMatchObject({
@@ -214,7 +239,9 @@ describe('GracefulDegradation integration pipeline', () => {
       success: true,
       message: 'File skipped due to access error',
     });
-    expect(eventBus.events.at(-1).payload.strategy).toBe(RecoveryStrategy.USE_DEFAULT);
+    expect(eventBus.events.at(-1).payload.strategy).toBe(
+      RecoveryStrategy.USE_DEFAULT
+    );
 
     // Store degraded data to simulate cache priming for later requests
     cache.set(missingMod.degradeContext.cacheKey, defaults['mod.alpha']);
@@ -232,7 +259,9 @@ describe('GracefulDegradation integration pipeline', () => {
         hasCache: true,
       }
     );
-    expect(cachedAccess.degradation.strategy).toBe(DegradationStrategy.USE_CACHED);
+    expect(cachedAccess.degradation.strategy).toBe(
+      DegradationStrategy.USE_CACHED
+    );
     expect(cachedAccess.degradation.data).toEqual(defaults['mod.alpha']);
     expect(cachedAccess.degradation.success).toBe(true);
 
@@ -246,11 +275,19 @@ describe('GracefulDegradation integration pipeline', () => {
       id: 'core:actor',
       hasDefault: true,
     };
-    const componentResult = pipeline.processExtraction(componentError, componentContext, {
-      cacheKey: null,
-    });
-    expect(componentResult.degradation.strategy).toBe(DegradationStrategy.USE_DEFAULT);
-    expect(componentResult.degradation.data).toEqual(defaults['component.core:actor']);
+    const componentResult = pipeline.processExtraction(
+      componentError,
+      componentContext,
+      {
+        cacheKey: null,
+      }
+    );
+    expect(componentResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_DEFAULT
+    );
+    expect(componentResult.degradation.data).toEqual(
+      defaults['component.core:actor']
+    );
 
     // Simulate direct lookup by mod/component identifier with a cached entry
     cache.set('alpha:core:actor', { id: 'core:actor', cached: true });
@@ -274,7 +311,9 @@ describe('GracefulDegradation integration pipeline', () => {
       type: 'references',
       hasDefault: true,
     });
-    expect(referencesResult.degradation.strategy).toBe(DegradationStrategy.USE_DEFAULT);
+    expect(referencesResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_DEFAULT
+    );
     expect(referencesResult.degradation.data instanceof Map).toBe(true);
 
     // Scenario 5: validation failure relies on generic degraded validation report
@@ -291,7 +330,9 @@ describe('GracefulDegradation integration pipeline', () => {
       hasDefault: true,
       id: 'alpha',
     });
-    expect(validationResult.degradation.strategy).toBe(DegradationStrategy.USE_DEFAULT);
+    expect(validationResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_DEFAULT
+    );
     expect(validationResult.degradation.data).toEqual({
       valid: false,
       errors: ['Alpha degraded'],
@@ -309,25 +350,37 @@ describe('GracefulDegradation integration pipeline', () => {
         hasDefault: true,
       }
     );
-    expect(modDefaultResult.degradation.strategy).toBe(DegradationStrategy.USE_DEFAULT);
+    expect(modDefaultResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_DEFAULT
+    );
     expect(modDefaultResult.degradation.data).toEqual(defaults['mod.alpha']);
 
     // Scenario 7: unknown context without defaults yields null degraded value
-    const unknownResult = pipeline.processExtraction(new Error('mystery failure'), {
-      filePath: '/mods/alpha/unknown.json',
-      modId: 'alpha',
-      type: 'mystery',
-    });
-    expect(unknownResult.degradation.strategy).toBe(DegradationStrategy.USE_DEFAULT);
+    const unknownResult = pipeline.processExtraction(
+      new Error('mystery failure'),
+      {
+        filePath: '/mods/alpha/unknown.json',
+        modId: 'alpha',
+        type: 'mystery',
+      }
+    );
+    expect(unknownResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_DEFAULT
+    );
     expect(unknownResult.degradation.data).toBeNull();
 
     // Scenario 8: explicit skip hint keeps track of skipped files
-    const skippedResult = pipeline.processExtraction(new Error('transient issue'), {
-      filePath: '/mods/alpha/temporary.json',
-      modId: 'alpha',
-      allowSkip: true,
-    });
-    expect(skippedResult.degradation.strategy).toBe(DegradationStrategy.SKIP_FILE);
+    const skippedResult = pipeline.processExtraction(
+      new Error('transient issue'),
+      {
+        filePath: '/mods/alpha/temporary.json',
+        modId: 'alpha',
+        allowSkip: true,
+      }
+    );
+    expect(skippedResult.degradation.strategy).toBe(
+      DegradationStrategy.SKIP_FILE
+    );
     expect(skippedResult.degradation.skipped).toBe(true);
 
     // Scenario 9: repeated timeouts escalate to reduced validation strategy
@@ -358,12 +411,17 @@ describe('GracefulDegradation integration pipeline', () => {
     expect(timeoutAttempt3.degradation.data.reduced).toBe(true);
 
     // Scenario 10: cache hint without entry reports unsuccessful cache lookup
-    const emptyCacheResult = pipeline.processExtraction(new Error('minor glitch'), {
-      filePath: '/mods/alpha/uncached.json',
-      modId: 'alpha',
-      hasCache: true,
-    });
-    expect(emptyCacheResult.degradation.strategy).toBe(DegradationStrategy.USE_CACHED);
+    const emptyCacheResult = pipeline.processExtraction(
+      new Error('minor glitch'),
+      {
+        filePath: '/mods/alpha/uncached.json',
+        modId: 'alpha',
+        hasCache: true,
+      }
+    );
+    expect(emptyCacheResult.degradation.strategy).toBe(
+      DegradationStrategy.USE_CACHED
+    );
     expect(emptyCacheResult.degradation.success).toBe(false);
 
     // Scenario 11: corruption with partial data keeps extracted subset
@@ -372,11 +430,14 @@ describe('GracefulDegradation integration pipeline', () => {
       '/mods/alpha/partial.json',
       { partialData: { id: 'alpha:partial', partial: true } }
     );
-    const partialCorruption = pipeline.processExtraction(partialCorruptionError, {
-      filePath: '/mods/alpha/partial.json',
-      modId: 'alpha',
-      partialData: { id: 'alpha:partial', partial: true },
-    });
+    const partialCorruption = pipeline.processExtraction(
+      partialCorruptionError,
+      {
+        filePath: '/mods/alpha/partial.json',
+        modId: 'alpha',
+        partialData: { id: 'alpha:partial', partial: true },
+      }
+    );
     expect(partialCorruption.degradation.strategy).toBe(
       DegradationStrategy.PARTIAL_EXTRACTION
     );
@@ -386,21 +447,31 @@ describe('GracefulDegradation integration pipeline', () => {
     });
 
     // Scenario 12: corruption with raw text performs best-effort parsing
-    const parseableRaw = '{"id":"alpha:parsed"}\nbody:component_01 other:attachment-02';
+    const parseableRaw =
+      '{"id":"alpha:parsed"}\nbody:component_01 other:attachment-02';
     const parseCorruption = pipeline.processExtraction(
-      new ModCorruptionError('Corruption with salvageable data', '/mods/alpha/raw.json', {
-        parseError: 'trailing comma',
-      }),
+      new ModCorruptionError(
+        'Corruption with salvageable data',
+        '/mods/alpha/raw.json',
+        {
+          parseError: 'trailing comma',
+        }
+      ),
       {
         filePath: '/mods/alpha/raw.json',
         modId: 'alpha',
         rawData: parseableRaw,
       }
     );
-    expect(parseCorruption.degradation.strategy).toBe(DegradationStrategy.BASIC_PARSING);
+    expect(parseCorruption.degradation.strategy).toBe(
+      DegradationStrategy.BASIC_PARSING
+    );
     expect(parseCorruption.degradation.data).toMatchObject({
       id: 'alpha:parsed',
-      references: expect.arrayContaining(['body:component_01', 'other:attachment-02']),
+      references: expect.arrayContaining([
+        'body:component_01',
+        'other:attachment-02',
+      ]),
     });
 
     // Scenario 13: parsing failure path still yields structured debug information
@@ -414,8 +485,13 @@ describe('GracefulDegradation integration pipeline', () => {
         rawData: { cannot: 'be parsed' },
       }
     );
-    expect(failingParse.degradation.strategy).toBe(DegradationStrategy.BASIC_PARSING);
-    expect(failingParse.degradation.data).toEqual({ partial: true, basicParse: true });
+    expect(failingParse.degradation.strategy).toBe(
+      DegradationStrategy.BASIC_PARSING
+    );
+    expect(failingParse.degradation.data).toEqual({
+      partial: true,
+      basicParse: true,
+    });
     expect(
       logger.records.debug.some((entry) =>
         entry.message.startsWith('Basic parsing failed:')
@@ -430,7 +506,9 @@ describe('GracefulDegradation integration pipeline', () => {
         modId: 'alpha',
       }
     );
-    expect(securityResult.degradation.strategy).toBe(DegradationStrategy.NO_DEGRADATION);
+    expect(securityResult.degradation.strategy).toBe(
+      DegradationStrategy.NO_DEGRADATION
+    );
     expect(securityResult.degradation.success).toBe(false);
     expect(securityResult.degradation.blocked).toBe(true);
 
@@ -465,7 +543,9 @@ describe('GracefulDegradation integration pipeline', () => {
       recentDegradations: [],
     });
     expect(
-      logger.records.debug.some((entry) => entry.message === 'Graceful degradation reset')
+      logger.records.debug.some(
+        (entry) => entry.message === 'Graceful degradation reset'
+      )
     ).toBe(true);
   });
 
@@ -500,7 +580,9 @@ describe('GracefulDegradation integration pipeline', () => {
       recentErrors: [],
     });
     expect(
-      logger.records.debug.some((entry) => entry.message === 'Error handler reset')
+      logger.records.debug.some(
+        (entry) => entry.message === 'Error handler reset'
+      )
     ).toBe(true);
 
     degradation.reset();
@@ -514,7 +596,9 @@ describe('GracefulDegradation integration pipeline', () => {
   });
 
   it('validates logger dependency end-to-end using the real dependency validation', () => {
-    expect(() => new GracefulDegradationClass({ logger: {} })).toThrow(InvalidArgumentError);
+    expect(() => new GracefulDegradationClass({ logger: {} })).toThrow(
+      InvalidArgumentError
+    );
     expect(() => new ModValidationErrorHandlerClass({ logger: {} })).toThrow(
       InvalidArgumentError
     );

@@ -31,16 +31,19 @@ The `CharacterConceptsManagerController` is a **monolithic UI controller** that 
 ### 1.2 Public API Entry Points
 
 **Primary Export:**
+
 ```javascript
 export class CharacterConceptsManagerController extends BaseCharacterBuilderController
 export default CharacterConceptsManagerController
 ```
 
 **Protected Methods** (exposed to subclasses & tests via `_testExports`):
+
 - All methods prefixed with `_` are technically protected
 - In non-production, `_testExports` object exposes internal state for testing
 
 **Key Lifecycle Methods:**
+
 - `constructor(deps)` - Dependency injection entry point
 - Inherited from `BaseCharacterBuilderController`:
   - `initialize()` - Called by lifecycle orchestrator
@@ -49,6 +52,7 @@ export default CharacterConceptsManagerController
 ### 1.3 Internal Dependencies Map
 
 **Private State Fields** (17 total):
+
 ```javascript
 #searchFilter          → Used by: search methods
 #conceptsData          → Used by: all display/CRUD methods
@@ -118,22 +122,22 @@ Cross-Tab Flow:
 
 Based on responsibility analysis, the following **14 seams** are identified:
 
-| # | Seam Name | Responsibility | Approx Lines | Coupling |
-|---|-----------|----------------|--------------|----------|
-| 1 | **ConceptCRUDService** | Create, read, update, delete operations | ~400 | Medium (uses service, dispatches events) |
-| 2 | **ConceptModalManager** | Modal lifecycle (open, close, animations) | ~350 | Low (pure UI) |
-| 3 | **ConceptCardRenderer** | Card creation, display, attachment | ~300 | Low (pure rendering) |
-| 4 | **ConceptSearchEngine** | Search, filter, fuzzy match, highlighting | ~450 | Medium (uses state) |
-| 5 | **ConceptStatisticsCalculator** | Stats calculation, aggregations | ~200 | Low (pure functions) |
-| 6 | **ConceptStatisticsAnimator** | Animated stats updates, progress bars | ~300 | Low (pure UI) |
-| 7 | **ConceptFormValidator** | Form validation, character limits | ~150 | Low (uses FormValidationHelper) |
-| 8 | **ConceptEventCoordinator** | Domain event handling (created/updated/deleted) | ~250 | High (orchestration) |
-| 9 | **ConceptKeyboardController** | Keyboard shortcuts, accessibility | ~300 | Medium (uses modal manager) |
-| 10 | **ConceptSessionManager** | Session state persistence/restoration | ~300 | Medium (uses localStorage) |
-| 11 | **ConceptCrossTabSynchronizer** | BroadcastChannel, leader election | ~350 | Medium (uses events) |
-| 12 | **ConceptOptimisticUpdateHandler** | Optimistic UI updates, rollback | ~250 | Medium (uses DOM) |
-| 13 | **ConceptUtilities** | Formatting, escaping, CSV export | ~250 | Low (pure utilities) |
-| 14 | **ConceptNotificationService** | Success/error messages, milestones | ~200 | Low (pure UI) |
+| #   | Seam Name                          | Responsibility                                  | Approx Lines | Coupling                                 |
+| --- | ---------------------------------- | ----------------------------------------------- | ------------ | ---------------------------------------- |
+| 1   | **ConceptCRUDService**             | Create, read, update, delete operations         | ~400         | Medium (uses service, dispatches events) |
+| 2   | **ConceptModalManager**            | Modal lifecycle (open, close, animations)       | ~350         | Low (pure UI)                            |
+| 3   | **ConceptCardRenderer**            | Card creation, display, attachment              | ~300         | Low (pure rendering)                     |
+| 4   | **ConceptSearchEngine**            | Search, filter, fuzzy match, highlighting       | ~450         | Medium (uses state)                      |
+| 5   | **ConceptStatisticsCalculator**    | Stats calculation, aggregations                 | ~200         | Low (pure functions)                     |
+| 6   | **ConceptStatisticsAnimator**      | Animated stats updates, progress bars           | ~300         | Low (pure UI)                            |
+| 7   | **ConceptFormValidator**           | Form validation, character limits               | ~150         | Low (uses FormValidationHelper)          |
+| 8   | **ConceptEventCoordinator**        | Domain event handling (created/updated/deleted) | ~250         | High (orchestration)                     |
+| 9   | **ConceptKeyboardController**      | Keyboard shortcuts, accessibility               | ~300         | Medium (uses modal manager)              |
+| 10  | **ConceptSessionManager**          | Session state persistence/restoration           | ~300         | Medium (uses localStorage)               |
+| 11  | **ConceptCrossTabSynchronizer**    | BroadcastChannel, leader election               | ~350         | Medium (uses events)                     |
+| 12  | **ConceptOptimisticUpdateHandler** | Optimistic UI updates, rollback                 | ~250         | Medium (uses DOM)                        |
+| 13  | **ConceptUtilities**               | Formatting, escaping, CSV export                | ~250         | Low (pure utilities)                     |
+| 14  | **ConceptNotificationService**     | Success/error messages, milestones              | ~200         | Low (pure UI)                            |
 
 **Total Extracted**: ~3,800 lines
 **Remaining in Controller**: ~200 lines (orchestration + facade)
@@ -147,6 +151,7 @@ Based on responsibility analysis, the following **14 seams** are identified:
 ✅ **EXCELLENT COVERAGE** - Refactoring is SAFE to proceed
 
 **Test Files**: 27 total
+
 - **Unit Tests**: 22 files (covering individual methods, edge cases, error handling)
 - **Integration Tests**: 4 files (covering full workflows, event flows)
 - **E2E Tests**: 1 file (covering modal interactions)
@@ -154,6 +159,7 @@ Based on responsibility analysis, the following **14 seams** are identified:
 **Test Cases**: 322 total (describes + its)
 
 **Coverage Areas**:
+
 - ✅ Constructor validation (dependency injection)
 - ✅ Lifecycle methods (init, cleanup)
 - ✅ Modal interactions (create, edit, delete)
@@ -170,6 +176,7 @@ Based on responsibility analysis, the following **14 seams** are identified:
 - ✅ Backward compatibility
 
 **Testing Infrastructure**:
+
 - Uses `_testExports` pattern for accessing private state in non-production
 - Comprehensive mocks for dependencies (logger, service, eventBus)
 - Test utilities in `/tests/common/`
@@ -177,13 +184,18 @@ Based on responsibility analysis, the following **14 seams** are identified:
 ### Dependency Analysis
 
 **External Dependencies**: ✅ MINIMAL
+
 ```javascript
 import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
-import { FormValidationHelper, ValidationPatterns } from '../shared/characterBuilder/formValidationHelper.js';
+import {
+  FormValidationHelper,
+  ValidationPatterns,
+} from '../shared/characterBuilder/formValidationHelper.js';
 import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
 ```
 
 **Injected Dependencies**: ✅ WELL-STRUCTURED
+
 - ILogger
 - CharacterBuilderService
 - ISafeEventDispatcher
@@ -198,6 +210,7 @@ import { UI_STATES } from '../shared/characterBuilder/uiStateManager.js';
 - ValidationService
 
 **Conclusion**: ✅ **PROCEED WITH REFACTORING**
+
 - Excellent test coverage provides safety net
 - Minimal external dependencies reduce risk
 - Well-defined DI pattern makes extraction cleaner
@@ -348,6 +361,7 @@ graph TB
 ```
 
 **Key Observations**:
+
 - ✅ No circular dependencies
 - ✅ Clear layering: Controller → Services → Utils
 - ✅ Low coupling between feature services
@@ -365,6 +379,7 @@ graph TB
 4. **Preserves** the `_testExports` pattern
 
 **Before (Current)**:
+
 ```javascript
 export class CharacterConceptsManagerController extends BaseCharacterBuilderController {
   async _createConcept(conceptText) {
@@ -380,6 +395,7 @@ export class CharacterConceptsManagerController extends BaseCharacterBuilderCont
 ```
 
 **After (Facade)**:
+
 ```javascript
 import { BaseCharacterBuilderController } from '../characterBuilder/controllers/BaseCharacterBuilderController.js';
 import { ConceptCRUDService } from './characterConceptsManager/core/ConceptCRUDService.js';
@@ -418,6 +434,7 @@ export default CharacterConceptsManagerController;
 ```
 
 **Shared Context Pattern**:
+
 ```javascript
 _createSharedContext(deps) {
   return {
@@ -440,6 +457,7 @@ _createSharedContext(deps) {
 ```
 
 **Benefits**:
+
 - ✅ Existing tests continue to work unchanged
 - ✅ Consumers see no API changes
 - ✅ Gradual migration path (extract one service at a time)
@@ -534,15 +552,22 @@ class ConceptCRUDService {
     this.#context.logger.info('Creating concept', { text: conceptText });
 
     // Call service
-    const newConcept = await this.#context.characterBuilderService.createCharacterConcept({
-      concept: conceptText
-    });
+    const newConcept =
+      await this.#context.characterBuilderService.createCharacterConcept({
+        concept: conceptText,
+      });
 
     // Update shared state
-    this.#context.state.setConcepts([...currentConcepts, { concept: newConcept, directionCount: 0 }]);
+    this.#context.state.setConcepts([
+      ...currentConcepts,
+      { concept: newConcept, directionCount: 0 },
+    ]);
 
     // Broadcast event (other services can react)
-    this.#context.eventBus.dispatch('core:character_concept_created', newConcept);
+    this.#context.eventBus.dispatch(
+      'core:character_concept_created',
+      newConcept
+    );
 
     return newConcept;
   }
@@ -550,6 +575,7 @@ class ConceptCRUDService {
 ```
 
 **Benefits**:
+
 - ✅ Clear ownership (facade owns state, services access via context)
 - ✅ Easy testing (mock context object)
 - ✅ Type safety (JSDoc types for context)
@@ -569,6 +595,7 @@ While extracting, we'll improve quality WITHOUT changing business logic:
 **Improvements**:
 
 1. **Create Type Definitions File** (`types/conceptTypes.js`):
+
 ```javascript
 /**
  * @typedef {Object} ConceptData
@@ -614,6 +641,7 @@ While extracting, we'll improve quality WITHOUT changing business logic:
 ```
 
 2. **Add Strict Types to Service Methods**:
+
 ```javascript
 /**
  * Create a new character concept
@@ -629,6 +657,7 @@ async createConcept(conceptText) {
 ```
 
 3. **Replace `any` with Specific Interfaces**:
+
 ```javascript
 // Before:
 /** @param {object} concept */
@@ -644,6 +673,7 @@ async createConcept(conceptText) {
 **Improvements**:
 
 1. **Create Domain-Specific Errors**:
+
 ```javascript
 // src/domUI/characterConceptsManager/errors/ConceptErrors.js
 
@@ -673,6 +703,7 @@ export class ConceptServiceError extends Error {
 ```
 
 2. **Use Typed Errors in Services**:
+
 ```javascript
 // Before:
 throw new Error('Invalid concept text');
@@ -682,11 +713,12 @@ import { ConceptValidationError } from '../errors/ConceptErrors.js';
 throw new ConceptValidationError('Concept text must be 1-6000 characters', {
   length: conceptText.length,
   min: 1,
-  max: 6000
+  max: 6000,
 });
 ```
 
 3. **Add Try-Catch Wrappers**:
+
 ```javascript
 async createConcept(conceptText) {
   try {
@@ -710,6 +742,7 @@ async createConcept(conceptText) {
 **Improvements**:
 
 1. **Create Configuration File**:
+
 ```javascript
 // src/domUI/characterConceptsManager/config/conceptManagerConfig.js
 
@@ -760,6 +793,7 @@ export const CONCEPT_CONFIG = {
 ```
 
 2. **Use in Services**:
+
 ```javascript
 import { CONCEPT_CONFIG } from '../config/conceptManagerConfig.js';
 
@@ -771,6 +805,7 @@ if (conceptText.length > CONCEPT_CONFIG.validation.maxLength) { ... }
 ```
 
 3. **Benefits**:
+
 - ✅ Single source of truth
 - ✅ Easy to adjust behavior
 - ✅ Better testability (mock config)
@@ -781,9 +816,11 @@ if (conceptText.length > CONCEPT_CONFIG.validation.maxLength) { ... }
 ### 2.3 Service Extraction Details
 
 #### Service 1: ConceptCRUDService
+
 **Responsibility**: All CRUD operations for concepts
 **Size**: ~400 lines
 **Methods**:
+
 - `createConcept(conceptText)` - Create new concept
 - `updateConcept(conceptId, conceptText)` - Update existing concept
 - `deleteConcept(conceptId)` - Delete concept
@@ -791,6 +828,7 @@ if (conceptText.length > CONCEPT_CONFIG.validation.maxLength) { ... }
 - `getConceptById(conceptId)` - Retrieve single concept
 
 **Dependencies**:
+
 - `CharacterBuilderService` - Backend API calls
 - `ISafeEventDispatcher` - Dispatch domain events
 - `ILogger` - Logging
@@ -798,9 +836,11 @@ if (conceptText.length > CONCEPT_CONFIG.validation.maxLength) { ... }
 - `ConceptNotificationService` - User feedback
 
 **State Access**:
+
 - `context.state.getConcepts()` / `setConcepts()`
 
 **Example**:
+
 ```javascript
 export class ConceptCRUDService {
   #context;
@@ -810,23 +850,29 @@ export class ConceptCRUDService {
   }
 
   async createConcept(conceptText) {
-    this.#context.logger.info('Creating concept', { length: conceptText.length });
+    this.#context.logger.info('Creating concept', {
+      length: conceptText.length,
+    });
 
     try {
       // Create via service
-      const newConcept = await this.#context.characterBuilderService.createCharacterConcept({
-        concept: conceptText
-      });
+      const newConcept =
+        await this.#context.characterBuilderService.createCharacterConcept({
+          concept: conceptText,
+        });
 
       // Update local state
       const currentConcepts = this.#context.state.getConcepts();
       this.#context.state.setConcepts([
         ...currentConcepts,
-        { concept: newConcept, directionCount: 0 }
+        { concept: newConcept, directionCount: 0 },
       ]);
 
       // Dispatch event
-      this.#context.eventBus.dispatch('core:character_concept_created', newConcept);
+      this.#context.eventBus.dispatch(
+        'core:character_concept_created',
+        newConcept
+      );
 
       return newConcept;
     } catch (error) {
@@ -840,9 +886,11 @@ export class ConceptCRUDService {
 ```
 
 #### Service 2: ConceptModalManager
+
 **Responsibility**: Modal lifecycle management
 **Size**: ~350 lines
 **Methods**:
+
 - `showCreateModal()` - Show create concept modal
 - `showEditModal(conceptId)` - Show edit modal with existing data
 - `closeConceptModal()` - Close concept modal (with unsaved changes check)
@@ -852,15 +900,18 @@ export class ConceptCRUDService {
 - `animateModalExit(modal, onComplete)` - Exit animation
 
 **Dependencies**:
+
 - `ILogger` - Logging
 - `ConceptUtilities` - Escaping, formatting
 
 **State Access**:
+
 - `context.state.getEditingConceptId()` / `setEditingConceptId()`
 - `context.state.getHasUnsavedChanges()`
 - `context.dom.getElement()`
 
 **Example**:
+
 ```javascript
 export class ConceptModalManager {
   #context;
@@ -897,9 +948,11 @@ export class ConceptModalManager {
 ```
 
 #### Service 3: ConceptSearchEngine
+
 **Responsibility**: Search, filtering, fuzzy matching
 **Size**: ~450 lines
 **Methods**:
+
 - `handleSearch(searchTerm)` - Process search input
 - `filterConcepts(concepts, searchFilter)` - Apply filters
 - `fuzzyMatch(text, pattern)` - Fuzzy string matching
@@ -908,13 +961,16 @@ export class ConceptModalManager {
 - `updateSearchStatus(resultCount)` - Update status display
 
 **Dependencies**:
+
 - `ILogger` - Logging
 - `ConceptUtilities` - Escaping
 
 **State Access**:
+
 - `context.state.getSearchFilter()` / `setSearchFilter()`
 
 **Example**:
+
 ```javascript
 export class ConceptSearchEngine {
   #context;
@@ -932,7 +988,7 @@ export class ConceptSearchEngine {
     const searchTerms = searchFilter
       .toLowerCase()
       .split(/\s+/)
-      .filter(term => term.length > 0);
+      .filter((term) => term.length > 0);
 
     return concepts.filter(({ concept }) => {
       const conceptText = concept.concept || concept.text;
@@ -942,7 +998,7 @@ export class ConceptSearchEngine {
 
       const conceptTextLower = conceptText.toLowerCase();
 
-      return searchTerms.every(term => {
+      return searchTerms.every((term) => {
         // Direct match
         if (conceptTextLower.includes(term)) {
           return true;
@@ -967,7 +1023,7 @@ export class ConceptSearchEngine {
 }
 ```
 
-*(Continue for remaining 11 services...)*
+_(Continue for remaining 11 services...)_
 
 ---
 
@@ -976,6 +1032,7 @@ export class ConceptSearchEngine {
 ### Ticket Structure
 
 Each ticket follows the pattern:
+
 1. **Setup** - Create file, add boilerplate
 2. **Extract** - Move methods from controller
 3. **Test** - Update tests, verify behavior
@@ -985,10 +1042,13 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 1: Setup & Types
+
 **Goal**: Create foundation for refactoring
 
 **Tasks**:
+
 1. Create directory structure:
+
    ```bash
    mkdir -p src/domUI/characterConceptsManager/{core,ui,features,utils,types,errors,config}
    ```
@@ -1010,6 +1070,7 @@ Each ticket follows the pattern:
    ```
 
 **Success Criteria**:
+
 - ✅ All directories created
 - ✅ Types file compiles (no JSDoc errors)
 - ✅ Errors file exports all error classes
@@ -1021,9 +1082,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 2: Extract ConceptUtilities
+
 **Goal**: Extract pure utility functions (no dependencies)
 
 **Tasks**:
+
 1. Create `utils/ConceptUtilities.js`
 
 2. Move methods (13 total):
@@ -1037,6 +1100,7 @@ Each ticket follows the pattern:
    - Plus 6 more helper methods
 
 3. Convert to static class:
+
    ```javascript
    export class ConceptUtilities {
      static formatRelativeDate(date) { ... }
@@ -1046,6 +1110,7 @@ Each ticket follows the pattern:
    ```
 
 4. Update controller to delegate:
+
    ```javascript
    _formatRelativeDate(date) {
      return ConceptUtilities.formatRelativeDate(date);
@@ -1060,6 +1125,7 @@ Each ticket follows the pattern:
    ```
 
 **Success Criteria**:
+
 - ✅ `ConceptUtilities.js` < 300 lines
 - ✅ All utility methods moved
 - ✅ Unit tests created (90%+ coverage)
@@ -1071,9 +1137,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 3: Extract ConceptFormValidator
+
 **Goal**: Extract form validation logic
 
 **Tasks**:
+
 1. Create `ui/ConceptFormValidator.js`
 
 2. Move methods (5 total):
@@ -1084,6 +1152,7 @@ Each ticket follows the pattern:
    - Form validation helpers
 
 3. Create class with context:
+
    ```javascript
    export class ConceptFormValidator {
      #context;
@@ -1100,6 +1169,7 @@ Each ticket follows the pattern:
    ```
 
 4. Update facade:
+
    ```javascript
    _validateConceptForm() {
      return this.#formValidator.validateConceptForm();
@@ -1111,6 +1181,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptFormValidator.js` < 200 lines
 - ✅ All validation methods moved
 - ✅ Tests pass
@@ -1121,9 +1192,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 4: Extract ConceptNotificationService
+
 **Goal**: Extract notification/feedback logic
 
 **Tasks**:
+
 1. Create `ui/ConceptNotificationService.js`
 
 2. Move methods (6 total):
@@ -1143,6 +1216,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptNotificationService.js` < 250 lines
 - ✅ All notification methods moved
 - ✅ Tests pass
@@ -1152,9 +1226,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 5: Extract ConceptStatisticsCalculator
+
 **Goal**: Extract statistics calculation (pure logic)
 
 **Tasks**:
+
 1. Create `features/ConceptStatisticsCalculator.js`
 
 2. Move methods (2 total):
@@ -1162,6 +1238,7 @@ Each ticket follows the pattern:
    - `calculateAverageResults()`
 
 3. Make pure functions:
+
    ```javascript
    export class ConceptStatisticsCalculator {
      static calculateStatistics(conceptsData) {
@@ -1180,6 +1257,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptStatisticsCalculator.js` < 250 lines
 - ✅ Pure functions (no side effects)
 - ✅ 100% test coverage (pure logic)
@@ -1190,9 +1268,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 6: Extract ConceptStatisticsAnimator
+
 **Goal**: Extract statistics UI updates and animations
 
 **Tasks**:
+
 1. Create `features/ConceptStatisticsAnimator.js`
 
 2. Move methods (7 total):
@@ -1213,6 +1293,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptStatisticsAnimator.js` < 350 lines
 - ✅ Uses `ConceptStatisticsCalculator` for data
 - ✅ Tests pass (mock DOM elements)
@@ -1222,9 +1303,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 7: Extract ConceptCardRenderer
+
 **Goal**: Extract concept card rendering logic
 
 **Tasks**:
+
 1. Create `ui/ConceptCardRenderer.js`
 
 2. Move methods (5 total):
@@ -1243,6 +1326,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptCardRenderer.js` < 350 lines
 - ✅ Card rendering extracted
 - ✅ Tests pass
@@ -1252,9 +1336,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 8: Extract ConceptSearchEngine
+
 **Goal**: Extract search and filtering logic
 
 **Tasks**:
+
 1. Create `features/ConceptSearchEngine.js`
 
 2. Move methods (12 total):
@@ -1280,6 +1366,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptSearchEngine.js` < 500 lines
 - ✅ All search logic extracted
 - ✅ Fuzzy matching tested
@@ -1290,9 +1377,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 9: Extract ConceptModalManager
+
 **Goal**: Extract modal management
 
 **Tasks**:
+
 1. Create `ui/ConceptModalManager.js`
 
 2. Move methods (7 total):
@@ -1313,6 +1402,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptModalManager.js` < 400 lines
 - ✅ Modal logic extracted
 - ✅ Tests pass (mock animations)
@@ -1322,9 +1412,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 10: Extract ConceptOptimisticUpdateHandler
+
 **Goal**: Extract optimistic update logic
 
 **Tasks**:
+
 1. Create `features/ConceptOptimisticUpdateHandler.js`
 
 2. Move methods (4 total):
@@ -1342,6 +1434,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptOptimisticUpdateHandler.js` < 300 lines
 - ✅ Optimistic logic extracted
 - ✅ Tests pass
@@ -1351,9 +1444,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 11: Extract ConceptSessionManager
+
 **Goal**: Extract session management logic
 
 **Tasks**:
+
 1. Create `core/ConceptSessionManager.js`
 
 2. Move methods (10 total):
@@ -1377,6 +1472,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptSessionManager.js` < 350 lines
 - ✅ Session logic extracted
 - ✅ Tests pass
@@ -1386,9 +1482,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 12: Extract ConceptCrossTabSynchronizer
+
 **Goal**: Extract cross-tab sync logic
 
 **Tasks**:
+
 1. Create `features/ConceptCrossTabSynchronizer.js`
 
 2. Move methods (6 total):
@@ -1408,6 +1506,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptCrossTabSynchronizer.js` < 400 lines
 - ✅ Cross-tab logic extracted
 - ✅ Tests pass
@@ -1417,9 +1516,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 13: Extract ConceptKeyboardController
+
 **Goal**: Extract keyboard shortcut handling
 
 **Tasks**:
+
 1. Create `features/ConceptKeyboardController.js`
 
 2. Move methods (4 total):
@@ -1437,6 +1538,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptKeyboardController.js` < 350 lines
 - ✅ Keyboard logic extracted
 - ✅ Tests pass
@@ -1446,9 +1548,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 14: Extract ConceptEventCoordinator
+
 **Goal**: Extract domain event coordination
 
 **Tasks**:
+
 1. Create `core/ConceptEventCoordinator.js`
 
 2. Move methods (5 total):
@@ -1467,6 +1571,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptEventCoordinator.js` < 300 lines
 - ✅ Event handling extracted
 - ✅ Tests pass
@@ -1476,9 +1581,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 15: Extract ConceptCRUDService
+
 **Goal**: Extract core CRUD operations
 
 **Tasks**:
+
 1. Create `core/ConceptCRUDService.js`
 
 2. Move methods (7 total):
@@ -1499,6 +1606,7 @@ Each ticket follows the pattern:
 6. Run tests
 
 **Success Criteria**:
+
 - ✅ `ConceptCRUDService.js` < 450 lines
 - ✅ All CRUD logic extracted
 - ✅ Error handling robust
@@ -1509,9 +1617,11 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 16: Final Integration & Facade Cleanup
+
 **Goal**: Complete facade, verify all tests
 
 **Tasks**:
+
 1. Update `characterConceptsManagerController.js`:
    - Import all services
    - Initialize in constructor
@@ -1522,6 +1632,7 @@ Each ticket follows the pattern:
 2. Verify facade is < 250 lines
 
 3. Run FULL test suite:
+
    ```bash
    npm run test:unit
    npm run test:integration
@@ -1529,11 +1640,13 @@ Each ticket follows the pattern:
    ```
 
 4. Run linting:
+
    ```bash
    npx eslint src/domUI/characterConceptsManager*
    ```
 
 5. Verify no circular dependencies:
+
    ```bash
    npm run depcruise src/domUI/characterConceptsManager
    ```
@@ -1544,6 +1657,7 @@ Each ticket follows the pattern:
    - Update CLAUDE.md if needed
 
 **Success Criteria**:
+
 - ✅ Facade < 250 lines
 - ✅ ALL 27 test files pass (322 test cases)
 - ✅ No linting errors
@@ -1555,10 +1669,13 @@ Each ticket follows the pattern:
 ---
 
 ### Ticket 17: Cleanup & Validation
+
 **Goal**: Final verification and cleanup
 
 **Tasks**:
+
 1. Verify line counts:
+
    ```bash
    find src/domUI/characterConceptsManager -name "*.js" -exec wc -l {} \; | sort -rn
    ```
@@ -1574,6 +1691,7 @@ Each ticket follows the pattern:
 6. Create migration notes for future developers
 
 7. Commit with clear message:
+
    ```bash
    git add src/domUI/characterConceptsManager*
    git commit -m "refactor(domUI): Extract CharacterConceptsManagerController into 15 services
@@ -1586,6 +1704,7 @@ Each ticket follows the pattern:
    ```
 
 **Success Criteria**:
+
 - ✅ All files < 500 lines
 - ✅ No performance regression
 - ✅ No memory leaks
@@ -1600,49 +1719,49 @@ Each ticket follows the pattern:
 
 ### Refactoring Metrics
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Total Files** | 1 | 15 | +1400% modularity |
-| **Largest File** | 3,996 lines | 450 lines | -89% |
-| **Average File Size** | 3,996 lines | ~260 lines | -93% |
-| **Circular Dependencies** | N/A | 0 | ✅ |
-| **Test Files** | 27 | 27+ | Maintained + added |
-| **Test Coverage** | 80%+ | 80%+ | Maintained |
-| **Public API Changes** | 0 | 0 | ✅ Zero breaking changes |
+| Metric                    | Before      | After      | Improvement              |
+| ------------------------- | ----------- | ---------- | ------------------------ |
+| **Total Files**           | 1           | 15         | +1400% modularity        |
+| **Largest File**          | 3,996 lines | 450 lines  | -89%                     |
+| **Average File Size**     | 3,996 lines | ~260 lines | -93%                     |
+| **Circular Dependencies** | N/A         | 0          | ✅                       |
+| **Test Files**            | 27          | 27+        | Maintained + added       |
+| **Test Coverage**         | 80%+        | 80%+       | Maintained               |
+| **Public API Changes**    | 0           | 0          | ✅ Zero breaking changes |
 
 ### Execution Timeline
 
-| Ticket | Estimated Time | Cumulative |
-|--------|---------------|------------|
-| 1. Setup & Types | 1h | 1h |
-| 2. ConceptUtilities | 2h | 3h |
-| 3. ConceptFormValidator | 2h | 5h |
-| 4. ConceptNotificationService | 2h | 7h |
-| 5. ConceptStatisticsCalculator | 1.5h | 8.5h |
-| 6. ConceptStatisticsAnimator | 3h | 11.5h |
-| 7. ConceptCardRenderer | 3h | 14.5h |
-| 8. ConceptSearchEngine | 4h | 18.5h |
-| 9. ConceptModalManager | 3h | 21.5h |
-| 10. ConceptOptimisticUpdateHandler | 2h | 23.5h |
-| 11. ConceptSessionManager | 3h | 26.5h |
-| 12. ConceptCrossTabSynchronizer | 3h | 29.5h |
-| 13. ConceptKeyboardController | 2.5h | 32h |
-| 14. ConceptEventCoordinator | 2.5h | 34.5h |
-| 15. ConceptCRUDService | 4h | 38.5h |
-| 16. Final Integration | 3h | 41.5h |
-| 17. Cleanup & Validation | 2h | **43.5h** |
+| Ticket                             | Estimated Time | Cumulative |
+| ---------------------------------- | -------------- | ---------- |
+| 1. Setup & Types                   | 1h             | 1h         |
+| 2. ConceptUtilities                | 2h             | 3h         |
+| 3. ConceptFormValidator            | 2h             | 5h         |
+| 4. ConceptNotificationService      | 2h             | 7h         |
+| 5. ConceptStatisticsCalculator     | 1.5h           | 8.5h       |
+| 6. ConceptStatisticsAnimator       | 3h             | 11.5h      |
+| 7. ConceptCardRenderer             | 3h             | 14.5h      |
+| 8. ConceptSearchEngine             | 4h             | 18.5h      |
+| 9. ConceptModalManager             | 3h             | 21.5h      |
+| 10. ConceptOptimisticUpdateHandler | 2h             | 23.5h      |
+| 11. ConceptSessionManager          | 3h             | 26.5h      |
+| 12. ConceptCrossTabSynchronizer    | 3h             | 29.5h      |
+| 13. ConceptKeyboardController      | 2.5h           | 32h        |
+| 14. ConceptEventCoordinator        | 2.5h           | 34.5h      |
+| 15. ConceptCRUDService             | 4h             | 38.5h      |
+| 16. Final Integration              | 3h             | 41.5h      |
+| 17. Cleanup & Validation           | 2h             | **43.5h**  |
 
 **Total Estimated Effort**: ~44 hours (~5.5 days for one developer)
 
 ### Risk Assessment
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
-| Breaking existing tests | Low | High | Maintain facade, run tests after each ticket |
-| Circular dependencies | Low | Medium | Use dependency graph, run depcruise |
-| Performance regression | Low | Medium | Run performance tests, benchmark |
-| State synchronization bugs | Medium | High | Use context pattern, comprehensive tests |
-| Incomplete extraction | Low | High | Follow ticket checklist, verify line counts |
+| Risk                       | Likelihood | Impact | Mitigation                                   |
+| -------------------------- | ---------- | ------ | -------------------------------------------- |
+| Breaking existing tests    | Low        | High   | Maintain facade, run tests after each ticket |
+| Circular dependencies      | Low        | Medium | Use dependency graph, run depcruise          |
+| Performance regression     | Low        | Medium | Run performance tests, benchmark             |
+| State synchronization bugs | Medium     | High   | Use context pattern, comprehensive tests     |
+| Incomplete extraction      | Low        | High   | Follow ticket checklist, verify line counts  |
 
 ### Success Criteria Checklist
 
@@ -1664,12 +1783,14 @@ Each ticket follows the pattern:
 This refactoring plan provides a **safe, incremental path** to decompose the 3,996-line monolithic controller into **15 focused, testable services**. The facade pattern ensures **zero breaking changes**, while the extensive test coverage (27 files, 322 cases) provides a **safety net** for each extraction.
 
 The resulting architecture will be:
+
 - ✅ **Maintainable** - Each service < 500 lines, single responsibility
 - ✅ **Testable** - Clear dependencies, easy mocking
 - ✅ **Extensible** - New features can be added as new services
 - ✅ **Robust** - Typed errors, configuration, comprehensive tests
 
 **Next Steps**:
+
 1. Review and approve this specification
 2. Create GitHub issues from tickets 1-17
 3. Assign tickets to developers

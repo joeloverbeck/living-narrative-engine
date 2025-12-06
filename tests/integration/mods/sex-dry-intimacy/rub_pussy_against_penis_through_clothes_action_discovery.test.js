@@ -27,7 +27,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         return;
       }
 
-      console.log('🔧 Building action index with action:', rubPussyAgainstPenisAction.id);
+      console.log(
+        '🔧 Building action index with action:',
+        rubPussyAgainstPenisAction.id
+      );
       // Build the action index with the rub_pussy_against_penis_through_clothes action
       testEnv.actionIndex.buildIndex([rubPussyAgainstPenisAction]);
       console.log('✅ Action index built');
@@ -70,7 +73,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
     const { testEnv } = testFixture;
     const originalResolveSync = testEnv.unifiedScopeResolver.resolveSync;
     testEnv.unifiedScopeResolver.resolveSync = (scopeName, context) => {
-      if (scopeName === 'sex-dry-intimacy:actors_with_penis_facing_straddler_covered') {
+      if (
+        scopeName ===
+        'sex-dry-intimacy:actors_with_penis_facing_straddler_covered'
+      ) {
         console.log('\n🔍 SCOPE RESOLVER CALLED FOR:', scopeName);
         const actorId = context?.actor?.id;
         console.log('  Actor ID:', actorId);
@@ -93,9 +99,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         }
 
         // Filter partners who meet all criteria
-        const validPartners = closeness.partners.filter(partnerId => {
+        const validPartners = closeness.partners.filter((partnerId) => {
           console.log(`\n    🔍 Checking partner: ${partnerId}`);
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
           console.log(`      Partner entity:`, partner ? 'found' : 'NOT FOUND');
 
           // Check sitting_on component
@@ -107,14 +114,20 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
           // Check if partner is the straddling target
           if (partner.id !== straddling.target_id) {
-            console.log(`      ❌ Not straddling target (${partner.id} !== ${straddling.target_id})`);
+            console.log(
+              `      ❌ Not straddling target (${partner.id} !== ${straddling.target_id})`
+            );
             return false;
           }
           console.log('      ✅ Is straddling target');
 
           // Check if partner is NOT in facing_away targets
           const facingAway = actor?.components?.['positioning:facing_away'];
-          if (facingAway && Array.isArray(facingAway.targets) && facingAway.targets.includes(partner.id)) {
+          if (
+            facingAway &&
+            Array.isArray(facingAway.targets) &&
+            facingAway.targets.includes(partner.id)
+          ) {
             console.log('      ❌ Partner is in facing_away targets');
             return false;
           }
@@ -140,7 +153,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
               return false;
             }
 
-            console.log(`          Part has components:`, Object.keys(part.components || {}));
+            console.log(
+              `          Part has components:`,
+              Object.keys(part.components || {})
+            );
             const bodyPart = part.components?.['anatomy:part'];
             console.log(`          Body part component:`, bodyPart);
             if (!bodyPart) return false;
@@ -153,8 +169,13 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
             // Check children recursively
             if (bodyPart.children && Array.isArray(bodyPart.children)) {
-              console.log(`          Checking ${bodyPart.children.length} children:`, bodyPart.children);
-              return bodyPart.children.some(childId => hasPenisInSubtree(childId));
+              console.log(
+                `          Checking ${bodyPart.children.length} children:`,
+                bodyPart.children
+              );
+              return bodyPart.children.some((childId) =>
+                hasPenisInSubtree(childId)
+              );
             }
 
             console.log(`          No children to check`);
@@ -183,21 +204,27 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
           }
 
           // Check if any equipped clothing covers the penis socket
-          const isPenisCovered = Object.entries(equipment.equipped || {}).some(([slotName, layers]) => {
-            console.log(`        Checking slot: ${slotName}`, layers);
-            const slotMapping = slotMetadata.slotMappings?.[slotName];
-            if (!slotMapping || !slotMapping.coveredSockets) {
-              console.log(`          No slot mapping or covered sockets`);
-              return false;
+          const isPenisCovered = Object.entries(equipment.equipped || {}).some(
+            ([slotName, layers]) => {
+              console.log(`        Checking slot: ${slotName}`, layers);
+              const slotMapping = slotMetadata.slotMappings?.[slotName];
+              if (!slotMapping || !slotMapping.coveredSockets) {
+                console.log(`          No slot mapping or covered sockets`);
+                return false;
+              }
+
+              // Check if this slot covers penis and has clothing
+              const coversPenis = slotMapping.coveredSockets.includes('penis');
+              const hasClothing = Object.values(layers || {}).some(
+                (items) => items && items.length > 0
+              );
+
+              console.log(
+                `          Covers penis: ${coversPenis}, Has clothing: ${hasClothing}`
+              );
+              return coversPenis && hasClothing;
             }
-
-            // Check if this slot covers penis and has clothing
-            const coversPenis = slotMapping.coveredSockets.includes('penis');
-            const hasClothing = Object.values(layers || {}).some(items => items && items.length > 0);
-
-            console.log(`          Covers penis: ${coversPenis}, Has clothing: ${hasClothing}`);
-            return coversPenis && hasClothing;
-          });
+          );
 
           console.log('      Penis covered:', isPenisCovered);
           if (!isPenisCovered) {
@@ -214,7 +241,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
       }
 
       // Resolver for secondary target: topmost torso_lower clothing
-      if (scopeName === 'clothing:target_topmost_torso_lower_clothing_no_accessories') {
+      if (
+        scopeName ===
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      ) {
         console.log('\n🔍 SECONDARY SCOPE RESOLVER CALLED');
         console.log('  Context:', context);
 
@@ -250,7 +280,10 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
         for (const layer of layerPriority) {
           if (torsoLowerLayers[layer] && torsoLowerLayers[layer].length > 0) {
             const topmostItem = torsoLowerLayers[layer][0];
-            console.log(`  ✅ Found topmost item in ${layer} layer:`, topmostItem);
+            console.log(
+              `  ✅ Found topmost item in ${layer} layer:`,
+              topmostItem
+            );
             return { success: true, value: new Set([topmostItem]) };
           }
         }
@@ -260,7 +293,11 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
       }
 
       // Fall back to original resolution for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
   });
 
@@ -413,7 +450,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action appears
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeDefined();
     });
@@ -488,7 +526,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -565,7 +604,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -635,7 +675,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -697,7 +738,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -776,7 +818,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -857,7 +900,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });
@@ -949,7 +993,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action appears
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeDefined();
     });
@@ -1023,7 +1068,8 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action discov
 
       // Assert action does NOT appear
       const foundAction = actions.find(
-        (a) => a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
+        (a) =>
+          a.id === 'sex-dry-intimacy:rub_pussy_against_penis_through_clothes'
       );
       expect(foundAction).toBeUndefined();
     });

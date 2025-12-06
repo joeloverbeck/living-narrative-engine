@@ -20,12 +20,19 @@ export function createGoapPlannerMock(options = {}) {
   };
 
   const mock = {
-    plan: jest.fn().mockImplementation((actorId, goal, initialState, planOptions = {}) => {
-      if (typeof options.planImplementation === 'function') {
-        return options.planImplementation(actorId, goal, initialState, planOptions);
-      }
-      return state.planResult;
-    }),
+    plan: jest
+      .fn()
+      .mockImplementation((actorId, goal, initialState, planOptions = {}) => {
+        if (typeof options.planImplementation === 'function') {
+          return options.planImplementation(
+            actorId,
+            goal,
+            initialState,
+            planOptions
+          );
+        }
+        return state.planResult;
+      }),
     getLastFailure: jest.fn().mockImplementation(() => state.lastFailure),
     /**
      * Helper to override the next value returned by plan().

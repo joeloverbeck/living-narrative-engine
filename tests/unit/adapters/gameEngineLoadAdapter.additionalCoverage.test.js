@@ -15,7 +15,11 @@ describe('GameEngineLoadAdapter additional coverage', () => {
 
   it('propagates synchronous errors thrown by the engine', async () => {
     const error = new Error('synchronous failure');
-    const engine = { loadGame: jest.fn(() => { throw error; }) };
+    const engine = {
+      loadGame: jest.fn(() => {
+        throw error;
+      }),
+    };
     const adapter = new GameEngineLoadAdapter(engine);
 
     await expect(adapter.load('beta')).rejects.toBe(error);

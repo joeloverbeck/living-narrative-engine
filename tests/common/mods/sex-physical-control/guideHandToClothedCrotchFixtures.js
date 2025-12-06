@@ -40,24 +40,21 @@ export const GUIDE_HAND_TO_CLOTHED_CROTCH_ROOM_ID = 'amber_suite';
  *
  * @type {string}
  */
-export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_CLOTHING_ID =
-  `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_ID}_slacks`;
+export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_CLOTHING_ID = `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_ID}_slacks`;
 
 /**
  * Default groin identifier for the actor's anatomy tree.
  *
  * @type {string}
  */
-export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID =
-  `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_ID}_groin`;
+export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID = `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_ID}_groin`;
 
 /**
  * Default penis identifier for the actor's anatomy tree.
  *
  * @type {string}
  */
-export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID =
-  `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID}_penis`;
+export const GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_PENIS_ID = `${GUIDE_HAND_TO_CLOTHED_CROTCH_ACTOR_GROIN_ID}_penis`;
 
 /**
  * @typedef {object} GuideHandToClothedCrotchScenarioOptions

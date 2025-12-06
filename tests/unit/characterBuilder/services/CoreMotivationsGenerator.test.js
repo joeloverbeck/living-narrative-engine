@@ -1086,10 +1086,8 @@ describe('CoreMotivationsGenerator', () => {
     };
 
     const buildValidMotivation = (index = 1) => ({
-      coreDesire:
-        `Motivation ${index} core desire contains sufficient descriptive language to surpass validation requirements easily.`,
-      internalContradiction:
-        `Motivation ${index} internal contradiction clearly explains the nuanced conflict with more than enough characters to pass validation.`,
+      coreDesire: `Motivation ${index} core desire contains sufficient descriptive language to surpass validation requirements easily.`,
+      internalContradiction: `Motivation ${index} internal contradiction clearly explains the nuanced conflict with more than enough characters to pass validation.`,
       centralQuestion: `How will motivation ${index} reconcile its core dilemma?`,
     });
 
@@ -1119,8 +1117,12 @@ describe('CoreMotivationsGenerator', () => {
           getAIDecision: jest.fn(async () => rawResponse),
         },
         llmConfigManager: {
-          loadConfiguration: jest.fn(async () => ({ configId: 'fallback-config' })),
-          getActiveConfiguration: jest.fn(async () => ({ configId: 'active-config' })),
+          loadConfiguration: jest.fn(async () => ({
+            configId: 'fallback-config',
+          })),
+          getActiveConfiguration: jest.fn(async () => ({
+            configId: 'active-config',
+          })),
           setActiveConfiguration: jest.fn(async () => true),
         },
         eventBus: {
@@ -1139,10 +1141,9 @@ describe('CoreMotivationsGenerator', () => {
         llmConfigManager:
           overrides.llmConfigManager || dependencies.llmConfigManager,
         eventBus: overrides.eventBus || dependencies.eventBus,
-        tokenEstimator:
-          overrides.hasOwnProperty('tokenEstimator')
-            ? overrides.tokenEstimator
-            : dependencies.tokenEstimator,
+        tokenEstimator: overrides.hasOwnProperty('tokenEstimator')
+          ? overrides.tokenEstimator
+          : dependencies.tokenEstimator,
       };
     };
 
@@ -1172,7 +1173,10 @@ describe('CoreMotivationsGenerator', () => {
       expect(buildSpy).toHaveBeenCalledTimes(3);
       expect(dependencies.logger.debug).toHaveBeenCalledWith(
         'CoreMotivationsGenerator: Token estimation (TokenEstimator)',
-        expect.objectContaining({ method: 'TokenEstimator', estimatedTokens: 128 })
+        expect.objectContaining({
+          method: 'TokenEstimator',
+          estimatedTokens: 128,
+        })
       );
     });
 
@@ -1182,30 +1186,34 @@ describe('CoreMotivationsGenerator', () => {
 
       const result = await service.generate(validParams, { maxRetries: 0 });
 
-      const promptLength =
-        promptModule
-          .buildCoreMotivationsGenerationPrompt(
-            validParams.concept.concept,
-            validParams.direction,
-            validParams.clichés
-          )
-          .length;
+      const promptLength = promptModule.buildCoreMotivationsGenerationPrompt(
+        validParams.concept.concept,
+        validParams.direction,
+        validParams.clichés
+      ).length;
       const expectedTokens = Math.ceil(promptLength / 4);
 
       expect(result[0].metadata.promptTokens).toBe(expectedTokens);
       expect(result[0].metadata.responseTokens).toBeGreaterThan(0);
       expect(dependencies.logger.debug).toHaveBeenCalledWith(
         'CoreMotivationsGenerator: Token estimation (fallback)',
-        expect.objectContaining({ method: 'fallback', estimatedTokens: expectedTokens })
+        expect.objectContaining({
+          method: 'fallback',
+          estimatedTokens: expectedTokens,
+        })
       );
     });
 
     it('should recover with fallback estimation when the token estimator throws', async () => {
       const failingEstimator = {
-        estimateTokens: jest.fn().mockRejectedValue(new Error('estimation failed')),
+        estimateTokens: jest
+          .fn()
+          .mockRejectedValue(new Error('estimation failed')),
       };
 
-      const dependencies = createDependencies({ tokenEstimator: failingEstimator });
+      const dependencies = createDependencies({
+        tokenEstimator: failingEstimator,
+      });
       const service = new CoreMotivationsGenerator(dependencies);
 
       const result = await service.generate(validParams);
@@ -1215,14 +1223,11 @@ describe('CoreMotivationsGenerator', () => {
         'CoreMotivationsGenerator: Token estimation failed, using fallback',
         expect.objectContaining({ error: 'estimation failed' })
       );
-      const promptLength =
-        promptModule
-          .buildCoreMotivationsGenerationPrompt(
-            validParams.concept.concept,
-            validParams.direction,
-            validParams.clichés
-          )
-          .length;
+      const promptLength = promptModule.buildCoreMotivationsGenerationPrompt(
+        validParams.concept.concept,
+        validParams.direction,
+        validParams.clichés
+      ).length;
       const expectedPromptTokens = Math.ceil(promptLength / 4);
       const expectedResponseTokens = Math.ceil(
         JSON.stringify(buildValidResponse()).length / 4

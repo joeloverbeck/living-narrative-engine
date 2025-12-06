@@ -105,13 +105,18 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
     expect(missingPrimaryWarning).toBeDefined();
 
     const placeholderWarning = mockLogger.warn.mock.calls.find(
-      ([message]) => message === 'Template still contains placeholders after formatting:'
+      ([message]) =>
+        message === 'Template still contains placeholders after formatting:'
     );
     expect(placeholderWarning).toBeDefined();
     expect(placeholderWarning[1].remainingPlaceholders).toEqual(
-      expect.arrayContaining(['primary.name', 'primary.', 'primary.stats.value', 'primary.metadata'])
+      expect.arrayContaining([
+        'primary.name',
+        'primary.',
+        'primary.stats.value',
+        'primary.metadata',
+      ])
     );
-
   });
 
   it('resolves alias placeholders and normalizes complex values for resolved targets', () => {
@@ -189,11 +194,15 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
         payload?.targetKey === 'secondary'
     );
     expect(resolvedSecondary).toBeDefined();
-    expect(resolvedSecondary[1].placeholderValueMap['secondary.displayName']).toBe('Guardian');
-    expect(resolvedSecondary[1].placeholderValueMap['secondary.context.detail']).toBe(
-      'close friend'
-    );
-    expect(resolvedSecondary[1].placeholderValueMap['secondary.id']).toEqual({ raw: 'sec-1' });
+    expect(
+      resolvedSecondary[1].placeholderValueMap['secondary.displayName']
+    ).toBe('Guardian');
+    expect(
+      resolvedSecondary[1].placeholderValueMap['secondary.context.detail']
+    ).toBe('close friend');
+    expect(resolvedSecondary[1].placeholderValueMap['secondary.id']).toEqual({
+      raw: 'sec-1',
+    });
   });
 
   it('returns a combination error when dependent targets disappear after the initial guard', () => {
@@ -236,7 +245,9 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
     );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toContain('No valid target combinations could be generated');
+    expect(result.error).toContain(
+      'No valid target combinations could be generated'
+    );
   });
 
   it('expands multiple dependent keys with and without generateAllCombinations and skips incomplete combinations', () => {
@@ -266,13 +277,13 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
     const actionTemplate =
       'coordinate {leader.displayName} with {ally.displayName}, bring {tool.displayName} to {location.displayName} and confirm with {spotter.displayName}';
 
-    const expectations = (
-      template,
-      resolvedTargets,
-      generateAllCombinations
-    ) =>
+    const expectations = (template, resolvedTargets, generateAllCombinations) =>
       formatter.formatMultiTarget(
-        { id: 'test:multi-dependent', template, generateCombinations: generateAllCombinations },
+        {
+          id: 'test:multi-dependent',
+          template,
+          generateCombinations: generateAllCombinations,
+        },
         resolvedTargets,
         {},
         {},
@@ -312,14 +323,15 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
     expect(combinationsWithoutFlag.ok).toBe(true);
     expect(combinationsWithoutFlag.value.length).toBeGreaterThan(0);
 
-    const skippedCombinationDebug = mockLogger.debug.mock.calls.find(([message, payload]) =>
-      message === 'generateContextDependentCombinations:' &&
-      payload.primaryTargets.some((primary) => primary.id === 'leader-2')
+    const skippedCombinationDebug = mockLogger.debug.mock.calls.find(
+      ([message, payload]) =>
+        message === 'generateContextDependentCombinations:' &&
+        payload.primaryTargets.some((primary) => primary.id === 'leader-2')
     );
     expect(skippedCombinationDebug).toBeDefined();
 
-    const generatedCombinationsLog = mockLogger.debug.mock.calls.find(([message]) =>
-      message === 'Generated combinations:'
+    const generatedCombinationsLog = mockLogger.debug.mock.calls.find(
+      ([message]) => message === 'Generated combinations:'
     );
     expect(generatedCombinationsLog).toBeDefined();
 
@@ -339,6 +351,8 @@ describe('MultiTargetActionFormatter exhaustive branch coverage', () => {
     );
 
     expect(combinationsWithMissingTargets.ok).toBe(false);
-    expect(combinationsWithMissingTargets.error).toContain('No valid target combinations');
+    expect(combinationsWithMissingTargets.error).toContain(
+      'No valid target combinations'
+    );
   });
 });

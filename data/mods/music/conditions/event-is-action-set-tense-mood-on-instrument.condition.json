@@ -4,7 +4,7 @@
   "description": "Tense mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_tense_mood_on_instrument"
     ]
   }

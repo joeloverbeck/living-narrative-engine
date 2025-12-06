@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
 const IPV6_UTILS_PATH = '../../../src/utils/ipv6Utils.js';
 

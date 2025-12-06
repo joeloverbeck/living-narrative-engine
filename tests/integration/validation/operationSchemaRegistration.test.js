@@ -80,7 +80,8 @@ describe('Operation Schema Registration Validation', () => {
       const fs = await import('fs/promises');
 
       // Act - Check if schema file exists
-      const schemaExists = await fs.access('data/schemas/operations/autoMoveClosenessPartners.schema.json')
+      const schemaExists = await fs
+        .access('data/schemas/operations/autoMoveClosenessPartners.schema.json')
         .then(() => true)
         .catch(() => false);
 
@@ -95,8 +96,8 @@ describe('Operation Schema Registration Validation', () => {
         parameters: {
           actor_id: 'test-actor-1',
           destination_id: 'test-location-1',
-          previous_location_id: 'test-location-0'
-        }
+          previous_location_id: 'test-location-0',
+        },
       };
 
       // Act & Assert

@@ -59,7 +59,9 @@ describe('Activity Integration in Body Descriptions', () => {
     it('should have priority-based ordering available for activity composition', () => {
       const priorities = componentSchemas.map(({ id, schema }) => ({
         id,
-        priority: schema.dataSchema.properties.activityMetadata.properties.priority.default,
+        priority:
+          schema.dataSchema.properties.activityMetadata.properties.priority
+            .default,
       }));
 
       // Verify all priorities are in valid range
@@ -78,22 +80,29 @@ describe('Activity Integration in Body Descriptions', () => {
   describe('Template Structure for Body Description Integration', () => {
     it('should have templates with {actor} placeholder for entity substitution', () => {
       componentSchemas.forEach(({ id, schema }) => {
-        const template = schema.dataSchema.properties.activityMetadata.properties.template.default;
+        const template =
+          schema.dataSchema.properties.activityMetadata.properties.template
+            .default;
         expect(template).toContain('{actor}');
       });
     });
 
     it('should have templates with {target} placeholder or standalone text', () => {
       componentSchemas.forEach(({ id, schema }) => {
-        const template = schema.dataSchema.properties.activityMetadata.properties.template.default;
-        const targetRole = schema.dataSchema.properties.activityMetadata.properties.targetRole.default;
+        const template =
+          schema.dataSchema.properties.activityMetadata.properties.template
+            .default;
+        const targetRole =
+          schema.dataSchema.properties.activityMetadata.properties.targetRole
+            .default;
 
         // Verify targetRole maps to actual component property
         expect(schema.dataSchema.properties).toHaveProperty(targetRole);
 
         // Template should either have {target} or reference target implicitly
         const hasTargetPlaceholder = template.includes('{target}');
-        const isStandaloneDescription = !hasTargetPlaceholder && targetRole === 'followers';
+        const isStandaloneDescription =
+          !hasTargetPlaceholder && targetRole === 'followers';
 
         expect(hasTargetPlaceholder || isStandaloneDescription).toBe(true);
       });
@@ -101,26 +110,32 @@ describe('Activity Integration in Body Descriptions', () => {
 
     it('should have templates formatted for natural language composition', () => {
       componentSchemas.forEach(({ id, schema }) => {
-        const template = schema.dataSchema.properties.activityMetadata.properties.template.default;
+        const template =
+          schema.dataSchema.properties.activityMetadata.properties.template
+            .default;
 
         // Templates should be complete phrases starting with {actor}
         expect(template).toMatch(/^\{actor\}/);
 
         // Templates should use present progressive or present tense
-        expect(template).toMatch(/is (following|leading|holding|sitting|straddling|lying|bending|biting|kissing|hugging|performing|receiving|being|kneeling)/);
+        expect(template).toMatch(
+          /is (following|leading|holding|sitting|straddling|lying|bending|biting|kissing|hugging|performing|receiving|being|kneeling)/
+        );
       });
     });
   });
 
   describe('Priority Distribution for Activity Ordering', () => {
     it('should have distinct priority tiers for activity composition', () => {
-      const priorities = componentSchemas.map(({ schema }) =>
-        schema.dataSchema.properties.activityMetadata.properties.priority.default
+      const priorities = componentSchemas.map(
+        ({ schema }) =>
+          schema.dataSchema.properties.activityMetadata.properties.priority
+            .default
       );
 
-      const highPriority = priorities.filter(p => p >= 70); // Highly intimate/explicit
-      const mediumPriority = priorities.filter(p => p >= 60 && p < 70); // Moderate intimate
-      const lowPriority = priorities.filter(p => p < 60); // Relational states
+      const highPriority = priorities.filter((p) => p >= 70); // Highly intimate/explicit
+      const mediumPriority = priorities.filter((p) => p >= 60 && p < 70); // Moderate intimate
+      const lowPriority = priorities.filter((p) => p < 60); // Relational states
 
       // Should have activities across priority spectrum
       expect(highPriority.length).toBeGreaterThan(0);
@@ -129,8 +144,10 @@ describe('Activity Integration in Body Descriptions', () => {
     });
 
     it('should have unique or near-unique priorities for consistent ordering', () => {
-      const priorities = componentSchemas.map(({ schema }) =>
-        schema.dataSchema.properties.activityMetadata.properties.priority.default
+      const priorities = componentSchemas.map(
+        ({ schema }) =>
+          schema.dataSchema.properties.activityMetadata.properties.priority
+            .default
       );
 
       const uniquePriorities = new Set(priorities);
@@ -151,7 +168,9 @@ describe('Activity Integration in Body Descriptions', () => {
         expect(schema).toHaveProperty('dataSchema');
 
         // Verify schema reference
-        expect(schema.$schema).toBe('schema://living-narrative-engine/component.schema.json');
+        expect(schema.$schema).toBe(
+          'schema://living-narrative-engine/component.schema.json'
+        );
 
         // Verify component ID matches expected format
         expect(schema.id).toBe(id);
@@ -169,7 +188,9 @@ describe('Activity Integration in Body Descriptions', () => {
 
     it('should have shouldDescribeInActivity defaulting to true', () => {
       componentSchemas.forEach(({ schema }) => {
-        const shouldDescribe = schema.dataSchema.properties.activityMetadata.properties.shouldDescribeInActivity.default;
+        const shouldDescribe =
+          schema.dataSchema.properties.activityMetadata.properties
+            .shouldDescribeInActivity.default;
 
         // All activated components should default to true
         expect(shouldDescribe).toBe(true);
@@ -213,7 +234,9 @@ describe('Activity Integration in Body Descriptions', () => {
       ];
 
       // Sort by priority (highest first) as ActivityDescriptionService would
-      const sorted = [...activityComponents].sort((a, b) => b.priority - a.priority);
+      const sorted = [...activityComponents].sort(
+        (a, b) => b.priority - a.priority
+      );
 
       // Verify expected ordering
       expect(sorted[0].id).toBe('positioning:straddling_waist');
@@ -235,10 +258,14 @@ describe('Activity Integration in Body Descriptions', () => {
 
         // Metadata structure is stable
         expect(schema.dataSchema.properties.activityMetadata).toBeTruthy();
-        expect(typeof schema.dataSchema.properties.activityMetadata).toBe('object');
+        expect(typeof schema.dataSchema.properties.activityMetadata).toBe(
+          'object'
+        );
 
         // Priority is stable for cache key generation
-        const priority = schema.dataSchema.properties.activityMetadata.properties.priority.default;
+        const priority =
+          schema.dataSchema.properties.activityMetadata.properties.priority
+            .default;
         expect(typeof priority).toBe('number');
         expect(Number.isInteger(priority)).toBe(true);
       });
@@ -252,14 +279,17 @@ describe('Activity Integration in Body Descriptions', () => {
         'data/mods/positioning/components/kneeling_before.component.json'
       );
       const referenceData = JSON.parse(readFileSync(referencePath, 'utf8'));
-      const referenceMetadata = referenceData.dataSchema.properties.activityMetadata;
+      const referenceMetadata =
+        referenceData.dataSchema.properties.activityMetadata;
 
       componentSchemas.forEach(({ id, schema }) => {
         const metadata = schema.dataSchema.properties.activityMetadata;
 
         // Same top-level structure
         expect(metadata.type).toBe(referenceMetadata.type);
-        expect(metadata.additionalProperties).toBe(referenceMetadata.additionalProperties);
+        expect(metadata.additionalProperties).toBe(
+          referenceMetadata.additionalProperties
+        );
         expect(metadata.description).toBe(referenceMetadata.description);
 
         // Same property set
@@ -268,8 +298,10 @@ describe('Activity Integration in Body Descriptions', () => {
         expect(componentKeys).toEqual(referenceKeys);
 
         // Same property types
-        Object.keys(referenceMetadata.properties).forEach(key => {
-          expect(metadata.properties[key].type).toBe(referenceMetadata.properties[key].type);
+        Object.keys(referenceMetadata.properties).forEach((key) => {
+          expect(metadata.properties[key].type).toBe(
+            referenceMetadata.properties[key].type
+          );
         });
       });
     });

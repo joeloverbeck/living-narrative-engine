@@ -107,11 +107,15 @@ describe('Timing Performance', () => {
       console.log(
         `Without timing (median): ${medianNoTimingOverhead.toFixed(4)}ms`
       );
-      console.log(`95th percentile (with timing): ${p95TimingOverhead.toFixed(4)}ms`);
+      console.log(
+        `95th percentile (with timing): ${p95TimingOverhead.toFixed(4)}ms`
+      );
       console.log(
         `95th percentile (without timing): ${p95NoTimingOverhead.toFixed(4)}ms`
       );
-      console.log(`Sample size: ${iterations} iterations after ${warmupIterations} warm-up`);
+      console.log(
+        `Sample size: ${iterations} iterations after ${warmupIterations} warm-up`
+      );
       console.log('=====================================\n');
     });
   });

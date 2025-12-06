@@ -1,4 +1,11 @@
-import { describe, expect, it, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 const SCRIPT_PATH = '../../../validate-rule.js';
 
@@ -13,7 +20,9 @@ const SCRIPT_PATH = '../../../validate-rule.js';
 function loadScript({ valid, errors = [] } = { valid: true }) {
   jest.resetModules();
 
-  const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => undefined);
+  const exitSpy = jest
+    .spyOn(process, 'exit')
+    .mockImplementation(() => undefined);
   const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
 
   const validateMock = jest.fn().mockImplementation(() => valid);
@@ -43,7 +52,9 @@ describe('validate-rule.js CLI script', () => {
   });
 
   it('prints a success message when the rule validates', () => {
-    const { exitSpy, logSpy, validateMock, ajvCtorMock } = loadScript({ valid: true });
+    const { exitSpy, logSpy, validateMock, ajvCtorMock } = loadScript({
+      valid: true,
+    });
 
     const expectedSchema = require('../../../data/schemas/rule.schema.json');
     const expectedRule = require('../../../data/mods/items/rules/handle_take_from_container.rule.json');
@@ -59,7 +70,10 @@ describe('validate-rule.js CLI script', () => {
 
   it('reports validation failures and exits with status code 1', () => {
     const errors = [{ instancePath: '/slot', message: 'should be string' }];
-    const { exitSpy, logSpy, validateMock } = loadScript({ valid: false, errors });
+    const { exitSpy, logSpy, validateMock } = loadScript({
+      valid: false,
+      errors,
+    });
 
     const expectedSchema = require('../../../data/schemas/rule.schema.json');
     const expectedRule = require('../../../data/mods/items/rules/handle_take_from_container.rule.json');

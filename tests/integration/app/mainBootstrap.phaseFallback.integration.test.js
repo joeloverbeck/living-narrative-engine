@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const mockConfigureContainer = jest.fn();
 const mockTokens = { ILogger: Symbol('ILogger') };
@@ -149,8 +156,12 @@ describe('main.js bootstrap fallback coverage', () => {
       success: true,
       payload: { showLoadGameUI: undefined },
     });
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
     mockStages.startGameStage.mockResolvedValue({ success: true });
 
     mockStages.setupGlobalEventListenersStage.mockImplementation(async () => {
@@ -160,7 +171,10 @@ describe('main.js bootstrap fallback coverage', () => {
       return { success: false, error: stageError };
     });
 
-    global.fetch.mockResolvedValue({ ok: true, json: async () => ({ startWorld: 'ember-falls' }) });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ startWorld: 'ember-falls' }),
+    });
 
     const mainModule = await import('../../../src/main.js');
     setPhaseHelper = mainModule.__TEST_ONLY__setCurrentPhaseForError;
@@ -168,9 +182,12 @@ describe('main.js bootstrap fallback coverage', () => {
     await mainModule.bootstrapApp();
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiRefs, details, loggerArg] = mockDisplayFatalStartupError.mock.calls[0];
+    const [uiRefs, details, loggerArg] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(uiRefs).toBe(uiElements);
-    expect(details.phase).toBe('Bootstrap Orchestration - Application Logic/Runtime');
+    expect(details.phase).toBe(
+      'Bootstrap Orchestration - Application Logic/Runtime'
+    );
     expect(loggerArg).toBe(logger);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
@@ -203,13 +220,25 @@ describe('main.js bootstrap fallback coverage', () => {
     });
 
     mockStages.initializeGlobalConfigStage.mockResolvedValue({ success: true });
-    mockStages.initializeGameEngineStage.mockResolvedValue({ success: true, payload: {} });
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeGameEngineStage.mockResolvedValue({
+      success: true,
+      payload: {},
+    });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
     mockStages.startGameStage.mockResolvedValue({ success: true });
 
-    global.fetch.mockResolvedValue({ ok: true, json: async () => ({ startWorld: 'aurora-base' }) });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ startWorld: 'aurora-base' }),
+    });
 
     const mainModule = await import('../../../src/main.js');
     setPhaseHelper = mainModule.__TEST_ONLY__setCurrentPhaseForError;
@@ -217,9 +246,12 @@ describe('main.js bootstrap fallback coverage', () => {
     await mainModule.bootstrapApp();
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiRefs, details, loggerArg] = mockDisplayFatalStartupError.mock.calls[0];
+    const [uiRefs, details, loggerArg] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(uiRefs).toBe(uiElements);
-    expect(details.phase).toBe('Bootstrap Orchestration - Core Services Resolution');
+    expect(details.phase).toBe(
+      'Bootstrap Orchestration - Core Services Resolution'
+    );
     expect(loggerArg).toBeNull();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
@@ -238,16 +270,34 @@ describe('main.js bootstrap fallback coverage', () => {
       return { success: false, error: stageError };
     });
 
-    mockStages.setupDIContainerStage.mockResolvedValue({ success: true, payload: { resolve: jest.fn() } });
-    mockStages.resolveLoggerStage.mockResolvedValue({ success: true, payload: { logger: createLogger() } });
+    mockStages.setupDIContainerStage.mockResolvedValue({
+      success: true,
+      payload: { resolve: jest.fn() },
+    });
+    mockStages.resolveLoggerStage.mockResolvedValue({
+      success: true,
+      payload: { logger: createLogger() },
+    });
     mockStages.initializeGlobalConfigStage.mockResolvedValue({ success: true });
-    mockStages.initializeGameEngineStage.mockResolvedValue({ success: true, payload: {} });
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeGameEngineStage.mockResolvedValue({
+      success: true,
+      payload: {},
+    });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
     mockStages.startGameStage.mockResolvedValue({ success: true });
 
-    global.fetch.mockResolvedValue({ ok: true, json: async () => ({ startWorld: 'fallback' }) });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ startWorld: 'fallback' }),
+    });
 
     const mainModule = await import('../../../src/main.js');
     setPhaseHelper = mainModule.__TEST_ONLY__setCurrentPhaseForError;
@@ -255,9 +305,12 @@ describe('main.js bootstrap fallback coverage', () => {
     await mainModule.bootstrapApp();
 
     expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-    const [uiRefs, details, loggerArg] = mockDisplayFatalStartupError.mock.calls[0];
+    const [uiRefs, details, loggerArg] =
+      mockDisplayFatalStartupError.mock.calls[0];
     expect(uiRefs).toBeDefined();
-    expect(details.phase).toBe('Bootstrap Orchestration - UI Element Validation');
+    expect(details.phase).toBe(
+      'Bootstrap Orchestration - UI Element Validation'
+    );
     expect(loggerArg).toBeNull();
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
@@ -286,13 +339,25 @@ describe('main.js bootstrap fallback coverage', () => {
     });
 
     mockStages.initializeGlobalConfigStage.mockResolvedValue({ success: true });
-    mockStages.initializeGameEngineStage.mockResolvedValue({ success: true, payload: engine });
-    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
-    mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-    mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+    mockStages.initializeGameEngineStage.mockResolvedValue({
+      success: true,
+      payload: engine,
+    });
+    mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupMenuButtonListenersStage.mockResolvedValue({
+      success: true,
+    });
+    mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+      success: true,
+    });
     mockStages.startGameStage.mockResolvedValue({ success: true });
 
-    global.fetch.mockResolvedValue({ ok: true, json: async () => ({ startWorld: 'crystal-reef' }) });
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ startWorld: 'crystal-reef' }),
+    });
 
     const { bootstrapApp, beginGame } = await import('../../../src/main.js');
 
@@ -302,18 +367,30 @@ describe('main.js bootstrap fallback coverage', () => {
     engine.showLoadGameUI = jest.fn().mockResolvedValue(undefined);
 
     await expect(beginGame(true)).resolves.toBeUndefined();
-    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(engine, 'crystal-reef', logger);
+    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(
+      engine,
+      'crystal-reef',
+      logger
+    );
     expect(engine.showLoadGameUI).toHaveBeenCalledTimes(1);
     expect(mockStages.startGameStage).toHaveBeenCalledTimes(1);
 
     engine.showLoadGameUI = undefined;
 
     await expect(beginGame(true)).resolves.toBeUndefined();
-    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(engine, 'crystal-reef', logger);
+    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(
+      engine,
+      'crystal-reef',
+      logger
+    );
     expect(mockStages.startGameStage).toHaveBeenCalledTimes(2);
 
     await expect(beginGame(false)).resolves.toBeUndefined();
-    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(engine, 'crystal-reef', logger);
+    expect(mockStages.startGameStage).toHaveBeenLastCalledWith(
+      engine,
+      'crystal-reef',
+      logger
+    );
     expect(mockStages.startGameStage).toHaveBeenCalledTimes(3);
   });
 });

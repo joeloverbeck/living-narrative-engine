@@ -370,7 +370,10 @@ describe('GetDamageCapabilitiesHandler', () => {
     });
 
     it('should handle EntityRefObject when provided', () => {
-      const params = { ...baseParams, entity_ref: { entityId: 'ref-object-123' } };
+      const params = {
+        ...baseParams,
+        entity_ref: { entityId: 'ref-object-123' },
+      };
       mockEntityManager.getComponentData.mockReturnValue(null);
 
       handler.execute(params, executionContext);
@@ -393,11 +396,15 @@ describe('GetDamageCapabilitiesHandler', () => {
         { name: 'slashing', amount: 15, penetration: 5 },
         { name: 'piercing', amount: 10, penetration: 8 },
       ];
-      mockEntityManager.getComponentData.mockReturnValue({ entries: existingEntries });
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: existingEntries,
+      });
 
       handler.execute(baseParams, executionContext);
 
-      expect(executionContext.evaluationContext.context.damage_entries).toEqual(existingEntries);
+      expect(executionContext.evaluationContext.context.damage_entries).toEqual(
+        existingEntries
+      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Found existing damage capabilities')
       );
@@ -405,7 +412,9 @@ describe('GetDamageCapabilitiesHandler', () => {
 
     it('should not generate damage when existing capabilities found', () => {
       const existingEntries = [{ name: 'fire', amount: 20 }];
-      mockEntityManager.getComponentData.mockReturnValue({ entries: existingEntries });
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: existingEntries,
+      });
 
       handler.execute(baseParams, executionContext);
 
@@ -456,7 +465,8 @@ describe('GetDamageCapabilitiesHandler', () => {
 
         handler.execute(baseParams, executionContext);
 
-        const result = executionContext.evaluationContext.context.damage_entries;
+        const result =
+          executionContext.evaluationContext.context.damage_entries;
         expect(result[0].amount).toBe(expectedDamage);
 
         // Reset for next iteration
@@ -542,7 +552,8 @@ describe('GetDamageCapabilitiesHandler', () => {
       };
 
       // Set up context with the variable
-      executionContext.evaluationContext.context.thrown_item = 'item-entity-123';
+      executionContext.evaluationContext.context.thrown_item =
+        'item-entity-123';
       // Mock JSON Logic evaluation to return the entity ID
       mockJsonLogicService.evaluate.mockReturnValue('item-entity-123');
       mockEntityManager.getComponentData.mockReturnValue(null);
@@ -628,8 +639,12 @@ describe('GetDamageCapabilitiesHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.my_damage_results).toBeDefined();
-      expect(executionContext.evaluationContext.context.my_damage_results).toHaveLength(1);
+      expect(
+        executionContext.evaluationContext.context.my_damage_results
+      ).toBeDefined();
+      expect(
+        executionContext.evaluationContext.context.my_damage_results
+      ).toHaveLength(1);
     });
 
     it('should trim whitespace from output_variable', () => {
@@ -643,8 +658,12 @@ describe('GetDamageCapabilitiesHandler', () => {
 
       handler.execute(params, executionContext);
 
-      expect(executionContext.evaluationContext.context.trimmed_var).toBeDefined();
-      expect(executionContext.evaluationContext.context['  trimmed_var  ']).toBeUndefined();
+      expect(
+        executionContext.evaluationContext.context.trimmed_var
+      ).toBeDefined();
+      expect(
+        executionContext.evaluationContext.context['  trimmed_var  ']
+      ).toBeUndefined();
     });
 
     it('should log success message after storing', () => {
@@ -653,7 +672,9 @@ describe('GetDamageCapabilitiesHandler', () => {
         output_variable: 'damage_entries',
       };
       const existingEntries = [{ name: 'slashing', amount: 10 }];
-      mockEntityManager.getComponentData.mockReturnValue({ entries: existingEntries });
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: existingEntries,
+      });
 
       handler.execute(params, executionContext);
 
@@ -698,7 +719,9 @@ describe('GetDamageCapabilitiesHandler', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('Error retrieving damage capabilities'),
+          message: expect.stringContaining(
+            'Error retrieving damage capabilities'
+          ),
           details: expect.objectContaining({
             error: 'Database connection failed',
           }),
@@ -719,7 +742,9 @@ describe('GetDamageCapabilitiesHandler', () => {
       handler.execute(baseParams, executionContext);
 
       // Empty entries array still counts as "having capabilities"
-      expect(executionContext.evaluationContext.context.damage_entries).toEqual([]);
+      expect(executionContext.evaluationContext.context.damage_entries).toEqual(
+        []
+      );
     });
 
     it('should handle weight of exactly 0', () => {
@@ -753,8 +778,12 @@ describe('GetDamageCapabilitiesHandler', () => {
 
       handler.execute(baseParams, executionContext);
 
-      expect(executionContext.evaluationContext.context.damage_entries).not.toBe('old value');
-      expect(Array.isArray(executionContext.evaluationContext.context.damage_entries)).toBe(true);
+      expect(
+        executionContext.evaluationContext.context.damage_entries
+      ).not.toBe('old value');
+      expect(
+        Array.isArray(executionContext.evaluationContext.context.damage_entries)
+      ).toBe(true);
     });
 
     it('should handle primary/secondary/tertiary keywords via event payload', () => {

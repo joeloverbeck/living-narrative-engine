@@ -35,30 +35,43 @@ describe('ActivityCacheManager Integration', () => {
         jest.advanceTimersByTime(1);
       }
 
-      const internalCache = cacheManager._getInternalCacheForTesting('activities');
+      const internalCache =
+        cacheManager._getInternalCacheForTesting('activities');
       expect(internalCache.size).toBe(4);
       expect(internalCache.has('entity0:activity')).toBe(false);
       expect(internalCache.has('entity1:activity')).toBe(false);
 
       // Manual invalidation should remove existing entries.
-      expect(cacheManager.get('activities', 'entity5:activity')).toEqual({ index: 5 });
+      expect(cacheManager.get('activities', 'entity5:activity')).toEqual({
+        index: 5,
+      });
       cacheManager.invalidate('activities', 'entity5:activity');
-      expect(cacheManager.get('activities', 'entity5:activity')).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'entity5:activity')
+      ).toBeUndefined();
 
       // Invalidate all entries for a specific entity key fragment.
       cacheManager.set('activities', 'entity5:activity', { restored: true });
       cacheManager.invalidateAll('entity5');
-      expect(cacheManager.get('activities', 'entity5:activity')).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'entity5:activity')
+      ).toBeUndefined();
 
       // Clearing all caches should remove every entry.
-      cacheManager.set('activities', 'entity-special:activity', { important: true });
+      cacheManager.set('activities', 'entity-special:activity', {
+        important: true,
+      });
       cacheManager.clearAll();
-      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(0);
+      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(
+        0
+      );
 
       // TTL configuration from the first registration should still apply.
       cacheManager.set('activities', 'entity-late:activity', { fresh: true });
       jest.advanceTimersByTime(60);
-      expect(cacheManager.get('activities', 'entity-late:activity')).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'entity-late:activity')
+      ).toBeUndefined();
 
       // Accessing an unregistered cache returns undefined without throwing.
       expect(cacheManager.get('unknown-cache', 'any-key')).toBeUndefined();
@@ -78,11 +91,17 @@ describe('ActivityCacheManager Integration', () => {
 
       cacheManager.set('activities', 'actor:componentA', { stage: 'initial' });
       await eventBus.dispatch(COMPONENT_ADDED_ID, { entityId: 'actor' });
-      expect(cacheManager.get('activities', 'actor:componentA')).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'actor:componentA')
+      ).toBeUndefined();
 
       cacheManager.set('activities', 'actor:componentB', { stage: 'second' });
-      await eventBus.dispatch(COMPONENT_REMOVED_ID, { entity: { id: 'actor' } });
-      expect(cacheManager.get('activities', 'actor:componentB')).toBeUndefined();
+      await eventBus.dispatch(COMPONENT_REMOVED_ID, {
+        entity: { id: 'actor' },
+      });
+      expect(
+        cacheManager.get('activities', 'actor:componentB')
+      ).toBeUndefined();
 
       cacheManager.set('activities', 'actor:componentC', { stage: 'batch' });
       cacheManager.set('activities', 'partner:componentD', { stage: 'batch' });
@@ -93,12 +112,22 @@ describe('ActivityCacheManager Integration', () => {
           { instanceId: 'spectator' },
         ],
       });
-      expect(cacheManager.get('activities', 'actor:componentC')).toBeUndefined();
-      expect(cacheManager.get('activities', 'partner:componentD')).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'actor:componentC')
+      ).toBeUndefined();
+      expect(
+        cacheManager.get('activities', 'partner:componentD')
+      ).toBeUndefined();
 
-      cacheManager.set('activities', 'spectator:componentE', { stage: 'removed' });
-      await eventBus.dispatch(ENTITY_REMOVED_ID, { entity: { id: 'spectator' } });
-      expect(cacheManager.get('activities', 'spectator:componentE')).toBeUndefined();
+      cacheManager.set('activities', 'spectator:componentE', {
+        stage: 'removed',
+      });
+      await eventBus.dispatch(ENTITY_REMOVED_ID, {
+        entity: { id: 'spectator' },
+      });
+      expect(
+        cacheManager.get('activities', 'spectator:componentE')
+      ).toBeUndefined();
     } finally {
       cacheManager.destroy();
     }
@@ -114,15 +143,21 @@ describe('ActivityCacheManager Integration', () => {
       cacheManager.registerCache('activities', { ttl: 20, maxSize: 5 });
       cacheManager.set('activities', 'entity:stale', { payload: true });
 
-      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(1);
+      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(
+        1
+      );
 
       // Advance beyond the TTL but before the cleanup interval to ensure the entry remains until cleanup runs.
       jest.advanceTimersByTime(25);
-      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(1);
+      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(
+        1
+      );
 
       // Trigger the scheduled cleanup interval (30s) so expired entries are removed automatically.
       jest.advanceTimersByTime(30000);
-      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(0);
+      expect(cacheManager._getInternalCacheForTesting('activities').size).toBe(
+        0
+      );
     } finally {
       cacheManager.destroy();
       jest.useRealTimers();

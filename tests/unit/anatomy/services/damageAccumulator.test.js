@@ -187,7 +187,9 @@ describe('DamageAccumulator', () => {
       accumulator.recordEffect(session, null, 'bleeding');
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('recordEffect called with missing partId or effect')
+        expect.stringContaining(
+          'recordEffect called with missing partId or effect'
+        )
       );
     });
 
@@ -197,7 +199,9 @@ describe('DamageAccumulator', () => {
       accumulator.recordEffect(session, 'part-1', null);
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('recordEffect called with missing partId or effect')
+        expect.stringContaining(
+          'recordEffect called with missing partId or effect'
+        )
       );
     });
 
@@ -269,7 +273,10 @@ describe('DamageAccumulator', () => {
 
     it('should return copies of arrays', () => {
       const session = accumulator.createSession('entity-123');
-      accumulator.recordDamage(session, { partId: 'part-1', effectsTriggered: [] });
+      accumulator.recordDamage(session, {
+        partId: 'part-1',
+        effectsTriggered: [],
+      });
 
       const result = accumulator.finalize(session);
 
@@ -312,7 +319,10 @@ describe('DamageAccumulator', () => {
 
     it('should return true after recording damage', () => {
       const session = accumulator.createSession('entity-123');
-      accumulator.recordDamage(session, { partId: 'part-1', effectsTriggered: [] });
+      accumulator.recordDamage(session, {
+        partId: 'part-1',
+        effectsTriggered: [],
+      });
 
       expect(accumulator.hasEntries(session)).toBe(true);
     });

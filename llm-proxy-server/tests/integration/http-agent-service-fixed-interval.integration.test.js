@@ -121,7 +121,9 @@ describe('HttpAgentService integration in fixed-interval cleanup mode', () => {
       expect(Object.keys(agent.sockets ?? {})).not.toHaveLength(0);
       const statsDuringRequest = service.getStats();
       expect(statsDuringRequest.activeAgents).toBe(1);
-      expect(statsDuringRequest.agentDetails[0].activeSockets).toBeGreaterThan(0);
+      expect(statsDuringRequest.agentDetails[0].activeSockets).toBeGreaterThan(
+        0
+      );
 
       const enhancedDuringRequest = service.getEnhancedStats();
       expect(enhancedDuringRequest.estimatedMemoryUsageMB).toBeGreaterThan(0);
@@ -152,7 +154,9 @@ describe('HttpAgentService integration in fixed-interval cleanup mode', () => {
       }
 
       const enhancedStats = service.getEnhancedStats();
-      expect(enhancedStats.adaptiveCleanup.cleanupOperations).toBeGreaterThanOrEqual(0);
+      expect(
+        enhancedStats.adaptiveCleanup.cleanupOperations
+      ).toBeGreaterThanOrEqual(0);
 
       expect(service.getActiveAgentCount()).toBe(0);
     } finally {

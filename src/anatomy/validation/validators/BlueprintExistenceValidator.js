@@ -57,9 +57,8 @@ export class BlueprintExistenceValidator extends BaseValidator {
   async performValidation(recipe, _options, builder) {
     try {
       const blueprintId = recipe?.blueprintId;
-      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(
-        blueprintId
-      );
+      const blueprint =
+        await this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       if (!blueprint) {
         const blueprintNamespace =

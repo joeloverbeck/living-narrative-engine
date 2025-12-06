@@ -106,7 +106,11 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
   it('discovers, filters, and indexes actions using real collaborators', () => {
     // Invalid build input triggers warning coverage before the real index is populated.
     actionIndex.buildIndex('not-an-array');
-    expect(logger.warnLogs.some((entry) => entry.message.includes('allActionDefinitions must be an array'))).toBe(true);
+    expect(
+      logger.warnLogs.some((entry) =>
+        entry.message.includes('allActionDefinitions must be an array')
+      )
+    ).toBe(true);
 
     const actionDefinitions = [
       {
@@ -167,7 +171,10 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
       'core:armor': { rating: 'heavy' },
     });
     const traceWithArmor = new TraceProbe();
-    const restrictedCandidates = actionIndex.getCandidateActions(hero, traceWithArmor);
+    const restrictedCandidates = actionIndex.getCandidateActions(
+      hero,
+      traceWithArmor
+    );
     expect(restrictedCandidates.map((action) => action.id)).toEqual([
       'core:wave',
       'core:meditate',
@@ -185,7 +192,10 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
       'core:discipline': { rank: 3 },
     });
     const traceMissingComponents = new TraceProbe();
-    const minimalCandidates = actionIndex.getCandidateActions(hero, traceMissingComponents);
+    const minimalCandidates = actionIndex.getCandidateActions(
+      hero,
+      traceMissingComponents
+    );
     expect(minimalCandidates.map((action) => action.id)).toEqual([
       'core:wave',
       'core:meditate',
@@ -202,14 +212,19 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
       'core:discipline': { rank: 3 },
       'core:stealth': { level: 5 },
     });
-    const finalCandidates = actionIndex.getCandidateActions(hero, new TraceProbe());
+    const finalCandidates = actionIndex.getCandidateActions(
+      hero,
+      new TraceProbe()
+    );
 
     const discovered = finalCandidates.map(buildDiscoveredAction);
     discovered.push({ ...discovered[0] }); // Duplicate for deduplication branch coverage.
 
     const composites = indexingService.indexActions(hero.id, discovered);
     expect(composites).toHaveLength(finalCandidates.length);
-    expect(logger.infoLogs.some((entry) => entry.message.includes('suppressed'))).toBe(true);
+    expect(
+      logger.infoLogs.some((entry) => entry.message.includes('suppressed'))
+    ).toBe(true);
     expect(
       logger.debugLogs.some((entry) =>
         entry.message.includes('actions have visual properties')
@@ -221,16 +236,22 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
     expect(cachedList).toEqual(composites);
     const reused = indexingService.indexActions(hero.id, []);
     expect(reused).toEqual(composites);
-    expect(indexingService.resolve(hero.id, 2).actionId).toBe(composites[1].actionId);
+    expect(indexingService.resolve(hero.id, 2).actionId).toBe(
+      composites[1].actionId
+    );
 
     // Clearing cache removes indexed data.
     indexingService.clearActorCache(hero.id);
-    expect(() => indexingService.getIndexedList(hero.id)).toThrow(ActionIndexingError);
+    expect(() => indexingService.getIndexedList(hero.id)).toThrow(
+      ActionIndexingError
+    );
 
     // Rebuild cache then clear via beginTurn to hit lifecycle branch.
     indexingService.indexActions(hero.id, discovered);
     indexingService.beginTurn(hero.id);
-    expect(() => indexingService.resolve(hero.id, 1)).toThrow(ActionIndexingError);
+    expect(() => indexingService.resolve(hero.id, 1)).toThrow(
+      ActionIndexingError
+    );
 
     // Indexing with empty discovery after cache reset is safe.
     const emptyComposite = indexingService.indexActions(hero.id, []);
@@ -239,9 +260,15 @@ describe('ActionIndex ↔ ActionIndexingService integration', () => {
 
   it('enforces guardrails for invalid indexing requests', () => {
     expect(() => indexingService.indexActions('', [])).toThrow(TypeError);
-    expect(() => indexingService.indexActions(hero.id, null)).toThrow(TypeError);
-    expect(() => indexingService.getIndexedList(hero.id)).toThrow(ActionIndexingError);
-    expect(() => indexingService.resolve(hero.id, 99)).toThrow(ActionIndexingError);
+    expect(() => indexingService.indexActions(hero.id, null)).toThrow(
+      TypeError
+    );
+    expect(() => indexingService.getIndexedList(hero.id)).toThrow(
+      ActionIndexingError
+    );
+    expect(() => indexingService.resolve(hero.id, 99)).toThrow(
+      ActionIndexingError
+    );
 
     // Lifecycle helpers should tolerate repeated calls without throwing.
     indexingService.beginTurn(hero.id);

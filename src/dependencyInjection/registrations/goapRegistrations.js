@@ -42,14 +42,18 @@ export function registerGoapServices(container) {
     { lifecycle: 'singleton' }
   );
 
-  container.register(tokens.IGoapEventDispatcher, (c) => {
-    const eventBus = c.resolve(tokens.IEventBus);
-    const logger = c.resolve(tokens.ILogger);
-    const traceProbe = c.resolve(tokens.IGoapEventTraceProbe);
-    return createGoapEventDispatcher(eventBus, logger, {
-      probes: [traceProbe],
-    });
-  }, { lifecycle: 'singleton' });
+  container.register(
+    tokens.IGoapEventDispatcher,
+    (c) => {
+      const eventBus = c.resolve(tokens.IEventBus);
+      const logger = c.resolve(tokens.ILogger);
+      const traceProbe = c.resolve(tokens.IGoapEventTraceProbe);
+      return createGoapEventDispatcher(eventBus, logger, {
+        probes: [traceProbe],
+      });
+    },
+    { lifecycle: 'singleton' }
+  );
 
   // Context Assembly Service
   container.register(
@@ -64,9 +68,13 @@ export function registerGoapServices(container) {
   );
 
   // Parameter Resolution Service
-  container.register(tokens.IParameterResolutionService, ParameterResolutionService, {
-    dependencies: [tokens.IEntityManager, tokens.ILogger],
-  });
+  container.register(
+    tokens.IParameterResolutionService,
+    ParameterResolutionService,
+    {
+      dependencies: [tokens.IEntityManager, tokens.ILogger],
+    }
+  );
 
   // Knowledge Manager (GOAPIMPL-023-02)
   // Updates actor knowledge based on visibility (same location + visible flag)
@@ -79,7 +87,7 @@ export function registerGoapServices(container) {
           // from EntityManager which has it as a dependency
           const entityManager = container.resolve(tokens.IEntityManager);
           return entityManager.componentMutationService;
-        }
+        },
       },
       tokens.IEntityManager,
       tokens.ILogger,
@@ -91,13 +99,17 @@ export function registerGoapServices(container) {
   // Planning Effects Simulator
   // Pure state transformation service for GOAP planning
   // Predicts task effects without executing handlers or triggering side effects
-  container.register(tokens.IPlanningEffectsSimulator, PlanningEffectsSimulator, {
-    dependencies: [
-      tokens.IParameterResolutionService,
-      tokens.IContextAssemblyService,
-      tokens.ILogger,
-    ],
-  });
+  container.register(
+    tokens.IPlanningEffectsSimulator,
+    PlanningEffectsSimulator,
+    {
+      dependencies: [
+        tokens.IParameterResolutionService,
+        tokens.IContextAssemblyService,
+        tokens.ILogger,
+      ],
+    }
+  );
 
   // Refinement State Manager
   // IMPORTANT: transient lifecycle required to prevent shared state across concurrent actor refinements
@@ -121,16 +133,20 @@ export function registerGoapServices(container) {
   // IMPORTANT: Injects container for lazy resolution of IRefinementStateManager
   // State manager is transient, so each execute() call resolves a fresh instance
   // to prevent state leakage between concurrent actor refinements
-  container.register(tokens.IPrimitiveActionStepExecutor, PrimitiveActionStepExecutor, {
-    dependencies: [
-      tokens.IParameterResolutionService,
-      tokens.AppContainer, // Lazy resolution for transient state manager
-      tokens.OperationInterpreter,
-      tokens.ActionIndex,
-      tokens.GameDataRepository,
-      tokens.ILogger,
-    ],
-  });
+  container.register(
+    tokens.IPrimitiveActionStepExecutor,
+    PrimitiveActionStepExecutor,
+    {
+      dependencies: [
+        tokens.IParameterResolutionService,
+        tokens.AppContainer, // Lazy resolution for transient state manager
+        tokens.OperationInterpreter,
+        tokens.ActionIndex,
+        tokens.GameDataRepository,
+        tokens.ILogger,
+      ],
+    }
+  );
 
   // Conditional Step Executor
   // IMPORTANT: Self-reference pattern for recursive nested conditional handling
@@ -175,10 +191,18 @@ export function registerGoapServices(container) {
   // Numeric Constraint Evaluator
   // Evaluates numeric constraints (>=, <=, ==, <, >) for GOAP planning
   // Calculates distances from current values to constraint satisfaction
-  container.register(tokens.INumericConstraintEvaluator, NumericConstraintEvaluator, {
-    dependencies: [tokens.JsonLogicEvaluationService, tokens.ILogger, tokens.IGoapEventDispatcher],
-    lifecycle: 'singleton',
-  });
+  container.register(
+    tokens.INumericConstraintEvaluator,
+    NumericConstraintEvaluator,
+    {
+      dependencies: [
+        tokens.JsonLogicEvaluationService,
+        tokens.ILogger,
+        tokens.IGoapEventDispatcher,
+      ],
+      lifecycle: 'singleton',
+    }
+  );
 
   // Goal Distance Heuristic
   // Simple, fast heuristic that counts unsatisfied goal conditions
@@ -188,8 +212,8 @@ export function registerGoapServices(container) {
     dependencies: [
       tokens.JsonLogicEvaluationService,
       tokens.INumericConstraintEvaluator,
-      tokens.IPlanningEffectsSimulator,  // NEW: Required for task effect estimation
-      tokens.ILogger
+      tokens.IPlanningEffectsSimulator, // NEW: Required for task effect estimation
+      tokens.ILogger,
     ],
     lifecycle: 'singleton',
   });
@@ -259,14 +283,18 @@ export function registerGoapServices(container) {
   // Plan Invalidation Detector (GOAPIMPL-020)
   // Re-checks task preconditions before execution to detect when world state changes
   // invalidate the current plan. Enables responsive AI that adapts to dynamic environments.
-  container.register(tokens.IPlanInvalidationDetector, PlanInvalidationDetector, {
-    dependencies: [
-      tokens.ILogger,
-      tokens.JsonLogicEvaluationService,
-      tokens.IDataRegistry,
-    ],
-    lifecycle: 'singleton',
-  });
+  container.register(
+    tokens.IPlanInvalidationDetector,
+    PlanInvalidationDetector,
+    {
+      dependencies: [
+        tokens.ILogger,
+        tokens.JsonLogicEvaluationService,
+        tokens.IDataRegistry,
+      ],
+      lifecycle: 'singleton',
+    }
+  );
 
   // GOAP Controller (GOAPIMPL-021)
   // Orchestrates complete GOAP decision cycle: goal selection → planning → validation → refinement

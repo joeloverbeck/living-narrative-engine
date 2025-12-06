@@ -431,9 +431,7 @@ describe('Apparent Age Component Integration', () => {
       );
 
       // Exact ages should still be formatted precisely when valid
-      expect(AgeUtils.formatAgeDescription(exactAgeData)).toBe(
-        '42 years old'
-      );
+      expect(AgeUtils.formatAgeDescription(exactAgeData)).toBe('42 years old');
     });
 
     it('should surface validation errors for out-of-policy age ranges', () => {
@@ -453,9 +451,9 @@ describe('Apparent Age Component Integration', () => {
         'Age values must not exceed 200'
       );
 
-      expect(() => AgeUtils.validateAgeComponent(excessiveBestGuessData)).toThrow(
-        'bestGuess must be between 0 and 200'
-      );
+      expect(() =>
+        AgeUtils.validateAgeComponent(excessiveBestGuessData)
+      ).toThrow('bestGuess must be between 0 and 200');
     });
   });
 });

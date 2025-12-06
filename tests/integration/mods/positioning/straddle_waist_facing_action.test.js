@@ -38,7 +38,7 @@ function setupStraddleFacingScenario(
 
   target.components['positioning:sitting_on'] = {
     furniture_id: 'test:chair1',
-    spot_index: 0
+    spot_index: 0,
   };
 
   return { room, actor, chair, target };
@@ -68,8 +68,12 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     const actor = testFixture.entityManager.getEntityInstance('test:actor1');
     expect(actor.components['positioning:straddling_waist']).toBeDefined();
-    expect(actor.components['positioning:straddling_waist'].target_id).toBe('test:target1');
-    expect(actor.components['positioning:straddling_waist'].facing_away).toBe(false);
+    expect(actor.components['positioning:straddling_waist'].target_id).toBe(
+      'test:target1'
+    );
+    expect(actor.components['positioning:straddling_waist'].facing_away).toBe(
+      false
+    );
   });
 
   it('should lock actor movement', async () => {
@@ -80,9 +84,13 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     // LOCK_MOVEMENT operation handler adds movement lock via its implementation
     // Check that action executed successfully (movement lock is internal)
-    const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (face-to-face).');
+    expect(successEvent.payload.message).toBe(
+      "Alice sits on Bob's lap (face-to-face)."
+    );
   });
 
   it('should keep target sitting after straddling', async () => {
@@ -91,9 +99,12 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     await testFixture.executeAction('test:actor1', 'test:target1');
 
-    const targetActor = testFixture.entityManager.getEntityInstance('test:target1');
+    const targetActor =
+      testFixture.entityManager.getEntityInstance('test:target1');
     expect(targetActor.components['positioning:sitting_on']).toBeDefined();
-    expect(targetActor.components['positioning:sitting_on'].furniture_id).toBe('test:chair1');
+    expect(targetActor.components['positioning:sitting_on'].furniture_id).toBe(
+      'test:chair1'
+    );
   });
 
   it('should generate correct log message', async () => {
@@ -102,9 +113,13 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     await testFixture.executeAction('test:actor1', 'test:target1');
 
-    const successEvent = testFixture.events.find(e => e.eventType === 'core:display_successful_action_result');
+    const successEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:display_successful_action_result'
+    );
     expect(successEvent).toBeDefined();
-    expect(successEvent.payload.message).toBe('Alice sits on Bob\'s lap (face-to-face).');
+    expect(successEvent.payload.message).toBe(
+      "Alice sits on Bob's lap (face-to-face)."
+    );
   });
 
   it('should dispatch perceptible event', async () => {
@@ -119,7 +134,7 @@ describe('Straddle Waist Facing - Action Execution', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(
-      'Alice sits on Bob\'s lap (face-to-face).'
+      "Alice sits on Bob's lap (face-to-face)."
     );
     expect(perceptibleEvent.payload.locationId).toBe('bedroom');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
@@ -136,9 +151,13 @@ describe('Straddle Waist Facing - Action Execution', () => {
     const target = testFixture.entityManager.getEntityInstance('test:target1');
 
     expect(actor.components['positioning:closeness']).toBeDefined();
-    expect(actor.components['positioning:closeness'].partners).toContain('test:target1');
+    expect(actor.components['positioning:closeness'].partners).toContain(
+      'test:target1'
+    );
     expect(target.components['positioning:closeness']).toBeDefined();
-    expect(target.components['positioning:closeness'].partners).toContain('test:actor1');
+    expect(target.components['positioning:closeness'].partners).toContain(
+      'test:actor1'
+    );
   });
 
   it('should not add facing_away component', async () => {

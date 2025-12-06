@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
@@ -17,8 +24,12 @@ describe('dependencyUtils – near 100% coverage', () => {
   describe('assertPresent', () => {
     it('allows any defined value without throwing', () => {
       expect(() => dependencyUtils.assertPresent(0, 'zero ok')).not.toThrow();
-      expect(() => dependencyUtils.assertPresent(false, 'false ok')).not.toThrow();
-      expect(() => dependencyUtils.assertPresent('', 'empty string ok')).not.toThrow();
+      expect(() =>
+        dependencyUtils.assertPresent(false, 'false ok')
+      ).not.toThrow();
+      expect(() =>
+        dependencyUtils.assertPresent('', 'empty string ok')
+      ).not.toThrow();
     });
 
     it('logs and throws using provided error type when missing', () => {
@@ -26,7 +37,7 @@ describe('dependencyUtils – near 100% coverage', () => {
       class CustomError extends Error {}
 
       expect(() =>
-        dependencyUtils.assertPresent(undefined, 'missing', CustomError, logger),
+        dependencyUtils.assertPresent(undefined, 'missing', CustomError, logger)
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('missing');
     });
@@ -36,7 +47,12 @@ describe('dependencyUtils – near 100% coverage', () => {
       class CustomError extends Error {}
 
       expect(() =>
-        dependencyUtils.assertPresent(null, 'still missing', CustomError, logger),
+        dependencyUtils.assertPresent(
+          null,
+          'still missing',
+          CustomError,
+          logger
+        )
       ).toThrow(CustomError);
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
@@ -45,7 +61,9 @@ describe('dependencyUtils – near 100% coverage', () => {
   describe('assertFunction', () => {
     it('accepts objects that expose the function', () => {
       const dependency = { init: () => true };
-      expect(() => dependencyUtils.assertFunction(dependency, 'init', 'ready')).not.toThrow();
+      expect(() =>
+        dependencyUtils.assertFunction(dependency, 'init', 'ready')
+      ).not.toThrow();
     });
 
     it('logs and throws when property is not a function', () => {
@@ -53,7 +71,13 @@ describe('dependencyUtils – near 100% coverage', () => {
       class CustomError extends Error {}
 
       expect(() =>
-        dependencyUtils.assertFunction({ init: 123 }, 'init', 'bad fn', CustomError, logger),
+        dependencyUtils.assertFunction(
+          { init: 123 },
+          'init',
+          'bad fn',
+          CustomError,
+          logger
+        )
       ).toThrow(CustomError);
       expect(logger.error).toHaveBeenCalledWith('bad fn');
     });
@@ -67,8 +91,8 @@ describe('dependencyUtils – near 100% coverage', () => {
           'init',
           'non-callable method',
           InvalidArgumentError,
-          logger,
-        ),
+          logger
+        )
       ).toThrow(InvalidArgumentError);
     });
   });
@@ -78,7 +102,11 @@ describe('dependencyUtils – near 100% coverage', () => {
       const dependency = { start: jest.fn(), stop: jest.fn() };
 
       expect(() =>
-        dependencyUtils.assertMethods(dependency, ['start', 'stop'], 'methods ok'),
+        dependencyUtils.assertMethods(
+          dependency,
+          ['start', 'stop'],
+          'methods ok'
+        )
       ).not.toThrow();
     });
 
@@ -91,8 +119,8 @@ describe('dependencyUtils – near 100% coverage', () => {
           ['run'],
           'missing run',
           InvalidArgumentError,
-          logger,
-        ),
+          logger
+        )
       ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith('missing run');
     });
@@ -101,23 +129,25 @@ describe('dependencyUtils – near 100% coverage', () => {
   describe('assertValidId', () => {
     it('passes through for non-blank ids', () => {
       const logger = { error: jest.fn() };
-      expect(() => dependencyUtils.assertValidId('entity-1', 'Context', logger)).not.toThrow();
+      expect(() =>
+        dependencyUtils.assertValidId('entity-1', 'Context', logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
     it('reports details and throws for invalid ids', () => {
       const logger = { error: jest.fn() };
 
-      expect(() => dependencyUtils.assertValidId('   ', 'Context', logger)).toThrow(
-        InvalidArgumentError,
-      );
+      expect(() =>
+        dependencyUtils.assertValidId('   ', 'Context', logger)
+      ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith(
         "Context: Invalid ID '   '. Expected non-blank string.",
         expect.objectContaining({
           receivedId: '   ',
           receivedType: 'string',
           context: 'Context',
-        }),
+        })
       );
     });
   });
@@ -126,7 +156,12 @@ describe('dependencyUtils – near 100% coverage', () => {
     it('accepts valid strings', () => {
       const logger = { error: jest.fn() };
       expect(() =>
-        dependencyUtils.assertNonBlankString('value', 'param', 'Context', logger),
+        dependencyUtils.assertNonBlankString(
+          'value',
+          'param',
+          'Context',
+          logger
+        )
       ).not.toThrow();
     });
 
@@ -134,7 +169,7 @@ describe('dependencyUtils – near 100% coverage', () => {
       const logger = { error: jest.fn() };
 
       expect(() =>
-        dependencyUtils.assertNonBlankString('', 'param', 'Context', logger),
+        dependencyUtils.assertNonBlankString('', 'param', 'Context', logger)
       ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith(
         "Context: Invalid param ''. Expected non-blank string.",
@@ -143,7 +178,7 @@ describe('dependencyUtils – near 100% coverage', () => {
           receivedType: 'string',
           parameterName: 'param',
           context: 'Context',
-        }),
+        })
       );
     });
   });
@@ -151,20 +186,20 @@ describe('dependencyUtils – near 100% coverage', () => {
   describe('validateDependency', () => {
     it('uses console error when logger is missing or lacks error', () => {
       expect(() => dependencyUtils.validateDependency(null, 'Service')).toThrow(
-        InvalidArgumentError,
+        InvalidArgumentError
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Missing required dependency: Service.',
+        'Missing required dependency: Service.'
       );
 
       consoleErrorSpy.mockClear();
       expect(() =>
         dependencyUtils.validateDependency(undefined, 'OtherService', {
           error: undefined,
-        }),
+        })
       ).toThrow(InvalidArgumentError);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Missing required dependency: OtherService.',
+        'Missing required dependency: OtherService.'
       );
     });
 
@@ -172,10 +207,12 @@ describe('dependencyUtils – near 100% coverage', () => {
       const logger = { error: jest.fn() };
 
       expect(() =>
-        dependencyUtils.validateDependency({}, 'Callable', logger, { isFunction: true }),
+        dependencyUtils.validateDependency({}, 'Callable', logger, {
+          isFunction: true,
+        })
       ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith(
-        "Dependency 'Callable' must be a function, but got object.",
+        "Dependency 'Callable' must be a function, but got object."
       );
     });
 
@@ -185,10 +222,10 @@ describe('dependencyUtils – near 100% coverage', () => {
       expect(() =>
         dependencyUtils.validateDependency({}, 'Service', logger, {
           requiredMethods: ['run'],
-        }),
+        })
       ).toThrow(InvalidArgumentError);
       expect(logger.error).toHaveBeenCalledWith(
-        "Invalid or missing method 'run' on dependency 'Service'.",
+        "Invalid or missing method 'run' on dependency 'Service'."
       );
     });
 
@@ -199,7 +236,7 @@ describe('dependencyUtils – near 100% coverage', () => {
       expect(() =>
         dependencyUtils.validateDependency(dependency, 'Service', logger, {
           requiredMethods: ['run', 'stop'],
-        }),
+        })
       ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
@@ -208,7 +245,9 @@ describe('dependencyUtils – near 100% coverage', () => {
   describe('validateDependencies', () => {
     it('returns immediately when no iterable is provided', () => {
       const logger = { error: jest.fn() };
-      expect(() => dependencyUtils.validateDependencies(null, logger)).not.toThrow();
+      expect(() =>
+        dependencyUtils.validateDependencies(null, logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
@@ -219,7 +258,9 @@ describe('dependencyUtils – near 100% coverage', () => {
         { dependency: jest.fn(), name: 'Second', isFunction: true },
       ];
 
-      expect(() => dependencyUtils.validateDependencies(entries, logger)).not.toThrow();
+      expect(() =>
+        dependencyUtils.validateDependencies(entries, logger)
+      ).not.toThrow();
       expect(logger.error).not.toHaveBeenCalled();
     });
 
@@ -228,10 +269,10 @@ describe('dependencyUtils – near 100% coverage', () => {
       const specs = [{ dependency: {}, name: 'Broken', isFunction: true }];
 
       expect(() => dependencyUtils.validateDependencies(specs, logger)).toThrow(
-        InvalidArgumentError,
+        InvalidArgumentError
       );
       expect(logger.error).toHaveBeenCalledWith(
-        "Dependency 'Broken' must be a function, but got object.",
+        "Dependency 'Broken' must be a function, but got object."
       );
     });
   });

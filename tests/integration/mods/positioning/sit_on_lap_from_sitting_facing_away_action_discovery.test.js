@@ -84,7 +84,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
     const conditionDefinitionMock =
       testFixture.testEnv.dataRegistry.getConditionDefinition;
     if (conditionDefinitionMock && conditionDefinitionMock.mock) {
-      conditionDefinitionMock.mockImplementation(conditionId => {
+      conditionDefinitionMock.mockImplementation((conditionId) => {
         if (conditionLookup[conditionId]) {
           return conditionLookup[conditionId];
         }
@@ -127,10 +127,13 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
         }
 
         // Filter partners where BOTH actor and partner have sitting_on
-        const bothSittingPartners = closeness.partners.filter(partnerId => {
-          const partner = testFixture.entityManager.getEntityInstance(partnerId);
-          const partnerHasSittingOn = !!partner?.components?.['positioning:sitting_on'];
-          const actorHasSittingOn = !!actor?.components?.['positioning:sitting_on'];
+        const bothSittingPartners = closeness.partners.filter((partnerId) => {
+          const partner =
+            testFixture.entityManager.getEntityInstance(partnerId);
+          const partnerHasSittingOn =
+            !!partner?.components?.['positioning:sitting_on'];
+          const actorHasSittingOn =
+            !!actor?.components?.['positioning:sitting_on'];
           return partnerHasSittingOn && actorHasSittingOn;
         });
 
@@ -138,7 +141,11 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
       }
 
       // Fall back to original resolution for other scopes
-      return originalResolveSync.call(testEnv.unifiedScopeResolver, scopeName, context);
+      return originalResolveSync.call(
+        testEnv.unifiedScopeResolver,
+        scopeName,
+        context
+      );
     };
   });
 
@@ -204,7 +211,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
       expect(actions).toBeDefined();
       expect(actions.length).toBeGreaterThan(0);
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
       );
       expect(sitOnLapAction).toBeDefined();
     });
@@ -271,7 +278,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
 
       // Assert: Action is available (both target1 and target2 should be in scope)
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
       );
       expect(sitOnLapAction).toBeDefined();
       // Note: Exact target verification would require inspecting resolved scope values
@@ -314,7 +321,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
 
       // Assert: Action does NOT appear
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
       );
       expect(sitOnLapAction).toBeUndefined();
     });
@@ -354,7 +361,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
 
       // Assert: Action does NOT appear
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
       );
       expect(sitOnLapAction).toBeUndefined();
     });
@@ -401,7 +408,7 @@ describe('sit_on_lap_from_sitting_facing_away action discovery - Integration Tes
 
       // Assert: Action does NOT appear
       const sitOnLapAction = actions.find(
-        a => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
+        (a) => a.id === 'positioning:sit_on_lap_from_sitting_facing_away'
       );
       expect(sitOnLapAction).toBeUndefined();
     });

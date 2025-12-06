@@ -37,7 +37,9 @@ describe('items:pick_up_item action definition', () => {
       'items:items_at_location'
     );
     expect(pickUpItemAction.targets.primary.placeholder).toBe('item');
-    expect(pickUpItemAction.targets.primary.description).toBe('Item to pick up');
+    expect(pickUpItemAction.targets.primary.description).toBe(
+      'Item to pick up'
+    );
   });
 
   it('should have grabbing prerequisite', () => {

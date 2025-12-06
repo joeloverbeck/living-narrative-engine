@@ -321,7 +321,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
           dispatchCount++;
           if (dispatchCount < 50) {
             // Create nested dispatch to increase recursion depth
-            await bus.dispatch('core:component_added', { componentId: `nested-${dispatchCount}` });
+            await bus.dispatch('core:component_added', {
+              componentId: `nested-${dispatchCount}`,
+            });
           }
         });
 
@@ -352,7 +354,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
 
         // Now in normal mode, a simple component add should NOT hit recursion limits
         // If counters weren't reset, we'd still be at depth ~50 from batch mode
-        await bus.dispatch('core:component_added', { componentId: 'normal-mode' });
+        await bus.dispatch('core:component_added', {
+          componentId: 'normal-mode',
+        });
 
         // Should succeed without recursion errors
         expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -381,7 +385,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
 
         // Create some events
         for (let i = 0; i < 20; i++) {
-          await bus.dispatch('core:component_added', { componentId: `first-${i}` });
+          await bus.dispatch('core:component_added', {
+            componentId: `first-${i}`,
+          });
         }
 
         // Exit batch mode (should reset counters)
@@ -400,7 +406,9 @@ describe('EventBus - Context-Aware Infinite Loop Detection', () => {
 
         // Create more events - should work fine since counters were reset
         for (let i = 0; i < 20; i++) {
-          await bus.dispatch('core:component_added', { componentId: `second-${i}` });
+          await bus.dispatch('core:component_added', {
+            componentId: `second-${i}`,
+          });
         }
 
         // Should not have any recursion errors

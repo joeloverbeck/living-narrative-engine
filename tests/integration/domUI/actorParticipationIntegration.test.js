@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import ActorParticipationController from '../../../src/domUI/actorParticipationController.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
@@ -7,7 +14,7 @@ import { ENGINE_READY_UI } from '../../../src/constants/eventIds.js';
 import {
   ACTOR_COMPONENT_ID,
   NAME_COMPONENT_ID,
-  PARTICIPATION_COMPONENT_ID
+  PARTICIPATION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
 // Recording event dispatcher for integration testing
@@ -72,7 +79,10 @@ describe('ActorParticipationController - Integration Tests', () => {
         </body>
       </html>
     `;
-    dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+    dom = new JSDOM(html, {
+      runScripts: 'dangerously',
+      pretendToBeVisual: true,
+    });
     document = dom.window.document;
     window = dom.window;
 
@@ -116,7 +126,9 @@ describe('ActorParticipationController - Integration Tests', () => {
 
     // Add participation component if specified
     if (participating !== null) {
-      await entityManager.addComponent(id, PARTICIPATION_COMPONENT_ID, { participating });
+      await entityManager.addComponent(id, PARTICIPATION_COMPONENT_ID, {
+        participating,
+      });
     }
 
     return id; // Return the entity ID
@@ -154,10 +166,13 @@ describe('ActorParticipationController - Integration Tests', () => {
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
 
       // Wait for async update
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Verify component updated using correct API
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
     });
 
@@ -183,11 +198,16 @@ describe('ActorParticipationController - Integration Tests', () => {
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
 
       // Wait for async update
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Verify component created using correct API
-      expect(entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)).toBe(true);
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      expect(
+        entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)
+      ).toBe(true);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
     });
 
@@ -212,15 +232,21 @@ describe('ActorParticipationController - Integration Tests', () => {
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
       await flushMicrotasks();
 
-      let participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      let participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
 
       // Toggle back on
       checkbox.checked = true;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
-      participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(true);
 
       // Toggle off again
@@ -228,7 +254,10 @@ describe('ActorParticipationController - Integration Tests', () => {
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
       await flushMicrotasks();
 
-      participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
     });
 
@@ -252,7 +281,10 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Verify change persisted
-      let participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      let participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
 
       // Trigger panel refresh by dispatching ENGINE_READY_UI again
@@ -260,11 +292,16 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Verify checkbox still reflects persisted state
-      const refreshedCheckbox = document.querySelector('input[data-actor-id="actor4"]');
+      const refreshedCheckbox = document.querySelector(
+        'input[data-actor-id="actor4"]'
+      );
       expect(refreshedCheckbox.checked).toBe(false);
 
       // Verify component still has correct value
-      participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
     });
   });
@@ -290,9 +327,15 @@ describe('ActorParticipationController - Integration Tests', () => {
       expect(checkboxes.length).toBe(3);
 
       // Verify states
-      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(true);
-      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(false);
-      expect(document.querySelector('[data-actor-id="actor3"]').checked).toBe(true); // Default
+      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(
+        true
+      );
+      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(
+        false
+      );
+      expect(document.querySelector('[data-actor-id="actor3"]').checked).toBe(
+        true
+      ); // Default
     });
 
     it('should handle all actors participating', async () => {
@@ -312,7 +355,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       const checkboxes = document.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes.length).toBe(3);
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         expect(checkbox.checked).toBe(true);
       });
     });
@@ -334,7 +377,7 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       const checkboxes = document.querySelectorAll('input[type="checkbox"]');
       expect(checkboxes.length).toBe(3);
-      checkboxes.forEach(checkbox => {
+      checkboxes.forEach((checkbox) => {
         expect(checkbox.checked).toBe(false);
       });
     });
@@ -358,12 +401,21 @@ describe('ActorParticipationController - Integration Tests', () => {
       const checkbox2 = document.querySelector('[data-actor-id="actor2"]');
       checkbox2.checked = true;
       checkbox2.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Verify only actor2 changed
-      expect(entityManager.getComponentData('actor1', PARTICIPATION_COMPONENT_ID).participating).toBe(true);
-      expect(entityManager.getComponentData('actor2', PARTICIPATION_COMPONENT_ID).participating).toBe(true);
-      expect(entityManager.getComponentData('actor3', PARTICIPATION_COMPONENT_ID).participating).toBe(true);
+      expect(
+        entityManager.getComponentData('actor1', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(true);
+      expect(
+        entityManager.getComponentData('actor2', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(true);
+      expect(
+        entityManager.getComponentData('actor3', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(true);
 
       // Toggle actor1 and actor3
       const checkbox1 = document.querySelector('[data-actor-id="actor1"]');
@@ -371,16 +423,25 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       checkbox1.checked = false;
       checkbox1.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       checkbox3.checked = false;
       checkbox3.dispatchEvent(new window.Event('change', { bubbles: true }));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Verify selective updates
-      expect(entityManager.getComponentData('actor1', PARTICIPATION_COMPONENT_ID).participating).toBe(false);
-      expect(entityManager.getComponentData('actor2', PARTICIPATION_COMPONENT_ID).participating).toBe(true);
-      expect(entityManager.getComponentData('actor3', PARTICIPATION_COMPONENT_ID).participating).toBe(false);
+      expect(
+        entityManager.getComponentData('actor1', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(false);
+      expect(
+        entityManager.getComponentData('actor2', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(true);
+      expect(
+        entityManager.getComponentData('actor3', PARTICIPATION_COMPONENT_ID)
+          .participating
+      ).toBe(false);
     });
   });
 
@@ -450,9 +511,15 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(true);
-      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(false);
-      expect(document.querySelector('[data-actor-id="actor3"]').checked).toBe(true);
+      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(
+        true
+      );
+      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(
+        false
+      );
+      expect(document.querySelector('[data-actor-id="actor3"]').checked).toBe(
+        true
+      );
     });
 
     it('should handle multiple ENGINE_READY_UI events correctly', async () => {
@@ -485,8 +552,12 @@ describe('ActorParticipationController - Integration Tests', () => {
       expect(checkboxes.length).toBe(2);
 
       // Verify states
-      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(true);
-      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(false);
+      expect(document.querySelector('[data-actor-id="actor1"]').checked).toBe(
+        true
+      );
+      expect(document.querySelector('[data-actor-id="actor2"]').checked).toBe(
+        false
+      );
     });
   });
 
@@ -511,7 +582,10 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Verify persistence through direct entity manager access
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation).toBeDefined();
       expect(participation.participating).toBe(false);
     });
@@ -536,7 +610,10 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Retrieve via getComponentData
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation).toBeDefined();
       expect(participation.participating).toBe(true);
     });
@@ -561,9 +638,12 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Verify data structure
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation).toEqual({
-        participating: false
+        participating: false,
       });
       expect(typeof participation.participating).toBe('boolean');
     });
@@ -586,7 +666,9 @@ describe('ActorParticipationController - Integration Tests', () => {
       expect(checkbox.checked).toBe(true);
 
       // Should not have component yet
-      expect(entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)).toBe(false);
+      expect(
+        entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)
+      ).toBe(false);
 
       // Toggle should create component
       checkbox.checked = false;
@@ -594,8 +676,13 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       // Now should have component
-      expect(entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)).toBe(true);
-      const participation = entityManager.getComponentData(actorId, PARTICIPATION_COMPONENT_ID);
+      expect(
+        entityManager.hasComponent(actorId, PARTICIPATION_COMPONENT_ID)
+      ).toBe(true);
+      const participation = entityManager.getComponentData(
+        actorId,
+        PARTICIPATION_COMPONENT_ID
+      );
       expect(participation.participating).toBe(false);
     });
   });
@@ -619,7 +706,8 @@ describe('ActorParticipationController - Integration Tests', () => {
 
       entityManager = new SimpleEntityManager();
       const loadError = new Error('Load failure');
-      const originalGetEntities = entityManager.getEntitiesWithComponent.bind(entityManager);
+      const originalGetEntities =
+        entityManager.getEntitiesWithComponent.bind(entityManager);
       entityManager.getEntitiesWithComponent = jest.fn(() => {
         throw loadError;
       });
@@ -701,8 +789,12 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      const checkbox = document.querySelector('input[data-actor-id="edge-actor"]');
-      const label = document.querySelector('label[for="actor-participation-edge-actor"]');
+      const checkbox = document.querySelector(
+        'input[data-actor-id="edge-actor"]'
+      );
+      const label = document.querySelector(
+        'label[for="actor-participation-edge-actor"]'
+      );
 
       label.dispatchEvent(new window.Event('change', { bubbles: true }));
 
@@ -719,16 +811,21 @@ describe('ActorParticipationController - Integration Tests', () => {
       await flushMicrotasks();
 
       expect(
-        entityManager.getComponentData('edge-actor', PARTICIPATION_COMPONENT_ID).participating
+        entityManager.getComponentData('edge-actor', PARTICIPATION_COMPONENT_ID)
+          .participating
       ).toBe(false);
     });
 
     it('reverts checkbox and reports error when participation updates fail', async () => {
       await createTestActor('failure-actor', 'Broken Toggle', true);
 
-      const originalAddComponent = entityManager.addComponent.bind(entityManager);
+      const originalAddComponent =
+        entityManager.addComponent.bind(entityManager);
       entityManager.addComponent = jest.fn(async (id, type, data) => {
-        if (type === PARTICIPATION_COMPONENT_ID && data.participating === false) {
+        if (
+          type === PARTICIPATION_COMPONENT_ID &&
+          data.participating === false
+        ) {
           return false;
         }
         return SimpleEntityManager.prototype.addComponent.call(
@@ -750,7 +847,9 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      const checkbox = document.querySelector('input[data-actor-id="failure-actor"]');
+      const checkbox = document.querySelector(
+        'input[data-actor-id="failure-actor"]'
+      );
 
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
@@ -768,7 +867,10 @@ describe('ActorParticipationController - Integration Tests', () => {
       expect(statusEl.textContent).toBe('Error updating participation');
       expect(statusEl.className).toBe('status-message status-error');
       expect(
-        entityManager.getComponentData('failure-actor', PARTICIPATION_COMPONENT_ID).participating
+        entityManager.getComponentData(
+          'failure-actor',
+          PARTICIPATION_COMPONENT_ID
+        ).participating
       ).toBe(true);
 
       entityManager.addComponent = originalAddComponent;
@@ -777,7 +879,8 @@ describe('ActorParticipationController - Integration Tests', () => {
     it('handles entity manager exceptions when updating participation', async () => {
       await createTestActor('exception-actor', 'Exception', true);
 
-      const originalAddComponent = entityManager.addComponent.bind(entityManager);
+      const originalAddComponent =
+        entityManager.addComponent.bind(entityManager);
       entityManager.addComponent = jest.fn(async () => {
         throw new Error('mutation failure');
       });
@@ -793,7 +896,9 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      const checkbox = document.querySelector('input[data-actor-id="exception-actor"]');
+      const checkbox = document.querySelector(
+        'input[data-actor-id="exception-actor"]'
+      );
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
       await flushMicrotasks();
@@ -827,13 +932,17 @@ describe('ActorParticipationController - Integration Tests', () => {
         await eventBus.dispatch(ENGINE_READY_UI, {});
         await flushMicrotasks();
 
-        const checkbox = document.querySelector('input[data-actor-id="status-actor"]');
+        const checkbox = document.querySelector(
+          'input[data-actor-id="status-actor"]'
+        );
         checkbox.checked = false;
         checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
         await flushMicrotasks();
 
         const statusEl = document.querySelector('#actor-participation-status');
-        expect(statusEl.textContent).toBe('Disabled participation for status-actor');
+        expect(statusEl.textContent).toBe(
+          'Disabled participation for status-actor'
+        );
         expect(statusEl.className).toBe('status-message status-success');
 
         jest.advanceTimersByTime(3000);
@@ -857,7 +966,10 @@ describe('ActorParticipationController - Integration Tests', () => {
           </body>
         </html>
       `;
-      dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+      dom = new JSDOM(html, {
+        runScripts: 'dangerously',
+        pretendToBeVisual: true,
+      });
       document = dom.window.document;
       window = dom.window;
       global.document = document;
@@ -865,11 +977,21 @@ describe('ActorParticipationController - Integration Tests', () => {
       documentContext = new DocumentContext(document);
 
       entityManager = new SimpleEntityManager();
-      await entityManager.addComponent('actor-no-status', ACTOR_COMPONENT_ID, {});
-      await entityManager.addComponent('actor-no-status', NAME_COMPONENT_ID, { text: 'No Status' });
-      await entityManager.addComponent('actor-no-status', PARTICIPATION_COMPONENT_ID, {
-        participating: true,
+      await entityManager.addComponent(
+        'actor-no-status',
+        ACTOR_COMPONENT_ID,
+        {}
+      );
+      await entityManager.addComponent('actor-no-status', NAME_COMPONENT_ID, {
+        text: 'No Status',
       });
+      await entityManager.addComponent(
+        'actor-no-status',
+        PARTICIPATION_COMPONENT_ID,
+        {
+          participating: true,
+        }
+      );
 
       controller = new ActorParticipationController({
         eventBus,
@@ -882,7 +1004,9 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      const checkbox = document.querySelector('input[data-actor-id="actor-no-status"]');
+      const checkbox = document.querySelector(
+        'input[data-actor-id="actor-no-status"]'
+      );
       checkbox.checked = false;
       checkbox.dispatchEvent(new window.Event('change', { bubbles: true }));
       await flushMicrotasks();
@@ -910,10 +1034,14 @@ describe('ActorParticipationController - Integration Tests', () => {
       await eventBus.dispatch(ENGINE_READY_UI, {});
       await flushMicrotasks();
 
-      expect(document.querySelectorAll('input[type="checkbox"]').length).toBe(1);
+      expect(document.querySelectorAll('input[type="checkbox"]').length).toBe(
+        1
+      );
 
       await entityManager.addComponent('new-actor', ACTOR_COMPONENT_ID, {});
-      await entityManager.addComponent('new-actor', NAME_COMPONENT_ID, { text: 'New Actor' });
+      await entityManager.addComponent('new-actor', NAME_COMPONENT_ID, {
+        text: 'New Actor',
+      });
 
       controller.refresh();
 
@@ -934,7 +1062,8 @@ describe('ActorParticipationController - Integration Tests', () => {
         entityManager,
       });
 
-      const originalGetEntities = entityManager.getEntitiesWithComponent.bind(entityManager);
+      const originalGetEntities =
+        entityManager.getEntitiesWithComponent.bind(entityManager);
       entityManager.getEntitiesWithComponent = jest.fn(() => {
         throw loadError;
       });

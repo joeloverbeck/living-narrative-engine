@@ -119,18 +119,18 @@ describe('BREAK_BIDIRECTIONAL_CLOSENESS Integration', () => {
       expect(fixture.getComponent(actor, 'relation:extra')).toBeNull();
       expect(fixture.getComponent(target, 'relation:extra')).toBeNull();
     });
-    
+
     it('should handle missing components gracefully', async () => {
       fixture = await setupFixture();
-      
-      const actor = fixture.createEntity({ 
-        id: 'actor-3', 
-        components: { 'core:actor': { name: 'Actor 3' } } 
+
+      const actor = fixture.createEntity({
+        id: 'actor-3',
+        components: { 'core:actor': { name: 'Actor 3' } },
       });
       const target = fixture.createEntity({ id: 'target-3', components: {} });
 
       // Should not throw error
-       await fixture.executeOperation('BREAK_BIDIRECTIONAL_CLOSENESS', {
+      await fixture.executeOperation('BREAK_BIDIRECTIONAL_CLOSENESS', {
         event: {
           payload: { actorId: actor, targetId: target },
         },
@@ -139,7 +139,7 @@ describe('BREAK_BIDIRECTIONAL_CLOSENESS Integration', () => {
           target_component_type: 'relation:missing_too',
         },
       });
-      
+
       // Still valid entities
       expect(fixture.getComponent(actor, 'core:actor')).toBeTruthy();
     });

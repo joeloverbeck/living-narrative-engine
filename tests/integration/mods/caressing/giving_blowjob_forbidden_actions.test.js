@@ -172,7 +172,8 @@ describe('caressing actions forbidden when giving blowjob', () => {
 
         if (
           hairAvailable &&
-          ((facingEachOther || actorBehind) && !actorKneelingBeforePartner)
+          (facingEachOther || actorBehind) &&
+          !actorKneelingBeforePartner
         ) {
           acc.add(partnerId);
           return acc;
@@ -199,11 +200,15 @@ describe('caressing actions forbidden when giving blowjob', () => {
     scopeResolver.resolveSync = (scopeName, context) => {
       if (
         scopeName === 'caressing:close_actors_facing_each_other' ||
-        scopeName === 'caressing:close_actors_facing_each_other_or_behind_target'
+        scopeName ===
+          'caressing:close_actors_facing_each_other_or_behind_target'
       ) {
         return {
           success: true,
-          value: getFacingTargets(context, scopeName.includes('or_behind_target')),
+          value: getFacingTargets(
+            context,
+            scopeName.includes('or_behind_target')
+          ),
         };
       }
 
@@ -226,7 +231,10 @@ describe('caressing actions forbidden when giving blowjob', () => {
   };
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('caressing', 'caressing:cup_chin');
+    testFixture = await ModTestFixture.forAction(
+      'caressing',
+      'caressing:cup_chin'
+    );
   });
 
   afterEach(() => {

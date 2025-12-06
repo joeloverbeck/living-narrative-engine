@@ -1,6 +1,7 @@
 # AWAEXTTURENDSTAROB-008: Update Tests to Use TestEnvironmentProvider
 
 ## Metadata
+
 - **Ticket ID:** AWAEXTTURENDSTAROB-008
 - **Phase:** 2 - Standard Patterns
 - **Priority:** High
@@ -15,6 +16,7 @@ Refactor existing tests to use `TestEnvironmentProvider` injection instead of `p
 ## Files to Modify
 
 ### Test Files
+
 - `tests/unit/turns/states/awaitingExternalTurnEndState.environmentConfig.test.js`
   - All test cases using `process.env.NODE_ENV`
   - Import `TestEnvironmentProvider`
@@ -27,6 +29,7 @@ Refactor existing tests to use `TestEnvironmentProvider` injection instead of `p
 ## Changes Required
 
 ### 1. Update environmentConfig.test.js - Add Import
+
 ```javascript
 // ADD to imports:
 import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
@@ -36,6 +39,7 @@ import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvir
 ```
 
 ### 2. Update environmentConfig.test.js - Remove Environment Setup
+
 ```javascript
 // REMOVE beforeEach/afterEach environment management:
 beforeEach(() => {
@@ -58,6 +62,7 @@ afterEach(() => {
 ```
 
 ### 3. Update Test 1: Production Environment
+
 ```javascript
 // BEFORE:
 it('should use 30-second timeout in production environment', async () => {
@@ -75,7 +80,9 @@ it('should use 30-second timeout in production environment', async () => {
 // AFTER:
 it('should use 30-second timeout in production environment', async () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -92,11 +99,14 @@ it('should use 30-second timeout in production environment', async () => {
 ```
 
 ### 4. Update Test 2: Development Environment
+
 ```javascript
 // AFTER:
 it('should use 3-second timeout in development environment', async () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -112,11 +122,15 @@ it('should use 3-second timeout in development environment', async () => {
 ```
 
 ### 5. Update Test 3: Test Environment (Now Just Another Development Test)
+
 ```javascript
 // AFTER (can keep as-is with provider for consistency):
 it('should use 3-second timeout in test environment', async () => {
   // Arrange
-  const testProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false, IS_TEST: true });
+  const testProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+    IS_TEST: true,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -132,6 +146,7 @@ it('should use 3-second timeout in test environment', async () => {
 ```
 
 ### 6. Update Test 4: Undefined NODE_ENV → Default Behavior Test
+
 ```javascript
 // BEFORE:
 it('should use 3-second timeout when NODE_ENV is undefined in Jest environment', async () => {
@@ -150,7 +165,10 @@ it('should use 3-second timeout when NODE_ENV is undefined in Jest environment',
 it('should use 3-second timeout when NODE_ENV is undefined in Jest environment', async () => {
   // Arrange
   // Use TestEnvironmentProvider to explicitly test Jest environment behavior
-  const testProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false, IS_TEST: true });
+  const testProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+    IS_TEST: true,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -166,11 +184,14 @@ it('should use 3-second timeout when NODE_ENV is undefined in Jest environment',
 ```
 
 ### 7. Update Tests 5-6: Explicit Override Tests
+
 ```javascript
 // AFTER (minimal change - just add provider for consistency):
 it('should use explicit timeout over production default', async () => {
   // Arrange
-  const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+  const productionProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: true,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -187,7 +208,9 @@ it('should use explicit timeout over production default', async () => {
 
 it('should use explicit timeout over development default', async () => {
   // Arrange
-  const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+  const developmentProvider = new TestEnvironmentProvider({
+    IS_PRODUCTION: false,
+  });
   const mockSetTimeout = jest.fn(() => 'timeout-id');
 
   // Act
@@ -204,6 +227,7 @@ it('should use explicit timeout over development default', async () => {
 ```
 
 ### 8. Update production.integration.test.js
+
 ```javascript
 // ADD to imports:
 import { TestEnvironmentProvider } from '../../../../src/configuration/TestEnvironmentProvider.js';
@@ -219,7 +243,9 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 
   test('schedules production timeout and cleans up using default timer helpers', async () => {
     // Arrange
-    const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
+    const productionProvider = new TestEnvironmentProvider({
+      IS_PRODUCTION: true,
+    });
 
     // ... existing mock setup ...
 
@@ -243,6 +269,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ## Out of Scope
 
 ### Must NOT Change
+
 - Production code (already updated in Ticket 007)
 - New integration test files (Tickets 009-011)
 - Regression tests (keep using real NODE_ENV for regression verification)
@@ -250,6 +277,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 - Other unrelated tests
 
 ### Must NOT Add
+
 - New test cases (covered in other tickets)
 - Provider validation tests (Ticket 009)
 - Property-based tests (Phase 3)
@@ -257,6 +285,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ## Acceptance Criteria
 
 ### AC1: No process.env.NODE_ENV Manipulation
+
 ```javascript
 // GIVEN: Updated test files
 // WHEN: Code review performed
@@ -268,6 +297,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ```
 
 ### AC2: TestEnvironmentProvider Used in All Environment Tests
+
 ```javascript
 // GIVEN: Tests requiring specific environments
 // WHEN: Tests executed
@@ -278,6 +308,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ```
 
 ### AC3: Tests More Isolated
+
 ```javascript
 // GIVEN: Multiple tests in same file
 // WHEN: Tests run in any order
@@ -289,6 +320,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ```
 
 ### AC4: All Tests Still Pass
+
 ```javascript
 // GIVEN: Updated test files
 // WHEN: npm run test:unit && npm run test:integration
@@ -300,6 +332,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ```
 
 ### AC5: Tests More Readable
+
 ```javascript
 // GIVEN: Updated test code
 // WHEN: Developer reads test
@@ -311,6 +344,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ```
 
 ### AC6: Regression Tests Unchanged
+
 ```javascript
 // GIVEN: Regression test files (Ticket 006)
 // WHEN: Those tests remain as-is
@@ -323,18 +357,21 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ## Invariants
 
 ### Test Quality Standards (Must Maintain)
+
 1. **Isolation**: Each test independent, no shared state
 2. **Fast**: All tests complete quickly (<500ms total)
 3. **Clear**: Provider injection makes environment explicit
 4. **Complete**: All environment scenarios still tested
 
 ### Coverage Requirements (Must Maintain or Improve)
+
 1. **Branches**: ≥95% for configuration logic
 2. **Functions**: 100% for timeout resolution
 3. **Lines**: ≥95% for validation
 4. **Edge Cases**: All scenarios still covered
 
 ### Project Standards (Must Follow)
+
 1. **TestBed Usage**: Continue using createTestBed()
 2. **Mock Patterns**: jest.fn() for dependencies
 3. **Import Style**: ES6 imports with .js extensions
@@ -343,6 +380,7 @@ describe('AwaitingExternalTurnEndState production defaults integration', () => {
 ## Testing Commands
 
 ### After Implementation
+
 ```bash
 # Run updated unit tests
 npm run test:unit -- environmentConfig.test.js
@@ -362,6 +400,7 @@ npm run test:ci
 ```
 
 ### Coverage Verification
+
 ```bash
 # Verify coverage maintained
 npm run test:unit -- awaitingExternalTurnEndState --coverage
@@ -373,12 +412,15 @@ npm run test:unit -- environmentConfig.test.js --coverage --collectCoverageFrom=
 ## Implementation Notes
 
 ### TestEnvironmentProvider Usage Pattern
+
 ```javascript
 // Production environment
 const productionProvider = new TestEnvironmentProvider({ IS_PRODUCTION: true });
 
 // Development environment
-const developmentProvider = new TestEnvironmentProvider({ IS_PRODUCTION: false });
+const developmentProvider = new TestEnvironmentProvider({
+  IS_PRODUCTION: false,
+});
 
 // Inject in state creation
 const state = new AwaitingExternalTurnEndState({
@@ -388,7 +430,9 @@ const state = new AwaitingExternalTurnEndState({
 ```
 
 ### Migration Checklist Per Test
+
 For each test using `process.env.NODE_ENV`:
+
 1. [ ] Create appropriate `TestEnvironmentProvider` instance
 2. [ ] Add `environmentProvider` to state constructor call
 3. [ ] Remove `process.env.NODE_ENV` assignment
@@ -397,6 +441,7 @@ For each test using `process.env.NODE_ENV`:
 6. [ ] Verify test name still accurate
 
 ### Before/After Example
+
 ```javascript
 // BEFORE:
 beforeEach(() => {
@@ -445,6 +490,7 @@ it('should use 30s timeout in production', () => {
 ### What Was Changed
 
 **Files Modified:**
+
 1. `tests/unit/turns/states/awaitingExternalTurnEndState.environmentConfig.test.js` (40 lines changed)
    - Added `TestEnvironmentProvider` import from correct path (`src/configuration/`)
    - Removed `originalNodeEnv` variable and all `process.env.NODE_ENV` manipulation
@@ -458,6 +504,7 @@ it('should use 30s timeout in production', () => {
    - Updated state construction to use `environmentProvider` option
 
 **Test Results:**
+
 - All 11 unit tests pass ✅
 - Integration test passes ✅
 - All 95+ related state tests still pass ✅

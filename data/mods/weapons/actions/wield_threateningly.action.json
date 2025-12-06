@@ -5,9 +5,7 @@
   "description": "Wield a weapon in a threatening manner to intimidate",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "forbidden_components": {
     "actor": [

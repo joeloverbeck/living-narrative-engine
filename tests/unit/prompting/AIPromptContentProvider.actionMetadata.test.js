@@ -101,7 +101,9 @@ describe('AIPromptContentProvider - Action Metadata Formatting', () => {
     });
 
     test('should handle missing metadata gracefully (no Purpose/Consider lines)', () => {
-      const actions = [{ id: 'core:wait', command: 'wait', description: 'Wait' }];
+      const actions = [
+        { id: 'core:wait', command: 'wait', description: 'Wait' },
+      ];
       const groupedMap = new Map([['core', actions]]);
       mockActionCategorizationService.groupActionsByNamespace.mockReturnValue(
         groupedMap

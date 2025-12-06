@@ -29,7 +29,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load a real condition from the positioning mod
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     // Verify the condition is properly loaded
@@ -52,7 +52,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     // Load multiple real conditions
     await testFixture.loadDependencyConditions([
       'positioning:actor-in-entity-facing-away',
-      'positioning:entity-not-in-facing-away'
+      'positioning:entity-not-in-facing-away',
     ]);
 
     // Verify both conditions are loaded
@@ -80,7 +80,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load dependency condition
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     // Verify the condition is accessible during scope resolution
@@ -89,8 +89,14 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     );
 
     expect(condition).toBeDefined();
-    expect(testFixture.testEnv.dataRegistry.getConditionDefinition).toBeDefined();
-    expect(jest.isMockFunction(testFixture.testEnv.dataRegistry.getConditionDefinition)).toBe(true);
+    expect(
+      testFixture.testEnv.dataRegistry.getConditionDefinition
+    ).toBeDefined();
+    expect(
+      jest.isMockFunction(
+        testFixture.testEnv.dataRegistry.getConditionDefinition
+      )
+    ).toBe(true);
   });
 
   it('should support custom scopes that reference loaded conditions', async () => {
@@ -104,7 +110,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load the condition that a custom scope might reference
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     // Create entities for testing
@@ -123,9 +129,10 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     testFixture.reset(entities);
 
     // Verify the condition is available in the test environment
-    const loadedCondition = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
-    );
+    const loadedCondition =
+      testFixture.testEnv.dataRegistry.getConditionDefinition(
+        'positioning:actor-in-entity-facing-away'
+      );
 
     expect(loadedCondition).toBeDefined();
     expect(loadedCondition.id).toBe('positioning:actor-in-entity-facing-away');
@@ -138,7 +145,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     );
 
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     const condition = testFixture.testEnv.dataRegistry.getConditionDefinition(
@@ -158,7 +165,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load conditions
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     // Perform some test operations
@@ -193,7 +200,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load dependency conditions
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     // Create test scenario
@@ -213,7 +220,9 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     testFixture.reset(entities);
 
     // Verify the test environment is properly configured
-    expect(testFixture.testEnv.dataRegistry.getConditionDefinition).toBeDefined();
+    expect(
+      testFixture.testEnv.dataRegistry.getConditionDefinition
+    ).toBeDefined();
     expect(testFixture.testEnv.entityManager).toBeDefined();
 
     // Verify loaded condition is accessible
@@ -231,7 +240,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load first condition
     await testFixture.loadDependencyConditions([
-      'positioning:actor-in-entity-facing-away'
+      'positioning:actor-in-entity-facing-away',
     ]);
 
     const condition1 = testFixture.testEnv.dataRegistry.getConditionDefinition(
@@ -241,7 +250,7 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
 
     // Load second condition later
     await testFixture.loadDependencyConditions([
-      'positioning:entity-not-in-facing-away'
+      'positioning:entity-not-in-facing-away',
     ]);
 
     const condition2 = testFixture.testEnv.dataRegistry.getConditionDefinition(
@@ -250,9 +259,10 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
     expect(condition2).toBeDefined();
 
     // First condition should still be available
-    const condition1Again = testFixture.testEnv.dataRegistry.getConditionDefinition(
-      'positioning:actor-in-entity-facing-away'
-    );
+    const condition1Again =
+      testFixture.testEnv.dataRegistry.getConditionDefinition(
+        'positioning:actor-in-entity-facing-away'
+      );
     expect(condition1Again).toBeDefined();
     expect(condition1Again).toEqual(condition1);
   });
@@ -270,16 +280,18 @@ describe('ModTestFixture - loadDependencyConditions Integration', () => {
       // After: One simple call
       await testFixture.loadDependencyConditions([
         'positioning:actor-in-entity-facing-away',
-        'positioning:entity-not-in-facing-away'
+        'positioning:entity-not-in-facing-away',
       ]);
 
       // Verify both are loaded and accessible
       const conditions = [
         'positioning:actor-in-entity-facing-away',
-        'positioning:entity-not-in-facing-away'
-      ].map(id => testFixture.testEnv.dataRegistry.getConditionDefinition(id));
+        'positioning:entity-not-in-facing-away',
+      ].map((id) =>
+        testFixture.testEnv.dataRegistry.getConditionDefinition(id)
+      );
 
-      conditions.forEach(condition => {
+      conditions.forEach((condition) => {
         expect(condition).toBeDefined();
         expect(condition).toHaveProperty('id');
         expect(condition).toHaveProperty('logic');

@@ -57,7 +57,9 @@ describe('Note formatting integration', () => {
       'Lead discovered at <script>alert(1)</script> the docks'
     );
     const subjectTypeElement = noteItems[0].querySelector('.note-subject-type');
-    expect(subjectTypeElement?.querySelector('.note-type-icon')?.textContent).toBe('🔍');
+    expect(
+      subjectTypeElement?.querySelector('.note-type-icon')?.textContent
+    ).toBe('🔍');
     expect(subjectTypeElement?.dataset.type).toBe('discovery');
 
     // Reconstruct textual view from DOM structure to confirm cross-module alignment
@@ -69,7 +71,8 @@ describe('Note formatting integration', () => {
           ? `${rawType.charAt(0).toUpperCase()}${rawType.slice(1)}`
           : null;
         const subject = item.querySelector('.note-subject')?.textContent.trim();
-        const content = item.querySelector('.note-content')?.textContent.trim() ?? '';
+        const content =
+          item.querySelector('.note-content')?.textContent.trim() ?? '';
         const context = item.querySelector('.note-context')?.textContent.trim();
 
         let composed = content;
@@ -112,7 +115,9 @@ describe('Note formatting integration', () => {
     };
 
     const displayText = formatNotesForDisplay(note);
-    expect(displayText).toBe('[Event] Operations: <b>Resolve meeting</b> agenda drafted (HQ Atrium)');
+    expect(displayText).toBe(
+      '[Event] Operations: <b>Resolve meeting</b> agenda drafted (HQ Atrium)'
+    );
 
     const tooltipHtml = formatNotesAsRichHtml(note);
     document.body.innerHTML = tooltipHtml;
@@ -124,10 +129,14 @@ describe('Note formatting integration', () => {
 
     const content = container.querySelector('.note-content');
     expect(content?.textContent).toBe('<b>Resolve meeting</b> agenda drafted');
-    expect(content?.innerHTML).toBe('&lt;b&gt;Resolve meeting&lt;/b&gt; agenda drafted');
+    expect(content?.innerHTML).toBe(
+      '&lt;b&gt;Resolve meeting&lt;/b&gt; agenda drafted'
+    );
 
     const clipboardText = formatNotesForClipboard(note);
-    expect(clipboardText).toBe('[Event] Operations: <b>Resolve meeting</b> agenda drafted\n  (Context: HQ Atrium)');
+    expect(clipboardText).toBe(
+      '[Event] Operations: <b>Resolve meeting</b> agenda drafted\n  (Context: HQ Atrium)'
+    );
   });
 
   it('gracefully ignores non-object or empty inputs across formatting helpers', () => {
@@ -157,7 +166,9 @@ describe('Note formatting integration', () => {
     expect(document.querySelector('.note-context')).toBeNull();
 
     const minimalClipboard = formatNotesForClipboard(minimalStructuredNote);
-    expect(minimalClipboard).toBe('[Observation] Shadow spotted near the greenhouse');
+    expect(minimalClipboard).toBe(
+      '[Observation] Shadow spotted near the greenhouse'
+    );
 
     expect(formatNotesForDisplay({ text: '   ', subject: 'Empty' })).toBeNull();
   });

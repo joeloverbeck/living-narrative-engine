@@ -250,7 +250,7 @@ function nodeFetch(url, options = {}) {
           const headerMap = new Map(
             Object.entries(response.headers).map(([key, value]) => [
               key.toLowerCase(),
-              Array.isArray(value) ? value.join(', ') : value ?? null,
+              Array.isArray(value) ? value.join(', ') : (value ?? null),
             ])
           );
 
@@ -297,22 +297,29 @@ class RecordingRetryManager extends RetryManager {
   }
 
   async perform(attemptFn, responseHandler) {
-    return super.perform(async (attempt) => {
-      const result = await attemptFn(attempt);
-      if (result && typeof result.status === 'number') {
-        this.performCalls.push({ type: 'response', attempt, status: result.status });
+    return super.perform(
+      async (attempt) => {
+        const result = await attemptFn(attempt);
+        if (result && typeof result.status === 'number') {
+          this.performCalls.push({
+            type: 'response',
+            attempt,
+            status: result.status,
+          });
+        }
+        return result;
+      },
+      async (response, attempt) => {
+        if (response && typeof response.status === 'number') {
+          this.performCalls.push({
+            type: 'handler',
+            attempt,
+            status: response.status,
+          });
+        }
+        return responseHandler(response, attempt);
       }
-      return result;
-    }, async (response, attempt) => {
-      if (response && typeof response.status === 'number') {
-        this.performCalls.push({
-          type: 'handler',
-          attempt,
-          status: response.status,
-        });
-      }
-      return responseHandler(response, attempt);
-    });
+    );
   }
 }
 
@@ -373,7 +380,12 @@ describe('fetchWithRetry real module integration', () => {
 
     const server = await startServer(() => responses[responseIndex++]);
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.25);
-    const retryManager = new RecordingRetryManager(3, 5, 10, environment.logger);
+    const retryManager = new RecordingRetryManager(
+      3,
+      5,
+      10,
+      environment.logger
+    );
 
     try {
       const result = await fetchWithRetry(
@@ -545,7 +557,9 @@ describe('fetchWithRetry real module integration', () => {
 
     expect(environment.recordedEvents).toHaveLength(1);
     const eventPayload = environment.recordedEvents[0].payload;
-    expect(eventPayload.message).toContain('Failed for https://example.invalid/resource');
+    expect(eventPayload.message).toContain(
+      'Failed for https://example.invalid/resource'
+    );
     expect(eventPayload.details.originalErrorName).toBe('TypeError');
   });
 
@@ -570,9 +584,9 @@ describe('fetchWithRetry real module integration', () => {
     });
 
     expect(environment.recordedEvents).toHaveLength(1);
-    expect(environment.recordedEvents[0].payload.details.originalErrorMessage).toBe(
-      'Network request failed'
-    );
+    expect(
+      environment.recordedEvents[0].payload.details.originalErrorMessage
+    ).toBe('Network request failed');
   });
 
   it('sets credentials to omit for localhost requests when necessary', async () => {

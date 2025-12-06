@@ -77,7 +77,9 @@ describe('ServiceFactory integration coverage for error handling and registratio
       expect(error.message).toContain('ExplodingService');
       expect(
         logger.errorLogs.some(([message]) =>
-          message.includes('Failed to create service for token ExplodingService')
+          message.includes(
+            'Failed to create service for token ExplodingService'
+          )
         )
       ).toBe(true);
     }
@@ -87,7 +89,10 @@ describe('ServiceFactory integration coverage for error handling and registratio
     const originalResolve = container.resolve.bind(container);
     container.resolve = (token) => {
       if (token === 'ServiceErrorToken') {
-        throw new ServiceError('custom failure', ServiceErrorCodes.INVALID_STATE);
+        throw new ServiceError(
+          'custom failure',
+          ServiceErrorCodes.INVALID_STATE
+        );
       }
       return originalResolve(token);
     };
@@ -194,9 +199,12 @@ describe('ServiceFactory integration coverage for error handling and registratio
 
     expect(first).toBeInstanceOf(TransientService);
     expect(second).toBeInstanceOf(TransientService);
-    expect(optionsRecord.some(({ token, options }) =>
-      token === 'TransientService' && options?.singleton === false
-    )).toBe(true);
+    expect(
+      optionsRecord.some(
+        ({ token, options }) =>
+          token === 'TransientService' && options?.singleton === false
+      )
+    ).toBe(true);
 
     container.register = originalRegister;
   });

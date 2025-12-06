@@ -294,7 +294,11 @@ describe('StepResolver', () => {
             message:
               "StepResolver: Failed to extract field 'core:name' from entity 'entity1': Component lookup failed",
           }),
-          { entityId: 'entity1', field: 'core:name', originalError: 'Component lookup failed' },
+          {
+            entityId: 'entity1',
+            field: 'core:name',
+            originalError: 'Component lookup failed',
+          },
           'StepResolver',
           'SCOPE_3004'
         );
@@ -577,7 +581,9 @@ describe('StepResolver', () => {
         entitiesGateway.getEntityInstance.mockReturnValue({
           componentTypeIds: ['core:info'],
         });
-        entitiesGateway.getComponentData.mockReturnValue({ description: 'test' });
+        entitiesGateway.getComponentData.mockReturnValue({
+          description: 'test',
+        });
 
         const result = resolverWithErrorHandler.resolve(node, ctx);
 
@@ -587,7 +593,11 @@ describe('StepResolver', () => {
             message:
               "StepResolver: Failed to resolve entity parent value for field 'components' on entity 'entity1': logger failed",
           }),
-          { entityId: 'entity1', field: 'components', originalError: 'logger failed' },
+          {
+            entityId: 'entity1',
+            field: 'components',
+            originalError: 'logger failed',
+          },
           'StepResolver',
           'SCOPE_3005'
         );

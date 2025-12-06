@@ -194,7 +194,14 @@ class AnatomyRecipeLoader extends SimpleItemLoader {
    * @param {number} index - Index of the group within the collection.
    * @private
    */
-  _validateConstraintArray(value, constraintType, field, modId, filename, index) {
+  _validateConstraintArray(
+    value,
+    constraintType,
+    field,
+    modId,
+    filename,
+    index
+  ) {
     if (value === undefined) {
       return;
     }

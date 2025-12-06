@@ -632,5 +632,4 @@ describe('Furniture Capacity and Proximity Edge Cases', () => {
       }
     });
   });
-
 });

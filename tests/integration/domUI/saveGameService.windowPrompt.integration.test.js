@@ -8,9 +8,7 @@ import {
 } from '@jest/globals';
 import SaveGameService from '../../../src/domUI/saveGameService.js';
 import WindowUserPrompt from '../../../src/domUI/windowUserPrompt.js';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import ISaveService from '../../../src/interfaces/ISaveService.js';
 
 /**
@@ -183,11 +181,13 @@ describe('SaveGameService integration with WindowUserPrompt and ConsoleLogger', 
       ]);
       const slot = { slotId: 5, identifier: 'slot-5', isEmpty: false };
 
-      const outcome = await service.executeSave(slot, 'Critical Run', saveService);
+      const outcome = await service.executeSave(
+        slot,
+        'Critical Run',
+        saveService
+      );
 
-      expect(saveService.calls).toEqual([
-        { slotId: 5, name: 'Critical Run' },
-      ]);
+      expect(saveService.calls).toEqual([{ slotId: 5, name: 'Critical Run' }]);
       expect(outcome).toEqual({
         result: { success: true, filePath: '/saves/run.json' },
         returnedIdentifier: '/saves/run.json',
@@ -202,7 +202,11 @@ describe('SaveGameService integration with WindowUserPrompt and ConsoleLogger', 
       const saveService = new ScriptedSaveService([{ success: true }]);
       const slot = { slotId: 2, identifier: null, isEmpty: false };
 
-      const outcome = await service.executeSave(slot, 'No Identifier', saveService);
+      const outcome = await service.executeSave(
+        slot,
+        'No Identifier',
+        saveService
+      );
 
       expect(outcome).toEqual({
         result: { success: true },
@@ -219,7 +223,11 @@ describe('SaveGameService integration with WindowUserPrompt and ConsoleLogger', 
       const saveService = new ScriptedSaveService([null]);
       const slot = { slotId: 1, identifier: 'slot-1', isEmpty: false };
 
-      const outcome = await service.executeSave(slot, 'Null Result', saveService);
+      const outcome = await service.executeSave(
+        slot,
+        'Null Result',
+        saveService
+      );
 
       expect(outcome).toEqual({ result: null, returnedIdentifier: null });
       expect(console.error).not.toHaveBeenCalled();
@@ -272,7 +280,11 @@ describe('SaveGameService integration with WindowUserPrompt and ConsoleLogger', 
       const saveService = new ScriptedSaveService([null]);
       const slot = { slotId: 10, identifier: 'slot-10', isEmpty: false };
 
-      const result = await service.performSave(slot, 'Missing Result', saveService);
+      const result = await service.performSave(
+        slot,
+        'Missing Result',
+        saveService
+      );
 
       expect(result).toEqual({
         success: false,

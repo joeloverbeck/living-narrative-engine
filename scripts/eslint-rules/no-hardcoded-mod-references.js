@@ -128,10 +128,13 @@ const rule = {
   },
   create(context) {
     const options = context.options[0] || {};
-    const allowedMods = Array.isArray(options.allowedMods) && options.allowedMods.length > 0
-      ? options.allowedMods
-      : ['core'];
-    const allowedFiles = Array.isArray(options.allowedFiles) ? options.allowedFiles : [];
+    const allowedMods =
+      Array.isArray(options.allowedMods) && options.allowedMods.length > 0
+        ? options.allowedMods
+        : ['core'];
+    const allowedFiles = Array.isArray(options.allowedFiles)
+      ? options.allowedFiles
+      : [];
     const filename = normalizeFilename(context.getFilename());
 
     if (isFileExempt(filename, allowedFiles)) {

@@ -10,12 +10,12 @@ Fix four issues in the injury narrative system that produces first-person descri
 
 ## Issues Addressed
 
-| Issue | Severity | Description | Ticket |
-|-------|----------|-------------|--------|
-| Duplicate part counting | High | "My right ear and right ear is completely numb" | PHYCONNARIMP-001 |
-| Dismembered parts show health state | High | Missing ear shows "is completely numb" | PHYCONNARIMP-002 |
-| Missing parts not prioritized | Medium | "is missing" appears after health states | PHYCONNARIMP-003 |
-| Bleeding parts not grouped | Medium | Separate sentences for each bleeding part | PHYCONNARIMP-004 |
+| Issue                               | Severity | Description                                     | Ticket           |
+| ----------------------------------- | -------- | ----------------------------------------------- | ---------------- |
+| Duplicate part counting             | High     | "My right ear and right ear is completely numb" | PHYCONNARIMP-001 |
+| Dismembered parts show health state | High     | Missing ear shows "is completely numb"          | PHYCONNARIMP-002 |
+| Missing parts not prioritized       | Medium   | "is missing" appears after health states        | PHYCONNARIMP-003 |
+| Bleeding parts not grouped          | Medium   | Separate sentences for each bleeding part       | PHYCONNARIMP-004 |
 
 ## Ticket Breakdown
 
@@ -57,11 +57,11 @@ Tickets 001, 002, and 004 can be worked in parallel. 003 depends on 002. 005 dep
 
 ## Files Affected
 
-| File | Tickets | Change Type |
-|------|---------|-------------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | 001-005 | Modify |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | 001-004 | Add tests |
-| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | 006 | Create |
+| File                                                                                   | Tickets | Change Type |
+| -------------------------------------------------------------------------------------- | ------- | ----------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`                              | 001-005 | Modify      |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js`                  | 001-004 | Add tests   |
+| `tests/integration/anatomy/physicalConditionNarrativeImprovements.integration.test.js` | 006     | Create      |
 
 ## Files NOT Changed
 
@@ -73,6 +73,7 @@ Tickets 001, 002, and 004 can be worked in parallel. 003 depends on 002. 005 dep
 ## Expected Output Transformation
 
 **Before (Buggy):**
+
 ```
 My right ear and right ear is completely numb. My torso screams with agony.
 My upper head throbs painfully. My brain stings slightly. My right ear is missing.
@@ -80,6 +81,7 @@ Blood flows steadily from my torso. Blood flows steadily from my upper head.
 ```
 
 **After (Fixed):**
+
 ```
 My right ear is missing. My torso screams with agony. My upper head throbs painfully.
 My brain stings slightly. Blood flows steadily from my torso and my upper head.
@@ -104,12 +106,12 @@ My brain stings slightly. Blood flows steadily from my torso and my upper head.
 
 ## Estimated Effort
 
-| Ticket | Complexity | Lines Changed |
-|--------|------------|---------------|
-| 001 | Low | ~5 |
-| 002 | Low-Medium | ~20 |
-| 003 | Low | ~30 |
-| 004 | Medium | ~50 |
-| 005 | Medium | ~100 (reorganization) |
-| 006 | Medium | ~150 (new file) |
-| **Total** | | ~355 |
+| Ticket    | Complexity | Lines Changed         |
+| --------- | ---------- | --------------------- |
+| 001       | Low        | ~5                    |
+| 002       | Low-Medium | ~20                   |
+| 003       | Low        | ~30                   |
+| 004       | Medium     | ~50                   |
+| 005       | Medium     | ~100 (reorganization) |
+| 006       | Medium     | ~150 (new file)       |
+| **Total** |            | ~355                  |

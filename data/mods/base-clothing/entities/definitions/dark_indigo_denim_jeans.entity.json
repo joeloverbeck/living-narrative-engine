@@ -8,10 +8,7 @@
       "equipmentSlots": {
         "primary": "legs"
       },
-      "allowedLayers": [
-        "base",
-        "outer"
-      ]
+      "allowedLayers": ["base", "outer"]
     },
     "core:material": {
       "material": "denim"
@@ -29,9 +26,7 @@
       "texture": "rugged"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_lower"
-      ],
+      "covers": ["torso_lower"],
       "coveragePriority": "base"
     },
     "items:item": {},

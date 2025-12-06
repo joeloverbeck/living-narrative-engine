@@ -28,9 +28,7 @@ describe('items:read_item perception type validation', () => {
 
   it('should dispatch perceptible event with item_read perception type without validation errors', async () => {
     // Arrange: Create a readable item scenario
-    const room = new ModEntityBuilder('test_room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test_room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Test Actor')
@@ -103,9 +101,7 @@ describe('items:read_item perception type validation', () => {
     };
 
     // Arrange: Create scenario
-    const room = new ModEntityBuilder('test_room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test_room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Test Actor')
@@ -149,9 +145,7 @@ describe('items:read_item perception type validation', () => {
     // This test verifies that the operation schema has been updated
     // by attempting to dispatch the event and checking for validation success
 
-    const room = new ModEntityBuilder('library')
-      .asRoom('Library')
-      .build();
+    const room = new ModEntityBuilder('library').asRoom('Library').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Reader')

@@ -32,8 +32,11 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
 
   it('should isolate cache operations per actor during concurrent processing', async () => {
     // Arrange: Create 2 characters using test recipes
-    const actorAId = await testBed.createCharacterFromRecipe('anatomy:human_male');
-    const actorBId = await testBed.createCharacterFromRecipe('anatomy:human_female');
+    const actorAId =
+      await testBed.createCharacterFromRecipe('anatomy:human_male');
+    const actorBId = await testBed.createCharacterFromRecipe(
+      'anatomy:human_female'
+    );
 
     // Get initial parts for both
     const entityA = entityManager.getEntityInstance(actorAId);
@@ -59,7 +62,7 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
         // Read B while A is being rebuilt
         const partsB = bodyGraphService.getAllParts(anatomyB, actorBId);
         expect(partsB.length).toBeGreaterThan(1);
-      })()
+      })(),
     ]);
 
     // Assert: B's parts unchanged by A's operations
@@ -70,7 +73,7 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
 
     // Verify no shared parts after rebuild
     const finalPartsA = bodyGraphService.getAllParts(anatomyA, actorAId);
-    const overlap = finalPartsA.filter(id => finalPartsB.includes(id));
+    const overlap = finalPartsA.filter((id) => finalPartsB.includes(id));
 
     expect(overlap).toEqual([]);
   });
@@ -81,21 +84,21 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
       'anatomy:human_male',
       'anatomy:human_female',
       'anatomy:human_male',
-      'anatomy:human_female'
+      'anatomy:human_female',
     ];
 
     // Generate all actors
     const actorIds = await Promise.all(
-      recipes.map(recipe => testBed.createCharacterFromRecipe(recipe))
+      recipes.map((recipe) => testBed.createCharacterFromRecipe(recipe))
     );
 
     // Get initial part sets
-    const initialPartSets = actorIds.map(actorId => {
+    const initialPartSets = actorIds.map((actorId) => {
       const entity = entityManager.getEntityInstance(actorId);
       const anatomy = entity.getComponentData('anatomy:body');
       return {
         actorId,
-        parts: bodyGraphService.getAllParts(anatomy, actorId)
+        parts: bodyGraphService.getAllParts(anatomy, actorId),
       };
     });
 
@@ -118,12 +121,16 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
         const entity3 = entityManager.getEntityInstance(actorIds[3]);
         const anatomy3 = entity3.getComponentData('anatomy:body');
         bodyGraphService.getAllParts(anatomy3, actorIds[3]);
-      })()
+      })(),
     ]);
 
     // Assert: Actors 2 and 3 unchanged
-    const finalPartSet2 = initialPartSets.find(s => s.actorId === actorIds[2]);
-    const finalPartSet3 = initialPartSets.find(s => s.actorId === actorIds[3]);
+    const finalPartSet2 = initialPartSets.find(
+      (s) => s.actorId === actorIds[2]
+    );
+    const finalPartSet3 = initialPartSets.find(
+      (s) => s.actorId === actorIds[3]
+    );
 
     const entity2 = entityManager.getEntityInstance(actorIds[2]);
     const entity3 = entityManager.getEntityInstance(actorIds[3]);
@@ -137,7 +144,7 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
     expect(currentParts3).toEqual(finalPartSet3.parts);
 
     // Assert: All 4 actors still have unique parts
-    const allPartSets = actorIds.map(actorId => {
+    const allPartSets = actorIds.map((actorId) => {
       const entity = entityManager.getEntityInstance(actorId);
       const anatomy = entity.getComponentData('anatomy:body');
       return bodyGraphService.getAllParts(anatomy, actorId);
@@ -145,7 +152,9 @@ describe('AnatomyCacheManager - Concurrent Cache Isolation', () => {
 
     for (let i = 0; i < allPartSets.length; i++) {
       for (let j = i + 1; j < allPartSets.length; j++) {
-        const overlap = allPartSets[i].filter(id => allPartSets[j].includes(id));
+        const overlap = allPartSets[i].filter((id) =>
+          allPartSets[j].includes(id)
+        );
         expect(overlap).toEqual([]);
       }
     }

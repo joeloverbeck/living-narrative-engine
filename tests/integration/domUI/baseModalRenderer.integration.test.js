@@ -155,7 +155,6 @@ describe('BaseModalRenderer integration', () => {
   });
 
   it('manages modal lifecycle, event bindings, and UI helpers with real collaborators', async () => {
-
     document.body.innerHTML = `
       <button id="launch" type="button">Launch</button>
       <div id="modal" class="modal-overlay">
@@ -209,15 +208,23 @@ describe('BaseModalRenderer integration', () => {
 
     renderer._displayStatusMessage('Processing request', 'warning');
     expect(statusElement.textContent).toBe('Processing request');
-    expect(statusElement.classList.contains('status-message-warning')).toBe(true);
+    expect(statusElement.classList.contains('status-message-warning')).toBe(
+      true
+    );
 
     renderer._displayStatusMessage('Completed', 'success');
-    expect(statusElement.classList.contains('status-message-success')).toBe(true);
-    expect(statusElement.classList.contains('status-message-warning')).toBe(false);
+    expect(statusElement.classList.contains('status-message-success')).toBe(
+      true
+    );
+    expect(statusElement.classList.contains('status-message-warning')).toBe(
+      false
+    );
 
     renderer._clearStatusMessage();
     expect(statusElement.textContent).toBe('');
-    expect(statusElement.classList.contains('status-message-success')).toBe(false);
+    expect(statusElement.classList.contains('status-message-success')).toBe(
+      false
+    );
 
     renderer._operationInProgressAffectedElements = [
       'confirmButton',
@@ -296,15 +303,21 @@ describe('BaseModalRenderer integration', () => {
     });
 
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("'closeButton' was configured in 'elementsConfig' but not found"),
+      expect.stringContaining(
+        "'closeButton' was configured in 'elementsConfig' but not found"
+      )
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("'statusMessageElement' was configured in 'elementsConfig' but not found"),
+      expect.stringContaining(
+        "'statusMessageElement' was configured in 'elementsConfig' but not found"
+      )
     );
 
     renderer._displayStatusMessage('ignored');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("'_displayStatusMessage' called, but 'statusMessageElement' is not available."),
+      expect.stringContaining(
+        "'_displayStatusMessage' called, but 'statusMessageElement' is not available."
+      )
     );
 
     modalElement.removeAttribute('tabindex');
@@ -317,14 +330,18 @@ describe('BaseModalRenderer integration', () => {
     renderer._operationInProgressAffectedElements = [];
     renderer._setOperationInProgress(true);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("No elements configured for '_setOperationInProgress'.")
+      expect.stringContaining(
+        "No elements configured for '_setOperationInProgress'."
+      )
     );
 
     renderer.elements.modalElement = null;
     renderer.isVisible = true;
     renderer.hide();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Cannot hide modal, 'modalElement' is not available."),
+      expect.stringContaining(
+        "Cannot hide modal, 'modalElement' is not available."
+      )
     );
 
     const rendererWithoutCloseButton = new TestModalRenderer({
@@ -337,14 +354,19 @@ describe('BaseModalRenderer integration', () => {
     });
 
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("'closeButton' was not specified in 'elementsConfig'.")
+      expect.stringContaining(
+        "'closeButton' was not specified in 'elementsConfig'."
+      )
     );
 
     rendererWithoutCloseButton.show();
-    rendererWithoutCloseButton._previouslyFocusedElement = document.createElement('button');
+    rendererWithoutCloseButton._previouslyFocusedElement =
+      document.createElement('button');
     rendererWithoutCloseButton.hide();
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Previously focused element is no longer focusable.')
+      expect.stringContaining(
+        'Previously focused element is no longer focusable.'
+      )
     );
 
     rendererWithoutCloseButton.show();
@@ -365,8 +387,9 @@ describe('BaseModalRenderer integration', () => {
 
     missingModalRenderer.show();
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining("Cannot show modal, 'modalElement' is not available."),
+      expect.stringContaining(
+        "Cannot show modal, 'modalElement' is not available."
+      )
     );
   });
 });
-

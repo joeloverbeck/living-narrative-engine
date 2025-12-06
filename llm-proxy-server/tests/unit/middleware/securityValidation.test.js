@@ -439,7 +439,10 @@ describe('Security Validation Middleware', () => {
 
         expect(mockRequest.securityValidation.warnings).toEqual(
           expect.arrayContaining([
-            expect.objectContaining({ type: 'INVALID_URL_HEADER', header: 'referer' }),
+            expect.objectContaining({
+              type: 'INVALID_URL_HEADER',
+              header: 'referer',
+            }),
           ])
         );
       });
@@ -574,7 +577,8 @@ describe('Security Validation Middleware', () => {
           .mockImplementation(() => {});
 
         mockRequest.headers = {
-          'content-security-policy': "default-src 'self'; script-src 'unsafe-eval'",
+          'content-security-policy':
+            "default-src 'self'; script-src 'unsafe-eval'",
           'x-test-header': '<script>alert(1)</script>',
         };
 
@@ -651,8 +655,10 @@ describe('Security Validation Middleware', () => {
       });
 
       it('should identify unsafe inline scripts in CSP headers', () => {
-        const unsafeInlineCSP = "default-src 'self'; script-src 'unsafe-inline'";
-        const result = SecurityValidationUtils.validateCSPHeader(unsafeInlineCSP);
+        const unsafeInlineCSP =
+          "default-src 'self'; script-src 'unsafe-inline'";
+        const result =
+          SecurityValidationUtils.validateCSPHeader(unsafeInlineCSP);
 
         expect(result.isValid).toBe(false);
         expect(result.unsafeValue).toBe('unsafe-inline');
@@ -805,7 +811,8 @@ describe('Security Validation Middleware', () => {
 
       it('should report invalid CSP directives in header analysis', () => {
         const headers = {
-          'content-security-policy': "default-src 'self'; script-src 'unsafe-inline'",
+          'content-security-policy':
+            "default-src 'self'; script-src 'unsafe-inline'",
         };
 
         const analysis =
@@ -881,7 +888,8 @@ describe('Security Validation Middleware', () => {
       };
 
       mockRequest.headers = {
-        'content-security-policy': "default-src 'self'; script-src 'unsafe-eval'",
+        'content-security-policy':
+          "default-src 'self'; script-src 'unsafe-eval'",
       };
 
       const middleware = createSecurityValidationMiddleware({

@@ -35,10 +35,7 @@
         "description": "Cumulative health damage accumulated from starvation. Increases while in starving or critical states."
       }
     },
-    "required": [
-      "state",
-      "energyPercentage"
-    ],
+    "required": ["state", "energyPercentage"],
     "additionalProperties": false
   },
   "validationRules": {

@@ -3,16 +3,29 @@
  * @description Covers MetricsService registry management helpers and error handling branches.
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import * as promClient from 'prom-client';
 import MetricsService from '../../../src/services/metricsService.js';
 
-const createLogger = () => ({ info: jest.fn(), debug: jest.fn(), error: jest.fn() });
+const createLogger = () => ({
+  info: jest.fn(),
+  debug: jest.fn(),
+  error: jest.fn(),
+});
 
 describe('MetricsService registry management', () => {
   beforeEach(() => {
     promClient.register.clear();
-    jest.spyOn(promClient, 'collectDefaultMetrics').mockImplementation(() => {});
+    jest
+      .spyOn(promClient, 'collectDefaultMetrics')
+      .mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -21,7 +34,9 @@ describe('MetricsService registry management', () => {
 
   it('resets metrics when enabled and logs success', () => {
     const logger = createLogger();
-    const resetSpy = jest.spyOn(promClient.register, 'resetMetrics').mockImplementation(() => {});
+    const resetSpy = jest
+      .spyOn(promClient.register, 'resetMetrics')
+      .mockImplementation(() => {});
 
     const service = new MetricsService({ logger, enabled: true });
 
@@ -45,7 +60,10 @@ describe('MetricsService registry management', () => {
     logger.error.mockClear();
 
     expect(() => service.reset()).not.toThrow();
-    expect(logger.error).toHaveBeenCalledWith('Error resetting metrics', resetError);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error resetting metrics',
+      resetError
+    );
   });
 
   it('does not attempt to reset metrics when disabled', () => {
@@ -76,16 +94,21 @@ describe('MetricsService registry management', () => {
   it('logs errors thrown during clear without rethrowing', () => {
     const logger = createLogger();
     const clearError = new Error('clear failure');
-    const clearSpy = jest.spyOn(promClient.register, 'clear').mockImplementation(() => {
-      throw clearError;
-    });
+    const clearSpy = jest
+      .spyOn(promClient.register, 'clear')
+      .mockImplementation(() => {
+        throw clearError;
+      });
 
     const service = new MetricsService({ logger, enabled: false });
 
     logger.error.mockClear();
 
     expect(() => service.clear()).not.toThrow();
-    expect(logger.error).toHaveBeenCalledWith('Error clearing metrics', clearError);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error clearing metrics',
+      clearError
+    );
     expect(clearSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -111,7 +134,10 @@ describe('MetricsService registry management', () => {
     const service = new MetricsService({ logger, enabled: true });
 
     await expect(service.getMetrics()).rejects.toBe(metricsError);
-    expect(logger.error).toHaveBeenCalledWith('Error getting metrics', metricsError);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error getting metrics',
+      metricsError
+    );
   });
 
   it('skips metrics retrieval when disabled', async () => {
@@ -120,13 +146,17 @@ describe('MetricsService registry management', () => {
 
     const service = new MetricsService({ logger, enabled: false });
 
-    await expect(service.getMetrics()).resolves.toBe('# Metrics collection is disabled\n');
+    await expect(service.getMetrics()).resolves.toBe(
+      '# Metrics collection is disabled\n'
+    );
     expect(metricsSpy).not.toHaveBeenCalled();
   });
 
   it('handles non-array results from getStats defensively', () => {
     const logger = createLogger();
-    jest.spyOn(promClient.register, 'getMetricsAsJSON').mockReturnValue({ invalid: true });
+    jest
+      .spyOn(promClient.register, 'getMetricsAsJSON')
+      .mockReturnValue({ invalid: true });
 
     const service = new MetricsService({ logger, enabled: true });
 
@@ -143,16 +173,20 @@ describe('MetricsService registry management', () => {
   it('returns an error payload when getStats fails', () => {
     const logger = createLogger();
     const statsError = new Error('stats failure');
-    jest.spyOn(promClient.register, 'getMetricsAsJSON').mockImplementation(() => {
-      throw statsError;
-    });
+    jest
+      .spyOn(promClient.register, 'getMetricsAsJSON')
+      .mockImplementation(() => {
+        throw statsError;
+      });
 
     const service = new MetricsService({ logger, enabled: true });
 
     const stats = service.getStats();
 
     expect(stats).toEqual({ enabled: true, error: 'stats failure' });
-    expect(logger.error).toHaveBeenCalledWith('Error getting metrics stats', statsError);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Error getting metrics stats',
+      statsError
+    );
   });
 });
-

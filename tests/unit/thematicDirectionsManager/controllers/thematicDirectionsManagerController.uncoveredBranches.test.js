@@ -10,9 +10,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import {
-  BaseCharacterBuilderControllerTestBase,
-} from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
+import { BaseCharacterBuilderControllerTestBase } from '../../characterBuilder/controllers/BaseCharacterBuilderController.testbase.js';
 import { ThematicDirectionsManagerController } from '../../../../src/thematicDirectionsManager/controllers/thematicDirectionsManagerController.js';
 
 const dropdownConfigs = [];
@@ -45,23 +43,16 @@ function defaultEditorFactory() {
 jest.mock(
   '../../../../src/shared/characterBuilder/previousItemsDropdown.js',
   () => ({
-    PreviousItemsDropdown: jest
-      .fn()
-      .mockImplementation((options) => {
-        dropdownConfigs.push(options);
-        return mockDropdownFactory(options);
-      }),
+    PreviousItemsDropdown: jest.fn().mockImplementation((options) => {
+      dropdownConfigs.push(options);
+      return mockDropdownFactory(options);
+    }),
   })
 );
 
-jest.mock(
-  '../../../../src/shared/characterBuilder/inPlaceEditor.js',
-  () => ({
-    InPlaceEditor: jest
-      .fn()
-      .mockImplementation(() => mockEditorFactory()),
-  })
-);
+jest.mock('../../../../src/shared/characterBuilder/inPlaceEditor.js', () => ({
+  InPlaceEditor: jest.fn().mockImplementation(() => mockEditorFactory()),
+}));
 
 /**
  * Add DOM required by controller
@@ -351,7 +342,9 @@ describe('ThematicDirectionsManagerController uncovered branches', () => {
       'Active'
     );
     expect(conceptDisplay.querySelector('.concept-date')).not.toBeNull();
-    expect(conceptDisplay.querySelector('.concept-direction-count')).not.toBeNull();
+    expect(
+      conceptDisplay.querySelector('.concept-direction-count')
+    ).not.toBeNull();
 
     await testBase.cleanup();
   });
@@ -482,10 +475,11 @@ describe('ThematicDirectionsManagerController uncovered branches', () => {
       message.includes('Potential memory leaks detected')
     );
     expect(leakCall?.[1]?.leaks).toEqual(
-      expect.arrayContaining([expect.stringContaining('Active concept dropdown')])
+      expect.arrayContaining([
+        expect.stringContaining('Active concept dropdown'),
+      ])
     );
 
     await testBase.cleanup();
   });
 });
-

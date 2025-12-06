@@ -355,7 +355,10 @@ describe('entityHelpers', () => {
         );
       }
 
-      const objectWithId = { id: 'object-target', description: 'forces eviction path' };
+      const objectWithId = {
+        id: 'object-target',
+        description: 'forces eviction path',
+      };
       const context = createEvaluationContext(
         objectWithId,
         actor,
@@ -556,7 +559,10 @@ describe('entityHelpers', () => {
       });
       const logger = { warn: jest.fn() };
       const runtimeContext = {
-        scopeEntityLookupDebug: { enabled: true, cacheEvents: cacheEventsHandler },
+        scopeEntityLookupDebug: {
+          enabled: true,
+          cacheEvents: cacheEventsHandler,
+        },
         logger,
       };
 

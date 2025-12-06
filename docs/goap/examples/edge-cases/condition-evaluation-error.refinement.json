@@ -7,10 +7,7 @@
   "applicability": {
     "description": "Actor exists (minimal requirement)",
     "condition": {
-      "has_component": [
-        {"var": "actor"},
-        "core:identity"
-      ]
+      "has_component": [{ "var": "actor" }, "core:identity"]
     }
   },
 
@@ -20,14 +17,21 @@
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"!=": [{"var": "actor"}, null]},
-          {"!=": [{"var": "actor.components"}, null]},
-          {"!=": [{"var": "actor.components.positioning:location"}, null]},
-          {"!=": [{"var": "actor.components.positioning:location.room"}, null]},
-          {"==": [
-            {"var": "actor.components.positioning:location.room"},
-            {"var": "task.params.targetRoom"}
-          ]}
+          { "!=": [{ "var": "actor" }, null] },
+          { "!=": [{ "var": "actor.components" }, null] },
+          { "!=": [{ "var": "actor.components.positioning:location" }, null] },
+          {
+            "!=": [
+              { "var": "actor.components.positioning:location.room" },
+              null
+            ]
+          },
+          {
+            "==": [
+              { "var": "actor.components.positioning:location.room" },
+              { "var": "task.params.targetRoom" }
+            ]
+          }
         ]
       },
       "thenSteps": [
@@ -56,12 +60,12 @@
       "stepType": "conditional",
       "condition": {
         "and": [
-          {"has_component": ["actor", "items:inventory"]},
-          {"has_component": ["task.params.item", "items:consumable"]},
+          { "has_component": ["actor", "items:inventory"] },
+          { "has_component": ["task.params.item", "items:consumable"] },
           {
             "in": [
-              {"var": "task.params.item"},
-              {"var": "actor.components.items:inventory.items"}
+              { "var": "task.params.item" },
+              { "var": "actor.components.items:inventory.items" }
             ]
           }
         ]
@@ -91,12 +95,17 @@
         ">=": [
           {
             "if": [
-              {"!=": [{"var": "actor.components.resources:health.current"}, null]},
-              {"var": "actor.components.resources:health.current"},
+              {
+                "!=": [
+                  { "var": "actor.components.resources:health.current" },
+                  null
+                ]
+              },
+              { "var": "actor.components.resources:health.current" },
               100
             ]
           },
-          {"var": "task.params.minimumHealth"}
+          { "var": "task.params.minimumHealth" }
         ]
       },
       "thenSteps": [
@@ -128,8 +137,8 @@
       "wrongCode": {
         "condition": {
           "==": [
-            {"var": "actor.components.positioning:location.room"},
-            {"var": "task.params.targetRoom"}
+            { "var": "actor.components.positioning:location.room" },
+            { "var": "task.params.targetRoom" }
           ]
         }
       },
@@ -141,8 +150,8 @@
       "wrongCode": {
         "condition": {
           "in": [
-            {"var": "task.params.item"},
-            {"var": "actor.components.items:inventory.items"}
+            { "var": "task.params.item" },
+            { "var": "actor.components.items:inventory.items" }
           ]
         }
       },
@@ -153,7 +162,7 @@
       "cause": "Not guarding against null/undefined before comparisons",
       "wrongCode": {
         "condition": {
-          ">": [{"var": "actor.components.resources:health.current"}, 50]
+          ">": [{ "var": "actor.components.resources:health.current" }, 50]
         }
       },
       "fix": "Check != null AND provide default value with if-then-else"
@@ -165,10 +174,10 @@
       "description": "Chain null checks for nested properties",
       "pattern": {
         "and": [
-          {"!=": [{"var": "obj"}, null]},
-          {"!=": [{"var": "obj.prop1"}, null]},
-          {"!=": [{"var": "obj.prop1.prop2"}, null]},
-          {"operation": [{"var": "obj.prop1.prop2"}, "value"]}
+          { "!=": [{ "var": "obj" }, null] },
+          { "!=": [{ "var": "obj.prop1" }, null] },
+          { "!=": [{ "var": "obj.prop1.prop2" }, null] },
+          { "operation": [{ "var": "obj.prop1.prop2" }, "value"] }
         ]
       }
     },
@@ -176,9 +185,9 @@
       "description": "Validate array before 'in' operator",
       "pattern": {
         "and": [
-          {"!=": [{"var": "array"}, null]},
-          {"===": [{"typeof": {"var": "array"}}, "array"]},
-          {"in": [{"var": "value"}, {"var": "array"}]}
+          { "!=": [{ "var": "array" }, null] },
+          { "===": [{ "typeof": { "var": "array" } }, "array"] },
+          { "in": [{ "var": "value" }, { "var": "array" }] }
         ]
       }
     },
@@ -186,11 +195,9 @@
       "description": "Provide default for comparisons",
       "pattern": {
         ">": [
-          {"if": [
-            {"!=": [{"var": "value"}, null]},
-            {"var": "value"},
-            0
-          ]},
+          {
+            "if": [{ "!=": [{ "var": "value" }, null] }, { "var": "value" }, 0]
+          },
           50
         ]
       }
@@ -199,9 +206,16 @@
       "description": "Use has_component before property access",
       "pattern": {
         "and": [
-          {"has_component": ["entity", "component:id"]},
-          {"!=": [{"var": "entity.components.component:id.property"}, null]},
-          {"operation": [{"var": "entity.components.component:id.property"}, "value"]}
+          { "has_component": ["entity", "component:id"] },
+          {
+            "!=": [{ "var": "entity.components.component:id.property" }, null]
+          },
+          {
+            "operation": [
+              { "var": "entity.components.component:id.property" },
+              "value"
+            ]
+          }
         ]
       }
     }

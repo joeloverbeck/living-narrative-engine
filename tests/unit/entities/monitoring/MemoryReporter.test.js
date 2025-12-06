@@ -62,7 +62,11 @@ describe('MemoryReporter', () => {
     const trend = { trend: 'growing', slope: 14.75, confidence: 0.92 };
     const patterns = [
       { type: 'exponential', description: 'Rapidly accelerating usage' },
-      { type: 'sawtooth', description: 'Large GC cycles', characteristics: { amplitude: 150 * MB } },
+      {
+        type: 'sawtooth',
+        description: 'Large GC cycles',
+        characteristics: { amplitude: 150 * MB },
+      },
     ];
     const hotspots = Array.from({ length: 6 }, (_, index) => ({
       operation: `operation-${index + 1}`,
@@ -101,7 +105,7 @@ describe('MemoryReporter', () => {
 
     expect(dependencies.logger.debug).toHaveBeenCalledWith(
       'MemoryReporter: Generating memory report',
-      { includeRecommendations: true, verbosity: 'detailed' },
+      { includeRecommendations: true, verbosity: 'detailed' }
     );
     expect(report.summary).toMatchObject({
       heapUsed: currentUsage.heapUsed,
@@ -117,14 +121,21 @@ describe('MemoryReporter', () => {
     expect(report.pressure.statistics).toBe(pressureStats);
 
     const priorities = report.recommendations.map((rec) => rec.priority);
-    expect(priorities).toEqual(['critical', 'critical', 'critical', 'high', 'high', 'medium']);
+    expect(priorities).toEqual([
+      'critical',
+      'critical',
+      'critical',
+      'high',
+      'high',
+      'medium',
+    ]);
 
     const history = reporter.getHistory();
     expect(history).toHaveLength(1);
     expect(history[0].summary.status).toBe('critical');
     expect(dependencies.logger.info).toHaveBeenCalledWith(
       'MemoryReporter: Memory report generated',
-      expect.objectContaining({ pressureLevel: 'critical' }),
+      expect.objectContaining({ pressureLevel: 'critical' })
     );
   });
 
@@ -168,7 +179,7 @@ describe('MemoryReporter', () => {
 
     reporter.stopAutoReporting();
     expect(dependencies.logger.info).not.toHaveBeenCalledWith(
-      'MemoryReporter: Auto-reporting stopped',
+      'MemoryReporter: Auto-reporting stopped'
     );
   });
 
@@ -187,15 +198,30 @@ describe('MemoryReporter', () => {
       },
       currentState: { memory: { heapUsed: 256 * MB } },
       trends: { trend: 'stable', slope: 0, confidence: 0.5 },
-      patterns: [{ type: 'note', description: 'All clear', characteristics: { amplitude: 0 } }],
+      patterns: [
+        {
+          type: 'note',
+          description: 'All clear',
+          characteristics: { amplitude: 0 },
+        },
+      ],
       leaks: { detected: false },
       hotspots: [{ operation: 'allocate', averageMemoryIncrease: 4 * MB }],
       profiling: null,
       pressure: { level: 'warning', statistics: { samples: 1 } },
       recommendations: [
-        { priority: 'high', category: 'trend', message: 'Monitor growth', action: 'monitor' },
+        {
+          priority: 'high',
+          category: 'trend',
+          message: 'Monitor growth',
+          action: 'monitor',
+        },
       ],
-      metadata: { timestamp: 1_650_000_000_000, verbosity: 'normal', historyLength: 0 },
+      metadata: {
+        timestamp: 1_650_000_000_000,
+        verbosity: 'normal',
+        historyLength: 0,
+      },
     };
 
     const json = reporter.exportReport(sampleReport, 'JSON');
@@ -214,14 +240,18 @@ describe('MemoryReporter', () => {
     expect(typeof generated).toBe('string');
     expect(JSON.parse(generated).summary).toBeDefined();
 
-    expect(() => reporter.exportReport(sampleReport, 'xml')).toThrow('Unsupported format: xml');
+    expect(() => reporter.exportReport(sampleReport, 'xml')).toThrow(
+      'Unsupported format: xml'
+    );
   });
 
   it('supports auto-reporting intervals and cleans up timers', () => {
     jest.useFakeTimers();
 
     const dependencies = createDependencies();
-    const reporter = new MemoryReporter(dependencies, { autoReportInterval: 25 });
+    const reporter = new MemoryReporter(dependencies, {
+      autoReportInterval: 25,
+    });
 
     const generateSpy = jest
       .spyOn(reporter, 'generateReport')
@@ -232,14 +262,14 @@ describe('MemoryReporter', () => {
     expect(generateSpy).toHaveBeenCalledTimes(1);
     expect(dependencies.logger.warn).toHaveBeenCalledWith(
       'MemoryReporter: Auto-report: Critical memory status',
-      expect.objectContaining({ status: 'critical' }),
+      expect.objectContaining({ status: 'critical' })
     );
 
     reporter.stopAutoReporting();
     jest.advanceTimersByTime(25);
     expect(generateSpy).toHaveBeenCalledTimes(1);
     expect(dependencies.logger.info).toHaveBeenCalledWith(
-      'MemoryReporter: Auto-reporting stopped',
+      'MemoryReporter: Auto-reporting stopped'
     );
 
     reporter.destroy();
@@ -247,7 +277,7 @@ describe('MemoryReporter', () => {
       expect.arrayContaining([
         ['MemoryReporter: Report history cleared'],
         ['MemoryReporter: MemoryReporter destroyed'],
-      ]),
+      ])
     );
 
     jest.useRealTimers();
@@ -291,9 +321,7 @@ describe('MemoryReporter', () => {
     reporter.clearHistory();
     expect(reporter.getHistory()).toHaveLength(0);
     expect(dependencies.logger.info.mock.calls).toEqual(
-      expect.arrayContaining([
-        ['MemoryReporter: Report history cleared'],
-      ]),
+      expect.arrayContaining([['MemoryReporter: Report history cleared']])
     );
 
     reporter.destroy();

@@ -1113,32 +1113,122 @@ describe('InjuryNarrativeFormatterService', () => {
         const summary = {
           entityId: 'entity-1',
           injuredParts: [
-            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', state: 'destroyed' },
-            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-5', partType: 'vagina', orientation: null, state: 'destroyed' },
-            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', state: 'destroyed' },
+            {
+              partEntityId: 'part-1',
+              partType: 'ass cheek',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-3',
+              partType: 'arm',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-4',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-5',
+              partType: 'vagina',
+              orientation: null,
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-6',
+              partType: 'breast',
+              orientation: 'left',
+              state: 'destroyed',
+            },
           ],
           destroyedParts: [
-            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', state: 'destroyed' },
-            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', state: 'destroyed' },
-            { partEntityId: 'part-5', partType: 'vagina', orientation: null, state: 'destroyed' },
-            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', state: 'destroyed' },
+            {
+              partEntityId: 'part-1',
+              partType: 'ass cheek',
+              orientation: 'left',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-3',
+              partType: 'arm',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-4',
+              partType: 'ear',
+              orientation: 'right',
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-5',
+              partType: 'vagina',
+              orientation: null,
+              state: 'destroyed',
+            },
+            {
+              partEntityId: 'part-6',
+              partType: 'breast',
+              orientation: 'left',
+              state: 'destroyed',
+            },
           ],
           bleedingParts: [],
           burningParts: [],
           poisonedParts: [],
           fracturedParts: [],
           dismemberedParts: [
-            { partEntityId: 'part-1', partType: 'ass cheek', orientation: 'left', isDismembered: true },
-            { partEntityId: 'part-2', partType: 'leg', orientation: 'right', isDismembered: true },
-            { partEntityId: 'part-3', partType: 'arm', orientation: 'right', isDismembered: true },
-            { partEntityId: 'part-4', partType: 'ear', orientation: 'right', isDismembered: true },
-            { partEntityId: 'part-5', partType: 'vagina', orientation: null, isDismembered: true },
-            { partEntityId: 'part-6', partType: 'breast', orientation: 'left', isDismembered: true },
+            {
+              partEntityId: 'part-1',
+              partType: 'ass cheek',
+              orientation: 'left',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-2',
+              partType: 'leg',
+              orientation: 'right',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-3',
+              partType: 'arm',
+              orientation: 'right',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-4',
+              partType: 'ear',
+              orientation: 'right',
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-5',
+              partType: 'vagina',
+              orientation: null,
+              isDismembered: true,
+            },
+            {
+              partEntityId: 'part-6',
+              partType: 'breast',
+              orientation: 'left',
+              isDismembered: true,
+            },
           ],
           isDying: false,
           isDead: false,
@@ -1547,7 +1637,11 @@ describe('InjuryNarrativeFormatterService', () => {
       it('should format two bleeding parts with same severity using "and"', () => {
         const summary = createSummaryWithBleedingParts([
           { partType: 'torso', bleedingSeverity: 'moderate' },
-          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
+          {
+            partType: 'head',
+            orientation: 'upper',
+            bleedingSeverity: 'moderate',
+          },
         ]);
 
         const result = service.formatFirstPerson(summary);
@@ -1559,8 +1653,16 @@ describe('InjuryNarrativeFormatterService', () => {
       it('should format three+ bleeding parts with Oxford comma', () => {
         const summary = createSummaryWithBleedingParts([
           { partType: 'torso', bleedingSeverity: 'moderate' },
-          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
-          { partType: 'leg', orientation: 'right', bleedingSeverity: 'moderate' },
+          {
+            partType: 'head',
+            orientation: 'upper',
+            bleedingSeverity: 'moderate',
+          },
+          {
+            partType: 'leg',
+            orientation: 'right',
+            bleedingSeverity: 'moderate',
+          },
         ]);
 
         const result = service.formatFirstPerson(summary);
@@ -1622,7 +1724,11 @@ describe('InjuryNarrativeFormatterService', () => {
           { partType: 'arm', orientation: 'left', bleedingSeverity: 'severe' },
           { partType: 'arm', orientation: 'right', bleedingSeverity: 'severe' },
           { partType: 'torso', bleedingSeverity: 'moderate' },
-          { partType: 'head', orientation: 'upper', bleedingSeverity: 'moderate' },
+          {
+            partType: 'head',
+            orientation: 'upper',
+            bleedingSeverity: 'moderate',
+          },
           { partType: 'leg', orientation: 'right', bleedingSeverity: 'minor' },
         ]);
 

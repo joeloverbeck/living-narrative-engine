@@ -29,7 +29,9 @@ describe('DismemberedBodyPartSpawner', () => {
     };
 
     mockEntityLifecycleManager = {
-      createEntityInstance: jest.fn().mockResolvedValue({ id: 'spawned-entity-1' }),
+      createEntityInstance: jest
+        .fn()
+        .mockResolvedValue({ id: 'spawned-entity-1' }),
     };
 
     mockGameDataRepository = {
@@ -246,7 +248,10 @@ describe('DismemberedBodyPartSpawner', () => {
             if (entityId === 'part-leg-1' && componentId === 'anatomy:part') {
               return { definitionId: 'anatomy:human_leg' };
             }
-            if (entityId === 'entity-sarah' && componentId === 'core:position') {
+            if (
+              entityId === 'entity-sarah' &&
+              componentId === 'core:position'
+            ) {
               return { locationId: 'location-tavern' };
             }
             if (entityId === 'entity-sarah' && componentId === 'core:name') {
@@ -256,29 +261,35 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
         // Weight comes from entity definition's core:weight component
-        mockGameDataRepository.getEntityDefinition.mockImplementation((defId) => {
-          if (defId === 'anatomy:human_leg') {
-            return {
-              id: 'anatomy:human_leg',
-              components: {
-                'anatomy:part': { subType: 'leg' },
-                'core:weight': { weight: 8.5 },
-              },
-            };
+        mockGameDataRepository.getEntityDefinition.mockImplementation(
+          (defId) => {
+            if (defId === 'anatomy:human_leg') {
+              return {
+                id: 'anatomy:human_leg',
+                components: {
+                  'anatomy:part': { subType: 'leg' },
+                  'core:weight': { weight: 8.5 },
+                },
+              };
+            }
+            return null;
           }
-          return null;
-        });
+        );
       });
 
       it('should spawn body part entity with correct name', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -289,14 +300,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should spawn body part at character location', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -307,14 +322,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should add items:item component', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -325,14 +344,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should add items:portable component', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -343,17 +366,21 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should use weight from entity definition core:weight component', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockGameDataRepository.getEntityDefinition).toHaveBeenCalledWith(
           'anatomy:human_leg'
         );
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           'anatomy:human_leg',
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -364,12 +391,14 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should dispatch body_part_spawned event', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
           'anatomy:body_part_spawned',
@@ -387,12 +416,14 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should log successful spawning', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-sarah',
-          partId: 'part-leg-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-sarah',
+            partId: 'part-leg-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.info).toHaveBeenCalledWith(
           expect.stringContaining('Spawned body part entity')
@@ -427,14 +458,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should include orientation for left parts', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'arm',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -445,14 +480,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should include orientation for right parts', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'arm',
-          orientation: 'right',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'right',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -463,14 +502,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should exclude orientation for mid parts', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'head',
-          orientation: 'mid',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'head',
+            orientation: 'mid',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -481,14 +524,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should handle null orientation', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'spine',
-          orientation: null,
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'spine',
+            orientation: null,
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -499,14 +546,18 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should handle missing part type', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: null,
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: null,
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -542,14 +593,18 @@ describe('DismemberedBodyPartSpawner', () => {
           },
         });
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'finger',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'finger',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -580,14 +635,18 @@ describe('DismemberedBodyPartSpawner', () => {
         // Entity definition not found
         mockGameDataRepository.getEntityDefinition.mockReturnValue(null);
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'unknown',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'unknown',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -624,12 +683,14 @@ describe('DismemberedBodyPartSpawner', () => {
           },
         });
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.warn).not.toHaveBeenCalled();
       });
@@ -646,33 +707,41 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('missing definitionId')
         );
-        expect(mockEntityLifecycleManager.createEntityInstance).not.toHaveBeenCalled();
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).not.toHaveBeenCalled();
       });
 
       it('should log error and skip spawning when part data is null', async () => {
         mockEntityManager.getComponentData.mockReturnValue(null);
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('missing definitionId')
         );
-        expect(mockEntityLifecycleManager.createEntityInstance).not.toHaveBeenCalled();
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).not.toHaveBeenCalled();
       });
 
       it('should log warning and skip when character has no position', async () => {
@@ -688,17 +757,21 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('missing position')
         );
-        expect(mockEntityLifecycleManager.createEntityInstance).not.toHaveBeenCalled();
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).not.toHaveBeenCalled();
       });
 
       it('should log warning and skip when locationId is missing', async () => {
@@ -714,17 +787,21 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
           expect.stringContaining('missing position')
         );
-        expect(mockEntityLifecycleManager.createEntityInstance).not.toHaveBeenCalled();
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).not.toHaveBeenCalled();
       });
 
       it('should use Unknown when character name is missing', async () => {
@@ -743,14 +820,18 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -779,12 +860,14 @@ describe('DismemberedBodyPartSpawner', () => {
           new Error('Entity creation failed')
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Failed to spawn body part'),
@@ -812,14 +895,18 @@ describe('DismemberedBodyPartSpawner', () => {
           }
         );
 
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'leg',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'leg',
+            orientation: 'left',
+          })
+        );
 
-        expect(mockEntityLifecycleManager.createEntityInstance).toHaveBeenCalledWith(
+        expect(
+          mockEntityLifecycleManager.createEntityInstance
+        ).toHaveBeenCalledWith(
           expect.any(String),
           expect.objectContaining({
             componentOverrides: expect.objectContaining({
@@ -857,10 +944,12 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should set partType to unknown when not provided', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+          })
+        );
 
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
           'anatomy:body_part_spawned',
@@ -871,11 +960,13 @@ describe('DismemberedBodyPartSpawner', () => {
       });
 
       it('should set orientation to null when not provided', async () => {
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'arm',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+          })
+        );
 
         expect(mockEventBus.dispatch).toHaveBeenCalledWith(
           'anatomy:body_part_spawned',
@@ -887,12 +978,14 @@ describe('DismemberedBodyPartSpawner', () => {
 
       it('should include timestamp in event', async () => {
         const beforeTime = Date.now();
-        await handleDismemberment(createEvent({
-          entityId: 'entity-1',
-          partId: 'part-1',
-          partType: 'arm',
-          orientation: 'left',
-        }));
+        await handleDismemberment(
+          createEvent({
+            entityId: 'entity-1',
+            partId: 'part-1',
+            partType: 'arm',
+            orientation: 'left',
+          })
+        );
         const afterTime = Date.now();
 
         const dispatchCall = mockEventBus.dispatch.mock.calls.find(

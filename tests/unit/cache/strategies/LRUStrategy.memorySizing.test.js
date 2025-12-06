@@ -11,7 +11,11 @@ describe('LRUStrategy memory sizing edge cases', () => {
 
     const cases = [
       { key: 'string', value: 'hello', expectedSize: 'hello'.length * 2 },
-      { key: 'object', value: { foo: 'bar' }, expectedSize: JSON.stringify({ foo: 'bar' }).length * 2 },
+      {
+        key: 'object',
+        value: { foo: 'bar' },
+        expectedSize: JSON.stringify({ foo: 'bar' }).length * 2,
+      },
       { key: 'number', value: 42, expectedSize: 8 },
       { key: 'boolean', value: false, expectedSize: 8 },
       { key: 'null', value: null, expectedSize: 8 },

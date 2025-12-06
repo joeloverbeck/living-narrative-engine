@@ -9,7 +9,7 @@ const ORIGINAL_FETCH = global.fetch;
 
 const waitFor = async (checkFn, { timeout = 15000, interval = 50 } = {}) => {
   const start = Date.now();
-   
+
   while (true) {
     try {
       const result = await checkFn();
@@ -24,7 +24,7 @@ const waitFor = async (checkFn, { timeout = 15000, interval = 50 } = {}) => {
     if (Date.now() - start >= timeout) {
       throw new Error('waitFor timeout exceeded');
     }
-     
+
     await new Promise((resolve) => setTimeout(resolve, interval));
   }
 };
@@ -38,7 +38,11 @@ const setDocumentReadyState = (value) => {
 
 const restoreDocumentReadyState = () => {
   if (ORIGINAL_READY_STATE_DESCRIPTOR) {
-    Object.defineProperty(document, 'readyState', ORIGINAL_READY_STATE_DESCRIPTOR);
+    Object.defineProperty(
+      document,
+      'readyState',
+      ORIGINAL_READY_STATE_DESCRIPTOR
+    );
   } else {
     delete document.readyState;
   }

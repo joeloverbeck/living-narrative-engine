@@ -52,7 +52,7 @@ describe('violence:tear_out_throat action discovery', () => {
   });
 
   describe('Positive discovery scenarios', () => {
-    it('is available when actor is biting the target\'s neck', () => {
+    it("is available when actor is biting the target's neck", () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Add biting components with reciprocal relationship
@@ -143,7 +143,7 @@ describe('violence:tear_out_throat action discovery', () => {
       expect(ids).not.toContain(ACTION_ID);
     });
 
-    it('is not available when actor\'s biting_neck component references a different entity', () => {
+    it("is not available when actor's biting_neck component references a different entity", () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
       // Actor biting someone else

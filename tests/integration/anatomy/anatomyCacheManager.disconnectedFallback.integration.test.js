@@ -92,7 +92,10 @@ class TestEntityManager {
 
   async removeComponent(entityId, componentId) {
     const components = this.entities.get(entityId);
-    if (components && Object.prototype.hasOwnProperty.call(components, componentId)) {
+    if (
+      components &&
+      Object.prototype.hasOwnProperty.call(components, componentId)
+    ) {
       delete components[componentId];
     }
   }
@@ -196,24 +199,28 @@ describe('AnatomyCacheManager integration fallback coverage', () => {
     );
 
     // Cached results should be reused until the cache is rebuilt.
-    expect(service.getAllParts(actorBodyComponent, 'actor-1')).toBe(firstTraversal);
+    expect(service.getAllParts(actorBodyComponent, 'actor-1')).toBe(
+      firstTraversal
+    );
     expect(service.hasCache('actor-1')).toBe(true);
 
     // Ensure the fallback logging occurred for the disconnected actor scenario.
     expect(
-      logger.debugEntries.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes(
-          "Actor entity 'actor-1' has anatomy:body but no joint children"
-        )
+      logger.debugEntries.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes(
+            "Actor entity 'actor-1' has anatomy:body but no joint children"
+          )
       )
     ).toBe(true);
     expect(
-      logger.infoEntries.some(([message]) =>
-        typeof message === 'string' &&
-        message.includes(
-          "Successfully connected actor 'actor-1' to its own anatomy root 'torso-root'"
-        )
+      logger.infoEntries.some(
+        ([message]) =>
+          typeof message === 'string' &&
+          message.includes(
+            "Successfully connected actor 'actor-1' to its own anatomy root 'torso-root'"
+          )
       )
     ).toBe(true);
 
@@ -264,6 +271,5 @@ describe('AnatomyCacheManager integration fallback coverage', () => {
         'arm-center',
       ])
     );
-
   });
 });

@@ -1,5 +1,8 @@
 import { describe, test, expect } from '@jest/globals';
-import { levenshteinDistance, findClosestMatches } from '../../../src/utils/stringUtils.js';
+import {
+  levenshteinDistance,
+  findClosestMatches,
+} from '../../../src/utils/stringUtils.js';
 
 describe('stringUtils', () => {
   describe('levenshteinDistance', () => {
@@ -68,7 +71,9 @@ describe('stringUtils', () => {
       const candidates = ['fest', 'best', 'test', 'rest'];
       const matches = findClosestMatches('test', candidates, 2);
       expect(matches[0]).toBe('test'); // distance 0
-      expect(matches.slice(1)).toEqual(expect.arrayContaining(['best', 'rest', 'fest']));
+      expect(matches.slice(1)).toEqual(
+        expect.arrayContaining(['best', 'rest', 'fest'])
+      );
       // Verify sorting - distance 0 should be first
       const distances = matches.map((m) => levenshteinDistance('test', m));
       expect(distances[0]).toBe(0);

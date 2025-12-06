@@ -1,6 +1,7 @@
 # ANAGRAGENARCANA-003: Remove Debug Console.log Statements
 
 ## Metadata
+
 - **ID**: ANAGRAGENARCANA-003
 - **Priority**: HIGH
 - **Severity**: P3
@@ -24,23 +25,40 @@ Multiple `console.log('[DEBUG]')` statements remain in production code within `s
 Located at `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js`:
 
 **Lines 88-103:**
+
 ```javascript
 console.log('[DEBUG] #processBlueprintSlots CALLED');
 console.log('[DEBUG]   blueprint.slots exists?', !!blueprint.slots);
-console.log('[DEBUG]   blueprint.slots keys:', blueprint.slots ? Object.keys(blueprint.slots) : 'N/A');
+console.log(
+  '[DEBUG]   blueprint.slots keys:',
+  blueprint.slots ? Object.keys(blueprint.slots) : 'N/A'
+);
 // ... more debug logs after sortSlotsByDependency call
 console.log('[DEBUG] #processBlueprintSlots - after sort:');
 console.log('[DEBUG]   sortedSlots type:', sortedSlots.constructor.name);
-console.log('[DEBUG]   sortedSlots.length or size:', sortedSlots.length || sortedSlots.size);
+console.log(
+  '[DEBUG]   sortedSlots.length or size:',
+  sortedSlots.length || sortedSlots.size
+);
 console.log('[DEBUG]   sortedSlots keys:', Array.from(sortedSlots.keys()));
 ```
 
 **Lines 224-228:**
+
 ```javascript
 console.log(`[DEBUG] Processing slot: ${slotKey}`);
-console.log('[DEBUG]   recipe.slots?.[slotKey]:', JSON.stringify(recipe.slots?.[slotKey], null, 2));
-console.log('[DEBUG]   componentOverrides:', JSON.stringify(componentOverrides, null, 2));
-console.log('[DEBUG]   componentOverrides keys:', Object.keys(componentOverrides));
+console.log(
+  '[DEBUG]   recipe.slots?.[slotKey]:',
+  JSON.stringify(recipe.slots?.[slotKey], null, 2)
+);
+console.log(
+  '[DEBUG]   componentOverrides:',
+  JSON.stringify(componentOverrides, null, 2)
+);
+console.log(
+  '[DEBUG]   componentOverrides keys:',
+  Object.keys(componentOverrides)
+);
 ```
 
 **Note:** Line numbers updated 2025-12-02 to reflect current codebase state.
@@ -49,9 +67,9 @@ console.log('[DEBUG]   componentOverrides keys:', Object.keys(componentOverrides
 
 ## Affected Files
 
-| File | Line(s) | Change Type |
-|------|---------|-------------|
-| `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | 88-103, 224-228 | Remove |
+| File                                                             | Line(s)         | Change Type |
+| ---------------------------------------------------------------- | --------------- | ----------- |
+| `src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrator.js` | 88-103, 224-228 | Remove      |
 
 ---
 
@@ -68,6 +86,7 @@ grep -n "console.log" src/anatomy/bodyBlueprintFactory/slotResolutionOrchestrato
 ### Step 2: Categorize Debug Statements
 
 For each statement, determine:
+
 1. **Remove entirely**: Debug noise with no production value
 2. **Replace with logger.debug()**: Useful for troubleshooting but should be controlled
 3. **Replace with logger.trace()**: Very verbose, only for deep debugging
@@ -75,11 +94,15 @@ For each statement, determine:
 ### Step 3: Remove Debug-Only Statements
 
 Remove statements like:
+
 ```javascript
 // REMOVE THESE
 console.log('[DEBUG] #processBlueprintSlots CALLED');
 console.log('[DEBUG]   blueprint.slots exists?', !!blueprint.slots);
-console.log('[DEBUG]   blueprint.slots keys:', Object.keys(blueprint.slots || {}));
+console.log(
+  '[DEBUG]   blueprint.slots keys:',
+  Object.keys(blueprint.slots || {})
+);
 ```
 
 ### Step 4: Convert Useful Diagnostics to Logger
@@ -102,7 +125,7 @@ Ensure the class has access to a logger via dependency injection:
 class SlotResolutionOrchestrator {
   #logger;
 
-  constructor({ logger, /* other deps */ }) {
+  constructor({ logger /* other deps */ }) {
     this.#logger = logger;
     // ...
   }
@@ -116,6 +139,7 @@ class SlotResolutionOrchestrator {
 ### Unit Tests
 
 1. **Test: No console.log calls in production code**
+
 ```javascript
 it('should not contain console.log calls', () => {
   const fs = require('fs');
@@ -133,6 +157,7 @@ it('should not contain console.log calls', () => {
 ```
 
 2. **Test: Logger used for diagnostics (if applicable)**
+
 ```javascript
 it('should use logger for diagnostic output', async () => {
   const mockLogger = {
@@ -214,11 +239,13 @@ it('should use logger for diagnostic output', async () => {
 ## Outcome
 
 ### What was originally planned
+
 - Remove all `console.log('[DEBUG]')` statements from `slotResolutionOrchestrator.js` (lines 56-71, 192-196 per original ticket)
 - Consider converting useful diagnostics to proper logger calls
 - Add unit tests to verify no console.log calls remain
 
 ### What was actually changed
+
 1. **Corrected ticket assumptions**: Line numbers were outdated; actual locations were lines 88-103 and 224-228
 2. **Removed 8 console.log debug statements** (all were debug-only with no production value):
    - 4 statements for processBlueprintSlots entry debugging
@@ -231,5 +258,6 @@ it('should use logger for diagnostic output', async () => {
    - [DEBUG] marker prevention
 
 ### Deviation from plan
+
 - Original line numbers were incorrect (56-71, 192-196 vs actual 88-103, 224-228)
 - No logger conversion was needed - existing logger.debug calls were already sufficient

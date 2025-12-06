@@ -342,7 +342,9 @@ describe('ScopeConditionAnalyzer', () => {
         'test/scope/path.scope'
       );
 
-      expect(validation.valid).toContain('positioning:actor-in-entity-facing-away');
+      expect(validation.valid).toContain(
+        'positioning:actor-in-entity-facing-away'
+      );
       expect(validation.missing).toEqual([]);
     });
 
@@ -353,7 +355,9 @@ describe('ScopeConditionAnalyzer', () => {
       );
 
       expect(validation.valid).toEqual([]);
-      expect(validation.missing).toContain('positioning:nonexistent-condition-xyz');
+      expect(validation.missing).toContain(
+        'positioning:nonexistent-condition-xyz'
+      );
     });
 
     it('should handle mix of valid and missing conditions', async () => {
@@ -365,7 +369,9 @@ describe('ScopeConditionAnalyzer', () => {
         'test/scope/path.scope'
       );
 
-      expect(validation.valid).toContain('positioning:actor-in-entity-facing-away');
+      expect(validation.valid).toContain(
+        'positioning:actor-in-entity-facing-away'
+      );
       expect(validation.missing).toContain('positioning:nonexistent-condition');
     });
 
@@ -385,7 +391,9 @@ describe('ScopeConditionAnalyzer', () => {
         'test/scope/path.scope'
       );
 
-      expect(validation.valid).toContain('positioning:actor-in-entity-facing-away');
+      expect(validation.valid).toContain(
+        'positioning:actor-in-entity-facing-away'
+      );
     });
 
     it('should handle invalid condition ID format', async () => {

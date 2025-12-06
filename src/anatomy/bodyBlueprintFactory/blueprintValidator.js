@@ -240,9 +240,7 @@ export function validateBlueprintRecipeConsistency(
     // Log warnings
     const warnings = issues.filter((issue) => issue.severity === 'warning');
     warnings.forEach((warning) => {
-      logger.warn(
-        `BlueprintValidator: ${warning.message} - ${warning.impact}`
-      );
+      logger.warn(`BlueprintValidator: ${warning.message} - ${warning.impact}`);
     });
   }
 

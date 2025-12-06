@@ -8,15 +8,11 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "cotton",
-      "properties": [
-        "breathable"
-      ]
+      "properties": ["breathable"]
     },
     "core:name": {
       "text": "athletic socks"

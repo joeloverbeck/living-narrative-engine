@@ -39,7 +39,10 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
 
   it('should only return trousers when boxer brief is covered (Layla Agirre bug fix)', () => {
     // Create resolver with coverage analyzer support
-    resolver = createArrayIterationResolver({ clothingAccessibilityService, errorHandler });
+    resolver = createArrayIterationResolver({
+      clothingAccessibilityService,
+      errorHandler,
+    });
 
     const node = {
       type: 'ArrayIterationStep',
@@ -52,13 +55,15 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
 
     // Mock clothing accessibility service to implement coverage blocking logic
     // In topmost mode, trousers block access to boxer brief underneath
-    clothingAccessibilityService.getAccessibleItems.mockImplementation((entityId, options) => {
-      if (entityId === 'layla-agirre' && options.mode === 'topmost') {
-        // Only trousers are accessible - boxer brief is blocked by coverage
-        return ['asudem:trousers'];
+    clothingAccessibilityService.getAccessibleItems.mockImplementation(
+      (entityId, options) => {
+        if (entityId === 'layla-agirre' && options.mode === 'topmost') {
+          // Only trousers are accessible - boxer brief is blocked by coverage
+          return ['asudem:trousers'];
+        }
+        return [];
       }
-      return [];
-    });
+    );
 
     // Simulate the exact clothing configuration from the bug report
     const clothingAccess = {
@@ -83,17 +88,19 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     // The boxer brief should be blocked by the trousers coverage
     expect(result).toEqual(new Set(['asudem:trousers']));
     expect(result).not.toContain('asudem:boxer_brief');
-    
+
     // Verify the service was called correctly
-    expect(clothingAccessibilityService.getAccessibleItems).toHaveBeenCalledWith(
+    expect(
+      clothingAccessibilityService.getAccessibleItems
+    ).toHaveBeenCalledWith(
       'layla-agirre',
       expect.objectContaining({
         mode: 'topmost',
         context: 'removal',
-        sortByPriority: true
+        sortByPriority: true,
       })
     );
-    
+
     // Verify trace logging from service interaction
     expect(trace.addStep).toHaveBeenCalledWith(
       'Retrieved 1 accessible items for mode: topmost'
@@ -102,7 +109,10 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
 
   it('should return boxer brief when trousers are removed', () => {
     // Create resolver with coverage analyzer support
-    resolver = createArrayIterationResolver({ clothingAccessibilityService, errorHandler });
+    resolver = createArrayIterationResolver({
+      clothingAccessibilityService,
+      errorHandler,
+    });
 
     const node = {
       type: 'ArrayIterationStep',
@@ -114,13 +124,15 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
     const ctx = { dispatcher, trace, actorEntity };
 
     // Mock clothing accessibility service for scenario without trousers
-    clothingAccessibilityService.getAccessibleItems.mockImplementation((entityId, options) => {
-      if (entityId === 'layla-agirre' && options.mode === 'topmost') {
-        // Only boxer brief is accessible now
-        return ['asudem:boxer_brief'];
+    clothingAccessibilityService.getAccessibleItems.mockImplementation(
+      (entityId, options) => {
+        if (entityId === 'layla-agirre' && options.mode === 'topmost') {
+          // Only boxer brief is accessible now
+          return ['asudem:boxer_brief'];
+        }
+        return [];
       }
-      return [];
-    });
+    );
 
     // Simulate clothing configuration after trousers are removed
     const clothingAccess = {
@@ -175,7 +187,7 @@ describe('Layla Agirre Scenario - Coverage Blocking', () => {
 
     // Without clothing accessibility service, empty array is returned
     expect(result).toEqual(new Set());
-    
+
     // Verify appropriate trace message was logged
     expect(trace.addStep).toHaveBeenCalledWith(
       'No clothing accessibility service available, returning empty array'

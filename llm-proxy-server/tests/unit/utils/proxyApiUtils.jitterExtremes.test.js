@@ -15,12 +15,7 @@ const createLogger = () => ({
   error: jest.fn(),
 });
 
-const createResponse = ({
-  ok,
-  status,
-  jsonData,
-  textData,
-}) => {
+const createResponse = ({ ok, status, jsonData, textData }) => {
   const response = {
     ok,
     status,
@@ -116,7 +111,9 @@ describe('RetryManager jitter boundaries', () => {
       jsonData: { ok: true },
     });
 
-    fetch.mockResolvedValueOnce(failureResponse).mockResolvedValueOnce(successResponse);
+    fetch
+      .mockResolvedValueOnce(failureResponse)
+      .mockResolvedValueOnce(successResponse);
 
     mathRandomSpy.mockReturnValue(0); // force -20% jitter
 

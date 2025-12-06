@@ -45,9 +45,9 @@ describe('validationUtils additional branches', () => {
       }),
     };
 
-    expect(() =>
-      retrieveStrategyFromContext(ctx, null, 'State')
-    ).toThrow('State: invalid actorEntity.');
+    expect(() => retrieveStrategyFromContext(ctx, null, 'State')).toThrow(
+      'State: invalid actorEntity.'
+    );
   });
 
   test('validateCommandString reports non-string input', () => {

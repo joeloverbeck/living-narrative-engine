@@ -9,10 +9,12 @@ This ticket series implements the `UNWIELD_ITEM` operation handler, which encaps
 ## Problem Statement
 
 When dropping a wielded item via `drop_item.action.json`, the system currently:
+
 - Removes the item from inventory
 - Sets the item's position to the actor's location
 
 However, it does NOT:
+
 - Remove the item from `wielded_item_ids` in `positioning:wielding` component
 - Unlock the grabbing appendages holding the item
 - Clean up the wielding component if it becomes empty
@@ -23,6 +25,7 @@ This leaves the actor in an inconsistent state where they appear to still be wie
 ## Solution
 
 Create a new `UNWIELD_ITEM` operation handler that:
+
 1. Encapsulates all unwielding logic in a single, reusable operation
 2. Is idempotent - safe to call even if item is not currently wielded
 3. Can be used by both `handle_unwield_item.rule.json` and `handle_drop_item.rule.json`
@@ -30,15 +33,15 @@ Create a new `UNWIELD_ITEM` operation handler that:
 
 ## Ticket Breakdown
 
-| Ticket | Title | Description | Status |
-|--------|-------|-------------|--------|
-| UNWITEOPE-001 | Schema Creation | Create operation schema and add reference | ✅ COMPLETED |
-| UNWITEOPE-002 | Handler Implementation | Create UnwieldItemHandler class | ✅ COMPLETED |
-| UNWITEOPE-003 | DI Registration | Token, factory, interpreter mapping, whitelist | ✅ COMPLETED |
-| UNWITEOPE-004 | Unit Tests | Handler unit test coverage | ✅ COMPLETED |
-| UNWITEOPE-005 | Drop Item Rule Update | Add UNWIELD_ITEM to handle_drop_item.rule.json | ✅ COMPLETED |
-| UNWITEOPE-006 | Unwield Item Rule Update | Simplify handle_unwield_item.rule.json | ✅ COMPLETED |
-| UNWITEOPE-007 | Integration Tests | End-to-end operation tests | ✅ COMPLETED |
+| Ticket        | Title                    | Description                                    | Status       |
+| ------------- | ------------------------ | ---------------------------------------------- | ------------ |
+| UNWITEOPE-001 | Schema Creation          | Create operation schema and add reference      | ✅ COMPLETED |
+| UNWITEOPE-002 | Handler Implementation   | Create UnwieldItemHandler class                | ✅ COMPLETED |
+| UNWITEOPE-003 | DI Registration          | Token, factory, interpreter mapping, whitelist | ✅ COMPLETED |
+| UNWITEOPE-004 | Unit Tests               | Handler unit test coverage                     | ✅ COMPLETED |
+| UNWITEOPE-005 | Drop Item Rule Update    | Add UNWIELD_ITEM to handle_drop_item.rule.json | ✅ COMPLETED |
+| UNWITEOPE-006 | Unwield Item Rule Update | Simplify handle_unwield_item.rule.json         | ✅ COMPLETED |
+| UNWITEOPE-007 | Integration Tests        | End-to-end operation tests                     | ✅ COMPLETED |
 
 ## Dependency Graph
 
@@ -60,23 +63,23 @@ UNWITEOPE-003 (DI Registration)
 
 ## Files Created (Total)
 
-| File | Purpose |
-|------|---------|
-| `data/schemas/operations/unwieldItem.schema.json` | Operation schema |
-| `src/logic/operationHandlers/unwieldItemHandler.js` | Handler implementation |
-| `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js` | Unit tests |
+| File                                                            | Purpose                |
+| --------------------------------------------------------------- | ---------------------- |
+| `data/schemas/operations/unwieldItem.schema.json`               | Operation schema       |
+| `src/logic/operationHandlers/unwieldItemHandler.js`             | Handler implementation |
+| `tests/unit/logic/operationHandlers/unwieldItemHandler.test.js` | Unit tests             |
 
 ## Files Modified (Total)
 
-| File | Change |
-|------|--------|
-| `data/schemas/operation.schema.json` | Add schema $ref |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add token |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | Add mapping |
-| `src/utils/preValidationUtils.js` | Add to whitelist |
-| `data/mods/items/rules/handle_drop_item.rule.json` | Add UNWIELD_ITEM call |
-| `data/mods/items/rules/handle_unwield_item.rule.json` | Simplify using new operation |
+| File                                                                     | Change                       |
+| ------------------------------------------------------------------------ | ---------------------------- |
+| `data/schemas/operation.schema.json`                                     | Add schema $ref              |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add token                    |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Add factory                  |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js`      | Add mapping                  |
+| `src/utils/preValidationUtils.js`                                        | Add to whitelist             |
+| `data/mods/items/rules/handle_drop_item.rule.json`                       | Add UNWIELD_ITEM call        |
+| `data/mods/items/rules/handle_unwield_item.rule.json`                    | Simplify using new operation |
 
 ## Success Criteria
 
@@ -102,12 +105,12 @@ All 7 tickets in the UNWITEOPE series were successfully implemented. The `UNWIEL
 
 ### Key Discrepancies from Original Plan
 
-| Originally Planned | Actual Implementation |
-|-------------------|----------------------|
-| Create `unwieldItemOperation.test.js` | Tests already existed in `unwield_item_rule_execution.test.js` |
-| Parameter names `actor_id`, `item_id` | Handler uses `actorEntity`, `itemEntity` |
-| Create 8 new integration tests | Only 2 edge case tests needed (rest already existed) |
-| Reference `wieldWeaponRuleExecution.test.js` | File doesn't exist; not needed |
+| Originally Planned                           | Actual Implementation                                          |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| Create `unwieldItemOperation.test.js`        | Tests already existed in `unwield_item_rule_execution.test.js` |
+| Parameter names `actor_id`, `item_id`        | Handler uses `actorEntity`, `itemEntity`                       |
+| Create 8 new integration tests               | Only 2 edge case tests needed (rest already existed)           |
+| Reference `wieldWeaponRuleExecution.test.js` | File doesn't exist; not needed                                 |
 
 ### Test Coverage Final State
 

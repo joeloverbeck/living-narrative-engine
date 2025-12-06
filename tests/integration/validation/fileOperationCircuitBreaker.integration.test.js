@@ -85,12 +85,12 @@ describe('FileOperationCircuitBreaker integration with file system operations', 
     expect(firstResult).toBe('live-data');
     expect(breaker.state).toBe(CircuitBreakerState.CLOSED);
 
-    await expect(breaker.executeOperation(readMissing, { attempt: 1 })).rejects.toThrow(
-      /ENOENT/
-    );
-    await expect(breaker.executeOperation(readMissing, { attempt: 2 })).rejects.toThrow(
-      /ENOENT/
-    );
+    await expect(
+      breaker.executeOperation(readMissing, { attempt: 1 })
+    ).rejects.toThrow(/ENOENT/);
+    await expect(
+      breaker.executeOperation(readMissing, { attempt: 2 })
+    ).rejects.toThrow(/ENOENT/);
     expect(breaker.state).toBe(CircuitBreakerState.OPEN);
     expect(
       logger.records.error.some(({ message }) =>
@@ -100,12 +100,12 @@ describe('FileOperationCircuitBreaker integration with file system operations', 
 
     let blockedError;
     await expect(
-      breaker.executeOperation(readExisting, { attempt: 'blocked' }).catch(
-        (error) => {
+      breaker
+        .executeOperation(readExisting, { attempt: 'blocked' })
+        .catch((error) => {
           blockedError = error;
           throw error;
-        }
-      )
+        })
     ).rejects.toBeInstanceOf(CircuitBreakerError);
     expect(blockedError.context.timeUntilRetry).toBeGreaterThan(0);
     const openStats = breaker.getStats();
@@ -157,12 +157,12 @@ describe('FileOperationCircuitBreaker integration with file system operations', 
 
     let manualBlockedError;
     await expect(
-      breaker.executeOperation(readExisting, { phase: 'manual-open-blocked' }).catch(
-        (error) => {
+      breaker
+        .executeOperation(readExisting, { phase: 'manual-open-blocked' })
+        .catch((error) => {
           manualBlockedError = error;
           throw error;
-        }
-      )
+        })
     ).rejects.toBeInstanceOf(CircuitBreakerError);
     expect(manualBlockedError.context.timeUntilRetry).toBeNull();
 
@@ -196,11 +196,15 @@ describe('FileOperationCircuitBreaker integration with file system operations', 
     expect(breaker.state).toBe(CircuitBreakerState.CLOSED);
 
     await expect(
-      breaker.executeOperation(readMissing, { phase: 'first-post-close-failure' })
+      breaker.executeOperation(readMissing, {
+        phase: 'first-post-close-failure',
+      })
     ).rejects.toThrow(/ENOENT/);
     await delay(100);
     await expect(
-      breaker.executeOperation(readMissing, { phase: 'second-post-close-failure' })
+      breaker.executeOperation(readMissing, {
+        phase: 'second-post-close-failure',
+      })
     ).rejects.toThrow(/ENOENT/);
     const stats = breaker.getStats();
     expect(stats.recentFailures).toBe(1);

@@ -144,10 +144,12 @@ describe('DescriptionPersistenceService', () => {
 
       expect(result.successful).toBe(3);
       expect(result.failed).toEqual([]);
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledTimes(
-        1
-      );
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({
             instanceId: 'entity1',
@@ -186,7 +188,10 @@ describe('DescriptionPersistenceService', () => {
         .mockReturnValueOnce(mockEntity); // entity3
 
       mockEntityManager.batchAddComponentsOptimized.mockResolvedValue({
-        results: [{ spec: { instanceId: 'entity1' } }, { spec: { instanceId: 'entity3' } }],
+        results: [
+          { spec: { instanceId: 'entity1' } },
+          { spec: { instanceId: 'entity3' } },
+        ],
         errors: [],
         updateCount: 2,
       });
@@ -198,7 +203,9 @@ describe('DescriptionPersistenceService', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "DescriptionPersistenceService: Entity 'entity2' not found, skipping in batch"
       );
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(
         expect.arrayContaining([
           expect.objectContaining({ instanceId: 'entity1' }),
           expect.objectContaining({ instanceId: 'entity3' }),
@@ -216,7 +223,9 @@ describe('DescriptionPersistenceService', () => {
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       mockEntityManager.batchAddComponentsOptimized.mockResolvedValue({
         results: [{ spec: { instanceId: 'entity1' } }],
-        errors: [{ spec: { instanceId: 'entity2' }, error: new Error('Batch error') }],
+        errors: [
+          { spec: { instanceId: 'entity2' }, error: new Error('Batch error') },
+        ],
         updateCount: 1,
       });
 
@@ -242,7 +251,9 @@ describe('DescriptionPersistenceService', () => {
 
       expect(result.successful).toBe(0);
       expect(result.failed).toEqual([]);
-      expect(mockEntityManager.batchAddComponentsOptimized).not.toHaveBeenCalled();
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).not.toHaveBeenCalled();
     });
 
     it('should use batch operation with single batch event to avoid recursion warnings', async () => {
@@ -264,14 +275,13 @@ describe('DescriptionPersistenceService', () => {
       expect(result.successful).toBe(50);
       expect(result.failed).toEqual([]);
       // Verify batch operation is called only once with all components
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledTimes(
-        1
-      );
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledTimes(1);
       // Verify it's called with emitBatchEvent=true to avoid recursion
-      expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
-        expect.any(Array),
-        true
-      );
+      expect(
+        mockEntityManager.batchAddComponentsOptimized
+      ).toHaveBeenCalledWith(expect.any(Array), true);
     });
   });
 

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import MemoryReporter from '../../../src/entities/monitoring/MemoryReporter.js';
 import MemoryMonitor from '../../../src/entities/monitoring/MemoryMonitor.js';
 import MemoryAnalyzer from '../../../src/entities/monitoring/MemoryAnalyzer.js';
@@ -63,18 +70,78 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     });
 
     const samples = [
-      { heapUsed: 200 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 10 * MB },
-      { heapUsed: 240 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 10 * MB },
-      { heapUsed: 288 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 10 * MB },
-      { heapUsed: 336 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 12 * MB },
-      { heapUsed: 352 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 12 * MB },
-      { heapUsed: 368 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 380 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 384 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 388 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 392 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 396 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
-      { heapUsed: 398 * MB, heapTotal: 400 * MB, heapLimit: 400 * MB, external: 14 * MB },
+      {
+        heapUsed: 200 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 10 * MB,
+      },
+      {
+        heapUsed: 240 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 10 * MB,
+      },
+      {
+        heapUsed: 288 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 10 * MB,
+      },
+      {
+        heapUsed: 336 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 12 * MB,
+      },
+      {
+        heapUsed: 352 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 12 * MB,
+      },
+      {
+        heapUsed: 368 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 380 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 384 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 388 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 392 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 396 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
+      {
+        heapUsed: 398 * MB,
+        heapTotal: 400 * MB,
+        heapLimit: 400 * MB,
+        external: 14 * MB,
+      },
     ];
 
     let sampleIndex = 0;
@@ -101,15 +168,26 @@ describe('MemoryReporter integration with live monitoring stack', () => {
       eventBus,
       samplingInterval: 1000,
       maxHistorySize: 32,
-      leakDetectionConfig: { windowSize: 4, checkInterval: 1000, enabled: true },
+      leakDetectionConfig: {
+        windowSize: 4,
+        checkInterval: 1000,
+        enabled: true,
+      },
     });
 
     analyzer = new MemoryAnalyzer({ logger }, { minSamplesForAnalysis: 4 });
-    profiler = new MemoryProfiler({ logger }, { trackPeakMemory: false, snapshotInterval: 50 });
+    profiler = new MemoryProfiler(
+      { logger },
+      { trackPeakMemory: false, snapshotInterval: 50 }
+    );
 
     pressureManager = new MemoryPressureManager(
       { logger, eventBus, monitor },
-      { automaticManagement: true, minTimeBetweenManagement: 0, aggressiveGC: true }
+      {
+        automaticManagement: true,
+        minTimeBetweenManagement: 0,
+        aggressiveGC: true,
+      }
     );
 
     pressureManager.enableAutomaticManagement(true);
@@ -174,9 +252,7 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     expect(report.hotspots.length).toBeGreaterThan(0);
 
     const categories = report.recommendations.map((rec) => rec.category);
-    expect(categories).toEqual(
-      expect.arrayContaining(['leak', 'pressure'])
-    );
+    expect(categories).toEqual(expect.arrayContaining(['leak', 'pressure']));
 
     expect(gcSpy).toHaveBeenCalled();
     expect(capturedStrategyEvents.length).toBeGreaterThan(0);
@@ -192,13 +268,14 @@ describe('MemoryReporter integration with live monitoring stack', () => {
   });
 
   it('supports exporting reports and auto-report lifecycle management', async () => {
-    const pressureLevelSpy = jest.spyOn(pressureManager, 'getCurrentPressureLevel');
+    const pressureLevelSpy = jest.spyOn(
+      pressureManager,
+      'getCurrentPressureLevel'
+    );
     pressureLevelSpy.mockReturnValueOnce('normal');
     pressureLevelSpy.mockReturnValueOnce('warning');
 
-    jest
-      .spyOn(monitor, 'getCurrentUsage')
-      .mockReturnValueOnce(null);
+    jest.spyOn(monitor, 'getCurrentUsage').mockReturnValueOnce(null);
 
     const leakSpy = jest.spyOn(monitor, 'detectMemoryLeak');
     leakSpy.mockReturnValueOnce({
@@ -215,8 +292,16 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     });
 
     const trendSpy = jest.spyOn(analyzer, 'analyzeTrend');
-    trendSpy.mockReturnValueOnce({ trend: 'stable', slope: 0, confidence: 0.2 });
-    trendSpy.mockReturnValueOnce({ trend: 'growing', slope: 15, confidence: 0.92 });
+    trendSpy.mockReturnValueOnce({
+      trend: 'stable',
+      slope: 0,
+      confidence: 0.2,
+    });
+    trendSpy.mockReturnValueOnce({
+      trend: 'growing',
+      slope: 15,
+      confidence: 0.92,
+    });
 
     const patternSpy = jest.spyOn(analyzer, 'detectPatterns');
     patternSpy.mockReturnValueOnce([]);
@@ -243,8 +328,12 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     });
 
     expect(warningReport.summary.status).toBe('warning');
-    expect(warningReport.recommendations.some((rec) => rec.category === 'pattern')).toBe(true);
-    expect(warningReport.recommendations.some((rec) => rec.category === 'pressure')).toBe(true);
+    expect(
+      warningReport.recommendations.some((rec) => rec.category === 'pattern')
+    ).toBe(true);
+    expect(
+      warningReport.recommendations.some((rec) => rec.category === 'pressure')
+    ).toBe(true);
 
     const jsonExport = reporter.exportReport(warningReport, 'json');
     expect(JSON.parse(jsonExport).summary.status).toBe('warning');
@@ -258,7 +347,9 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     const htmlExport = reporter.exportReport(warningReport, 'html');
     expect(htmlExport).toContain('<!DOCTYPE html>');
 
-    expect(() => reporter.exportReport(warningReport, 'csv')).toThrow('Unsupported format');
+    expect(() => reporter.exportReport(warningReport, 'csv')).toThrow(
+      'Unsupported format'
+    );
 
     const autoJson = reporter.exportReport(undefined, 'json');
     expect(typeof autoJson).toBe('string');
@@ -297,7 +388,8 @@ describe('MemoryReporter integration with live monitoring stack', () => {
     expect(autoHistory.length).toBeLessThanOrEqual(2);
 
     const warnLogs = logger.logs.filter(
-      (entry) => entry.level === 'warn' && String(entry.args[0]).includes('Auto-report')
+      (entry) =>
+        entry.level === 'warn' && String(entry.args[0]).includes('Auto-report')
     );
     expect(warnLogs.length).toBeGreaterThan(0);
 

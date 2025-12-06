@@ -269,16 +269,10 @@ Add the new files under the manifest's `content` object in `data/mods/your_mod/m
         "entities/definitions/spider_abdomen.entity.json",
         "entities/definitions/spider_spinneret.entity.json"
       ],
-      "instances": [
-        "entities/test_spider.instance.json"
-      ]
+      "instances": ["entities/test_spider.instance.json"]
     },
-    "blueprints": [
-      "blueprints/spider.blueprint.json"
-    ],
-    "recipes": [
-      "recipes/spider.recipe.json"
-    ],
+    "blueprints": ["blueprints/spider.blueprint.json"],
+    "recipes": ["recipes/spider.recipe.json"],
     "structure-templates": [
       "structure-templates/spider.structure-template.json"
     ]

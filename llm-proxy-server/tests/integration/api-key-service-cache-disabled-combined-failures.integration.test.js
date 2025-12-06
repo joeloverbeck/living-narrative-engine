@@ -5,7 +5,14 @@
  *              both environment and file sources are misconfigured.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -173,12 +180,15 @@ describe('ApiKeyService cache-disabled success and combined failure integration'
     );
     expect(result.errorDetails.details.reason).toContain('ENOENT');
     expect(result.errorDetails.details.llmId).toBeUndefined();
-    expect(result.errorDetails.details.originalErrorMessage).toContain('ENOENT');
+    expect(result.errorDetails.details.originalErrorMessage).toContain(
+      'ENOENT'
+    );
 
     const warnMessages = logger.warn.mock.calls.map(([message]) => message);
     expect(
-      warnMessages.some((message) =>
-        typeof message === 'string' && message.includes('LLM ID: N/A')
+      warnMessages.some(
+        (message) =>
+          typeof message === 'string' && message.includes('LLM ID: N/A')
       )
     ).toBe(true);
   });

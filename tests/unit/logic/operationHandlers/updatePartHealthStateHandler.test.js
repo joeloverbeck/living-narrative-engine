@@ -895,10 +895,7 @@ describe('UpdatePartHealthStateHandler', () => {
         return null;
       });
 
-      await handler.execute(
-        { part_entity_ref: '  part1  ' },
-        executionContext
-      );
+      await handler.execute({ part_entity_ref: '  part1  ' }, executionContext);
 
       expect(em.getComponentData).toHaveBeenCalledWith(
         'part1',

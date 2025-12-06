@@ -66,14 +66,26 @@ describe('DISBODPARSPA-011: Human Head/Face Weight Validation', () => {
 
   describe('Human Eye Definitions', () => {
     const EYES = [
-      { file: 'human_eye_amber.entity.json', minWeight: 0.007, maxWeight: 0.009 },
-      { file: 'human_eye_blue.entity.json', minWeight: 0.007, maxWeight: 0.009 },
+      {
+        file: 'human_eye_amber.entity.json',
+        minWeight: 0.007,
+        maxWeight: 0.009,
+      },
+      {
+        file: 'human_eye_blue.entity.json',
+        minWeight: 0.007,
+        maxWeight: 0.009,
+      },
       {
         file: 'human_eye_blue_hooded.entity.json',
         minWeight: 0.007,
         maxWeight: 0.009,
       },
-      { file: 'human_eye_brown.entity.json', minWeight: 0.007, maxWeight: 0.009 },
+      {
+        file: 'human_eye_brown.entity.json',
+        minWeight: 0.007,
+        maxWeight: 0.009,
+      },
       {
         file: 'human_eye_brown_almond.entity.json',
         minWeight: 0.007,
@@ -89,7 +101,11 @@ describe('DISBODPARSPA-011: Human Head/Face Weight Validation', () => {
         minWeight: 0.007,
         maxWeight: 0.009,
       },
-      { file: 'human_eye_green.entity.json', minWeight: 0.007, maxWeight: 0.009 },
+      {
+        file: 'human_eye_green.entity.json',
+        minWeight: 0.007,
+        maxWeight: 0.009,
+      },
       {
         file: 'human_eye_hazel_almond.entity.json',
         minWeight: 0.007,

@@ -157,7 +157,11 @@ describe('[Integration] Player Type Routing Verification', () => {
 
     it('should verify GOAP provider returns action index from GOAP controller', async () => {
       const mockActions = [
-        { actionId: 'core:sit_down', index: 1, params: { targetId: 'chair-1' } },
+        {
+          actionId: 'core:sit_down',
+          index: 1,
+          params: { targetId: 'chair-1' },
+        },
         { actionId: 'core:stand_up', index: 2, params: {} },
       ];
 
@@ -176,7 +180,11 @@ describe('[Integration] Player Type Routing Verification', () => {
       };
 
       const factory = new ActorAwareStrategyFactory({
-        providers: { human: providers.human, llm: providers.llm, goap: goapProvider },
+        providers: {
+          human: providers.human,
+          llm: providers.llm,
+          goap: goapProvider,
+        },
         logger,
         choicePipeline,
         turnActionFactory,
@@ -188,7 +196,11 @@ describe('[Integration] Player Type Routing Verification', () => {
       expect(strategy.decisionProvider).toBe(goapProvider);
 
       // Simulate decision making with actions
-      const result = await strategy.decisionProvider.decide(actor, {}, mockActions);
+      const result = await strategy.decisionProvider.decide(
+        actor,
+        {},
+        mockActions
+      );
 
       expect(result).toEqual({
         chosenIndex: 1,
@@ -215,7 +227,11 @@ describe('[Integration] Player Type Routing Verification', () => {
       };
 
       const factory = new ActorAwareStrategyFactory({
-        providers: { human: providers.human, llm: providers.llm, goap: goapProvider },
+        providers: {
+          human: providers.human,
+          llm: providers.llm,
+          goap: goapProvider,
+        },
         logger,
         choicePipeline,
         turnActionFactory,
@@ -391,9 +407,15 @@ describe('[Integration] Player Type Routing Verification', () => {
   describe('Complete Routing Flow', () => {
     it('should verify all three player types can be routed in sequence', () => {
       const actors = {
-        humanActor: { getComponentData: jest.fn().mockReturnValue({ type: 'human' }) },
-        llmActor: { getComponentData: jest.fn().mockReturnValue({ type: 'llm' }) },
-        goapActor: { getComponentData: jest.fn().mockReturnValue({ type: 'goap' }) },
+        humanActor: {
+          getComponentData: jest.fn().mockReturnValue({ type: 'human' }),
+        },
+        llmActor: {
+          getComponentData: jest.fn().mockReturnValue({ type: 'llm' }),
+        },
+        goapActor: {
+          getComponentData: jest.fn().mockReturnValue({ type: 'goap' }),
+        },
       };
 
       const factory = new ActorAwareStrategyFactory({

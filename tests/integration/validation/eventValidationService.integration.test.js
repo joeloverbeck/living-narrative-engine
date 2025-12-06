@@ -75,7 +75,9 @@ describe('EventValidationService Integration', () => {
     schemaValidator = new AjvSchemaValidator({ logger });
 
     const commonSchema = loadJson('data/schemas/common.schema.json');
-    const attemptActionEvent = loadJson('data/mods/core/events/attempt_action.event.json');
+    const attemptActionEvent = loadJson(
+      'data/mods/core/events/attempt_action.event.json'
+    );
 
     await schemaValidator.addSchema(commonSchema, commonSchema.$id);
     await schemaValidator.addSchema(
@@ -124,7 +126,9 @@ describe('EventValidationService Integration', () => {
     expect(result.source).toBe('schema');
     expect(result.warnings).toEqual([]);
     const messages = (result.errors || []).map((error) => error.message || '');
-    expect(messages.join(' ')).toContain("must have required property 'actorId'");
+    expect(messages.join(' ')).toContain(
+      "must have required property 'actorId'"
+    );
   });
 
   it('exposes business rule errors when schema passes but legacy expectations fail', async () => {
@@ -140,7 +144,9 @@ describe('EventValidationService Integration', () => {
   });
 
   it('surfaces multi-target consistency warnings alongside schema validation', async () => {
-    const mismatchedTargetEvent = buildValidEvent({ targetId: 'npc:unrelated_999' });
+    const mismatchedTargetEvent = buildValidEvent({
+      targetId: 'npc:unrelated_999',
+    });
 
     const result = await service.validateEvent(mismatchedTargetEvent);
 
@@ -174,12 +180,24 @@ describe('EventValidationService Integration', () => {
     const results = await service.validateEvents(events);
 
     expect(results).toHaveLength(3);
-    expect(results[0]).toMatchObject({ index: 0, isValid: true, source: 'complete' });
-    expect(results[1]).toMatchObject({ index: 1, isValid: true, source: 'complete' });
+    expect(results[0]).toMatchObject({
+      index: 0,
+      isValid: true,
+      source: 'complete',
+    });
+    expect(results[1]).toMatchObject({
+      index: 1,
+      isValid: true,
+      source: 'complete',
+    });
     expect(results[2].isValid).toBe(false);
     expect(results[2].source).toBe('schema');
-    const finalMessages = (results[2].errors || []).map((error) => error.message || '');
-    expect(finalMessages.join(' ')).toContain("must have required property 'actorId'");
+    const finalMessages = (results[2].errors || []).map(
+      (error) => error.message || ''
+    );
+    expect(finalMessages.join(' ')).toContain(
+      "must have required property 'actorId'"
+    );
   });
 
   it('handles unexpected errors while validating a batch and continues processing', async () => {
@@ -190,7 +208,9 @@ describe('EventValidationService Integration', () => {
       .mockImplementationOnce(async () => {
         throw new Error('simulated validator failure');
       })
-      .mockImplementation((evt, schemaId) => originalValidateEvent(evt, schemaId));
+      .mockImplementation((evt, schemaId) =>
+        originalValidateEvent(evt, schemaId)
+      );
 
     const results = await service.validateEvents([event, buildValidEvent()]);
 
@@ -204,11 +224,17 @@ describe('EventValidationService Integration', () => {
     expect(results[0].errors).toEqual([
       'Validation error: simulated validator failure',
     ]);
-    expect(results[1]).toMatchObject({ index: 1, isValid: true, source: 'complete' });
+    expect(results[1]).toMatchObject({
+      index: 1,
+      isValid: true,
+      source: 'complete',
+    });
 
     const errorLog = logger.entries.find((entry) => entry.level === 'error');
     expect(errorLog).toBeDefined();
-    expect(String(errorLog.args[0])).toContain('Failed to validate event at index 0');
+    expect(String(errorLog.args[0])).toContain(
+      'Failed to validate event at index 0'
+    );
   });
 
   it('reports and resets performance metrics from the multi-target validator', async () => {
@@ -228,8 +254,12 @@ describe('EventValidationService Integration', () => {
     expect(secondResult.isValid).toBe(true);
 
     const metricsBeforeReset = service.getPerformanceMetrics();
-    expect(metricsBeforeReset.multiTarget.validationCount).toBeGreaterThanOrEqual(2);
-    expect(metricsBeforeReset.multiTarget.averageTime).toBeGreaterThanOrEqual(0);
+    expect(
+      metricsBeforeReset.multiTarget.validationCount
+    ).toBeGreaterThanOrEqual(2);
+    expect(metricsBeforeReset.multiTarget.averageTime).toBeGreaterThanOrEqual(
+      0
+    );
 
     service.resetPerformanceMetrics();
     const metricsAfterReset = service.getPerformanceMetrics();

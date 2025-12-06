@@ -35,17 +35,20 @@ describe('Scope Tracing Integration', () => {
 
       // Verify the custom scope was registered
       expect(testFixture.testEnv._registeredResolvers).toBeDefined();
-      expect(testFixture.testEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
+      expect(
+        testFixture.testEnv._registeredResolvers.has('positioning:close_actors')
+      ).toBe(true);
 
       // Directly resolve a scope to trigger tracer
       // Get the full entity instance from the entity manager
       const actorEntity = testFixture.testEnv.entityManager.getEntityInstance(
         scenario.actor.id
       );
-      const resolveResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'positioning:close_actors',
-        actorEntity
-      );
+      const resolveResult =
+        testFixture.testEnv.unifiedScopeResolver.resolveSync(
+          'positioning:close_actors',
+          actorEntity
+        );
 
       const trace = testFixture.getScopeTraceData();
 

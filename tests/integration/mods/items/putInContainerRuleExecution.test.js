@@ -236,7 +236,14 @@ describe('items:put_in_container action integration', () => {
       .withComponent('items:openable', {})
       .build();
 
-    testFixture.reset([room, actor, container, heavyItem, existing1, existing2]);
+    testFixture.reset([
+      room,
+      actor,
+      container,
+      heavyItem,
+      existing1,
+      existing2,
+    ]);
 
     // Act: Attempt to put heavy item in container (would exceed 100 weight: 40 + 30 + 50 = 120)
     await testFixture.executeAction('test:actor1', 'weak-chest', {
@@ -246,8 +253,11 @@ describe('items:put_in_container action integration', () => {
     });
 
     // Assert: Verify item was NOT moved
-    const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actorAfter.components['items:inventory'].items).toContain('heavy-item');
+    const actorAfter =
+      testFixture.entityManager.getEntityInstance('test:actor1');
+    expect(actorAfter.components['items:inventory'].items).toContain(
+      'heavy-item'
+    );
 
     const containerAfter =
       testFixture.entityManager.getEntityInstance('weak-chest');
@@ -423,13 +433,15 @@ describe('items:put_in_container action integration', () => {
           involvedEntities: putEvent.payload.involvedEntities,
         },
         originating_actor_id: putEvent.payload.actorId,
-        recipient_ids:
-          putEvent.payload.contextualData?.recipientIds ?? [putEvent.payload.actorId],
+        recipient_ids: putEvent.payload.contextualData?.recipientIds ?? [
+          putEvent.payload.actorId,
+        ],
       });
 
       const actorEntity =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      const logEntries = actorEntity.components['core:perception_log'].logEntries;
+      const logEntries =
+        actorEntity.components['core:perception_log'].logEntries;
       expect(logEntries).toHaveLength(1);
       expect(logEntries[0].descriptionText).toContain('puts package-1');
     });
@@ -492,13 +504,15 @@ describe('items:put_in_container action integration', () => {
           involvedEntities: failedEvent.payload.involvedEntities,
         },
         originating_actor_id: failedEvent.payload.actorId,
-        recipient_ids:
-          failedEvent.payload.contextualData?.recipientIds ?? [failedEvent.payload.actorId],
+        recipient_ids: failedEvent.payload.contextualData?.recipientIds ?? [
+          failedEvent.payload.actorId,
+        ],
       });
 
       const actorEntity =
         testFixture.entityManager.getEntityInstance('test:actor1');
-      const logEntries = actorEntity.components['core:perception_log'].logEntries;
+      const logEntries =
+        actorEntity.components['core:perception_log'].logEntries;
       expect(logEntries).toHaveLength(1);
       expect(logEntries[0].perceptionType).toBe('put_in_container_failed');
     });
@@ -626,7 +640,8 @@ describe('items:put_in_container action integration', () => {
           secondaryId: 'apple-1',
         },
       });
-      const actor1After = testFixture.entityManager.getEntityInstance('actor-1');
+      const actor1After =
+        testFixture.entityManager.getEntityInstance('actor-1');
       expect(actor1After.components['items:inventory'].items).not.toContain(
         'apple-1'
       );
@@ -637,7 +652,8 @@ describe('items:put_in_container action integration', () => {
           secondaryId: 'bread-1',
         },
       });
-      const actor2After = testFixture.entityManager.getEntityInstance('actor-2');
+      const actor2After =
+        testFixture.entityManager.getEntityInstance('actor-2');
       expect(actor2After.components['items:inventory'].items).not.toContain(
         'bread-1'
       );
@@ -645,9 +661,9 @@ describe('items:put_in_container action integration', () => {
       // Verify container now has both items
       const containerAfter =
         testFixture.entityManager.getEntityInstance('supply-crate');
-      expect(containerAfter.components['items:container'].contents).toHaveLength(
-        2
-      );
+      expect(
+        containerAfter.components['items:container'].contents
+      ).toHaveLength(2);
       expect(containerAfter.components['items:container'].contents).toEqual(
         expect.arrayContaining(['apple-1', 'bread-1'])
       );

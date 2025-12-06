@@ -5,6 +5,7 @@
 **Estimated Effort:** 0.25 days
 **Completed:** 2025-11-28
 **Dependencies:**
+
 - PERPARHEAANDNARTHR-001 (Part Health Component)
 - PERPARHEAANDNARTHR-002 (Health Thresholds Lookup)
 - PERPARHEAANDNARTHR-009 (Part Health Changed Event)
@@ -21,6 +22,7 @@ Update the anatomy mod manifest to include references to the new component, look
 ## Outcome
 
 ### Originally Planned
+
 1. Add `part_health.component.json` to components array
 2. Add `lookups` section with `part_health_thresholds.json`
 3. Add two event references to events array
@@ -28,18 +30,22 @@ Update the anatomy mod manifest to include references to the new component, look
 ### Actually Changed
 
 **Assumptions Corrected:**
+
 - `part_health.component.json` was already present in the manifest (no change needed)
 - `content.lookups` array already existed but was empty `[]` (just needed population)
 
 **Changes Applied:**
+
 1. **No change** to components (already present)
 2. **Populated** `content.lookups` with `part_health_thresholds.json`
 3. **Added** `part_health_changed.event.json` and `part_state_changed.event.json` to events array (alphabetically ordered)
 
 ### Modified Files
+
 - `data/mods/anatomy/mod-manifest.json` - Added 2 event references, populated lookups array
 
 ### Verification Results
+
 - ✅ JSON validity verified
 - ✅ All referenced files exist
 - ✅ `npm run validate` passed
@@ -52,9 +58,11 @@ Update the anatomy mod manifest to include references to the new component, look
 ## Files to Touch
 
 ### New Files
+
 - None
 
 ### Modified Files
+
 - `data/mods/anatomy/mod-manifest.json`
 
 ---
@@ -62,6 +70,7 @@ Update the anatomy mod manifest to include references to the new component, look
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any component files (already created)
 - Any event files (already created)
 - Any lookup files (already created)
@@ -86,6 +95,7 @@ In `data/mods/anatomy/mod-manifest.json`, add the following entries:
 #### 2. Populate Lookups Array
 
 The `content.lookups` array exists but is empty `[]`. Add:
+
 ```json
 "lookups": [
   "part_health_thresholds.json"
@@ -95,6 +105,7 @@ The `content.lookups` array exists but is empty `[]`. Add:
 #### 3. Add Event References
 
 In the `content.events` array, add (maintain alphabetical order):
+
 ```json
 "part_health_changed.event.json",
 "part_state_changed.event.json"
@@ -115,9 +126,7 @@ In the `content.events` array, add (maintain alphabetical order):
       "requires_grabbing.component.json",
       "sockets.component.json"
     ],
-    "lookups": [
-      "part_health_thresholds.json"
-    ],
+    "lookups": ["part_health_thresholds.json"],
     "events": [
       "anatomy_generated.event.json",
       "interaction_click.event.json",
@@ -141,6 +150,7 @@ In the `content.events` array, add (maintain alphabetical order):
 ### Tests That Must Pass
 
 1. **JSON validity:**
+
    ```bash
    node -e "JSON.parse(require('fs').readFileSync('data/mods/anatomy/mod-manifest.json'))"
    ```

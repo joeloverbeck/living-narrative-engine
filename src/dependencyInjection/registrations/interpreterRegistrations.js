@@ -225,7 +225,10 @@ export function registerInterpreters(container) {
       'REGENERATE_DESCRIPTION',
       bind(tokens.RegenerateDescriptionHandler)
     );
-    registry.register('RESOLVE_DIRECTION', bind(tokens.ResolveDirectionHandler));
+    registry.register(
+      'RESOLVE_DIRECTION',
+      bind(tokens.ResolveDirectionHandler)
+    );
     registry.register(
       'RESOLVE_HIT_LOCATION',
       bind(tokens.ResolveHitLocationHandler)
@@ -241,7 +244,10 @@ export function registerInterpreters(container) {
       'DROP_ITEM_AT_LOCATION',
       bind(tokens.DropItemAtLocationHandler)
     );
-    registry.register('PICK_RANDOM_ENTITY', bind(tokens.PickRandomEntityHandler));
+    registry.register(
+      'PICK_RANDOM_ENTITY',
+      bind(tokens.PickRandomEntityHandler)
+    );
     registry.register(
       'PICK_UP_ITEM_FROM_LOCATION',
       bind(tokens.PickUpItemFromLocationHandler)
@@ -255,10 +261,7 @@ export function registerInterpreters(container) {
       'TAKE_FROM_CONTAINER',
       bind(tokens.TakeFromContainerHandler)
     );
-    registry.register(
-      'PUT_IN_CONTAINER',
-      bind(tokens.PutInContainerHandler)
-    );
+    registry.register('PUT_IN_CONTAINER', bind(tokens.PutInContainerHandler));
     registry.register(
       'VALIDATE_CONTAINER_CAPACITY',
       bind(tokens.ValidateContainerCapacityHandler)

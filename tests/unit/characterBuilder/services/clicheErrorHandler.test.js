@@ -440,7 +440,9 @@ describe('ClicheErrorHandler', () => {
       const error = new ClicheLLMError('Service failure', 500);
       const operation = 'half_open_operation';
       let currentTime = 0;
-      const nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+      const nowSpy = jest
+        .spyOn(Date, 'now')
+        .mockImplementation(() => currentTime);
 
       try {
         for (let i = 0; i < 5; i++) {
@@ -474,7 +476,11 @@ describe('ClicheErrorHandler', () => {
       const operation = 'successful_operation';
 
       for (let i = 0; i < 5; i++) {
-        await errorHandler.handleError(error, { operation, attempt: 3, maxRetries: 3 });
+        await errorHandler.handleError(error, {
+          operation,
+          attempt: 3,
+          maxRetries: 3,
+        });
       }
 
       mockLogger.warn.mockClear();
@@ -580,9 +586,7 @@ describe('ClicheErrorHandler', () => {
           operation: 'stale_operation',
         });
 
-        jest.setSystemTime(
-          new Date(baseTime.getTime() + 25 * 60 * 60 * 1000)
-        );
+        jest.setSystemTime(new Date(baseTime.getTime() + 25 * 60 * 60 * 1000));
 
         await errorHandler.handleError(freshError, {
           operation: 'fresh_operation',

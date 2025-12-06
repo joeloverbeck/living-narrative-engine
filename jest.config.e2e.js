@@ -10,8 +10,11 @@ const baseConfig = require('./jest.config.js');
  * @type {import('@jest/types').Config.InitialOptions}
  */
 // Relax coverage gates automatically for single-file/targeted runs
-const isTargetedRun = process.argv.some((arg) =>
-  arg.includes('tests/e2e/') || arg.endsWith('.test.js') || arg.endsWith('.spec.js')
+const isTargetedRun = process.argv.some(
+  (arg) =>
+    arg.includes('tests/e2e/') ||
+    arg.endsWith('.test.js') ||
+    arg.endsWith('.spec.js')
 );
 module.exports = {
   ...baseConfig,

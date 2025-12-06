@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
@@ -91,9 +98,11 @@ describe('ConfigurationLoader', () => {
     );
     expect(patternValidator.enabled).toBe(true);
     expect(patternValidator.failFast).toBe(true);
-    expect(result.pipelineConfig.validators['pattern-matching'].severityOverrides[
-      'pattern-matching'
-    ]).toBe('warning');
+    expect(
+      result.pipelineConfig.validators['pattern-matching'].severityOverrides[
+        'pattern-matching'
+      ]
+    ).toBe('warning');
     expect(result.rawConfig.mods.essential).toEqual(['core', 'dlc']);
     expect(result.pipelineConfig.output.format).toBe('json');
   });
@@ -143,9 +152,9 @@ describe('ConfigurationLoader', () => {
     );
 
     expect(merged.validators).toHaveLength(2);
-    expect(merged.validators.find((v) => v.name === 'component-existence').enabled).toBe(
-      false
-    );
+    expect(
+      merged.validators.find((v) => v.name === 'component-existence').enabled
+    ).toBe(false);
   });
 
   it('normalizes invalid config shapes and validator entries during merge', () => {
@@ -161,14 +170,19 @@ describe('ConfigurationLoader', () => {
       ],
     });
 
-    expect(merged.mods).toEqual({ essential: [], optional: [], autoDetect: false });
+    expect(merged.mods).toEqual({
+      essential: [],
+      optional: [],
+      autoDetect: false,
+    });
     expect(merged.validators.map((validator) => validator.name)).toEqual([
       'alpha',
       'beta',
     ]);
     expect(
       merged.validators.every(
-        (validator) => validator.enabled === true && validator.priority === Infinity
+        (validator) =>
+          validator.enabled === true && validator.priority === Infinity
       )
     ).toBe(true);
   });

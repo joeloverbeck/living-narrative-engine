@@ -501,7 +501,8 @@ describe('DescriptionPersistenceService Integration Tests', () => {
         ['workflow-entity-3', 'Batch description 3'],
       ]);
 
-      const batchResult = await service.updateMultipleDescriptions(descriptionsMap);
+      const batchResult =
+        await service.updateMultipleDescriptions(descriptionsMap);
       expect(batchResult.successful).toBe(3);
 
       // Individual verifications

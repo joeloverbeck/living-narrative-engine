@@ -59,9 +59,13 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
   };
 
   const setFurnitureSpots = async (spots) => {
-    await entityManager.addComponent(furnitureId, 'positioning:allows_sitting', {
-      spots,
-    });
+    await entityManager.addComponent(
+      furnitureId,
+      'positioning:allows_sitting',
+      {
+        spots,
+      }
+    );
   };
 
   it('returns true when candidate is the closest left occupant and the adjacent slot is free', async () => {
@@ -142,7 +146,9 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
 
   it('returns false when parameters are missing', () => {
     expect(evaluate(['entity', 'target'], contextFor())).toBe(false);
-    expect(logger.logs.warn.at(-1)[0]).toMatch('Missing required actor parameter');
+    expect(logger.logs.warn.at(-1)[0]).toMatch(
+      'Missing required actor parameter'
+    );
   });
 
   it('returns false when the actor path cannot be resolved', async () => {
@@ -150,7 +156,9 @@ describe('IsClosestLeftOccupantOperator - integration', () => {
     await setSitting(candidateId, furnitureId, 0);
     await setFurnitureSpots([candidateId, null, actorId]);
 
-    expect(evaluate(['entity', 'target', 'missingPath'], contextFor())).toBe(false);
+    expect(evaluate(['entity', 'target', 'missingPath'], contextFor())).toBe(
+      false
+    );
   });
 
   it('returns false when indices are outside the furniture configuration', async () => {

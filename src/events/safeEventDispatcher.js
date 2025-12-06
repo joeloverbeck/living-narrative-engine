@@ -155,8 +155,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
             description.includes('error');
           const hasErrorKeywords = description.match(/(error|exception|fail)/i);
 
-          const logMessage =
-            `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
+          const logMessage = `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
           const logContext = { ...context, error };
 
           if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {
@@ -191,8 +190,7 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
         description.includes('error');
       const hasErrorKeywords = description.match(/(error|exception|fail)/i);
 
-      const logMessage =
-        `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
+      const logMessage = `SafeEventDispatcher: Exception caught while ${description}. Error: ${errorMessage}`;
       const logContext = { ...context, error };
 
       if (isErrorEvent || hasErrorKeywords || this.#isHandlingError) {

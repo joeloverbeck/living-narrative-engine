@@ -56,7 +56,10 @@ const aiRegistrationModulePath =
  */
 async function importBaseContainerWithMocks({ failKey, failureError } = {}) {
   const registrationMocks = Object.fromEntries(
-    Object.keys(registrationModulePaths).map((key) => [key, jest.fn(() => undefined)])
+    Object.keys(registrationModulePaths).map((key) => [
+      key,
+      jest.fn(() => undefined),
+    ])
   );
 
   const aiRegistrationMocks = {
@@ -92,7 +95,9 @@ async function importBaseContainerWithMocks({ failKey, failureError } = {}) {
     ...aiRegistrationMocks,
   }));
 
-  const module = await import('../../../src/dependencyInjection/baseContainerConfig.js');
+  const module = await import(
+    '../../../src/dependencyInjection/baseContainerConfig.js'
+  );
 
   return {
     configureBaseContainer: module.configureBaseContainer,

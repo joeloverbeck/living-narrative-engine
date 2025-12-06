@@ -103,8 +103,10 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const receivingBlowjob = actor?.components?.['positioning:receiving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const receivingBlowjob =
+        actor?.components?.['positioning:receiving_blowjob'];
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       // IMPORTANT: No kneeling filter here (same as receiving_blowjob_from_actor)
       // This allows the action to work when target is kneeling before actor
@@ -118,12 +120,14 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       // Check if giving entity exists and has matching giving_blowjob component
-      const givingEntity = fixture.entityManager.getEntityInstance(givingEntityId);
+      const givingEntity =
+        fixture.entityManager.getEntityInstance(givingEntityId);
       if (!givingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const givingBlowjob = givingEntity.components?.['positioning:giving_blowjob'];
+      const givingBlowjob =
+        givingEntity.components?.['positioning:giving_blowjob'];
       if (!givingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -162,7 +166,8 @@ describe('sex-penile-oral:guide_blowjob_with_hand action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installActorGivingBlowjobToMeScopeOverride(testFixture);
+    restoreScopeResolver =
+      installActorGivingBlowjobToMeScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -188,7 +193,9 @@ describe('sex-penile-oral:guide_blowjob_with_hand action discovery', () => {
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("guide {primary}'s blowjob with your hand");
+    expect(discovered.template).toBe(
+      "guide {primary}'s blowjob with your hand"
+    );
   });
 
   it('does not appear when actor lacks receiving_blowjob component', async () => {
@@ -287,6 +294,8 @@ describe('sex-penile-oral:guide_blowjob_with_hand action discovery', () => {
 
     // This should PASS with the raw closeness.partners scope
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("guide {primary}'s blowjob with your hand");
+    expect(discovered.template).toBe(
+      "guide {primary}'s blowjob with your hand"
+    );
   });
 });

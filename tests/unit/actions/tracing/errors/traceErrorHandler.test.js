@@ -256,9 +256,7 @@ describe('TraceErrorHandler', () => {
       const stats = errorHandler.getErrorStatistics();
 
       expect(stats.totalErrors).toBe(50);
-      expect(
-        errorHandler.shouldDisableComponent(componentName)
-      ).toBe(true);
+      expect(errorHandler.shouldDisableComponent(componentName)).toBe(true);
     });
 
     it('should remove the oldest component history when exceeding the global limit', async () => {

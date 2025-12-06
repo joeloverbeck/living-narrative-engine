@@ -260,7 +260,7 @@ describe('ScopeEngine', () => {
         // Mock getEntityInstance for actor entity
         mockEntityManager.getEntityInstance = jest.fn().mockReturnValue({
           id: actorId,
-          componentTypeIds: ["movement:exits"],
+          componentTypeIds: ['movement:exits'],
         });
 
         // The first step 'actor.movement:exits' resolves to the array of objects.
@@ -275,7 +275,7 @@ describe('ScopeEngine', () => {
         // To do this, we need to mock the direct data access.
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentName) => {
-            if (entityId === actorId && componentName === "movement:exits") {
+            if (entityId === actorId && componentName === 'movement:exits') {
               // Step 1: actor.movement:exits
               // This step returns an array of objects, not entity IDs.
               return [
@@ -718,7 +718,10 @@ describe('ScopeEngine', () => {
       mockJsonLogicEval.evaluate.mockReset();
 
       // CRITICAL: Reset getEntity mock that was set in previous test
-      if (mockEntityManager.getEntity && mockEntityManager.getEntity.mockReset) {
+      if (
+        mockEntityManager.getEntity &&
+        mockEntityManager.getEntity.mockReset
+      ) {
         mockEntityManager.getEntity.mockReset();
       }
     });
@@ -1229,9 +1232,7 @@ describe('ScopeEngine', () => {
         const itemId = 'item_with_source';
         const mockEntity = {
           id: itemId,
-          components: new Map([
-            ['core:item', { name: 'Ring' }],
-          ]),
+          components: new Map([['core:item', { name: 'Ring' }]]),
         };
 
         const runtimeCtxWithSources = {
@@ -1276,7 +1277,10 @@ describe('ScopeEngine', () => {
           },
         };
 
-        const gateway = engine._createEntitiesGateway(runtimeCtxWithDebug, trace);
+        const gateway = engine._createEntitiesGateway(
+          runtimeCtxWithDebug,
+          trace
+        );
         const result = gateway.getItemComponents('template123');
 
         expect(result).toEqual({
@@ -1346,7 +1350,9 @@ describe('ScopeEngine', () => {
           scopeEntityLookupDebug: { enabled: true },
         };
 
-        const gateway = engine._createEntitiesGateway(runtimeCtxWithDebugLogger);
+        const gateway = engine._createEntitiesGateway(
+          runtimeCtxWithDebugLogger
+        );
         const result = gateway.getItemComponents('item_component_ids');
 
         expect(result).toEqual({});
@@ -1372,7 +1378,9 @@ describe('ScopeEngine', () => {
           entityManager: initialEntityManager,
         };
 
-        const gateway = engine._createEntitiesGateway(runtimeCtxWithCustomManager);
+        const gateway = engine._createEntitiesGateway(
+          runtimeCtxWithCustomManager
+        );
         expect(gateway.getEntityInstance('entity-id')).toEqual({
           id: 'initial-entity',
         });
@@ -1616,7 +1624,10 @@ describe('ScopeEngine', () => {
     let validAST;
 
     beforeEach(() => {
-      engine = new ScopeEngine({ maxDepth: 10, spatialIndexManager: mockSpatialIndexManager });
+      engine = new ScopeEngine({
+        maxDepth: 10,
+        spatialIndexManager: mockSpatialIndexManager,
+      });
 
       validActorEntity = {
         id: 'actor-123',
@@ -1699,7 +1710,9 @@ describe('ScopeEngine', () => {
 
         expect(() => {
           engine.resolve(validAST, invalidEntity, validRuntimeCtx);
-        }).toThrow(/ScopeEngine\.resolve.*actorEntity must have an 'id' property/);
+        }).toThrow(
+          /ScopeEngine\.resolve.*actorEntity must have an 'id' property/
+        );
       });
 
       it('should detect and hint for context object (action pipeline)', () => {
@@ -1756,7 +1769,9 @@ describe('ScopeEngine', () => {
 
         expect(() => {
           engine.resolve(validAST, validActorEntity, invalidCtx);
-        }).toThrow(/ScopeEngine\.resolve.*missing critical services.*entityManager/);
+        }).toThrow(
+          /ScopeEngine\.resolve.*missing critical services.*entityManager/
+        );
       });
 
       it('should not throw for missing jsonLogicEval (optional service)', () => {
@@ -1817,7 +1832,11 @@ describe('ScopeEngine', () => {
         // Mock the entity manager to return a valid set
         mockEntityManager.getEntityInstance.mockReturnValue(validActorEntity);
 
-        const result = engine.resolve(validAST, validActorEntity, validRuntimeCtx);
+        const result = engine.resolve(
+          validAST,
+          validActorEntity,
+          validRuntimeCtx
+        );
 
         // Should return a Set
         expect(result).toBeInstanceOf(Set);

@@ -14,38 +14,38 @@ See: `specs/dismembered-body-part-spawning.md`
 
 ### Phase 1: Schema & Event Foundation
 
-| Ticket | Title | Est. Size | Dependencies |
-|--------|-------|-----------|--------------|
-| DISBODPARSPA-001 | Add `definitionId` field to `anatomy:part` component schema | S | None |
-| DISBODPARSPA-002 | Create `anatomy:body_part_spawned` event definition | S | None |
+| Ticket           | Title                                                       | Est. Size | Dependencies |
+| ---------------- | ----------------------------------------------------------- | --------- | ------------ |
+| DISBODPARSPA-001 | Add `definitionId` field to `anatomy:part` component schema | S         | None         |
+| DISBODPARSPA-002 | Create `anatomy:body_part_spawned` event definition         | S         | None         |
 
 ### Phase 2: Entity Definition Weight Data (Data-Driven)
 
-| Ticket | Title | Est. Size | Dependencies |
-|--------|-------|-----------|--------------|
-| DISBODPARSPA-010 | Add `items:weight` to human torso/limb entity definitions | M | None |
-| DISBODPARSPA-011 | Add `items:weight` to human head/face entity definitions | M | None |
-| DISBODPARSPA-012 | Add `items:weight` to human hair/extremity entity definitions | M | None |
-| DISBODPARSPA-013 | Add `items:weight` to chicken entity definitions | S | None |
-| DISBODPARSPA-014 | Add `items:weight` to creature entity definitions (centaur, dragon, eldritch, cat, horse) | M | None |
-| DISBODPARSPA-015 | Add `items:weight` to utility/generic entity definitions | S | None |
+| Ticket           | Title                                                                                     | Est. Size | Dependencies |
+| ---------------- | ----------------------------------------------------------------------------------------- | --------- | ------------ |
+| DISBODPARSPA-010 | Add `items:weight` to human torso/limb entity definitions                                 | M         | None         |
+| DISBODPARSPA-011 | Add `items:weight` to human head/face entity definitions                                  | M         | None         |
+| DISBODPARSPA-012 | Add `items:weight` to human hair/extremity entity definitions                             | M         | None         |
+| DISBODPARSPA-013 | Add `items:weight` to chicken entity definitions                                          | S         | None         |
+| DISBODPARSPA-014 | Add `items:weight` to creature entity definitions (centaur, dragon, eldritch, cat, horse) | M         | None         |
+| DISBODPARSPA-015 | Add `items:weight` to utility/generic entity definitions                                  | S         | None         |
 
 ### Phase 3: Core Code Implementation
 
-| Ticket | Title | Est. Size | Dependencies |
-|--------|-------|-----------|--------------|
-| DISBODPARSPA-020 | Update EntityGraphBuilder to store `definitionId` in `anatomy:part` | S | DISBODPARSPA-001 |
-| DISBODPARSPA-021 | Create `DismemberedBodyPartSpawner` service | M | DISBODPARSPA-001, DISBODPARSPA-002 |
-| DISBODPARSPA-022 | Register `DismemberedBodyPartSpawner` in DI container and initialize | S | DISBODPARSPA-021 |
+| Ticket           | Title                                                                | Est. Size | Dependencies                       |
+| ---------------- | -------------------------------------------------------------------- | --------- | ---------------------------------- |
+| DISBODPARSPA-020 | Update EntityGraphBuilder to store `definitionId` in `anatomy:part`  | S         | DISBODPARSPA-001                   |
+| DISBODPARSPA-021 | Create `DismemberedBodyPartSpawner` service                          | M         | DISBODPARSPA-001, DISBODPARSPA-002 |
+| DISBODPARSPA-022 | Register `DismemberedBodyPartSpawner` in DI container and initialize | S         | DISBODPARSPA-021                   |
 
 ### Phase 4: Testing
 
-| Ticket | Title | Est. Size | Dependencies |
-|--------|-------|-----------|--------------|
-| DISBODPARSPA-030 | Unit tests for `DismemberedBodyPartSpawner` service | M | DISBODPARSPA-021 |
-| DISBODPARSPA-031 | Unit tests for EntityGraphBuilder `definitionId` storage | S | DISBODPARSPA-020 |
-| DISBODPARSPA-032 | Integration tests for dismemberment spawning flow | M | DISBODPARSPA-022 |
-| DISBODPARSPA-033 | Data validation tests for body part weight completeness | S | DISBODPARSPA-010-015 |
+| Ticket           | Title                                                    | Est. Size | Dependencies         |
+| ---------------- | -------------------------------------------------------- | --------- | -------------------- |
+| DISBODPARSPA-030 | Unit tests for `DismemberedBodyPartSpawner` service      | M         | DISBODPARSPA-021     |
+| DISBODPARSPA-031 | Unit tests for EntityGraphBuilder `definitionId` storage | S         | DISBODPARSPA-020     |
+| DISBODPARSPA-032 | Integration tests for dismemberment spawning flow        | M         | DISBODPARSPA-022     |
+| DISBODPARSPA-033 | Data validation tests for body part weight completeness  | S         | DISBODPARSPA-010-015 |
 
 ---
 

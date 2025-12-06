@@ -1,9 +1,18 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 
 const MODULE_PATH = '../../src/speech-patterns-generator-main.js';
-const BOOTSTRAP_PATH = '../../src/characterBuilder/CharacterBuilderBootstrap.js';
-const CONTROLLER_PATH = '../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
+const BOOTSTRAP_PATH =
+  '../../src/characterBuilder/CharacterBuilderBootstrap.js';
+const CONTROLLER_PATH =
+  '../../src/characterBuilder/controllers/SpeechPatternsGeneratorController.js';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -42,7 +51,9 @@ describe('speech-patterns-generator-main entrypoint', () => {
         bootstrap: bootstrapMock,
       })),
     }));
-    jest.doMock(CONTROLLER_PATH, () => ({ SpeechPatternsGeneratorController: jest.fn() }));
+    jest.doMock(CONTROLLER_PATH, () => ({
+      SpeechPatternsGeneratorController: jest.fn(),
+    }));
     return bootstrapMock;
   };
 
@@ -66,7 +77,9 @@ describe('speech-patterns-generator-main entrypoint', () => {
       getCurrentActiveLlmId: jest.fn().mockResolvedValue('llm-1'),
       getAvailableLlmOptions: jest
         .fn()
-        .mockResolvedValue([{ configId: 'llm-1', displayName: 'Friendly LLM' }]),
+        .mockResolvedValue([
+          { configId: 'llm-1', displayName: 'Friendly LLM' },
+        ]),
     };
 
     const container = {
@@ -128,7 +141,9 @@ describe('speech-patterns-generator-main entrypoint', () => {
 
     const llmAdapter = {
       getCurrentActiveLlmId: jest.fn().mockResolvedValue('llm-3'),
-      getAvailableLlmOptions: jest.fn().mockResolvedValue([{ configId: 'other' }]),
+      getAvailableLlmOptions: jest
+        .fn()
+        .mockResolvedValue([{ configId: 'other' }]),
     };
 
     const container = { resolve: jest.fn().mockReturnValue(llmAdapter) };
@@ -187,7 +202,9 @@ describe('speech-patterns-generator-main entrypoint', () => {
       }),
     };
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     mockBootstrapModule(async (config) => {
       config.hooks?.postInit?.({ id: 'controller' });
@@ -201,7 +218,10 @@ describe('speech-patterns-generator-main entrypoint', () => {
     const handler = addEventListenerSpy.mock.calls[0][1];
     await handler();
 
-    expect(consoleSpy).toHaveBeenCalledWith('Failed to update LLM display', failure);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      'Failed to update LLM display',
+      failure
+    );
     expect(nameElement.textContent).toBe('Unknown');
   });
 
@@ -215,7 +235,9 @@ describe('speech-patterns-generator-main entrypoint', () => {
       throw failure;
     });
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await jest.isolateModulesAsync(async () => {
       await import(MODULE_PATH);
@@ -226,9 +248,11 @@ describe('speech-patterns-generator-main entrypoint', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Failed to initialize Speech Patterns Generator:',
-      failure,
+      failure
     );
-    expect(errorContainer.innerHTML).toContain('Failed to initialize the application');
+    expect(errorContainer.innerHTML).toContain(
+      'Failed to initialize the application'
+    );
     expect(errorContainer.innerHTML).toContain(failure.message);
   });
 });

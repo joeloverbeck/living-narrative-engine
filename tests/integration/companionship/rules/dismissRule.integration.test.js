@@ -128,7 +128,9 @@ describe('core_handle_dismiss rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'companionship:event-is-action-dismiss' ? eventIsActionDismiss : undefined
+        id === 'companionship:event-is-action-dismiss'
+          ? eventIsActionDismiss
+          : undefined
       ),
       getEventDefinition: jest.fn((eventName) => {
         const commonEvents = {

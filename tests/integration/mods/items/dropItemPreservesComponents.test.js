@@ -205,7 +205,8 @@ describe('Items - Drop Item Component Preservation', () => {
     await testFixture.executeAction('test:actor1', 'gun-1');
 
     // Verify: Both items should have all components preserved
-    const droppedLetter = testFixture.entityManager.getEntityInstance('letter-1');
+    const droppedLetter =
+      testFixture.entityManager.getEntityInstance('letter-1');
     const droppedGun = testFixture.entityManager.getEntityInstance('gun-1');
 
     // Letter components

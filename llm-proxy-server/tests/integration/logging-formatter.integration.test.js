@@ -89,7 +89,9 @@ describe('enhanced log formatter integration coverage', () => {
     expect(contextStart).toBeDefined();
     expect(lines.some((line) => line.includes('"size": 42'))).toBe(true);
     expect(lines.some((line) => line.includes('↳ Details[0]:'))).toBe(true);
-    expect(lines.some((line) => line.includes('↳ Details[1]: final-detail'))).toBe(true);
+    expect(
+      lines.some((line) => line.includes('↳ Details[1]: final-detail'))
+    ).toBe(true);
   });
 
   test('gracefully handles unstringifiable context objects', async () => {
@@ -112,7 +114,9 @@ describe('enhanced log formatter integration coverage', () => {
     );
 
     expect(formatted.icon).toMatch(/(🚀|\[START\])/);
-    expect(formatted.contextLines[0]).toContain('↳ Context: [Unable to format:');
+    expect(formatted.contextLines[0]).toContain(
+      '↳ Context: [Unable to format:'
+    );
   });
 
   test('falls back to console output when sanitization fails', async () => {
@@ -134,7 +138,9 @@ describe('enhanced log formatter integration coverage', () => {
 
     expect(infoSpy).toHaveBeenCalledTimes(1);
     const output = infoSpy.mock.calls[0][0];
-    expect(output).toContain('[FALLBACK] INFO: Startup process initializing core components');
+    expect(output).toContain(
+      '[FALLBACK] INFO: Startup process initializing core components'
+    );
   });
 
   test('falls back to simple formatting when enhanced mode is disabled', async () => {
@@ -150,7 +156,9 @@ describe('enhanced log formatter integration coverage', () => {
 
     expect(infoSpy).toHaveBeenCalledTimes(1);
     const output = infoSpy.mock.calls[0][0];
-    expect(output).toMatch(/\[\d{2}:\d{2}:\d{2}\.\d{3}\] INFO: LLM Proxy Server boot complete/);
+    expect(output).toMatch(
+      /\[\d{2}:\d{2}:\d{2}\.\d{3}\] INFO: LLM Proxy Server boot complete/
+    );
     expect(output).toContain('{"ready":true} detail');
   });
 
@@ -190,7 +198,9 @@ describe('enhanced log formatter integration coverage', () => {
     const logger = new ConsoleLogger();
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    logger.error('Unexpected meltdown occurred in pipeline', { phase: 'aggregation' });
+    logger.error('Unexpected meltdown occurred in pipeline', {
+      phase: 'aggregation',
+    });
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     const output = errorSpy.mock.calls[0][0];

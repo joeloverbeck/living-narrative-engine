@@ -39,7 +39,9 @@ describe('LlmConfigService unexpected failure integration coverage', () => {
   let envManager;
 
   beforeAll(async () => {
-    tempDir = await mkdtemp(path.join(tmpdir(), 'llm-config-service-unexpected-'));
+    tempDir = await mkdtemp(
+      path.join(tmpdir(), 'llm-config-service-unexpected-')
+    );
   });
 
   afterAll(async () => {
@@ -75,7 +77,11 @@ describe('LlmConfigService unexpected failure integration coverage', () => {
 
     const catastrophicFailure = new Error('catastrophic loader failure');
 
-    const throwingLoader = async (resolvedPath, injectedLogger, injectedReader) => {
+    const throwingLoader = async (
+      resolvedPath,
+      injectedLogger,
+      injectedReader
+    ) => {
       const contents = await injectedReader.readFile(resolvedPath, 'utf-8');
       injectedLogger.debug('Loaded bytes prior to failure', {
         resolvedPath,

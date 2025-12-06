@@ -9,9 +9,7 @@ import {
   validateVisualProperties,
   countActionsWithVisualProperties,
 } from '../../../src/validation/visualPropertiesValidator.js';
-import {
-  runVisualPropertiesPerformanceTest,
-} from '../../common/mockFactories/visualProperties.js';
+import { runVisualPropertiesPerformanceTest } from '../../common/mockFactories/visualProperties.js';
 
 // Mock the colorValidation module
 jest.mock('../../../src/utils/colorValidation.js', () => ({
@@ -46,9 +44,7 @@ jest.mock('../../../src/utils/colorValidation.js', () => ({
 
 describe('Visual Properties Validator - Performance Benchmarks', () => {
   it('should validate 1000 colors in under 100ms', () => {
-    const {
-      validateColor,
-    } = require('../../../src/utils/colorValidation.js');
+    const { validateColor } = require('../../../src/utils/colorValidation.js');
 
     const result = runVisualPropertiesPerformanceTest(
       () => {

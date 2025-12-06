@@ -433,7 +433,13 @@ describe('JSON-Schema – clothing:coverage_mapping component', () => {
 
     test('should use priority levels compatible with wearable component layers', () => {
       // These match the layer enum from clothing:wearable component
-      const wearableLayers = ['outer', 'armor', 'base', 'underwear', 'accessories'];
+      const wearableLayers = [
+        'outer',
+        'armor',
+        'base',
+        'underwear',
+        'accessories',
+      ];
 
       wearableLayers.forEach((layer) => {
         const data = {

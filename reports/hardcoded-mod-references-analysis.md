@@ -17,15 +17,16 @@ This analysis reveals **significant violations** of the Living Narrative Engine'
 
 ### Severity Breakdown
 
-| Category | Count | Severity | Status |
-|----------|-------|----------|---------|
-| **p_erotica debug code** | 12 | 🔴 **CRITICAL** | Must fix immediately |
-| **Non-core mod hardcoding** | 65+ | 🟡 **HIGH** | Violates architecture |
-| **Core mod references** | ~180 | 🟢 **ACCEPTABLE** | Review case-by-case |
+| Category                    | Count | Severity          | Status                |
+| --------------------------- | ----- | ----------------- | --------------------- |
+| **p_erotica debug code**    | 12    | 🔴 **CRITICAL**   | Must fix immediately  |
+| **Non-core mod hardcoding** | 65+   | 🟡 **HIGH**       | Violates architecture |
+| **Core mod references**     | ~180  | 🟢 **ACCEPTABLE** | Review case-by-case   |
 
 ### Impact Assessment
 
 **Current State**: The engine cannot function as a true modding platform due to:
+
 - Tight coupling to positioning mod (50+ references)
 - Tight coupling to items mod (40+ references)
 - Inability to disable or replace these mods
@@ -44,6 +45,7 @@ This analysis reveals **significant violations** of the Living Narrative Engine'
 ### Affected Files
 
 1. **src/initializers/worldInitializer.js** (2 occurrences)
+
    ```javascript
    // Line 58-61: Debug logging for specific entity
    if (instanceId === 'p_erotica:park_bench_instance') {
@@ -113,7 +115,7 @@ this.#logger.debug(`Processing entity: ${entityId}`);
 // Lines 23-25: Hardcoded component dependency
 const sittingComponent = this.#entityManager.getComponent(
   actorId,
-  'positioning:sitting'  // ❌ HARDCODED
+  'positioning:sitting' // ❌ HARDCODED
 );
 
 // Lines 34-36: More hardcoding
@@ -129,7 +131,8 @@ if (!this.#entityManager.hasComponent(targetId, 'positioning:sitting')) {
 
 ```javascript
 // ✅ Data-driven approach
-const sittingComponentType = parameters.sittingComponentType || 'positioning:sitting';
+const sittingComponentType =
+  parameters.sittingComponentType || 'positioning:sitting';
 const sittingComponent = this.#entityManager.getComponent(
   actorId,
   sittingComponentType
@@ -143,13 +146,16 @@ const sittingComponent = this.#entityManager.getComponent(
 ```javascript
 // Lines 92-98: Hardcoded positioning checks
 const forbiddenComponents = [
-  'positioning:kneeling',     // ❌ HARDCODED
-  'positioning:lying_down',   // ❌ HARDCODED
-  'positioning:sitting'       // ❌ HARDCODED
+  'positioning:kneeling', // ❌ HARDCODED
+  'positioning:lying_down', // ❌ HARDCODED
+  'positioning:sitting', // ❌ HARDCODED
 ];
 
-if (forbiddenComponents.some(comp =>
-  this.#entityManager.hasComponent(targetId, comp))) {
+if (
+  forbiddenComponents.some((comp) =>
+    this.#entityManager.hasComponent(targetId, comp)
+  )
+) {
   return { valid: false, reason: 'Invalid positioning' };
 }
 ```
@@ -161,10 +167,14 @@ if (forbiddenComponents.some(comp =>
 ```javascript
 // ✅ Load from action data
 const actionDef = this.#actionRegistry.get(actionId);
-const forbiddenComponents = actionDef.targetValidation?.forbiddenComponents || [];
+const forbiddenComponents =
+  actionDef.targetValidation?.forbiddenComponents || [];
 
-if (forbiddenComponents.some(comp =>
-  this.#entityManager.hasComponent(targetId, comp))) {
+if (
+  forbiddenComponents.some((comp) =>
+    this.#entityManager.hasComponent(targetId, comp)
+  )
+) {
   return { valid: false, reason: 'Invalid positioning' };
 }
 ```
@@ -179,7 +189,7 @@ if (this.#entityManager.hasComponent(entityId, 'positioning:straddling')) {
   // ❌ HARDCODED
   const straddlingComp = this.#entityManager.getComponent(
     entityId,
-    'positioning:straddling'  // ❌ HARDCODED
+    'positioning:straddling' // ❌ HARDCODED
   );
   return straddlingComp.targetId;
 }
@@ -202,9 +212,10 @@ class RelationshipResolverPlugin {
 }
 
 // In slotAccessResolver
-const relatedIds = this.#relationshipPlugins
-  .find(p => p.canResolve(entityId, slotName))
-  ?.resolve(entityId, slotName) || [];
+const relatedIds =
+  this.#relationshipPlugins
+    .find((p) => p.canResolve(entityId, slotName))
+    ?.resolve(entityId, slotName) || [];
 ```
 
 ### Items Mod Violations (~40 references)
@@ -217,12 +228,12 @@ const relatedIds = this.#relationshipPlugins
 // Lines 45-50: Hardcoded component types
 const containerComp = this.#entityManager.getComponent(
   containerId,
-  'items:container'  // ❌ HARDCODED
+  'items:container' // ❌ HARDCODED
 );
 
 const lockedComp = this.#entityManager.getComponent(
   containerId,
-  'items:locked'  // ❌ HARDCODED
+  'items:locked' // ❌ HARDCODED
 );
 ```
 
@@ -261,12 +272,12 @@ const containerComp = this.#componentTypeRegistry.getComponent(
 // Lines 67-72: Hardcoded capacity checking
 const inventoryComp = this.#entityManager.getComponent(
   actorId,
-  'items:inventory'  // ❌ HARDCODED
+  'items:inventory' // ❌ HARDCODED
 );
 
 const weightComp = this.#entityManager.getComponent(
   itemId,
-  'items:weight'  // ❌ HARDCODED
+  'items:weight' // ❌ HARDCODED
 );
 ```
 
@@ -287,38 +298,42 @@ class CapacityValidator {
 }
 
 // Implementations
-class WeightCapacityValidator extends CapacityValidator { }
-class SlotCapacityValidator extends CapacityValidator { }
-class MagicalCapacityValidator extends CapacityValidator { }
+class WeightCapacityValidator extends CapacityValidator {}
+class SlotCapacityValidator extends CapacityValidator {}
+class MagicalCapacityValidator extends CapacityValidator {}
 
 // In handler
-const validator = this.#capacityValidators.find(v =>
-  v.canValidate(actorId, itemId));
+const validator = this.#capacityValidators.find((v) =>
+  v.canValidate(actorId, itemId)
+);
 const result = validator.validate(actorId, itemId);
 ```
 
 ### Additional Non-Core Violations
 
 **Affection Mod** (5 references):
+
 - `src/ai/services/notesAnalyticsService.js:234` - Hardcoded affection score analysis
 - `src/characterBuilder/services/traitsRewriterGenerator.js:156` - Affection trait assumptions
 
 **Violence Mod** (4 references):
+
 - `src/events/eventBusRecursionGuard.js:89` - Special handling for violence events
 - `src/logging/logMetadataEnricher.js:123` - Violence action categorization
 
 **Clothing Mod** (6 references):
+
 - `src/anatomy/services/bodyDescriptionComposer.js:178` - Clothing visibility assumptions
 - `src/domUI/components/portraitRenderer.js:245` - Clothing layer rendering
 
 ### Recommended Solutions Summary
 
-| Pattern | Use Case | Effort | Impact |
-|---------|----------|--------|--------|
-| **Component Type Registry** | Replace hardcoded component IDs | Medium | High - enables mod flexibility |
-| **Plugin Architecture** | Relationship resolvers, validators | High | Very High - true extensibility |
-| **Configuration Parameters** | Operation handler flexibility | Low | Medium - quick wins |
-| **Event-Driven Discovery** | Dynamic capability detection | Medium | High - loose coupling |
+| Pattern                      | Use Case                           | Effort | Impact                         |
+| ---------------------------- | ---------------------------------- | ------ | ------------------------------ |
+| **Component Type Registry**  | Replace hardcoded component IDs    | Medium | High - enables mod flexibility |
+| **Plugin Architecture**      | Relationship resolvers, validators | High   | Very High - true extensibility |
+| **Configuration Parameters** | Operation handler flexibility      | Low    | Medium - quick wins            |
+| **Event-Driven Discovery**   | Dynamic capability detection       | Medium | High - loose coupling          |
 
 ---
 
@@ -346,6 +361,7 @@ const locationComp = this.#entityManager.getComponent(
 ```
 
 **Reasoning**:
+
 - Actor and location are fundamental concepts in any game
 - All mods build upon these core entity types
 - Dependency is inherent to the ECS architecture
@@ -365,6 +381,7 @@ const tagsComp = this.#entityManager.getComponent(entityId, 'core:tags');
 ```
 
 **Reasoning**:
+
 - Name, description, tags are universal metadata
 - Every entity needs identification
 - Core mod defines the baseline component vocabulary
@@ -380,16 +397,17 @@ const tagsComp = this.#entityManager.getComponent(entityId, 'core:tags');
 // ✅ ACCEPTABLE - core event types
 this.#eventBus.dispatch({
   type: 'core:ENTITY_CREATED',
-  payload: { entityId }
+  payload: { entityId },
 });
 
 this.#eventBus.dispatch({
   type: 'core:COMPONENT_ADDED',
-  payload: { entityId, componentId }
+  payload: { entityId, componentId },
 });
 ```
 
 **Reasoning**:
+
 - System-level events from core mod
 - Lifecycle events fundamental to ECS
 - Not content-specific, architectural
@@ -405,12 +423,12 @@ this.#eventBus.dispatch({
 ```javascript
 // Lines 89-95: ⚠️ QUESTIONABLE
 const requiredCoreComponents = [
-  'core:name',        // ⚠️ Should ALL entities have names?
+  'core:name', // ⚠️ Should ALL entities have names?
   'core:description', // ⚠️ Should ALL entities have descriptions?
-  'core:tags'         // ⚠️ Should ALL entities have tags?
+  'core:tags', // ⚠️ Should ALL entities have tags?
 ];
 
-entity.components.forEach(comp => {
+entity.components.forEach((comp) => {
   if (requiredCoreComponents.includes(comp.id)) {
     // Validate structure
   }
@@ -418,6 +436,7 @@ entity.components.forEach(comp => {
 ```
 
 **Issue**: Enforces that ALL entities must have name/description/tags. But what about:
+
 - Abstract entities (relationship markers, temporary state holders)
 - System entities (timers, triggers)
 - Procedural entities (might not have descriptions until generated)
@@ -429,10 +448,10 @@ entity.components.forEach(comp => {
 const entityTypeDef = this.#entityTypeRegistry.get(entity.type);
 const requiredComponents = entityTypeDef.requiredComponents || [
   'core:name',
-  'core:description'
+  'core:description',
 ];
 
-entity.components.forEach(comp => {
+entity.components.forEach((comp) => {
   if (requiredComponents.includes(comp.id)) {
     // Validate structure
   }
@@ -533,6 +552,7 @@ Engine Core
 **Risk**: None - pure deletion
 
 **Action Items**:
+
 - [ ] Remove all `p_erotica:park_bench_instance` checks from 6 production files
 - [ ] Verify no other entity-specific debug code exists
 - [ ] Add ESLint rule to prevent entity-specific debug code
@@ -549,24 +569,30 @@ Create ESLint custom rule:
 // .eslintrc.js addition
 module.exports = {
   rules: {
-    'no-hardcoded-mod-references': 'error'
+    'no-hardcoded-mod-references': 'error',
   },
-  overrides: [{
-    files: ['src/**/*.js'],
-    rules: {
-      'no-hardcoded-mod-references': ['error', {
-        allowedMods: ['core'], // Only core mod allowed
-        allowedFiles: [
-          'src/loaders/modLoader.js', // Legitimate mod references
-          'tests/**/*.js'  // Tests can reference any mod
-        ]
-      }]
-    }
-  }]
+  overrides: [
+    {
+      files: ['src/**/*.js'],
+      rules: {
+        'no-hardcoded-mod-references': [
+          'error',
+          {
+            allowedMods: ['core'], // Only core mod allowed
+            allowedFiles: [
+              'src/loaders/modLoader.js', // Legitimate mod references
+              'tests/**/*.js', // Tests can reference any mod
+            ],
+          },
+        ],
+      },
+    },
+  ],
 };
 ```
 
 **Action Items**:
+
 - [ ] Implement ESLint custom rule
 - [ ] Add to pre-commit hooks
 - [ ] Run on entire codebase
@@ -602,7 +628,10 @@ export class ComponentTypeRegistry {
   }
 
   getComponentId(category, preferredType = null) {
-    if (preferredType && this.#categories.get(category)?.includes(preferredType)) {
+    if (
+      preferredType &&
+      this.#categories.get(category)?.includes(preferredType)
+    ) {
       return preferredType;
     }
 
@@ -611,10 +640,15 @@ export class ComponentTypeRegistry {
 
   hasComponentOfCategory(entityManager, entityId, category) {
     const componentIds = this.#categories.get(category) || [];
-    return componentIds.some(id => entityManager.hasComponent(entityId, id));
+    return componentIds.some((id) => entityManager.hasComponent(entityId, id));
   }
 
-  getComponentOfCategory(entityManager, entityId, category, preferredType = null) {
+  getComponentOfCategory(
+    entityManager,
+    entityId,
+    category,
+    preferredType = null
+  ) {
     const componentId = this.getComponentId(category, preferredType);
     if (!componentId) {
       throw new Error(`No component registered for category: ${category}`);
@@ -626,6 +660,7 @@ export class ComponentTypeRegistry {
 ```
 
 **Action Items**:
+
 - [ ] Create ComponentTypeRegistry class
 - [ ] Add DI token and registration
 - [ ] Update ModLoader to call registry.register() from mod data
@@ -649,13 +684,13 @@ export class ComponentTypeRegistry {
 
 ### Code Quality Metrics
 
-| Metric | Current | Target (Phase 2) | Target (Phase 6) |
-|--------|---------|------------------|------------------|
-| Hardcoded non-core refs | 65+ | <20 | 0 |
-| Core refs requiring review | 20 | 10 | 5 |
-| Files with violations | 35+ | <10 | 0 |
-| ESLint violations | N/A | 0 | 0 |
-| Test coverage (refactored code) | N/A | >85% | >90% |
+| Metric                          | Current | Target (Phase 2) | Target (Phase 6) |
+| ------------------------------- | ------- | ---------------- | ---------------- |
+| Hardcoded non-core refs         | 65+     | <20              | 0                |
+| Core refs requiring review      | 20      | 10               | 5                |
+| Files with violations           | 35+     | <10              | 0                |
+| ESLint violations               | N/A     | 0                | 0                |
+| Test coverage (refactored code) | N/A     | >85%             | >90%             |
 
 ---
 
@@ -677,16 +712,19 @@ The Living Narrative Engine has **significant architectural violations** of its 
 With the proposed changes, the Living Narrative Engine will achieve:
 
 ✅ **True Data-Driven Architecture**
+
 - Engine code contains zero hardcoded mod references (except core)
 - All mod-specific logic lives in mod files or plugins
 - Mods can be disabled, replaced, or extended without engine changes
 
 ✅ **Mod Independence**
+
 - Can disable positioning mod → engine gracefully handles missing capabilities
 - Can replace items mod → custom inventory systems work seamlessly
 - Can create total conversion mods → no engine assumptions about content
 
 ✅ **Third-Party Extensibility**
+
 - Clear plugin interfaces for extending engine capabilities
 - Component type registry for alternative implementations
 - Comprehensive mod development guide

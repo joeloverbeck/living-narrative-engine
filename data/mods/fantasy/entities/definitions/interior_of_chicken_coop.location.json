@@ -1,23 +1,23 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:interior_of_chicken_coop",
-    "components": {
-        "core:name": {
-            "text": "interior of chicken coop"
-        },
-        "core:description": {
-            "text": "The interior is a small, bare wooden coop: tight corners, plank walls stained a deep brown, and a low ceiling framed with simple beams. On the left wall, two short, rounded roost bars are mounted one above the other like a stubby ladder. Centered on the back wall sits a narrow shelf unit divided into three open cubbies, built like nesting boxes. The floor is covered in a thin layer of straw or wood shavings, flattened and uneven, with two shallow bowls set directly on it—one nearer the left corner, one closer to the door. On the right, a heavy plank door with diagonal cross-bracing fills most of the wall; dark metal hardware and a small lock fixture sit near the latch. Light seeps in softly from gaps and edges rather than any visible window, leaving the corners dim and the wood grain prominent."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/interior_of_chicken_coop.png",
-            "altText": "Interior of chicken coop"
-        },
-        "movement:exits": [
-            {
-                "direction": "to the yard of Aldous' home",
-                "target": "fantasy:12_kiln_lane_yard_instance",
-                "blocker": "fantasy:chicken_coop_door_instance"
-            }
-        ]
-    }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:interior_of_chicken_coop",
+  "components": {
+    "core:name": {
+      "text": "interior of chicken coop"
+    },
+    "core:description": {
+      "text": "The interior is a small, bare wooden coop: tight corners, plank walls stained a deep brown, and a low ceiling framed with simple beams. On the left wall, two short, rounded roost bars are mounted one above the other like a stubby ladder. Centered on the back wall sits a narrow shelf unit divided into three open cubbies, built like nesting boxes. The floor is covered in a thin layer of straw or wood shavings, flattened and uneven, with two shallow bowls set directly on it—one nearer the left corner, one closer to the door. On the right, a heavy plank door with diagonal cross-bracing fills most of the wall; dark metal hardware and a small lock fixture sit near the latch. Light seeps in softly from gaps and edges rather than any visible window, leaving the corners dim and the wood grain prominent."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/interior_of_chicken_coop.png",
+      "altText": "Interior of chicken coop"
+    },
+    "movement:exits": [
+      {
+        "direction": "to the yard of Aldous' home",
+        "target": "fantasy:12_kiln_lane_yard_instance",
+        "blocker": "fantasy:chicken_coop_door_instance"
+      }
+    ]
+  }
 }

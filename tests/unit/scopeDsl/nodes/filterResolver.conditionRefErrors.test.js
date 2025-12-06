@@ -36,31 +36,30 @@ function createCommonContext(overrides = {}) {
  * @param overrides
  */
 function createCommonDeps(overrides = {}) {
-  const logicEval =
-    overrides.logicEval ||
-    {
-      evaluate: jest.fn(() => {
-        throw new Error('Could not resolve condition_ref: missing predicate');
-      }),
-    };
+  const logicEval = overrides.logicEval || {
+    evaluate: jest.fn(() => {
+      throw new Error('Could not resolve condition_ref: missing predicate');
+    }),
+  };
 
-  const entitiesGateway =
-    overrides.entitiesGateway ||
-    {
-      getEntityInstance: jest.fn((id) => (id === 'entity-1' ? { ...ENTITY_INSTANCE } : null)),
-      getItemComponents: jest.fn(),
-    };
+  const entitiesGateway = overrides.entitiesGateway || {
+    getEntityInstance: jest.fn((id) =>
+      id === 'entity-1' ? { ...ENTITY_INSTANCE } : null
+    ),
+    getItemComponents: jest.fn(),
+  };
 
-  const locationProvider =
-    overrides.locationProvider || {
-      getLocation: jest.fn(() => ({ id: 'loc-actor' })),
-    };
+  const locationProvider = overrides.locationProvider || {
+    getLocation: jest.fn(() => ({ id: 'loc-actor' })),
+  };
 
   return {
     logicEval,
     entitiesGateway,
     locationProvider,
-    ...('errorHandler' in overrides ? { errorHandler: overrides.errorHandler } : {}),
+    ...('errorHandler' in overrides
+      ? { errorHandler: overrides.errorHandler }
+      : {}),
   };
 }
 
@@ -86,7 +85,8 @@ describe('filterResolver condition_ref error handling', () => {
     expect(result.size).toBe(0);
     expect(deps.logicEval.evaluate).toHaveBeenCalledTimes(1);
     expect(errorHandler.handleError).toHaveBeenCalledTimes(1);
-    const [handledError, handledCtx, resolverName, code] = errorHandler.handleError.mock.calls[0];
+    const [handledError, handledCtx, resolverName, code] =
+      errorHandler.handleError.mock.calls[0];
     expect(handledError).toBeInstanceOf(Error);
     expect(handledError.message).toContain('Filter logic evaluation failed');
     expect(handledCtx).toBe(ctx);
@@ -198,7 +198,9 @@ describe('filterResolver condition_ref error handling', () => {
     const ctx = createCommonContext();
     ctx.actorEntity.id = undefined;
 
-    expect(() => resolver.resolve(baseNode, ctx)).toThrow('handled: invalid actor id');
+    expect(() => resolver.resolve(baseNode, ctx)).toThrow(
+      'handled: invalid actor id'
+    );
     expect(errorHandler.handleError).toHaveBeenCalledWith(
       expect.any(Error),
       ctx,

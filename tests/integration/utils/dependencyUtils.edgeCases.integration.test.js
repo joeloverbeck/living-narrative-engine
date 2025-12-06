@@ -1,16 +1,12 @@
 import { describe, it, expect, afterEach } from '@jest/globals';
 
 import InitializationService from '../../../src/initializers/services/initializationService.js';
-import {
-  SystemInitializationError,
-} from '../../../src/errors/InitializationError.js';
+import { SystemInitializationError } from '../../../src/errors/InitializationError.js';
 import { LLMConfigurationManager } from '../../../src/llms/services/llmConfigurationManager.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ServiceSetup } from '../../../src/utils/serviceInitializerUtils.js';
 import { withValidatedDeps } from '../../../src/utils/withValidatedDeps.js';
-import {
-  assertMethods,
-} from '../../../src/utils/dependencyUtils.js';
+import { assertMethods } from '../../../src/utils/dependencyUtils.js';
 
 class MemoryLogger {
   constructor() {

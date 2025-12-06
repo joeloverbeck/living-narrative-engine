@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/logging/bootstrapLogger.js';
 const ENV_UTILS_PATH = '../../../src/utils/environmentUtils.js';
@@ -14,13 +21,22 @@ describe('bootstrapLogger environment fallbacks', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    originalLevel = Object.prototype.hasOwnProperty.call(process.env, 'DEBUG_LOG_LEVEL')
+    originalLevel = Object.prototype.hasOwnProperty.call(
+      process.env,
+      'DEBUG_LOG_LEVEL'
+    )
       ? process.env.DEBUG_LOG_LEVEL
       : SENTINEL;
-    originalMode = Object.prototype.hasOwnProperty.call(process.env, 'DEBUG_LOG_MODE')
+    originalMode = Object.prototype.hasOwnProperty.call(
+      process.env,
+      'DEBUG_LOG_MODE'
+    )
       ? process.env.DEBUG_LOG_MODE
       : SENTINEL;
-    originalGlobalKey = Object.prototype.hasOwnProperty.call(globalThis, GLOBAL_KEY)
+    originalGlobalKey = Object.prototype.hasOwnProperty.call(
+      globalThis,
+      GLOBAL_KEY
+    )
       ? globalThis[GLOBAL_KEY]
       : SENTINEL;
     originalGlobalEnv = Object.prototype.hasOwnProperty.call(globalThis, 'env')
@@ -64,7 +80,9 @@ describe('bootstrapLogger environment fallbacks', () => {
 
   it('reads environment variables from process.env when utilities are unavailable', async () => {
     await jest.isolateModulesAsync(async () => {
-      jest.doMock(ENV_UTILS_PATH, () => ({ getEnvironmentVariable: undefined }));
+      jest.doMock(ENV_UTILS_PATH, () => ({
+        getEnvironmentVariable: undefined,
+      }));
       process.env.DEBUG_LOG_LEVEL = 'warn';
 
       const module = await import(MODULE_PATH);
@@ -74,7 +92,9 @@ describe('bootstrapLogger environment fallbacks', () => {
 
   it('falls back to a global scoped value when process.env has no data', async () => {
     await jest.isolateModulesAsync(async () => {
-      jest.doMock(ENV_UTILS_PATH, () => ({ getEnvironmentVariable: undefined }));
+      jest.doMock(ENV_UTILS_PATH, () => ({
+        getEnvironmentVariable: undefined,
+      }));
       globalThis[GLOBAL_KEY] = 'silent';
 
       const module = await import(MODULE_PATH);
@@ -84,30 +104,37 @@ describe('bootstrapLogger environment fallbacks', () => {
 
   it('uses the global env bag and respects null coalescing to the default', async () => {
     await jest.isolateModulesAsync(async () => {
-      jest.doMock(ENV_UTILS_PATH, () => ({ getEnvironmentVariable: undefined }));
+      jest.doMock(ENV_UTILS_PATH, () => ({
+        getEnvironmentVariable: undefined,
+      }));
       globalThis.env = { DEBUG_LOG_LEVEL: null };
 
       const module = await import(MODULE_PATH);
-      expect(module.resolveBootstrapLogLevel({ defaultLevel: module.LogLevel.ERROR })).toBe(
-        module.LogLevel.ERROR
-      );
+      expect(
+        module.resolveBootstrapLogLevel({ defaultLevel: module.LogLevel.ERROR })
+      ).toBe(module.LogLevel.ERROR);
     });
   });
 
   it('normalizes numeric log levels and ignores invalid numeric overrides', async () => {
     const module = await import(MODULE_PATH);
 
-    expect(module.resolveBootstrapLogLevel({ level: module.LogLevel.DEBUG })).toBe(
-      module.LogLevel.DEBUG
-    );
-    expect(module.resolveBootstrapLogLevel({ level: 999, defaultLevel: module.LogLevel.INFO })).toBe(
-      module.LogLevel.INFO
-    );
+    expect(
+      module.resolveBootstrapLogLevel({ level: module.LogLevel.DEBUG })
+    ).toBe(module.LogLevel.DEBUG);
+    expect(
+      module.resolveBootstrapLogLevel({
+        level: 999,
+        defaultLevel: module.LogLevel.INFO,
+      })
+    ).toBe(module.LogLevel.INFO);
   });
 
   it('extracts log levels from the global env bag when populated', async () => {
     await jest.isolateModulesAsync(async () => {
-      jest.doMock(ENV_UTILS_PATH, () => ({ getEnvironmentVariable: undefined }));
+      jest.doMock(ENV_UTILS_PATH, () => ({
+        getEnvironmentVariable: undefined,
+      }));
       globalThis.env = { DEBUG_LOG_LEVEL: 'warning' };
 
       const module = await import(MODULE_PATH);
@@ -142,7 +169,9 @@ describe('bootstrapLogger console fallbacks', () => {
 
   it('invokes fallback logging before the primary info method', async () => {
     const module = await import(MODULE_PATH);
-    const logger = module.createBootstrapLogger({ level: module.LogLevel.DEBUG });
+    const logger = module.createBootstrapLogger({
+      level: module.LogLevel.DEBUG,
+    });
 
     logger.info('info message');
 
@@ -152,7 +181,9 @@ describe('bootstrapLogger console fallbacks', () => {
 
   it('avoids duplicate logging when primary and fallback targets are identical', async () => {
     const module = await import(MODULE_PATH);
-    const logger = module.createBootstrapLogger({ level: module.LogLevel.INFO });
+    const logger = module.createBootstrapLogger({
+      level: module.LogLevel.INFO,
+    });
 
     consoleInfoSpy.mockRestore();
     console.info = console.log;
@@ -164,7 +195,9 @@ describe('bootstrapLogger console fallbacks', () => {
 
   it('uses console.log as a fallback when debug/warn/error APIs are missing', async () => {
     const module = await import(MODULE_PATH);
-    const logger = module.createBootstrapLogger({ level: module.LogLevel.DEBUG });
+    const logger = module.createBootstrapLogger({
+      level: module.LogLevel.DEBUG,
+    });
 
     console.debug = undefined;
     logger.debug('debug via log');

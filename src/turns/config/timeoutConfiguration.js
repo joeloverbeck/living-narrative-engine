@@ -49,7 +49,8 @@ class TimeoutConfiguration {
    */
   constructor({ timeoutMs, environmentProvider, logger } = {}) {
     this.#explicitTimeoutMs = timeoutMs;
-    this.#environmentProvider = environmentProvider ?? new ProcessEnvironmentProvider();
+    this.#environmentProvider =
+      environmentProvider ?? new ProcessEnvironmentProvider();
     this.#logger = logger;
     this.#resolvedTimeout = null; // Lazy resolution
   }
@@ -75,7 +76,10 @@ class TimeoutConfiguration {
    */
   #resolveTimeout() {
     // Explicit timeout takes precedence
-    if (this.#explicitTimeoutMs !== undefined && this.#explicitTimeoutMs !== null) {
+    if (
+      this.#explicitTimeoutMs !== undefined &&
+      this.#explicitTimeoutMs !== null
+    ) {
       return this.#explicitTimeoutMs;
     }
 

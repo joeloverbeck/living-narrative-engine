@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ViolationReporter from '../../../src/validation/violationReporter.js';
 
@@ -206,9 +213,7 @@ describe('ViolationReporter', () => {
         colors: false,
       });
 
-      expect(report).toContain(
-        '📊 Impact: loading=true, runtime=false'
-      );
+      expect(report).toContain('📊 Impact: loading=true, runtime=false');
     });
 
     it('should fall back to legacy formatting when severity data is unavailable', () => {
@@ -258,9 +263,8 @@ describe('ViolationReporter', () => {
         ],
       ]);
       const options = { verbose: true };
-      const originalImplementation = reporter._generateFileExistenceReport.bind(
-        reporter
-      );
+      const originalImplementation =
+        reporter._generateFileExistenceReport.bind(reporter);
       const fileReportSpy = jest
         .spyOn(reporter, '_generateFileExistenceReport')
         .mockImplementation(originalImplementation);

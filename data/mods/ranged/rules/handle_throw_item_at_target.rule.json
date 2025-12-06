@@ -2,7 +2,9 @@
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_throw_item_at_target",
   "event_type": "core:attempt_action",
-  "condition": { "condition_ref": "ranged:event-is-action-throw-item-at-target" },
+  "condition": {
+    "condition_ref": "ranged:event-is-action-throw-item-at-target"
+  },
   "actions": [
     {
       "type": "GET_NAME",
@@ -10,11 +12,17 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "throwableName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "throwableName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -69,7 +77,9 @@
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowCritical" }]
       }
     },
@@ -77,7 +87,9 @@
       "type": "IF",
       "comment": "Handle SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowHit" }]
       }
     },
@@ -85,7 +97,9 @@
       "type": "IF",
       "comment": "Handle FUMBLE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowFumble" }]
       }
     },
@@ -93,7 +107,9 @@
       "type": "IF",
       "comment": "Handle FAILURE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [{ "macro": "ranged:handleThrowMiss" }]
       }
     }

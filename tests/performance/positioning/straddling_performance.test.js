@@ -4,13 +4,7 @@
  * efficiency, rule execution speed, and linear scaling validation.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { performance } from 'perf_hooks';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import straddleFacingRule from '../../../data/mods/positioning/rules/straddle_waist_facing.rule.json';
@@ -197,9 +191,12 @@ describe('Straddling Waist System - Performance Tests', () => {
       createHandlers,
       rules: [straddleFacingRule, straddleFacingAwayRule, dismountRule],
       conditions: {
-        'positioning:event-is-action-straddle-waist-facing': straddleFacingCondition,
-        'positioning:event-is-action-straddle-waist-facing-away': straddleFacingAwayCondition,
-        'positioning:event-is-action-dismount-from-straddling': dismountCondition,
+        'positioning:event-is-action-straddle-waist-facing':
+          straddleFacingCondition,
+        'positioning:event-is-action-straddle-waist-facing-away':
+          straddleFacingAwayCondition,
+        'positioning:event-is-action-dismount-from-straddling':
+          dismountCondition,
       },
       macros: {
         'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -213,30 +210,49 @@ describe('Straddling Waist System - Performance Tests', () => {
   describe('Action discovery performance', () => {
     it('should complete discovery in <10ms with 100 actors', () => {
       // Create main actor with closeness to one sitting target
-      const actorId = createActor(testEnv.entityManager, 'test:actor1', 'Alice', 'test:room');
+      const actorId = createActor(
+        testEnv.entityManager,
+        'test:actor1',
+        'Alice',
+        'test:room'
+      );
       testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
-        partners: ['test:actor2']
+        partners: ['test:actor2'],
       });
 
       // Create 100 actors (some sitting, some not)
       for (let i = 2; i <= 101; i++) {
-        const id = createActor(testEnv.entityManager, `test:actor${i}`, `Actor ${i}`, 'test:room');
+        const id = createActor(
+          testEnv.entityManager,
+          `test:actor${i}`,
+          `Actor ${i}`,
+          'test:room'
+        );
 
         // Every 10th actor is sitting
         if (i % 10 === 0) {
           const chairId = `test:chair${i}`;
-          createChair(testEnv.entityManager, chairId, `Chair ${i}`, 'test:room');
+          createChair(
+            testEnv.entityManager,
+            chairId,
+            `Chair ${i}`,
+            'test:room'
+          );
           testEnv.entityManager.addComponent(id, 'positioning:sitting_on', {
             furniture_id: chairId,
-            seat_index: 0
+            seat_index: 0,
           });
         }
       }
 
       // Add closeness to actor2
-      testEnv.entityManager.addComponent('test:actor2', 'positioning:closeness', {
-        partners: ['test:actor1']
-      });
+      testEnv.entityManager.addComponent(
+        'test:actor2',
+        'positioning:closeness',
+        {
+          partners: ['test:actor1'],
+        }
+      );
 
       const startTime = performance.now();
       // Action discovery would happen through the rule system
@@ -257,8 +273,10 @@ describe('Straddling Waist System - Performance Tests', () => {
           createHandlers,
           rules: [straddleFacingRule, straddleFacingAwayRule],
           conditions: {
-            'positioning:event-is-action-straddle-waist-facing': straddleFacingCondition,
-            'positioning:event-is-action-straddle-waist-facing-away': straddleFacingAwayCondition,
+            'positioning:event-is-action-straddle-waist-facing':
+              straddleFacingCondition,
+            'positioning:event-is-action-straddle-waist-facing-away':
+              straddleFacingAwayCondition,
           },
           macros: {
             'core:logSuccessAndEndTurn': logSuccessMacro,
@@ -272,27 +290,46 @@ describe('Straddling Waist System - Performance Tests', () => {
           partnerIds.push(`test:actor${i}`);
         }
 
-        const mainActorId = createActor(freshEnv.entityManager, 'test:actor0', 'Main Actor', 'test:room');
-        freshEnv.entityManager.addComponent(mainActorId, 'positioning:closeness', {
-          partners: partnerIds
-        });
+        const mainActorId = createActor(
+          freshEnv.entityManager,
+          'test:actor0',
+          'Main Actor',
+          'test:room'
+        );
+        freshEnv.entityManager.addComponent(
+          mainActorId,
+          'positioning:closeness',
+          {
+            partners: partnerIds,
+          }
+        );
 
         // Create partner actors
         partnerIds.forEach((id, index) => {
-          createActor(freshEnv.entityManager, id, `Partner ${index}`, 'test:room');
+          createActor(
+            freshEnv.entityManager,
+            id,
+            `Partner ${index}`,
+            'test:room'
+          );
 
           // Half of partners are sitting
           if (index % 2 === 0) {
             const chairId = `test:chair${index}`;
-            createChair(freshEnv.entityManager, chairId, `Chair ${index}`, 'test:room');
+            createChair(
+              freshEnv.entityManager,
+              chairId,
+              `Chair ${index}`,
+              'test:room'
+            );
             freshEnv.entityManager.addComponent(id, 'positioning:sitting_on', {
               furniture_id: chairId,
-              seat_index: 0
+              seat_index: 0,
             });
           }
 
           freshEnv.entityManager.addComponent(id, 'positioning:closeness', {
-            partners: ['test:actor0']
+            partners: ['test:actor0'],
           });
         });
 
@@ -334,21 +371,36 @@ describe('Straddling Waist System - Performance Tests', () => {
 
   describe('Rule execution performance', () => {
     it('should complete straddling rule execution in <50ms', () => {
-      const actorId = createActor(testEnv.entityManager, 'test:actor1', 'Alice', 'test:room');
-      const targetId = createActor(testEnv.entityManager, 'test:target', 'Bob', 'test:room');
-      const chairId = createChair(testEnv.entityManager, 'test:chair', 'Chair', 'test:room');
+      const actorId = createActor(
+        testEnv.entityManager,
+        'test:actor1',
+        'Alice',
+        'test:room'
+      );
+      const targetId = createActor(
+        testEnv.entityManager,
+        'test:target',
+        'Bob',
+        'test:room'
+      );
+      const chairId = createChair(
+        testEnv.entityManager,
+        'test:chair',
+        'Chair',
+        'test:room'
+      );
 
       testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
-        partners: ['test:target']
+        partners: ['test:target'],
       });
 
       testEnv.entityManager.addComponent(targetId, 'positioning:sitting_on', {
         furniture_id: chairId,
-        seat_index: 0
+        seat_index: 0,
       });
 
       testEnv.entityManager.addComponent(targetId, 'positioning:closeness', {
-        partners: ['test:actor1']
+        partners: ['test:actor1'],
       });
 
       const event = {
@@ -357,9 +409,9 @@ describe('Straddling Waist System - Performance Tests', () => {
           action: {
             id: 'positioning:straddle_waist_facing',
             actorId: 'test:actor1',
-            target: 'test:target'
-          }
-        }
+            target: 'test:target',
+          },
+        },
       };
 
       const startTime = performance.now();
@@ -372,13 +424,27 @@ describe('Straddling Waist System - Performance Tests', () => {
     });
 
     it('should complete dismounting rule execution in <50ms', () => {
-      const actorId = createActor(testEnv.entityManager, 'test:actor1', 'Alice', 'test:room');
-      const targetId = createActor(testEnv.entityManager, 'test:target', 'Bob', 'test:room');
+      const actorId = createActor(
+        testEnv.entityManager,
+        'test:actor1',
+        'Alice',
+        'test:room'
+      );
+      const targetId = createActor(
+        testEnv.entityManager,
+        'test:target',
+        'Bob',
+        'test:room'
+      );
 
-      testEnv.entityManager.addComponent(actorId, 'positioning:straddling_waist', {
-        target_id: 'test:target',
-        facing_away: false
-      });
+      testEnv.entityManager.addComponent(
+        actorId,
+        'positioning:straddling_waist',
+        {
+          target_id: 'test:target',
+          facing_away: false,
+        }
+      );
 
       const event = {
         type: ACTION_DECIDED,
@@ -386,9 +452,9 @@ describe('Straddling Waist System - Performance Tests', () => {
           action: {
             id: 'positioning:dismount_from_straddling',
             actorId: 'test:actor1',
-            target: 'test:target'
-          }
-        }
+            target: 'test:target',
+          },
+        },
       };
 
       const startTime = performance.now();
@@ -401,21 +467,36 @@ describe('Straddling Waist System - Performance Tests', () => {
     });
 
     it('should handle facing away variant with same performance', () => {
-      const actorId = createActor(testEnv.entityManager, 'test:actor1', 'Alice', 'test:room');
-      const targetId = createActor(testEnv.entityManager, 'test:target', 'Bob', 'test:room');
-      const chairId = createChair(testEnv.entityManager, 'test:chair', 'Chair', 'test:room');
+      const actorId = createActor(
+        testEnv.entityManager,
+        'test:actor1',
+        'Alice',
+        'test:room'
+      );
+      const targetId = createActor(
+        testEnv.entityManager,
+        'test:target',
+        'Bob',
+        'test:room'
+      );
+      const chairId = createChair(
+        testEnv.entityManager,
+        'test:chair',
+        'Chair',
+        'test:room'
+      );
 
       testEnv.entityManager.addComponent(actorId, 'positioning:closeness', {
-        partners: ['test:target']
+        partners: ['test:target'],
       });
 
       testEnv.entityManager.addComponent(targetId, 'positioning:sitting_on', {
         furniture_id: chairId,
-        seat_index: 0
+        seat_index: 0,
       });
 
       testEnv.entityManager.addComponent(targetId, 'positioning:closeness', {
-        partners: ['test:actor1']
+        partners: ['test:actor1'],
       });
 
       const event = {
@@ -424,9 +505,9 @@ describe('Straddling Waist System - Performance Tests', () => {
           action: {
             id: 'positioning:straddle_waist_facing_away',
             actorId: 'test:actor1',
-            target: 'test:target'
-          }
-        }
+            target: 'test:target',
+          },
+        },
       };
 
       const startTime = performance.now();

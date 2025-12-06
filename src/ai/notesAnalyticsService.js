@@ -55,7 +55,9 @@ class NotesAnalyticsService {
       ...metadata,
     });
 
-    this.#logger.debug(`Analytics: Recorded note creation - ${note.subjectType}`);
+    this.#logger.debug(
+      `Analytics: Recorded note creation - ${note.subjectType}`
+    );
   }
 
   /**
@@ -83,7 +85,9 @@ class NotesAnalyticsService {
     this.#metrics.misclassificationPatterns[patternKey] =
       (this.#metrics.misclassificationPatterns[patternKey] || 0) + 1;
 
-    this.#logger.warn(`Analytics: Categorization error - ${patternKey}`, { error });
+    this.#logger.warn(`Analytics: Categorization error - ${patternKey}`, {
+      error,
+    });
   }
 
   /**

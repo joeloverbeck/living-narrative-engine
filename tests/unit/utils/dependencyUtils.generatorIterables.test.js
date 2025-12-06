@@ -2,11 +2,7 @@ import { describe, it, expect, jest, afterEach } from '@jest/globals';
 import * as dependencyUtils from '../../../src/utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
-const {
-  assertFunction,
-  assertMethods,
-  validateDependencies,
-} = dependencyUtils;
+const { assertFunction, assertMethods, validateDependencies } = dependencyUtils;
 
 describe('dependencyUtils generator and type edge cases', () => {
   afterEach(() => {

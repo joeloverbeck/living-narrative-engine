@@ -33,7 +33,6 @@ describe('CoreMotivationsGeneratorController', () => {
 
     // Mock Date.now for cache testing
     jest.spyOn(Date, 'now');
-
   });
 
   afterEach(() => {
@@ -304,22 +303,28 @@ describe('CoreMotivationsGeneratorController', () => {
         },
       ];
 
-      const organized = testBed.controller.organizeDirectionsByConcept(directions);
+      const organized =
+        testBed.controller.organizeDirectionsByConcept(directions);
 
-      expect(organized.find((group) => group.conceptId === 'c-1').conceptTitle).toBe(
-        'Unknown Concept'
-      );
-      expect(organized.find((group) => group.conceptId === 'c-2').conceptTitle).toBe(
-        'First line title'
-      );
       expect(
-        organized.find((group) => group.conceptId === 'c-3').conceptTitle.endsWith('...')
+        organized.find((group) => group.conceptId === 'c-1').conceptTitle
+      ).toBe('Unknown Concept');
+      expect(
+        organized.find((group) => group.conceptId === 'c-2').conceptTitle
+      ).toBe('First line title');
+      expect(
+        organized
+          .find((group) => group.conceptId === 'c-3')
+          .conceptTitle.endsWith('...')
       ).toBe(true);
     });
 
     it('selects a direction via DOM interaction and caches concept/direction data', async () => {
       const motivations = [{ id: 'm-1', createdAt: new Date() }];
-      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+      await testBed.loadDirectionWithMotivations(
+        'test-direction-1',
+        motivations
+      );
 
       await testBed.selectDirection('test-direction-1');
 
@@ -337,7 +342,9 @@ describe('CoreMotivationsGeneratorController', () => {
       await testBed.loadDirectionWithMotivations('test-direction-1', []);
       await testBed.selectDirection('test-direction-1');
 
-      const retrievedEvent = testBed.getLastEventOfType('core:core_motivations_retrieved');
+      const retrievedEvent = testBed.getLastEventOfType(
+        'core:core_motivations_retrieved'
+      );
       expect(retrievedEvent.payload.count).toBe(0);
     });
 
@@ -365,7 +372,10 @@ describe('CoreMotivationsGeneratorController', () => {
         manyMotivations
       );
 
-      await testBed.loadDirectionWithMotivations('test-direction-1', manyMotivations);
+      await testBed.loadDirectionWithMotivations(
+        'test-direction-1',
+        manyMotivations
+      );
       await testBed.selectDirection('test-direction-1');
 
       const loadMoreTrigger = document.getElementById('load-more-trigger');
@@ -398,7 +408,10 @@ describe('CoreMotivationsGeneratorController', () => {
       ];
 
       testBed.setupMotivationsDisplay(motivations);
-      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+      await testBed.loadDirectionWithMotivations(
+        'test-direction-1',
+        motivations
+      );
       await testBed.selectDirection('test-direction-1');
 
       jest.useFakeTimers();
@@ -432,7 +445,10 @@ describe('CoreMotivationsGeneratorController', () => {
       ];
 
       testBed.setupMotivationsDisplay(motivations);
-      await testBed.loadDirectionWithMotivations('test-direction-1', motivations);
+      await testBed.loadDirectionWithMotivations(
+        'test-direction-1',
+        motivations
+      );
       await testBed.selectDirection('test-direction-1');
 
       // Remove eligible directions so the export filename path uses the fallback
@@ -493,7 +509,9 @@ describe('CoreMotivationsGeneratorController', () => {
         resolveGeneration = resolve;
       });
 
-      testBed.mockCoreMotivationsGenerator.generate.mockReturnValue(pendingGeneration);
+      testBed.mockCoreMotivationsGenerator.generate.mockReturnValue(
+        pendingGeneration
+      );
 
       await testBed.controller.initialize();
       await testBed.selectDirection('test-direction-1');
@@ -714,7 +732,9 @@ describe('CoreMotivationsGeneratorController', () => {
       generateBtn.click();
       await testBed.waitForAsyncOperations();
 
-      expect(testBed.mockCoreMotivationsGenerator.generate).not.toHaveBeenCalled();
+      expect(
+        testBed.mockCoreMotivationsGenerator.generate
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -838,7 +858,11 @@ describe('CoreMotivationsGeneratorController', () => {
       const error = new Error('Deletion failed');
       testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValueOnce(
         [
-          { id: 'motivation-1', text: 'Stubborn resolve', createdAt: new Date() },
+          {
+            id: 'motivation-1',
+            text: 'Stubborn resolve',
+            createdAt: new Date(),
+          },
         ]
       );
       await testBed.selectDirection('test-direction-1');
@@ -909,7 +933,11 @@ describe('CoreMotivationsGeneratorController', () => {
     it('should surface an error when clearing motivations fails', async () => {
       // Arrange
       const mockMotivations = [
-        { id: 'motivation-1', text: 'Another motivation', createdAt: new Date() },
+        {
+          id: 'motivation-1',
+          text: 'Another motivation',
+          createdAt: new Date(),
+        },
       ];
       testBed.mockCharacterBuilderService.getCoreMotivationsByDirectionId.mockResolvedValue(
         mockMotivations
@@ -4035,7 +4063,9 @@ describe('CoreMotivationsGeneratorController', () => {
       const [exportedMotivations] =
         testBed.mockDisplayEnhancer.formatMotivationsForExport.mock.calls[0];
       expect(exportedMotivations).toEqual(motivations);
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('Exported motivations');
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'Exported motivations'
+      );
       expect(URL.createObjectURL).toHaveBeenCalled();
 
       navigator.clipboard = originalClipboard;
@@ -4206,7 +4236,8 @@ describe('CoreMotivationsGeneratorController', () => {
       jest.useFakeTimers();
       await testBed.controller.initialize();
 
-      const getCallbacks = (eventType) => testBed.eventCallbacks.get(eventType)[0];
+      const getCallbacks = (eventType) =>
+        testBed.eventCallbacks.get(eventType)[0];
 
       getCallbacks('core:core_motivations_generation_started')();
       let announcer = document.getElementById('sr-announcements');

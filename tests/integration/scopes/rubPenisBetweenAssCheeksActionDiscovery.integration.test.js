@@ -28,7 +28,8 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
@@ -90,18 +91,28 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     const dataRegistry = new InMemoryDataRegistry({ logger });
 
     // Store the action
-    dataRegistry.store('actions', rubPenisBetweenAssCheeksAction.id, rubPenisBetweenAssCheeksAction);
+    dataRegistry.store(
+      'actions',
+      rubPenisBetweenAssCheeksAction.id,
+      rubPenisBetweenAssCheeksAction
+    );
 
     // Store the condition
-    dataRegistry.store('conditions', 'positioning:actor-in-entity-facing-away', {
-      id: 'positioning:actor-in-entity-facing-away',
-      logic: {
-        in: [
-          { var: 'actor.id' },
-          { var: 'entity.components.positioning:facing_away.facing_away_from' },
-        ],
-      },
-    });
+    dataRegistry.store(
+      'conditions',
+      'positioning:actor-in-entity-facing-away',
+      {
+        id: 'positioning:actor-in-entity-facing-away',
+        logic: {
+          in: [
+            { var: 'actor.id' },
+            {
+              var: 'entity.components.positioning:facing_away.facing_away_from',
+            },
+          ],
+        },
+      }
+    );
 
     // Initialize JSON Logic with custom operators
     jsonLogicEval = new JsonLogicEvaluationService({
@@ -128,30 +139,42 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex-dry-intimacy:actors_with_exposed_ass_facing_away': scopeDefinitions.get(
-        'sex-dry-intimacy:actors_with_exposed_ass_facing_away'
-      ),
+      'sex-dry-intimacy:actors_with_exposed_ass_facing_away':
+        scopeDefinitions.get(
+          'sex-dry-intimacy:actors_with_exposed_ass_facing_away'
+        ),
     });
 
     scopeEngine = new ScopeEngine();
-    
+
     // Mock prerequisite evaluation to check for penis
     prerequisiteEvaluationService = {
-      evaluate: jest.fn().mockImplementation((prerequisites, actionDef, actor, trace) => {
-        console.log('PrerequisiteEvaluationService.evaluate called for action:', actionDef.id);
-        
-        // Check if the actor has a penis for this specific action
-        if (actionDef.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks' && prerequisites) {
-          // Check if actor has penis using the hasPartOfType operator
-          const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
-          const context = { actor };
-          const hasPenis = jsonLogicEval.evaluate(hasPartOfTypeLogic, context);
-          console.log('Actor has penis in prerequisite check:', hasPenis);
-          return hasPenis;
-        }
-        
-        return true;
-      }),
+      evaluate: jest
+        .fn()
+        .mockImplementation((prerequisites, actionDef, actor, trace) => {
+          console.log(
+            'PrerequisiteEvaluationService.evaluate called for action:',
+            actionDef.id
+          );
+
+          // Check if the actor has a penis for this specific action
+          if (
+            actionDef.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks' &&
+            prerequisites
+          ) {
+            // Check if actor has penis using the hasPartOfType operator
+            const hasPartOfTypeLogic = { hasPartOfType: ['actor', 'penis'] };
+            const context = { actor };
+            const hasPenis = jsonLogicEval.evaluate(
+              hasPartOfTypeLogic,
+              context
+            );
+            console.log('Actor has penis in prerequisite check:', hasPenis);
+            return hasPenis;
+          }
+
+          return true;
+        }),
     };
 
     targetResolutionService = createTargetResolutionServiceWithMocks({
@@ -163,7 +186,9 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     });
 
     gameDataRepository = {
-      getAllActionDefinitions: jest.fn().mockReturnValue([rubPenisBetweenAssCheeksAction]),
+      getAllActionDefinitions: jest
+        .fn()
+        .mockReturnValue([rubPenisBetweenAssCheeksAction]),
       get: jest.fn((type, id) => dataRegistry.get(type, id)),
     };
 
@@ -191,13 +216,23 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
       ? {
           name: 'CustomMockMultiTargetResolution',
           async execute(context) {
-            console.log('Mock stage received context.candidateActions:', context.candidateActions?.map(a => a.id));
-            console.log('Mock stage received context.data?.candidateActions:', context.data?.candidateActions?.map(a => a.id));
-            
+            console.log(
+              'Mock stage received context.candidateActions:',
+              context.candidateActions?.map((a) => a.id)
+            );
+            console.log(
+              'Mock stage received context.data?.candidateActions:',
+              context.data?.candidateActions?.map((a) => a.id)
+            );
+
             // Get candidate actions from the right place
-            const candidateActions = context.candidateActions || context.data?.candidateActions || [];
-            console.log('Mock stage found actions:', candidateActions.map(a => a.id));
-            
+            const candidateActions =
+              context.candidateActions || context.data?.candidateActions || [];
+            console.log(
+              'Mock stage found actions:',
+              candidateActions.map((a) => a.id)
+            );
+
             // Check if the action's scope conditions are met
             const actionsWithTargets = [];
             for (const actionDef of candidateActions) {
@@ -205,13 +240,13 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
               // We'll evaluate the scope for the target
               const target1 = entityManager.getEntityInstance('target1');
               const actorEntity = context.actor;
-              
+
               // Check the scope conditions using jsonLogicEval
               const scopeContext = {
                 actor: actorEntity,
                 entity: target1,
               };
-              
+
               // Evaluate the full scope logic for the action
               const fullScopeLogic = {
                 and: [
@@ -221,38 +256,47 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
                       {
                         and: [
                           { hasPartOfType: ['.', 'ass_cheek'] },
-                          { not: { isSocketCovered: ['.', 'left_ass'] } }
-                        ]
+                          { not: { isSocketCovered: ['.', 'left_ass'] } },
+                        ],
                       },
                       {
                         and: [
                           { hasPartOfType: ['.', 'ass_cheek'] },
-                          { not: { isSocketCovered: ['.', 'right_ass'] } }
-                        ]
-                      }
-                    ]
-                  }
-                ]
+                          { not: { isSocketCovered: ['.', 'right_ass'] } },
+                        ],
+                      },
+                    ],
+                  },
+                ],
               };
-              
-              const scopePasses = jsonLogicEval.evaluate(fullScopeLogic, scopeContext);
-              console.log(`Scope evaluation for action ${actionDef.id}: ${scopePasses}`);
-              
+
+              const scopePasses = jsonLogicEval.evaluate(
+                fullScopeLogic,
+                scopeContext
+              );
+              console.log(
+                `Scope evaluation for action ${actionDef.id}: ${scopePasses}`
+              );
+
               if (scopePasses) {
                 actionsWithTargets.push({
                   actionDef,
-                  targetContexts: [{
-                    type: 'entity',
-                    entityId: 'target1',
-                    displayName: 'Target 1',
-                    placeholder: 'primary',
-                  }],
-                  resolvedTargets: {
-                    primary: [{
-                      id: 'target1',
+                  targetContexts: [
+                    {
+                      type: 'entity',
+                      entityId: 'target1',
                       displayName: 'Target 1',
-                      entity: target1,
-                    }],
+                      placeholder: 'primary',
+                    },
+                  ],
+                  resolvedTargets: {
+                    primary: [
+                      {
+                        id: 'target1',
+                        displayName: 'Target 1',
+                        entity: target1,
+                      },
+                    ],
                   },
                   targetDefinitions: {
                     primary: {
@@ -264,7 +308,7 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
                 });
               }
             }
-            
+
             return {
               isSuccess: () => true,
               success: true,
@@ -280,7 +324,6 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
         }
       : createEmptyMockMultiTargetResolutionStage();
 
-    
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -290,33 +333,40 @@ describe('Rub Penis Between Ass Cheeks Action Discovery Integration Tests', () =
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
-        getCandidateActions: jest
-          .fn()
-          .mockImplementation((actor, trace) => {
-            // Return the action only if the actor has the required components
-            const allActions = gameDataRepository.getAllActionDefinitions();
-            console.log('getCandidateActions called with actor:', actor.id);
-            console.log('All actions:', allActions.map(a => a.id));
-            
-            const filtered = allActions.filter(action => {
-              // Check if actor has required components
-              if (action.required_components?.actor) {
-                for (const comp of action.required_components.actor) {
-                  const hasComp = !!entityManager.getComponentData(actor.id, comp);
-                  console.log(`Actor ${actor.id} has ${comp}: ${hasComp}`);
-                  if (!hasComp) {
-                    return false;
-                  }
+        getCandidateActions: jest.fn().mockImplementation((actor, trace) => {
+          // Return the action only if the actor has the required components
+          const allActions = gameDataRepository.getAllActionDefinitions();
+          console.log('getCandidateActions called with actor:', actor.id);
+          console.log(
+            'All actions:',
+            allActions.map((a) => a.id)
+          );
+
+          const filtered = allActions.filter((action) => {
+            // Check if actor has required components
+            if (action.required_components?.actor) {
+              for (const comp of action.required_components.actor) {
+                const hasComp = !!entityManager.getComponentData(
+                  actor.id,
+                  comp
+                );
+                console.log(`Actor ${actor.id} has ${comp}: ${hasComp}`);
+                if (!hasComp) {
+                  return false;
                 }
               }
-              return true;
-            });
-            
-            console.log('Filtered actions:', filtered.map(a => a.id));
-            return filtered;
-          }),
+            }
+            return true;
+          });
+
+          console.log(
+            'Filtered actions:',
+            filtered.map((a) => a.id)
+          );
+          return filtered;
+        }),
       },
       prerequisiteService: prerequisiteEvaluationService,
       targetService: targetResolutionService,
@@ -406,56 +456,62 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               'clothing:equipment': {
                 equipped: {
                   // If both are covered, use torso_lower like actual game
-                  ...(leftAssCovered && rightAssCovered && {
-                    torso_lower: {
-                      base: ['underwear_item'],
-                    },
-                  }),
+                  ...(leftAssCovered &&
+                    rightAssCovered && {
+                      torso_lower: {
+                        base: ['underwear_item'],
+                      },
+                    }),
                   // For partial coverage testing, use custom slots
-                  ...(leftAssCovered && !rightAssCovered && {
-                    left_custom: {
-                      base: ['left_cover'],
-                    },
-                  }),
-                  ...(rightAssCovered && !leftAssCovered && {
-                    right_custom: {
-                      base: ['right_cover'],
-                    },
-                  }),
+                  ...(leftAssCovered &&
+                    !rightAssCovered && {
+                      left_custom: {
+                        base: ['left_cover'],
+                      },
+                    }),
+                  ...(rightAssCovered &&
+                    !leftAssCovered && {
+                      right_custom: {
+                        base: ['right_cover'],
+                      },
+                    }),
                 },
               },
               'clothing:slot_metadata': {
                 slotMappings: {
                   // Full coverage via torso_lower
-                  ...(leftAssCovered && rightAssCovered && {
-                    torso_lower: {
-                      coveredSockets: [
-                        'left_hip',
-                        'right_hip',
-                        'waist_front',
-                        'waist_back',
-                        'pubic_hair',
-                        'penis',
-                        'left_testicle',
-                        'right_testicle',
-                        'vagina',
-                        'asshole',
-                        'left_ass',
-                        'right_ass'
-                      ],
-                    },
-                  }),
+                  ...(leftAssCovered &&
+                    rightAssCovered && {
+                      torso_lower: {
+                        coveredSockets: [
+                          'left_hip',
+                          'right_hip',
+                          'waist_front',
+                          'waist_back',
+                          'pubic_hair',
+                          'penis',
+                          'left_testicle',
+                          'right_testicle',
+                          'vagina',
+                          'asshole',
+                          'left_ass',
+                          'right_ass',
+                        ],
+                      },
+                    }),
                   // Partial coverage for testing
-                  ...(leftAssCovered && !rightAssCovered && {
-                    left_custom: {
-                      coveredSockets: ['left_ass'],
-                    },
-                  }),
-                  ...(rightAssCovered && !leftAssCovered && {
-                    right_custom: {
-                      coveredSockets: ['right_ass'],
-                    },
-                  }),
+                  ...(leftAssCovered &&
+                    !rightAssCovered && {
+                      left_custom: {
+                        coveredSockets: ['left_ass'],
+                      },
+                    }),
+                  ...(rightAssCovered &&
+                    !leftAssCovered && {
+                      right_custom: {
+                        coveredSockets: ['right_ass'],
+                      },
+                    }),
                 },
               },
             }),
@@ -561,11 +617,17 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       });
 
       // Debug: Log all discovered actions and target entity state
-      console.log('All discovered actions:', result.actions.map(a => a.id));
+      console.log(
+        'All discovered actions:',
+        result.actions.map((a) => a.id)
+      );
       console.log('Full result:', JSON.stringify(result, null, 2));
       const target1 = entityManager.getEntityInstance('target1');
-      console.log('Target1 components:', JSON.stringify(target1.components, null, 2));
-      
+      console.log(
+        'Target1 components:',
+        JSON.stringify(target1.components, null, 2)
+      );
+
       // Check if scope is being evaluated correctly
       const scopeContext = {
         actor: actorEntity,
@@ -576,36 +638,39 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         scopeContext
       );
       console.log('Target has ass_cheek parts:', hasPartOfTypeResult);
-      
+
       const isSocketCoveredLeftResult = jsonLogicEval.evaluate(
         { isSocketCovered: ['.', 'left_ass'] },
         scopeContext
       );
       console.log('Target left_ass is covered:', isSocketCoveredLeftResult);
-      
+
       const isSocketCoveredRightResult = jsonLogicEval.evaluate(
         { isSocketCovered: ['.', 'right_ass'] },
         scopeContext
       );
       console.log('Target right_ass is covered:', isSocketCoveredRightResult);
-      
+
       // Check facing away condition
       const facingAwayResult = jsonLogicEval.evaluate(
         { condition_ref: 'positioning:actor-in-entity-facing-away' },
         scopeContext
       );
       console.log('Actor is in entity facing away:', facingAwayResult);
-      
+
       // Check if actor has penis
       const actorHasPenisResult = jsonLogicEval.evaluate(
         { hasPartOfType: ['actor', 'penis'] },
         scopeContext
       );
       console.log('Actor has penis:', actorHasPenisResult);
-      
+
       // Check if actor has required components
-      console.log('Actor components:', JSON.stringify(actorEntity.components, null, 2));
-      
+      console.log(
+        'Actor components:',
+        JSON.stringify(actorEntity.components, null, 2)
+      );
+
       // Try evaluating the full scope
       const fullScopeLogic = {
         and: [
@@ -615,26 +680,32 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
               {
                 and: [
                   { hasPartOfType: ['.', 'ass_cheek'] },
-                  { not: { isSocketCovered: ['.', 'left_ass'] } }
-                ]
+                  { not: { isSocketCovered: ['.', 'left_ass'] } },
+                ],
               },
               {
                 and: [
                   { hasPartOfType: ['.', 'ass_cheek'] },
-                  { not: { isSocketCovered: ['.', 'right_ass'] } }
-                ]
-              }
-            ]
-          }
-        ]
+                  { not: { isSocketCovered: ['.', 'right_ass'] } },
+                ],
+              },
+            ],
+          },
+        ],
       };
-      const fullScopeResult = jsonLogicEval.evaluate(fullScopeLogic, scopeContext);
+      const fullScopeResult = jsonLogicEval.evaluate(
+        fullScopeLogic,
+        scopeContext
+      );
       console.log('Full scope evaluation result:', fullScopeResult);
-      
+
       // Check if action is in the candidate actions
       const candidateActions = gameDataRepository.getAllActionDefinitions();
-      console.log('Candidate actions:', candidateActions.map(a => a.id));
-      
+      console.log(
+        'Candidate actions:',
+        candidateActions.map((a) => a.id)
+      );
+
       // Check what prerequisite evaluation returns
       const prereqResult = prerequisiteEvaluationService.evaluate(
         rubPenisBetweenAssCheeksAction.prerequisites,
@@ -643,14 +714,17 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         null
       );
       console.log('Prerequisite evaluation result:', prereqResult);
-      
+
       // Check if scope is registered
-      const registeredScope = scopeRegistry.getScope('sex-dry-intimacy:actors_with_exposed_ass_facing_away');
+      const registeredScope = scopeRegistry.getScope(
+        'sex-dry-intimacy:actors_with_exposed_ass_facing_away'
+      );
       console.log('Scope is registered:', !!registeredScope);
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -674,7 +748,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -698,7 +773,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(1);
       expect(rubActions[0].params.targetId).toBe('target1');
@@ -722,7 +798,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -745,7 +822,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -768,7 +846,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -791,7 +870,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -799,7 +879,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
     it('should not discover action when target wears torso_lower clothing (base layer)', async () => {
       // This test validates the fix for the bug where actions were available
       // even when target was wearing clothing in torso_lower slot
-      
+
       // Arrange - target wearing underwear in torso_lower base layer
       setupEntities({
         targetFacingAway: true,
@@ -817,7 +897,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears clothing
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });
@@ -874,7 +955,7 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
                     'vagina',
                     'asshole',
                     'left_ass',
-                    'right_ass'
+                    'right_ass',
                   ],
                 },
               },
@@ -956,7 +1037,8 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
 
       // Assert - action should NOT be available when target wears underwear
       const rubActions = result.actions.filter(
-        (action) => action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+        (action) =>
+          action.id === 'sex-dry-intimacy:rub_penis_between_ass_cheeks'
       );
       expect(rubActions).toHaveLength(0);
     });

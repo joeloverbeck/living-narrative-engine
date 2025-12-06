@@ -15,7 +15,9 @@ describe('My Test', () => {
   let entityManager;
 
   beforeEach(() => {
-    const logger = { /* ... */ };
+    const logger = {
+      /* ... */
+    };
     entityManager = createEntityManagerAdapter({ logger });
   });
 
@@ -43,29 +45,29 @@ const manager = new SimpleEntityManager([]);
 
 All entity managers implement these methods from the IEntityManager interface:
 
-| Method | Parameters | Returns | Description |
-|--------|-----------|---------|-------------|
-| `entities` (getter) | None | `IterableIterator<Entity>` | Iterator over all entities |
-| `getEntityIds()` | None | `Array<string>` | Get all entity IDs |
-| `getComponentData(entityId, componentType)` | `string, string` | `Object\|undefined` | Get component data |
-| `hasComponent(entityId, componentType)` | `string, string` | `boolean` | Check component presence |
-| `getEntityInstance(entityId)` | `string` | `Entity\|undefined` | Get full entity |
-| `getEntitiesWithComponent(componentType)` | `string` | `Array<Entity>` | Filter entities by component |
-| `getEntitiesInLocation(locationId)` | `string` | `Set<string>` | Get entity IDs at location |
-| `findEntities(queryObj)` | `object` | `Array<Entity>` | Complex query filtering |
-| `getAllComponentTypesForEntity(entityId)` | `string` | `Array<string>` | Get all component types |
+| Method                                      | Parameters       | Returns                    | Description                  |
+| ------------------------------------------- | ---------------- | -------------------------- | ---------------------------- |
+| `entities` (getter)                         | None             | `IterableIterator<Entity>` | Iterator over all entities   |
+| `getEntityIds()`                            | None             | `Array<string>`            | Get all entity IDs           |
+| `getComponentData(entityId, componentType)` | `string, string` | `Object\|undefined`        | Get component data           |
+| `hasComponent(entityId, componentType)`     | `string, string` | `boolean`                  | Check component presence     |
+| `getEntityInstance(entityId)`               | `string`         | `Entity\|undefined`        | Get full entity              |
+| `getEntitiesWithComponent(componentType)`   | `string`         | `Array<Entity>`            | Filter entities by component |
+| `getEntitiesInLocation(locationId)`         | `string`         | `Set<string>`              | Get entity IDs at location   |
+| `findEntities(queryObj)`                    | `object`         | `Array<Entity>`            | Complex query filtering      |
+| `getAllComponentTypesForEntity(entityId)`   | `string`         | `Array<string>`            | Get all component types      |
 
 ### Test-Specific Convenience Methods
 
 Methods for test setup and teardown (not in production):
 
-| Method | Description |
-|--------|-------------|
-| `getEntities()` | Get all entities as array (convenience) |
-| `addEntity(entity)` | Add entity to manager |
-| `deleteEntity(entityId)` | Remove entity from manager |
-| `clearAll()` | Remove all entities |
-| `setEntities(entities)` | Replace all entities |
+| Method                   | Description                             |
+| ------------------------ | --------------------------------------- |
+| `getEntities()`          | Get all entities as array (convenience) |
+| `addEntity(entity)`      | Add entity to manager                   |
+| `deleteEntity(entityId)` | Remove entity from manager              |
+| `clearAll()`             | Remove all entities                     |
+| `setEntities(entities)`  | Replace all entities                    |
 
 ## Common Patterns
 
@@ -80,8 +82,12 @@ beforeEach(() => {
     id: 'actor-1',
     components: {
       'core:actor': {},
-      'anatomy:body': { parts: { /* ... */ } }
-    }
+      'anatomy:body': {
+        parts: {
+          /* ... */
+        },
+      },
+    },
   });
 });
 ```
@@ -120,7 +126,7 @@ it('should find entity IDs at location', () => {
 
   // Convert to entity objects if needed
   const entities = Array.from(room1EntityIds)
-    .map(id => entityManager.getEntityInstance(id))
+    .map((id) => entityManager.getEntityInstance(id))
     .filter(Boolean);
 });
 ```
@@ -130,6 +136,7 @@ it('should find entity IDs at location', () => {
 ### Step 1: Update Imports
 
 **Before:**
+
 ```javascript
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
@@ -137,6 +144,7 @@ const manager = new SimpleEntityManager([]);
 ```
 
 **After:**
+
 ```javascript
 import { createEntityManagerAdapter } from '../../common/entities/entityManagerTestFactory.js';
 
@@ -150,7 +158,7 @@ All `SimpleEntityManager` methods work through the adapter:
 ```javascript
 // These all work the same
 manager.addEntity(entity);
-manager.getEntities();  // Test convenience method (array)
+manager.getEntities(); // Test convenience method (array)
 manager.hasComponent(id, type);
 manager.clearAll();
 ```
@@ -164,9 +172,9 @@ Start using production API methods for better compatibility:
 const actors = manager.getEntitiesWithComponent('core:actor');
 
 // ⚠️ Manual filtering - works but not idiomatic
-const actors = manager.getEntities().filter(e =>
-  manager.hasComponent(e.id, 'core:actor')
-);
+const actors = manager
+  .getEntities()
+  .filter((e) => manager.hasComponent(e.id, 'core:actor'));
 ```
 
 ## Troubleshooting
@@ -208,8 +216,8 @@ const manager = createEntityManagerAdapter({ logger });
 ```javascript
 // ⚠️ Inefficient - Multiple iterations
 const actors = Array.from(manager.entities)
-  .filter(e => manager.hasComponent(e.id, 'core:actor'))
-  .filter(e => {
+  .filter((e) => manager.hasComponent(e.id, 'core:actor'))
+  .filter((e) => {
     const loc = manager.getComponentData(e.id, 'core:position');
     return loc?.locationId === 'room1';
   });
@@ -217,7 +225,7 @@ const actors = Array.from(manager.entities)
 // ✅ Better - Use getEntitiesWithComponent first
 const actorsInRoom = manager
   .getEntitiesWithComponent('core:actor')
-  .filter(e => {
+  .filter((e) => {
     const loc = manager.getComponentData(e.id, 'core:position');
     return loc?.locationId === 'room1';
   });
@@ -226,7 +234,7 @@ const actorsInRoom = manager
 const room1EntityIds = manager.getEntitiesInLocation('room1');
 const actors = manager
   .getEntitiesWithComponent('core:actor')
-  .filter(e => room1EntityIds.has(e.id));
+  .filter((e) => room1EntityIds.has(e.id));
 ```
 
 ## References

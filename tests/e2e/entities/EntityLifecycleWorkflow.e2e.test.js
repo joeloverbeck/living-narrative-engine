@@ -9,7 +9,14 @@
  * E2E test coverage analysis for core entity lifecycle operations.
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+} from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Entity Lifecycle E2E Workflow', () => {
@@ -350,7 +357,8 @@ describe('Entity Lifecycle E2E Workflow', () => {
       // Assert all entities are removed (parallel reads for verification)
       const removalChecks = await Promise.all(
         entityIds.map(async (entityId) => {
-          const entity = await testBed.entityManager.getEntityInstance(entityId);
+          const entity =
+            await testBed.entityManager.getEntityInstance(entityId);
           return { entityId, entity };
         })
       );

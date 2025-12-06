@@ -80,7 +80,9 @@ describe('AjvSchemaValidator.getLoadedComponentSchemas', () => {
     });
 
     it('falls back to an empty array when the registry returns a non-array value', () => {
-      dataRegistry.getAllComponentDefinitions.mockReturnValue({ unexpected: true });
+      dataRegistry.getAllComponentDefinitions.mockReturnValue({
+        unexpected: true,
+      });
 
       const result = validator.getLoadedComponentSchemas();
 

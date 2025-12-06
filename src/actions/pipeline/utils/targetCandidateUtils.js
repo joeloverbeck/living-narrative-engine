@@ -26,5 +26,5 @@ export function extractCandidateId(candidate) {
 }
 
 export default {
-  extractCandidateId
+  extractCandidateId,
 };

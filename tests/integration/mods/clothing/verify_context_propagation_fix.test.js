@@ -37,7 +37,9 @@ describe('Context propagation fix verification', () => {
 
     const actionJson = JSON.parse(actionContent);
 
-    expect(actionJson.targets.secondary.scope).toBe('clothing:target_topmost_clothing');
+    expect(actionJson.targets.secondary.scope).toBe(
+      'clothing:target_topmost_clothing'
+    );
     expect(actionJson.targets.secondary.contextFrom).toBe('primary');
 
     testBed.cleanup();

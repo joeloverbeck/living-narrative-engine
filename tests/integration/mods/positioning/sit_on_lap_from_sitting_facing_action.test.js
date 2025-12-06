@@ -23,8 +23,14 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
   describe('Component Manipulation', () => {
     it('should remove sitting_on component from actor', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -41,7 +47,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair2',
@@ -53,14 +59,21 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
     });
 
     it('should add straddling_waist component with facing_away=false', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -77,7 +90,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair2',
@@ -89,16 +102,29 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:straddling_waist']).toBeDefined();
-      expect(updatedActor.components['positioning:straddling_waist'].target_id).toBe('target1');
-      expect(updatedActor.components['positioning:straddling_waist'].facing_away).toBe(false);
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeDefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist'].target_id
+      ).toBe('target1');
+      expect(
+        updatedActor.components['positioning:straddling_waist'].facing_away
+      ).toBe(false);
     });
 
     it('should NOT add facing_away component to actor', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -115,7 +141,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair2',
@@ -127,13 +153,19 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
-      expect(updatedActor.components['positioning:facing_away']).toBeUndefined();
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
+      expect(
+        updatedActor.components['positioning:facing_away']
+      ).toBeUndefined();
     });
 
     it('should keep target sitting_on component unchanged', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair = new ModEntityBuilder('chair1').withName('Chair').atLocation('room1').build();
+      const chair = new ModEntityBuilder('chair1')
+        .withName('Chair')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -150,7 +182,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair1',
@@ -162,18 +194,29 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedTarget = testFixture.entityManager.getEntityInstance('target1');
+      const updatedTarget =
+        testFixture.entityManager.getEntityInstance('target1');
       expect(updatedTarget.components['positioning:sitting_on']).toBeDefined();
-      expect(updatedTarget.components['positioning:sitting_on'].furniture_id).toBe('chair1');
-      expect(updatedTarget.components['positioning:sitting_on'].spot_index).toBe(1);
+      expect(
+        updatedTarget.components['positioning:sitting_on'].furniture_id
+      ).toBe('chair1');
+      expect(
+        updatedTarget.components['positioning:sitting_on'].spot_index
+      ).toBe(1);
     });
   });
 
   describe('Event Dispatching', () => {
     it('should NOT dispatch actor_turned_back event', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -190,7 +233,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'chair2',
@@ -202,14 +245,22 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const turnedBackEvent = testFixture.events.find(e => e.eventType === 'positioning:actor_turned_back');
+      const turnedBackEvent = testFixture.events.find(
+        (e) => e.eventType === 'positioning:actor_turned_back'
+      );
       expect(turnedBackEvent).toBeUndefined();
     });
 
     it('should dispatch successful action result event', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -239,7 +290,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const successEvent = testFixture.events.find(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
       expect(successEvent).toBeDefined();
     });
@@ -248,8 +299,14 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
   describe('Output Validation', () => {
     it('should generate correct log message', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair1 = new ModEntityBuilder('chair1').withName('Chair 1').atLocation('room1').build();
-      const chair2 = new ModEntityBuilder('chair2').withName('Chair 2').atLocation('room1').build();
+      const chair1 = new ModEntityBuilder('chair1')
+        .withName('Chair 1')
+        .atLocation('room1')
+        .build();
+      const chair2 = new ModEntityBuilder('chair2')
+        .withName('Chair 2')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -279,17 +336,22 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
       await testFixture.executeAction('actor1', 'target1');
 
       const successEvent = testFixture.events.find(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toBe("Alice sits on Bob's lap (face-to-face).");
+      expect(successEvent.payload.message).toBe(
+        "Alice sits on Bob's lap (face-to-face)."
+      );
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle actor transitioning from same furniture as target', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const couch = new ModEntityBuilder('couch1').withName('Couch').atLocation('room1').build();
+      const couch = new ModEntityBuilder('couch1')
+        .withName('Couch')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -306,7 +368,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'couch1',
@@ -318,16 +380,27 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
-      expect(updatedActor.components['positioning:straddling_waist']).toBeDefined();
-      expect(updatedActor.components['positioning:straddling_waist'].target_id).toBe('target1');
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeDefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist'].target_id
+      ).toBe('target1');
     });
 
     it('should handle actor transitioning from different furniture', async () => {
       const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
-      const chair = new ModEntityBuilder('chair1').withName('Chair').atLocation('room1').build();
-      const couch = new ModEntityBuilder('couch1').withName('Couch').atLocation('room1').build();
+      const chair = new ModEntityBuilder('chair1')
+        .withName('Chair')
+        .atLocation('room1')
+        .build();
+      const couch = new ModEntityBuilder('couch1')
+        .withName('Couch')
+        .atLocation('room1')
+        .build();
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Alice')
@@ -344,7 +417,7 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
         .closeToEntity('actor1')
         .withName('Bob')
         .atLocation('room1')
-        
+
         .asActor()
         .withComponent('positioning:sitting_on', {
           furniture_id: 'couch1',
@@ -356,9 +429,12 @@ describe('sit_on_lap_from_sitting_facing - Action Execution', () => {
 
       await testFixture.executeAction('actor1', 'target1');
 
-      const updatedActor = testFixture.entityManager.getEntityInstance('actor1');
+      const updatedActor =
+        testFixture.entityManager.getEntityInstance('actor1');
       expect(updatedActor.components['positioning:sitting_on']).toBeUndefined();
-      expect(updatedActor.components['positioning:straddling_waist']).toBeDefined();
+      expect(
+        updatedActor.components['positioning:straddling_waist']
+      ).toBeDefined();
     });
   });
 });

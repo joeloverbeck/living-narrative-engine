@@ -3,17 +3,21 @@
 ## Status: ✅ COMPLETED
 
 ## Summary
+
 Update AIPromptContentProvider to use the ModActionMetadataProvider service to include Purpose and Consider When metadata in the formatted action output.
 
 ## Prerequisites
+
 - ENHACTINFFORLLM-002 must be completed (service implementation)
 - ENHACTINFFORLLM-003 must be completed (DI registration)
 
 ## Files to Touch
+
 - `src/prompting/AIPromptContentProvider.js`
 - `src/dependencyInjection/registrations/aiRegistrations.js` (update factory only)
 
 ## Out of Scope
+
 - DO NOT modify the `ModActionMetadataProvider` service itself
 - DO NOT modify schema files
 - DO NOT create test files (that's ENHACTINFFORLLM-006)
@@ -41,6 +45,7 @@ Location: `src/prompting/AIPromptContentProvider.js`
 #### 1c. Update Constructor (starting at line 63)
 
 Add to constructor parameters:
+
 ```javascript
 modActionMetadataProvider,
 ```
@@ -48,6 +53,7 @@ modActionMetadataProvider,
 **NOTE**: Constructor uses `validateDependencies()` (array-based batch validation), NOT individual `validateDependency()` calls.
 
 Add to the dependencies array in `validateDependencies`:
+
 ```javascript
 {
   dependency: modActionMetadataProvider,
@@ -57,6 +63,7 @@ Add to the dependencies array in `validateDependencies`:
 ```
 
 Add assignment (after `this.#actionCategorizationService = actionCategorizationService;`):
+
 ```javascript
 this.#modActionMetadataProvider = modActionMetadataProvider;
 ```
@@ -74,7 +81,9 @@ for (const [namespace, namespaceActions] of grouped) {
   const metadata = this.#modActionMetadataProvider.getMetadataForMod(namespace);
 
   // Format header with action count
-  segments.push(`### ${displayName} Actions (${namespaceActions.length} actions)`);
+  segments.push(
+    `### ${displayName} Actions (${namespaceActions.length} actions)`
+  );
 
   // Add purpose if available
   if (metadata?.actionPurpose) {
@@ -114,11 +123,9 @@ registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
     gameStateValidationService: c.resolve(
       tokens.IGameStateValidationServiceForPrompting
     ),
-    actionCategorizationService: c.resolve(
-      tokens.IActionCategorizationService
-    ),
+    actionCategorizationService: c.resolve(tokens.IActionCategorizationService),
     characterDataXmlBuilder: c.resolve(tokens.CharacterDataXmlBuilder),
-    modActionMetadataProvider: c.resolve(tokens.IModActionMetadataProvider),  // NEW
+    modActionMetadataProvider: c.resolve(tokens.IModActionMetadataProvider), // NEW
   });
 });
 ```
@@ -126,12 +133,14 @@ registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 - `npm run typecheck` passes
 - `npm run test:unit -- --testPathPattern="AIPromptContentProvider"` passes
 - `npm run test:integration -- --testPathPattern="prompting"` passes
 - All existing tests continue to pass (backward compatibility)
 
 ### Invariants That Must Remain True
+
 1. Output format unchanged when metadata is NOT present (graceful degradation)
 2. Private field naming follows `#` convention
 3. Dependency validation follows existing pattern using `validateDependency`
@@ -141,6 +150,7 @@ registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
 7. Existing logging behavior preserved
 
 ## Verification Steps
+
 1. Run `npm run typecheck`
 2. Run `npx eslint src/prompting/AIPromptContentProvider.js`
 3. Run `npm run test:unit -- --testPathPattern="AIPromptContentProvider"`
@@ -153,6 +163,7 @@ registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
 ### What Was Actually Changed vs Originally Planned
 
 **Ticket Corrections Made First:**
+
 - The ticket originally assumed individual `validateDependency()` calls, but the actual code uses `validateDependencies()` with an array-based batch validation pattern. Corrected in ticket before implementation.
 
 **Implementation Matched Plan:**
@@ -167,6 +178,7 @@ All planned code changes were implemented as specified:
 2. **aiRegistrations.js** - Factory updated with new dependency
 
 **Additional Changes Required (Not in Original Plan):**
+
 - Updated 4 test files to provide mock `modActionMetadataProvider`:
   - `tests/unit/prompting/AIPromptContentProvider.test.js`
   - `tests/integration/prompting/notesFormattingIntegration.test.js`
@@ -174,6 +186,7 @@ All planned code changes were implemented as specified:
   - `tests/integration/prompting/PromptAssembly.test.js`
 
 **Verification Results:**
+
 - ✅ All 32 unit tests pass
 - ✅ All 32 integration tests pass
 - ✅ Typecheck passes

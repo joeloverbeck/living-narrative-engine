@@ -100,8 +100,12 @@ describe('handle_take_from_container Rule Schema Validation', () => {
     expect(schema.$defs.Parameters).toBeDefined();
     expect(schema.$defs.Parameters.type).toBe('object');
     expect(schema.$defs.Parameters.properties).toHaveProperty('actorEntity');
-    expect(schema.$defs.Parameters.properties).toHaveProperty('containerEntity');
+    expect(schema.$defs.Parameters.properties).toHaveProperty(
+      'containerEntity'
+    );
     expect(schema.$defs.Parameters.properties).toHaveProperty('itemEntity');
-    expect(schema.$defs.Parameters.properties).toHaveProperty('result_variable');
+    expect(schema.$defs.Parameters.properties).toHaveProperty(
+      'result_variable'
+    );
   });
 });

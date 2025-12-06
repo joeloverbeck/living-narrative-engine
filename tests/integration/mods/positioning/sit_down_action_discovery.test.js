@@ -5,7 +5,10 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import { ModEntityScenarios, ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityScenarios,
+  ModEntityBuilder,
+} from '../../../common/mods/ModEntityBuilder.js';
 import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
 
 describe('positioning:sit_down action discovery', () => {
@@ -28,8 +31,12 @@ describe('positioning:sit_down action discovery', () => {
     it('should have correct forbidden components structure', () => {
       expect(sitDownAction.forbidden_components).toBeDefined();
       expect(sitDownAction.forbidden_components.actor).toBeInstanceOf(Array);
-      expect(sitDownAction.forbidden_components.actor).toContain('positioning:sitting_on');
-      expect(sitDownAction.forbidden_components.actor).toContain('positioning:kneeling_before');
+      expect(sitDownAction.forbidden_components.actor).toContain(
+        'positioning:sitting_on'
+      );
+      expect(sitDownAction.forbidden_components.actor).toContain(
+        'positioning:kneeling_before'
+      );
     });
 
     it('should NOT appear when actor has fucking_anally component', () => {
@@ -50,7 +57,9 @@ describe('positioning:sit_down action discovery', () => {
 
       testFixture.reset([room, chair, scenario.actor]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
       expect(ids).not.toContain('positioning:sit_down');

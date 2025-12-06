@@ -15,11 +15,11 @@ Add the `damage-types:damage_capabilities` component to the fantasy weapon entit
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json` | UPDATE | Add damage_capabilities |
-| `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json` | UPDATE | Add damage_capabilities |
-| `data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json` | UPDATE | Add damage_capabilities |
+| File                                                                              | Action | Description             |
+| --------------------------------------------------------------------------------- | ------ | ----------------------- |
+| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json`               | UPDATE | Add damage_capabilities |
+| `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json`          | UPDATE | Add damage_capabilities |
+| `data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json`          | UPDATE | Add damage_capabilities |
 | `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` | UPDATE | Add damage_capabilities |
 
 ## Out of Scope
@@ -122,12 +122,12 @@ Add the `damage-types:damage_capabilities` component to the fantasy weapon entit
 
 ### Damage Configuration Summary
 
-| Weapon | Type | Amount | Penetration | Bleed | Dismember |
-|--------|------|--------|-------------|-------|-----------|
-| Vespera Rapier | slashing | 3 | 0.3 | moderate (3 turns) | 0.8 |
-| Vespera Main-Gauche | piercing | 2 | 0.8 | minor (2 turns) | - |
-| Rill Practice Stick | blunt | 1 | - | - | - |
-| Threadscar Melissa Longsword | slashing | 4 | 0.3 | moderate (3 turns) | 0.7 |
+| Weapon                       | Type     | Amount | Penetration | Bleed              | Dismember |
+| ---------------------------- | -------- | ------ | ----------- | ------------------ | --------- |
+| Vespera Rapier               | slashing | 3      | 0.3         | moderate (3 turns) | 0.8       |
+| Vespera Main-Gauche          | piercing | 2      | 0.8         | minor (2 turns)    | -         |
+| Rill Practice Stick          | blunt    | 1      | -           | -                  | -         |
+| Threadscar Melissa Longsword | slashing | 4      | 0.3         | moderate (3 turns) | 0.7       |
 
 ## Acceptance Criteria
 

@@ -34,14 +34,14 @@ This document provides actionable recommendations for refactoring the recipe val
 
 ### Key Benefits
 
-| Improvement | Current | Target | Impact |
-|-------------|---------|--------|--------|
-| **File Size** | 1,207 lines | <500 per file | ✅ Guideline compliance |
-| **Test Coverage** | 0% unit tests | 80%+ coverage | ✅ Regression prevention |
-| **Extensibility** | Closed system | Plugin architecture | ✅ Mod-specific validators |
-| **Configuration** | Hardcoded | JSON config | ✅ Environment flexibility |
-| **Code Duplication** | 5 instances | 0 instances | ✅ DRY compliance |
-| **Validation Complexity** | 128 flag configs | Linear pipeline | ✅ Simplified testing |
+| Improvement               | Current          | Target              | Impact                     |
+| ------------------------- | ---------------- | ------------------- | -------------------------- |
+| **File Size**             | 1,207 lines      | <500 per file       | ✅ Guideline compliance    |
+| **Test Coverage**         | 0% unit tests    | 80%+ coverage       | ✅ Regression prevention   |
+| **Extensibility**         | Closed system    | Plugin architecture | ✅ Mod-specific validators |
+| **Configuration**         | Hardcoded        | JSON config         | ✅ Environment flexibility |
+| **Code Duplication**      | 5 instances      | 0 instances         | ✅ DRY compliance          |
+| **Validation Complexity** | 128 flag configs | Linear pipeline     | ✅ Simplified testing      |
 
 ---
 
@@ -146,7 +146,13 @@ export class ValidationContext {
   #config;
   #metadata;
 
-  constructor({ dataRegistry, schemaValidator, blueprintProcessor, logger, config = {} }) {
+  constructor({
+    dataRegistry,
+    schemaValidator,
+    blueprintProcessor,
+    logger,
+    config = {},
+  }) {
     assertPresent(dataRegistry, 'dataRegistry is required');
     assertPresent(schemaValidator, 'schemaValidator is required');
     assertPresent(blueprintProcessor, 'blueprintProcessor is required');
@@ -408,6 +414,7 @@ export class ValidationContext {
 ```
 
 **Phase 1 Deliverables:**
+
 - ✅ `IValidator` interface
 - ✅ `ValidationContext` class
 - ✅ Configuration schema + default config
@@ -452,8 +459,8 @@ export function levenshteinDistance(a, b) {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
         );
       }
     }
@@ -532,7 +539,14 @@ export class EntityMatcherService {
     const matches = [];
 
     for (const entityDef of allEntityDefs) {
-      if (this.#matchesEntity(entityDef, { partType, allowedTypes, tags, properties })) {
+      if (
+        this.#matchesEntity(entityDef, {
+          partType,
+          allowedTypes,
+          tags,
+          properties,
+        })
+      ) {
         matches.push(entityDef.id);
       }
     }
@@ -571,7 +585,9 @@ export class EntityMatcherService {
     }
 
     // Check property values
-    for (const [propKey, expectedValue] of Object.entries(criteria.properties)) {
+    for (const [propKey, expectedValue] of Object.entries(
+      criteria.properties
+    )) {
       if (anatomyPart.properties?.[propKey] !== expectedValue) {
         return false;
       }
@@ -593,7 +609,10 @@ export class EntityMatcherService {
  * @file Blueprint processing service
  */
 
-import { assertPresent, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  assertPresent,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 
 /**
  * Processes blueprints (V1 and V2 formats)
@@ -620,7 +639,12 @@ export class BlueprintProcessorService {
    */
   processBlueprint(rawBlueprint) {
     assertPresent(rawBlueprint, 'rawBlueprint is required');
-    assertNonBlankString(rawBlueprint.id, 'blueprint.id', 'processBlueprint', this.#logger);
+    assertNonBlankString(
+      rawBlueprint.id,
+      'blueprint.id',
+      'processBlueprint',
+      this.#logger
+    );
 
     // V1 blueprint (already has slots)
     if (!rawBlueprint.structureTemplate) {
@@ -798,6 +822,7 @@ export class ValidationResultBuilder {
 ```
 
 **Phase 2 Deliverables:**
+
 - ✅ String utilities (eliminates 3 duplications)
 - ✅ Entity matcher service (eliminates 2 duplications)
 - ✅ Blueprint processor service (eliminates 1 duplication)
@@ -887,7 +912,9 @@ export class BaseValidator extends IValidator {
    * @abstract
    */
   async performValidation(recipe, context, builder) {
-    throw new Error(`performValidation not implemented in ${this.constructor.name}`);
+    throw new Error(
+      `performValidation not implemented in ${this.constructor.name}`
+    );
   }
 }
 ```
@@ -920,7 +947,10 @@ export class BodyDescriptorValidator extends BaseValidator {
     const bodyDescriptors = recipe.body?.descriptors || {};
 
     // Get anatomy:body component schema
-    const bodyComponent = context.dataRegistry.get('components', 'anatomy:body');
+    const bodyComponent = context.dataRegistry.get(
+      'components',
+      'anatomy:body'
+    );
     if (!bodyComponent) {
       builder.addError(
         'COMPONENT_NOT_FOUND',
@@ -942,7 +972,10 @@ export class BodyDescriptorValidator extends BaseValidator {
     }
 
     // Validate using AJV (proper schema validation)
-    const valid = context.schemaValidator.validate(descriptorsSchema, bodyDescriptors);
+    const valid = context.schemaValidator.validate(
+      descriptorsSchema,
+      bodyDescriptors
+    );
 
     if (!valid) {
       const errors = context.schemaValidator.getErrors();
@@ -990,7 +1023,9 @@ export class ValidatorRegistry {
     }
 
     if (this.#validators.has(validator.name)) {
-      this.#logger.warn(`Validator ${validator.name} already registered, overwriting`);
+      this.#logger.warn(
+        `Validator ${validator.name} already registered, overwriting`
+      );
     }
 
     this.#validators.set(validator.name, validator);
@@ -1049,6 +1084,7 @@ export class ValidatorRegistry {
 ```
 
 **Phase 3 Tasks:**
+
 1. Create `BaseValidator` class
 2. Refactor 11 validation checks to standalone validators:
    - ✅ Component Existence (already exists as rule)
@@ -1117,7 +1153,9 @@ export class ValidationPipeline {
 
     const validators = this.#getEnabledValidators();
 
-    this.#logger.info(`Starting validation pipeline with ${validators.length} validators`);
+    this.#logger.info(
+      `Starting validation pipeline with ${validators.length} validators`
+    );
 
     for (const validator of validators) {
       const validatorConfig = this.#getValidatorConfig(validator.name);
@@ -1140,7 +1178,10 @@ export class ValidationPipeline {
           break;
         }
       } catch (error) {
-        this.#logger.error(`Validator ${validator.name} threw exception`, error);
+        this.#logger.error(
+          `Validator ${validator.name} threw exception`,
+          error
+        );
         results.errors.push({
           type: 'VALIDATOR_EXCEPTION',
           validator: validator.name,
@@ -1161,12 +1202,10 @@ export class ValidationPipeline {
   }
 
   #getEnabledValidators() {
-    return this.#registry
-      .getAll()
-      .filter((v) => {
-        const config = this.#getValidatorConfig(v.name);
-        return config.enabled !== false;
-      });
+    return this.#registry.getAll().filter((v) => {
+      const config = this.#getValidatorConfig(v.name);
+      return config.enabled !== false;
+    });
   }
 
   #getValidatorConfig(name) {
@@ -1189,7 +1228,8 @@ export class ValidationPipeline {
 
     // Categorize issues by severity
     for (const issue of result.issues) {
-      const severityOverride = this.#config.errorHandling?.severityOverrides?.[validatorName];
+      const severityOverride =
+        this.#config.errorHandling?.severityOverrides?.[validatorName];
       const severity = severityOverride || issue.severity;
 
       const enhancedIssue = {
@@ -1221,7 +1261,10 @@ export class ValidationPipeline {
 
 import fs from 'fs/promises';
 import path from 'path';
-import { assertPresent, assertNonBlankString } from '../../../utils/dependencyUtils.js';
+import {
+  assertPresent,
+  assertNonBlankString,
+} from '../../../utils/dependencyUtils.js';
 
 /**
  * Loads and validates configuration
@@ -1268,13 +1311,18 @@ export class ConfigurationLoader {
 
       if (!valid) {
         const errors = this.#schemaValidator.getErrors();
-        throw new Error(`Invalid configuration: ${JSON.stringify(errors, null, 2)}`);
+        throw new Error(
+          `Invalid configuration: ${JSON.stringify(errors, null, 2)}`
+        );
       }
 
       this.#logger.info(`Loaded validation configuration: ${targetPath}`);
       return config;
     } catch (error) {
-      this.#logger.error(`Failed to load configuration from ${targetPath}`, error);
+      this.#logger.error(
+        `Failed to load configuration from ${targetPath}`,
+        error
+      );
       throw error;
     }
   }
@@ -1379,7 +1427,10 @@ program
       const configLoader = new ConfigurationLoader({
         schemaValidator: container.resolve('IAJVSchemaValidator'),
         logger,
-        defaultConfigPath: path.join(process.cwd(), 'config/validation-config.json'),
+        defaultConfigPath: path.join(
+          process.cwd(),
+          'config/validation-config.json'
+        ),
       });
 
       const config = await configLoader.load(options.config);
@@ -1471,6 +1522,7 @@ program.parse(process.argv);
 ```
 
 **Phase 4 Deliverables:**
+
 - ✅ `ValidationPipeline` orchestrator
 - ✅ `ConfigurationLoader` with schema validation
 - ✅ Updated CLI entry point
@@ -1499,30 +1551,35 @@ Remove Legacy Code
 ### Step-by-Step Migration
 
 #### Step 1: Feature Parity (Weeks 1-7)
+
 - Develop new system alongside existing implementation
 - No changes to `validate-recipe.js` or `RecipePreflightValidator.js`
 - All new code in separate files
 - **Testing:** Compare outputs between old and new systems
 
 #### Step 2: Integration Testing (Week 8)
+
 - Create comprehensive test suite comparing both systems
 - Validate identical output for all existing recipes
 - Document any behavioral differences
 - **Gate:** 100% output parity required before proceeding
 
 #### Step 3: Beta Release (Week 9)
+
 - Release `validate-recipe-v2.js` as opt-in beta
 - Add `--use-v2` flag to existing CLI
 - Gather feedback from real usage
 - **Monitoring:** Track adoption and issues
 
 #### Step 4: Deprecation (Week 10)
+
 - Make v2 the default
 - Add deprecation warning to old system
 - Provide migration guide for custom validators
 - **Timeline:** 1 month deprecation period
 
 #### Step 5: Removal (Week 14)
+
 - Remove `RecipePreflightValidator.js` (1,207 lines)
 - Remove old CLI entry point
 - Clean up deprecated code
@@ -1537,6 +1594,7 @@ Remove Legacy Code
 **Coverage Target:** 80% branches, 90% functions/lines
 
 **Test Structure:**
+
 ```javascript
 // tests/unit/anatomy/validation/validators/BodyDescriptorValidator.test.js
 
@@ -1679,11 +1737,11 @@ describe('Legacy vs Refactored Comparison', () => {
 
 ### Expected Performance Impact
 
-| Metric | Current | Target | Change |
-|--------|---------|--------|--------|
-| **Startup Time** | ~200ms | ~250ms | +25% (config loading) |
-| **Validation Time** | ~500ms | ~480ms | -4% (better caching) |
-| **Memory Usage** | ~50MB | ~55MB | +10% (validator objects) |
+| Metric              | Current | Target | Change                   |
+| ------------------- | ------- | ------ | ------------------------ |
+| **Startup Time**    | ~200ms  | ~250ms | +25% (config loading)    |
+| **Validation Time** | ~500ms  | ~480ms | -4% (better caching)     |
+| **Memory Usage**    | ~50MB   | ~55MB  | +10% (validator objects) |
 
 ### Optimization Strategies
 
@@ -1699,16 +1757,19 @@ describe('Legacy vs Refactored Comparison', () => {
 ### CLI Compatibility
 
 **Old Command:**
+
 ```bash
 npm run validate:recipe data/mods/anatomy/recipes/humanoid.recipe.json
 ```
 
 **New Command (same result):**
+
 ```bash
 npm run validate:recipe data/mods/anatomy/recipes/humanoid.recipe.json
 ```
 
 **Advanced Usage (new features):**
+
 ```bash
 # Use custom configuration
 npm run validate:recipe recipe.json -- --config custom-validation.json
@@ -1723,15 +1784,21 @@ npm run validate:recipe recipe.json -- --verbose
 ### API Compatibility
 
 **Old API (programmatic usage):**
+
 ```javascript
-const validator = new RecipePreflightValidator({ /* ... */ });
+const validator = new RecipePreflightValidator({
+  /* ... */
+});
 const results = await validator.validate(recipe);
 ```
 
 **New API (backward-compatible wrapper):**
+
 ```javascript
 // Legacy interface maintained
-const validator = new RecipePreflightValidator({ /* ... */ });
+const validator = new RecipePreflightValidator({
+  /* ... */
+});
 const results = await validator.validate(recipe);
 
 // Internally delegates to new pipeline
@@ -1762,12 +1829,14 @@ const results = await validator.validate(recipe);
 ### Rollback Plan
 
 **If critical issues discovered:**
+
 1. Revert CLI to use old implementation
 2. Mark new system as experimental
 3. Address issues in isolated branch
 4. Re-release when validated
 
 **Rollback Command:**
+
 ```bash
 git revert <refactoring-commits>
 npm run validate:recipe # Uses old implementation
@@ -1779,35 +1848,36 @@ npm run validate:recipe # Uses old implementation
 
 ### Code Quality Metrics
 
-| Metric | Before | Target | Success Criteria |
-|--------|--------|--------|------------------|
-| **Max File Size** | 1,207 lines | <500 lines | ✅ All files comply |
-| **Code Duplication** | 5 instances | 0 instances | ✅ Zero duplication |
-| **Unit Test Coverage** | 0% | 80%+ | ✅ >80% branch coverage |
-| **Cyclomatic Complexity** | High | <10 per function | ✅ All functions simple |
+| Metric                    | Before      | Target           | Success Criteria        |
+| ------------------------- | ----------- | ---------------- | ----------------------- |
+| **Max File Size**         | 1,207 lines | <500 lines       | ✅ All files comply     |
+| **Code Duplication**      | 5 instances | 0 instances      | ✅ Zero duplication     |
+| **Unit Test Coverage**    | 0%          | 80%+             | ✅ >80% branch coverage |
+| **Cyclomatic Complexity** | High        | <10 per function | ✅ All functions simple |
 
 ### Functional Metrics
 
-| Metric | Target | Success Criteria |
-|--------|--------|------------------|
-| **Output Parity** | 100% | ✅ Identical results for all test recipes |
-| **Configuration Flexibility** | Full | ✅ Can disable any validator |
-| **Extensibility** | Plugin system | ✅ Can add custom validators without core changes |
-| **Error Clarity** | Improved | ✅ Clear, actionable error messages |
+| Metric                        | Target        | Success Criteria                                  |
+| ----------------------------- | ------------- | ------------------------------------------------- |
+| **Output Parity**             | 100%          | ✅ Identical results for all test recipes         |
+| **Configuration Flexibility** | Full          | ✅ Can disable any validator                      |
+| **Extensibility**             | Plugin system | ✅ Can add custom validators without core changes |
+| **Error Clarity**             | Improved      | ✅ Clear, actionable error messages               |
 
 ### Performance Metrics
 
-| Metric | Baseline | Target | Tolerance |
-|--------|----------|--------|-----------|
-| **Validation Time** | 500ms | <550ms | +10% max |
-| **Memory Usage** | 50MB | <60MB | +20% max |
-| **Startup Time** | 200ms | <250ms | +25% max |
+| Metric              | Baseline | Target | Tolerance |
+| ------------------- | -------- | ------ | --------- |
+| **Validation Time** | 500ms    | <550ms | +10% max  |
+| **Memory Usage**    | 50MB     | <60MB  | +20% max  |
+| **Startup Time**    | 200ms    | <250ms | +25% max  |
 
 ---
 
 ## Implementation Checklist
 
 ### Phase 1: Foundation ✅
+
 - [ ] Create `IValidator` interface
 - [ ] Create `ValidationContext` class
 - [ ] Create configuration schema
@@ -1815,6 +1885,7 @@ npm run validate:recipe # Uses old implementation
 - [ ] Write unit tests for core classes
 
 ### Phase 2: Services ✅
+
 - [ ] Create `stringUtils.js` (Levenshtein)
 - [ ] Create `EntityMatcherService`
 - [ ] Create `BlueprintProcessorService`
@@ -1823,6 +1894,7 @@ npm run validate:recipe # Uses old implementation
 - [ ] Write unit tests for all services
 
 ### Phase 3: Validators ✅
+
 - [ ] Create `BaseValidator` class
 - [ ] Refactor 11 validators to standalone classes
 - [ ] Create `ValidatorRegistry`
@@ -1830,6 +1902,7 @@ npm run validate:recipe # Uses old implementation
 - [ ] Integration tests for validator interactions
 
 ### Phase 4: Pipeline ✅
+
 - [ ] Create `ValidationPipeline` orchestrator
 - [ ] Create `ConfigurationLoader`
 - [ ] Create new CLI entry point (`validate-recipe-v2.js`)
@@ -1838,6 +1911,7 @@ npm run validate:recipe # Uses old implementation
 - [ ] Create comparison test suite
 
 ### Phase 5: Migration ✅
+
 - [ ] Run comparison tests (100% parity)
 - [ ] Beta release with opt-in flag
 - [ ] Documentation and migration guide

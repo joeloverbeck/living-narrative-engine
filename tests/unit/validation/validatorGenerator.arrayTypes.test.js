@@ -133,7 +133,8 @@ describe('ValidatorGenerator - Array Type Handling', () => {
       properties: {
         body: {
           type: ['object', 'null'],
-          description: 'The generated anatomy structure, null until body is built',
+          description:
+            'The generated anatomy structure, null until body is built',
         },
         generationMetadata: {
           type: 'object',

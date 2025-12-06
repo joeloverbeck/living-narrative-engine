@@ -1,10 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ActionExecutionTrace } from '../../../../src/actions/tracing/actionExecutionTrace.js';
 import { ErrorClassifier } from '../../../../src/actions/tracing/errorClassification.js';
 import { StackTraceAnalyzer } from '../../../../src/actions/tracing/stackTraceAnalyzer.js';
@@ -39,7 +33,9 @@ describe('ActionExecutionTrace additional coverage scenarios', () => {
 
     ActionExecutionTrace.__setProcessingLockForTesting(trace, true);
 
-    expect(() => trace.captureError(new Error('secondary failure'))).not.toThrow();
+    expect(() =>
+      trace.captureError(new Error('secondary failure'))
+    ).not.toThrow();
     const error = trace.getError();
     expect(error.message).toBe('primary failure');
 
@@ -155,4 +151,3 @@ describe('ActionExecutionTrace additional coverage scenarios', () => {
     ).not.toThrow();
   });
 });
-

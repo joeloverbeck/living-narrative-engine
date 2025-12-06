@@ -19,9 +19,7 @@
     "left_arm": {
       "partType": "arm",
       "preferId": "tests:missing_arm",
-      "tags": [
-        "descriptors:imaginary_component"
-      ]
+      "tags": ["descriptors:imaginary_component"]
     },
     "right_arm": {
       "partType": "arm",

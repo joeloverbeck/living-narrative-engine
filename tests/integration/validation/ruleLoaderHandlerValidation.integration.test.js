@@ -4,7 +4,14 @@
  * @see tickets/ROBOPEHANVAL-005-rule-loader-validation-integration.md
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
 import { HandlerCompletenessValidator } from '../../../src/validation/handlerCompletenessValidator.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -29,7 +36,10 @@ describe('RuleLoader Handler Validation Integration', () => {
     };
     mockPathResolver = {
       resolvePath: jest.fn((base, relative) => `${base}/${relative}`),
-      resolveModContentPath: jest.fn((modId, contentType, filename) => `data/mods/${modId}/${contentType}/${filename}`),
+      resolveModContentPath: jest.fn(
+        (modId, contentType, filename) =>
+          `data/mods/${modId}/${contentType}/${filename}`
+      ),
     };
     mockFetcher = {
       fetch: jest.fn(),
@@ -83,7 +93,10 @@ describe('RuleLoader Handler Validation Integration', () => {
         trigger: { event_type: 'TEST_EVENT' },
         actions: [
           { type: 'LOG', parameters: { message: 'test' } },
-          { type: 'SET_COMPONENT_VALUE', parameters: { component: 'core:test', value: 1 } },
+          {
+            type: 'SET_COMPONENT_VALUE',
+            parameters: { component: 'core:test', value: 1 },
+          },
         ],
       };
 
@@ -127,7 +140,12 @@ describe('RuleLoader Handler Validation Integration', () => {
             parameters: {
               condition: { '==': [1, 1] },
               then_actions: [{ type: 'LOG', parameters: { message: 'then' } }],
-              else_actions: [{ type: 'SET_COMPONENT_VALUE', parameters: { component: 'core:test', value: 0 } }],
+              else_actions: [
+                {
+                  type: 'SET_COMPONENT_VALUE',
+                  parameters: { component: 'core:test', value: 0 },
+                },
+              ],
             },
           },
         ],

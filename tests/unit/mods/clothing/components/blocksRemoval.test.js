@@ -28,7 +28,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
@@ -36,7 +39,10 @@ describe('clothing:blocks_removal Component', () => {
       const data = {
         blocksRemovalOf: ['clothing:pants', 'clothing:skirt'],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
@@ -51,13 +57,19 @@ describe('clothing:blocks_removal Component', () => {
         ],
         blocksRemovalOf: ['clothing:special_pants'],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
     it('should reject component without blockedSlots or blocksRemovalOf', () => {
       const data = {};
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -71,7 +83,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -85,7 +100,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -99,7 +117,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -113,7 +134,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -127,7 +151,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -135,7 +162,10 @@ describe('clothing:blocks_removal Component', () => {
       const data = {
         blocksRemovalOf: ['invalid@pattern', 'also-bad!'],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -143,7 +173,10 @@ describe('clothing:blocks_removal Component', () => {
       const data = {
         blocksRemovalOf: ['clothing:pants_blue', 'armor:plate_legs'],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
@@ -162,12 +195,19 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
     it('should validate all blockType values', () => {
-      const blockTypes = ['must_remove_first', 'must_loosen_first', 'full_block'];
+      const blockTypes = [
+        'must_remove_first',
+        'must_loosen_first',
+        'full_block',
+      ];
       blockTypes.forEach((blockType) => {
         const data = {
           blockedSlots: [
@@ -178,7 +218,10 @@ describe('clothing:blocks_removal Component', () => {
             },
           ],
         };
-        const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+        const result = testBed.validateAgainstSchema(
+          data,
+          'clothing:blocks_removal'
+        );
         expect(result.isValid).toBe(true);
       });
     });
@@ -194,7 +237,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
 
@@ -209,7 +255,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(false);
     });
 
@@ -237,7 +286,10 @@ describe('clothing:blocks_removal Component', () => {
             },
           ],
         };
-        const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+        const result = testBed.validateAgainstSchema(
+          data,
+          'clothing:blocks_removal'
+        );
         expect(result.isValid).toBe(true);
       });
     });
@@ -254,7 +306,10 @@ describe('clothing:blocks_removal Component', () => {
           },
         ],
       };
-      const result = testBed.validateAgainstSchema(data, 'clothing:blocks_removal');
+      const result = testBed.validateAgainstSchema(
+        data,
+        'clothing:blocks_removal'
+      );
       expect(result.isValid).toBe(true);
     });
   });

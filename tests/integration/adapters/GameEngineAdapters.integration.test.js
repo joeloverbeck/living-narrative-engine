@@ -47,13 +47,20 @@ describe('GameEngine adapters integration', () => {
 
     it('delegates save requests to the underlying game engine', async () => {
       const adapter = new GameEngineSaveAdapter(engine);
-      const payload = { success: true, slotId: 'slot-42', name: 'Integration Save' };
+      const payload = {
+        success: true,
+        slotId: 'slot-42',
+        name: 'Integration Save',
+      };
       engine.triggerManualSave.mockResolvedValue(payload);
 
       const result = await adapter.save('slot-42', 'Integration Save');
 
       expect(engine.triggerManualSave).toHaveBeenCalledTimes(1);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Integration Save', 'slot-42');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Integration Save',
+        'slot-42'
+      );
       expect(result).toEqual(payload);
     });
 
@@ -63,7 +70,10 @@ describe('GameEngine adapters integration', () => {
       engine.triggerManualSave.mockRejectedValue(error);
 
       await expect(adapter.save('slot-7', 'Broken Save')).rejects.toBe(error);
-      expect(engine.triggerManualSave).toHaveBeenCalledWith('Broken Save', 'slot-7');
+      expect(engine.triggerManualSave).toHaveBeenCalledWith(
+        'Broken Save',
+        'slot-7'
+      );
     });
   });
 });

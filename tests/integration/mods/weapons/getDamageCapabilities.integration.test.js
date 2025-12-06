@@ -197,7 +197,9 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
       // Create a gold bar (12.4 kg) - heavy item for improvised weapon
       entityManager.addComponent('gold_bar', 'items:item', {});
       entityManager.addComponent('gold_bar', 'items:portable', {});
-      entityManager.addComponent('gold_bar', WEIGHT_COMPONENT, { weight: 12.4 });
+      entityManager.addComponent('gold_bar', WEIGHT_COMPONENT, {
+        weight: 12.4,
+      });
       // No damage_capabilities component - should generate from weight
 
       const params = {
@@ -228,7 +230,9 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
       // Create a light item (< 0.2 kg gives 1 damage)
       entityManager.addComponent('coffee_cup', 'items:item', {});
       entityManager.addComponent('coffee_cup', 'items:portable', {});
-      entityManager.addComponent('coffee_cup', WEIGHT_COMPONENT, { weight: 0.15 });
+      entityManager.addComponent('coffee_cup', WEIGHT_COMPONENT, {
+        weight: 0.15,
+      });
 
       const params = {
         entity_ref: 'coffee_cup',
@@ -362,9 +366,13 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
   describe('JSON Logic Entity Resolution', () => {
     test('should resolve entity via JSON Logic expression', async () => {
       entityManager.addComponent('dynamic_weapon', 'weapons:weapon', {});
-      entityManager.addComponent('dynamic_weapon', DAMAGE_CAPABILITIES_COMPONENT, {
-        entries: [{ name: 'crushing', amount: 30 }],
-      });
+      entityManager.addComponent(
+        'dynamic_weapon',
+        DAMAGE_CAPABILITIES_COMPONENT,
+        {
+          entries: [{ name: 'crushing', amount: 30 }],
+        }
+      );
 
       // Set up context with dynamic entity reference
       executionContext.evaluationContext.context.selectedWeaponId =
@@ -417,7 +425,9 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
     });
 
     test('should dispatch error for missing output_variable', async () => {
-      entityManager.addComponent('test_item', WEIGHT_COMPONENT, { weight: 2.0 });
+      entityManager.addComponent('test_item', WEIGHT_COMPONENT, {
+        weight: 2.0,
+      });
 
       const params = {
         entity_ref: 'test_item',
@@ -492,16 +502,20 @@ describe('GET_DAMAGE_CAPABILITIES - Integration Tests', () => {
       // Similar to rill_practice_stick entity pattern
       entityManager.addComponent('practice_stick', 'items:item', {});
       entityManager.addComponent('practice_stick', 'weapons:weapon', {});
-      entityManager.addComponent('practice_stick', DAMAGE_CAPABILITIES_COMPONENT, {
-        entries: [
-          {
-            name: 'blunt',
-            amount: 3,
-            penetration: 0,
-            effects: {},
-          },
-        ],
-      });
+      entityManager.addComponent(
+        'practice_stick',
+        DAMAGE_CAPABILITIES_COMPONENT,
+        {
+          entries: [
+            {
+              name: 'blunt',
+              amount: 3,
+              penetration: 0,
+              effects: {},
+            },
+          ],
+        }
+      );
 
       const params = {
         entity_ref: 'practice_stick',

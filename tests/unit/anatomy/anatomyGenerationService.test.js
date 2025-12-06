@@ -674,10 +674,12 @@ describe('AnatomyGenerationService', () => {
       expect(result).toEqual({
         generated: [],
         skipped: [],
-        failed: [{
-          entityId: 'entity-1',
-          error: expect.stringContaining('Recipe \'test-recipe\' not found')
-        }],
+        failed: [
+          {
+            entityId: 'entity-1',
+            error: expect.stringContaining("Recipe 'test-recipe' not found"),
+          },
+        ],
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -741,10 +743,12 @@ describe('AnatomyGenerationService', () => {
       expect(result).toEqual({
         generated: ['entity-2'],
         skipped: [],
-        failed: [{
-          entityId: 'entity-1',
-          error: expect.stringContaining('Recipe \'bad-recipe\' not found')
-        }],
+        failed: [
+          {
+            entityId: 'entity-1',
+            error: expect.stringContaining("Recipe 'bad-recipe' not found"),
+          },
+        ],
       });
     });
   });

@@ -841,7 +841,8 @@ describe('Validation Middleware - Comprehensive Tests', () => {
 
       expect(targetHeadersIndex).toBeGreaterThanOrEqual(0);
 
-      const targetHeadersChain = bodyMock.mock.results[targetHeadersIndex].value;
+      const targetHeadersChain =
+        bodyMock.mock.results[targetHeadersIndex].value;
       const sanitizer = targetHeadersChain.customSanitizer.mock.calls[0][0];
 
       const sanitized = sanitizer({

@@ -34,9 +34,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
   it('should correctly resolve secondaryId placeholder (not secondaryTargetId)', async () => {
     // Arrange: Setup scenario with actors and item
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
@@ -85,18 +83,22 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
     expect(turnEndedEvent.payload.success).toBe(true);
 
     // Verify the transfer actually happened
-    const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-    const targetAfter = testFixture.entityManager.getEntityInstance('test:actor2');
+    const actorAfter =
+      testFixture.entityManager.getEntityInstance('test:actor1');
+    const targetAfter =
+      testFixture.entityManager.getEntityInstance('test:actor2');
 
-    expect(actorAfter.components['items:inventory'].items).not.toContain('test-letter');
-    expect(targetAfter.components['items:inventory'].items).toContain('test-letter');
+    expect(actorAfter.components['items:inventory'].items).not.toContain(
+      'test-letter'
+    );
+    expect(targetAfter.components['items:inventory'].items).toContain(
+      'test-letter'
+    );
   });
 
   it('should NOT have placeholder warnings in logs', async () => {
     // Arrange
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
@@ -139,8 +141,9 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
     });
 
     // Assert: Should NOT have any placeholder warnings
-    const placeholderWarnings = warnSpy.mock.calls.filter((call) =>
-      call[0]?.includes('Placeholder') || call[0]?.includes('not found')
+    const placeholderWarnings = warnSpy.mock.calls.filter(
+      (call) =>
+        call[0]?.includes('Placeholder') || call[0]?.includes('not found')
     );
 
     expect(placeholderWarnings).toHaveLength(0);
@@ -150,9 +153,7 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
 
   it('should pass correct itemEntity to VALIDATE_INVENTORY_CAPACITY', async () => {
     // Arrange: Setup scenario where capacity check will fail
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actor = new ModEntityBuilder('test:actor1')
       .withName('Alice')
@@ -201,8 +202,11 @@ describe('give_item secondaryTargetId placeholder bug reproduction', () => {
     expect(failureEvent.payload.message).toContain('max_weight_exceeded');
 
     // Verify item didn't move
-    const actorAfter = testFixture.entityManager.getEntityInstance('test:actor1');
-    expect(actorAfter.components['items:inventory'].items).toContain('heavy-item');
+    const actorAfter =
+      testFixture.entityManager.getEntityInstance('test:actor1');
+    expect(actorAfter.components['items:inventory'].items).toContain(
+      'heavy-item'
+    );
   });
 
   describe('dispatch signature bug fix', () => {

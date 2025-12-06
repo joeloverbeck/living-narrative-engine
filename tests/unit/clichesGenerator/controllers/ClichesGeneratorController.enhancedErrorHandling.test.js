@@ -49,8 +49,12 @@ async function initializeController() {
 
   // Default concept/cliché generation responses so selection works out of the box.
   const concept = testBed.createMockConcept();
-  testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(concept);
-  testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(false);
+  testBed.mockCharacterBuilderService.getCharacterConcept.mockResolvedValue(
+    concept
+  );
+  testBed.mockCharacterBuilderService.hasClichesForDirection.mockResolvedValue(
+    false
+  );
 }
 
 beforeEach(async () => {
@@ -96,16 +100,18 @@ describe('ClichesGeneratorController deletion flows', () => {
     deleteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await testBed.waitForAsyncOperations();
 
-    expect(testBed.mockCharacterBuilderService.removeClicheItem).toHaveBeenCalledWith(
-      'dir-1',
-      'names',
-      deletedName
-    );
+    expect(
+      testBed.mockCharacterBuilderService.removeClicheItem
+    ).toHaveBeenCalledWith('dir-1', 'names', deletedName);
 
     const state = testBed.controller._testGetCurrentState();
     expect(state.currentCliches).toBe(updatedCliche);
-    expect(testBed.getStatusMessages().textContent).toContain('Item deleted successfully');
-    expect(testBed.controller.getCacheStats().clichesCacheSize).toBeGreaterThan(0);
+    expect(testBed.getStatusMessages().textContent).toContain(
+      'Item deleted successfully'
+    );
+    expect(testBed.controller.getCacheStats().clichesCacheSize).toBeGreaterThan(
+      0
+    );
   });
 
   it('handles errors when deleting a category item', async () => {
@@ -132,7 +138,9 @@ describe('ClichesGeneratorController deletion flows', () => {
       'Failed to delete cliché item:',
       deletionError
     );
-    expect(testBed.getStatusMessages().textContent).toContain('Failed to delete item');
+    expect(testBed.getStatusMessages().textContent).toContain(
+      'Failed to delete item'
+    );
   });
 
   it('deletes a trope via the display enhancer callback', async () => {
@@ -160,13 +168,14 @@ describe('ClichesGeneratorController deletion flows', () => {
     deleteTropeButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     await testBed.waitForAsyncOperations();
 
-    expect(testBed.mockCharacterBuilderService.removeClicheTrope).toHaveBeenCalledWith(
-      'dir-1',
-      tropeToDelete
-    );
+    expect(
+      testBed.mockCharacterBuilderService.removeClicheTrope
+    ).toHaveBeenCalledWith('dir-1', tropeToDelete);
     const state = testBed.controller._testGetCurrentState();
     expect(state.currentCliches).toBe(updatedCliche);
-    expect(testBed.getStatusMessages().textContent).toContain('Trope deleted successfully');
+    expect(testBed.getStatusMessages().textContent).toContain(
+      'Trope deleted successfully'
+    );
   });
 
   it('handles errors when deleting a trope', async () => {
@@ -193,7 +202,9 @@ describe('ClichesGeneratorController deletion flows', () => {
       'Failed to delete cliché trope:',
       deletionError
     );
-    expect(testBed.getStatusMessages().textContent).toContain('Failed to delete trope');
+    expect(testBed.getStatusMessages().textContent).toContain(
+      'Failed to delete trope'
+    );
   });
 });
 
@@ -216,15 +227,18 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
     retryButton.click();
     await testBed.waitForAsyncOperations();
 
-    expect(testBed.mockCharacterBuilderService.generateClichesForDirection).toHaveBeenCalledTimes(2);
+    expect(
+      testBed.mockCharacterBuilderService.generateClichesForDirection
+    ).toHaveBeenCalledTimes(2);
     const state = testBed.controller._testGetCurrentState();
     expect(state.currentCliches).toBe(generatedCliche);
   });
 
   it('invokes the enhanced error handler when direction selection fails and shows recovery guidance', async () => {
-    const prerequisiteError = new ClichePrerequisiteError('Missing prerequisites', [
-      'direction selection',
-    ]);
+    const prerequisiteError = new ClichePrerequisiteError(
+      'Missing prerequisites',
+      ['direction selection']
+    );
     const showLoadingSpy = jest
       .spyOn(testBed.controller, '_showLoading')
       .mockImplementation(() => {
@@ -241,13 +255,18 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
     const actionableSteps = Array.from(
       statusMessages.querySelectorAll('.cb-actionable-steps li')
     ).map((step) => step.textContent);
-    expect(actionableSteps).toContain('Select a thematic direction from the dropdown');
+    expect(actionableSteps).toContain(
+      'Select a thematic direction from the dropdown'
+    );
 
     showLoadingSpy.mockRestore();
   });
 
   it('shows a refresh option when data integrity issues are detected during direction selection', async () => {
-    const dataIntegrityError = new ClicheDataIntegrityError('Cached clichés are invalid', 'cliches');
+    const dataIntegrityError = new ClicheDataIntegrityError(
+      'Cached clichés are invalid',
+      'cliches'
+    );
     const showLoadingSpy = jest
       .spyOn(testBed.controller, '_showLoading')
       .mockImplementation(() => {
@@ -258,7 +277,9 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
     await testBed.waitForAsyncOperations();
 
     const statusMessages = testBed.getStatusMessages();
-    const refreshButton = statusMessages.querySelector('.cb-error-action button');
+    const refreshButton = statusMessages.querySelector(
+      '.cb-error-action button'
+    );
     expect(refreshButton).toBeTruthy();
     expect(refreshButton.textContent).toContain('Refresh Page');
 
@@ -266,15 +287,21 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
   });
 
   it('displays fallback options from the error handler and executes manual entry guidance', async () => {
-    const llmError = new ClicheLLMError('LLM quota exceeded', 400, { isRetryable: false });
-    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(llmError);
+    const llmError = new ClicheLLMError('LLM quota exceeded', 400, {
+      isRetryable: false,
+    });
+    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
+      llmError
+    );
 
     await testBed.selectDirection('dir-1');
     await testBed.triggerGeneration();
     await testBed.waitForAsyncOperations();
 
     const statusMessages = testBed.getStatusMessages();
-    const fallbackButtons = statusMessages.querySelectorAll('.cb-option-buttons button');
+    const fallbackButtons = statusMessages.querySelectorAll(
+      '.cb-option-buttons button'
+    );
     expect(fallbackButtons.length).toBeGreaterThanOrEqual(3);
 
     fallbackButtons[0].click();
@@ -285,8 +312,12 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
   });
 
   it('shows the try later fallback guidance when selected', async () => {
-    const llmError = new ClicheLLMError('Service temporarily busy', 429, { isRetryable: false });
-    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(llmError);
+    const llmError = new ClicheLLMError('Service temporarily busy', 429, {
+      isRetryable: false,
+    });
+    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
+      llmError
+    );
 
     await testBed.selectDirection('dir-1');
     await testBed.triggerGeneration();
@@ -305,8 +336,12 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
   });
 
   it('shows support contact details when the support fallback is selected', async () => {
-    const llmError = new ClicheLLMError('Persistent failure', 500, { isRetryable: false });
-    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(llmError);
+    const llmError = new ClicheLLMError('Persistent failure', 500, {
+      isRetryable: false,
+    });
+    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
+      llmError
+    );
 
     await testBed.selectDirection('dir-1');
     await testBed.triggerGeneration();
@@ -325,8 +360,12 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
   });
 
   it('logs unknown fallback actions without throwing', async () => {
-    const llmError = new ClicheLLMError('Fallback scenario', 400, { isRetryable: false });
-    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(llmError);
+    const llmError = new ClicheLLMError('Fallback scenario', 400, {
+      isRetryable: false,
+    });
+    testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
+      llmError
+    );
 
     await testBed.selectDirection('dir-1');
     await testBed.triggerGeneration();
@@ -340,11 +379,17 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
     fallbackButton.click();
     await testBed.waitForAsyncOperations();
 
-    expect(testBed.logger.warn).toHaveBeenCalledWith('Unknown fallback action:', 'SOMETHING_ELSE');
+    expect(testBed.logger.warn).toHaveBeenCalledWith(
+      'Unknown fallback action:',
+      'SOMETHING_ELSE'
+    );
   });
 
   it('displays storage fallback messaging when persistent storage is unavailable', async () => {
-    const storageError = new ClicheStorageError('Failed to persist clichés', 'save');
+    const storageError = new ClicheStorageError(
+      'Failed to persist clichés',
+      'save'
+    );
     testBed.mockCharacterBuilderService.generateClichesForDirection.mockRejectedValue(
       storageError
     );
@@ -360,7 +405,9 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
 
   it('schedules a retry when the error handler recommends another attempt', async () => {
     const generatedCliche = testBed.createMockClichesData();
-    const retryableError = new ClicheLLMError('Temporary outage', 503, { isRetryable: true });
+    const retryableError = new ClicheLLMError('Temporary outage', 503, {
+      isRetryable: true,
+    });
     testBed.mockCharacterBuilderService.generateClichesForDirection
       .mockRejectedValueOnce(retryableError)
       .mockResolvedValueOnce(generatedCliche);
@@ -377,7 +424,9 @@ describe('ClichesGeneratorController enhanced error recovery', () => {
     await testBed.waitForAsyncOperations();
 
     await testBed.waitForAsyncOperations();
-    expect(testBed.mockCharacterBuilderService.generateClichesForDirection).toHaveBeenCalledTimes(2);
+    expect(
+      testBed.mockCharacterBuilderService.generateClichesForDirection
+    ).toHaveBeenCalledTimes(2);
 
     setTimeoutSpy.mockRestore();
   });

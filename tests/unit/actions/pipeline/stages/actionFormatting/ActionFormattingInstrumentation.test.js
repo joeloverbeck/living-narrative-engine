@@ -33,19 +33,19 @@ describe('ActionFormattingInstrumentation', () => {
     };
 
     expect(() => instrumentation.stageStarted(stageContext)).toThrow(
-      'ActionFormattingInstrumentation.stageStarted must be implemented',
+      'ActionFormattingInstrumentation.stageStarted must be implemented'
     );
     expect(() => instrumentation.actionStarted(actionContext)).toThrow(
-      'ActionFormattingInstrumentation.actionStarted must be implemented',
+      'ActionFormattingInstrumentation.actionStarted must be implemented'
     );
     expect(() => instrumentation.actionCompleted(actionContext)).toThrow(
-      'ActionFormattingInstrumentation.actionCompleted must be implemented',
+      'ActionFormattingInstrumentation.actionCompleted must be implemented'
     );
     expect(() => instrumentation.actionFailed(actionContext)).toThrow(
-      'ActionFormattingInstrumentation.actionFailed must be implemented',
+      'ActionFormattingInstrumentation.actionFailed must be implemented'
     );
     expect(() => instrumentation.stageCompleted(completionContext)).toThrow(
-      'ActionFormattingInstrumentation.stageCompleted must be implemented',
+      'ActionFormattingInstrumentation.stageCompleted must be implemented'
     );
   });
 

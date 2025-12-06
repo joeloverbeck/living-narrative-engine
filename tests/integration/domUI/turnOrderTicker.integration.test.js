@@ -3,7 +3,14 @@
  * Tests the complete flow from round_started event to rendered DOM elements.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TurnOrderTickerRenderer } from '../../../src/domUI/turnOrderTickerRenderer.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
@@ -22,7 +29,7 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     // Mock window.matchMedia for animation tests
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
-      value: jest.fn().mockImplementation(query => ({
+      value: jest.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -57,8 +64,8 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
 
     // Create production-like dependencies
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -71,14 +78,14 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -89,7 +96,7 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -105,7 +112,7 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -113,13 +120,15 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -164,7 +173,9 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     // Verify actor elements have correct structure
     const firstActor = mockActorQueue.children[0];
     expect(firstActor.classList.contains('ticker-actor')).toBe(true);
-    expect(firstActor.querySelector('.ticker-actor-name').textContent).toBe('Actor 1');
+    expect(firstActor.querySelector('.ticker-actor-name').textContent).toBe(
+      'Actor 1'
+    );
 
     // Verify round number was updated
     expect(mockRoundNumber.textContent).toBe('ROUND 1');
@@ -207,7 +218,9 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
 
     // Should only have new actors
     expect(mockActorQueue.children.length).toBe(3);
-    expect(mockActorQueue.children[0].querySelector('.ticker-actor-name').textContent).toBe('Actor 3');
+    expect(
+      mockActorQueue.children[0].querySelector('.ticker-actor-name').textContent
+    ).toBe('Actor 3');
     expect(mockRoundNumber.textContent).toBe('ROUND 2');
   });
 
@@ -226,7 +239,9 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     // Verify empty message
     expect(mockActorQueue.children.length).toBe(1);
     expect(mockActorQueue.children[0].className).toBe('ticker-empty-message');
-    expect(mockActorQueue.children[0].textContent).toBe('No participating actors');
+    expect(mockActorQueue.children[0].textContent).toBe(
+      'No participating actors'
+    );
   });
 
   it('should handle invalid event payload gracefully', () => {
@@ -253,8 +268,8 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     renderer = new TurnOrderTickerRenderer({
       logger: mockLogger,
       documentContext: {
-        query: jest.fn(selector => document.querySelector(selector)),
-        create: jest.fn(tag => document.createElement(tag)),
+        query: jest.fn((selector) => document.querySelector(selector)),
+        create: jest.fn((tag) => document.createElement(tag)),
       },
       validatedEventDispatcher: {
         dispatch: jest.fn(),
@@ -265,14 +280,14 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
         unsubscribe: jest.fn(),
       },
       domElementFactory: {
-        create: jest.fn(tag => document.createElement(tag)),
+        create: jest.fn((tag) => document.createElement(tag)),
         div: jest.fn((cls) => {
           const el = document.createElement('div');
           if (cls) {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
@@ -283,7 +298,7 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           if (text !== undefined) {
@@ -299,19 +314,21 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
         }),
       },
       entityManager: {
-        getEntityInstance: jest.fn(id => ({ id })),
+        getEntityInstance: jest.fn((id) => ({ id })),
         hasComponent: jest.fn(() => false),
         getComponentData: jest.fn(),
       },
       entityDisplayDataProvider: {
-        getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+        getEntityName: jest.fn(
+          (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+        ),
         getEntityPortraitPath: jest.fn(() => '/path/to/portrait.jpg'),
       },
       tickerContainerElement: mockContainer,
@@ -348,8 +365,12 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     subscribedHandlers['core:round_started'](event);
 
     // Verify animation class was added (stub implementation adds 'entering' class)
-    expect(mockActorQueue.children[0].classList.contains('entering')).toBe(true);
-    expect(mockActorQueue.children[1].classList.contains('entering')).toBe(true);
+    expect(mockActorQueue.children[0].classList.contains('entering')).toBe(
+      true
+    );
+    expect(mockActorQueue.children[1].classList.contains('entering')).toBe(
+      true
+    );
   });
 });
 
@@ -388,8 +409,8 @@ describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', ()
 
     // Create production-like dependencies
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -402,7 +423,7 @@ describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', ()
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(config => {
+      create: jest.fn((config) => {
         const el = document.createElement(config.tag || 'div');
         if (config.classes) el.className = config.classes.join(' ');
         if (config.attributes) {
@@ -411,23 +432,29 @@ describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', ()
           });
         }
         if (config.children) {
-          config.children.forEach(child => el.appendChild(child));
+          config.children.forEach((child) => el.appendChild(child));
         }
         return el;
       }),
-      div: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'div' })),
-      span: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'span' })),
-      img: jest.fn(config => mockDomElementFactory.create({ ...config, tag: 'img' })),
+      div: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'div' })
+      ),
+      span: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'span' })
+      ),
+      img: jest.fn((config) =>
+        mockDomElementFactory.create({ ...config, tag: 'img' })
+      ),
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => true),
       getComponentData: jest.fn(() => ({})),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityName: jest.fn((id) => `Actor ${id}`),
       getEntityPortraitPath: jest.fn(() => '/path/to/portrait.jpg'),
     };
 
@@ -534,7 +561,9 @@ describe('TurnOrderTickerRenderer - Integration: Current Actor Highlighting', ()
     expect(actor3.classList.contains('current')).toBe(true);
 
     // Verify only one actor is highlighted at the end
-    const allHighlighted = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const allHighlighted = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(allHighlighted.length).toBe(1);
     expect(allHighlighted[0].getAttribute('data-entity-id')).toBe('actor-3');
   });
@@ -574,8 +603,8 @@ describe('Turn Order Ticker - Participation Updates', () => {
 
     // Create production-like dependencies (matching existing pattern)
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -588,14 +617,14 @@ describe('Turn Order Ticker - Participation Updates', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -606,7 +635,7 @@ describe('Turn Order Ticker - Participation Updates', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -622,7 +651,7 @@ describe('Turn Order Ticker - Participation Updates', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -630,13 +659,15 @@ describe('Turn Order Ticker - Participation Updates', () => {
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -671,7 +702,9 @@ describe('Turn Order Ticker - Participation Updates', () => {
     };
     subscribedHandlers['core:round_started'](roundStartedEvent);
 
-    const actorElement = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    const actorElement = mockActorQueue.querySelector(
+      '[data-entity-id="actor-1"]'
+    );
 
     // Initially participating
     expect(actorElement.getAttribute('data-participating')).toBe('true');
@@ -718,7 +751,9 @@ describe('Turn Order Ticker - Participation Updates', () => {
       },
     });
 
-    const actor2Element = mockActorQueue.querySelector('[data-entity-id="actor-2"]');
+    const actor2Element = mockActorQueue.querySelector(
+      '[data-entity-id="actor-2"]'
+    );
     expect(actor2Element.getAttribute('data-participating')).toBe('false');
   });
 
@@ -739,7 +774,9 @@ describe('Turn Order Ticker - Participation Updates', () => {
       subscribedHandlers['core:round_started'](event);
 
       // Get the rendered actor elements
-      const actorElements = Array.from(mockActorQueue.querySelectorAll('.ticker-actor'));
+      const actorElements = Array.from(
+        mockActorQueue.querySelectorAll('.ticker-actor')
+      );
       expect(actorElements.length).toBe(3);
 
       // Verify all actors have entering class
@@ -756,7 +793,7 @@ describe('Turn Order Ticker - Participation Updates', () => {
       jest.advanceTimersByTime(1000);
 
       // Verify all entering classes are removed
-      actorElements.forEach(element => {
+      actorElements.forEach((element) => {
         expect(element.classList.contains('entering')).toBe(false);
         expect(element.style.animationDelay).toBe('');
       });
@@ -916,7 +953,9 @@ describe('Turn Order Ticker - Participation Updates', () => {
       });
 
       // Should have exiting class during animation
-      const actor1Element = queueElement.querySelector('[data-entity-id="actor-1"]');
+      const actor1Element = queueElement.querySelector(
+        '[data-entity-id="actor-1"]'
+      );
       expect(actor1Element?.classList.contains('exiting')).toBe(true);
 
       // Wait for animation
@@ -924,7 +963,9 @@ describe('Turn Order Ticker - Participation Updates', () => {
       await new Promise((resolve) => setTimeout(resolve, 100)); // Extra buffer
 
       // Should be removed after animation
-      expect(queueElement.querySelector('[data-entity-id="actor-1"]')).toBeNull();
+      expect(
+        queueElement.querySelector('[data-entity-id="actor-1"]')
+      ).toBeNull();
       expect(queueElement.querySelectorAll('.ticker-actor').length).toBe(1);
     });
   });
@@ -961,8 +1002,8 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -975,14 +1016,14 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -993,7 +1034,7 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -1009,7 +1050,7 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1017,13 +1058,15 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -1091,7 +1134,9 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
       },
     });
 
-    const round1Elements = Array.from(mockActorQueue.querySelectorAll('.ticker-actor'));
+    const round1Elements = Array.from(
+      mockActorQueue.querySelectorAll('.ticker-actor')
+    );
     expect(round1Elements.length).toBe(3);
 
     // Round 2 with different actors
@@ -1105,13 +1150,23 @@ describe('TurnOrderTickerRenderer - Integration: Multi-Round Progression', () =>
     });
 
     // Old actors should be completely removed
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-1"]')).toBeNull();
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-2"]')).toBeNull();
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-3"]')).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-1"]')
+    ).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-2"]')
+    ).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-3"]')
+    ).toBeNull();
 
     // New actors should be present
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-4"]')).not.toBeNull();
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-5"]')).not.toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-4"]')
+    ).not.toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-5"]')
+    ).not.toBeNull();
     expect(mockActorQueue.querySelectorAll('.ticker-actor').length).toBe(2);
   });
 
@@ -1196,8 +1251,8 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -1210,14 +1265,14 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1228,7 +1283,7 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -1244,7 +1299,7 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1252,13 +1307,15 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
     };
 
     mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -1300,10 +1357,12 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
     });
 
     // Wait for animation to complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Actor should be removed
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-2"]')).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-2"]')
+    ).toBeNull();
     expect(mockActorQueue.children.length).toBe(2);
   });
 
@@ -1332,10 +1391,12 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
       payload: { entityId: 'actor-2' },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Should be removed
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-2"]')).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-2"]')
+    ).toBeNull();
   });
 
   it('should maintain correct order after mid-round removal', async () => {
@@ -1354,9 +1415,11 @@ describe('TurnOrderTickerRenderer - Integration: Mid-Round Actor Removal', () =>
       payload: { entityId: 'actor-2' },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    const remaining = Array.from(mockActorQueue.querySelectorAll('.ticker-actor'));
+    const remaining = Array.from(
+      mockActorQueue.querySelectorAll('.ticker-actor')
+    );
     expect(remaining.length).toBe(3);
     expect(remaining[0].getAttribute('data-entity-id')).toBe('actor-1');
     expect(remaining[1].getAttribute('data-entity-id')).toBe('actor-3');
@@ -1392,8 +1455,8 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -1406,14 +1469,14 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1424,7 +1487,7 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -1440,7 +1503,7 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1448,13 +1511,15 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -1500,7 +1565,9 @@ describe('TurnOrderTickerRenderer - Integration: Stress Testing', () => {
     }
 
     // Should still have exactly one current actor
-    const currentActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const currentActors = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(currentActors.length).toBe(1);
   });
 
@@ -1599,8 +1666,8 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
       const subscribedHandlers = {};
 
       const mockDocumentContext = {
-        query: jest.fn(selector => document.querySelector(selector)),
-        create: jest.fn(tag => document.createElement(tag)),
+        query: jest.fn((selector) => document.querySelector(selector)),
+        create: jest.fn((tag) => document.createElement(tag)),
       };
 
       const mockValidatedEventDispatcher = {
@@ -1613,14 +1680,14 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
       };
 
       const mockDomElementFactory = {
-        create: jest.fn(tag => document.createElement(tag)),
+        create: jest.fn((tag) => document.createElement(tag)),
         div: jest.fn((cls) => {
           const el = document.createElement('div');
           if (cls) {
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
@@ -1631,7 +1698,7 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           if (text !== undefined) {
@@ -1647,7 +1714,7 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
             if (Array.isArray(cls)) {
               el.classList.add(...cls);
             } else {
-              el.classList.add(...cls.split(' ').filter(c => c));
+              el.classList.add(...cls.split(' ').filter((c) => c));
             }
           }
           return el;
@@ -1655,13 +1722,13 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
       };
 
       const mockEntityManager = {
-        getEntityInstance: jest.fn(id => ({ id })),
+        getEntityInstance: jest.fn((id) => ({ id })),
         hasComponent: jest.fn(() => false),
         getComponentData: jest.fn(),
       };
 
       const mockEntityDisplayDataProvider = {
-        getEntityName: jest.fn(id => `Actor ${id}`),
+        getEntityName: jest.fn((id) => `Actor ${id}`),
         getEntityPortraitPath: jest.fn(() => null),
       };
 
@@ -1713,19 +1780,19 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
     };
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1736,7 +1803,7 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -1752,7 +1819,7 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1760,13 +1827,13 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id}`),
+      getEntityName: jest.fn((id) => `Actor ${id}`),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -1787,7 +1854,7 @@ describe('TurnOrderTickerRenderer - Integration: Memory Leak Prevention', () => 
     renderer.dispose();
 
     // All unsubscribe functions should have been called
-    unsubscribeMocks.forEach(unsubscribe => {
+    unsubscribeMocks.forEach((unsubscribe) => {
       expect(unsubscribe).toHaveBeenCalled();
     });
   });
@@ -1821,8 +1888,8 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -1835,14 +1902,14 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1853,7 +1920,7 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -1869,7 +1936,7 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -1877,13 +1944,15 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -1915,7 +1984,9 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
       },
     });
 
-    const actor1Element = mockActorQueue.querySelector('[data-entity-id="actor-1"]');
+    const actor1Element = mockActorQueue.querySelector(
+      '[data-entity-id="actor-1"]'
+    );
     expect(actor1Element).not.toBeNull();
 
     // End turn
@@ -1924,10 +1995,12 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
       payload: { entityId: 'actor-1' },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Element should be completely removed from DOM
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-1"]')).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-1"]')
+    ).toBeNull();
     expect(mockActorQueue.contains(actor1Element)).toBe(false);
   });
 
@@ -1956,7 +2029,7 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
     });
 
     // All old elements should be removed
-    round1Elements.forEach(element => {
+    round1Elements.forEach((element) => {
       expect(mockActorQueue.contains(element)).toBe(false);
     });
 
@@ -1991,7 +2064,9 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
 
     // Should only have empty message
     expect(mockActorQueue.childElementCount).toBe(1);
-    expect(mockActorQueue.querySelector('.ticker-empty-message')).not.toBeNull();
+    expect(
+      mockActorQueue.querySelector('.ticker-empty-message')
+    ).not.toBeNull();
   });
 
   it('should maintain proper parent-child relationships', () => {
@@ -2005,7 +2080,9 @@ describe('TurnOrderTickerRenderer - Integration: DOM Lifecycle Management', () =
     });
 
     const actorElement = mockActorQueue.querySelector('.ticker-actor');
-    const nameBadgeElement = actorElement.querySelector('.ticker-actor-name-badge');
+    const nameBadgeElement = actorElement.querySelector(
+      '.ticker-actor-name-badge'
+    );
     const nameElement = actorElement.querySelector('.ticker-actor-name');
 
     // Verify proper nesting: mockActorQueue > actorElement > nameBadgeElement > nameElement
@@ -2043,8 +2120,8 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2057,14 +2134,14 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2075,7 +2152,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2091,7 +2168,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2099,13 +2176,15 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -2137,7 +2216,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
       { roundNumber: 'invalid', actors: ['actor-1'] }, // invalid type
     ];
 
-    malformedPayloads.forEach(payload => {
+    malformedPayloads.forEach((payload) => {
       expect(() => {
         subscribedHandlers['core:round_started']({
           type: 'core:round_started',
@@ -2165,8 +2244,8 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     }
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2179,14 +2258,14 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2197,7 +2276,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2213,7 +2292,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2221,7 +2300,9 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -2262,8 +2343,8 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     }
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2276,14 +2357,14 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2294,7 +2375,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2310,7 +2391,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2318,7 +2399,7 @@ describe('TurnOrderTickerRenderer - Integration: Error Recovery', () => {
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
@@ -2397,8 +2478,8 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2411,14 +2492,14 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2429,7 +2510,7 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2445,7 +2526,7 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2453,13 +2534,15 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -2512,7 +2595,9 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
     expect(actor3.classList.contains('current')).toBe(true);
 
     // Only one actor should be current
-    const currentActors = mockActorQueue.querySelectorAll('.ticker-actor.current');
+    const currentActors = mockActorQueue.querySelectorAll(
+      '.ticker-actor.current'
+    );
     expect(currentActors.length).toBe(1);
   });
 
@@ -2549,11 +2634,17 @@ describe('TurnOrderTickerRenderer - Integration: Concurrent Event Handling', () 
     });
 
     // Old actors should be removed
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-1"]')).toBeNull();
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-2"]')).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-1"]')
+    ).toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-2"]')
+    ).toBeNull();
 
     // New actor should be present
-    expect(mockActorQueue.querySelector('[data-entity-id="actor-3"]')).not.toBeNull();
+    expect(
+      mockActorQueue.querySelector('[data-entity-id="actor-3"]')
+    ).not.toBeNull();
 
     jest.useRealTimers();
   });
@@ -2661,8 +2752,8 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     subscribedHandlers = {};
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2675,14 +2766,14 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2693,7 +2784,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2709,7 +2800,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2717,13 +2808,15 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -2800,13 +2893,15 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     }
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => '/path/to/portrait.jpg'),
     };
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2819,14 +2914,14 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2837,7 +2932,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2853,7 +2948,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2861,7 +2956,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
+      getEntityInstance: jest.fn((id) => ({ id })),
       hasComponent: jest.fn(() => false),
       getComponentData: jest.fn(),
     };
@@ -2893,14 +2988,16 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
   it('should set aria-disabled for non-participating actors', () => {
     // Set up entity manager to return participating = false
     const mockEntityManager = {
-      getEntityInstance: jest.fn(id => ({ id })),
-      hasComponent: jest.fn((id, componentId) => componentId === 'core:participation'),
+      getEntityInstance: jest.fn((id) => ({ id })),
+      hasComponent: jest.fn(
+        (id, componentId) => componentId === 'core:participation'
+      ),
       getComponentData: jest.fn(() => ({ participating: false })),
     };
 
     const mockDocumentContext = {
-      query: jest.fn(selector => document.querySelector(selector)),
-      create: jest.fn(tag => document.createElement(tag)),
+      query: jest.fn((selector) => document.querySelector(selector)),
+      create: jest.fn((tag) => document.createElement(tag)),
     };
 
     const mockValidatedEventDispatcher = {
@@ -2913,14 +3010,14 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockDomElementFactory = {
-      create: jest.fn(tag => document.createElement(tag)),
+      create: jest.fn((tag) => document.createElement(tag)),
       div: jest.fn((cls) => {
         const el = document.createElement('div');
         if (cls) {
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2931,7 +3028,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         if (text !== undefined) {
@@ -2947,7 +3044,7 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
           if (Array.isArray(cls)) {
             el.classList.add(...cls);
           } else {
-            el.classList.add(...cls.split(' ').filter(c => c));
+            el.classList.add(...cls.split(' ').filter((c) => c));
           }
         }
         return el;
@@ -2955,7 +3052,9 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     };
 
     const mockEntityDisplayDataProvider = {
-      getEntityName: jest.fn(id => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`),
+      getEntityName: jest.fn(
+        (id) => `Actor ${id.substring(id.lastIndexOf('-') + 1)}`
+      ),
       getEntityPortraitPath: jest.fn(() => null),
     };
 
@@ -2984,7 +3083,9 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
 
     const actorElement = document.querySelector('[data-entity-id="actor-1"]');
     expect(actorElement.getAttribute('aria-disabled')).toBe('true');
-    expect(actorElement.getAttribute('aria-label')).toContain('not participating');
+    expect(actorElement.getAttribute('aria-label')).toContain(
+      'not participating'
+    );
   });
 
   it('should create screen reader announcements for turn changes', () => {
@@ -3007,12 +3108,18 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     });
 
     // Check for screen reader announcement element
-    const srAnnouncements = document.querySelectorAll('.sr-only[role="status"]');
+    const srAnnouncements = document.querySelectorAll(
+      '.sr-only[role="status"]'
+    );
     expect(srAnnouncements.length).toBeGreaterThan(0);
 
     // Verify announcement content
-    const announcements = Array.from(srAnnouncements).map(el => el.textContent);
-    expect(announcements.some(text => text.includes("Actor 1's turn"))).toBe(true);
+    const announcements = Array.from(srAnnouncements).map(
+      (el) => el.textContent
+    );
+    expect(announcements.some((text) => text.includes("Actor 1's turn"))).toBe(
+      true
+    );
   });
 
   it('should announce actor removal to screen readers', async () => {
@@ -3034,13 +3141,23 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     });
 
     // Wait a bit for async operations and screen reader announcement to be created
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Check for screen reader announcement
-    const srAnnouncements = document.querySelectorAll('.sr-only[role="status"]');
-    const announcements = Array.from(srAnnouncements).map(el => el.textContent);
-    expect(announcements.some(text => text.includes('Actor 1 removed from turn order'))).toBe(true);
-    expect(announcements.some(text => text.includes('1 actor remaining'))).toBe(true);
+    const srAnnouncements = document.querySelectorAll(
+      '.sr-only[role="status"]'
+    );
+    const announcements = Array.from(srAnnouncements).map(
+      (el) => el.textContent
+    );
+    expect(
+      announcements.some((text) =>
+        text.includes('Actor 1 removed from turn order')
+      )
+    ).toBe(true);
+    expect(
+      announcements.some((text) => text.includes('1 actor remaining'))
+    ).toBe(true);
   });
 
   it('should announce participation changes to screen readers', () => {
@@ -3064,8 +3181,16 @@ describe('TurnOrderTickerRenderer - Integration: Accessibility Compliance', () =
     });
 
     // Check for screen reader announcement
-    const srAnnouncements = document.querySelectorAll('.sr-only[role="status"]');
-    const announcements = Array.from(srAnnouncements).map(el => el.textContent);
-    expect(announcements.some(text => text.includes('Actor 1 disabled from participation'))).toBe(true);
+    const srAnnouncements = document.querySelectorAll(
+      '.sr-only[role="status"]'
+    );
+    const announcements = Array.from(srAnnouncements).map(
+      (el) => el.textContent
+    );
+    expect(
+      announcements.some((text) =>
+        text.includes('Actor 1 disabled from participation')
+      )
+    ).toBe(true);
   });
 });

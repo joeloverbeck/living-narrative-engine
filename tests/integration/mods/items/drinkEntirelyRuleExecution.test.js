@@ -87,8 +87,11 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'whiskey-bottle-1');
 
       // Assert: Verify volume set to 0
-      const container = testFixture.entityManager.getEntityInstance('whiskey-bottle-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      const container =
+        testFixture.entityManager.getEntityInstance('whiskey-bottle-1');
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
 
       // Assert: Verify empty component added
       expect(container.components['items:empty']).toBeDefined();
@@ -101,7 +104,8 @@ describe('items:drink_entirely action integration', () => {
         (e) =>
           e.eventType === 'core:perceptible_event' &&
           e.payload.perceptionType === 'liquid_consumed_entirely' &&
-          (!e.payload.contextualData?.recipientIds || e.payload.contextualData.recipientIds.length === 0)
+          (!e.payload.contextualData?.recipientIds ||
+            e.payload.contextualData.recipientIds.length === 0)
       );
       expect(publicEvent).toBeDefined();
       expect(publicEvent.payload.descriptionText).toContain(
@@ -117,8 +121,12 @@ describe('items:drink_entirely action integration', () => {
           e.payload.contextualData?.recipientIds?.length > 0
       );
       expect(privateEvent).toBeDefined();
-      expect(privateEvent.payload.contextualData.recipientIds).toEqual(['test:actor1']);
-      expect(privateEvent.payload.descriptionText).toContain('You drink it all in one go.');
+      expect(privateEvent.payload.contextualData.recipientIds).toEqual([
+        'test:actor1',
+      ]);
+      expect(privateEvent.payload.descriptionText).toContain(
+        'You drink it all in one go.'
+      );
 
       // Assert: Verify turn ended successfully
       const turnEndedEvent = testFixture.events.find(
@@ -129,7 +137,14 @@ describe('items:drink_entirely action integration', () => {
     });
 
     it('dispatches liquid_consumed_entirely event', async () => {
-      const scenario = setupDrinkEntirelyScenario('Bob', 'tavern', 'mug-1', 400, 100, 'Strong drink.');
+      const scenario = setupDrinkEntirelyScenario(
+        'Bob',
+        'tavern',
+        'mug-1',
+        400,
+        100,
+        'Strong drink.'
+      );
       testFixture.reset([scenario.room, scenario.actor, scenario.container]);
 
       await testFixture.executeAction('test:actor1', 'mug-1');
@@ -161,7 +176,9 @@ describe('items:drink_entirely action integration', () => {
 
       // Assert: Verify all volume consumed
       const container = testFixture.entityManager.getEntityInstance('flask-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
 
       // Assert: Verify empty component added
       expect(container.components['items:empty']).toBeDefined();
@@ -194,8 +211,11 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'canteen-1');
 
       // Assert: Verify all volume consumed (not just one serving)
-      const container = testFixture.entityManager.getEntityInstance('canteen-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      const container =
+        testFixture.entityManager.getEntityInstance('canteen-1');
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
 
       // Assert: Verify empty component added
       expect(container.components['items:empty']).toBeDefined();
@@ -228,8 +248,11 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'pitcher-1');
 
       // Assert: Verify ALL volume consumed, not just serving size increments
-      const container = testFixture.entityManager.getEntityInstance('pitcher-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      const container =
+        testFixture.entityManager.getEntityInstance('pitcher-1');
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
       // Verify exactly 350ml consumed, not 300ml (3 servings)
@@ -262,13 +285,18 @@ describe('items:drink_entirely action integration', () => {
         (e) =>
           e.eventType === 'core:perceptible_event' &&
           e.payload.perceptionType === 'liquid_consumed_entirely' &&
-          (!e.payload.contextualData?.recipientIds || e.payload.contextualData.recipientIds.length === 0)
+          (!e.payload.contextualData?.recipientIds ||
+            e.payload.contextualData.recipientIds.length === 0)
       );
 
       expect(publicEvents).toHaveLength(1);
       const publicEvent = publicEvents[0];
-      expect(publicEvent.payload.descriptionText).toContain('Frank drinks entirely from glass-1, emptying it.');
-      expect(publicEvent.payload.descriptionText).not.toContain('private flavor');
+      expect(publicEvent.payload.descriptionText).toContain(
+        'Frank drinks entirely from glass-1, emptying it.'
+      );
+      expect(publicEvent.payload.descriptionText).not.toContain(
+        'private flavor'
+      );
     });
 
     it('excludes acting actor from public perceptible event', async () => {
@@ -289,11 +317,14 @@ describe('items:drink_entirely action integration', () => {
         (e) =>
           e.eventType === 'core:perceptible_event' &&
           e.payload.perceptionType === 'liquid_consumed_entirely' &&
-          (!e.payload.contextualData?.recipientIds || e.payload.contextualData.recipientIds.length === 0)
+          (!e.payload.contextualData?.recipientIds ||
+            e.payload.contextualData.recipientIds.length === 0)
       );
 
       expect(publicEvent).toBeDefined();
-      expect(publicEvent.payload.contextualData.excludedActorIds).toEqual(['test:actor1']);
+      expect(publicEvent.payload.contextualData.excludedActorIds).toEqual([
+        'test:actor1',
+      ]);
       expect(publicEvent.payload.descriptionText).not.toContain('bitter');
     });
 
@@ -319,9 +350,15 @@ describe('items:drink_entirely action integration', () => {
 
       expect(privateEvents).toHaveLength(1);
       const privateEvent = privateEvents[0];
-      expect(privateEvent.payload.contextualData.recipientIds).toEqual(['test:actor1']);
-      expect(privateEvent.payload.descriptionText).toContain('Secret magical taste.');
-      expect(privateEvent.payload.contextualData.flavorText).toBe('Secret magical taste.');
+      expect(privateEvent.payload.contextualData.recipientIds).toEqual([
+        'test:actor1',
+      ]);
+      expect(privateEvent.payload.descriptionText).toContain(
+        'Secret magical taste.'
+      );
+      expect(privateEvent.payload.contextualData.flavorText).toBe(
+        'Secret magical taste.'
+      );
     });
 
     it('handles missing flavor text gracefully', async () => {
@@ -345,7 +382,9 @@ describe('items:drink_entirely action integration', () => {
           e.payload.contextualData?.recipientIds?.length > 0
       );
       expect(privateEvent).toBeDefined();
-      expect(privateEvent.payload.descriptionText).toContain('Henry drinks entirely from bottle-1, emptying it.');
+      expect(privateEvent.payload.descriptionText).toContain(
+        'Henry drinks entirely from bottle-1, emptying it.'
+      );
       // Should still dispatch event even with empty flavor
       expect(privateEvent.payload.contextualData.flavorText).toBe('');
     });
@@ -371,7 +410,9 @@ describe('items:drink_entirely action integration', () => {
       );
 
       expect(successEvent).toBeDefined();
-      expect(successEvent.payload.message).toBe('Bob drinks entirely from whiskey-bottle-1, emptying it.');
+      expect(successEvent.payload.message).toBe(
+        'Bob drinks entirely from whiskey-bottle-1, emptying it.'
+      );
     });
   });
 
@@ -412,7 +453,9 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'vial-1');
 
       const container = testFixture.entityManager.getEntityInstance('vial-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
       const privateEvent = testFixture.events.find(
@@ -437,7 +480,9 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'barrel-1');
 
       const container = testFixture.entityManager.getEntityInstance('barrel-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
       const privateEvent = testFixture.events.find(
@@ -462,7 +507,9 @@ describe('items:drink_entirely action integration', () => {
       await testFixture.executeAction('test:actor1', 'jar-1');
 
       const container = testFixture.entityManager.getEntityInstance('jar-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
       // Verify exactly 275ml consumed
@@ -492,7 +539,9 @@ describe('items:drink_entirely action integration', () => {
 
       // Verify ALL 750ml consumed, not just 100ml (one serving)
       const container = testFixture.entityManager.getEntityInstance('jug-1');
-      expect(container.components['items:liquid_container'].currentVolumeMilliliters).toBe(0);
+      expect(
+        container.components['items:liquid_container'].currentVolumeMilliliters
+      ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
       const privateEvent = testFixture.events.find(

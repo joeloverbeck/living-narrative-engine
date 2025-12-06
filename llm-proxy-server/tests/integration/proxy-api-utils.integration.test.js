@@ -135,7 +135,9 @@ describe('RetryManager integration with real HTTP interactions', () => {
       expect(server.getAttemptCount()).toBe(2);
 
       const warnMessages = records.warn.map(([message]) => message);
-      expect(warnMessages.some((msg) => msg.includes('Attempt 1/3'))).toBe(true);
+      expect(warnMessages.some((msg) => msg.includes('Attempt 1/3'))).toBe(
+        true
+      );
     } finally {
       await server.close();
     }

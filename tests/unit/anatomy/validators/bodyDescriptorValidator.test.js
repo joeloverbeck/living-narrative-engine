@@ -17,7 +17,9 @@ describe('BodyDescriptorValidator', () => {
 
   describe('constructor', () => {
     it('should accept logger dependency', () => {
-      expect(() => new BodyDescriptorValidator({ logger: mockLogger })).not.toThrow();
+      expect(
+        () => new BodyDescriptorValidator({ logger: mockLogger })
+      ).not.toThrow();
     });
 
     it('should work without logger (uses fallback)', () => {
@@ -138,7 +140,15 @@ describe('BodyDescriptorValidator', () => {
     });
 
     it('should accept all valid height values', () => {
-      const validHeights = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+      const validHeights = [
+        'gigantic',
+        'very-tall',
+        'tall',
+        'average',
+        'short',
+        'petite',
+        'tiny',
+      ];
       for (const height of validHeights) {
         const result = validator.validateRecipeDescriptors({ height });
         expect(result.valid).toBe(true);
@@ -147,7 +157,19 @@ describe('BodyDescriptorValidator', () => {
     });
 
     it('should accept all valid build values', () => {
-      const validBuilds = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+      const validBuilds = [
+        'skinny',
+        'slim',
+        'lissom',
+        'toned',
+        'athletic',
+        'shapely',
+        'hourglass',
+        'thick',
+        'muscular',
+        'hulking',
+        'stocky',
+      ];
       for (const build of validBuilds) {
         const result = validator.validateRecipeDescriptors({ build });
         expect(result.valid).toBe(true);
@@ -156,7 +178,15 @@ describe('BodyDescriptorValidator', () => {
     });
 
     it('should accept all valid composition values', () => {
-      const validCompositions = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
+      const validCompositions = [
+        'underweight',
+        'lean',
+        'average',
+        'soft',
+        'chubby',
+        'overweight',
+        'obese',
+      ];
       for (const composition of validCompositions) {
         const result = validator.validateRecipeDescriptors({ composition });
         expect(result.valid).toBe(true);
@@ -165,7 +195,14 @@ describe('BodyDescriptorValidator', () => {
     });
 
     it('should accept all valid hairDensity values', () => {
-      const validHairDensities = ['hairless', 'sparse', 'light', 'moderate', 'hairy', 'very-hairy'];
+      const validHairDensities = [
+        'hairless',
+        'sparse',
+        'light',
+        'moderate',
+        'hairy',
+        'very-hairy',
+      ];
       for (const hairDensity of validHairDensities) {
         const result = validator.validateRecipeDescriptors({ hairDensity });
         expect(result.valid).toBe(true);
@@ -204,7 +241,12 @@ describe('BodyDescriptorValidator', () => {
     it('should return valid:true if all descriptors present', () => {
       const config = {
         descriptionOrder: [
-          'height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell'
+          'height',
+          'skin_color',
+          'build',
+          'body_composition',
+          'body_hair',
+          'smell',
         ],
       };
       const configResult = validator.validateFormattingConfig(config);
@@ -215,8 +257,14 @@ describe('BodyDescriptorValidator', () => {
     it('should handle extra descriptors in descriptionOrder', () => {
       const config = {
         descriptionOrder: [
-          'height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell',
-          'extra_descriptor_1', 'extra_descriptor_2'
+          'height',
+          'skin_color',
+          'build',
+          'body_composition',
+          'body_hair',
+          'smell',
+          'extra_descriptor_1',
+          'extra_descriptor_2',
         ],
       };
       const result = validator.validateFormattingConfig(config);
@@ -255,7 +303,9 @@ describe('BodyDescriptorValidator', () => {
       const result = validator.validateFormattingConfig(config);
       expect(result.warnings[0]).toContain('defined in registry');
       expect(result.warnings[0]).toContain('missing from descriptionOrder');
-      expect(result.warnings[0]).toContain('will not appear in generated descriptions');
+      expect(result.warnings[0]).toContain(
+        'will not appear in generated descriptions'
+      );
     });
 
     it('should handle empty descriptionOrder array', () => {
@@ -274,7 +324,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+              descriptionOrder: [
+                'height',
+                'skin_color',
+                'build',
+                'body_composition',
+                'body_hair',
+                'smell',
+              ],
             };
           }
           return null;
@@ -285,7 +342,10 @@ describe('BodyDescriptorValidator', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('anatomyFormatting', 'default');
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyFormatting',
+        'default'
+      );
       expect(consistencyResult).toHaveProperty('errors');
       expect(consistencyResult).toHaveProperty('warnings');
       expect(consistencyResult).toHaveProperty('info');
@@ -300,7 +360,9 @@ describe('BodyDescriptorValidator', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      expect(result.errors).toContain('Formatting config not found: anatomy:default');
+      expect(result.errors).toContain(
+        'Formatting config not found: anatomy:default'
+      );
     });
 
     it('should validate sample recipes from dataRegistry', async () => {
@@ -308,7 +370,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type, recipeId) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+              descriptionOrder: [
+                'height',
+                'skin_color',
+                'build',
+                'body_composition',
+                'body_hair',
+                'smell',
+              ],
             };
           }
           if (type === 'anatomyRecipes' && recipeId === 'anatomy:human_male') {
@@ -316,15 +385,18 @@ describe('BodyDescriptorValidator', () => {
               bodyDescriptors: {
                 height: 'tall',
                 skinColor: 'tan',
-              }
+              },
             };
           }
-          if (type === 'anatomyRecipes' && recipeId === 'anatomy:human_female') {
+          if (
+            type === 'anatomyRecipes' &&
+            recipeId === 'anatomy:human_female'
+          ) {
             return {
               bodyDescriptors: {
                 height: 'average',
                 skinColor: 'fair',
-              }
+              },
             };
           }
           return null;
@@ -335,8 +407,14 @@ describe('BodyDescriptorValidator', () => {
         dataRegistry: mockDataRegistry,
       });
 
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('anatomyRecipes', 'anatomy:human_male');
-      expect(mockDataRegistry.get).toHaveBeenCalledWith('anatomyRecipes', 'anatomy:human_female');
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        'anatomy:human_male'
+      );
+      expect(mockDataRegistry.get).toHaveBeenCalledWith(
+        'anatomyRecipes',
+        'anatomy:human_female'
+      );
       expect(recipeResult).toHaveProperty('errors');
     });
 
@@ -345,7 +423,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+              descriptionOrder: [
+                'height',
+                'skin_color',
+                'build',
+                'body_composition',
+                'body_hair',
+                'smell',
+              ],
             };
           }
           return null; // Recipes not found
@@ -367,7 +452,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+              descriptionOrder: [
+                'height',
+                'skin_color',
+                'build',
+                'body_composition',
+                'body_hair',
+                'smell',
+              ],
             };
           }
           return null;
@@ -388,14 +480,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type, id) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height'] // Missing descriptors - will generate warnings
+              descriptionOrder: ['height'], // Missing descriptors - will generate warnings
             };
           }
           if (type === 'anatomyRecipes' && id === 'anatomy:human_male') {
             return {
               bodyDescriptors: {
                 height: 'invalid-height', // Invalid value - will generate error
-              }
+              },
             };
           }
           return null;
@@ -407,13 +499,22 @@ describe('BodyDescriptorValidator', () => {
       });
 
       expect(result.warnings.length).toBeGreaterThan(0); // From missing descriptors in config
-      expect(result.warnings.some(w => w.includes('anatomy:human_male'))).toBe(true); // From invalid recipe
+      expect(
+        result.warnings.some((w) => w.includes('anatomy:human_male'))
+      ).toBe(true); // From invalid recipe
     });
 
     it('should use async/await properly', async () => {
       const mockDataRegistry = {
         get: jest.fn(() => ({
-          descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+          descriptionOrder: [
+            'height',
+            'skin_color',
+            'build',
+            'body_composition',
+            'body_hair',
+            'smell',
+          ],
         })),
       };
 
@@ -431,7 +532,14 @@ describe('BodyDescriptorValidator', () => {
         get: jest.fn((type, id) => {
           if (type === 'anatomyFormatting') {
             return {
-              descriptionOrder: ['height', 'skin_color', 'build', 'body_composition', 'body_hair', 'smell']
+              descriptionOrder: [
+                'height',
+                'skin_color',
+                'build',
+                'body_composition',
+                'body_hair',
+                'smell',
+              ],
             };
           }
           if (type === 'anatomyRecipes' && id === 'anatomy:human_male') {

@@ -3,7 +3,14 @@
  * @description Integration tests for the anatomy-visualizer entrypoint using real DI container wiring.
  */
 
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -82,7 +89,9 @@ function createFileFetchMock() {
           'kissing',
           'isekai',
         ];
-        const filteredMods = preferredMods.filter((modId) => availableMods.has(modId));
+        const filteredMods = preferredMods.filter((modId) =>
+          availableMods.has(modId)
+        );
         fileText = JSON.stringify({ ...parsed, mods: filteredMods });
         fileBuffer = Buffer.from(fileText, 'utf-8');
       } else {
@@ -201,7 +210,12 @@ describe('anatomy-visualizer entrypoint (real modules)', () => {
       if (type === 'click') {
         backButtonClickHandler = listener;
       }
-      return originalBackButtonAddEventListener.call(this, type, listener, options);
+      return originalBackButtonAddEventListener.call(
+        this,
+        type,
+        listener,
+        options
+      );
     };
 
     global.alert = jest.fn();
@@ -221,123 +235,148 @@ describe('anatomy-visualizer entrypoint (real modules)', () => {
     document.body.innerHTML = '';
   });
 
-  it('initializes after DOMContentLoaded when the document is still loading', async () => {
-    const fetchMock = createFileFetchMock();
-    global.fetch = fetchMock;
-    window.fetch = fetchMock;
+  it(
+    'initializes after DOMContentLoaded when the document is still loading',
+    async () => {
+      const fetchMock = createFileFetchMock();
+      global.fetch = fetchMock;
+      window.fetch = fetchMock;
 
-    const { default: AnatomyVisualizerUI } = await import(
-      '../../../src/domUI/AnatomyVisualizerUI.js'
-    );
-    const uiInitializeSpy = jest.spyOn(AnatomyVisualizerUI.prototype, 'initialize');
+      const { default: AnatomyVisualizerUI } = await import(
+        '../../../src/domUI/AnatomyVisualizerUI.js'
+      );
+      const uiInitializeSpy = jest.spyOn(
+        AnatomyVisualizerUI.prototype,
+        'initialize'
+      );
 
-    const { CommonBootstrapper } = await import(
-      '../../../src/bootstrapper/CommonBootstrapper.js'
-    );
-    const bootstrapSpy = jest.spyOn(CommonBootstrapper.prototype, 'bootstrap');
+      const { CommonBootstrapper } = await import(
+        '../../../src/bootstrapper/CommonBootstrapper.js'
+      );
+      const bootstrapSpy = jest.spyOn(
+        CommonBootstrapper.prototype,
+        'bootstrap'
+      );
 
-    await import('../../../src/anatomy-visualizer.js');
+      await import('../../../src/anatomy-visualizer.js');
 
-    expect(bootstrapSpy).not.toHaveBeenCalled();
+      expect(bootstrapSpy).not.toHaveBeenCalled();
 
-    readyStateValue = 'interactive';
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+      readyStateValue = 'interactive';
+      document.dispatchEvent(new Event('DOMContentLoaded'));
 
-    await waitForCondition(() => bootstrapSpy.mock.results.length === 1);
-    const bootstrapResult = bootstrapSpy.mock.results[0]?.value;
-    await bootstrapResult;
+      await waitForCondition(() => bootstrapSpy.mock.results.length === 1);
+      const bootstrapResult = bootstrapSpy.mock.results[0]?.value;
+      await bootstrapResult;
 
-    await waitForCondition(() => uiInitializeSpy.mock.results.length === 1);
-    await uiInitializeSpy.mock.results[0]?.value;
+      await waitForCondition(() => uiInitializeSpy.mock.results.length === 1);
+      await uiInitializeSpy.mock.results[0]?.value;
 
-    const entitySelector = document.getElementById('entity-selector');
-    expect(entitySelector).toBeTruthy();
-    const uiInstance = uiInitializeSpy.mock.instances[0];
-    if (uiInstance) {
-      const definitions = uiInstance._registry?.getAllEntityDefinitions?.() ?? [];
-      expect(definitions.length).toBeGreaterThan(0);
-    }
-    expect(entitySelector.options.length).toBeGreaterThan(1);
+      const entitySelector = document.getElementById('entity-selector');
+      expect(entitySelector).toBeTruthy();
+      const uiInstance = uiInitializeSpy.mock.instances[0];
+      if (uiInstance) {
+        const definitions =
+          uiInstance._registry?.getAllEntityDefinitions?.() ?? [];
+        expect(definitions.length).toBeGreaterThan(0);
+      }
+      expect(entitySelector.options.length).toBeGreaterThan(1);
 
-    expect(backButtonClickHandler).toBeInstanceOf(Function);
-    // Execute the captured handler directly to cover the navigation branch.
-    try {
-      backButtonClickHandler();
-    } catch (navigationError) {
-      // jsdom does not implement cross-document navigation; ensure the expected error is raised.
-      expect(navigationError?.type).toBe('not implemented');
-    }
-  }, DEFAULT_TIMEOUT_MS);
+      expect(backButtonClickHandler).toBeInstanceOf(Function);
+      // Execute the captured handler directly to cover the navigation branch.
+      try {
+        backButtonClickHandler();
+      } catch (navigationError) {
+        // jsdom does not implement cross-document navigation; ensure the expected error is raised.
+        expect(navigationError?.type).toBe('not implemented');
+      }
+    },
+    DEFAULT_TIMEOUT_MS
+  );
 
-  it('bootstraps immediately when the document is already loaded', async () => {
-    const fetchMock = createFileFetchMock();
-    global.fetch = fetchMock;
-    window.fetch = fetchMock;
+  it(
+    'bootstraps immediately when the document is already loaded',
+    async () => {
+      const fetchMock = createFileFetchMock();
+      global.fetch = fetchMock;
+      window.fetch = fetchMock;
 
-    readyStateValue = 'complete';
+      readyStateValue = 'complete';
 
-    const { default: AnatomyVisualizerUI } = await import(
-      '../../../src/domUI/AnatomyVisualizerUI.js'
-    );
-    const uiInitializeSpy = jest.spyOn(AnatomyVisualizerUI.prototype, 'initialize');
+      const { default: AnatomyVisualizerUI } = await import(
+        '../../../src/domUI/AnatomyVisualizerUI.js'
+      );
+      const uiInitializeSpy = jest.spyOn(
+        AnatomyVisualizerUI.prototype,
+        'initialize'
+      );
 
-    const { CommonBootstrapper } = await import(
-      '../../../src/bootstrapper/CommonBootstrapper.js'
-    );
-    const bootstrapSpy = jest.spyOn(CommonBootstrapper.prototype, 'bootstrap');
+      const { CommonBootstrapper } = await import(
+        '../../../src/bootstrapper/CommonBootstrapper.js'
+      );
+      const bootstrapSpy = jest.spyOn(
+        CommonBootstrapper.prototype,
+        'bootstrap'
+      );
 
-    await import('../../../src/anatomy-visualizer.js');
+      await import('../../../src/anatomy-visualizer.js');
 
-    await waitForCondition(() => bootstrapSpy.mock.results.length === 1);
-    const bootstrapResult = bootstrapSpy.mock.results[0]?.value;
-    await bootstrapResult;
+      await waitForCondition(() => bootstrapSpy.mock.results.length === 1);
+      const bootstrapResult = bootstrapSpy.mock.results[0]?.value;
+      await bootstrapResult;
 
-    await waitForCondition(() => uiInitializeSpy.mock.results.length === 1);
-    await uiInitializeSpy.mock.results[0]?.value;
+      await waitForCondition(() => uiInitializeSpy.mock.results.length === 1);
+      await uiInitializeSpy.mock.results[0]?.value;
 
-    expect(bootstrapSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        containerConfigType: 'minimal',
-        worldName: 'default',
-        includeAnatomyFormatting: true,
-      })
-    );
-  }, DEFAULT_TIMEOUT_MS);
+      expect(bootstrapSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          containerConfigType: 'minimal',
+          worldName: 'default',
+          includeAnatomyFormatting: true,
+        })
+      );
+    },
+    DEFAULT_TIMEOUT_MS
+  );
 
-  it('reports fatal errors when bootstrap fails', async () => {
-    const failingFetch = jest.fn(async () => ({
-      ok: false,
-      status: 500,
-      statusText: 'Internal Error',
-      json: async () => {
-        throw new Error('fetch failure');
-      },
-      text: async () => 'fetch failure',
-    }));
-    global.fetch = failingFetch;
-    window.fetch = failingFetch;
+  it(
+    'reports fatal errors when bootstrap fails',
+    async () => {
+      const failingFetch = jest.fn(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Error',
+        json: async () => {
+          throw new Error('fetch failure');
+        },
+        text: async () => 'fetch failure',
+      }));
+      global.fetch = failingFetch;
+      window.fetch = failingFetch;
 
-    readyStateValue = 'complete';
+      readyStateValue = 'complete';
 
-    const alertSpy = jest.spyOn(global, 'alert');
+      const alertSpy = jest.spyOn(global, 'alert');
 
-    const { CommonBootstrapper } = await import(
-      '../../../src/bootstrapper/CommonBootstrapper.js'
-    );
-    const fatalSpy = jest.spyOn(
-      CommonBootstrapper.prototype,
-      'displayFatalStartupError'
-    );
+      const { CommonBootstrapper } = await import(
+        '../../../src/bootstrapper/CommonBootstrapper.js'
+      );
+      const fatalSpy = jest.spyOn(
+        CommonBootstrapper.prototype,
+        'displayFatalStartupError'
+      );
 
-    await import('../../../src/anatomy-visualizer.js');
+      await import('../../../src/anatomy-visualizer.js');
 
-    await waitForCondition(() => fatalSpy.mock.calls.length === 1);
+      await waitForCondition(() => fatalSpy.mock.calls.length === 1);
 
-    expect(fatalSpy.mock.calls[0][0]).toMatch(
-      /Failed to initialize anatomy visualizer: Failed to load game configuration/
-    );
-    expect(alertSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to initialize anatomy visualizer')
-    );
-  }, DEFAULT_TIMEOUT_MS);
+      expect(fatalSpy.mock.calls[0][0]).toMatch(
+        /Failed to initialize anatomy visualizer: Failed to load game configuration/
+      );
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to initialize anatomy visualizer')
+      );
+    },
+    DEFAULT_TIMEOUT_MS
+  );
 });

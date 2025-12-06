@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Arm Entity Validation', () => {
   const armEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -16,7 +19,9 @@ describe('Tortoise Arm Entity Validation', () => {
     });
 
     it('should have correct description', () => {
-      expect(armEntity.description).toBe('Scaled reptilian arm with hand socket');
+      expect(armEntity.description).toBe(
+        'Scaled reptilian arm with hand socket'
+      );
     });
 
     it('should have anatomy:part component with tortoise_arm subType', () => {
@@ -31,12 +36,16 @@ describe('Tortoise Arm Entity Validation', () => {
 
     it('should have descriptors:texture component with "scaled" texture', () => {
       expect(armEntity.components['descriptors:texture']).toBeDefined();
-      expect(armEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(armEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
 
     it('should have descriptors:color_extended component with "dark-olive" color', () => {
       expect(armEntity.components['descriptors:color_extended']).toBeDefined();
-      expect(armEntity.components['descriptors:color_extended'].color).toBe('dark-olive');
+      expect(armEntity.components['descriptors:color_extended'].color).toBe(
+        'dark-olive'
+      );
     });
   });
 
@@ -113,7 +122,9 @@ describe('Tortoise Arm Entity Validation', () => {
     });
 
     it('should have scaled texture as per reptilian anatomy', () => {
-      expect(armEntity.components['descriptors:texture'].texture).toBe('scaled');
+      expect(armEntity.components['descriptors:texture'].texture).toBe(
+        'scaled'
+      );
     });
   });
 });

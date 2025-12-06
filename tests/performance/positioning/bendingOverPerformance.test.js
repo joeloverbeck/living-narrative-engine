@@ -140,7 +140,13 @@ function createHandlers(entityManager, eventBus, logger, gameDataRepository) {
  * @param locationId
  * @param allowsBending
  */
-function createSurface(entityManager, id, name, locationId, allowsBending = true) {
+function createSurface(
+  entityManager,
+  id,
+  name,
+  locationId,
+  allowsBending = true
+) {
   if (allowsBending) {
     entityManager.addComponent(id, 'positioning:allows_bending_over', {});
   }
@@ -219,7 +225,8 @@ describe('Bending Over System Performance', () => {
       },
       scopes: {
         'positioning:available_surfaces': {
-          scope: 'positioning:available_surfaces := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]}]',
+          scope:
+            'positioning:available_surfaces := entities(positioning:allows_bending_over)[][{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "actor.components.core:position.locationId"}]}]',
         },
       },
     });
@@ -238,40 +245,44 @@ describe('Bending Over System Performance', () => {
 
     // Create action discovery service with proper pipeline orchestrator
     const mockActionPipelineOrchestrator = {
-      discoverActions: jest.fn().mockImplementation(async (actor, context, options = {}) => {
-        const candidateActions = actionIndex.getCandidateActions(actor);
-        const actions = [];
+      discoverActions: jest
+        .fn()
+        .mockImplementation(async (actor, context, options = {}) => {
+          const candidateActions = actionIndex.getCandidateActions(actor);
+          const actions = [];
 
-        for (const actionDef of candidateActions) {
-          // Resolve targets using scope resolver
-          const scopeValue = actionDef.targets || actionDef.scope;
-          if (scopeValue) {
-            const targetResult = scopeResolver.resolveSync(scopeValue, { actor });
-            if (targetResult.success && targetResult.value.size > 0) {
-              for (const targetId of targetResult.value) {
-                actions.push({
-                  actionId: actionDef.id,
-                  id: actionDef.id,
-                  name: actionDef.name,
-                  command: `${actionDef.name} ${targetId}`,
-                  params: { targetId },
-                });
+          for (const actionDef of candidateActions) {
+            // Resolve targets using scope resolver
+            const scopeValue = actionDef.targets || actionDef.scope;
+            if (scopeValue) {
+              const targetResult = scopeResolver.resolveSync(scopeValue, {
+                actor,
+              });
+              if (targetResult.success && targetResult.value.size > 0) {
+                for (const targetId of targetResult.value) {
+                  actions.push({
+                    actionId: actionDef.id,
+                    id: actionDef.id,
+                    name: actionDef.name,
+                    command: `${actionDef.name} ${targetId}`,
+                    params: { targetId },
+                  });
+                }
               }
+            } else {
+              // Actions without targets
+              actions.push({
+                actionId: actionDef.id,
+                id: actionDef.id,
+                name: actionDef.name,
+                command: actionDef.name,
+                params: {},
+              });
             }
-          } else {
-            // Actions without targets
-            actions.push({
-              actionId: actionDef.id,
-              id: actionDef.id,
-              name: actionDef.name,
-              command: actionDef.name,
-              params: {},
-            });
           }
-        }
 
-        return { actions, errors: [], trace: options.trace };
-      }),
+          return { actions, errors: [], trace: options.trace };
+        }),
     };
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -280,7 +291,10 @@ describe('Bending Over System Performance', () => {
       actionPipelineOrchestrator: mockActionPipelineOrchestrator,
       traceContextFactory: () => new TraceContext(),
       getActorLocationFn: (actor) => {
-        const position = testEnv.entityManager.getComponentData(actor.id, POSITION_COMPONENT_ID);
+        const position = testEnv.entityManager.getComponentData(
+          actor.id,
+          POSITION_COMPONENT_ID
+        );
         return position ? position.locationId : null;
       },
     });
@@ -294,13 +308,23 @@ describe('Bending Over System Performance', () => {
     it('should handle action discovery with many surfaces efficiently', async () => {
       const locationId = 'location:test';
       createLocation(testEnv.entityManager, locationId, 'Test Location');
-      const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', locationId);
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        locationId
+      );
 
       // Create 100 surfaces
       const surfaces = [];
       for (let i = 0; i < 100; i++) {
         const surfaceId = `test:surface${i}`;
-        createSurface(testEnv.entityManager, surfaceId, `surface${i}`, locationId);
+        createSurface(
+          testEnv.entityManager,
+          surfaceId,
+          `surface${i}`,
+          locationId
+        );
         surfaces.push(surfaceId);
       }
 
@@ -318,18 +342,27 @@ describe('Bending Over System Performance', () => {
       const discoveryTime = endTime - startTime;
 
       // Should discover 100 bend_over actions (one for each surface)
-      const bendOverActions = actions.filter(a => a.actionId === 'positioning:bend_over');
+      const bendOverActions = actions.filter(
+        (a) => a.actionId === 'positioning:bend_over'
+      );
       expect(bendOverActions).toHaveLength(100);
 
       // Performance threshold: < 500ms for 100 surfaces (more realistic for complex action discovery)
       expect(discoveryTime).toBeLessThan(500);
-      console.log(`Action discovery with 100 surfaces took ${discoveryTime.toFixed(2)}ms`);
+      console.log(
+        `Action discovery with 100 surfaces took ${discoveryTime.toFixed(2)}ms`
+      );
     });
 
     it('should scale linearly with number of surfaces', async () => {
       const locationId = 'location:test';
       createLocation(testEnv.entityManager, locationId, 'Test Location');
-      const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', locationId);
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        locationId
+      );
 
       // Actions and scopes are already registered in beforeEach
 
@@ -344,7 +377,12 @@ describe('Bending Over System Performance', () => {
 
         // Create surfaces
         for (let i = 0; i < count; i++) {
-          createSurface(testEnv.entityManager, `test:surface${i}`, `surface${i}`, locationId);
+          createSurface(
+            testEnv.entityManager,
+            `test:surface${i}`,
+            `surface${i}`,
+            locationId
+          );
         }
 
         // Warm up - run several iterations to stabilize JIT and caches
@@ -375,7 +413,7 @@ describe('Bending Over System Performance', () => {
 
       // Check that time increases roughly linearly
       // Time per item should be relatively constant
-      const timePerItem = measurements.map(m => m.time / m.count);
+      const timePerItem = measurements.map((m) => m.time / m.count);
       const baselineTimePerItem = timePerItem[0];
 
       // Verify scaling using dual thresholds to account for timing variance
@@ -385,8 +423,10 @@ describe('Bending Over System Performance', () => {
 
       for (let i = 1; i < timePerItem.length; i++) {
         const currentTimePerItem = timePerItem[i];
-        const exceedsRatio = currentTimePerItem > baselineTimePerItem * ratioThreshold;
-        const exceedsAbsolute = currentTimePerItem - baselineTimePerItem > absoluteThreshold;
+        const exceedsRatio =
+          currentTimePerItem > baselineTimePerItem * ratioThreshold;
+        const exceedsAbsolute =
+          currentTimePerItem - baselineTimePerItem > absoluteThreshold;
 
         // Only fail if BOTH ratio AND absolute thresholds are exceeded
         // This prevents flakiness from timing variance at small scales
@@ -395,7 +435,10 @@ describe('Bending Over System Performance', () => {
       }
 
       console.log('Scaling test results:', measurements);
-      console.log('Time per item:', timePerItem.map(t => `${t.toFixed(4)}ms`));
+      console.log(
+        'Time per item:',
+        timePerItem.map((t) => `${t.toFixed(4)}ms`)
+      );
     });
   });
 
@@ -451,7 +494,9 @@ describe('Bending Over System Performance', () => {
 
       // Performance threshold: < 200ms (more realistic for complex scope evaluation)
       expect(evaluationTime).toBeLessThan(200);
-      console.log(`Scope evaluation with complex filters took ${evaluationTime.toFixed(2)}ms`);
+      console.log(
+        `Scope evaluation with complex filters took ${evaluationTime.toFixed(2)}ms`
+      );
     });
 
     it('should handle nested scope evaluations efficiently', async () => {
@@ -461,7 +506,12 @@ describe('Bending Over System Performance', () => {
       // Create hierarchical structure
       for (let i = 0; i < 20; i++) {
         const surfaceId = `test:surface${i}`;
-        createSurface(testEnv.entityManager, surfaceId, `surface${i}`, locationId);
+        createSurface(
+          testEnv.entityManager,
+          surfaceId,
+          `surface${i}`,
+          locationId
+        );
 
         // Some surfaces have actors already bending over them
         if (i % 3 === 0) {
@@ -471,13 +521,22 @@ describe('Bending Over System Performance', () => {
             `Bender${i}`,
             locationId
           );
-          testEnv.entityManager.addComponent(bendingActor, 'positioning:bending_over', {
-            surface_id: surfaceId,
-          });
+          testEnv.entityManager.addComponent(
+            bendingActor,
+            'positioning:bending_over',
+            {
+              surface_id: surfaceId,
+            }
+          );
         }
       }
 
-      const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', locationId);
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        locationId
+      );
 
       // Scopes are already registered in beforeEach
 
@@ -490,59 +549,77 @@ describe('Bending Over System Performance', () => {
 
       expect(available.value.size).toBeGreaterThan(0);
       expect(endTime - startTime).toBeLessThan(200);
-      console.log(`Nested scope evaluation took ${(endTime - startTime).toFixed(2)}ms`);
+      console.log(
+        `Nested scope evaluation took ${(endTime - startTime).toFixed(2)}ms`
+      );
     });
   });
 
   describe('State Change Performance', () => {
     it('should handle rapid state changes without memory leaks', async () => {
-        const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', 'location:test');
-        const counter = createSurface(testEnv.entityManager, 'test:counter', 'counter', 'location:test');
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const counter = createSurface(
+        testEnv.entityManager,
+        'test:counter',
+        'counter',
+        'location:test'
+      );
 
-        // Measure initial memory (if available in environment)
-        const initialMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
+      // Measure initial memory (if available in environment)
+      const initialMemory = process.memoryUsage
+        ? process.memoryUsage().heapUsed
+        : 0;
 
-        // Perform 100 rapid bend/straighten cycles
-        const startTime = performance.now();
-        for (let i = 0; i < 100; i++) {
-          await testEnv.dispatchAction({
-            actionId: 'positioning:bend_over',
-            actorId: actor,
-            targetId: counter,
-          });
-          await testEnv.dispatchAction({
-            actionId: 'positioning:straighten_up',
-            actorId: actor,
-            targetId: counter,
-          });
-        }
-        const endTime = performance.now();
+      // Perform 100 rapid bend/straighten cycles
+      const startTime = performance.now();
+      for (let i = 0; i < 100; i++) {
+        await testEnv.dispatchAction({
+          actionId: 'positioning:bend_over',
+          actorId: actor,
+          targetId: counter,
+        });
+        await testEnv.dispatchAction({
+          actionId: 'positioning:straighten_up',
+          actorId: actor,
+          targetId: counter,
+        });
+      }
+      const endTime = performance.now();
 
-        // Check final state
-        const finalState = testEnv.entityManager.getComponentData(
-          actor,
-          'positioning:bending_over'
-        );
-        expect(finalState).toBeNull();
+      // Check final state
+      const finalState = testEnv.entityManager.getComponentData(
+        actor,
+        'positioning:bending_over'
+      );
+      expect(finalState).toBeNull();
 
-        // Performance check
-        const totalTime = endTime - startTime;
-        const timePerCycle = totalTime / 100;
-        expect(timePerCycle).toBeLessThan(300); // < 300ms per cycle (more realistic for rule processing)
+      // Performance check
+      const totalTime = endTime - startTime;
+      const timePerCycle = totalTime / 100;
+      expect(timePerCycle).toBeLessThan(300); // < 300ms per cycle (more realistic for rule processing)
 
-        // Memory check (when available in environment)
-        // Note: Memory API may not be available in all test environments
-        const hasMemoryAPI = typeof process.memoryUsage === 'function';
-        const finalMemory = hasMemoryAPI ? process.memoryUsage().heapUsed : initialMemory;
-        const memoryIncrease = finalMemory - initialMemory;
-        // Allow for some memory increase, but not excessive
-        // Rule processing with extensive logging can use significant memory
-        const reasonableIncrease = 50 * 1024 * 1024; // 50MB
-        // Always perform assertion - it will pass trivially if memory API is unavailable
-        expect(memoryIncrease).toBeLessThan(reasonableIncrease);
+      // Memory check (when available in environment)
+      // Note: Memory API may not be available in all test environments
+      const hasMemoryAPI = typeof process.memoryUsage === 'function';
+      const finalMemory = hasMemoryAPI
+        ? process.memoryUsage().heapUsed
+        : initialMemory;
+      const memoryIncrease = finalMemory - initialMemory;
+      // Allow for some memory increase, but not excessive
+      // Rule processing with extensive logging can use significant memory
+      const reasonableIncrease = 50 * 1024 * 1024; // 50MB
+      // Always perform assertion - it will pass trivially if memory API is unavailable
+      expect(memoryIncrease).toBeLessThan(reasonableIncrease);
 
-        console.log(`100 state change cycles took ${totalTime.toFixed(2)}ms (${timePerCycle.toFixed(2)}ms per cycle)`);
-      });
+      console.log(
+        `100 state change cycles took ${totalTime.toFixed(2)}ms (${timePerCycle.toFixed(2)}ms per cycle)`
+      );
+    });
 
     it('should handle concurrent state changes efficiently', async () => {
       const locationId = 'location:test';
@@ -552,8 +629,22 @@ describe('Bending Over System Performance', () => {
       const actors = [];
       const surfaces = [];
       for (let i = 0; i < 20; i++) {
-        actors.push(createActor(testEnv.entityManager, `test:actor${i}`, `Actor${i}`, locationId));
-        surfaces.push(createSurface(testEnv.entityManager, `test:surface${i}`, `surface${i}`, locationId));
+        actors.push(
+          createActor(
+            testEnv.entityManager,
+            `test:actor${i}`,
+            `Actor${i}`,
+            locationId
+          )
+        );
+        surfaces.push(
+          createSurface(
+            testEnv.entityManager,
+            `test:surface${i}`,
+            `surface${i}`,
+            locationId
+          )
+        );
       }
 
       // Measure concurrent operations
@@ -585,8 +676,18 @@ describe('Bending Over System Performance', () => {
 
   describe('Rule Processing Performance', () => {
     it('should process rules efficiently with many conditions', async () => {
-      const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', 'location:test');
-      const surface = createSurface(testEnv.entityManager, 'test:surface', 'surface', 'location:test');
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const surface = createSurface(
+        testEnv.entityManager,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Add various components to make condition checking more complex
       testEnv.entityManager.addComponent(actor, 'core:description', {
@@ -620,8 +721,18 @@ describe('Bending Over System Performance', () => {
     });
 
     it('should handle rule chains efficiently', async () => {
-      const actor = createActor(testEnv.entityManager, 'test:actor', 'Actor', 'location:test');
-      const surface = createSurface(testEnv.entityManager, 'test:surface', 'surface', 'location:test');
+      const actor = createActor(
+        testEnv.entityManager,
+        'test:actor',
+        'Actor',
+        'location:test'
+      );
+      const surface = createSurface(
+        testEnv.entityManager,
+        'test:surface',
+        'surface',
+        'location:test'
+      );
 
       // Create a chain of bend -> straighten -> bend operations
       const startTime = performance.now();

@@ -17,8 +17,12 @@ describe('HeuristicRegistry - Heuristic Retrieval', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
 
-    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     registry = new HeuristicRegistry({
       goalDistanceHeuristic: mockGoalDistance,
@@ -64,7 +68,9 @@ describe('HeuristicRegistry - Heuristic Retrieval', () => {
       const heuristic = registry.get(null);
 
       expect(heuristic).toBe(mockGoalDistance);
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Invalid name'));
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid name')
+      );
     });
 
     it('should fallback to goal-distance for undefined name', () => {
@@ -123,8 +129,12 @@ describe('HeuristicRegistry - Calculation Delegation', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
 
-    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     registry = new HeuristicRegistry({
       goalDistanceHeuristic: mockGoalDistance,
@@ -133,7 +143,11 @@ describe('HeuristicRegistry - Calculation Delegation', () => {
     });
 
     state = { 'entity-1:core:hungry': true };
-    goal = { conditions: [{ condition: { has_component: ['entity-1', 'core:hungry'] } }] };
+    goal = {
+      conditions: [
+        { condition: { has_component: ['entity-1', 'core:hungry'] } },
+      ],
+    };
     tasks = [{ id: 'task-1' }];
   });
 
@@ -196,8 +210,12 @@ describe('HeuristicRegistry - Result Validation', () => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
 
-    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     registry = new HeuristicRegistry({
       goalDistanceHeuristic: mockGoalDistance,
@@ -303,7 +321,9 @@ describe('HeuristicRegistry - Construction', () => {
 
   it('should validate goalDistanceHeuristic dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     expect(() => {
       new HeuristicRegistry({
@@ -324,7 +344,9 @@ describe('HeuristicRegistry - Construction', () => {
 
   it('should validate relaxedPlanningGraphHeuristic dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
+    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
 
     expect(() => {
       new HeuristicRegistry({
@@ -344,8 +366,12 @@ describe('HeuristicRegistry - Construction', () => {
   });
 
   it('should use fallback logger if invalid logger provided', () => {
-    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     // ensureValidLogger creates a fallback instead of throwing
     const registry = new HeuristicRegistry({
@@ -358,8 +384,12 @@ describe('HeuristicRegistry - Construction', () => {
 
   it('should construct successfully with valid dependencies', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     expect(() => {
       new HeuristicRegistry({
@@ -372,8 +402,12 @@ describe('HeuristicRegistry - Construction', () => {
 
   it('should log initialization with heuristic names', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', ['calculate']);
-    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', ['calculate']);
+    const mockGoalDistance = testBed.createMock('IGoalDistanceHeuristic', [
+      'calculate',
+    ]);
+    const mockRPG = testBed.createMock('IRelaxedPlanningGraphHeuristic', [
+      'calculate',
+    ]);
 
     new HeuristicRegistry({
       goalDistanceHeuristic: mockGoalDistance,

@@ -29,7 +29,9 @@ describe('movement:teleport action discovery', () => {
       expect(teleportAction.id).toBe('movement:teleport');
       expect(teleportAction.name).toBe('Teleport');
       expect(teleportAction.description).toContain('teleport');
-      expect(teleportAction.targets.primary.scope).toBe('movement:clear_directions');
+      expect(teleportAction.targets.primary.scope).toBe(
+        'movement:clear_directions'
+      );
     });
 
     it('should require can_teleport marker component', () => {

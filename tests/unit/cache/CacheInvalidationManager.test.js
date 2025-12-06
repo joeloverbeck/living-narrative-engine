@@ -20,14 +20,12 @@ describe('CacheInvalidationManager', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockValidatedEventDispatcher = testBed.createMock('validatedEventDispatcher', [
-      'dispatch'
-    ]);
+    mockValidatedEventDispatcher = testBed.createMock(
+      'validatedEventDispatcher',
+      ['dispatch']
+    );
 
-    mockCache = testBed.createMock('cache', [
-      'invalidate',
-      'clear'
-    ]);
+    mockCache = testBed.createMock('cache', ['invalidate', 'clear']);
     mockCache.invalidate.mockReturnValue(5);
 
     manager = new CacheInvalidationManager({
@@ -75,7 +73,7 @@ describe('CacheInvalidationManager', () => {
 
     it('should register cache with entity types', () => {
       manager.registerCache('test-cache', mockCache, {
-        entityTypes: ['actor', 'item']
+        entityTypes: ['actor', 'item'],
       });
 
       const caches = manager.getRegisteredCaches();
@@ -85,7 +83,7 @@ describe('CacheInvalidationManager', () => {
 
     it('should register cache with component types', () => {
       manager.registerCache('test-cache', mockCache, {
-        componentTypes: ['stats', 'inventory']
+        componentTypes: ['stats', 'inventory'],
       });
 
       const caches = manager.getRegisteredCaches();
@@ -97,7 +95,7 @@ describe('CacheInvalidationManager', () => {
       expect(() => {
         manager.registerCache('', mockCache);
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         manager.registerCache(null, mockCache);
       }).toThrow(InvalidArgumentError);
@@ -107,7 +105,7 @@ describe('CacheInvalidationManager', () => {
       expect(() => {
         manager.registerCache('test-cache', null);
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         manager.registerCache('test-cache', {});
       }).toThrow(InvalidArgumentError);
@@ -130,7 +128,7 @@ describe('CacheInvalidationManager', () => {
         entityTypes: ['actor', 'item'],
         componentTypes: ['stats', 'inventory'],
         keyPatterns: [/^actor:/],
-        description: 'Test cache'
+        description: 'Test cache',
       };
 
       manager.registerCache('full-cache', mockCache, metadata);
@@ -162,9 +160,13 @@ describe('CacheInvalidationManager', () => {
   describe('Pattern-Based Invalidation', () => {
     beforeEach(() => {
       manager.registerCache('cache1', mockCache, { entityTypes: ['actor'] });
-      manager.registerCache('cache2', testBed.createMock('cache', ['invalidate', 'clear']), {
-        entityTypes: ['item']
-      });
+      manager.registerCache(
+        'cache2',
+        testBed.createMock('cache', ['invalidate', 'clear']),
+        {
+          entityTypes: ['item'],
+        }
+      );
     });
 
     it('should invalidate caches by string pattern', () => {
@@ -210,7 +212,9 @@ describe('CacheInvalidationManager', () => {
 
       expect(result).toEqual({});
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Cache not found for pattern invalidation: unknown-cache')
+        expect.stringContaining(
+          'Cache not found for pattern invalidation: unknown-cache'
+        )
       );
     });
 
@@ -222,7 +226,9 @@ describe('CacheInvalidationManager', () => {
       manager.invalidatePattern('actor:');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to dispatch invalidation event: CACHE_PATTERN_INVALIDATION'),
+        expect.stringContaining(
+          'Failed to dispatch invalidation event: CACHE_PATTERN_INVALIDATION'
+        ),
         expect.any(Error)
       );
     });
@@ -230,16 +236,18 @@ describe('CacheInvalidationManager', () => {
 
   describe('Entity-Based Invalidation', () => {
     beforeEach(() => {
-      manager.registerCache('actor-cache', mockCache, { entityTypes: ['actor'] });
+      manager.registerCache('actor-cache', mockCache, {
+        entityTypes: ['actor'],
+      });
       const mockCache2 = testBed.createMock('cache', ['invalidate', 'clear']);
       mockCache2.invalidate.mockReturnValue(3);
       manager.registerCache('item-cache', mockCache2, {
-        entityTypes: ['item']
+        entityTypes: ['item'],
       });
       const mockCache3 = testBed.createMock('cache', ['invalidate', 'clear']);
       mockCache3.invalidate.mockReturnValue(2);
       manager.registerCache('all-cache', mockCache3, {
-        entityTypes: ['actor', 'item']
+        entityTypes: ['actor', 'item'],
       });
     });
 
@@ -264,11 +272,16 @@ describe('CacheInvalidationManager', () => {
     });
 
     it('should handle dependency invalidation failures gracefully', () => {
-      const failingCache = testBed.createMock('failingCache', ['invalidate', 'clear']);
+      const failingCache = testBed.createMock('failingCache', [
+        'invalidate',
+        'clear',
+      ]);
       failingCache.invalidate.mockImplementation(() => {
         throw new Error('dependency failure');
       });
-      manager.registerCache('failing-cache', failingCache, { entityTypes: ['actor'] });
+      manager.registerCache('failing-cache', failingCache, {
+        entityTypes: ['actor'],
+      });
       manager.addDependency('actor:player', 'failing-cache');
 
       const result = manager.invalidateEntity('actor:player', ['actor-cache']);
@@ -278,9 +291,14 @@ describe('CacheInvalidationManager', () => {
     });
 
     it('should skip redundant dependency invalidations when results already exist', () => {
-      const extraCache = testBed.createMock('extraCache', ['invalidate', 'clear']);
+      const extraCache = testBed.createMock('extraCache', [
+        'invalidate',
+        'clear',
+      ]);
       extraCache.invalidate.mockReturnValue(4);
-      manager.registerCache('extra-cache', extraCache, { entityTypes: ['actor'] });
+      manager.registerCache('extra-cache', extraCache, {
+        entityTypes: ['actor'],
+      });
       manager.addDependency('actor:player', 'extra-cache');
 
       const result = manager.invalidateEntity('actor:player');
@@ -293,7 +311,10 @@ describe('CacheInvalidationManager', () => {
   describe('Cache Clearing', () => {
     beforeEach(() => {
       manager.registerCache('cache1', mockCache);
-      manager.registerCache('cache2', testBed.createMock('cache', ['clear', 'invalidate']));
+      manager.registerCache(
+        'cache2',
+        testBed.createMock('cache', ['clear', 'invalidate'])
+      );
     });
 
     it('should clear all registered caches', () => {
@@ -336,7 +357,10 @@ describe('CacheInvalidationManager', () => {
     it('should skip listener cleanup when event integration is disabled during destroy', () => {
       const localLogger = testBed.createMockLogger();
       const disabledManager = new CacheInvalidationManager(
-        { logger: localLogger, validatedEventDispatcher: mockValidatedEventDispatcher },
+        {
+          logger: localLogger,
+          validatedEventDispatcher: mockValidatedEventDispatcher,
+        },
         { enableEventIntegration: false }
       );
 
@@ -430,8 +454,14 @@ describe('CacheInvalidationManager', () => {
 
   describe('Statistics and Monitoring', () => {
     beforeEach(() => {
-      manager.registerCache('cache1', mockCache, { description: 'Test cache 1' });
-      manager.registerCache('cache2', testBed.createMock('cache', ['invalidate', 'clear']), { description: 'Test cache 2' });
+      manager.registerCache('cache1', mockCache, {
+        description: 'Test cache 1',
+      });
+      manager.registerCache(
+        'cache2',
+        testBed.createMock('cache', ['invalidate', 'clear']),
+        { description: 'Test cache 2' }
+      );
     });
 
     it('should provide statistics', () => {
@@ -461,7 +491,6 @@ describe('CacheInvalidationManager', () => {
     });
   });
 
-
   describe('Error Handling', () => {
     it('should handle concurrent operations safely', () => {
       manager.registerCache('test-cache', mockCache);
@@ -471,7 +500,7 @@ describe('CacheInvalidationManager', () => {
         Promise.resolve(manager.invalidatePattern(`test:${i}`))
       );
 
-      return Promise.all(promises).then(results => {
+      return Promise.all(promises).then((results) => {
         expect(results).toHaveLength(10);
         expect(mockCache.invalidate).toHaveBeenCalledTimes(10);
       });
@@ -489,17 +518,19 @@ describe('CacheInvalidationManager', () => {
     it('should process component modification events', () => {
       manager.registerCache('component-cache', mockCache, {
         componentTypes: ['health'],
-        entityTypes: ['entity-1']
+        entityTypes: ['entity-1'],
       });
 
       const invalidateEntitySpy = jest.spyOn(manager, 'invalidateEntity');
 
       const handledCount = manager.emitEvent('COMPONENT_MODIFIED', {
-        payload: { entityId: 'entity-1', componentId: 'health' }
+        payload: { entityId: 'entity-1', componentId: 'health' },
       });
 
       expect(handledCount).toBe(1);
-      expect(invalidateEntitySpy).toHaveBeenCalledWith('entity-1', ['component-cache']);
+      expect(invalidateEntitySpy).toHaveBeenCalledWith('entity-1', [
+        'component-cache',
+      ]);
       expect(manager.getStats().eventsHandled).toBe(1);
 
       invalidateEntitySpy.mockRestore();
@@ -508,16 +539,18 @@ describe('CacheInvalidationManager', () => {
     it('should process component modification events using entity metadata when component types do not match', () => {
       manager.registerCache('entity-cache', mockCache, {
         componentTypes: [],
-        entityTypes: ['entity-3']
+        entityTypes: ['entity-3'],
       });
 
       const invalidateEntitySpy = jest.spyOn(manager, 'invalidateEntity');
 
       manager.emitEvent('COMPONENT_MODIFIED', {
-        payload: { entityId: 'entity-3', componentId: 'non-matching' }
+        payload: { entityId: 'entity-3', componentId: 'non-matching' },
       });
 
-      expect(invalidateEntitySpy).toHaveBeenCalledWith('entity-3', ['entity-cache']);
+      expect(invalidateEntitySpy).toHaveBeenCalledWith('entity-3', [
+        'entity-cache',
+      ]);
 
       invalidateEntitySpy.mockRestore();
     });
@@ -526,7 +559,7 @@ describe('CacheInvalidationManager', () => {
       const invalidateEntitySpy = jest.spyOn(manager, 'invalidateEntity');
 
       const handledCount = manager.emitEvent('COMPONENT_MODIFIED', {
-        payload: { entityId: 'entity-2' }
+        payload: { entityId: 'entity-2' },
       });
 
       expect(handledCount).toBe(1);
@@ -539,13 +572,13 @@ describe('CacheInvalidationManager', () => {
     it('should skip component invalidation when metadata does not match any cache', () => {
       manager.registerCache('mismatch-cache', mockCache, {
         componentTypes: ['speed'],
-        entityTypes: ['entity-9']
+        entityTypes: ['entity-9'],
       });
 
       const invalidateEntitySpy = jest.spyOn(manager, 'invalidateEntity');
 
       const handledCount = manager.emitEvent('COMPONENT_MODIFIED', {
-        payload: { entityId: 'entity-4', componentId: 'health' }
+        payload: { entityId: 'entity-4', componentId: 'health' },
       });
 
       expect(handledCount).toBe(1);
@@ -566,12 +599,14 @@ describe('CacheInvalidationManager', () => {
     });
 
     it('should process entity movement events and log handler failures', () => {
-      const invalidatePatternSpy = jest.spyOn(manager, 'invalidatePattern').mockImplementation(() => {
-        throw new Error('movement failure');
-      });
+      const invalidatePatternSpy = jest
+        .spyOn(manager, 'invalidatePattern')
+        .mockImplementation(() => {
+          throw new Error('movement failure');
+        });
 
       const handledCount = manager.emitEvent('ENTITY_MOVED', {
-        payload: { entityId: 'entity-2', fromLocation: 'A', toLocation: 'B' }
+        payload: { entityId: 'entity-2', fromLocation: 'A', toLocation: 'B' },
       });
 
       expect(handledCount).toBe(1);
@@ -585,12 +620,14 @@ describe('CacheInvalidationManager', () => {
 
     it('should process entity movement events with valid payloads', () => {
       const handledCount = manager.emitEvent('ENTITY_MOVED', {
-        payload: { entityId: 'entity-3', fromLocation: 'A', toLocation: 'B' }
+        payload: { entityId: 'entity-3', fromLocation: 'A', toLocation: 'B' },
       });
 
       expect(handledCount).toBe(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Entity movement invalidation: entity-3 (A -> B)')
+        expect.stringContaining(
+          'Entity movement invalidation: entity-3 (A -> B)'
+        )
       );
     });
 
@@ -616,14 +653,18 @@ describe('CacheInvalidationManager', () => {
     });
 
     it('should process explicit invalidation request events', () => {
-      const patternSpy = jest.spyOn(manager, 'invalidatePattern').mockReturnValue({});
-      const entitySpy = jest.spyOn(manager, 'invalidateEntity').mockReturnValue({});
+      const patternSpy = jest
+        .spyOn(manager, 'invalidatePattern')
+        .mockReturnValue({});
+      const entitySpy = jest
+        .spyOn(manager, 'invalidateEntity')
+        .mockReturnValue({});
 
       manager.emitEvent(CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED, {
-        payload: { pattern: 'pattern:*', cacheIds: ['cache-a'] }
+        payload: { pattern: 'pattern:*', cacheIds: ['cache-a'] },
       });
       manager.emitEvent(CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED, {
-        payload: { entityId: 'entity-3', cacheIds: ['cache-b'] }
+        payload: { entityId: 'entity-3', cacheIds: ['cache-b'] },
       });
 
       expect(patternSpy).toHaveBeenCalledWith('pattern:*', ['cache-a']);
@@ -638,7 +679,9 @@ describe('CacheInvalidationManager', () => {
       const patternSpy = jest.spyOn(manager, 'invalidatePattern');
       const entitySpy = jest.spyOn(manager, 'invalidateEntity');
 
-      const handledCount = manager.emitEvent(CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED);
+      const handledCount = manager.emitEvent(
+        CacheInvalidationEvents.CACHE_INVALIDATION_REQUESTED
+      );
 
       expect(handledCount).toBe(1);
       expect(patternSpy).not.toHaveBeenCalled();
@@ -649,10 +692,16 @@ describe('CacheInvalidationManager', () => {
     });
 
     it('should process entity creation and deletion events', () => {
-      const invalidateEntitySpy = jest.spyOn(manager, 'invalidateEntity').mockReturnValue({});
+      const invalidateEntitySpy = jest
+        .spyOn(manager, 'invalidateEntity')
+        .mockReturnValue({});
 
-      manager.emitEvent('ENTITY_CREATED', { payload: { entityId: 'entity-4' } });
-      manager.emitEvent('ENTITY_DELETED', { payload: { entityId: 'entity-5' } });
+      manager.emitEvent('ENTITY_CREATED', {
+        payload: { entityId: 'entity-4' },
+      });
+      manager.emitEvent('ENTITY_DELETED', {
+        payload: { entityId: 'entity-5' },
+      });
 
       expect(invalidateEntitySpy).toHaveBeenNthCalledWith(1, 'entity-4');
       expect(invalidateEntitySpy).toHaveBeenNthCalledWith(2, 'entity-5');

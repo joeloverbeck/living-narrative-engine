@@ -17,20 +17,22 @@ Migrate `handle_hug_tight.rule.json` in the `hugging` mod from the expanded patt
 
 ## Assumption Corrections
 
-| Original Assumption | Reality |
-|---------------------|---------|
+| Original Assumption                                                                    | Reality                                                                                                                       |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Rule files: `handle_embrace_from_behind.rule.json`, `handle_release_embrace.rule.json` | These DO NOT EXIST. Actual files: `handle_release_self_from_hug.rule.json`, `handle_release_self_from_hug_forceful.rule.json` |
-| Component namespace: `hugging:hugging`, `hugging:being_hugged` | Actual: `positioning:hugging`, `positioning:being_hugged` (defined in positioning mod) |
-| Release rules: Simple unconditional removal | Reality: Conditional removal that preserves unrelated relationships |
+| Component namespace: `hugging:hugging`, `hugging:being_hugged`                         | Actual: `positioning:hugging`, `positioning:being_hugged` (defined in positioning mod)                                        |
+| Release rules: Simple unconditional removal                                            | Reality: Conditional removal that preserves unrelated relationships                                                           |
 
 ---
 
 ## Files to Touch
 
 ### Modified Files (1 rule)
+
 - `data/mods/hugging/rules/handle_hug_tight.rule.json`
 
 ### NOT Modified (behavioral incompatibility)
+
 - `data/mods/hugging/rules/handle_release_hug.rule.json` - requires conditional removal
 - `data/mods/hugging/rules/handle_release_self_from_hug.rule.json` - requires conditional removal
 - `data/mods/hugging/rules/handle_release_self_from_hug_forceful.rule.json` - requires conditional removal
@@ -40,6 +42,7 @@ Migrate `handle_hug_tight.rule.json` in the `hugging` mod from the expanded patt
 ## Out of Scope
 
 **DO NOT modify:**
+
 - Any action files (only rules)
 - Any condition files
 - Any component files
@@ -82,23 +85,69 @@ Migrate `handle_hug_tight.rule.json` in the `hugging` mod from the expanded patt
   "event_type": "core:attempt_action",
   "condition": { "condition_ref": "hugging:event-is-action-hug-tight" },
   "actions": [
-    { "type": "GET_NAME", "parameters": { "entity_ref": "actor", "result_variable": "actorName" } },
-    { "type": "GET_NAME", "parameters": { "entity_ref": "target", "result_variable": "targetName" } },
-    { "type": "QUERY_COMPONENT", "parameters": { "entity_ref": "actor", "component_type": "core:position", "result_variable": "actorPosition" } },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
     {
       "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
       "parameters": {
         "actor_component_type": "positioning:hugging",
         "target_component_type": "positioning:being_hugged",
-        "actor_data": { "embraced_entity_id": "{event.payload.targetId}", "initiated": true },
-        "target_data": { "hugging_entity_id": "{event.payload.actorId}", "consented": true },
-        "existing_component_types_to_clean": ["positioning:hugging", "positioning:being_hugged"]
+        "actor_data": {
+          "embraced_entity_id": "{event.payload.targetId}",
+          "initiated": true
+        },
+        "target_data": {
+          "hugging_entity_id": "{event.payload.actorId}",
+          "consented": true
+        },
+        "existing_component_types_to_clean": [
+          "positioning:hugging",
+          "positioning:being_hugged"
+        ]
       }
     },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "logMessage", "value": "{context.actorName} closes their arms around {context.targetName} tenderly, hugging {context.targetName} tight." } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "perceptionType", "value": "action_target_general" } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "locationId", "value": "{context.actorPosition.locationId}" } },
-    { "type": "SET_VARIABLE", "parameters": { "variable_name": "targetId", "value": "{event.payload.targetId}" } },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} closes their arms around {context.targetName} tenderly, hugging {context.targetName} tight."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }
@@ -113,6 +162,7 @@ Migrate `handle_hug_tight.rule.json` in the `hugging` mod from the expanded patt
 - [x] Run integration tests for hugging mod
 
 ### NOT Migrated (documented reason)
+
 - [ ] ~~`handle_release_hug.rule.json`~~ - requires conditional removal logic
 - [ ] ~~`handle_release_self_from_hug.rule.json`~~ - requires conditional removal logic
 - [ ] ~~`handle_release_self_from_hug_forceful.rule.json`~~ - requires conditional removal logic
@@ -124,6 +174,7 @@ Migrate `handle_hug_tight.rule.json` in the `hugging` mod from the expanded patt
 ### Tests That Must Pass
 
 1. **All hugging mod integration tests:**
+
    ```bash
    NODE_ENV=test npm run test:integration -- tests/integration/mods/hugging/
    ```
@@ -186,11 +237,22 @@ The release rules have conditional logic like:
     "condition": {
       "and": [
         { "var": "context.actorHuggingComponent" },
-        { "==": [{ "var": "context.actorHuggingComponent.embraced_entity_id" }, { "var": "event.payload.targetId" }] }
+        {
+          "==": [
+            { "var": "context.actorHuggingComponent.embraced_entity_id" },
+            { "var": "event.payload.targetId" }
+          ]
+        }
       ]
     },
     "then_actions": [
-      { "type": "REMOVE_COMPONENT", "parameters": { "entity_ref": "actor", "component_type": "positioning:hugging" } }
+      {
+        "type": "REMOVE_COMPONENT",
+        "parameters": {
+          "entity_ref": "actor",
+          "component_type": "positioning:hugging"
+        }
+      }
     ]
   }
 }
@@ -199,6 +261,7 @@ The release rules have conditional logic like:
 This ensures that if actor is hugging **someone else**, their hugging component is preserved.
 
 The `BREAK_BIDIRECTIONAL_CLOSENESS` handler unconditionally removes all specified components, which would break test:
+
 - `"leaves unrelated embrace data untouched when the actor references a different partner"`
 
 To migrate release rules, the handler would need a new `match_data` parameter for conditional removal - a separate enhancement ticket.
@@ -211,12 +274,12 @@ To migrate release rules, the handler would need a new `match_data` parameter fo
 
 ### Planned vs Actual
 
-| Aspect | Original Plan | Actual Outcome |
-|--------|---------------|----------------|
-| Rules migrated | 4 rules | 1 rule (`handle_hug_tight.rule.json`) |
-| Handlers used | ESTABLISH + BREAK | ESTABLISH only |
-| Line reduction | ~88% per rule | 65% (208 → 73 lines) |
-| Tests modified | None expected | None needed |
+| Aspect         | Original Plan     | Actual Outcome                        |
+| -------------- | ----------------- | ------------------------------------- |
+| Rules migrated | 4 rules           | 1 rule (`handle_hug_tight.rule.json`) |
+| Handlers used  | ESTABLISH + BREAK | ESTABLISH only                        |
+| Line reduction | ~88% per rule     | 65% (208 → 73 lines)                  |
+| Tests modified | None expected     | None needed                           |
 
 ### Summary
 

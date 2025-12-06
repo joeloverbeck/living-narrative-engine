@@ -341,7 +341,9 @@ describe('BurnEnergyHandler', () => {
       };
 
       // Set up execution context with actor
-      executionContext.evaluationContext.actor = { id: 'real-actor-entity-123' };
+      executionContext.evaluationContext.actor = {
+        id: 'real-actor-entity-123',
+      };
 
       em.getComponentData.mockReturnValue(metabolicStore);
       em.batchAddComponentsOptimized.mockResolvedValue(true);

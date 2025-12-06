@@ -153,7 +153,10 @@ describe('CriticalMemoryStrategy', () => {
       expect.objectContaining({ type: 'MEMORY_EMERGENCY_DUMP' })
     );
     expect(eventBus.dispatch).toHaveBeenCalledWith(
-      expect.objectContaining({ type: 'MEMORY_STRATEGY_COMPLETED', payload: expect.objectContaining({ success: true }) })
+      expect.objectContaining({
+        type: 'MEMORY_STRATEGY_COMPLETED',
+        payload: expect.objectContaining({ success: true }),
+      })
     );
 
     expect(triggerGarbageCollection).toHaveBeenCalledTimes(3);
@@ -306,7 +309,7 @@ describe('CriticalMemoryStrategy', () => {
 
   it('dispatches failure event when an error happens during completion', async () => {
     const logger = createLogger();
-    const dispatch = jest.fn(event => {
+    const dispatch = jest.fn((event) => {
       if (event.type === 'MEMORY_STRATEGY_COMPLETED') {
         throw new Error('completion failed');
       }
@@ -340,7 +343,7 @@ describe('CriticalMemoryStrategy', () => {
 
   it('continues execution when individual steps fail', async () => {
     const logger = createLogger();
-    const dispatch = jest.fn(event => {
+    const dispatch = jest.fn((event) => {
       if (event.type === 'MEMORY_CRITICAL_STOP_OPERATIONS') {
         throw new Error('stop failure');
       }

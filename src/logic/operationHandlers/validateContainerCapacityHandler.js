@@ -67,7 +67,11 @@ class ValidateContainerCapacityHandler extends BaseOperationHandler {
    */
   #validateParams(params, logger) {
     if (
-      !assertParamsObject(params, this.#dispatcher, 'VALIDATE_CONTAINER_CAPACITY')
+      !assertParamsObject(
+        params,
+        this.#dispatcher,
+        'VALIDATE_CONTAINER_CAPACITY'
+      )
     ) {
       return null;
     }

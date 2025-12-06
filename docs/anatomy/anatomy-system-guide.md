@@ -179,14 +179,14 @@ Because the validators own their `failFast` flag, callers cannot override this b
 
 ### Descriptor Registry Quick Reference
 
-| Descriptor | Display key | Type | Valid values |
-| --- | --- | --- | --- |
-| `height` | `height` | Enumerated | microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic |
-| `skinColor` | `skin_color` | Free-form | Any string |
-| `build` | `build` | Enumerated | skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky, frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky |
-| `composition` | `body_composition` | Enumerated | underweight, lean, average, soft, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting |
-| `hairDensity` | `body_hair` | Enumerated | hairless, sparse, light, moderate, hairy, very-hairy, furred |
-| `smell` | `smell` | Free-form | Any string |
+| Descriptor    | Display key        | Type       | Valid values                                                                                                                                                                        |
+| ------------- | ------------------ | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `height`      | `height`           | Enumerated | microscopic, minuscule, tiny, petite, short, average, tall, very-tall, gigantic, colossal, titanic                                                                                  |
+| `skinColor`   | `skin_color`       | Free-form  | Any string                                                                                                                                                                          |
+| `build`       | `build`            | Enumerated | skinny, slim, lissom, toned, athletic, shapely, hourglass, thick, muscular, hulking, stocky, frail, gaunt, skeletal, atrophied, cadaverous, massive, willowy, barrel-chested, lanky |
+| `composition` | `body_composition` | Enumerated | underweight, lean, average, soft, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting                         |
+| `hairDensity` | `body_hair`        | Enumerated | hairless, sparse, light, moderate, hairy, very-hairy, furred                                                                                                                        |
+| `smell`       | `smell`            | Free-form  | Any string                                                                                                                                                                          |
 
 ## Event-Driven Integration
 
@@ -211,11 +211,13 @@ Because the validators own their `failFast` flag, callers cannot override this b
 ## Armor Support
 
 The anatomy system natively supports armor as a distinct clothing layer. Armor is defined in:
+
 - Wearable component (`clothing:wearable`)
 - Slot metadata component (`clothing:slot_metadata`)
 - Coverage mapping component (`clothing:coverage_mapping`)
 
 **Allowed Layers by Slot** (typical configuration):
+
 - `standard_torso_upper`: `["underwear", "base", "outer", "armor"]`
 - `standard_legs`: `["underwear", "base", "outer", "armor"]`
 - `standard_hands`: `["base", "armor"]`
@@ -224,6 +226,7 @@ The anatomy system natively supports armor as a distinct clothing layer. Armor i
 Most clothing slots support armor by default.
 
 **Layer Hierarchy** (innermost to outermost):
+
 1. `underwear` - Undergarments
 2. `base` - Regular clothing
 3. `armor` - Protective equipment (cuirasses, chainmail, plate armor)
@@ -231,6 +234,7 @@ Most clothing slots support armor by default.
 5. `accessories` - Accessories (jewelry, belts, gloves)
 
 **Coverage Priority** (lower = higher visibility):
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150
 - `base`: 200

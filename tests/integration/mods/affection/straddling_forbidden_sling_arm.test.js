@@ -115,8 +115,9 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       testFixture.reset([room, actor, target]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).not.toContain(ACTION_ID);
     });
@@ -149,8 +150,9 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       testFixture.reset([room, actor, target]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).not.toContain(ACTION_ID);
     });
@@ -170,7 +172,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       const availableActions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id
       );
-      const actionIds = availableActions.map(action => action.id);
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).toContain(ACTION_ID);
     });
@@ -196,8 +198,9 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       testFixture.reset([room, actor, target]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).toContain(ACTION_ID);
     });
@@ -241,7 +244,7 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
       const successEvent = testFixture.events.find(
-        e => e.eventType === 'core:display_successful_action_result'
+        (e) => e.eventType === 'core:display_successful_action_result'
       );
       expect(successEvent).toBeDefined();
       expect(successEvent.payload.message).toContain('arm');
@@ -283,8 +286,9 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       testFixture.reset([room, actor, target1, target2]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       // Action should not be available for ANY target since actor is straddling
       expect(actionIds).not.toContain(ACTION_ID);
@@ -313,8 +317,9 @@ describe('sling_arm_around_shoulders forbidden when straddling - Integration Tes
       testFixture.reset([room, actor, target]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
-      const actionIds = availableActions.map(action => action.id);
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = availableActions.map((action) => action.id);
 
       expect(actionIds).not.toContain(ACTION_ID);
     });

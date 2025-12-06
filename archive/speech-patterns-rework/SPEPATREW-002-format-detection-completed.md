@@ -1,24 +1,30 @@
 # SPEPATREW-002: Implement Format Detection in CharacterDataFormatter
 
 ## Objective
+
 Add format detection logic to `CharacterDataFormatter` to identify whether speech patterns use string, object, or mixed format.
 
 ## Priority
+
 **Critical** - Prerequisite for format-specific rendering
 
 ## Estimated Effort
+
 0.5 days
 
 ## Dependencies
+
 - **SPEPATREW-001** must be completed (schema updated)
 
 ## Files to Touch
+
 - `src/prompting/CharacterDataFormatter.js` (add private method)
 - `tests/unit/prompting/CharacterDataFormatter.test.js` (add test suite)
 
 ## Implementation Details
 
 ### Add Private Method
+
 ```javascript
 /**
  * Detects speech pattern format type
@@ -44,11 +50,13 @@ Add format detection logic to `CharacterDataFormatter` to identify whether speec
 ```
 
 ### Update Existing Method
+
 Modify `formatSpeechPatterns(speechPatterns)` to call `#detectPatternFormat()` but DO NOT yet implement format-specific rendering (that's SPEPATREW-003).
 
 **CORRECTED ASSUMPTION**: The method signature is `formatSpeechPatterns(speechPatterns)`, NOT `formatSpeechPatterns(entity)`. It receives the patterns array/string directly.
 
 For now, just add the detection call and log the detected format:
+
 ```javascript
 formatSpeechPatterns(speechPatterns) {
   if (!speechPatterns) {
@@ -87,6 +95,7 @@ formatSpeechPatterns(speechPatterns) {
 ```
 
 ## Out of Scope
+
 - **DO NOT** implement format-specific rendering methods yet (SPEPATREW-003)
 - **DO NOT** modify schema files
 - **DO NOT** change any character entity files
@@ -96,6 +105,7 @@ formatSpeechPatterns(speechPatterns) {
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 1. `#detectPatternFormat(['str1', 'str2'])` returns `'string'`
 2. `#detectPatternFormat([{type: 'X', examples: ['e1']}])` returns `'object'`
 3. `#detectPatternFormat(['str', {type: 'X', examples: ['e1']}])` returns `'mixed'`
@@ -107,6 +117,7 @@ formatSpeechPatterns(speechPatterns) {
 9. No regression in other formatter methods
 
 ### Invariants
+
 - Method is private (prefixed with `#`)
 - Returns only one of three strings: `'string'`, `'object'`, `'mixed'`
 - No side effects except optional warning log
@@ -115,6 +126,7 @@ formatSpeechPatterns(speechPatterns) {
 - Existing `formatSpeechPatterns` output unchanged (backward compatibility)
 
 ## Validation Commands
+
 ```bash
 # Run specific test file
 npm run test:unit -- tests/unit/prompting/CharacterDataFormatter.test.js
@@ -130,6 +142,7 @@ npx eslint src/prompting/CharacterDataFormatter.js
 ```
 
 ## Definition of Done
+
 - [x] `#detectPatternFormat()` method implemented
 - [x] Method integrated into `formatSpeechPatterns()`
 - [x] All 9 test cases pass
@@ -139,12 +152,15 @@ npx eslint src/prompting/CharacterDataFormatter.js
 - [x] Code review completed
 
 ## Status
+
 **COMPLETED** - 2025-11-24
 
 ## Outcome
+
 Successfully implemented format detection logic in CharacterDataFormatter with the following changes:
 
 ### Code Changes:
+
 1. **Added `#detectPatternFormat()` method** (src/prompting/CharacterDataFormatter.js:54-73)
    - Detects 'string', 'object', or 'mixed' format
    - Returns 'string' for empty/null/undefined arrays (backward compatibility)
@@ -157,7 +173,9 @@ Successfully implemented format detection logic in CharacterDataFormatter with t
    - Maintains existing output format (no rendering changes)
 
 ### Test Changes:
+
 Added 9 comprehensive test cases (tests/unit/prompting/CharacterDataFormatter.test.js:291-398):
+
 - String format detection
 - Object format detection
 - Mixed format detection with warning
@@ -168,9 +186,11 @@ Added 9 comprehensive test cases (tests/unit/prompting/CharacterDataFormatter.te
 - Input immutability verification
 
 ### Discrepancies from Original Plan:
+
 **CORRECTED ASSUMPTION**: The ticket originally assumed `formatSpeechPatterns(entity)` but the actual signature is `formatSpeechPatterns(speechPatterns)`. The method receives patterns directly, not an entity object. Ticket was updated to reflect this.
 
 ### Validation Results:
+
 - All 79 CharacterDataFormatter tests pass ✓
 - All 346 prompting unit tests pass ✓
 - No regressions in existing functionality ✓

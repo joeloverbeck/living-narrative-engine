@@ -19,7 +19,6 @@ describe('PipelineResult - Memory Tests', () => {
   jest.setTimeout(120000); // 2 minutes for memory stabilization
 
   beforeEach(async () => {
-
     // Force garbage collection before each test
     await global.memoryTestUtils.forceGCAndWait();
   });

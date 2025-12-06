@@ -389,10 +389,7 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
         data: {
           scope: 'test-scope',
           timestamp: 123,
-          entityDiscovery: [
-            { foundEntities: 2 },
-            { foundEntities: 3 },
-          ],
+          entityDiscovery: [{ foundEntities: 2 }, { foundEntities: 3 }],
           filterEvaluations: [
             { filterPassed: true },
             { filterPassed: false },
@@ -424,7 +421,9 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
       const parsedData =
         typeof callArgs === 'string' ? JSON.parse(callArgs) : callArgs;
 
-      expect(parsedData.actions['action:scope'].enhancedScopeEvaluation).toEqual({
+      expect(
+        parsedData.actions['action:scope'].enhancedScopeEvaluation
+      ).toEqual({
         scope: 'test-scope',
         timestamp: 123,
         entityDiscovery: enhancedScopeData.data.entityDiscovery,
@@ -1144,7 +1143,9 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
       expect(mockStorageAdapter.getItem).toHaveBeenCalledWith('actionTraces');
       expect(result.success).toBe(true);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('ActionTraceOutputService: Exported 1 traces as')
+        expect.stringContaining(
+          'ActionTraceOutputService: Exported 1 traces as'
+        )
       );
     });
 
@@ -1163,8 +1164,16 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
 
       const storageAdapter = createMockStorageAdapter();
       storageAdapter.getItem.mockResolvedValue([
-        { id: 'export-1', timestamp: 10, data: { actionType: 'kept', value: 1 } },
-        { id: 'export-2', timestamp: 20, data: { actionType: 'filtered', value: 2 } },
+        {
+          id: 'export-1',
+          timestamp: 10,
+          data: { actionType: 'kept', value: 1 },
+        },
+        {
+          id: 'export-2',
+          timestamp: 20,
+          data: { actionType: 'filtered', value: 2 },
+        },
       ]);
 
       const jsonFormatter = {
@@ -1178,10 +1187,16 @@ describe('ActionTraceOutputService - Additional Coverage Tests', () => {
         traceDirectoryManager,
       });
 
-      const result = await service.exportTracesToFileSystem(['export-2'], 'json');
+      const result = await service.exportTracesToFileSystem(
+        ['export-2'],
+        'json'
+      );
 
       expect(storageAdapter.getItem).toHaveBeenCalledWith('actionTraces');
-      expect(jsonFormatter.format).toHaveBeenCalledWith({ actionType: 'filtered', value: 2 });
+      expect(jsonFormatter.format).toHaveBeenCalledWith({
+        actionType: 'filtered',
+        value: 2,
+      });
       expect(jsonFormatter.format).toHaveBeenCalledTimes(1);
       expect(result.exportedCount).toBe(1);
     });

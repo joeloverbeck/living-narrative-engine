@@ -10,10 +10,7 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  cleanupTestElements,
-  createTestContainer,
-} from './domTestUtils.js';
+import { cleanupTestElements, createTestContainer } from './domTestUtils.js';
 
 /**
  * Test bed for speech patterns generator integration testing
@@ -129,7 +126,9 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
       hasHook: jest.fn().mockReturnValue(false),
       getHooks: jest.fn().mockReturnValue([]),
       clearHooks: jest.fn(),
-      getControllerName: jest.fn().mockReturnValue('SpeechPatternsGeneratorController'),
+      getControllerName: jest
+        .fn()
+        .mockReturnValue('SpeechPatternsGeneratorController'),
       createControllerMethodHook: jest.fn((controller, methodName) => {
         return async (...args) => {
           if (typeof controller[methodName] === 'function') {
@@ -174,13 +173,15 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
         }
         await this.initialize();
       }),
-      resetInitializationState: jest.fn().mockImplementation(function (callback) {
-        this.isInitialized = false;
-        this.isInitializing = false;
-        if (typeof callback === 'function') {
-          callback();
-        }
-      }),
+      resetInitializationState: jest
+        .fn()
+        .mockImplementation(function (callback) {
+          this.isInitialized = false;
+          this.isInitializing = false;
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }),
     };
 
     // Create element cache for mockDOMElementManager
@@ -223,7 +224,9 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
         return elementCache;
       }),
       normalizeElementConfig: jest.fn((config) =>
-        typeof config === 'string' ? { selector: config, required: true } : config
+        typeof config === 'string'
+          ? { selector: config, required: true }
+          : config
       ),
       validateElement: jest.fn(),
       setElementEnabled: jest.fn(),
@@ -291,7 +294,9 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
       })),
       handleServiceError: jest.fn((error, operation, userMessage) => {
         // Rethrow the error with operation context for testing
-        const contextualError = new Error(`${operation} failed: ${error.message}`);
+        const contextualError = new Error(
+          `${operation} failed: ${error.message}`
+        );
         throw contextualError;
       }),
       logError: jest.fn(),
@@ -471,7 +476,9 @@ export class SpeechPatternsGeneratorTestBed extends BaseTestBed {
     this.mockSpeechPatternsGeneratorService.generatePatterns.mockRejectedValue(
       error
     );
-    this.mockCharacterBuilderService.generateSpeechPatterns.mockRejectedValue(error);
+    this.mockCharacterBuilderService.generateSpeechPatterns.mockRejectedValue(
+      error
+    );
   }
 
   // ============= Service Getter Methods =============

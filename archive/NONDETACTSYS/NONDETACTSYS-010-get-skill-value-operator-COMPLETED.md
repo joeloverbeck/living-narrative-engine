@@ -8,15 +8,15 @@ Create a custom JSON Logic operator `getSkillValue` that retrieves skill values 
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operators/getSkillValueOperator.js` | Operator class implementation |
+| File                                                       | Purpose                              |
+| ---------------------------------------------------------- | ------------------------------------ |
+| `src/logic/operators/getSkillValueOperator.js`             | Operator class implementation        |
 | `tests/unit/logic/operators/getSkillValueOperator.test.js` | Comprehensive unit tests (~30 tests) |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                    | Change                                    |
+| --------------------------------------- | ----------------------------------------- |
 | `src/logic/jsonLogicCustomOperators.js` | Import and register GetSkillValueOperator |
 
 ## Implementation Details
@@ -88,7 +88,12 @@ export class GetSkillValueOperator {
         return 0;
       }
 
-      const [entityPath, componentId, propertyPath = 'value', defaultValue = 0] = params;
+      const [
+        entityPath,
+        componentId,
+        propertyPath = 'value',
+        defaultValue = 0,
+      ] = params;
 
       // Resolve entity using standard pattern
       const entityId = this.#resolveEntityFromPath(entityPath, context);
@@ -97,7 +102,10 @@ export class GetSkillValueOperator {
       }
 
       // Get component data
-      const componentData = this.#entityManager.getComponentData(entityId, componentId);
+      const componentData = this.#entityManager.getComponentData(
+        entityId,
+        componentId
+      );
       if (componentData === null || componentData === undefined) {
         this.#logger.debug(
           `${this.#operatorName}: Component ${componentId} not found on entity ${entityId}, returning default ${defaultValue}`
@@ -115,7 +123,10 @@ export class GetSkillValueOperator {
 
       return result;
     } catch (error) {
-      this.#logger.error(`${this.#operatorName}: Error during evaluation`, error);
+      this.#logger.error(
+        `${this.#operatorName}: Error during evaluation`,
+        error
+      );
       return 0;
     }
   }
@@ -219,24 +230,28 @@ npx eslint src/logic/operators/getSkillValueOperator.js
 **Note**: Test pattern follows `hasFreeGrabbingAppendagesOperator.test.js` structure.
 
 #### 1. Constructor Tests (4 tests)
+
 - Should initialize with required dependencies
 - Should throw error if entityManager is missing
 - Should throw error if logger is missing
 - Should throw error if both dependencies are missing
 
 #### 2. Basic Retrieval Tests (4 tests)
+
 - Returns skill value when component exists
 - Returns default when component missing
 - Returns default when entity not found
 - Handles nested property paths (e.g., `stats.strength`)
 
 #### 3. Default Values Tests (4 tests)
+
 - Should default propertyPath to "value" when not provided
 - Should default defaultValue to 0 when not provided
 - Should use custom default value when component missing
 - Should handle non-numeric default values gracefully
 
 #### 4. Entity Reference Resolution Tests (6 tests)
+
 - Resolves entity reference from context (actor path)
 - Handles "self" reference
 - Resolves entity object with id
@@ -245,6 +260,7 @@ npx eslint src/logic/operators/getSkillValueOperator.js
 - Handles target path resolution
 
 #### 5. Error Handling Tests (8 tests)
+
 - Returns 0 for no parameters
 - Returns 0 for null parameters
 - Returns 0 for undefined parameters
@@ -255,6 +271,7 @@ npx eslint src/logic/operators/getSkillValueOperator.js
 - Handles exceptions gracefully and returns 0
 
 #### 6. Edge Cases Tests (5 tests)
+
 - Zero skill value returns 0 (not default)
 - Large skill values handled correctly
 - Negative skill values handled correctly
@@ -262,6 +279,7 @@ npx eslint src/logic/operators/getSkillValueOperator.js
 - Whitespace-only entityId handled correctly
 
 #### 7. Logging Tests (3 tests)
+
 - Logs debug message for successful skill retrieval
 - Logs debug message when component not found
 - Logs error for exceptions during evaluation
@@ -283,12 +301,12 @@ npx eslint src/logic/operators/getSkillValueOperator.js
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js` | Operator pattern reference |
-| `src/logic/operators/isRemovalBlockedOperator.js` | Entity resolution pattern |
-| `src/logic/jsonLogicCustomOperators.js` | Registration location |
-| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | Test pattern |
+| File                                                                   | Purpose                    |
+| ---------------------------------------------------------------------- | -------------------------- |
+| `src/logic/operators/hasFreeGrabbingAppendagesOperator.js`             | Operator pattern reference |
+| `src/logic/operators/isRemovalBlockedOperator.js`                      | Entity resolution pattern  |
+| `src/logic/jsonLogicCustomOperators.js`                                | Registration location      |
+| `tests/unit/logic/operators/hasFreeGrabbingAppendagesOperator.test.js` | Test pattern               |
 
 ---
 
@@ -308,31 +326,31 @@ The original ticket contained several incorrect assumptions about codebase patte
 
 #### Files Created
 
-| File | Description |
-|------|-------------|
-| `src/logic/operators/getSkillValueOperator.js` | 249 lines - Full operator implementation with entity resolution, component data retrieval, nested property path extraction |
-| `tests/unit/logic/operators/getSkillValueOperator.test.js` | 523 lines - **40 tests** across 8 describe blocks (exceeded the 30 test target) |
+| File                                                       | Description                                                                                                                |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `src/logic/operators/getSkillValueOperator.js`             | 249 lines - Full operator implementation with entity resolution, component data retrieval, nested property path extraction |
+| `tests/unit/logic/operators/getSkillValueOperator.test.js` | 523 lines - **40 tests** across 8 describe blocks (exceeded the 30 test target)                                            |
 
 #### Files Modified
 
-| File | Change |
-|------|--------|
+| File                                    | Change                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------- |
 | `src/logic/jsonLogicCustomOperators.js` | Added import and registration of GetSkillValueOperator (lines 23, 205-208, 427-437) |
 
 #### Test Coverage
 
 **40 tests** across 8 describe blocks (exceeding the ~30 test target):
 
-| Describe Block | Tests | Status |
-|----------------|-------|--------|
-| Constructor | 4 | ✅ |
-| Basic Retrieval | 4 | ✅ |
-| Default Values | 4 | ✅ |
-| Entity Reference Resolution | 6 | ✅ |
-| Error Handling | 9 | ✅ |
-| Edge Cases | 6 | ✅ |
-| Logging | 3 | ✅ |
-| Integration with JSON Logic context patterns | 4 | ✅ |
+| Describe Block                               | Tests | Status |
+| -------------------------------------------- | ----- | ------ |
+| Constructor                                  | 4     | ✅     |
+| Basic Retrieval                              | 4     | ✅     |
+| Default Values                               | 4     | ✅     |
+| Entity Reference Resolution                  | 6     | ✅     |
+| Error Handling                               | 9     | ✅     |
+| Edge Cases                                   | 6     | ✅     |
+| Logging                                      | 3     | ✅     |
+| Integration with JSON Logic context patterns | 4     | ✅     |
 
 All 40 tests pass.
 

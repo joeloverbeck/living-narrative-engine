@@ -67,10 +67,7 @@ describe('ApiKeyService combined source error resilience', () => {
   it('synthesizes comprehensive errors when file read unexpectedly omits details', async () => {
     const llmId = 'llm-missing-details';
 
-    const createErrorSpy = jest.spyOn(
-      apiKeyService,
-      '_createErrorDetails'
-    );
+    const createErrorSpy = jest.spyOn(apiKeyService, '_createErrorDetails');
 
     jest
       .spyOn(apiKeyService, '_readApiKeyFromFile')

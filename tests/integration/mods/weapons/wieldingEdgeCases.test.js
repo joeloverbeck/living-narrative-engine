@@ -100,7 +100,9 @@ describe('Wielding Edge Cases', () => {
         'positioning:wielding'
       );
       expect(wieldingComponent).toBeDefined();
-      expect(wieldingComponent.wielded_item_ids).toEqual(['weapons:silver_revolver']);
+      expect(wieldingComponent.wielded_item_ids).toEqual([
+        'weapons:silver_revolver',
+      ]);
     });
 
     it('should handle mixed namespaced and simple IDs', async () => {
@@ -175,7 +177,10 @@ describe('Wielding Edge Cases', () => {
       fixture.reset([actor, sword]);
 
       // Act: Remove the wielding component
-      fixture.entityManager.removeComponent('test-actor', 'positioning:wielding');
+      fixture.entityManager.removeComponent(
+        'test-actor',
+        'positioning:wielding'
+      );
 
       // Assert: Component should be removed (getComponent returns null when not found)
       const wieldingComponent = fixture.entityManager.getComponent(
@@ -189,7 +194,13 @@ describe('Wielding Edge Cases', () => {
   describe('Many Wielded Items', () => {
     it('should handle many wielded items (5+) in array', async () => {
       // Arrange: Actor already wielding 4 weapons, wielding a 5th
-      const weaponIds = ['weapon-1', 'weapon-2', 'weapon-3', 'weapon-4', 'weapon-5'];
+      const weaponIds = [
+        'weapon-1',
+        'weapon-2',
+        'weapon-3',
+        'weapon-4',
+        'weapon-5',
+      ];
 
       const actor = new ModEntityBuilder('test-actor')
         .withName('Test Actor')
@@ -264,7 +275,9 @@ describe('Wielding Edge Cases', () => {
       expect(wieldingComponent).toBeDefined();
       expect(wieldingComponent.wielded_item_ids).toContain('existing-weapon');
       // The stale reference remains (component doesn't clean up stale references)
-      expect(wieldingComponent.wielded_item_ids).toContain('non-existent-weapon');
+      expect(wieldingComponent.wielded_item_ids).toContain(
+        'non-existent-weapon'
+      );
     });
   });
 
@@ -297,7 +310,9 @@ describe('Wielding Edge Cases', () => {
         'test_actor_1',
         'positioning:wielding'
       );
-      expect(wieldingComponent.wielded_item_ids).toEqual(['weapon_with_underscore']);
+      expect(wieldingComponent.wielded_item_ids).toEqual([
+        'weapon_with_underscore',
+      ]);
     });
 
     it('should handle IDs with hyphens correctly', async () => {
@@ -328,7 +343,9 @@ describe('Wielding Edge Cases', () => {
         'test-actor-1',
         'positioning:wielding'
       );
-      expect(wieldingComponent.wielded_item_ids).toEqual(['weapon-with-hyphen']);
+      expect(wieldingComponent.wielded_item_ids).toEqual([
+        'weapon-with-hyphen',
+      ]);
     });
   });
 });

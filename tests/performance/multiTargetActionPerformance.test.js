@@ -779,8 +779,11 @@ describe('Multi-Target Action Performance Tests', () => {
           // 2 targets: ~1.2-1.5x
           // 4 targets: ~1.4-2.0x
           // 8 targets: ~1.6-2.5x
-          const maxExpectedRatio = 1.0 + Math.log2(results[i].targetCount) * 0.5; // Logarithmic scaling expectation
-          console.log(`  Maximum expected ratio: ${maxExpectedRatio.toFixed(3)}x (logarithmic scaling)`);
+          const maxExpectedRatio =
+            1.0 + Math.log2(results[i].targetCount) * 0.5; // Logarithmic scaling expectation
+          console.log(
+            `  Maximum expected ratio: ${maxExpectedRatio.toFixed(3)}x (logarithmic scaling)`
+          );
 
           expect(ratio).toBeLessThan(3.0); // Conservative threshold: Real validation shouldn't exceed 3x even at 8 targets
 
@@ -788,7 +791,9 @@ describe('Multi-Target Action Performance Tests', () => {
             console.log(
               `  ⚠️  WARNING: Ratio (${ratio.toFixed(3)}x) exceeds logarithmic expectation (${maxExpectedRatio.toFixed(3)}x)`
             );
-            console.log(`  This may indicate suboptimal scaling in validation logic.`);
+            console.log(
+              `  This may indicate suboptimal scaling in validation logic.`
+            );
           }
         } else {
           console.log(
@@ -814,9 +819,7 @@ describe('Multi-Target Action Performance Tests', () => {
       const validatorMetrics = validator.getPerformanceMetrics();
       console.log('\n=== VALIDATOR INTERNAL METRICS ===');
       console.log(`Total validations: ${validatorMetrics.validationCount}`);
-      console.log(
-        `Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`
-      );
+      console.log(`Average time: ${validatorMetrics.averageTime.toFixed(4)}ms`);
       console.log(
         `Error rate: ${(validatorMetrics.errorRate * 100).toFixed(2)}%`
       );

@@ -117,7 +117,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -146,7 +146,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -173,7 +173,7 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         const byTarget = new Map();
         const byGroupKey = new Map();
         if (Array.isArray(activities)) {
-          activities.forEach(activity => {
+          activities.forEach((activity) => {
             const targetId = activity?.targetEntityId || 'solo';
             if (!byTarget.has(targetId)) {
               byTarget.set(targetId, []);
@@ -203,7 +203,10 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     };
 
     mockGroupingSystem = {
-      groupActivities: jest.fn((index) => ({ groups: [], simultaneousActivities: [] })),
+      groupActivities: jest.fn((index) => ({
+        groups: [],
+        simultaneousActivities: [],
+      })),
       sortByPriority: jest.fn((activities) => activities),
     };
 
@@ -218,10 +221,14 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
         possessive: 'their',
         possessivePronoun: 'theirs',
       })),
-      generateActivityPhrase: jest.fn((actorRef, activity) => `${actorRef} does something`),
+      generateActivityPhrase: jest.fn(
+        (actorRef, activity) => `${actorRef} does something`
+      ),
       sanitizeVerbPhrase: jest.fn((phrase) => phrase),
       buildRelatedActivityFragment: jest.fn(() => ''),
-      mergeAdverb: jest.fn((current, injected) => `${current} ${injected}`.trim()),
+      mergeAdverb: jest.fn((current, injected) =>
+        `${current} ${injected}`.trim()
+      ),
       injectSoftener: jest.fn((template, descriptor) => template),
       truncateDescription: jest.fn((desc, maxLen) => desc),
     };
@@ -278,7 +285,12 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     const alicia = registerEntity(createEntity('alicia', 'female'));
 
     for (let i = 0; i < 5; i += 1) {
-      addActivity(jon, `{actor} performs action${i} with {target}`, alicia.id, 80 - i);
+      addActivity(
+        jon,
+        `{actor} performs action${i} with {target}`,
+        alicia.id,
+        80 - i
+      );
     }
 
     const firstStart = performance.now();
@@ -338,7 +350,12 @@ describe('ActivityDescriptionService - Performance Optimizations', () => {
     hooks.setGenderCacheEntry('entity1', 'female');
     hooks.setActivityIndexCacheEntry('priority:entity1', {
       signature: 'test',
-      index: { byTarget: new Map(), byPriority: [], byGroupKey: new Map(), all: [] },
+      index: {
+        byTarget: new Map(),
+        byPriority: [],
+        byGroupKey: new Map(),
+        all: [],
+      },
     });
 
     service.destroy();

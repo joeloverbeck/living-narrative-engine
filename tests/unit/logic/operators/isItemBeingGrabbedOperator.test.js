@@ -2,7 +2,14 @@
  * @file Unit tests for IsItemBeingGrabbedOperator
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { IsItemBeingGrabbedOperator } from '../../../../src/logic/operators/isItemBeingGrabbedOperator.js';
 import * as grabbingUtils from '../../../../src/utils/grabbingUtils.js';
@@ -142,7 +149,10 @@ describe('IsItemBeingGrabbedOperator', () => {
         { partId: 'actor_1:hand', itemId: 'item_1' },
       ]);
 
-      const result = operator.evaluate([{ var: 'event.payload.actorId' }, 'entity'], context);
+      const result = operator.evaluate(
+        [{ var: 'event.payload.actorId' }, 'entity'],
+        context
+      );
 
       expect(result).toBe(true);
       expect(grabbingUtils.getHeldItems).toHaveBeenCalledWith(
@@ -293,7 +303,9 @@ describe('IsItemBeingGrabbedOperator', () => {
       operator.evaluate(['actor', 'entity'], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Actor actor_1 holds 1 items, checking for item item_1, result=true')
+        expect.stringContaining(
+          'Actor actor_1 holds 1 items, checking for item item_1, result=true'
+        )
       );
     });
 
@@ -304,7 +316,9 @@ describe('IsItemBeingGrabbedOperator', () => {
       operator.evaluate(['actor', 'entity'], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Actor actor_1 holds 0 items, checking for item item_1, result=false')
+        expect.stringContaining(
+          'Actor actor_1 holds 0 items, checking for item item_1, result=false'
+        )
       );
     });
   });

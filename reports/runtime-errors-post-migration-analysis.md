@@ -14,10 +14,10 @@
 
 ### Error Breakdown by Mod
 
-| Mod | Error Count | Error Types |
-|-----|-------------|-------------|
-| **positioning** | 2 | Action schema violations |
-| **items** | 10 | Action (2), Condition (1), Rule (3 × 2 validation errors each) |
+| Mod             | Error Count | Error Types                                                    |
+| --------------- | ----------- | -------------------------------------------------------------- |
+| **positioning** | 2           | Action schema violations                                       |
+| **items**       | 10          | Action (2), Condition (1), Rule (3 × 2 validation errors each) |
 
 ---
 
@@ -26,10 +26,12 @@
 ### 🔴 Critical Issue: Invalid 'target' Property in required_components (Feature Not Implemented)
 
 **Affected Files**:
+
 - `data/mods/positioning/actions/straddle_waist_facing.action.json` (line 69-76)
 - `data/mods/positioning/actions/straddle_waist_facing_away.action.json`
 
 **Error Message**:
+
 ```
 ActionLoader [positioning]: Primary schema validation failed
 Validation errors:
@@ -54,11 +56,12 @@ The action schema (`data/schemas/action.schema.json` lines 105-118) defines `req
 ```
 
 **Current Invalid Code**:
+
 ```json
 {
   "required_components": {
     "actor": ["positioning:closeness"],
-    "target": ["positioning:sitting_on", "positioning:closeness"]  // ❌ INVALID
+    "target": ["positioning:sitting_on", "positioning:closeness"] // ❌ INVALID
   }
 }
 ```
@@ -67,6 +70,7 @@ The action schema (`data/schemas/action.schema.json` lines 105-118) defines `req
 The schema supports multi-target actions (via the `targets` property), but `required_components` was intentionally designed to only validate actor requirements. Unlike `forbidden_components` which supports both actor and target validation (schema lines 119-165), `required_components` has **never** supported target role validation.
 
 **Architectural Pattern Discovery**:
+
 - ✅ **`forbidden_components`**: Fully supports `actor`, `target` (legacy), `primary`, `secondary`, `tertiary` (multi-target)
   - **Validator**: `src/actions/validation/TargetComponentValidator.js` handles target validation
   - **Pipeline Stage**: `src/actions/pipeline/stages/TargetComponentValidationStage.js` applies validation
@@ -78,6 +82,7 @@ The schema supports multi-target actions (via the `targets` property), but `requ
   - **No Pipeline Stage**: No target-side validation for required components exists
 
 **Impact**:
+
 - 2 new straddling actions cannot load
 - Feature completely blocked
 
@@ -88,10 +93,12 @@ The schema supports multi-target actions (via the `targets` property), but `requ
 ### 🔴 Critical Issue: Invalid contextFrom Value
 
 **Affected Files**:
+
 - `data/mods/items/actions/drop_item.action.json` (line 478-519)
 - `data/mods/items/actions/pick_up_item.action.json` (line 569-609)
 
 **Error Messages**:
+
 ```
 Validation errors:
   - /targets: Expected type 'string' but got 'object'
@@ -112,6 +119,7 @@ The action schema (`data/schemas/action.schema.json` lines 25-29) defines:
 ```
 
 **Current Invalid Code** (drop_item.action.json):
+
 ```json
 {
   "targets": {
@@ -119,19 +127,20 @@ The action schema (`data/schemas/action.schema.json` lines 25-29) defines:
       "scope": "items:actor_inventory_items",
       "placeholder": "item",
       "description": "Item to drop",
-      "contextFrom": "actor"  // ❌ INVALID - "actor" not in enum
+      "contextFrom": "actor" // ❌ INVALID - "actor" not in enum
     }
   }
 }
 ```
 
 **Why This Happened**:
-The `contextFrom` property was designed to reference *other targets* (like "use primary target as context for secondary"), not entity roles like "actor". The field is being misused.
+The `contextFrom` property was designed to reference _other targets_ (like "use primary target as context for secondary"), not entity roles like "actor". The field is being misused.
 
 **Additional Issue - Missing Template**:
 `pick_up_item.action.json` is missing the required `template` property entirely.
 
 **Impact**:
+
 - 2 item actions cannot load
 - Inventory system non-functional
 
@@ -142,9 +151,11 @@ The `contextFrom` property was designed to reference *other targets* (like "use 
 ### 🔴 Critical Issue: Wrong Property Name (jsonLogic vs logic)
 
 **Affected File**:
+
 - `data/mods/items/conditions/secondary-has-portable.condition.json` (line 344-383)
 
 **Error Message**:
+
 ```
 ConditionLoader [items]: Primary schema validation failed
 Validation errors:
@@ -158,23 +169,25 @@ The condition schema (`data/schemas/condition.schema.json` line 17, 22) requires
 
 ```json
 {
-  "required": ["id", "description", "logic"],  // ← Must be "logic"
+  "required": ["id", "description", "logic"], // ← Must be "logic"
   "properties": {
-    "logic": { /* ... */ }  // ← Not "jsonLogic"
+    "logic": {
+      /* ... */
+    } // ← Not "jsonLogic"
   }
 }
 ```
 
 **Current Invalid Code**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
   "id": "items:secondary-has-portable",
   "description": "Checks if the secondary target has portable component",
-  "jsonLogic": {  // ❌ INVALID - Should be "logic"
-    "!!": [
-      { "var": "secondaryTarget.components.items:portable" }
-    ]
+  "jsonLogic": {
+    // ❌ INVALID - Should be "logic"
+    "!!": [{ "var": "secondaryTarget.components.items:portable" }]
   }
 }
 ```
@@ -183,6 +196,7 @@ The condition schema (`data/schemas/condition.schema.json` line 17, 22) requires
 Likely confusion during file creation. The schema standardized on `logic` as the property name, but the file was created with `jsonLogic`.
 
 **Impact**:
+
 - 1 condition fails to load
 - May affect item-related prerequisites
 
@@ -193,11 +207,13 @@ Likely confusion during file creation. The schema standardized on `logic` as the
 ### 🔴 Critical Issue: Operation Handlers Exist But Schemas Missing
 
 **Affected Files**:
+
 - `data/mods/items/rules/handle_drop_item.rule.json` (line 750-812)
 - `data/mods/items/rules/handle_give_item.rule.json` (line 859-921)
 - `data/mods/items/rules/handle_pick_up_item.rule.json` (line 968-1030)
 
 **Error Messages**:
+
 ```
 Pre-validation failed for 'handle_drop_item.rule.json':
   Operation at index 1: Unknown operation type "DROP_ITEM_AT_LOCATION"
@@ -214,16 +230,27 @@ Pre-validation failed for 'handle_pick_up_item.rule.json':
 **Good News**: The operation handlers ARE registered in the code!
 
 From `src/dependencyInjection/registrations/interpreterRegistrations.js` (lines 159-171):
+
 ```javascript
 registry.register('TRANSFER_ITEM', bind(tokens.TransferItemHandler));
-registry.register('VALIDATE_INVENTORY_CAPACITY', bind(tokens.ValidateInventoryCapacityHandler));
-registry.register('DROP_ITEM_AT_LOCATION', bind(tokens.DropItemAtLocationHandler));
-registry.register('PICK_UP_ITEM_FROM_LOCATION', bind(tokens.PickUpItemFromLocationHandler));
+registry.register(
+  'VALIDATE_INVENTORY_CAPACITY',
+  bind(tokens.ValidateInventoryCapacityHandler)
+);
+registry.register(
+  'DROP_ITEM_AT_LOCATION',
+  bind(tokens.DropItemAtLocationHandler)
+);
+registry.register(
+  'PICK_UP_ITEM_FROM_LOCATION',
+  bind(tokens.PickUpItemFromLocationHandler)
+);
 ```
 
 **Problem**: The JSON schemas for these operations are missing from `data/schemas/operations/`
 
 **Expected Files** (not found):
+
 - `data/schemas/operations/dropItemAtLocation.schema.json`
 - `data/schemas/operations/pickUpItemFromLocation.schema.json`
 - `data/schemas/operations/validateInventoryCapacity.schema.json`
@@ -231,10 +258,12 @@ registry.register('PICK_UP_ITEM_FROM_LOCATION', bind(tokens.PickUpItemFromLocati
 
 **Why This Happened**:
 The operation handlers were implemented in code (`src/logic/operationHandlers/`) but the corresponding schema definitions were never created. The schema validation system requires both:
+
 1. ✅ Runtime handler registration (done)
 2. ❌ Schema definition files (missing)
 
 **Impact**:
+
 - 3 item-related rules fail validation
 - Core inventory functionality blocked
 - Give/drop/pick-up mechanics non-functional
@@ -246,6 +275,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ### Path A: Quick Fixes (Low Complexity)
 
 **Priority 1**: Fix simple property name errors
+
 - **Ticket A1**: Rename `jsonLogic` to `logic` in condition file
 - **Ticket A2**: Add missing `template` property to `pick_up_item.action.json`
 - **Time**: 5 minutes
@@ -258,6 +288,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 **Two Options**:
 
 **Option B1 - Extend Schema to Support Target Required Components** (Recommended):
+
 - Update `action.schema.json` to allow `target` (legacy), `primary`, `secondary`, `tertiary` in `required_components`
 - **Pattern Reference**: Match existing `forbidden_components` design in schema lines 119-165
 - **Implementation Requirements**:
@@ -271,6 +302,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 - **Risk**: Medium (affects action discovery pipeline, requires new validation layer)
 
 **Option B2 - Remove Target Validation**:
+
 - Remove `target` from `required_components` in action files
 - Rely only on scope filtering for target validation
 - **Time**: 10 minutes
@@ -283,12 +315,14 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 **Two Options**:
 
 **Option B3 - Remove contextFrom** (Quick fix):
+
 - Remove `"contextFrom": "actor"` from item actions
 - Document that contextFrom is for target-to-target relationships only
 - **Time**: 5 minutes
 - **Risk**: Minimal (property is optional)
 
 **Option B4 - Extend contextFrom enum**:
+
 - Add "actor" to allowed contextFrom values
 - Update multi-target resolution to handle actor context
 - **Time**: 2 hours
@@ -301,6 +335,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 **Priority 4**: Create operation schema files
 
 **Required Actions**:
+
 - **Ticket C1**: Create `dropItemAtLocation.schema.json`
 - **Ticket C2**: Create `pickUpItemFromLocation.schema.json`
 - **Ticket C3**: Create `validateInventoryCapacity.schema.json`
@@ -309,6 +344,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 **Schema Template Reference**: Use existing operation schemas as templates (e.g., `data/schemas/operations/modifyComponent.schema.json`)
 
 **Required Parameters** (from handler implementations):
+
 - `DROP_ITEM_AT_LOCATION`: `actorEntity`, `itemEntity`, `locationId`
 - `PICK_UP_ITEM_FROM_LOCATION`: `actorEntity`, `itemEntity`, `locationId`
 - `VALIDATE_INVENTORY_CAPACITY`: `actorEntity`, `itemEntity`
@@ -326,49 +362,58 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 **🎯 Goal**: Get game loading again
 
 #### Ticket #1: Fix Condition Schema Violation
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐ Trivial
 **Files**: 1
 **Estimate**: 5 minutes
 
 **Actions**:
+
 - Rename `jsonLogic` → `logic` in `secondary-has-portable.condition.json`
 - Test: Run game and verify condition loads
 
 **Acceptance Criteria**:
+
 - Condition loads without validation errors
 - Log shows: "ConditionLoader [items]: Loaded X conditions"
 
 ---
 
 #### Ticket #2: Add Missing Template to pick_up_item Action
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐ Trivial
 **Files**: 1
 **Estimate**: 5 minutes
 
 **Actions**:
+
 - Add `"template": "pick up {item}"` to `pick_up_item.action.json`
 - Test: Run game and verify action structure
 
 **Acceptance Criteria**:
+
 - Action definition includes template property
 - Schema validation passes for this file
 
 ---
 
 #### Ticket #3: Remove Invalid contextFrom Properties
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐ Trivial
 **Files**: 2
 **Estimate**: 10 minutes
 
 **Actions**:
+
 - Remove `"contextFrom": "actor"` from `drop_item.action.json`
 - Remove `"contextFrom": "actor"` from `pick_up_item.action.json`
 - Document in comments that contextFrom is for inter-target relationships only
 
 **Acceptance Criteria**:
+
 - Both action files validate successfully
 - Actions load during content phase
 - No `contextFrom` validation errors in logs
@@ -376,18 +421,21 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ---
 
 #### Ticket #4: Create Operation Schema - DROP_ITEM_AT_LOCATION
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐⭐ Simple
 **Files**: 1 new
 **Estimate**: 15 minutes
 
 **Actions**:
+
 - Create `data/schemas/operations/dropItemAtLocation.schema.json`
 - Define parameters: `actorEntity` (string), `itemEntity` (string), `locationId` (string)
 - Follow template from `modifyComponent.schema.json`
 - Register schema in schema loader
 
 **Acceptance Criteria**:
+
 - Schema file exists and validates
 - `handle_drop_item.rule.json` passes pre-validation
 - Operation can be used in rules
@@ -395,17 +443,20 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ---
 
 #### Ticket #5: Create Operation Schema - PICK_UP_ITEM_FROM_LOCATION
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐⭐ Simple
 **Files**: 1 new
 **Estimate**: 15 minutes
 
 **Actions**:
+
 - Create `data/schemas/operations/pickUpItemFromLocation.schema.json`
 - Define parameters: `actorEntity` (string), `itemEntity` (string), `locationId` (string)
 - Follow same pattern as DROP_ITEM_AT_LOCATION
 
 **Acceptance Criteria**:
+
 - Schema file exists and validates
 - `handle_pick_up_item.rule.json` passes pre-validation
 - Operation can be used in rules
@@ -413,17 +464,20 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ---
 
 #### Ticket #6: Create Operation Schema - VALIDATE_INVENTORY_CAPACITY
+
 **Priority**: 🔴 P0 (Blocking)
 **Complexity**: ⭐⭐ Simple
 **Files**: 1 new
 **Estimate**: 15 minutes
 
 **Actions**:
+
 - Create `data/schemas/operations/validateInventoryCapacity.schema.json`
 - Define parameters: `actorEntity` (string), `itemEntity` (string)
 - Include validation result variable parameter
 
 **Acceptance Criteria**:
+
 - Schema file exists and validates
 - Both `handle_give_item.rule.json` and `handle_pick_up_item.rule.json` pass validation
 - Operation can be used in rules
@@ -431,16 +485,19 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ---
 
 #### Ticket #7: Create Operation Schema - TRANSFER_ITEM
+
 **Priority**: 🟡 P1 (High - for give_item action)
 **Complexity**: ⭐⭐ Simple
 **Files**: 1 new
 **Estimate**: 15 minutes
 
 **Actions**:
+
 - Create `data/schemas/operations/transferItem.schema.json`
 - Define parameters: `fromEntity` (string), `toEntity` (string), `itemEntity` (string)
 
 **Acceptance Criteria**:
+
 - Schema file exists and validates
 - TRANSFER_ITEM operation recognized by rule pre-validation
 
@@ -449,13 +506,16 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ### Sprint 2: Schema Improvements (Remove Technical Debt)
 
 #### Ticket #8: Implement Target Required Components Validation
+
 **Priority**: 🟡 P1 (High)
 **Complexity**: ⭐⭐⭐⭐ High (New Feature Implementation)
 **Files**: 1 schema, 1 new validator class, 1 pipeline stage modification, 2 actions, tests
 **Estimate**: 2-3 hours
 
 **Actions**:
+
 1. **Schema Update** (`data/schemas/action.schema.json` lines 105-118):
+
    ```json
    "required_components": {
      "type": "object",
@@ -496,6 +556,7 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
    - Edge cases: empty arrays, missing entities, mixed legacy/multi-target
 
 **Acceptance Criteria**:
+
 - Schema allows both actor and target role properties
 - New validator class correctly validates target requirements
 - Pipeline stage filters actions based on target components
@@ -505,12 +566,14 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 - Documentation updated
 
 **Implementation Reference**:
+
 - **Pattern**: `src/actions/validation/TargetComponentValidator.js` (forbidden components)
 - **Schema Pattern**: Lines 119-165 of `action.schema.json` (forbidden_components multi-target support)
 - **Pipeline Pattern**: `src/actions/pipeline/stages/TargetComponentValidationStage.js`
 - **Index Pattern**: `src/actions/actionIndex.js` (lines 106-122 for forbidden components)
 
 **Technical Notes**:
+
 - This is a NEW FEATURE, not just a schema fix
 - Match pattern from `forbidden_components` which already supports target validation
 - Consider whether to pre-filter (ActionIndex) or post-filter (pipeline stage)
@@ -519,18 +582,21 @@ The operation handlers were implemented in code (`src/logic/operationHandlers/`)
 ---
 
 #### Ticket #9: Integration Testing - Item System
+
 **Priority**: 🟡 P1 (High)
 **Complexity**: ⭐⭐⭐ Medium
 **Files**: Test suite
 **Estimate**: 1 hour
 
 **Actions**:
+
 - Create integration tests for drop/pick-up/give item workflows
 - Test operation handler execution
 - Verify perception logging
 - Test inventory capacity validation
 
 **Acceptance Criteria**:
+
 - All item operations execute successfully in integration tests
 - Inventory state updates correctly
 - Perception events dispatched properly
@@ -560,14 +626,17 @@ Ticket #8 ────► Schema Improvement (Independent)
 ## Risk Assessment
 
 ### Low Risk ✅
+
 - Tickets #1, #2, #3: Simple property fixes
 - Tickets #4-7: Following established schema patterns
 
 ### Medium Risk ⚠️
+
 - Ticket #8: Schema changes affect validation system
 - Ticket #9: May reveal additional integration issues
 
 ### Mitigation Strategies
+
 1. **Backup**: Commit before schema changes
 2. **Incremental Testing**: Test each ticket completion
 3. **Validation**: Run full test suite after Sprint 1
@@ -578,12 +647,15 @@ Ticket #8 ────► Schema Improvement (Independent)
 ## Testing Strategy
 
 ### Unit Tests Required
+
 - None (schema changes don't require unit tests)
 
 ### Integration Tests Required
+
 - Ticket #9: Item system workflow tests
 
 ### Manual Testing Checklist
+
 - [ ] Game loads without validation errors
 - [ ] Straddling actions appear in action list
 - [ ] Item actions (drop/pick-up/give) work correctly
@@ -596,6 +668,7 @@ Ticket #8 ────► Schema Improvement (Independent)
 ## Success Metrics
 
 ### Sprint 1 Complete When:
+
 - ✅ 0 schema validation errors in logs
 - ✅ All 12 identified errors resolved
 - ✅ Game initialization completes successfully
@@ -603,6 +676,7 @@ Ticket #8 ────► Schema Improvement (Independent)
 - ✅ Positioning mod loads all content
 
 ### Sprint 2 Complete When:
+
 - ✅ Schema supports target role validation
 - ✅ Integration tests pass at 100%
 - ✅ Documentation updated
@@ -613,16 +687,19 @@ Ticket #8 ────► Schema Improvement (Independent)
 ## Notes for Implementation
 
 ### Schema File Locations
+
 - **Operation Schemas**: `data/schemas/operations/*.schema.json`
 - **Action Schema**: `data/schemas/action.schema.json`
 - **Condition Schema**: `data/schemas/condition.schema.json`
 
 ### Reference Files for Templates
+
 - **Operation Schema Template**: `data/schemas/operations/modifyComponent.schema.json`
 - **Multi-Target Action Example**: Any action in `data/mods/*/actions/` using `targets` object
 - **Condition Example**: `data/mods/core/conditions/`
 
 ### Validation Commands
+
 ```bash
 # Run game and check console for validation errors
 npm run start
@@ -654,6 +731,7 @@ npm run validate:schemas
 **Key Discovery**: This analysis originally assumed that `required_components` for targets was simply not updated for multi-target actions. **This assumption was incorrect.**
 
 **Actual Architecture**:
+
 - ✅ **`forbidden_components`**: Fully implemented for both actor AND target validation
   - Supports legacy `target` and multi-target `primary`/`secondary`/`tertiary` roles
   - Has dedicated validator: `TargetComponentValidator.js`
@@ -665,6 +743,7 @@ npm run validate:schemas
   - No equivalent to `TargetComponentValidator` exists
 
 **Implication for Ticket #8**: This is not a simple schema extension. Implementing `required_components` for targets requires:
+
 1. New validator class (~200 lines, mirroring `TargetComponentValidator.js`)
 2. Pipeline stage integration (new stage or extend existing)
 3. Schema modifications

@@ -1,4 +1,11 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 import CacheService from '../../src/services/cacheService.js';
 

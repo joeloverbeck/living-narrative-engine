@@ -168,13 +168,13 @@ export class LRUStrategy {
    */
   prune(aggressive = false) {
     const sizeBefore = this.#cache.size;
-    
+
     if (aggressive) {
       // Clear everything for aggressive pruning
       this.#cache.clear();
       return sizeBefore;
     }
-    
+
     // Let lru-cache handle normal pruning
     this.#cache.purgeStale();
     return sizeBefore - this.#cache.size;

@@ -14,7 +14,11 @@ describe('FilterClauseAnalyzer', () => {
     mockLogicEval = {
       evaluate: (logic, context) => {
         // Handle primitives - they evaluate to themselves
-        if (logic === null || logic === undefined || typeof logic !== 'object') {
+        if (
+          logic === null ||
+          logic === undefined ||
+          typeof logic !== 'object'
+        ) {
           return logic;
         }
 
@@ -38,26 +42,44 @@ describe('FilterClauseAnalyzer', () => {
             return context[varName] ?? defaultValue;
           }
           case '==':
-            return mockLogicEval.evaluate(args[0], context) === mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) ===
+              mockLogicEval.evaluate(args[1], context)
+            );
           case '!=':
-            return mockLogicEval.evaluate(args[0], context) !== mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) !==
+              mockLogicEval.evaluate(args[1], context)
+            );
           case '>':
-            return mockLogicEval.evaluate(args[0], context) > mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) >
+              mockLogicEval.evaluate(args[1], context)
+            );
           case '>=':
-            return mockLogicEval.evaluate(args[0], context) >= mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) >=
+              mockLogicEval.evaluate(args[1], context)
+            );
           case '<':
-            return mockLogicEval.evaluate(args[0], context) < mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) <
+              mockLogicEval.evaluate(args[1], context)
+            );
           case '<=':
-            return mockLogicEval.evaluate(args[0], context) <= mockLogicEval.evaluate(args[1], context);
+            return (
+              mockLogicEval.evaluate(args[0], context) <=
+              mockLogicEval.evaluate(args[1], context)
+            );
           case 'in': {
             const value = mockLogicEval.evaluate(args[0], context);
             const array = mockLogicEval.evaluate(args[1], context);
             return Array.isArray(array) && array.includes(value);
           }
           case 'and':
-            return args.every(arg => mockLogicEval.evaluate(arg, context));
+            return args.every((arg) => mockLogicEval.evaluate(arg, context));
           case 'or':
-            return args.some(arg => mockLogicEval.evaluate(arg, context));
+            return args.some((arg) => mockLogicEval.evaluate(arg, context));
           case '!':
           case 'not':
             return !mockLogicEval.evaluate(args, context);
@@ -73,7 +95,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown).toBeDefined();
@@ -88,7 +114,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '!=': [{ var: 'type' }, 'enemy'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('!=');
@@ -99,7 +129,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '>': [{ var: 'level' }, 5] };
       const context = { level: 10 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('>');
@@ -110,7 +144,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '>=': [{ var: 'level' }, 5] };
       const context = { level: 5 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('>=');
@@ -121,7 +159,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '<': [{ var: 'level' }, 5] };
       const context = { level: 3 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('<');
@@ -132,7 +174,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '<=': [{ var: 'level' }, 5] };
       const context = { level: 5 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('<=');
@@ -143,7 +189,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { in: [{ var: 'type' }, ['actor', 'npc', 'enemy']] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('in');
@@ -161,7 +211,11 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 10 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('and');
@@ -181,7 +235,11 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 3 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(false);
       expect(result.breakdown.operator).toBe('and');
@@ -199,14 +257,20 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 3 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(false);
       expect(result.breakdown.operator).toBe('or');
       expect(result.breakdown.result).toBe(false);
       expect(result.breakdown.children[0].result).toBe(false);
       expect(result.breakdown.children[1].result).toBe(false);
-      expect(result.description).toContain('At least one condition must be true');
+      expect(result.description).toContain(
+        'At least one condition must be true'
+      );
     });
 
     it('should analyze or operator with some true', () => {
@@ -218,7 +282,11 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 3 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('or');
@@ -231,7 +299,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '!': { '==': [{ var: 'type' }, 'enemy'] } };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('!');
@@ -243,7 +315,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { not: { '==': [{ var: 'type' }, 'enemy'] } };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('not');
@@ -254,7 +330,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '!': 'unexpected truthy value' };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(false);
       expect(result.breakdown.operator).toBe('!');
@@ -271,7 +351,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode.type).toBe('variable');
@@ -284,7 +368,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'level' }, 5] };
       const context = { level: 10 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode.value).toBe(10);
@@ -296,7 +384,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: ['missing', 'default'] }, 'default'] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode.varName).toBe('missing');
@@ -307,7 +399,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode.path).toEqual([0]);
@@ -317,7 +413,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { var: 'type' };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe('actor');
       expect(result.breakdown).toMatchObject({
@@ -345,7 +445,11 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 5, role: 'admin' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('and');
@@ -358,22 +462,20 @@ describe('FilterClauseAnalyzer', () => {
       const logic = {
         and: [
           {
-            or: [
-              { '==': [{ var: 'a' }, 1] },
-              { '==': [{ var: 'b' }, 2] },
-            ],
+            or: [{ '==': [{ var: 'a' }, 1] }, { '==': [{ var: 'b' }, 2] }],
           },
           {
-            or: [
-              { '==': [{ var: 'c' }, 3] },
-              { '==': [{ var: 'd' }, 4] },
-            ],
+            or: [{ '==': [{ var: 'c' }, 3] }, { '==': [{ var: 'd' }, 4] }],
           },
         ],
       };
       const context = { a: 1, b: 0, c: 3, d: 0 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.children).toHaveLength(2);
@@ -390,7 +492,11 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 10 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.breakdown.path).toEqual([]);
       expect(result.breakdown.children[0].path).toEqual([0]);
@@ -404,17 +510,32 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { condition_ref: 'core:is_actor' };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('condition reference');
       expect(result.description).toContain('core:is_actor');
     });
 
     it('should handle anatomy operators', () => {
-      const logic = { hasPartWithComponentValue: ['actor', 'descriptors:build', 'build', 'muscular'] };
+      const logic = {
+        hasPartWithComponentValue: [
+          'actor',
+          'descriptors:build',
+          'build',
+          'muscular',
+        ],
+      };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('hasPartWithComponentValue');
       expect(result.description).toContain('"actor"');
@@ -424,7 +545,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { hasPartOfType: 'torso' };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toBe('hasPartOfType("torso")');
     });
@@ -433,7 +558,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { hasClothingInSlot: ['entity', 'torso'] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('hasClothingInSlot');
       expect(result.description).toContain('"entity"');
@@ -444,7 +573,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { isSocketCovered: 'torso' };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toBe('isSocketCovered("torso")');
     });
@@ -453,7 +586,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { hasSittingSpaceToRight: ['actor', 'target', 1] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('hasSittingSpaceToRight');
       expect(result.description).toContain('"actor"');
@@ -463,7 +600,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { canScootCloser: 'actor' };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toBe('canScootCloser("actor")');
     });
@@ -472,7 +613,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { unknownOperator: ['arg1', 'arg2'] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('unknownOperator');
       expect(result.description).toContain('"arg1"');
@@ -482,10 +627,16 @@ describe('FilterClauseAnalyzer', () => {
 
   describe('Array literal handling', () => {
     it('should treat array literals as values, not operators', () => {
-      const logic = { in: [{ var: 'status' }, ['active', 'pending', 'approved']] };
+      const logic = {
+        in: [{ var: 'status' }, ['active', 'pending', 'approved']],
+      };
       const context = { status: 'active' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.result).toBe(true);
       expect(result.breakdown.operator).toBe('in');
@@ -499,22 +650,37 @@ describe('FilterClauseAnalyzer', () => {
     });
 
     it('should preserve entire array, not just first element', () => {
-      const logic = { in: ['test', ['option1', 'option2', 'option3', 'option4']] };
+      const logic = {
+        in: ['test', ['option1', 'option2', 'option3', 'option4']],
+      };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const arrayNode = result.breakdown.children[1];
       expect(arrayNode.type).toBe('value');
       expect(arrayNode.value).toHaveLength(4);
-      expect(arrayNode.value).toEqual(['option1', 'option2', 'option3', 'option4']);
+      expect(arrayNode.value).toEqual([
+        'option1',
+        'option2',
+        'option3',
+        'option4',
+      ]);
     });
 
     it('should handle empty arrays as values', () => {
       const logic = { in: ['value', []] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const arrayNode = result.breakdown.children[1];
       expect(arrayNode.type).toBe('value');
@@ -525,7 +691,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'data' }, [['nested'], ['arrays']]] };
       const context = { data: [['nested'], ['arrays']] };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const arrayNode = result.breakdown.children[1];
       expect(arrayNode.type).toBe('value');
@@ -536,7 +706,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { in: ['test', ['string', 123, true, null]] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const arrayNode = result.breakdown.children[1];
       expect(arrayNode.type).toBe('value');
@@ -546,12 +720,20 @@ describe('FilterClauseAnalyzer', () => {
 
   describe('Edge cases', () => {
     it('should handle null/undefined logic', () => {
-      const result1 = FilterClauseAnalyzer.analyzeFilter(null, {}, mockLogicEval);
+      const result1 = FilterClauseAnalyzer.analyzeFilter(
+        null,
+        {},
+        mockLogicEval
+      );
       expect(result1.result).toBe(false);
       expect(result1.breakdown).toBeNull();
       expect(result1.description).toContain('Empty or invalid logic');
 
-      const result2 = FilterClauseAnalyzer.analyzeFilter(undefined, {}, mockLogicEval);
+      const result2 = FilterClauseAnalyzer.analyzeFilter(
+        undefined,
+        {},
+        mockLogicEval
+      );
       expect(result2.result).toBe(false);
       expect(result2.breakdown).toBeNull();
     });
@@ -560,7 +742,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = {};
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       // Empty object evaluates based on mockLogicEval behavior
       expect(result.breakdown).toBeDefined();
@@ -576,7 +762,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, errorLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        errorLogicEval
+      );
 
       expect(result.result).toBe(false);
       expect(result.breakdown).toBeNull();
@@ -588,7 +778,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'missing' }, 'value'] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode.value).toBeUndefined();
@@ -605,18 +799,28 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 10 };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toBe('All conditions must be true');
       expect(result.breakdown.children[0].description).toContain('equals');
-      expect(result.breakdown.children[1].description).toContain('is greater than');
+      expect(result.breakdown.children[1].description).toContain(
+        'is greater than'
+      );
     });
 
     it('should format values correctly - primitives', () => {
       const logic = { '==': ['string', 123] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('"string"');
       expect(result.description).toContain('123');
@@ -626,7 +830,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { in: ['value', ['a', 'b', 'c']] };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('[');
       expect(result.description).toContain('"a"');
@@ -636,28 +844,30 @@ describe('FilterClauseAnalyzer', () => {
 
     it('should format condition references within values', () => {
       const logic = {
-        in: [
-          'value',
-          [{ condition_ref: 'core:is_actor' }],
-        ],
+        in: ['value', [{ condition_ref: 'core:is_actor' }]],
       };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('condition_ref("core:is_actor")');
     });
 
     it('should stringify object values for descriptions', () => {
       const logic = {
-        in: [
-          'value',
-          [{ foo: 'bar', count: 3 }],
-        ],
+        in: ['value', [{ foo: 'bar', count: 3 }]],
       };
       const context = {};
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('{"foo":"bar","count":3}');
     });
@@ -666,7 +876,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, { var: 'expected' }] };
       const context = { type: 'actor', expected: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('var("type")');
       expect(result.description).toContain('var("expected")');
@@ -686,10 +900,16 @@ describe('FilterClauseAnalyzer', () => {
       };
       const context = { type: 'actor', level: 5, role: 'admin' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.description).toContain('All conditions must be true');
-      expect(result.breakdown.children[1].description).toContain('At least one condition must be true');
+      expect(result.breakdown.children[1].description).toContain(
+        'At least one condition must be true'
+      );
     });
   });
 
@@ -698,7 +918,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       expect(result.breakdown).toMatchObject({
         type: 'operator',
@@ -714,7 +938,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': [{ var: 'type' }, 'actor'] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const varNode = result.breakdown.children[0];
       expect(varNode).toMatchObject({
@@ -731,7 +959,11 @@ describe('FilterClauseAnalyzer', () => {
       const logic = { '==': ['literal', { var: 'type' }] };
       const context = { type: 'actor' };
 
-      const result = FilterClauseAnalyzer.analyzeFilter(logic, context, mockLogicEval);
+      const result = FilterClauseAnalyzer.analyzeFilter(
+        logic,
+        context,
+        mockLogicEval
+      );
 
       const valueNode = result.breakdown.children[0];
       expect(valueNode).toMatchObject({

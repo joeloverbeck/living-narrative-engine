@@ -76,6 +76,7 @@ Create two rule files for the items mod aiming system: `handle_aim_item` and `ha
 ```
 
 **Rule Operation Sequence:**
+
 1. **GET_TIMESTAMP** - Get current game timestamp for aim tracking
 2. **ADD_COMPONENT** - Add `items:aimed_at` to the item (secondary target)
    - `entity_ref` = item ID (from `event.payload.secondaryId`)
@@ -84,6 +85,7 @@ Create two rule files for the items mod aiming system: `handle_aim_item` and `ha
 4. **END_TURN** - Complete actor's turn successfully
 
 **Key Interpolations:**
+
 - `{event.payload.actorId}` - Actor performing action
 - `{event.payload.targetId}` - Primary target (what's being aimed at)
 - `{event.payload.secondaryId}` - Secondary target (the item being aimed)
@@ -148,6 +150,7 @@ Create two rule files for the items mod aiming system: `handle_aim_item` and `ha
 ```
 
 **Rule Operation Sequence:**
+
 1. **QUERY_COMPONENT** - Retrieve `items:aimed_at` data before removing it
    - Stores in `context.aimedAtData` to access `targetId` for event
 2. **GET_TIMESTAMP** - Get current game timestamp
@@ -156,12 +159,14 @@ Create two rule files for the items mod aiming system: `handle_aim_item` and `ha
 5. **END_TURN** - Complete actor's turn successfully
 
 **Key Interpolations:**
+
 - `{event.payload.targetId}` - The item (primary target in lower_aim action)
 - `{context.aimedAtData.targetId}` - What was being aimed at (retrieved from QUERY_COMPONENT)
 
 ### 3. Rule File Naming
 
 **Convention:** `handle_<action_name>.rule.json`
+
 - `handle_aim_item.rule.json` for `items:aim_item` action
 - `handle_lower_aim.rule.json` for `items:lower_aim` action
 
@@ -236,7 +241,7 @@ describe('Items Mod - Aiming Rule Execution', () => {
       const pistol = fixture.createEntity('weapons:pistol', {
         'items:item': {},
         'items:portable': {},
-        'items:aimable': {}
+        'items:aimable': {},
       });
 
       fixture.addToInventory(actor.id, [pistol.id]);
@@ -247,7 +252,7 @@ describe('Items Mod - Aiming Rule Execution', () => {
       // Execute aim action
       await fixture.executeAction(actor.id, 'items:aim_item', {
         primary: target.id,
-        secondary: pistol.id
+        secondary: pistol.id,
       });
 
       // Verify aimed_at component added
@@ -274,8 +279,8 @@ describe('Items Mod - Aiming Rule Execution', () => {
         'items:aimed_at': {
           targetId: target.id,
           aimedBy: actor.id,
-          timestamp: 1000
-        }
+          timestamp: 1000,
+        },
       });
 
       fixture.addToInventory(actor.id, [pistol.id]);
@@ -285,7 +290,7 @@ describe('Items Mod - Aiming Rule Execution', () => {
 
       // Execute lower aim action
       await fixture.executeAction(actor.id, 'items:lower_aim', {
-        primary: pistol.id
+        primary: pistol.id,
       });
 
       // Verify aimed_at component removed
@@ -303,6 +308,7 @@ describe('Items Mod - Aiming Rule Execution', () => {
 ## Corrections Made to Ticket (2025-11-23)
 
 **Schema Structure Corrections:**
+
 - Changed `"id"` field to `"rule_id"` per rule.schema.json
 - Changed `"description"` field to `"comment"` per rule.schema.json
 - Added required `"event_type": "core:attempt_action"` field
@@ -310,6 +316,7 @@ describe('Items Mod - Aiming Rule Execution', () => {
 - These corrections align with existing rules in `data/mods/items/rules/`
 
 **Event Payload Field Name Corrections:**
+
 - Changed `actorId` to `actorEntity` per event schemas
 - Changed `itemId` to `itemEntity` per event schemas
 - Changed `targetId` to `targetEntity` per event schemas
@@ -317,11 +324,13 @@ describe('Items Mod - Aiming Rule Execution', () => {
 - These align with `items:item_aimed` and `items:aim_lowered` event schemas
 
 **Component Data Corrections:**
+
 - Removed `timestamp` field from `items:aimed_at` component value
 - Component schema only allows `targetId` and `aimedBy` (plus optional `activityMetadata`)
 - Timestamp is tracked in event payload only, not component data
 
 **File Status:**
+
 - Both rule files already exist as placeholders (created in WEASYSIMP-006)
 - Placeholders include correct schema references and condition structures
 - This ticket updates placeholders with full implementation
@@ -357,10 +366,12 @@ describe('Items Mod - Aiming Rule Execution', () => {
 ### What Was Completed
 
 **Rule Files Implemented:**
+
 1. ✅ `data/mods/items/rules/handle_aim_item.rule.json` - Updated from placeholder
 2. ✅ `data/mods/items/rules/handle_lower_aim.rule.json` - Updated from placeholder
 
 **Test Files Updated:**
+
 1. ✅ `tests/integration/mods/items/aimingEventsDispatched.test.js` - Unskipped and enhanced
 
 **Changes vs. Original Plan:**
@@ -389,12 +400,14 @@ describe('Items Mod - Aiming Rule Execution', () => {
 ### Implementation Details
 
 **handle_aim_item rule (4 operations):**
+
 1. GET_TIMESTAMP - Get current game timestamp
 2. ADD_COMPONENT - Add `items:aimed_at` to item with `targetId` and `aimedBy`
 3. DISPATCH_EVENT - Dispatch `items:item_aimed` event
 4. END_TURN - Complete actor's turn successfully
 
 **handle_lower_aim rule (5 operations):**
+
 1. QUERY_COMPONENT - Retrieve `items:aimed_at` data before removal
 2. GET_TIMESTAMP - Get current game timestamp
 3. REMOVE_COMPONENT - Remove `items:aimed_at` from item

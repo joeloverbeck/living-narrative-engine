@@ -7,15 +7,22 @@
  *
  * This addresses the Priority 1 critical gap identified in the entity workflows
  * E2E test coverage analysis for spatial indexing operations.
- * 
+ *
  * Key test scenarios from analysis report section 5.1:
  * 1. Entity Spatial Lifecycle - Complete position component lifecycle
- * 2. Cross-Location Queries - Multi-entity location query accuracy  
+ * 2. Cross-Location Queries - Multi-entity location query accuracy
  * 3. Spatial Index Consistency - Batch operations consistency validation
  * 4. Performance Under Load - Large-scale entity spatial operations
  */
 
-import { describe, it, expect, beforeAll, afterAll, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  afterEach,
+} from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Spatial Indexing E2E Workflow', () => {
@@ -73,10 +80,13 @@ describe('Spatial Indexing E2E Workflow', () => {
       expect(positionComponent.locationId).toBe(initialLocationId);
 
       // Verify entity appears in spatial index at initial location
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // No need to rebuild - SpatialIndexSynchronizer maintains index automatically
-      const entitiesAtInitialLocation = spatialIndexManager.getEntitiesAtLocation(initialLocationId);
+      const entitiesAtInitialLocation =
+        spatialIndexManager.getEntitiesAtLocation(initialLocationId);
       expect(entitiesAtInitialLocation).toContain(entityId);
 
       // Act - Update entity position
@@ -85,8 +95,10 @@ describe('Spatial Indexing E2E Workflow', () => {
       });
 
       // Assert - Entity moved in spatial index (automatically maintained by SpatialIndexSynchronizer)
-      const entitiesAtOldLocation = spatialIndexManager.getEntitiesAtLocation(initialLocationId);
-      const entitiesAtNewLocation = spatialIndexManager.getEntitiesAtLocation(updatedLocationId);
+      const entitiesAtOldLocation =
+        spatialIndexManager.getEntitiesAtLocation(initialLocationId);
+      const entitiesAtNewLocation =
+        spatialIndexManager.getEntitiesAtLocation(updatedLocationId);
 
       expect(entitiesAtOldLocation).not.toContain(entityId);
       expect(entitiesAtNewLocation).toContain(entityId);
@@ -97,7 +109,8 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Assert - Entity removed from spatial index (automatically maintained)
       expect(removeResult).toBe(true);
 
-      const entitiesAfterRemoval = spatialIndexManager.getEntitiesAtLocation(updatedLocationId);
+      const entitiesAfterRemoval =
+        spatialIndexManager.getEntitiesAtLocation(updatedLocationId);
       expect(entitiesAfterRemoval).not.toContain(entityId);
 
       // Verify spatial index cleanup
@@ -127,8 +140,10 @@ describe('Spatial Indexing E2E Workflow', () => {
       expect(entity).toBeDefined();
       expect(entity.hasComponent('core:position')).toBe(false);
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
-      
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
+
       // Verify entity is not in any location
       let foundInIndex = false;
       if (spatialIndexManager.locationIndex) {
@@ -148,7 +163,8 @@ describe('Spatial Indexing E2E Workflow', () => {
       });
 
       // Assert - Entity now appears in spatial index (automatically maintained)
-      const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(newLocationId);
+      const entitiesAtLocation =
+        spatialIndexManager.getEntitiesAtLocation(newLocationId);
       expect(entitiesAtLocation).toContain(entityId);
     });
 
@@ -169,7 +185,9 @@ describe('Spatial Indexing E2E Workflow', () => {
         instanceId: entityId,
       });
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Act & Assert - Try adding with empty string location
       await testBed.entityManager.addComponent(entityId, 'core:position', {
@@ -177,13 +195,15 @@ describe('Spatial Indexing E2E Workflow', () => {
       });
 
       // Should not appear in spatial index
-      const entitiesAtEmptyLocation = spatialIndexManager.getEntitiesAtLocation('');
+      const entitiesAtEmptyLocation =
+        spatialIndexManager.getEntitiesAtLocation('');
       expect(entitiesAtEmptyLocation.length).toBe(0);
 
       // Test that null location handling works (spatial index should handle gracefully)
-      // Note: We can't actually set null via addComponent due to validation, 
+      // Note: We can't actually set null via addComponent due to validation,
       // but we can test the spatial index manager's null handling directly
-      const entitiesAtNullLocation = spatialIndexManager.getEntitiesAtLocation(null);
+      const entitiesAtNullLocation =
+        spatialIndexManager.getEntitiesAtLocation(null);
       expect(entitiesAtNullLocation.length).toBe(0);
     });
   });
@@ -192,33 +212,51 @@ describe('Spatial Indexing E2E Workflow', () => {
     it('should maintain spatial index consistency during component mutations', async () => {
       // Arrange - Create multiple entities at different locations
       const entityConfigs = [
-        { definitionId: 'test:consistency_entity_1', instanceId: 'consistency_001', locationId: 'location_A' },
-        { definitionId: 'test:consistency_entity_2', instanceId: 'consistency_002', locationId: 'location_A' },
-        { definitionId: 'test:consistency_entity_3', instanceId: 'consistency_003', locationId: 'location_B' },
+        {
+          definitionId: 'test:consistency_entity_1',
+          instanceId: 'consistency_001',
+          locationId: 'location_A',
+        },
+        {
+          definitionId: 'test:consistency_entity_2',
+          instanceId: 'consistency_002',
+          locationId: 'location_A',
+        },
+        {
+          definitionId: 'test:consistency_entity_3',
+          instanceId: 'consistency_003',
+          locationId: 'location_B',
+        },
       ];
 
       // Create entities in parallel for better performance
-      await Promise.all(entityConfigs.map(async (config) => {
-        await testBed.ensureEntityDefinitionExists(config.definitionId, {
-          id: config.definitionId,
-          components: {
-            'core:name': { text: `Consistency Entity ${config.instanceId}` },
-            'core:description': { text: 'Entity for consistency testing' },
-            'core:position': { locationId: config.locationId },
-          },
-        });
+      await Promise.all(
+        entityConfigs.map(async (config) => {
+          await testBed.ensureEntityDefinitionExists(config.definitionId, {
+            id: config.definitionId,
+            components: {
+              'core:name': { text: `Consistency Entity ${config.instanceId}` },
+              'core:description': { text: 'Entity for consistency testing' },
+              'core:position': { locationId: config.locationId },
+            },
+          });
 
-        return testBed.createTestEntity(config.definitionId, {
-          instanceId: config.instanceId,
-        });
-      }));
+          return testBed.createTestEntity(config.definitionId, {
+            instanceId: config.instanceId,
+          });
+        })
+      );
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Assert initial state (no rebuild needed - automatically maintained)
-      const entitiesAtLocationA = spatialIndexManager.getEntitiesAtLocation('location_A');
-      const entitiesAtLocationB = spatialIndexManager.getEntitiesAtLocation('location_B');
-      
+      const entitiesAtLocationA =
+        spatialIndexManager.getEntitiesAtLocation('location_A');
+      const entitiesAtLocationB =
+        spatialIndexManager.getEntitiesAtLocation('location_B');
+
       expect(entitiesAtLocationA.length).toBe(2);
       expect(entitiesAtLocationB.length).toBe(1);
       expect(entitiesAtLocationA).toContain('consistency_001');
@@ -227,16 +265,24 @@ describe('Spatial Indexing E2E Workflow', () => {
 
       // Act - Perform mixed mutations
       // Move entity from A to B
-      await testBed.entityManager.addComponent('consistency_001', 'core:position', {
-        locationId: 'location_B',
-      });
+      await testBed.entityManager.addComponent(
+        'consistency_001',
+        'core:position',
+        {
+          locationId: 'location_B',
+        }
+      );
 
       // Move entity to a different location (location_C)
-      await testBed.entityManager.addComponent('consistency_002', 'core:position', {
-        locationId: 'location_C',
-      });
+      await testBed.entityManager.addComponent(
+        'consistency_002',
+        'core:position',
+        {
+          locationId: 'location_C',
+        }
+      );
 
-      // Add new entity to location D 
+      // Add new entity to location D
       await testBed.ensureEntityDefinitionExists('test:new_entity', {
         id: 'test:new_entity',
         components: {
@@ -244,13 +290,19 @@ describe('Spatial Indexing E2E Workflow', () => {
           'core:position': { locationId: 'location_D' },
         },
       });
-      await testBed.createTestEntity('test:new_entity', { instanceId: 'consistency_004' });
+      await testBed.createTestEntity('test:new_entity', {
+        instanceId: 'consistency_004',
+      });
 
       // Assert final consistency (automatically maintained)
-      const finalLocationA = spatialIndexManager.getEntitiesAtLocation('location_A');
-      const finalLocationB = spatialIndexManager.getEntitiesAtLocation('location_B');
-      const finalLocationC = spatialIndexManager.getEntitiesAtLocation('location_C');
-      const finalLocationD = spatialIndexManager.getEntitiesAtLocation('location_D');
+      const finalLocationA =
+        spatialIndexManager.getEntitiesAtLocation('location_A');
+      const finalLocationB =
+        spatialIndexManager.getEntitiesAtLocation('location_B');
+      const finalLocationC =
+        spatialIndexManager.getEntitiesAtLocation('location_C');
+      const finalLocationD =
+        spatialIndexManager.getEntitiesAtLocation('location_D');
 
       expect(finalLocationA.length).toBe(0); // Empty after moves
       expect(finalLocationB.length).toBe(2); // Original 003 + moved 001
@@ -265,21 +317,28 @@ describe('Spatial Indexing E2E Workflow', () => {
 
     it('should handle concurrent component mutations safely', async () => {
       // Arrange - Create entities for concurrent testing in parallel
-      const entityIds = Array.from({ length: 5 }, (_, i) => `concurrent_${i + 1}`);
+      const entityIds = Array.from(
+        { length: 5 },
+        (_, i) => `concurrent_${i + 1}`
+      );
       const locations = ['location_X', 'location_Y', 'location_Z'];
 
       // Create all entities in parallel
-      await Promise.all(entityIds.map(async (entityId) => {
-        await testBed.ensureEntityDefinitionExists(`test:${entityId}`, {
-          id: `test:${entityId}`,
-          components: {
-            'core:name': { text: `Concurrent Entity ${entityId}` },
-            'core:position': { locationId: locations[0] }, // Start all at location_X
-          },
-        });
+      await Promise.all(
+        entityIds.map(async (entityId) => {
+          await testBed.ensureEntityDefinitionExists(`test:${entityId}`, {
+            id: `test:${entityId}`,
+            components: {
+              'core:name': { text: `Concurrent Entity ${entityId}` },
+              'core:position': { locationId: locations[0] }, // Start all at location_X
+            },
+          });
 
-        return testBed.createTestEntity(`test:${entityId}`, { instanceId: entityId });
-      }));
+          return testBed.createTestEntity(`test:${entityId}`, {
+            instanceId: entityId,
+          });
+        })
+      );
 
       // Act - Perform concurrent mutations
       const mutationPromises = entityIds.map((entityId, index) =>
@@ -293,16 +352,22 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Assert - All mutations completed successfully
       results.forEach((result, index) => {
         if (result.status === 'rejected') {
-          console.warn(`Concurrent mutation ${index} failed:`, result.reason?.message);
+          console.warn(
+            `Concurrent mutation ${index} failed:`,
+            result.reason?.message
+          );
         }
       });
 
       // Verify final spatial index consistency (automatically maintained)
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       let totalEntitiesInIndex = 0;
       for (const location of locations) {
-        const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(location);
+        const entitiesAtLocation =
+          spatialIndexManager.getEntitiesAtLocation(location);
         totalEntitiesInIndex += entitiesAtLocation.length;
       }
 
@@ -314,15 +379,21 @@ describe('Spatial Indexing E2E Workflow', () => {
     it('should return accurate results for complex location queries', async () => {
       // Arrange - Create a diverse set of entities across multiple locations
       const testData = [
-        { locationId: 'forest_1', entities: ['tree_001', 'tree_002', 'deer_001'] },
+        {
+          locationId: 'forest_1',
+          entities: ['tree_001', 'tree_002', 'deer_001'],
+        },
         { locationId: 'forest_2', entities: ['tree_003', 'bear_001'] },
-        { locationId: 'lake_1', entities: ['fish_001', 'fish_002', 'fish_003', 'boat_001'] },
+        {
+          locationId: 'lake_1',
+          entities: ['fish_001', 'fish_002', 'fish_003', 'boat_001'],
+        },
         { locationId: 'village_1', entities: ['npc_001', 'npc_002'] },
         { locationId: 'empty_field', entities: [] }, // Empty location for boundary testing
       ];
 
       // Create all entities in parallel
-      const allEntityPromises = testData.flatMap(location =>
+      const allEntityPromises = testData.flatMap((location) =>
         location.entities.map(async (entityId) => {
           await testBed.ensureEntityDefinitionExists(`test:${entityId}`, {
             id: `test:${entityId}`,
@@ -332,17 +403,23 @@ describe('Spatial Indexing E2E Workflow', () => {
             },
           });
 
-          return testBed.createTestEntity(`test:${entityId}`, { instanceId: entityId });
+          return testBed.createTestEntity(`test:${entityId}`, {
+            instanceId: entityId,
+          });
         })
       );
       await Promise.all(allEntityPromises);
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Act & Assert - Test each location query (index automatically maintained)
       for (const location of testData) {
-        const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(location.locationId);
-        
+        const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(
+          location.locationId
+        );
+
         expect(entitiesAtLocation.length).toBe(location.entities.length);
         for (const expectedEntity of location.entities) {
           expect(entitiesAtLocation).toContain(expectedEntity);
@@ -350,7 +427,8 @@ describe('Spatial Indexing E2E Workflow', () => {
       }
 
       // Assert - Test boundary conditions
-      const nonExistentLocation = spatialIndexManager.getEntitiesAtLocation('non_existent');
+      const nonExistentLocation =
+        spatialIndexManager.getEntitiesAtLocation('non_existent');
       expect(nonExistentLocation.length).toBe(0);
 
       const nullLocation = spatialIndexManager.getEntitiesAtLocation(null);
@@ -364,7 +442,10 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Arrange - Create a location with many entities for performance testing
       const locationId = 'crowded_marketplace';
       const entityCount = 50; // Reduced from 100 for faster E2E tests
-      const entityIds = Array.from({ length: entityCount }, (_, i) => `merchant_${i + 1}`);
+      const entityIds = Array.from(
+        { length: entityCount },
+        (_, i) => `merchant_${i + 1}`
+      );
 
       // Create entity definition
       await testBed.ensureEntityDefinitionExists('test:marketplace_entity', {
@@ -378,7 +459,7 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Create all entities at the same location in parallel
       const creationStartTime = performance.now();
       await Promise.all(
-        entityIds.map(entityId =>
+        entityIds.map((entityId) =>
           testBed.createTestEntity('test:marketplace_entity', {
             instanceId: entityId,
             validateDefinition: false, // Skip validation after first
@@ -388,24 +469,27 @@ describe('Spatial Indexing E2E Workflow', () => {
       const creationEndTime = performance.now();
 
       // Act - Test query performance
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Index automatically maintained - no rebuild needed
       const queryStartTime = performance.now();
-      const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(locationId);
+      const entitiesAtLocation =
+        spatialIndexManager.getEntitiesAtLocation(locationId);
       const queryEndTime = performance.now();
 
       // Assert - Performance and accuracy
       expect(entitiesAtLocation.length).toBe(entityCount);
-      
+
       // Performance thresholds from report section 6.1
       const creationTime = creationEndTime - creationStartTime;
       const queryTime = queryEndTime - queryStartTime;
-      
+
       // Entity creation should average < 100ms per entity (lenient for test environment)
       const avgCreationTime = creationTime / entityCount;
       expect(avgCreationTime).toBeLessThan(200); // Double the threshold for E2E tests
-      
+
       // Spatial queries should be < 50ms
       expect(queryTime).toBeLessThan(50);
 
@@ -419,7 +503,10 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Arrange - Create entities that will move between locations
       const sourceLocation = 'source_location';
       const targetLocations = ['target_1', 'target_2', 'target_3'];
-      const entityIds = Array.from({ length: 12 }, (_, i) => `moving_entity_${i + 1}`);
+      const entityIds = Array.from(
+        { length: 12 },
+        (_, i) => `moving_entity_${i + 1}`
+      );
 
       await testBed.ensureEntityDefinitionExists('test:moving_entity', {
         id: 'test:moving_entity',
@@ -431,7 +518,7 @@ describe('Spatial Indexing E2E Workflow', () => {
 
       // Create all entities in parallel
       await Promise.all(
-        entityIds.map(entityId =>
+        entityIds.map((entityId) =>
           testBed.createTestEntity('test:moving_entity', {
             instanceId: entityId,
             validateDefinition: false,
@@ -439,10 +526,13 @@ describe('Spatial Indexing E2E Workflow', () => {
         )
       );
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Verify initial state (index automatically maintained)
-      const initialEntities = spatialIndexManager.getEntitiesAtLocation(sourceLocation);
+      const initialEntities =
+        spatialIndexManager.getEntitiesAtLocation(sourceLocation);
       expect(initialEntities.length).toBe(entityIds.length);
 
       // Act - Move entities to different target locations simultaneously
@@ -456,12 +546,14 @@ describe('Spatial Indexing E2E Workflow', () => {
       await Promise.allSettled(movePromises);
 
       // Assert - Verify entities distributed correctly (index automatically maintained)
-      const finalSourceEntities = spatialIndexManager.getEntitiesAtLocation(sourceLocation);
+      const finalSourceEntities =
+        spatialIndexManager.getEntitiesAtLocation(sourceLocation);
       expect(finalSourceEntities.length).toBe(0); // All should have moved
 
       let totalMovedEntities = 0;
       for (const targetLocation of targetLocations) {
-        const entitiesAtTarget = spatialIndexManager.getEntitiesAtLocation(targetLocation);
+        const entitiesAtTarget =
+          spatialIndexManager.getEntitiesAtLocation(targetLocation);
         totalMovedEntities += entitiesAtTarget ? entitiesAtTarget.length : 0;
       }
 
@@ -487,7 +579,10 @@ describe('Spatial Indexing E2E Workflow', () => {
       // Act - Create entities and distribute across locations in parallel
       const creationStartTime = performance.now();
 
-      const entityIds = Array.from({ length: entityCount }, (_, i) => `perf_entity_${i + 1}`);
+      const entityIds = Array.from(
+        { length: entityCount },
+        (_, i) => `perf_entity_${i + 1}`
+      );
 
       // Create all entities in parallel and update positions
       await Promise.all(
@@ -513,7 +608,9 @@ describe('Spatial Indexing E2E Workflow', () => {
       expect(avgCreationTime).toBeLessThan(200); // Lenient for E2E tests
 
       // Test spatial query performance across all locations
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Index automatically maintained - no rebuild needed
       const queryStartTime = performance.now();
@@ -521,8 +618,11 @@ describe('Spatial Indexing E2E Workflow', () => {
 
       for (let i = 1; i <= locationCount; i++) {
         const locationId = `perf_location_${i}`;
-        const entitiesAtLocation = spatialIndexManager.getEntitiesAtLocation(locationId);
-        totalQueriedEntities += entitiesAtLocation ? entitiesAtLocation.length : 0;
+        const entitiesAtLocation =
+          spatialIndexManager.getEntitiesAtLocation(locationId);
+        totalQueriedEntities += entitiesAtLocation
+          ? entitiesAtLocation.length
+          : 0;
       }
 
       const queryEndTime = performance.now();
@@ -560,7 +660,7 @@ describe('Spatial Indexing E2E Workflow', () => {
 
       // Create entities first (without position for batch testing) in parallel
       await Promise.all(
-        additions.map(addition =>
+        additions.map((addition) =>
           testBed.createTestEntity('test:batch_entity', {
             instanceId: addition.entityId,
             validateDefinition: false,
@@ -568,14 +668,16 @@ describe('Spatial Indexing E2E Workflow', () => {
         )
       );
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Act - Test batch addition performance
       const batchStartTime = performance.now();
-      
+
       if (typeof spatialIndexManager.batchAdd === 'function') {
         const batchResult = await spatialIndexManager.batchAdd(additions);
-        
+
         const batchEndTime = performance.now();
         const batchTime = batchEndTime - batchStartTime;
 
@@ -586,24 +688,23 @@ describe('Spatial Indexing E2E Workflow', () => {
 
         // Verify spatial index state
         expect(spatialIndexManager.size).toBe(10); // 10 different locations
-        
+
         console.log(`Batch Operation Metrics:
           - Processed ${batchSize} spatial additions in ${batchTime.toFixed(2)}ms
           - Batch processing time: ${batchResult.processingTime.toFixed(2)}ms
           - Final index size: ${spatialIndexManager.size} locations`);
-
       } else {
         // Fallback to individual operations and measure
         for (const addition of additions) {
           spatialIndexManager.addEntity(addition.entityId, addition.locationId);
         }
-        
+
         const fallbackEndTime = performance.now();
         const fallbackTime = fallbackEndTime - batchStartTime;
 
         expect(fallbackTime).toBeLessThan(2000); // More lenient for individual operations
         expect(spatialIndexManager.size).toBe(10);
-        
+
         console.log(`Fallback Operation Metrics:
           - Processed ${batchSize} individual additions in ${fallbackTime.toFixed(2)}ms`);
       }
@@ -623,9 +724,12 @@ describe('Spatial Indexing E2E Workflow', () => {
       });
 
       // Create initial entities in parallel
-      const initialEntityIds = Array.from({ length: initialEntityCount }, (_, i) => `mixed_ops_entity_${i + 1}`);
+      const initialEntityIds = Array.from(
+        { length: initialEntityCount },
+        (_, i) => `mixed_ops_entity_${i + 1}`
+      );
       await Promise.all(
-        initialEntityIds.map(entityId =>
+        initialEntityIds.map((entityId) =>
           testBed.createTestEntity('test:mixed_ops_entity', {
             instanceId: entityId,
             validateDefinition: false,
@@ -633,32 +737,38 @@ describe('Spatial Indexing E2E Workflow', () => {
         )
       );
 
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Act - Perform mixed operations (creates, moves, queries)
       const mixedOpsStartTime = performance.now();
-      
+
       const operations = [];
-      
+
       // Create new entities
       for (let i = 0; i < operationCount; i++) {
         const entityId = `new_mixed_entity_${i + 1}`;
-        operations.push(testBed.createTestEntity('test:mixed_ops_entity', {
-          instanceId: entityId,
-          validateDefinition: false,
-        }));
+        operations.push(
+          testBed.createTestEntity('test:mixed_ops_entity', {
+            instanceId: entityId,
+            validateDefinition: false,
+          })
+        );
       }
 
-      // Move existing entities  
+      // Move existing entities
       for (let i = 0; i < Math.min(operationCount, initialEntityCount); i++) {
         const entityId = initialEntityIds[i];
-        operations.push(testBed.entityManager.addComponent(entityId, 'core:position', {
-          locationId: `moved_location_${i + 1}`,
-        }));
+        operations.push(
+          testBed.entityManager.addComponent(entityId, 'core:position', {
+            locationId: `moved_location_${i + 1}`,
+          })
+        );
       }
 
       await Promise.allSettled(operations);
-      
+
       // Perform queries
       const queryResults = [];
       for (let i = 0; i < 20; i++) {
@@ -666,17 +776,17 @@ describe('Spatial Indexing E2E Workflow', () => {
         const entities = spatialIndexManager.getEntitiesAtLocation(locationId);
         queryResults.push(entities.length);
       }
-      
+
       const mixedOpsEndTime = performance.now();
       const totalMixedOpsTime = mixedOpsEndTime - mixedOpsStartTime;
 
       // Assert - Performance and correctness
       expect(totalMixedOpsTime).toBeLessThan(5000); // Should complete within 5 seconds
       expect(queryResults.length).toBe(20);
-      
+
       // Verify spatial index integrity
       await testBed.assertRepositoryConsistency();
-      
+
       console.log(`Mixed Operations Metrics:
         - Completed ${operationCount} creates, ${operationCount} moves, and 20 queries
         - Total time: ${totalMixedOpsTime.toFixed(2)}ms
@@ -685,7 +795,9 @@ describe('Spatial Indexing E2E Workflow', () => {
 
     it('should handle edge cases and error conditions gracefully', async () => {
       // Arrange
-      const spatialIndexManager = testBed.container.resolve('ISpatialIndexManager');
+      const spatialIndexManager = testBed.container.resolve(
+        'ISpatialIndexManager'
+      );
 
       // Test with null/undefined/invalid inputs
       const testCases = [
@@ -703,22 +815,30 @@ describe('Spatial Indexing E2E Workflow', () => {
         }).not.toThrow();
 
         expect(() => {
-          spatialIndexManager.removeEntity(testCase.entityId, testCase.locationId);
+          spatialIndexManager.removeEntity(
+            testCase.entityId,
+            testCase.locationId
+          );
         }).not.toThrow();
-        
+
         expect(() => {
           spatialIndexManager.getEntitiesAtLocation(testCase.locationId);
         }).not.toThrow();
       }
 
       // Test query with non-existent location returns empty set
-      const nonExistentResult = spatialIndexManager.getEntitiesAtLocation('non_existent_location_12345');
+      const nonExistentResult = spatialIndexManager.getEntitiesAtLocation(
+        'non_existent_location_12345'
+      );
       expect(nonExistentResult.length).toBe(0);
       expect(nonExistentResult).toBeInstanceOf(Array);
 
       // Test removal from non-existent location doesn't error
       expect(() => {
-        spatialIndexManager.removeEntity('some_entity', 'non_existent_location');
+        spatialIndexManager.removeEntity(
+          'some_entity',
+          'non_existent_location'
+        );
       }).not.toThrow();
     });
   });

@@ -8,11 +8,11 @@ Create the four new component JSON schemas for vital organs, dying state, death 
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `data/mods/anatomy/components/vital_organ.component.json` | CREATE |
-| `data/mods/anatomy/components/dying.component.json` | CREATE |
-| `data/mods/anatomy/components/dead.component.json` | CREATE |
+| File                                                             | Action |
+| ---------------------------------------------------------------- | ------ |
+| `data/mods/anatomy/components/vital_organ.component.json`        | CREATE |
+| `data/mods/anatomy/components/dying.component.json`              | CREATE |
+| `data/mods/anatomy/components/dead.component.json`               | CREATE |
 | `data/mods/anatomy/components/damage_propagation.component.json` | CREATE |
 
 ## Out of Scope
@@ -84,6 +84,7 @@ All 4 component JSON files were created exactly as specified in the ticket:
 ### Tests Added
 
 Updated `tests/unit/schemas/core-and-anatomy.allComponents.schema.test.js`:
+
 - Added valid payloads for all 4 new components
 - Added invalid payloads for all 4 new components
 

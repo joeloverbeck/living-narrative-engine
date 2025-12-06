@@ -13,6 +13,7 @@
 The Anatomy System v2 represents a significant architectural achievement, enabling dynamic creature generation through blueprints, structure templates, and pattern-based assembly. However, the recipe creation process suffers from severe diagnostic friction, requiring multiple troubleshooting rounds for every new creature type.
 
 **Pain Point Severity:**
+
 - **Red Dragon:** 6+ error rounds before successful graph generation
 - **All Creatures:** Consistent pattern of late-stage validation failures
 - **User Impact:** High frustration, slow iteration, unpredictable failures
@@ -27,28 +28,31 @@ The Anatomy System v2 represents a significant architectural achievement, enabli
 
 ### High-Priority Recommendations
 
-| Recommendation | Impact | Effort | Priority |
-|----------------|--------|--------|----------|
-| Pre-flight Recipe Validator | High | Medium | **P0** |
-| Component Existence Checker | High | Low | **P0** |
-| Enhanced Error Messages | High | Low | **P0** |
-| Recipe Validation CLI Tool | High | Medium | **P1** |
-| Pattern Matching Dry-Run | Medium | Low | **P1** |
-| Interactive Recipe Wizard | Medium | High | **P2** |
+| Recommendation              | Impact | Effort | Priority |
+| --------------------------- | ------ | ------ | -------- |
+| Pre-flight Recipe Validator | High   | Medium | **P0**   |
+| Component Existence Checker | High   | Low    | **P0**   |
+| Enhanced Error Messages     | High   | Low    | **P0**   |
+| Recipe Validation CLI Tool  | High   | Medium | **P1**   |
+| Pattern Matching Dry-Run    | Medium | Low    | **P1**   |
+| Interactive Recipe Wizard   | Medium | High   | **P2**   |
 
 ### Expected Outcomes
 
 **Phase 1 (Quick Wins - 2-3 weeks):**
+
 - 80% reduction in troubleshooting rounds
 - Clear, actionable error messages at load time
 - Component compatibility validation before generation
 
 **Phase 2 (Tooling - 3-4 weeks):**
+
 - CLI validation tool for recipe creators
 - Comprehensive diagnostic reports
 - Improved documentation with common patterns
 
 **Phase 3 (Architecture - 4-6 weeks):**
+
 - Declarative validation pipeline
 - Schema-driven error prevention
 - Automated compatibility checking
@@ -126,6 +130,7 @@ The Anatomy System v2 represents a significant architectural achievement, enabli
 ### Dependency Chain
 
 **Explicit Dependencies:**
+
 ```
 Recipe ──requires──▶ Blueprint ──requires──▶ Structure Template
   │                     │
@@ -137,6 +142,7 @@ Recipe ──requires──▶ Blueprint ──requires──▶ Structure Templ
 ```
 
 **Implicit Dependencies (Not Validated):**
+
 ```
 Recipe.slots.properties ──should match──▶ Entity.components[x].properties
 Recipe.patterns.partType ──should exist in──▶ EntityRegistry
@@ -179,6 +185,7 @@ Part.descriptors ──required for──▶ Description rendering
 ### Red Dragon Troubleshooting Session
 
 **Error Round 1: Constraint Validation**
+
 ```
 Error: "Invalid 'requires' group at index 0. 'partTypes' must contain at least 2 items."
 Location: Recipe constraint validation
@@ -188,6 +195,7 @@ Root Cause: Schema validation doesn't explain business rule
 ```
 
 **Error Round 2: Missing Entity Definition**
+
 ```
 Error: "No entity definitions found matching anatomy requirements. Need part type: 'dragon_wing'."
 Location: Part selection service
@@ -197,6 +205,7 @@ Root Cause: No pre-flight check for component requirements in entities
 ```
 
 **Error Round 3: Component Validation Failure**
+
 ```
 Error: "Runtime component validation failed for 'anatomy:dragon_wing'. Invalid components: [descriptors:length_category]"
 Location: Entity instantiation
@@ -206,6 +215,7 @@ Root Cause: No property validation against component schema at load time
 ```
 
 **Error Round 4: Property Mismatch**
+
 ```
 Error: Property matching validation failed (properties don't match recipe slot requirements)
 Location: Part selection validation
@@ -215,6 +225,7 @@ Root Cause: No validation that recipe properties match entity properties
 ```
 
 **Error Round 5: Missing Component**
+
 ```
 Error: "No entity definitions found. Required components: [anatomy:part, anatomy:horned]"
 Location: Part selection service
@@ -224,6 +235,7 @@ Root Cause: No component existence validation at recipe load
 ```
 
 **Error Round 6: Missing Sockets**
+
 ```
 Error: "Socket 'fire_gland' not found on parent entity 'anatomy:dragon_torso'"
 Location: Blueprint slot processing
@@ -233,6 +245,7 @@ Root Cause: No socket/slot compatibility validation
 ```
 
 **Final Issue: Silent Description Exclusion**
+
 ```
 Issue: Only wings appeared in description, not head/legs/tail
 Location: Description rendering
@@ -268,12 +281,14 @@ Diagnostic Gap: No warning that parts would be excluded
 ### User Experience Impact
 
 **Time to First Success:**
+
 - **Kraken:** ~4 hours (3 troubleshooting rounds)
 - **Centaur:** ~3 hours (2 troubleshooting rounds)
 - **Spider:** ~5 hours (4 troubleshooting rounds)
 - **Dragon:** ~6 hours (7 troubleshooting rounds)
 
 **Frustration Factors:**
+
 1. Late error discovery (rebuild → reload → test cycle)
 2. Unclear error messages (what to fix, how to fix)
 3. Silent failures (debug logging, filtered parts)
@@ -281,6 +296,7 @@ Diagnostic Gap: No warning that parts would be excluded
 5. Trial-and-error fixes (no validation feedback)
 
 **Development Velocity Impact:**
+
 - **Before Fix:** 30-45 minutes per error round
 - **After System:** Should be <5 minutes with proper validation
 - **Potential Improvement:** 6-9x faster iteration
@@ -294,15 +310,18 @@ Diagnostic Gap: No warning that parts would be excluded
 **Architectural Constraint: Dynamic Entity System**
 
 The anatomy system uses runtime entity instantiation, which means:
+
 1. Entities created on-demand during generation
 2. Components loaded lazily when needed
 3. Validation deferred until actual use
 
 **Trade-off:**
+
 - ✅ **Benefit:** Flexibility, modularity, dynamic composition
 - ❌ **Cost:** Late error detection, poor error locality
 
 **Why This Design:**
+
 - Entity Component System (ECS) architecture
 - Mod-based content loading
 - Runtime composition requirements
@@ -310,6 +329,7 @@ The anatomy system uses runtime entity instantiation, which means:
 ### Missing Pre-flight Validation Layer
 
 **Current State:**
+
 ```
 Recipe Load ──▶ Schema Validation ──▶ ✅ DONE
                                       │
@@ -319,6 +339,7 @@ Generation ──▶ Entity Lookup ──▶ ❌ ERROR (too late!)
 ```
 
 **Needed State:**
+
 ```
 Recipe Load ──▶ Schema Validation ──▶ Cross-Reference Validation ──▶ ✅ DONE
                                        │
@@ -332,6 +353,7 @@ Recipe Load ──▶ Schema Validation ──▶ Cross-Reference Validation ─
 ### Schema vs Runtime Validation Gap
 
 **Schema Validation (Load Time):**
+
 - ✅ Validates JSON structure
 - ✅ Validates data types
 - ✅ Validates required fields
@@ -340,6 +362,7 @@ Recipe Load ──▶ Schema Validation ──▶ Cross-Reference Validation ─
 - ❌ Cannot validate component compatibility
 
 **Runtime Validation (Generation Time):**
+
 - ✅ Validates entity existence
 - ✅ Validates component data
 - ✅ Validates property matching
@@ -349,6 +372,7 @@ Recipe Load ──▶ Schema Validation ──▶ Cross-Reference Validation ─
 
 **The Gap:**
 No intermediate validation layer that can:
+
 - Access entity registry
 - Look up component schemas
 - Validate cross-references
@@ -357,22 +381,26 @@ No intermediate validation layer that can:
 ### Descriptor-Driven Design Implications
 
 **Design Decision:**
+
 - Description rendering only outputs descriptor values
 - Parts without descriptors return empty strings
 - Empty strings filtered from output
 
 **Implications:**
+
 1. **Implicit Requirement:** All parts MUST have descriptors to appear
 2. **No Documentation:** Requirement not clearly stated
 3. **Silent Failure:** No warning when parts excluded
 4. **Discovery Process:** Trial-and-error to find requirement
 
 **Why This Design:**
+
 - Descriptors provide standardized formatting
 - Avoids "Part: " with nothing after it
 - Enables consistent description composition
 
 **Problem:**
+
 - Requirement not surfaced to recipe creators
 - No validation that parts have descriptors
 - No error/warning when parts excluded
@@ -380,6 +408,7 @@ No intermediate validation layer that can:
 ### Diagnostic Tooling Absence
 
 **Current Diagnostic Approach:**
+
 1. Read error logs manually
 2. Inspect console output (debug level)
 3. Check schema files in editor
@@ -387,6 +416,7 @@ No intermediate validation layer that can:
 5. Reload and retry
 
 **What's Missing:**
+
 1. **Pre-flight validator** - Check recipe before generation
 2. **Compatibility checker** - Verify recipe against registry
 3. **Error message enhancement** - Include remediation steps
@@ -427,6 +457,7 @@ class RecipePreflightValidator {
 **Priority:** **P0** - Critical for UX improvement
 
 **Implementation Approach:**
+
 1. Add validation phase after recipe load
 2. Integrate with entity registry
 3. Check component existence in registry
@@ -435,6 +466,7 @@ class RecipePreflightValidator {
 6. Block generation if critical errors found
 
 **Dependencies:**
+
 - Entity registry access
 - Component schema registry
 - Blueprint registry
@@ -488,6 +520,7 @@ function validateComponentExistence(recipe, componentRegistry) {
 **Priority:** **P0** - Quick win with high value
 
 **Implementation Approach:**
+
 1. Hook into recipe load pipeline
 2. Extract all component references (slots, patterns)
 3. Verify existence in component registry
@@ -507,7 +540,9 @@ function validatePropertySchemas(recipe, componentRegistry) {
   const errors = [];
 
   for (const [slotName, slot] of Object.entries(recipe.slots)) {
-    for (const [componentId, properties] of Object.entries(slot.properties || {})) {
+    for (const [componentId, properties] of Object.entries(
+      slot.properties || {}
+    )) {
       const component = componentRegistry.get(componentId);
       if (!component) continue; // Caught by existence checker
 
@@ -533,6 +568,7 @@ function validatePropertySchemas(recipe, componentRegistry) {
 **Priority:** **P0** - Quick win with high value
 
 **Implementation Approach:**
+
 1. Access component schemas from registry
 2. Validate each property object with AJV
 3. Format AJV errors with context
@@ -580,6 +616,7 @@ function validatePatternMatching(recipe, entityRegistry) {
 **Priority:** **P1** - High value, low effort
 
 **Implementation Approach:**
+
 1. Run part selection logic without instantiation
 2. Report zero-match patterns as warnings
 3. Suggest similar entities that almost match
@@ -597,7 +634,9 @@ function validatePatternMatching(recipe, entityRegistry) {
 function validateConstraints(recipe) {
   const errors = [];
 
-  for (const [index, constraint] of Object.entries(recipe.constraints?.requires || [])) {
+  for (const [index, constraint] of Object.entries(
+    recipe.constraints?.requires || []
+  )) {
     if (!constraint.partTypes || constraint.partTypes.length < 2) {
       errors.push({
         constraint: `requires[${index}]`,
@@ -639,9 +678,13 @@ function validateSocketSlotCompatibility(blueprint, recipe, entityRegistry) {
     return errors;
   }
 
-  const sockets = new Set(rootEntity.components['anatomy:sockets']?.sockets.map(s => s.id) || []);
+  const sockets = new Set(
+    rootEntity.components['anatomy:sockets']?.sockets.map((s) => s.id) || []
+  );
 
-  for (const [slotName, slot] of Object.entries(blueprint.additionalSlots || {})) {
+  for (const [slotName, slot] of Object.entries(
+    blueprint.additionalSlots || {}
+  )) {
     if (!sockets.has(slot.socket)) {
       errors.push({
         blueprint: blueprint.id,
@@ -701,6 +744,7 @@ Validation Summary:
 **Priority:** **P1** - High value for recipe creators
 
 **Implementation Approach:**
+
 1. Create CLI script in `scripts/validate-recipe.js`
 2. Integrate all validation functions
 3. Format output with colors and symbols
@@ -720,10 +764,10 @@ Validation Summary:
 class AnatomyError extends Error {
   constructor({ context, problem, impact, fix, references }) {
     super(problem);
-    this.context = context;      // Where error occurred
-    this.problem = problem;       // What went wrong
-    this.impact = impact;         // Why it matters
-    this.fix = fix;              // How to fix it
+    this.context = context; // Where error occurred
+    this.problem = problem; // What went wrong
+    this.impact = impact; // Why it matters
+    this.fix = fix; // How to fix it
     this.references = references; // Related files/docs
   }
 
@@ -736,7 +780,7 @@ Impact:  ${this.impact}
 Fix:     ${this.fix}
 
 References:
-${this.references.map(r => `  - ${r}`).join('\n')}
+${this.references.map((r) => `  - ${r}`).join('\n')}
 `;
   }
 }
@@ -772,7 +816,7 @@ function generateValidationReport(recipe, validationResults) {
     summary: {
       totalErrors: validationResults.errors.length,
       totalWarnings: validationResults.warnings.length,
-      criticalIssues: validationResults.errors.filter(e => e.critical).length,
+      criticalIssues: validationResults.errors.filter((e) => e.critical).length,
       passedChecks: validationResults.passed.length,
     },
     errors: validationResults.errors.map(formatError),
@@ -805,7 +849,10 @@ function checkBlueprintRecipeCompatibility(blueprint, recipe) {
   const recipeSlots = new Set(Object.keys(recipe.slots || {}));
 
   for (const requiredSlot of blueprintSlots.required) {
-    if (!recipeSlots.has(requiredSlot) && !isMatchedByPattern(recipe.patterns, requiredSlot)) {
+    if (
+      !recipeSlots.has(requiredSlot) &&
+      !isMatchedByPattern(recipe.patterns, requiredSlot)
+    ) {
       issues.push({
         type: 'missing_slot',
         slot: requiredSlot,
@@ -905,20 +952,25 @@ npm run create:recipe
 # Recipe Creation Checklist
 
 ## Before You Start
+
 - [ ] Choose or create a blueprint
 - [ ] Identify required structure template
 - [ ] List all part types needed
 - [ ] Check component availability
 
 ## Step 1: Create Component Schemas
+
 For each new component needed:
+
 - [ ] Create component schema file
 - [ ] Define dataSchema with properties
 - [ ] Add to appropriate mod folder
 - [ ] Validate schema with `npm run validate`
 
 ## Step 2: Create Entity Definitions
+
 For each part type:
+
 - [ ] Create entity definition file
 - [ ] Add anatomy:part component with subType
 - [ ] Add required descriptor components:
@@ -930,12 +982,14 @@ For each part type:
 - [ ] Validate entity with `npm run validate:entity`
 
 ## Step 3: Create or Update Blueprint
+
 - [ ] Define root entity with sockets
 - [ ] Specify structure template
 - [ ] Add additionalSlots if needed
 - [ ] Verify socket/slot compatibility
 
 ## Step 4: Create Recipe
+
 - [ ] Define recipeId and blueprintId
 - [ ] Add body descriptors
 - [ ] Configure explicit slots
@@ -944,12 +998,14 @@ For each part type:
 - [ ] Validate recipe with `npm run validate:recipe`
 
 ## Step 5: Test
+
 - [ ] Load in anatomy visualizer
 - [ ] Verify graph generates
 - [ ] Check anatomy description
 - [ ] Validate all parts appear
 
 ## Common Pitfalls
+
 - Forgetting descriptor components → parts excluded from description
 - Invalid enum values → runtime validation errors
 - Missing sockets → slot resolution errors
@@ -970,7 +1026,7 @@ For each part type:
 
 **Solution:** Create error pattern catalog:
 
-```markdown
+````markdown
 # Common Anatomy System Errors
 
 ## Error: "No entity definitions found matching anatomy requirements"
@@ -978,18 +1034,21 @@ For each part type:
 **Symptom:** Pattern matching fails to find entities
 
 **Common Causes:**
+
 1. Entity missing required component
 2. Entity component has wrong property values
 3. Pattern requirements too strict
 4. Entity not loaded (mod dependency issue)
 
 **Diagnostic Steps:**
+
 1. Check entity has all required components (pattern.tags)
 2. Verify component property values match (pattern.properties)
 3. Check entity partType matches (pattern.partType)
 4. Verify mod is loaded in game.json
 
 **Example Fix:**
+
 ```json
 // Recipe pattern requires:
 {
@@ -1008,24 +1067,28 @@ For each part type:
   }
 }
 ```
+````
 
 ## Error: "Runtime component validation failed"
 
 **Symptom:** Component has invalid data
 
 **Common Causes:**
+
 1. Invalid enum value
 2. Wrong data type
 3. Missing required field
 4. Extra properties not allowed
 
 **Diagnostic Steps:**
+
 1. Check component schema for valid values
 2. Verify all required fields present
 3. Check additionalProperties setting
 4. Validate against component dataSchema
 
 **Example Fix:**
+
 ```json
 // Schema allows:
 "enum": ["short", "medium", "long"]
@@ -1038,7 +1101,8 @@ For each part type:
 ```
 
 [Continue for all common error patterns...]
-```
+
+````
 
 **Impact:** High - Reduces troubleshooting time
 **Effort:** Low - Documentation from experience
@@ -1088,9 +1152,10 @@ For each part type:
 1. **Always run schema validation first**
    ```bash
    npm run validate
-   ```
+````
 
 2. **Use pre-flight validator before testing** (when available)
+
    ```bash
    npm run validate:recipe path/to/recipe.json
    ```
@@ -1108,6 +1173,7 @@ For each part type:
 ## Validation Checklist
 
 Before creating a new recipe:
+
 - [ ] All referenced components exist
 - [ ] All component properties use valid enum values
 - [ ] All entity definitions have required descriptors
@@ -1136,7 +1202,8 @@ Before creating a new recipe:
    - Common patterns
    - Example fixes
    - Related issues
-```
+
+````
 
 **Impact:** Medium - Improves understanding
 **Effort:** Low - Documentation only
@@ -1192,11 +1259,12 @@ describe('Red Dragon Recipe', () => {
     expect(description).toContain('Dragon tail');
   });
 });
-```
+````
 
 ## Integration Testing
 
 ### Anatomy Visualizer Test
+
 1. Load recipe in visualizer
 2. Generate graph
 3. Verify no console errors
@@ -1204,6 +1272,7 @@ describe('Red Dragon Recipe', () => {
 5. Validate graph structure
 
 ### CLI Validation Test
+
 ```bash
 # Run validation
 npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json
@@ -1216,6 +1285,7 @@ npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json
 ## Test Checklist
 
 Before considering a recipe complete:
+
 - [ ] Schema validation passes
 - [ ] Pre-flight validation passes
 - [ ] Graph generates without errors
@@ -1223,6 +1293,7 @@ Before considering a recipe complete:
 - [ ] All parts have appropriate descriptors
 - [ ] Pattern matching finds all expected entities
 - [ ] Constraints validate successfully
+
 ```
 
 **Impact:** Low - Better testing practices
@@ -1242,34 +1313,36 @@ Before considering a recipe complete:
 **Solution:** Design multi-stage validation pipeline:
 
 ```
+
 ┌─────────────────────────────────────────────────────┐
-│          Staged Validation Pipeline                 │
+│ Staged Validation Pipeline │
 ├─────────────────────────────────────────────────────┤
-│                                                     │
-│  Stage 1: LOAD (Schema Validation)                 │
-│  ├─ JSON structure                                 │
-│  ├─ Data types                                     │
-│  └─ Required fields                                │
-│                                                     │
-│  Stage 2: PRE-FLIGHT (Cross-Reference)             │
-│  ├─ Component existence                            │
-│  ├─ Entity compatibility                           │
-│  ├─ Property schemas                               │
-│  ├─ Socket/slot matching                           │
-│  └─ Pattern dry-run                                │
-│                                                     │
-│  Stage 3: GENERATION (Runtime)                     │
-│  ├─ Entity instantiation                           │
-│  ├─ Component validation                           │
-│  └─ Pattern matching                               │
-│                                                     │
-│  Stage 4: POST-GENERATION (Verification)           │
-│  ├─ Descriptor coverage                            │
-│  ├─ Constraint satisfaction                        │
-│  └─ Description completeness                       │
-│                                                     │
+│ │
+│ Stage 1: LOAD (Schema Validation) │
+│ ├─ JSON structure │
+│ ├─ Data types │
+│ └─ Required fields │
+│ │
+│ Stage 2: PRE-FLIGHT (Cross-Reference) │
+│ ├─ Component existence │
+│ ├─ Entity compatibility │
+│ ├─ Property schemas │
+│ ├─ Socket/slot matching │
+│ └─ Pattern dry-run │
+│ │
+│ Stage 3: GENERATION (Runtime) │
+│ ├─ Entity instantiation │
+│ ├─ Component validation │
+│ └─ Pattern matching │
+│ │
+│ Stage 4: POST-GENERATION (Verification) │
+│ ├─ Descriptor coverage │
+│ ├─ Constraint satisfaction │
+│ └─ Description completeness │
+│ │
 └─────────────────────────────────────────────────────┘
-```
+
+````
 
 **Benefits:**
 - Early error detection
@@ -1312,9 +1385,10 @@ class ValidationCache {
     });
   }
 }
-```
+````
 
 **Benefits:**
+
 - Faster re-validation
 - Reduced computation
 - Better development UX
@@ -1359,6 +1433,7 @@ class ValidationCache {
 ```
 
 **Benefits:**
+
 - Self-documenting constraints
 - Better error messages
 - Easier to extend
@@ -1412,6 +1487,7 @@ function validateTextureComponent(data) {
 ```
 
 **Benefits:**
+
 - DRY principle
 - Consistent validation
 - Easier maintenance
@@ -1429,6 +1505,7 @@ function validateTextureComponent(data) {
 **Goal:** Reduce troubleshooting rounds by 80%
 
 **Priority P0 Items:**
+
 1. **Week 1:**
    - ✅ Component Existence Checker (Rec 1.2)
    - ✅ Property Schema Validator (Rec 1.3)
@@ -1446,6 +1523,7 @@ function validateTextureComponent(data) {
    - 🧪 Testing & Validation
 
 **Success Metrics:**
+
 - ✅ All P0 validations implemented
 - ✅ CLI tool functional
 - ✅ Error messages enhanced
@@ -1453,6 +1531,7 @@ function validateTextureComponent(data) {
 - 📊 Validation catches 80%+ of errors at load time
 
 **Deliverables:**
+
 - Pre-flight validation system
 - CLI validation tool
 - Enhanced error messages
@@ -1466,6 +1545,7 @@ function validateTextureComponent(data) {
 **Goal:** Improve recipe creator experience
 
 **Priority P1 Items:**
+
 1. **Week 4-5:**
    - ✅ Constraint Pre-Validation (Rec 1.5)
    - ✅ Validation Report Generator (Rec 2.3)
@@ -1478,12 +1558,14 @@ function validateTextureComponent(data) {
    - 📊 Metrics collection
 
 **Success Metrics:**
+
 - ✅ All P1 features implemented
 - ✅ Comprehensive documentation
 - 📊 Recipe creation time reduced by 50%
 - 📊 Zero-error recipe creation possible
 
 **Deliverables:**
+
 - Validation report system
 - Compatibility checker
 - Complete documentation suite
@@ -1496,6 +1578,7 @@ function validateTextureComponent(data) {
 **Goal:** Long-term robustness and maintainability
 
 **Priority P2 Items:**
+
 1. **Week 8-10:**
    - 🏗️ Staged Validation Pipeline (Rec 4.1)
    - ✅ Validation Result Caching (Rec 4.2)
@@ -1507,12 +1590,14 @@ function validateTextureComponent(data) {
    - 🧪 Load testing
 
 **Success Metrics:**
+
 - ✅ Pipeline architecture implemented
 - ✅ Recipe wizard functional
 - 📊 Validation performance optimized
 - 📊 System handles 100+ recipes efficiently
 
 **Deliverables:**
+
 - Staged validation pipeline
 - Interactive wizard
 - Performance optimizations
@@ -1523,6 +1608,7 @@ function validateTextureComponent(data) {
 ### Phase 4: Advanced Features (Future)
 
 **Priority P3 Items:**
+
 - Schema-Driven Validation Generation (Rec 4.4)
 - Advanced diagnostic tooling
 - Automated recipe testing
@@ -1535,23 +1621,27 @@ function validateTextureComponent(data) {
 ### User Experience Metrics
 
 **Current State (Baseline):**
+
 - Time to First Success: 3-6 hours
 - Error Rounds per Recipe: 2-7
 - Manual Schema Checks: 10-20
 - Silent Failures: 2-4 per recipe
 
 **Phase 1 Targets:**
+
 - Time to First Success: <1 hour (83% improvement)
 - Error Rounds per Recipe: 0-1 (85% reduction)
 - Manual Schema Checks: 0-2 (90% reduction)
 - Silent Failures: 0 (100% elimination)
 
 **Phase 2 Targets:**
+
 - Time to First Success: <30 minutes (92% improvement)
 - Zero-Error Creation: 80% of recipes
 - Documentation Satisfaction: >90%
 
 **Phase 3 Targets:**
+
 - Time to First Success: <15 minutes (96% improvement)
 - Zero-Error Creation: 95% of recipes
 - Wizard Adoption: >70%
@@ -1559,6 +1649,7 @@ function validateTextureComponent(data) {
 ### System Health Metrics
 
 **Validation Coverage:**
+
 - Component Existence: 100%
 - Property Schemas: 100%
 - Entity Compatibility: 100%
@@ -1566,11 +1657,13 @@ function validateTextureComponent(data) {
 - Pattern Matching: 95%+
 
 **Error Detection:**
+
 - Load-Time Detection: >80%
 - Pre-Generation Detection: >95%
 - Silent Failures: 0%
 
 **Developer Experience:**
+
 - Documentation Completeness: >90%
 - Error Message Quality: >85% actionable
 - Tool Adoption: >70%
@@ -1580,6 +1673,7 @@ function validateTextureComponent(data) {
 ## Appendix A: Error Message Templates
 
 ### Component Not Found
+
 ```
 [ERROR] Component 'anatomy:horned' not found
 
@@ -1609,6 +1703,7 @@ References:
 ```
 
 ### Invalid Property Value
+
 ```
 [ERROR] Invalid component property value
 
@@ -1625,6 +1720,7 @@ Component Schema: data/mods/anatomy/components/horned.component.json
 ```
 
 ### No Matching Entities
+
 ```
 [WARNING] Pattern has zero matching entities
 
@@ -1654,6 +1750,7 @@ Suggestion:
 ## Appendix B: Validation Pseudo-Code
 
 ### Pre-flight Validator
+
 ```javascript
 class RecipePreflightValidator {
   #componentRegistry;
@@ -1719,13 +1816,20 @@ class RecipePreflightValidator {
     const errors = [];
 
     for (const [slotName, slot] of Object.entries(recipe.slots || {})) {
-      for (const [componentId, properties] of Object.entries(slot.properties || {})) {
+      for (const [componentId, properties] of Object.entries(
+        slot.properties || {}
+      )) {
         const component = this.#componentRegistry.get(componentId);
         if (!component) continue;
 
-        const validation = validateAgainstSchema(properties, component.dataSchema);
+        const validation = validateAgainstSchema(
+          properties,
+          component.dataSchema
+        );
         if (!validation.valid) {
-          errors.push(new InvalidPropertyError(slotName, componentId, validation.errors));
+          errors.push(
+            new InvalidPropertyError(slotName, componentId, validation.errors)
+          );
         }
       }
     }
@@ -1759,6 +1863,7 @@ class RecipePreflightValidator {
 ## Appendix C: CLI Tool Usage Examples
 
 ### Basic Validation
+
 ```bash
 # Validate single recipe
 npm run validate:recipe data/mods/anatomy/recipes/red_dragon.recipe.json
@@ -1776,6 +1881,7 @@ npm run validate:recipe --report red_dragon.recipe.json
 ### Output Examples
 
 **Success:**
+
 ```
 ✓ Validating red_dragon.recipe.json
 
@@ -1802,6 +1908,7 @@ Constraint Validation:
 ```
 
 **With Errors:**
+
 ```
 ✗ Validating red_dragon.recipe.json
 
@@ -1845,6 +1952,7 @@ The Anatomy System v2 is architecturally sound but suffers from severe diagnosti
 3. **Architecture (P2):** Staged validation and interactive wizards
 
 **Expected Impact:**
+
 - 80%+ reduction in troubleshooting time
 - 95%+ error detection at load time
 - Zero silent failures
@@ -1852,6 +1960,7 @@ The Anatomy System v2 is architecturally sound but suffers from severe diagnosti
 - Recipe creation time reduced from 3-6 hours to <30 minutes
 
 **Priority Action Items:**
+
 1. Implement Component Existence Checker (1 day)
 2. Implement Property Schema Validator (1 day)
 3. Enhance Error Messages (2 days)

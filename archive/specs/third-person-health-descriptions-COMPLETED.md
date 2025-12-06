@@ -1,13 +1,16 @@
 # Third-Person Health Descriptions for Generated Character Text
 
 ## Background
+
 - The Physical Condition widget in `game.html` (`src/domUI/injuryStatusPanel.js`) renders first-person injury text via `InjuryAggregationService.aggregateInjuries` and `InjuryNarrativeFormatterService.formatFirstPerson`. The same narrative is injected into the actor persona prompt (`src/prompting/characterDataXmlBuilder.js`) through `healthState.firstPersonNarrative` built in `src/turns/services/actorDataExtractor.js`.
 - Generated character descriptions (used by the Location panel tooltip and the world-context prompt) come from `BodyDescriptionComposer.composeDescription`, which stitches descriptors, `Wearing:` from `EquipmentDescriptionService`, and `Inventory:` from conspicuous items. These descriptions are stored on `core:description` and are consumed by the location renderer (`src/domUI/location/renderCharacterListItem.js`) and by the LLM world context formatter (`src/prompting/AIPromptContentProvider.js`, which parses newline/semicolon-delimited "Key: Value" pairs into bullets).
 
 ## Goal
+
 Add a reusable third-person medical report that mirrors the first-person Physical Condition narrative but exposes only visually obvious injuries. Surface it in a new `Health:` line inside generated descriptions (between `Wearing:` and `Inventory:`) so it appears both in `game.html` location character tooltips and in the prompt previewed via the "Prompt to LLM" button.
 
 ## Requirements
+
 - **Reuse pipeline**: Continue using `InjuryAggregationService` for injury data and extend `InjuryNarrativeFormatterService` with a third-person formatter so logic stays in one place and remains consistent with the first-person report.
 - **Visibility rules**:
   - Include only injuries that are externally visible to observers (missing/dismembered parts, destroyed or damaged externals, fractures, bleeding/burning/poisoning on visible parts).
@@ -18,6 +21,7 @@ Add a reusable third-person medical report that mirrors the first-person Physica
 - **Consumption**: The new line must flow through `core:description` so both the location tooltip and the world-context prompt (which splits on newlines/semicolons) render a `Health` bullet. The main actor’s first-person Physical Condition prompt remains unchanged.
 
 ## Implementation Sketch
+
 1. **Expose visibility metadata**: Update `InjuryAggregationService` to mark each part with an `isVitalOrgan` (or similar) flag derived from the existing `anatomy:vital_organ` lookup, so formatters can filter without re-querying components.
 2. **Third-person formatter**: Add a method such as `formatThirdPersonVisible(summary, options)` to `InjuryNarrativeFormatterService` that:
    - Filters out `isVitalOrgan` parts.
@@ -27,6 +31,7 @@ Add a reusable third-person medical report that mirrors the first-person Physica
 4. **Prompt/UI flow**: Because descriptions are already stored on `core:description` and consumed by both the location renderer and `AIPromptContentProvider`, no extra wiring should be needed beyond ensuring the new `Health:` line is present and well-formatted for `_parseCharacterDescription` (newline- or semicolon-delimited key/value).
 
 ## Test Plan
+
 - **Formatter unit tests** (`src/anatomy/services/injuryNarrativeFormatterService.js`):
   - Healthy actor → `Health: Perfect health.`
   - Dismemberment grouping (singular/plural) and destroyed states emit third-person sentences without pain language.
@@ -40,4 +45,3 @@ Add a reusable third-person medical report that mirrors the first-person Physica
   - World context rendering of other characters shows a `Health` bullet parsed from the description and matches the third-person formatter output.
   - Existing Physical Condition prompt (`characterDataXmlBuilder` first-person injuries) remains unaffected.
 - **DOM/UI regression test** (`src/domUI/location/renderCharacterListItem.js` or DOM snapshot): tooltips/rendered character cards display the `Health:` line with newlines preserved.
-

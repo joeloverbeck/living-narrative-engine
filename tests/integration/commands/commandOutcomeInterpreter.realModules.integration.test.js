@@ -1,9 +1,4 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import CommandOutcomeInterpreter from '../../../src/commands/interpreters/commandOutcomeInterpreter.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
@@ -61,14 +56,16 @@ async function createIntegrationHarness() {
   registry.store(
     'events',
     systemErrorEventDefinition.id,
-    systemErrorEventDefinition,
+    systemErrorEventDefinition
   );
 
   const repository = new GameDataRepository(registry, dispatcherLog.logger);
-  const schemaValidator = new AjvSchemaValidator({ logger: dispatcherLog.logger });
+  const schemaValidator = new AjvSchemaValidator({
+    logger: dispatcherLog.logger,
+  });
   await schemaValidator.addSchema(
     systemErrorEventDefinition.payloadSchema,
-    `${systemErrorEventDefinition.id}#payload`,
+    `${systemErrorEventDefinition.id}#payload`
   );
 
   const eventBus = new EventBus({ logger: dispatcherLog.logger });
@@ -97,7 +94,7 @@ async function createIntegrationHarness() {
     'actor-1',
     definition,
     {},
-    dispatcherLog.logger,
+    dispatcherLog.logger
   );
   const actor = new Entity(instanceData);
 
@@ -183,8 +180,8 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     expect(receivedEvents).toHaveLength(0);
     expect(
       interpreterLog.entries.debug.some((entry) =>
-        entry.message.includes('CommandProcessor success for action'),
-      ),
+        entry.message.includes('CommandProcessor success for action')
+      )
     ).toBe(true);
   });
 
@@ -212,9 +209,9 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     expect(
       interpreterLog.entries.debug.some((entry) =>
         entry.message.includes(
-          "CommandOutcomeInterpreter: actor actor-1: result.actionResult.actionId ('   ') invalid/missing.",
-        ),
-      ),
+          "CommandOutcomeInterpreter: actor actor-1: result.actionResult.actionId ('   ') invalid/missing."
+        )
+      )
     ).toBe(true);
   });
 
@@ -253,14 +250,17 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     });
 
     await expect(
-      interpreter.interpret({ success: true, actionResult: { actionId: 'x' } }, null),
+      interpreter.interpret(
+        { success: true, actionResult: { actionId: 'x' } },
+        null
+      )
     ).rejects.toThrow(InvalidArgumentError);
 
     await waitForDispatch();
 
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
-      'CommandOutcomeInterpreter: Invalid turnContext provided.',
+      'CommandOutcomeInterpreter: Invalid turnContext provided.'
     );
     expect(dispatcherLog.entries.error).toHaveLength(0);
   });
@@ -281,14 +281,17 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     turnContext.getActor = undefined;
 
     await expect(
-      interpreter.interpret({ success: true, actionResult: { actionId: 'x' } }, turnContext),
+      interpreter.interpret(
+        { success: true, actionResult: { actionId: 'x' } },
+        turnContext
+      )
     ).rejects.toThrow(InvalidArgumentError);
 
     await waitForDispatch();
 
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
-      'CommandOutcomeInterpreter: Invalid turnContext provided.',
+      'CommandOutcomeInterpreter: Invalid turnContext provided.'
     );
   });
 
@@ -306,14 +309,17 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     turnContext.getChosenAction = () => null;
 
     await expect(
-      interpreter.interpret({ success: true, actionResult: { actionId: 'core:test' } }, turnContext),
+      interpreter.interpret(
+        { success: true, actionResult: { actionId: 'core:test' } },
+        turnContext
+      )
     ).rejects.toThrow(InvalidArgumentError);
 
     await waitForDispatch();
 
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
-      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.',
+      'CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.'
     );
     expect(receivedEvents[0].payload.details).toMatchObject({
       actorInContext: { name: 'Anonymous' },
@@ -333,14 +339,14 @@ describe('CommandOutcomeInterpreter integration with real dispatchers', () => {
     turnContext.setChosenAction({ actionDefinitionId: 'test:chosen' });
 
     await expect(
-      interpreter.interpret({ actionResult: {} }, turnContext),
+      interpreter.interpret({ actionResult: {} }, turnContext)
     ).rejects.toThrow(InvalidArgumentError);
 
     await waitForDispatch();
 
     expect(receivedEvents).toHaveLength(1);
     expect(receivedEvents[0].payload.message).toBe(
-      "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1.",
+      "CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: actor-1."
     );
     expect(receivedEvents[0].payload.details).toMatchObject({
       receivedResult: {},

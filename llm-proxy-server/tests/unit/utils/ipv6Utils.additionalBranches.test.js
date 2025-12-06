@@ -106,5 +106,4 @@ describe('validateIPv6Address additional branch coverage', () => {
     expect(classification.type).toBe('ipv4-mapped-private');
     expect(classification.range).toContain('0.0.0.0');
   });
-
 });

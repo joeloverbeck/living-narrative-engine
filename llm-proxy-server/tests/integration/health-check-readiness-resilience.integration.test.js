@@ -1,17 +1,14 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { createLivenessCheck, createReadinessCheck } from '../../src/middleware/healthCheck.js';
+import {
+  createLivenessCheck,
+  createReadinessCheck,
+} from '../../src/middleware/healthCheck.js';
 import { createConsoleLogger } from '../../src/consoleLogger.js';
 import { NodeFileSystemReader } from '../../src/nodeFileSystemReader.js';
 import {
@@ -243,6 +240,8 @@ describe('health check readiness resilience integration', () => {
     );
 
     expect(processCheck.status).toBe('DOWN');
-    expect(processCheck.details.memoryUsage.percentage).toBeGreaterThanOrEqual(90);
+    expect(processCheck.details.memoryUsage.percentage).toBeGreaterThanOrEqual(
+      90
+    );
   });
 });

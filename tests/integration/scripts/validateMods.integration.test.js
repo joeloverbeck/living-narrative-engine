@@ -3,7 +3,15 @@
  * @description Tests the complete validation workflow with real dependencies
  */
 
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import path from 'path';
 import fs from 'fs/promises';
@@ -21,21 +29,27 @@ async function cleanupIntegrationTestMods() {
     const entries = await fs.readdir(MODS_DIR, { withFileTypes: true });
     await Promise.all(
       entries
-        .filter((entry) => entry.isDirectory() && TEST_MOD_PATTERN.test(entry.name))
+        .filter(
+          (entry) => entry.isDirectory() && TEST_MOD_PATTERN.test(entry.name)
+        )
         .map(async (entry) => {
           const modPath = path.join(MODS_DIR, entry.name);
           try {
             await fs.rm(modPath, { recursive: true, force: true });
           } catch (error) {
-             
-            console.warn(`Failed to remove leftover integration test mod ${entry.name}:`, error.message);
+            console.warn(
+              `Failed to remove leftover integration test mod ${entry.name}:`,
+              error.message
+            );
           }
         })
     );
   } catch (error) {
     if (error.code !== 'ENOENT') {
-       
-      console.warn('Failed to inspect mods directory during cleanup:', error.message);
+      console.warn(
+        'Failed to inspect mods directory during cleanup:',
+        error.message
+      );
     }
   }
 }
@@ -56,7 +70,9 @@ const TEST_EXIT_SIGNAL = Symbol.for('validateMods.test.exit');
  */
 function runCLI(args = [], options = {}) {
   const { env: envOverrides = {}, useCache = true } = options;
-  const cacheKey = useCache ? JSON.stringify({ args, env: envOverrides }) : null;
+  const cacheKey = useCache
+    ? JSON.stringify({ args, env: envOverrides })
+    : null;
 
   if (useCache && cliResultCache.has(cacheKey)) {
     return cliResultCache.get(cacheKey);
@@ -256,7 +272,7 @@ describe('ValidateMods CLI Integration', () => {
       id: testModName,
       name: 'Test Mod',
       version: '1.0.0',
-      dependencies: [{ id: 'core', version: '^1.0.0' }] // Missing 'positioning' dependency
+      dependencies: [{ id: 'core', version: '^1.0.0' }], // Missing 'positioning' dependency
     };
     await fs.writeFile(
       path.join(tempModPath, 'mod-manifest.json'),
@@ -270,10 +286,10 @@ describe('ValidateMods CLI Integration', () => {
         properties: {
           reference: {
             type: 'string',
-            default: 'positioning:standing' // Reference to undeclared dependency
-          }
-        }
-      }
+            default: 'positioning:standing', // Reference to undeclared dependency
+          },
+        },
+      },
     };
     await fs.writeFile(
       path.join(tempModPath, 'components', 'test-component.json'),
@@ -285,7 +301,7 @@ describe('ValidateMods CLI Integration', () => {
       quiet: ['--mod', testModName, '--quiet'],
       jsonQuiet: ['--mod', testModName, '--format', 'json', '--quiet'],
       verbose: ['--mod', testModName, '--verbose'],
-      concurrency: ['--mod', testModName, '--concurrency', '5', '--quiet']
+      concurrency: ['--mod', testModName, '--concurrency', '5', '--quiet'],
     };
 
     const entries = [];
@@ -313,17 +329,19 @@ describe('ValidateMods CLI Integration', () => {
     it('should validate a real mod with CLI interface', async () => {
       // Run the CLI with the test mod
       const result = await runCLI([
-        '--mod', testModName,
-        '--format', 'json',
+        '--mod',
+        testModName,
+        '--format',
+        'json',
         '--strict',
-        '--quiet'
+        '--quiet',
       ]);
 
       // Parse JSON output if available
       let jsonOutput;
       try {
         // Extract JSON from stdout (may have other output)
-        const jsonMatch = result.stdout.match(/\{[\s\S]*\}/);  
+        const jsonMatch = result.stdout.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           jsonOutput = JSON.parse(jsonMatch[0]);
         }
@@ -333,7 +351,7 @@ describe('ValidateMods CLI Integration', () => {
 
       // In strict mode with violations, should exit with code 1
       expect(result.exitCode).toBe(1);
-      
+
       // Should mention the violation in output
       const output = result.stdout + result.stderr;
       expect(output).toContain(testModName);
@@ -342,7 +360,7 @@ describe('ValidateMods CLI Integration', () => {
     it('should handle command line arguments correctly', async () => {
       // Test basic CLI argument parsing
       const result = await runCLI(['--help']);
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Living Narrative Engine Mod Validator');
       expect(result.stdout).toContain('USAGE:');
@@ -353,7 +371,7 @@ describe('ValidateMods CLI Integration', () => {
     it('should validate ecosystem by default', async () => {
       // Run without specific mods (should validate entire ecosystem)
       const result = await runCLI(['--quiet', '--format', 'json']);
-      
+
       // Should complete without crashing
       // Exit code depends on actual mod state
       expect([0, 1, 2]).toContain(result.exitCode);
@@ -361,7 +379,7 @@ describe('ValidateMods CLI Integration', () => {
 
     it('should handle version flag', async () => {
       const result = await runCLI(['--version']);
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Living Narrative Engine Mod Validator');
       expect(result.stdout).toMatch(/v\d+\.\d+\.\d+/);
@@ -381,21 +399,21 @@ describe('ValidateMods CLI Integration', () => {
   describe('CLI Error Handling', () => {
     it('should handle invalid arguments gracefully', async () => {
       const result = await runCLI(['--invalid-flag']);
-      
+
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Unknown option');
     });
 
     it('should handle invalid format option', async () => {
       const result = await runCLI(['--format', 'invalid-format']);
-      
+
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid format');
     });
 
     it('should handle invalid severity option', async () => {
       const result = await runCLI(['--severity', 'invalid']);
-      
+
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid severity');
     });
@@ -415,7 +433,9 @@ describe('ValidateMods CLI Integration', () => {
       const normalResult = fastResults.normal;
 
       // Quiet mode should produce less output than normal
-      expect(quietResult.stdout.length).toBeLessThan(normalResult.stdout.length);
+      expect(quietResult.stdout.length).toBeLessThan(
+        normalResult.stdout.length
+      );
     });
 
     it('should support concurrency option', async () => {
@@ -426,7 +446,7 @@ describe('ValidateMods CLI Integration', () => {
 
     it('should reject invalid concurrency values', async () => {
       const result = await runCLI(['--concurrency', '0']);
-      
+
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain('Invalid concurrency');
     });
@@ -437,19 +457,28 @@ describe('ValidateMods CLI Integration', () => {
       const outputFile = path.join(process.cwd(), 'test-output.json');
 
       try {
-        const result = await runCLI([
-          '--mod', testModName,
-          '--format', 'json',
-          '--output', outputFile,
-          '--quiet'
-        ], { env: FAST_ENV, useCache: false });
+        const result = await runCLI(
+          [
+            '--mod',
+            testModName,
+            '--format',
+            'json',
+            '--output',
+            outputFile,
+            '--quiet',
+          ],
+          { env: FAST_ENV, useCache: false }
+        );
 
         expect([0, 1, 2]).toContain(result.exitCode);
-        
+
         // Check if file was created
-        const fileExists = await fs.access(outputFile).then(() => true).catch(() => false);
+        const fileExists = await fs
+          .access(outputFile)
+          .then(() => true)
+          .catch(() => false);
         expect(fileExists).toBe(true);
-        
+
         if (fileExists) {
           // Clean up
           await fs.unlink(outputFile);

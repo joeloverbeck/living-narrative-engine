@@ -45,9 +45,7 @@ class InMemorySchemaValidator {
     if (!schema) {
       return {
         isValid: false,
-        errors: [
-          { instancePath: '', message: `Schema ${schemaId} not found` },
-        ],
+        errors: [{ instancePath: '', message: `Schema ${schemaId} not found` }],
       };
     }
 
@@ -101,7 +99,9 @@ describe('ShortTermMemoryService with real event infrastructure', () => {
   beforeEach(() => {
     logger = new RecordingLogger();
     schemaValidator = new InMemorySchemaValidator({
-      [ThoughtAddedSchemaId]: { requiredFields: ['entityId', 'text', 'timestamp'] },
+      [ThoughtAddedSchemaId]: {
+        requiredFields: ['entityId', 'text', 'timestamp'],
+      },
     });
     gameDataRepository = new InMemoryGameDataRepository([
       [
@@ -157,7 +157,11 @@ describe('ShortTermMemoryService with real event infrastructure', () => {
     for (const { text, at } of additions) {
       const result = service.addThought(mem, text, at);
       expect(result.wasAdded).toBe(true);
-      service.emitThoughtAdded(mem.entityId, result.entry.text, result.entry.timestamp);
+      service.emitThoughtAdded(
+        mem.entityId,
+        result.entry.text,
+        result.entry.timestamp
+      );
       await waitForDispatch();
     }
 
@@ -224,7 +228,11 @@ describe('ShortTermMemoryService with real event infrastructure', () => {
     );
     expect(result.wasAdded).toBe(true);
 
-    service.emitThoughtAdded(mem.entityId, result.entry.text, result.entry.timestamp);
+    service.emitThoughtAdded(
+      mem.entityId,
+      result.entry.text,
+      result.entry.timestamp
+    );
     await waitForDispatch();
 
     expect(receivedEvents).toHaveLength(0);

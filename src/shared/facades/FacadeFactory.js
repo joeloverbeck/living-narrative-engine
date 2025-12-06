@@ -5,7 +5,10 @@
  * @see src/shared/facades/FacadeRegistry.js
  */
 
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -70,10 +73,14 @@ class FacadeFactory {
       }
 
       this.#logger.debug(`Registered facade: ${config.name}`);
-
     } catch (error) {
-      this.#logger.error(`Failed to register facade: ${config?.name || 'unknown'}`, error);
-      throw new InvalidArgumentError(`Failed to register facade ${config?.name || 'unknown'}: ${error.message}`);
+      this.#logger.error(
+        `Failed to register facade: ${config?.name || 'unknown'}`,
+        error
+      );
+      throw new InvalidArgumentError(
+        `Failed to register facade ${config?.name || 'unknown'}: ${error.message}`
+      );
     }
   }
 
@@ -87,7 +94,12 @@ class FacadeFactory {
    */
   createFacade(facadeName, overrideOptions = {}) {
     try {
-      assertNonBlankString(facadeName, 'Facade name', 'createFacade', this.#logger);
+      assertNonBlankString(
+        facadeName,
+        'Facade name',
+        'createFacade',
+        this.#logger
+      );
 
       this.#logger.debug(`Creating facade: ${facadeName}`);
 
@@ -108,10 +120,11 @@ class FacadeFactory {
 
       this.#logger.info(`Created facade: ${facadeName}`);
       return instance;
-
     } catch (error) {
       this.#logger.error(`Failed to create facade: ${facadeName}`, error);
-      throw new InvalidArgumentError(`Failed to create facade ${facadeName}: ${error.message}`);
+      throw new InvalidArgumentError(
+        `Failed to create facade ${facadeName}: ${error.message}`
+      );
     }
   }
 
@@ -124,14 +137,21 @@ class FacadeFactory {
    */
   getSingletonFacade(facadeName, overrideOptions = {}) {
     try {
-      assertNonBlankString(facadeName, 'Facade name', 'getSingletonFacade', this.#logger);
+      assertNonBlankString(
+        facadeName,
+        'Facade name',
+        'getSingletonFacade',
+        this.#logger
+      );
 
       // Generate cache key based on facade name and options
       const cacheKey = this.#generateCacheKey(facadeName, overrideOptions);
 
       // Return existing instance if available
       if (this.#instances.has(cacheKey)) {
-        this.#logger.debug(`Returning existing singleton facade: ${facadeName}`);
+        this.#logger.debug(
+          `Returning existing singleton facade: ${facadeName}`
+        );
         return this.#instances.get(cacheKey);
       }
 
@@ -139,12 +159,16 @@ class FacadeFactory {
       this.#logger.debug(`Creating singleton facade: ${facadeName}`);
       const instance = this.createFacade(facadeName, overrideOptions);
       this.#instances.set(cacheKey, instance);
-      
-      return instance;
 
+      return instance;
     } catch (error) {
-      this.#logger.error(`Failed to get singleton facade: ${facadeName}`, error);
-      throw new InvalidArgumentError(`Failed to create facade ${facadeName}: ${error.message}`);
+      this.#logger.error(
+        `Failed to get singleton facade: ${facadeName}`,
+        error
+      );
+      throw new InvalidArgumentError(
+        `Failed to create facade ${facadeName}: ${error.message}`
+      );
     }
   }
 
@@ -162,8 +186,8 @@ class FacadeFactory {
           keysToDelete.push(key);
         }
       }
-      
-      keysToDelete.forEach(key => this.#instances.delete(key));
+
+      keysToDelete.forEach((key) => this.#instances.delete(key));
       this.#logger.debug(`Cleared singleton cache for: ${facadeName}`);
     } else {
       // Clear all
@@ -182,7 +206,10 @@ class FacadeFactory {
     try {
       return this.#container.isRegistered(facadeName);
     } catch (error) {
-      this.#logger.debug(`Error checking if facade is registered: ${facadeName}`, error);
+      this.#logger.debug(
+        `Error checking if facade is registered: ${facadeName}`,
+        error
+      );
       return false;
     }
   }
@@ -225,7 +252,7 @@ class FacadeFactory {
     if (Object.keys(options).length === 0) {
       return facadeName;
     }
-    
+
     // Create deterministic hash of options
     const optionsStr = JSON.stringify(options, Object.keys(options).sort());
     return `${facadeName}:${Buffer.from(optionsStr).toString('base64')}`;
@@ -243,8 +270,8 @@ class FacadeFactory {
         logger: this.#container.resolve('ILogger'),
         eventBus: this.#container.resolve('IEventBus'),
         unifiedCache: this.#container.resolve('IUnifiedCache'),
-        circuitBreaker: this.#container.isRegistered('ICircuitBreaker') 
-          ? this.#container.resolve('ICircuitBreaker') 
+        circuitBreaker: this.#container.isRegistered('ICircuitBreaker')
+          ? this.#container.resolve('ICircuitBreaker')
           : null,
       };
     } catch (error) {
@@ -252,7 +279,6 @@ class FacadeFactory {
       throw new InvalidArgumentError('Core facade dependencies not available');
     }
   }
-
 }
 
 export default FacadeFactory;

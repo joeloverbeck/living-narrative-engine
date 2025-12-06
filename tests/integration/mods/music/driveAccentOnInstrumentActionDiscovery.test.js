@@ -33,7 +33,9 @@ describe('music:drive_accent_on_instrument - Action Discovery', () => {
       expect(driveAccentAction.id).toBe('music:drive_accent_on_instrument');
       expect(driveAccentAction.name).toBe('Drive Accent on Instrument');
       expect(driveAccentAction.description).toContain('emphatic accent');
-      expect(driveAccentAction.template).toBe('drive an accent on {instrument}');
+      expect(driveAccentAction.template).toBe(
+        'drive an accent on {instrument}'
+      );
     });
 
     it('should use instrument_actor_is_playing scope for primary target', () => {
@@ -85,7 +87,10 @@ describe('music:drive_accent_on_instrument - Action Discovery', () => {
 
     compatibleMoods.forEach((mood) => {
       it(`should discover action when actor has ${mood} mood`, () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Performer')
@@ -121,11 +126,21 @@ describe('music:drive_accent_on_instrument - Action Discovery', () => {
   });
 
   describe('Discovery with incompatible moods', () => {
-    const incompatibleMoods = ['cheerful', 'playful', 'meditative', 'mournful', 'eerie', 'tender'];
+    const incompatibleMoods = [
+      'cheerful',
+      'playful',
+      'meditative',
+      'mournful',
+      'eerie',
+      'tender',
+    ];
 
     incompatibleMoods.forEach((mood) => {
       it(`should NOT discover action when actor has ${mood} mood`, () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Performer')
@@ -285,11 +300,10 @@ describe('music:drive_accent_on_instrument - Action Discovery', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toHaveLength(0);

@@ -140,7 +140,9 @@ describe('GOAP Complex Plans - Integration', () => {
 
         // Verify: Tasks array shows dependencies
         expect(planningCompleted.payload.tasks).toBeDefined();
-        expect(planningCompleted.payload.tasks.length).toBeGreaterThanOrEqual(3);
+        expect(planningCompleted.payload.tasks.length).toBeGreaterThanOrEqual(
+          3
+        );
 
         // Verify: Build shelter task comes AFTER gather tasks
         const taskIds = planningCompleted.payload.tasks;

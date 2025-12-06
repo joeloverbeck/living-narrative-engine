@@ -1,10 +1,10 @@
 {
-    "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "fantasy:large_speckled_hen_instance",
-    "definitionId": "fantasy:large_speckled_hen",
-    "componentOverrides": {
-        "core:position": {
-            "locationId": "fantasy:interior_of_chicken_coop_instance"
-        }
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:large_speckled_hen_instance",
+  "definitionId": "fantasy:large_speckled_hen",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:interior_of_chicken_coop_instance"
     }
+  }
 }

@@ -166,7 +166,9 @@ describe('FOR_EACH collection type validation', () => {
           interpreter,
           executeActionSequence
         )
-      ).rejects.toThrow(/collection.*must be.*string path.*Received: undefined/i);
+      ).rejects.toThrow(
+        /collection.*must be.*string path.*Received: undefined/i
+      );
     });
 
     test('throws TypeError when collection is a number', async () => {

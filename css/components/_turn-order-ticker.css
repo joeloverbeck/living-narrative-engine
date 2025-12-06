@@ -45,7 +45,9 @@
   gap: 0.25rem;
   flex-shrink: 0;
   position: relative;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Current Actor Highlight */
@@ -67,8 +69,15 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.05); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
 }
 
 /* Portrait Display */
@@ -80,7 +89,9 @@
   border-radius: 6px;
   border: 2px solid #7f8c8d;
   background: #34495e;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* Name Badge (No Portrait) */
@@ -95,7 +106,9 @@
   background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
   border: 2px solid #7f8c8d;
   border-radius: 6px;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition:
+    filter 0.3s ease,
+    opacity 0.3s ease;
 }
 
 .ticker-actor-name-badge .ticker-actor-name {
@@ -119,13 +132,13 @@
 }
 
 /* Non-Participating State */
-.ticker-actor[data-participating="false"] .ticker-actor-portrait,
-.ticker-actor[data-participating="false"] .ticker-actor-name-badge {
+.ticker-actor[data-participating='false'] .ticker-actor-portrait,
+.ticker-actor[data-participating='false'] .ticker-actor-name-badge {
   filter: grayscale(100%);
   opacity: 0.4;
 }
 
-.ticker-actor[data-participating="false"] .ticker-actor-name {
+.ticker-actor[data-participating='false'] .ticker-actor-name {
   color: #95a5a6;
   opacity: 0.6;
 }
@@ -229,7 +242,7 @@
     border-color: currentColor;
   }
 
-  .ticker-actor[data-participating="false"] {
+  .ticker-actor[data-participating='false'] {
     text-decoration: line-through;
   }
 
@@ -260,7 +273,7 @@
     color: #f5f5f5;
   }
 
-  .ticker-actor[data-participating="false"] .ticker-actor-name {
+  .ticker-actor[data-participating='false'] .ticker-actor-name {
     color: #666;
   }
 }
@@ -306,8 +319,12 @@
 }
 
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Scrollbar Styling */

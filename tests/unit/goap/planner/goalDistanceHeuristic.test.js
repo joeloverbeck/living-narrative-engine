@@ -15,14 +15,17 @@ describe('GoalDistanceHeuristic - Calculation', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-    const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-      'isNumericConstraint',
-      'calculateDistance',
+    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
     ]);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
-    ]);
+    const mockNumericEvaluator = testBed.createMock(
+      'NumericConstraintEvaluator',
+      ['isNumericConstraint', 'calculateDistance']
+    );
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     heuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator: mockEvaluator,
@@ -45,13 +48,17 @@ describe('GoalDistanceHeuristic - Calculation', () => {
 
       const goal = {
         conditions: [
-          { condition: { '!': { has_component: ['entity-1', 'core:hungry'] } } },
+          {
+            condition: { '!': { has_component: ['entity-1', 'core:hungry'] } },
+          },
           { condition: { '>=': [{ var: 'state.entity-1:core:health' }, 80] } },
         ],
       };
 
       // Both conditions satisfied
-      mockEvaluator.evaluate.mockReturnValueOnce(true).mockReturnValueOnce(true);
+      mockEvaluator.evaluate
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true);
 
       const result = heuristic.calculate(state, goal);
 
@@ -135,7 +142,9 @@ describe('GoalDistanceHeuristic - Calculation', () => {
 
       const goal = {
         conditions: [
-          { condition: { '!': { has_component: ['entity-1', 'core:hungry'] } } },
+          {
+            condition: { '!': { has_component: ['entity-1', 'core:hungry'] } },
+          },
           { condition: { '>=': [{ var: 'state.entity-1:core:health' }, 80] } },
           { condition: { has_component: ['entity-1', 'core:shelter'] } },
         ],
@@ -181,7 +190,11 @@ describe('GoalDistanceHeuristic - Calculation', () => {
 
       const goal = {
         conditions: [
-          { condition: { '==': [{ var: 'state.entity-1:core:nutrition.hungerLevel' }, 0] } },
+          {
+            condition: {
+              '==': [{ var: 'state.entity-1:core:nutrition.hungerLevel' }, 0],
+            },
+          },
           { condition: { '>': [{ var: 'state.entity-1:core:health' }, 80] } },
         ],
       };
@@ -201,12 +214,18 @@ describe('GoalDistanceHeuristic - Calculation', () => {
 
       const goal = {
         conditions: [
-          { condition: { '==': [{ var: 'state.entity-1:core:hungry' }, false] } },
-          { condition: { '==': [{ var: 'state.entity-1:core:tired' }, false] } },
+          {
+            condition: { '==': [{ var: 'state.entity-1:core:hungry' }, false] },
+          },
+          {
+            condition: { '==': [{ var: 'state.entity-1:core:tired' }, false] },
+          },
         ],
       };
 
-      mockEvaluator.evaluate.mockReturnValueOnce(false).mockReturnValueOnce(true);
+      mockEvaluator.evaluate
+        .mockReturnValueOnce(false)
+        .mockReturnValueOnce(true);
 
       const result = heuristic.calculate(state, goal);
 
@@ -255,7 +274,9 @@ describe('GoalDistanceHeuristic - Calculation', () => {
       const result2 = heuristic.calculate(state, {});
       expect(result2).toBe(Infinity);
 
-      const result3 = heuristic.calculate(state, { conditions: 'not-an-array' });
+      const result3 = heuristic.calculate(state, {
+        conditions: 'not-an-array',
+      });
       expect(result3).toBe(Infinity);
 
       expect(mockLogger.warn).toHaveBeenCalledTimes(3);
@@ -331,7 +352,9 @@ describe('GoalDistanceHeuristic - Calculation', () => {
     it('should accept tasks parameter for interface compatibility (unused)', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:hungry'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:hungry'] } },
+        ],
       };
       const tasks = [{ id: 'task-1' }, { id: 'task-2' }];
 
@@ -346,7 +369,9 @@ describe('GoalDistanceHeuristic - Calculation', () => {
     it('should work without tasks parameter', () => {
       const state = { 'entity-1:core:hungry': true };
       const goal = {
-        conditions: [{ condition: { has_component: ['entity-1', 'core:hungry'] } }],
+        conditions: [
+          { condition: { has_component: ['entity-1', 'core:hungry'] } },
+        ],
       };
 
       mockEvaluator.evaluate.mockReturnValue(true);
@@ -368,14 +393,17 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
     mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
       'isNumericConstraint',
       'calculateDistance',
     ]);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
-    ]);
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     heuristic = new GoalDistanceHeuristic({
       jsonLogicEvaluator: mockEvaluator,
@@ -405,7 +433,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       const result = heuristic.calculate(state, goal);
 
       expect(result).toBe(50);
-      expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(goal.goalState);
+      expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(
+        goal.goalState
+      );
       expect(mockNumericEvaluator.calculateDistance).toHaveBeenCalledTimes(1);
       const [goalArg, evaluationContext, options] =
         mockNumericEvaluator.calculateDistance.mock.calls[0];
@@ -418,7 +448,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       expect(options).toEqual(
         expect.objectContaining({
           stateView: expect.any(Object),
-          metadata: expect.objectContaining({ origin: 'GoalDistanceHeuristic' }),
+          metadata: expect.objectContaining({
+            origin: 'GoalDistanceHeuristic',
+          }),
         })
       );
       expect(mockEvaluator.evaluate).not.toHaveBeenCalled();
@@ -470,7 +502,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       expect(options).toEqual(
         expect.objectContaining({
           stateView: expect.any(Object),
-          metadata: expect.objectContaining({ origin: 'GoalDistanceHeuristic' }),
+          metadata: expect.objectContaining({
+            origin: 'GoalDistanceHeuristic',
+          }),
         })
       );
     });
@@ -561,7 +595,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       const result = heuristic.calculate(state, goal);
 
       expect(result).toBe(0);
-      expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(goal.goalState);
+      expect(mockNumericEvaluator.isNumericConstraint).toHaveBeenCalledWith(
+        goal.goalState
+      );
       expect(mockNumericEvaluator.calculateDistance).not.toHaveBeenCalled();
       expect(mockEvaluator.evaluate).toHaveBeenCalledWith(
         goal.goalState,
@@ -597,7 +633,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       };
 
       const goal = {
-        conditions: [{ condition: { '>=': [{ var: 'state.actor:core:health' }, 80] } }],
+        conditions: [
+          { condition: { '>=': [{ var: 'state.actor:core:health' }, 80] } },
+        ],
       };
 
       mockEvaluator.evaluate.mockReturnValue(false);
@@ -619,7 +657,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       const goal = {
         conditions: [
           { condition: { '>=': [{ var: 'state.actor:core:health' }, 80] } },
-          { condition: { '<=': [{ var: 'state.actor:core:needs.hunger' }, 30] } },
+          {
+            condition: { '<=': [{ var: 'state.actor:core:needs.hunger' }, 30] },
+          },
         ],
       };
 
@@ -650,7 +690,9 @@ describe('GoalDistanceHeuristic - Numeric Constraints', () => {
       const result = heuristic.calculate(state, goal);
 
       expect(result).toBe(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Failed to evaluate'));
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to evaluate')
+      );
     });
 
     it('should handle missing state properties', () => {
@@ -718,13 +760,14 @@ describe('GoalDistanceHeuristic - Construction', () => {
 
   it('should validate jsonLogicEvaluator dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-      'isNumericConstraint',
-      'calculateDistance',
-    ]);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
-    ]);
+    const mockNumericEvaluator = testBed.createMock(
+      'NumericConstraintEvaluator',
+      ['isNumericConstraint', 'calculateDistance']
+    );
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     expect(() => {
       new GoalDistanceHeuristic({
@@ -747,10 +790,13 @@ describe('GoalDistanceHeuristic - Construction', () => {
 
   it('should validate numericConstraintEvaluator dependency', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
     ]);
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     expect(() => {
       new GoalDistanceHeuristic({
@@ -772,14 +818,17 @@ describe('GoalDistanceHeuristic - Construction', () => {
   });
 
   it('should use fallback logger if invalid logger provided', () => {
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-    const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-      'isNumericConstraint',
-      'calculateDistance',
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
     ]);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
-    ]);
+    const mockNumericEvaluator = testBed.createMock(
+      'NumericConstraintEvaluator',
+      ['isNumericConstraint', 'calculateDistance']
+    );
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     // ensureValidLogger creates a fallback instead of throwing
     const heuristic = new GoalDistanceHeuristic({
@@ -793,14 +842,17 @@ describe('GoalDistanceHeuristic - Construction', () => {
 
   it('should construct successfully with valid dependencies', () => {
     const mockLogger = testBed.createMockLogger();
-    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-    const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-      'isNumericConstraint',
-      'calculateDistance',
+    const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
     ]);
-    const mockPlanningSimulator = testBed.createMock('IPlanningEffectsSimulator', [
-      'simulateEffects',
-    ]);
+    const mockNumericEvaluator = testBed.createMock(
+      'NumericConstraintEvaluator',
+      ['isNumericConstraint', 'calculateDistance']
+    );
+    const mockPlanningSimulator = testBed.createMock(
+      'IPlanningEffectsSimulator',
+      ['simulateEffects']
+    );
 
     expect(() => {
       new GoalDistanceHeuristic({
@@ -824,7 +876,9 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
   beforeEach(() => {
     testBed = createTestBed();
     mockLogger = testBed.createMockLogger();
-    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
+    mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+      'evaluate',
+    ]);
     mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
       'isNumericConstraint',
       'calculateDistance',
@@ -858,7 +912,11 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
           id: 'eat',
           cost: 5,
           planningEffects: [
-            { op: 'MODIFY_COMPONENT', path: 'actor:core:needs', field: 'hunger' },
+            {
+              op: 'MODIFY_COMPONENT',
+              path: 'actor:core:needs',
+              field: 'hunger',
+            },
           ],
         },
       ];
@@ -907,7 +965,11 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
           id: 'eat_small',
           cost: 5,
           planningEffects: [
-            { op: 'MODIFY_COMPONENT', path: 'actor:core:needs', field: 'hunger' },
+            {
+              op: 'MODIFY_COMPONENT',
+              path: 'actor:core:needs',
+              field: 'hunger',
+            },
           ],
         },
       ];
@@ -1065,9 +1127,17 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
         goalState: { '<=': [{ var: 'state.actor:core:needs.hunger' }, 10] },
       };
       const tasks = [
-        { id: 'nibble', cost: 2, planningEffects: [{ op: 'MODIFY_COMPONENT' }] },
+        {
+          id: 'nibble',
+          cost: 2,
+          planningEffects: [{ op: 'MODIFY_COMPONENT' }],
+        },
         { id: 'eat', cost: 5, planningEffects: [{ op: 'MODIFY_COMPONENT' }] },
-        { id: 'feast', cost: 10, planningEffects: [{ op: 'MODIFY_COMPONENT' }] },
+        {
+          id: 'feast',
+          cost: 10,
+          planningEffects: [{ op: 'MODIFY_COMPONENT' }],
+        },
       ];
 
       mockNumericEvaluator.isNumericConstraint.mockReturnValue(true);
@@ -1355,11 +1425,13 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
   describe('Constructor validation', () => {
     it('should validate planningEffectsSimulator dependency', () => {
       const mockLogger = testBed.createMockLogger();
-      const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-      const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-        'isNumericConstraint',
-        'calculateDistance',
+      const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+        'evaluate',
       ]);
+      const mockNumericEvaluator = testBed.createMock(
+        'NumericConstraintEvaluator',
+        ['isNumericConstraint', 'calculateDistance']
+      );
 
       expect(() => {
         new GoalDistanceHeuristic({
@@ -1382,11 +1454,13 @@ describe('GoalDistanceHeuristic - Enhanced Multi-Action Estimation', () => {
 
     it('should construct successfully with all dependencies', () => {
       const mockLogger = testBed.createMockLogger();
-      const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', ['evaluate']);
-      const mockNumericEvaluator = testBed.createMock('NumericConstraintEvaluator', [
-        'isNumericConstraint',
-        'calculateDistance',
+      const mockEvaluator = testBed.createMock('JsonLogicEvaluationService', [
+        'evaluate',
       ]);
+      const mockNumericEvaluator = testBed.createMock(
+        'NumericConstraintEvaluator',
+        ['isNumericConstraint', 'calculateDistance']
+      );
       const mockSimulator = testBed.createMock('IPlanningEffectsSimulator', [
         'simulateEffects',
       ]);

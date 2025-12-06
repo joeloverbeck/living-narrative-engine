@@ -33,7 +33,15 @@ describe('persistNotes integration coverage', () => {
     const notesService = { addNotes: jest.fn() };
     const componentAccess = createComponentAccess();
 
-    persistNotes({}, createActor(), logger, dispatcher, notesService, new Date(), componentAccess);
+    persistNotes(
+      {},
+      createActor(),
+      logger,
+      dispatcher,
+      notesService,
+      new Date(),
+      componentAccess
+    );
 
     expect(notesService.addNotes).not.toHaveBeenCalled();
     expect(componentAccess.fetchComponent).not.toHaveBeenCalled();
@@ -62,7 +70,8 @@ describe('persistNotes integration coverage', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
+        message:
+          "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
         details: { actorId: actor.id },
       })
     );
@@ -103,7 +112,10 @@ describe('persistNotes integration coverage', () => {
     const actor = createActor({ id: 'actor-with-notes' });
     const now = new Date('2024-05-01T10:00:00.000Z');
 
-    const firstNote = { text: 'Remember the secret entrance', subject: 'Hidden Door' };
+    const firstNote = {
+      text: 'Remember the secret entrance',
+      subject: 'Hidden Door',
+    };
     const secondNote = {
       text: 'Visit the market',
       subject: 'Marketplace',
@@ -121,7 +133,10 @@ describe('persistNotes integration coverage', () => {
       componentAccess
     );
 
-    expect(componentAccess.fetchComponent).toHaveBeenCalledWith(actor, NOTES_COMPONENT_ID);
+    expect(componentAccess.fetchComponent).toHaveBeenCalledWith(
+      actor,
+      NOTES_COMPONENT_ID
+    );
     expect(componentAccess.applyComponent).toHaveBeenCalledTimes(1);
     const [, , updatedComponent] = componentAccess.applyComponent.mock.calls[0];
     expect(updatedComponent.notes).toHaveLength(2);
@@ -164,7 +179,11 @@ describe('persistNotes integration coverage', () => {
     persistNotes(
       {
         notes: [
-          { text: 'Artifact glows faintly', subject: 'Ancient Artifact', subjectType: 'INVALID_TYPE' },
+          {
+            text: 'Artifact glows faintly',
+            subject: 'Ancient Artifact',
+            subjectType: 'INVALID_TYPE',
+          },
         ],
       },
       actor,
@@ -258,7 +277,15 @@ describe('persistNotes integration coverage', () => {
   it('does not apply component changes when the notes service reports no modifications', () => {
     const logger = createLogger();
     const componentAccess = createComponentAccess();
-    const existingComponent = { notes: [{ text: 'Existing', subject: 'Lore', subjectType: DEFAULT_SUBJECT_TYPE }] };
+    const existingComponent = {
+      notes: [
+        {
+          text: 'Existing',
+          subject: 'Lore',
+          subjectType: DEFAULT_SUBJECT_TYPE,
+        },
+      ],
+    };
     componentAccess.fetchComponent.mockReturnValue(existingComponent);
 
     const addNotes = jest.fn(() => ({
@@ -272,7 +299,11 @@ describe('persistNotes integration coverage', () => {
     persistNotes(
       {
         notes: [
-          { text: 'Existing', subject: 'Lore', subjectType: DEFAULT_SUBJECT_TYPE },
+          {
+            text: 'Existing',
+            subject: 'Lore',
+            subjectType: DEFAULT_SUBJECT_TYPE,
+          },
         ],
       },
       createActor(),
@@ -283,7 +314,11 @@ describe('persistNotes integration coverage', () => {
       componentAccess
     );
 
-    expect(addNotes).toHaveBeenCalledWith(existingComponent, expect.any(Array), now);
+    expect(addNotes).toHaveBeenCalledWith(
+      existingComponent,
+      expect.any(Array),
+      now
+    );
     expect(componentAccess.applyComponent).not.toHaveBeenCalled();
     expect(logger.debug).not.toHaveBeenCalled();
   });

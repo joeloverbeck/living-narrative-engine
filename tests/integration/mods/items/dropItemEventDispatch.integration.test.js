@@ -37,9 +37,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
 
   it('should dispatch items:item_dropped event with correct payload structure', async () => {
     // Arrange: Create scenario with actor holding an item (with grabbing hands for prerequisite)
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
@@ -97,9 +95,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
 
   it('should not trigger EventBus invalid event name error', async () => {
     // Arrange (with grabbing hands for prerequisite)
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')
@@ -137,9 +133,7 @@ describe('dropItemAtLocationHandler - Event Dispatch Signature Bug', () => {
 
   it('should successfully validate event payload against schema', async () => {
     // Arrange (with grabbing hands for prerequisite)
-    const room = new ModEntityBuilder('test-room')
-      .asRoom('Test Room')
-      .build();
+    const room = new ModEntityBuilder('test-room').asRoom('Test Room').build();
 
     const actorBuilder = new ModEntityBuilder('test:actor1')
       .withName('TestActor')

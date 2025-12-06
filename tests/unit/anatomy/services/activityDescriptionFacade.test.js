@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ActivityDescriptionFacade from '../../../../src/anatomy/services/activityDescriptionFacade.js';
 
 describe('ActivityDescriptionFacade', () => {
@@ -90,7 +97,9 @@ describe('ActivityDescriptionFacade', () => {
     mockIndexManager = {
       buildIndex: jest.fn((activities) => ({
         byTarget: new Map(),
-        byPriority: [...activities].sort((a, b) => (b.priority || 0) - (a.priority || 0)),
+        byPriority: [...activities].sort(
+          (a, b) => (b.priority || 0) - (a.priority || 0)
+        ),
         byGroupKey: new Map(),
         all: activities,
       })),
@@ -107,7 +116,7 @@ describe('ActivityDescriptionFacade', () => {
 
     mockGroupingSystem = {
       groupActivities: jest.fn((activities) =>
-        activities.map(activity => ({
+        activities.map((activity) => ({
           primaryActivity: activity,
           relatedActivities: [],
         }))
@@ -157,63 +166,75 @@ describe('ActivityDescriptionFacade', () => {
 
   describe('Constructor', () => {
     it('should accept null logger and create fallback', () => {
-      expect(() => new ActivityDescriptionFacade({
-        logger: null,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        cacheManager: mockCacheManager,
-        indexManager: mockIndexManager,
-        metadataCollectionSystem: mockMetadataCollectionSystem,
-        nlgSystem: mockNLGSystem,
-        groupingSystem: mockGroupingSystem,
-        contextBuildingSystem: mockContextBuildingSystem,
-        filteringSystem: mockFilteringSystem,
-      })).not.toThrow();
+      expect(
+        () =>
+          new ActivityDescriptionFacade({
+            logger: null,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            cacheManager: mockCacheManager,
+            indexManager: mockIndexManager,
+            metadataCollectionSystem: mockMetadataCollectionSystem,
+            nlgSystem: mockNLGSystem,
+            groupingSystem: mockGroupingSystem,
+            contextBuildingSystem: mockContextBuildingSystem,
+            filteringSystem: mockFilteringSystem,
+          })
+      ).not.toThrow();
     });
 
     it('should validate entityManager dependency', () => {
-      expect(() => new ActivityDescriptionFacade({
-        logger: mockLogger,
-        entityManager: null,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        cacheManager: mockCacheManager,
-        indexManager: mockIndexManager,
-        metadataCollectionSystem: mockMetadataCollectionSystem,
-        nlgSystem: mockNLGSystem,
-        groupingSystem: mockGroupingSystem,
-        contextBuildingSystem: mockContextBuildingSystem,
-        filteringSystem: mockFilteringSystem,
-      })).toThrow(/IEntityManager/);
+      expect(
+        () =>
+          new ActivityDescriptionFacade({
+            logger: mockLogger,
+            entityManager: null,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            cacheManager: mockCacheManager,
+            indexManager: mockIndexManager,
+            metadataCollectionSystem: mockMetadataCollectionSystem,
+            nlgSystem: mockNLGSystem,
+            groupingSystem: mockGroupingSystem,
+            contextBuildingSystem: mockContextBuildingSystem,
+            filteringSystem: mockFilteringSystem,
+          })
+      ).toThrow(/IEntityManager/);
     });
 
     it('should validate anatomyFormattingService dependency', () => {
-      expect(() => new ActivityDescriptionFacade({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: null,
-        cacheManager: mockCacheManager,
-        indexManager: mockIndexManager,
-        metadataCollectionSystem: mockMetadataCollectionSystem,
-        nlgSystem: mockNLGSystem,
-        groupingSystem: mockGroupingSystem,
-        contextBuildingSystem: mockContextBuildingSystem,
-        filteringSystem: mockFilteringSystem,
-      })).toThrow(/AnatomyFormattingService/);
+      expect(
+        () =>
+          new ActivityDescriptionFacade({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: null,
+            cacheManager: mockCacheManager,
+            indexManager: mockIndexManager,
+            metadataCollectionSystem: mockMetadataCollectionSystem,
+            nlgSystem: mockNLGSystem,
+            groupingSystem: mockGroupingSystem,
+            contextBuildingSystem: mockContextBuildingSystem,
+            filteringSystem: mockFilteringSystem,
+          })
+      ).toThrow(/AnatomyFormattingService/);
     });
 
     it('should validate cacheManager dependency', () => {
-      expect(() => new ActivityDescriptionFacade({
-        logger: mockLogger,
-        entityManager: mockEntityManager,
-        anatomyFormattingService: mockAnatomyFormattingService,
-        cacheManager: null,
-        indexManager: mockIndexManager,
-        metadataCollectionSystem: mockMetadataCollectionSystem,
-        nlgSystem: mockNLGSystem,
-        groupingSystem: mockGroupingSystem,
-        contextBuildingSystem: mockContextBuildingSystem,
-        filteringSystem: mockFilteringSystem,
-      })).toThrow(/IActivityCacheManager/);
+      expect(
+        () =>
+          new ActivityDescriptionFacade({
+            logger: mockLogger,
+            entityManager: mockEntityManager,
+            anatomyFormattingService: mockAnatomyFormattingService,
+            cacheManager: null,
+            indexManager: mockIndexManager,
+            metadataCollectionSystem: mockMetadataCollectionSystem,
+            nlgSystem: mockNLGSystem,
+            groupingSystem: mockGroupingSystem,
+            contextBuildingSystem: mockContextBuildingSystem,
+            filteringSystem: mockFilteringSystem,
+          })
+      ).toThrow(/IActivityCacheManager/);
     });
 
     it('should validate all service dependencies', () => {
@@ -226,7 +247,7 @@ describe('ActivityDescriptionFacade', () => {
         'filteringSystem',
       ];
 
-      requiredServices.forEach(serviceName => {
+      requiredServices.forEach((serviceName) => {
         const config = {
           logger: mockLogger,
           entityManager: mockEntityManager,
@@ -247,10 +268,22 @@ describe('ActivityDescriptionFacade', () => {
     });
 
     it('should register required caches', () => {
-      expect(mockCacheManager.registerCache).toHaveBeenCalledWith('entityName', expect.any(Object));
-      expect(mockCacheManager.registerCache).toHaveBeenCalledWith('gender', expect.any(Object));
-      expect(mockCacheManager.registerCache).toHaveBeenCalledWith('activityIndex', expect.any(Object));
-      expect(mockCacheManager.registerCache).toHaveBeenCalledWith('closeness', expect.any(Object));
+      expect(mockCacheManager.registerCache).toHaveBeenCalledWith(
+        'entityName',
+        expect.any(Object)
+      );
+      expect(mockCacheManager.registerCache).toHaveBeenCalledWith(
+        'gender',
+        expect.any(Object)
+      );
+      expect(mockCacheManager.registerCache).toHaveBeenCalledWith(
+        'activityIndex',
+        expect.any(Object)
+      );
+      expect(mockCacheManager.registerCache).toHaveBeenCalledWith(
+        'closeness',
+        expect.any(Object)
+      );
     });
 
     it('should handle optional eventBus parameter', () => {
@@ -313,25 +346,34 @@ describe('ActivityDescriptionFacade', () => {
     it('should orchestrate all services in correct order', async () => {
       const callOrder = [];
 
-      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        callOrder.push('collectMetadata');
-        return [{ id: '1', verb: 'walks' }];
-      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          callOrder.push('collectMetadata');
+          return [{ id: '1', verb: 'walks' }];
+        }
+      );
 
-      mockFilteringSystem.filterByConditions.mockImplementation((activities) => {
-        callOrder.push('filter');
-        return activities;
-      });
+      mockFilteringSystem.filterByConditions.mockImplementation(
+        (activities) => {
+          callOrder.push('filter');
+          return activities;
+        }
+      );
 
       mockGroupingSystem.groupActivities.mockImplementation((activities) => {
         callOrder.push('group');
-        return activities.map(a => ({ primaryActivity: a, relatedActivities: [] }));
+        return activities.map((a) => ({
+          primaryActivity: a,
+          relatedActivities: [],
+        }));
       });
 
-      mockContextBuildingSystem.buildActivityContext.mockImplementation((groups) => {
-        callOrder.push('buildContext');
-        return groups;
-      });
+      mockContextBuildingSystem.buildActivityContext.mockImplementation(
+        (groups) => {
+          callOrder.push('buildContext');
+          return groups;
+        }
+      );
 
       mockNLGSystem.formatActivityDescription.mockImplementation(() => {
         callOrder.push('format');
@@ -356,14 +398,18 @@ describe('ActivityDescriptionFacade', () => {
 
       await facade.generateActivityDescription(entity);
 
-      expect(mockMetadataCollectionSystem.collectActivityMetadata).toHaveBeenCalledWith(entity);
+      expect(
+        mockMetadataCollectionSystem.collectActivityMetadata
+      ).toHaveBeenCalledWith(entity);
     });
 
     it('should pass activities and entity to filtering', async () => {
       const activities = [{ id: '1', verb: 'walks' }];
       const entity = { id: 'entity_1' };
 
-      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(activities);
+      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(
+        activities
+      );
 
       await facade.generateActivityDescription(entity);
 
@@ -376,45 +422,60 @@ describe('ActivityDescriptionFacade', () => {
     it('should pass filtered activities to grouping', async () => {
       const filteredActivities = [{ id: '1', verb: 'walks' }];
 
-      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(filteredActivities);
-      mockFilteringSystem.filterByConditions.mockReturnValue(filteredActivities);
+      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(
+        filteredActivities
+      );
+      mockFilteringSystem.filterByConditions.mockReturnValue(
+        filteredActivities
+      );
 
       const entity = { id: 'entity_1' };
       await facade.generateActivityDescription(entity);
 
-      expect(mockGroupingSystem.groupActivities).toHaveBeenCalledWith(filteredActivities);
+      expect(mockGroupingSystem.groupActivities).toHaveBeenCalledWith(
+        filteredActivities
+      );
     });
 
     it('should pass grouped activities and entity to context building', async () => {
       const groups = [
-        { primaryActivity: { id: '1', verb: 'walks' }, relatedActivities: [] }
+        { primaryActivity: { id: '1', verb: 'walks' }, relatedActivities: [] },
       ];
       const entity = { id: 'entity_1' };
 
-      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue([groups[0].primaryActivity]);
+      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue([
+        groups[0].primaryActivity,
+      ]);
       mockGroupingSystem.groupActivities.mockReturnValue(groups);
 
       await facade.generateActivityDescription(entity);
 
-      expect(mockContextBuildingSystem.buildActivityContext).toHaveBeenCalledWith(
-        groups,
-        entity
-      );
+      expect(
+        mockContextBuildingSystem.buildActivityContext
+      ).toHaveBeenCalledWith(groups, entity);
     });
 
     it('should pass activities with context, entity, and config to NLG', async () => {
       const activitiesWithContext = [
-        { primaryActivity: { id: '1', verb: 'walks' }, relatedActivities: [], tone: 'neutral' }
+        {
+          primaryActivity: { id: '1', verb: 'walks' },
+          relatedActivities: [],
+          tone: 'neutral',
+        },
       ];
       const entity = { id: 'entity_1' };
       const config = { enabled: true, maxActivities: 5 };
 
       mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue([
-        activitiesWithContext[0].primaryActivity
+        activitiesWithContext[0].primaryActivity,
       ]);
       mockGroupingSystem.groupActivities.mockReturnValue(activitiesWithContext);
-      mockContextBuildingSystem.buildActivityContext.mockReturnValue(activitiesWithContext);
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(config);
+      mockContextBuildingSystem.buildActivityContext.mockReturnValue(
+        activitiesWithContext
+      );
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockReturnValue(
+        config
+      );
 
       await facade.generateActivityDescription(entity);
 
@@ -426,9 +487,11 @@ describe('ActivityDescriptionFacade', () => {
     });
 
     it('should handle errors gracefully and return empty string', async () => {
-      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        throw new Error('Collection failed');
-      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          throw new Error('Collection failed');
+        }
+      );
 
       const entity = { id: 'entity_1' };
       const result = await facade.generateActivityDescription(entity);
@@ -441,9 +504,11 @@ describe('ActivityDescriptionFacade', () => {
     });
 
     it('should dispatch error event when eventBus is available', async () => {
-      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        throw new Error('Collection failed');
-      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          throw new Error('Collection failed');
+        }
+      );
 
       const entity = { id: 'entity_1' };
       await facade.generateActivityDescription(entity);
@@ -458,9 +523,11 @@ describe('ActivityDescriptionFacade', () => {
     });
 
     it('should not dispatch error event when event bus is unavailable', async () => {
-      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementationOnce(() => {
-        throw new Error('Collection failed');
-      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementationOnce(
+        () => {
+          throw new Error('Collection failed');
+        }
+      );
 
       const facadeWithoutEventBus = new ActivityDescriptionFacade({
         logger: mockLogger,
@@ -489,9 +556,11 @@ describe('ActivityDescriptionFacade', () => {
       mockEventBus.dispatch.mockImplementation(() => {
         throw dispatchError;
       });
-      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(() => {
-        throw new Error('Collection failed');
-      });
+      mockMetadataCollectionSystem.collectActivityMetadata.mockImplementation(
+        () => {
+          throw new Error('Collection failed');
+        }
+      );
 
       const entity = { id: 'entity_1' };
       await facade.generateActivityDescription(entity);
@@ -503,15 +572,17 @@ describe('ActivityDescriptionFacade', () => {
     });
 
     it('should use default config when getActivityIntegrationConfig fails', async () => {
-      mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(() => {
-        throw new Error('Config error');
-      });
+      mockAnatomyFormattingService.getActivityIntegrationConfig.mockImplementation(
+        () => {
+          throw new Error('Config error');
+        }
+      );
 
       mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue([
-        { id: '1', verb: 'walks' }
+        { id: '1', verb: 'walks' },
       ]);
       mockGroupingSystem.groupActivities.mockReturnValue([
-        { primaryActivity: { id: '1', verb: 'walks' }, relatedActivities: [] }
+        { primaryActivity: { id: '1', verb: 'walks' }, relatedActivities: [] },
       ]);
 
       const entity = { id: 'entity_1' };
@@ -538,7 +609,9 @@ describe('ActivityDescriptionFacade', () => {
       facade.clearAllCaches();
 
       expect(mockCacheManager.clearAll).toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith('All activity description caches cleared');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'All activity description caches cleared'
+      );
     });
 
     it('should handle clearAll errors gracefully', () => {
@@ -548,22 +621,39 @@ describe('ActivityDescriptionFacade', () => {
 
       facade.clearAllCaches();
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to clear caches', expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to clear caches',
+        expect.any(Error)
+      );
     });
 
     it('should invalidate cache for specific entity', () => {
       facade.invalidateCache('entity_1');
 
-      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('entityName', 'entity_1');
-      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('gender', 'entity_1');
-      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('activityIndex', 'entity_1');
-      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('closeness', 'entity_1');
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith(
+        'entityName',
+        'entity_1'
+      );
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith(
+        'gender',
+        'entity_1'
+      );
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith(
+        'activityIndex',
+        'entity_1'
+      );
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith(
+        'closeness',
+        'entity_1'
+      );
     });
 
     it('should log debug message when invalidating entity cache', () => {
       facade.invalidateCache('entity_1');
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('Cache invalidated for entity: entity_1');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'Cache invalidated for entity: entity_1'
+      );
     });
 
     it('should handle missing entityId in invalidateCache', () => {
@@ -643,7 +733,10 @@ describe('ActivityDescriptionFacade', () => {
 
       mockCacheManager.invalidate.mockClear();
       hooks.invalidateEntities(['entity_1']);
-      expect(mockCacheManager.invalidate).toHaveBeenCalledWith('entityName', 'entity_1');
+      expect(mockCacheManager.invalidate).toHaveBeenCalledWith(
+        'entityName',
+        'entity_1'
+      );
     });
 
     it('should expose getActivityIntegrationConfig hook', () => {
@@ -663,9 +756,15 @@ describe('ActivityDescriptionFacade', () => {
     it('should merge test hooks from all services', () => {
       mockNLGSystem.getTestHooks.mockReturnValue({ nlgHook: jest.fn() });
       mockGroupingSystem.getTestHooks.mockReturnValue({ groupHook: jest.fn() });
-      mockContextBuildingSystem.getTestHooks.mockReturnValue({ contextHook: jest.fn() });
-      mockFilteringSystem.getTestHooks.mockReturnValue({ filterHook: jest.fn() });
-      mockMetadataCollectionSystem.getTestHooks = jest.fn(() => ({ metadataHook: jest.fn() }));
+      mockContextBuildingSystem.getTestHooks.mockReturnValue({
+        contextHook: jest.fn(),
+      });
+      mockFilteringSystem.getTestHooks.mockReturnValue({
+        filterHook: jest.fn(),
+      });
+      mockMetadataCollectionSystem.getTestHooks = jest.fn(() => ({
+        metadataHook: jest.fn(),
+      }));
 
       const newFacade = new ActivityDescriptionFacade({
         logger: mockLogger,
@@ -702,7 +801,9 @@ describe('ActivityDescriptionFacade', () => {
     it('should log info message on destroy', () => {
       facade.destroy();
 
-      expect(mockLogger.info).toHaveBeenCalledWith('ActivityDescriptionFacade destroyed');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActivityDescriptionFacade destroyed'
+      );
     });
 
     it('should handle destroy errors gracefully', () => {
@@ -773,7 +874,9 @@ describe('ActivityDescriptionFacade', () => {
       facadeWithEvents.destroy();
 
       // Event unsubscribers are cleared
-      expect(mockLogger.info).toHaveBeenCalledWith('ActivityDescriptionFacade destroyed');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ActivityDescriptionFacade destroyed'
+      );
     });
   });
 
@@ -787,29 +890,42 @@ describe('ActivityDescriptionFacade', () => {
       const filteredMetadata = [rawMetadata[0]]; // Filter keeps only highest priority
 
       const groupedActivities = [
-        { primaryActivity: filteredMetadata[0], relatedActivities: [] }
+        { primaryActivity: filteredMetadata[0], relatedActivities: [] },
       ];
 
       const activitiesWithContext = [
-        { ...groupedActivities[0], tone: 'neutral', intensity: 'moderate' }
+        { ...groupedActivities[0], tone: 'neutral', intensity: 'moderate' },
       ];
 
       const finalDescription = 'Entity_entity_1 walks confidently';
 
-      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(rawMetadata);
+      mockMetadataCollectionSystem.collectActivityMetadata.mockReturnValue(
+        rawMetadata
+      );
       mockFilteringSystem.filterByConditions.mockReturnValue(filteredMetadata);
       mockGroupingSystem.groupActivities.mockReturnValue(groupedActivities);
-      mockContextBuildingSystem.buildActivityContext.mockReturnValue(activitiesWithContext);
+      mockContextBuildingSystem.buildActivityContext.mockReturnValue(
+        activitiesWithContext
+      );
       mockNLGSystem.formatActivityDescription.mockReturnValue(finalDescription);
 
       const entity = { id: 'entity_1' };
       const result = await facade.generateActivityDescription(entity);
 
       expect(result).toBe(finalDescription);
-      expect(mockMetadataCollectionSystem.collectActivityMetadata).toHaveBeenCalledWith(entity);
-      expect(mockFilteringSystem.filterByConditions).toHaveBeenCalledWith(rawMetadata, entity);
-      expect(mockGroupingSystem.groupActivities).toHaveBeenCalledWith(filteredMetadata);
-      expect(mockContextBuildingSystem.buildActivityContext).toHaveBeenCalledWith(groupedActivities, entity);
+      expect(
+        mockMetadataCollectionSystem.collectActivityMetadata
+      ).toHaveBeenCalledWith(entity);
+      expect(mockFilteringSystem.filterByConditions).toHaveBeenCalledWith(
+        rawMetadata,
+        entity
+      );
+      expect(mockGroupingSystem.groupActivities).toHaveBeenCalledWith(
+        filteredMetadata
+      );
+      expect(
+        mockContextBuildingSystem.buildActivityContext
+      ).toHaveBeenCalledWith(groupedActivities, entity);
       expect(mockNLGSystem.formatActivityDescription).toHaveBeenCalled();
     });
 

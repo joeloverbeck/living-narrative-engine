@@ -7,7 +7,11 @@
     "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
-    "actor": ["kissing:kissing", "positioning:biting_neck", "positioning:giving_blowjob"],
+    "actor": [
+      "kissing:kissing",
+      "positioning:biting_neck",
+      "positioning:giving_blowjob"
+    ],
     "target": ["positioning:giving_blowjob"]
   },
   "template": "give {target} a peck on the lips",

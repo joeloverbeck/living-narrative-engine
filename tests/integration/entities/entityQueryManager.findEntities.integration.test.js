@@ -49,7 +49,10 @@ describe('EntityQueryManager.findEntities integration', () => {
     testBed = createTestBed();
     logger = testBed.createMockLogger();
     repository = new EntityRepositoryAdapter({ logger });
-    queryManager = new EntityQueryManager({ entityRepository: repository, logger });
+    queryManager = new EntityQueryManager({
+      entityRepository: repository,
+      logger,
+    });
   });
 
   afterEach(() => {

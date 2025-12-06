@@ -12,9 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import { CoreMotivationsGeneratorController } from '../../../src/coreMotivationsGenerator/controllers/CoreMotivationsGeneratorController.js';
-import {
-  ControllerLifecycleOrchestrator,
-} from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
 import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
 import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
 import { AsyncUtilitiesToolkit } from '../../../src/characterBuilder/services/asyncUtilitiesToolkit.js';
@@ -148,10 +146,12 @@ describe('CoreMotivationsGeneratorController - EventBus Dispatch Issue (Simplifi
     });
 
     // Create controller
-    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
-      logger: mockLogger,
-      eventBus: mockEventBus,
-    });
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator(
+      {
+        logger: mockLogger,
+        eventBus: mockEventBus,
+      }
+    );
 
     const asyncUtilitiesToolkit = new AsyncUtilitiesToolkit({
       logger: mockLogger,

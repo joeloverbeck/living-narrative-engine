@@ -89,9 +89,7 @@ function createHandler(logger, overrides = {}) {
     _isDestroyed: false,
     getLogger: () => logger,
     requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
-    requestAwaitingInputStateTransition: jest
-      .fn()
-      .mockResolvedValue(undefined),
+    requestAwaitingInputStateTransition: jest.fn().mockResolvedValue(undefined),
     requestProcessingCommandStateTransition: jest
       .fn()
       .mockResolvedValue(undefined),
@@ -176,7 +174,9 @@ describe('RepromptStrategy integration', () => {
     expect(context.requestTransition.mock.calls[0][0]).toBe(
       AwaitingActorDecisionState
     );
-    expect(handler.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(1);
+    expect(handler.requestAwaitingInputStateTransition).toHaveBeenCalledTimes(
+      1
+    );
     expect(services.validatedEventDispatcher.dispatched).toHaveLength(0);
     expect(logger.debug).toHaveBeenCalledWith(
       'RepromptStrategy: Re-prompting actor actor-123; requesting transition to AwaitingActorDecisionState.'

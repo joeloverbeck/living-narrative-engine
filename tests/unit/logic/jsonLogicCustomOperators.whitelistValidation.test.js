@@ -59,13 +59,44 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
 
       // Find operators in whitelist but not registered (excluding standard operators and special syntax)
       const standardOperators = new Set([
-        'var', 'missing', 'missing_some', 'if',
-        '==', '===', '!=', '!==', '!', '!!',
-        'or', 'and', '>', '>=', '<', '<=',
-        'max', 'min', '+', '-', '*', '/', '%',
-        'map', 'filter', 'reduce', 'all', 'none', 'some',
-        'merge', 'in', 'cat', 'substr', 'log',
-        'not', 'has', 'toLowerCase', 'toUpperCase',
+        'var',
+        'missing',
+        'missing_some',
+        'if',
+        '==',
+        '===',
+        '!=',
+        '!==',
+        '!',
+        '!!',
+        'or',
+        'and',
+        '>',
+        '>=',
+        '<',
+        '<=',
+        'max',
+        'min',
+        '+',
+        '-',
+        '*',
+        '/',
+        '%',
+        'map',
+        'filter',
+        'reduce',
+        'all',
+        'none',
+        'some',
+        'merge',
+        'in',
+        'cat',
+        'substr',
+        'log',
+        'not',
+        'has',
+        'toLowerCase',
+        'toUpperCase',
       ]);
 
       const specialSyntax = new Set([
@@ -91,8 +122,12 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
 
       // Verify NO warning was logged about unregistered operators
       const warnCalls = mockLogger.warn.mock.calls;
-      const unregisteredWarning = warnCalls.find(call =>
-        call[0] && call[0].includes('Operators in ALLOWED_OPERATIONS whitelist but not registered')
+      const unregisteredWarning = warnCalls.find(
+        (call) =>
+          call[0] &&
+          call[0].includes(
+            'Operators in ALLOWED_OPERATIONS whitelist but not registered'
+          )
       );
       expect(unregisteredWarning).toBeUndefined();
     });
@@ -115,8 +150,8 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
 
       // Verify NO warning was logged about hasBodyPartWithComponentValue since it's been removed
       const warnCalls = mockLogger.warn.mock.calls;
-      const hasBodyPartWarning = warnCalls.some(call =>
-        call[0] && call[0].includes('hasBodyPartWithComponentValue')
+      const hasBodyPartWarning = warnCalls.some(
+        (call) => call[0] && call[0].includes('hasBodyPartWithComponentValue')
       );
       expect(hasBodyPartWarning).toBe(false);
     });

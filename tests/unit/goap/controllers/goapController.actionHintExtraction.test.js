@@ -78,7 +78,9 @@ describe('GoapController - Action Hint Extraction', () => {
   describe('constructor', () => {
     it('should accept parameterResolutionService dependency', () => {
       expect(controller).toBeInstanceOf(GoapController);
-      expect(mockLogger.info).toHaveBeenCalledWith('GoapController initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'GoapController initialized'
+      );
     });
 
     it('should throw if parameterResolutionService is missing', () => {
@@ -135,7 +137,9 @@ describe('GoapController - Action Hint Extraction', () => {
         methodId: 'core:consume_item.simple',
         actorId: 'actor_1',
         timestamp: Date.now(),
-        stepResults: [{ success: true, data: {}, actionId: 'items:consume_item' }],
+        stepResults: [
+          { success: true, data: {}, actionId: 'items:consume_item' },
+        ],
       };
 
       // Setup method with first step

@@ -136,15 +136,17 @@ describe('PoisonTickSystem', () => {
       it('should apply tick damage to poisoned part', async () => {
         const partId = 'part:arm';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 3, tickDamage: 2 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 3, tickDamage: 2 };
+            }
+            if (componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100 };
+            }
+            return null;
           }
-          if (componentId === 'anatomy:part_health') {
-            return { currentHealth: 50, maxHealth: 100 };
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'anatomy:part_health';
         });
@@ -168,15 +170,17 @@ describe('PoisonTickSystem', () => {
       it('should remove poison and emit stopped event with part scope when duration expires', async () => {
         const partId = 'part:arm';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 1, tickDamage: 1 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 1, tickDamage: 1 };
+            }
+            if (componentId === 'anatomy:part_health') {
+              return { currentHealth: 50, maxHealth: 100 };
+            }
+            return null;
           }
-          if (componentId === 'anatomy:part_health') {
-            return { currentHealth: 50, maxHealth: 100 };
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'anatomy:part_health';
         });
@@ -200,15 +204,17 @@ describe('PoisonTickSystem', () => {
       it('should remove poison when part is destroyed', async () => {
         const partId = 'part:arm';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([partId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 5, tickDamage: 3 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 5, tickDamage: 3 };
+            }
+            if (componentId === 'anatomy:part_health') {
+              return { currentHealth: 0, maxHealth: 100 }; // Destroyed
+            }
+            return null;
           }
-          if (componentId === 'anatomy:part_health') {
-            return { currentHealth: 0, maxHealth: 100 }; // Destroyed
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'anatomy:part_health';
         });
@@ -234,15 +240,17 @@ describe('PoisonTickSystem', () => {
       it('should apply tick damage to poisoned entity', async () => {
         const entityId = 'entity:goblin';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([entityId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 3, tickDamage: 5 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 3, tickDamage: 5 };
+            }
+            if (componentId === 'core:health') {
+              return { currentHealth: 100, maxHealth: 100 };
+            }
+            return null;
           }
-          if (componentId === 'core:health') {
-            return { currentHealth: 100, maxHealth: 100 };
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'core:health';
         });
@@ -266,15 +274,17 @@ describe('PoisonTickSystem', () => {
       it('should remove poison and emit stopped event with entity scope when duration expires', async () => {
         const entityId = 'entity:goblin';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([entityId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 1, tickDamage: 2 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 1, tickDamage: 2 };
+            }
+            if (componentId === 'core:health') {
+              return { currentHealth: 50, maxHealth: 100 };
+            }
+            return null;
           }
-          if (componentId === 'core:health') {
-            return { currentHealth: 50, maxHealth: 100 };
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'core:health';
         });
@@ -298,15 +308,17 @@ describe('PoisonTickSystem', () => {
       it('should remove poison when entity is destroyed', async () => {
         const entityId = 'entity:goblin';
         mockEntityManager.getEntitiesWithComponent.mockReturnValue([entityId]);
-        mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-          if (componentId === POISONED_COMPONENT_ID) {
-            return { remainingTurns: 5, tickDamage: 3 };
+        mockEntityManager.getComponentData.mockImplementation(
+          (id, componentId) => {
+            if (componentId === POISONED_COMPONENT_ID) {
+              return { remainingTurns: 5, tickDamage: 3 };
+            }
+            if (componentId === 'core:health') {
+              return { currentHealth: 0, maxHealth: 100 }; // Destroyed
+            }
+            return null;
           }
-          if (componentId === 'core:health') {
-            return { currentHealth: 0, maxHealth: 100 }; // Destroyed
-          }
-          return null;
-        });
+        );
         mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
           return componentId === 'core:health';
         });
@@ -331,12 +343,14 @@ describe('PoisonTickSystem', () => {
     it('should handle target with no health component as destroyed', async () => {
       const targetId = 'entity:something';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([targetId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === POISONED_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === POISONED_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1 };
+          }
+          return null;
         }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockReturnValue(false);
 
       await system.processTick();
@@ -356,18 +370,20 @@ describe('PoisonTickSystem', () => {
     it('should process multiple poisoned targets in one tick', async () => {
       const targets = ['part:arm', 'entity:goblin'];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(targets);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === POISONED_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === POISONED_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1 };
+          }
+          if (componentId === 'anatomy:part_health' && id === 'part:arm') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          if (componentId === 'core:health' && id === 'entity:goblin') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'anatomy:part_health' && id === 'part:arm') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        if (componentId === 'core:health' && id === 'entity:goblin') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         if (id === 'part:arm') return componentId === 'anatomy:part_health';
         if (id === 'entity:goblin') return componentId === 'core:health';
@@ -394,15 +410,17 @@ describe('PoisonTickSystem', () => {
     it('should clamp health to 0 minimum', async () => {
       const entityId = 'entity:goblin';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([entityId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === POISONED_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 15 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === POISONED_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 15 };
+          }
+          if (componentId === 'core:health') {
+            return { currentHealth: 10, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'core:health') {
-          return { currentHealth: 10, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'core:health';
       });
@@ -421,15 +439,17 @@ describe('PoisonTickSystem', () => {
     it('should process tick when turn ended event fires', async () => {
       const entityId = 'entity:goblin';
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([entityId]);
-      mockEntityManager.getComponentData.mockImplementation((id, componentId) => {
-        if (componentId === POISONED_COMPONENT_ID) {
-          return { remainingTurns: 2, tickDamage: 1 };
+      mockEntityManager.getComponentData.mockImplementation(
+        (id, componentId) => {
+          if (componentId === POISONED_COMPONENT_ID) {
+            return { remainingTurns: 2, tickDamage: 1 };
+          }
+          if (componentId === 'core:health') {
+            return { currentHealth: 50, maxHealth: 100 };
+          }
+          return null;
         }
-        if (componentId === 'core:health') {
-          return { currentHealth: 50, maxHealth: 100 };
-        }
-        return null;
-      });
+      );
       mockEntityManager.hasComponent.mockImplementation((id, componentId) => {
         return componentId === 'core:health';
       });

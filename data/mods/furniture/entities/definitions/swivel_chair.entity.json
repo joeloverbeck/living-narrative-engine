@@ -1,22 +1,20 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "furniture:swivel_chair",
-    "description": "A red-and-black swivel chair.",
-    "components": {
-        "core:name": {
-            "text": "swivel chair"
-        },
-        "core:description": {
-            "text": "A red-and-black swivel chair."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/swivel_chair.png",
-            "altText": "A red-and-black swivel chair."
-        },
-        "positioning:allows_sitting": {
-            "spots": [
-                null
-            ]
-        }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:swivel_chair",
+  "description": "A red-and-black swivel chair.",
+  "components": {
+    "core:name": {
+      "text": "swivel chair"
+    },
+    "core:description": {
+      "text": "A red-and-black swivel chair."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/swivel_chair.png",
+      "altText": "A red-and-black swivel chair."
+    },
+    "positioning:allows_sitting": {
+      "spots": [null]
     }
+  }
 }

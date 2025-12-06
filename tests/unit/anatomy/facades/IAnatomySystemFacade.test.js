@@ -27,7 +27,9 @@ const createCache = () => ({
 
 const createBodyGraphService = () => ({
   getBodyParts: jest.fn().mockResolvedValue([]),
-  buildGraph: jest.fn().mockResolvedValue({ nodes: [], edges: [], properties: {} }),
+  buildGraph: jest
+    .fn()
+    .mockResolvedValue({ nodes: [], edges: [], properties: {} }),
   analyzeGraph: jest.fn().mockResolvedValue({}),
   getPartsByType: jest.fn().mockResolvedValue([]),
   getConnectedParts: jest.fn().mockResolvedValue([]),
@@ -39,10 +41,15 @@ const createBodyGraphService = () => ({
 });
 
 const createAnatomyDescriptionService = () => ({
-  generateEntityDescription: jest.fn().mockResolvedValue({ description: 'default description' }),
+  generateEntityDescription: jest
+    .fn()
+    .mockResolvedValue({ description: 'default description' }),
   generatePartDescription: jest
     .fn()
-    .mockResolvedValue({ description: 'part description', metadata: { tone: 'neutral' } }),
+    .mockResolvedValue({
+      description: 'part description',
+      metadata: { tone: 'neutral' },
+    }),
 });
 
 const createGraphIntegrityValidator = () => ({
@@ -53,7 +60,11 @@ const createGraphIntegrityValidator = () => ({
 const createAnatomyGenerationService = () => ({
   buildFromBlueprint: jest
     .fn()
-    .mockResolvedValue({ nodes: [], edges: [], properties: { generated: true } }),
+    .mockResolvedValue({
+      nodes: [],
+      edges: [],
+      properties: { generated: true },
+    }),
   clearEntityAnatomy: jest.fn().mockResolvedValue({ success: true }),
 });
 
@@ -80,7 +91,10 @@ const buildDependencies = (overrides = {}) => {
   };
 
   if (overrides.bodyGraphService) {
-    merged.bodyGraphService = { ...base.bodyGraphService, ...overrides.bodyGraphService };
+    merged.bodyGraphService = {
+      ...base.bodyGraphService,
+      ...overrides.bodyGraphService,
+    };
   }
   if (overrides.anatomyDescriptionService) {
     merged.anatomyDescriptionService = {
@@ -142,7 +156,7 @@ describe('IAnatomySystemFacade', () => {
     it('throws when instantiated directly', () => {
       const dependencies = buildDependencies();
       expect(() => new IAnatomySystemFacade(dependencies)).toThrow(
-        'Cannot instantiate abstract class IAnatomySystemFacade',
+        'Cannot instantiate abstract class IAnatomySystemFacade'
       );
     });
   });
@@ -174,11 +188,17 @@ describe('IAnatomySystemFacade', () => {
       expect(response.success).toBe(true);
       expect(response.data).toHaveLength(1);
       expect(response.data[0].name).toBe('A');
-      expect(response.pagination).toMatchObject({ total: 3, count: 1, hasMore: true, limit: 1, offset: 1 });
+      expect(response.pagination).toMatchObject({
+        total: 3,
+        count: 1,
+        hasMore: true,
+        limit: 1,
+        offset: 1,
+      });
       expect(facade.__deps.unifiedCache.set).toHaveBeenCalledWith(
         expect.stringContaining('anatomy:parts:entity-1'),
         expect.any(Object),
-        { ttl: 120 },
+        { ttl: 120 }
       );
     });
 
@@ -225,19 +245,31 @@ describe('IAnatomySystemFacade', () => {
 
       const response = await facade.getPartByType('entity-4', 'arm');
       expect(response.data).toEqual([]);
-      expect(response.pagination).toEqual({ total: 0, count: 0, offset: 0, hasMore: false });
+      expect(response.pagination).toEqual({
+        total: 0,
+        count: 0,
+        offset: 0,
+        hasMore: false,
+      });
     });
 
     it('returns fallback connected parts when graph lookup fails', async () => {
       facade = new TestAnatomySystemFacade({
         bodyGraphService: {
-          getConnectedParts: jest.fn().mockRejectedValue(new Error('no connection')),
+          getConnectedParts: jest
+            .fn()
+            .mockRejectedValue(new Error('no connection')),
         },
       });
 
       const response = await facade.getConnectedParts('entity-5', 'part-1');
       expect(response.data).toEqual([]);
-      expect(response.pagination).toEqual({ total: 0, count: 0, offset: 0, hasMore: false });
+      expect(response.pagination).toEqual({
+        total: 0,
+        count: 0,
+        offset: 0,
+        hasMore: false,
+      });
     });
 
     it('returns fallback body parts when retrieval fails', async () => {
@@ -257,12 +289,10 @@ describe('IAnatomySystemFacade', () => {
     it('uses default query options when omitted', async () => {
       facade = new TestAnatomySystemFacade({
         bodyGraphService: {
-          getBodyParts: jest
-            .fn()
-            .mockResolvedValue([
-              { id: '1', name: 'alpha' },
-              { id: '2', name: 'beta' },
-            ]),
+          getBodyParts: jest.fn().mockResolvedValue([
+            { id: '1', name: 'alpha' },
+            { id: '2', name: 'beta' },
+          ]),
         },
       });
 
@@ -290,16 +320,17 @@ describe('IAnatomySystemFacade', () => {
     it('defaults sort order to ascending when not provided', async () => {
       facade = new TestAnatomySystemFacade({
         bodyGraphService: {
-          getBodyParts: jest
-            .fn()
-            .mockResolvedValue([
-              { id: '1', name: 'B' },
-              { id: '2', name: 'A' },
-            ]),
+          getBodyParts: jest.fn().mockResolvedValue([
+            { id: '1', name: 'B' },
+            { id: '2', name: 'A' },
+          ]),
         },
       });
 
-      const response = await facade.getBodyParts('entity-9', { sortBy: 'name', sortOrder: undefined });
+      const response = await facade.getBodyParts('entity-9', {
+        sortBy: 'name',
+        sortOrder: undefined,
+      });
 
       expect(response.sortOrder).toBe('asc');
       expect(response.data.map((part) => part.name)).toEqual(['A', 'B']);
@@ -308,17 +339,18 @@ describe('IAnatomySystemFacade', () => {
     it('sorts parts ascending when explicitly requested', async () => {
       facade = new TestAnatomySystemFacade({
         bodyGraphService: {
-          getBodyParts: jest
-            .fn()
-            .mockResolvedValue([
-              { id: '1', name: 'C' },
-              { id: '2', name: 'A' },
-              { id: '3', name: 'B' },
-            ]),
+          getBodyParts: jest.fn().mockResolvedValue([
+            { id: '1', name: 'C' },
+            { id: '2', name: 'A' },
+            { id: '3', name: 'B' },
+          ]),
         },
       });
 
-      const response = await facade.getBodyParts('entity-10', { sortBy: 'name', sortOrder: 'asc' });
+      const response = await facade.getBodyParts('entity-10', {
+        sortBy: 'name',
+        sortOrder: 'asc',
+      });
 
       expect(response.data.map((part) => part.name)).toEqual(['A', 'B', 'C']);
     });
@@ -328,11 +360,18 @@ describe('IAnatomySystemFacade', () => {
     it('returns error response when attachment validation fails', async () => {
       facade = new TestAnatomySystemFacade({
         graphIntegrityValidator: {
-          validateAttachment: jest.fn().mockResolvedValue({ valid: false, errors: ['bad fit'] }),
+          validateAttachment: jest
+            .fn()
+            .mockResolvedValue({ valid: false, errors: ['bad fit'] }),
         },
       });
 
-      const response = await facade.attachPart('entity-6', 'part-A', 'socket-Z', { validate: true });
+      const response = await facade.attachPart(
+        'entity-6',
+        'part-A',
+        'socket-Z',
+        { validate: true }
+      );
 
       expect(response.success).toBe(false);
       expect(response.error.type).toBe('InvalidArgumentError');
@@ -343,32 +382,43 @@ describe('IAnatomySystemFacade', () => {
       const eventBus = createEventBus();
       facade = new TestAnatomySystemFacade({ eventBus });
 
-      const response = await facade.attachPart('entity-7', 'part-A', 'socket-1', {
-        notifyOnChange: true,
-        requestId: 'attach-req',
-      });
+      const response = await facade.attachPart(
+        'entity-7',
+        'part-A',
+        'socket-1',
+        {
+          notifyOnChange: true,
+          requestId: 'attach-req',
+        }
+      );
 
       expect(response.success).toBe(true);
-      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith('anatomy:graph:entity-7');
-      expect(facade.__deps.unifiedCache.invalidateByPattern).toHaveBeenCalledWith(
-        'anatomy:parts:entity-7:*',
-      );
       expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
-        'anatomy:connected-parts:entity-7:socket-1',
+        'anatomy:graph:entity-7'
+      );
+      expect(
+        facade.__deps.unifiedCache.invalidateByPattern
+      ).toHaveBeenCalledWith('anatomy:parts:entity-7:*');
+      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
+        'anatomy:connected-parts:entity-7:socket-1'
       );
       expect(eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_PART_ATTACHED' }),
+        expect.objectContaining({ type: 'ANATOMY_PART_ATTACHED' })
       );
     });
 
     it('handles attachPart with default options', async () => {
       facade = new TestAnatomySystemFacade();
 
-      const response = await facade.attachPart('entity-8', 'part-B', 'socket-2');
+      const response = await facade.attachPart(
+        'entity-8',
+        'part-B',
+        'socket-2'
+      );
 
       expect(response.success).toBe(true);
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_PART_ATTACHED' }),
+        expect.objectContaining({ type: 'ANATOMY_PART_ATTACHED' })
       );
     });
 
@@ -380,10 +430,15 @@ describe('IAnatomySystemFacade', () => {
         eventBus,
       });
 
-      const response = await facade.attachPart('entity-9', 'part-C', 'socket-3', {
-        validate: false,
-        notifyOnChange: false,
-      });
+      const response = await facade.attachPart(
+        'entity-9',
+        'part-C',
+        'socket-3',
+        {
+          validate: false,
+          notifyOnChange: false,
+        }
+      );
 
       expect(response.success).toBe(true);
       expect(validator).not.toHaveBeenCalled();
@@ -399,14 +454,18 @@ describe('IAnatomySystemFacade', () => {
         },
       });
 
-      const response = await facade.detachPart('entity-8', 'part-B', { notifyOnChange: true });
+      const response = await facade.detachPart('entity-8', 'part-B', {
+        notifyOnChange: true,
+      });
 
-      expect(response.changes.removed[0]).toMatchObject({ parentPartId: 'parent-1' });
+      expect(response.changes.removed[0]).toMatchObject({
+        parentPartId: 'parent-1',
+      });
       expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
-        'anatomy:connected-parts:entity-8:parent-1',
+        'anatomy:connected-parts:entity-8:parent-1'
       );
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_PART_DETACHED' }),
+        expect.objectContaining({ type: 'ANATOMY_PART_DETACHED' })
       );
     });
 
@@ -453,18 +512,20 @@ describe('IAnatomySystemFacade', () => {
 
       await facade.replacePart('entity-9', 'old-part', 'new-part');
 
-      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith('anatomy:graph:entity-9');
-      expect(facade.__deps.unifiedCache.invalidateByPattern).toHaveBeenCalledWith(
-        'anatomy:parts:entity-9:*',
+      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
+        'anatomy:graph:entity-9'
+      );
+      expect(
+        facade.__deps.unifiedCache.invalidateByPattern
+      ).toHaveBeenCalledWith('anatomy:parts:entity-9:*');
+      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
+        'anatomy:connected-parts:entity-9:conn-1'
       );
       expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
-        'anatomy:connected-parts:entity-9:conn-1',
-      );
-      expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
-        'anatomy:connected-parts:entity-9:conn-2',
+        'anatomy:connected-parts:entity-9:conn-2'
       );
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_PART_REPLACED' }),
+        expect.objectContaining({ type: 'ANATOMY_PART_REPLACED' })
       );
     });
 
@@ -478,7 +539,9 @@ describe('IAnatomySystemFacade', () => {
         },
       });
 
-      await facade.replacePart('entity-12', 'old', 'new', { notifyOnChange: false });
+      await facade.replacePart('entity-12', 'old', 'new', {
+        notifyOnChange: false,
+      });
 
       expect(eventBus.dispatch).not.toHaveBeenCalled();
     });
@@ -491,16 +554,19 @@ describe('IAnatomySystemFacade', () => {
     });
 
     it('modifies parts, invalidates caches and dispatches events when notifyOnChange is true', async () => {
-      await facade.modifyPart('entity-11', 'part-Y', { size: 'large', status: 'healthy' });
+      await facade.modifyPart('entity-11', 'part-Y', {
+        size: 'large',
+        status: 'healthy',
+      });
 
-      expect(facade.__deps.unifiedCache.invalidateByPattern).toHaveBeenCalledWith(
-        'anatomy:parts:entity-11:*',
-      );
+      expect(
+        facade.__deps.unifiedCache.invalidateByPattern
+      ).toHaveBeenCalledWith('anatomy:parts:entity-11:*');
       expect(facade.__deps.unifiedCache.invalidate).toHaveBeenCalledWith(
-        'anatomy:connected-parts:entity-11:part-Y',
+        'anatomy:connected-parts:entity-11:part-Y'
       );
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_PART_MODIFIED' }),
+        expect.objectContaining({ type: 'ANATOMY_PART_MODIFIED' })
       );
     });
 
@@ -508,7 +574,12 @@ describe('IAnatomySystemFacade', () => {
       const eventBus = createEventBus();
       facade = new TestAnatomySystemFacade({ eventBus });
 
-      await facade.modifyPart('entity-13', 'part-Z', { power: 5 }, { notifyOnChange: false });
+      await facade.modifyPart(
+        'entity-13',
+        'part-Z',
+        { power: 5 },
+        { notifyOnChange: false }
+      );
 
       expect(eventBus.dispatch).not.toHaveBeenCalled();
     });
@@ -525,11 +596,17 @@ describe('IAnatomySystemFacade', () => {
     it('returns error response when blueprint validation fails during build', async () => {
       facade = new TestAnatomySystemFacade({
         bodyBlueprintFactory: {
-          validateBlueprint: jest.fn().mockResolvedValue({ valid: false, errors: ['bad blueprint'] }),
+          validateBlueprint: jest
+            .fn()
+            .mockResolvedValue({ valid: false, errors: ['bad blueprint'] }),
         },
       });
 
-      const response = await facade.buildBodyGraph('entity-13', { type: 'test' }, { validate: true });
+      const response = await facade.buildBodyGraph(
+        'entity-13',
+        { type: 'test' },
+        { validate: true }
+      );
 
       expect(response.success).toBe(false);
       expect(response.error.type).toBe('InvalidArgumentError');
@@ -537,21 +614,28 @@ describe('IAnatomySystemFacade', () => {
 
     it('builds graphs, invalidates caches and dispatches events', async () => {
       const customService = createBodyGraphService();
-      customService.buildGraph.mockResolvedValue({ nodes: [{ id: 'node-1' }], edges: [], properties: {} });
+      customService.buildGraph.mockResolvedValue({
+        nodes: [{ id: 'node-1' }],
+        edges: [],
+        properties: {},
+      });
       facade = new TestAnatomySystemFacade({ bodyGraphService: customService });
 
       const response = await facade.buildBodyGraph(
         'entity-14',
         { parts: [] },
-        { notifyOnChange: true },
+        { notifyOnChange: true }
       );
 
       expect(response.data.nodes).toEqual([{ id: 'node-1' }]);
-      expect(facade.__deps.unifiedCache.invalidateByPattern).toHaveBeenCalledWith(
-        'anatomy:*:entity-14:*',
-      );
+      expect(
+        facade.__deps.unifiedCache.invalidateByPattern
+      ).toHaveBeenCalledWith('anatomy:*:entity-14:*');
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_GRAPH_BUILT', payload: expect.objectContaining({ blueprintType: 'custom' }) }),
+        expect.objectContaining({
+          type: 'ANATOMY_GRAPH_BUILT',
+          payload: expect.objectContaining({ blueprintType: 'custom' }),
+        })
       );
     });
 
@@ -566,7 +650,7 @@ describe('IAnatomySystemFacade', () => {
       const response = await facade.buildBodyGraph(
         'entity-15',
         { parts: [] },
-        { validate: false, notifyOnChange: false },
+        { validate: false, notifyOnChange: false }
       );
 
       expect(response.success).toBe(true);
@@ -577,7 +661,9 @@ describe('IAnatomySystemFacade', () => {
     it('uses fallback validation response when validator fails', async () => {
       facade = new TestAnatomySystemFacade({
         graphIntegrityValidator: {
-          validateEntityGraph: jest.fn().mockRejectedValue(new Error('validation unavailable')),
+          validateEntityGraph: jest
+            .fn()
+            .mockRejectedValue(new Error('validation unavailable')),
         },
       });
 
@@ -600,7 +686,10 @@ describe('IAnatomySystemFacade', () => {
         },
       });
 
-      const response = await facade.validateGraph('entity-16', { fixIssues: true, requestId: 'val-1' });
+      const response = await facade.validateGraph('entity-16', {
+        fixIssues: true,
+        requestId: 'val-1',
+      });
 
       expect(response.metadata.requestId).toBe('val-1');
       expect(response.autoFixApplied).toBe(true);
@@ -610,7 +699,9 @@ describe('IAnatomySystemFacade', () => {
     it('returns cached constraints fallback when service fails', async () => {
       facade = new TestAnatomySystemFacade({
         bodyGraphService: {
-          getConstraints: jest.fn().mockRejectedValue(new Error('no constraints')),
+          getConstraints: jest
+            .fn()
+            .mockRejectedValue(new Error('no constraints')),
         },
       });
 
@@ -623,10 +714,15 @@ describe('IAnatomySystemFacade', () => {
     it('uses fallback entity description when generator fails', async () => {
       facade = new TestAnatomySystemFacade({
         anatomyDescriptionService: {
-          generateEntityDescription: jest.fn().mockRejectedValue(new Error('unavailable')),
+          generateEntityDescription: jest
+            .fn()
+            .mockRejectedValue(new Error('unavailable')),
           generatePartDescription: jest
             .fn()
-            .mockResolvedValue({ description: 'part description', metadata: {} }),
+            .mockResolvedValue({
+              description: 'part description',
+              metadata: {},
+            }),
         },
       });
 
@@ -641,8 +737,12 @@ describe('IAnatomySystemFacade', () => {
 
     it('uses default entity description options when none are provided', async () => {
       const descriptionService = createAnatomyDescriptionService();
-      descriptionService.generateEntityDescription.mockResolvedValue({ description: 'ok' });
-      facade = new TestAnatomySystemFacade({ anatomyDescriptionService: descriptionService });
+      descriptionService.generateEntityDescription.mockResolvedValue({
+        description: 'ok',
+      });
+      facade = new TestAnatomySystemFacade({
+        anatomyDescriptionService: descriptionService,
+      });
 
       const response = await facade.generateDescription('entity-19');
 
@@ -656,7 +756,9 @@ describe('IAnatomySystemFacade', () => {
           generateEntityDescription: jest
             .fn()
             .mockResolvedValue({ description: 'ok', metadata: {} }),
-          generatePartDescription: jest.fn().mockRejectedValue(new Error('nope')),
+          generatePartDescription: jest
+            .fn()
+            .mockRejectedValue(new Error('nope')),
         },
       });
 
@@ -670,8 +772,13 @@ describe('IAnatomySystemFacade', () => {
 
     it('uses default part description options when none are provided', async () => {
       const descriptionService = createAnatomyDescriptionService();
-      descriptionService.generatePartDescription.mockResolvedValue({ description: 'fine', metadata: {} });
-      facade = new TestAnatomySystemFacade({ anatomyDescriptionService: descriptionService });
+      descriptionService.generatePartDescription.mockResolvedValue({
+        description: 'fine',
+        metadata: {},
+      });
+      facade = new TestAnatomySystemFacade({
+        anatomyDescriptionService: descriptionService,
+      });
 
       const response = await facade.getPartDescription('entity-20', 'part-AA');
 
@@ -719,15 +826,19 @@ describe('IAnatomySystemFacade', () => {
           stopOnError: false,
           returnResults: true,
           onProgress,
-        },
+        }
       );
 
-      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data).toMatchObject({
+        processed: 2,
+        successful: 1,
+        failed: 1,
+      });
       expect(response.data.results).toHaveLength(2);
       expect(response.data.errors).toHaveLength(1);
       expect(onProgress).toHaveBeenCalledTimes(2);
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_BULK_ATTACH_COMPLETED' }),
+        expect.objectContaining({ type: 'ANATOMY_BULK_ATTACH_COMPLETED' })
       );
     });
 
@@ -738,7 +849,7 @@ describe('IAnatomySystemFacade', () => {
       const response = await facade.attachMultipleParts(
         'entity-22',
         [{ partId: 'part-1', parentPartId: 'socket-1' }],
-        { stopOnError: true },
+        { stopOnError: true }
       );
 
       expect(response.success).toBe(false);
@@ -756,7 +867,9 @@ describe('IAnatomySystemFacade', () => {
       const detachSpy = jest.spyOn(facade, 'detachPart');
       detachSpy.mockResolvedValue({ success: true });
 
-      const response = await facade.detachMultipleParts('entity-24', ['part-1']);
+      const response = await facade.detachMultipleParts('entity-24', [
+        'part-1',
+      ]);
 
       expect(response.data.processed).toBe(1);
       expect(response.data.results).toHaveLength(0);
@@ -778,14 +891,18 @@ describe('IAnatomySystemFacade', () => {
           stopOnError: false,
           returnResults: true,
           onProgress,
-        },
+        }
       );
 
-      expect(response.data).toMatchObject({ processed: 2, successful: 1, failed: 1 });
+      expect(response.data).toMatchObject({
+        processed: 2,
+        successful: 1,
+        failed: 1,
+      });
       expect(response.data.errors).toHaveLength(1);
       expect(onProgress).toHaveBeenCalledTimes(2);
       expect(facade.__deps.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_BULK_DETACH_COMPLETED' }),
+        expect.objectContaining({ type: 'ANATOMY_BULK_DETACH_COMPLETED' })
       );
     });
 
@@ -796,7 +913,7 @@ describe('IAnatomySystemFacade', () => {
       const response = await facade.detachMultipleParts(
         'entity-25',
         ['part-1'],
-        { stopOnError: true },
+        { stopOnError: true }
       );
 
       expect(response.success).toBe(false);
@@ -806,7 +923,10 @@ describe('IAnatomySystemFacade', () => {
 
   describe('rebuild operations', () => {
     it('returns error response when blueprint is missing', async () => {
-      const response = await facade.rebuildFromBlueprint('entity-26', undefined);
+      const response = await facade.rebuildFromBlueprint(
+        'entity-26',
+        undefined
+      );
 
       expect(response.success).toBe(false);
       expect(response.error.type).toBe('InvalidArgumentError');
@@ -825,17 +945,20 @@ describe('IAnatomySystemFacade', () => {
       const response = await cascadeFacade.rebuildFromBlueprint(
         'entity-27',
         { parts: [] },
-        { cascade: true, notifyOnChange: true },
+        { cascade: true, notifyOnChange: true }
       );
 
-      expect(dependencies.anatomyGenerationService.clearEntityAnatomy).toHaveBeenCalledWith(
-        'entity-27',
-      );
-      expect(dependencies.unifiedCache.invalidateByPattern).toHaveBeenCalledWith(
-        'anatomy:*:entity-27:*',
-      );
+      expect(
+        dependencies.anatomyGenerationService.clearEntityAnatomy
+      ).toHaveBeenCalledWith('entity-27');
+      expect(
+        dependencies.unifiedCache.invalidateByPattern
+      ).toHaveBeenCalledWith('anatomy:*:entity-27:*');
       expect(dependencies.eventBus.dispatch).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'ANATOMY_GRAPH_REBUILT', payload: expect.objectContaining({ blueprintType: 'custom' }) }),
+        expect.objectContaining({
+          type: 'ANATOMY_GRAPH_REBUILT',
+          payload: expect.objectContaining({ blueprintType: 'custom' }),
+        })
       );
       expect(response.data.nodes).toEqual([{ id: 'rebuilt' }]);
     });
@@ -844,15 +967,21 @@ describe('IAnatomySystemFacade', () => {
       const dependencies = buildDependencies();
       const facadeNoCascade = new TestAnatomySystemFacade(dependencies);
       const buildSpy = jest.spyOn(facadeNoCascade, 'buildBodyGraph');
-      buildSpy.mockResolvedValue({ success: true, data: { nodes: [], edges: [], properties: {} }, metadata: {} });
+      buildSpy.mockResolvedValue({
+        success: true,
+        data: { nodes: [], edges: [], properties: {} },
+        metadata: {},
+      });
 
       const response = await facadeNoCascade.rebuildFromBlueprint(
         'entity-28',
         { parts: [] },
-        { cascade: false, notifyOnChange: false },
+        { cascade: false, notifyOnChange: false }
       );
 
-      expect(dependencies.anatomyGenerationService.clearEntityAnatomy).not.toHaveBeenCalled();
+      expect(
+        dependencies.anatomyGenerationService.clearEntityAnatomy
+      ).not.toHaveBeenCalled();
       expect(dependencies.eventBus.dispatch).not.toHaveBeenCalled();
       expect(response.success).toBe(true);
       expect(response.data.nodes).toEqual([]);

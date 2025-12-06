@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import path from 'node:path';
@@ -70,16 +64,21 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
-  const paths = Array.from(createdDirectories).sort((a, b) => b.length - a.length);
+  const paths = Array.from(createdDirectories).sort(
+    (a, b) => b.length - a.length
+  );
   for (const directory of paths) {
     try {
       await rm(directory, { recursive: true, force: true });
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error('Failed to remove temporary trace directory during cleanup', {
-        directory,
-        error: error.message,
-      });
+      console.error(
+        'Failed to remove temporary trace directory during cleanup',
+        {
+          directory,
+          error: error.message,
+        }
+      );
     }
   }
   createdDirectories.clear();
@@ -141,7 +140,10 @@ describe('traceRoutes integration coverage', () => {
       });
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ success: false, error: 'Invalid output path' });
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Invalid output path',
+    });
 
     await rm(expectedDirectory, { recursive: true, force: true });
   });
@@ -235,7 +237,10 @@ describe('traceRoutes integration coverage', () => {
     const brokenStats = await stat(path.join(expectedDirectory, 'broken.json'));
     expect(brokenStats.isDirectory()).toBe(true);
 
-    const storedContent = await readFile(path.join(expectedDirectory, 'good.json'), 'utf8');
+    const storedContent = await readFile(
+      path.join(expectedDirectory, 'good.json'),
+      'utf8'
+    );
     expect(JSON.parse(storedContent)).toEqual({ id: 1, ok: true });
   });
 
@@ -269,8 +274,16 @@ describe('traceRoutes integration coverage', () => {
     const expectedDirectory = registerDirectoryForCleanup(outputDirectory);
 
     await mkdir(expectedDirectory, { recursive: true });
-    await writeFile(path.join(expectedDirectory, 'alpha.json'), JSON.stringify({ a: 1 }), 'utf8');
-    await writeFile(path.join(expectedDirectory, 'beta.txt'), 'log entry', 'utf8');
+    await writeFile(
+      path.join(expectedDirectory, 'alpha.json'),
+      JSON.stringify({ a: 1 }),
+      'utf8'
+    );
+    await writeFile(
+      path.join(expectedDirectory, 'beta.txt'),
+      'log entry',
+      'utf8'
+    );
     await writeFile(path.join(expectedDirectory, 'ignored.bin'), 'binary');
 
     const response = await request(app)
@@ -297,7 +310,10 @@ describe('traceRoutes integration coverage', () => {
       .query({ directory: outsideDirectory });
 
     expect(response.status).toBe(403);
-    expect(response.body).toEqual({ success: false, error: 'Invalid directory path' });
+    expect(response.body).toEqual({
+      success: false,
+      error: 'Invalid directory path',
+    });
   });
 
   it('returns an empty result for directories that do not exist', async () => {
@@ -328,7 +344,11 @@ describe('traceRoutes integration coverage', () => {
       await symlink(danglingTarget, danglingLink);
     } catch (error) {
       // If symlinks are not supported, skip this test gracefully.
-      if (error.code === 'EPERM' || error.code === 'EEXIST' || error.code === 'ENOTSUP') {
+      if (
+        error.code === 'EPERM' ||
+        error.code === 'EEXIST' ||
+        error.code === 'ENOTSUP'
+      ) {
         return;
       }
       throw error;

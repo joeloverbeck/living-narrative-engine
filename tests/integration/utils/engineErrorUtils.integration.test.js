@@ -134,9 +134,7 @@ describe('engineErrorUtils integration', () => {
     expect(env.callSequence).toEqual(['reset']);
     expect(env.getResetCount()).toBe(1);
 
-    expect(
-      env.logger.errorLogs.map((entry) => entry.message)
-    ).toContain(
+    expect(env.logger.errorLogs.map((entry) => entry.message)).toContain(
       'engineErrorUtils.dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
     );
   });
@@ -155,7 +153,11 @@ describe('engineErrorUtils integration', () => {
       true
     );
 
-    expect(result).toEqual({ success: false, error: 'database offline', data: null });
+    expect(result).toEqual({
+      success: false,
+      error: 'database offline',
+      data: null,
+    });
 
     expect(env.recordedEvents).toHaveLength(1);
     const [event] = env.recordedEvents;

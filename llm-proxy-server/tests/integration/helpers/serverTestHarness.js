@@ -6,7 +6,10 @@ import net from 'node:net';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const waitForCondition = async (checkFn, { timeout = 15000, interval = 200 } = {}) => {
+const waitForCondition = async (
+  checkFn,
+  { timeout = 15000, interval = 200 } = {}
+) => {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     if (await checkFn()) {
@@ -66,9 +69,12 @@ const captureEventHandlers = (events) => {
 };
 
 const writeConfigFile = (content) => {
-  const directory = mkdtempSync(path.join(tmpdir(), 'proxy-server-resilience-'));
+  const directory = mkdtempSync(
+    path.join(tmpdir(), 'proxy-server-resilience-')
+  );
   const filePath = path.join(directory, 'llm-configs.json');
-  const payload = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+  const payload =
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2);
   writeFileSync(filePath, payload, 'utf8');
   const remove = () => {
     rmSync(directory, { recursive: true, force: true });
@@ -121,7 +127,8 @@ export async function startProxyServer({
 
   const patchedSetTimeout = (fn, delay, ...rest) => {
     const shouldAccelerate =
-      typeof fn === 'function' && fn.toString().includes('Forced shutdown after timeout');
+      typeof fn === 'function' &&
+      fn.toString().includes('Forced shutdown after timeout');
     if (shouldAccelerate) {
       const timerId = originalSetTimeout(() => fn(...rest), 0);
       trackedTimeouts.add(timerId);
@@ -135,7 +142,9 @@ export async function startProxyServer({
   global.setInterval = patchedSetInterval;
   global.setTimeout = patchedSetTimeout;
 
-  const port = envOverrides.PROXY_PORT ? Number(envOverrides.PROXY_PORT) : await getAvailablePort();
+  const port = envOverrides.PROXY_PORT
+    ? Number(envOverrides.PROXY_PORT)
+    : await getAvailablePort();
 
   const applyEnv = () => {
     const nextEnv = {
@@ -191,17 +200,22 @@ export async function startProxyServer({
     await import('../../../src/core/server.js');
     const handlers = computeNewHandlers();
 
-    const ready = await waitForCondition(() => pingEndpoint(port, readinessRoute), {
-      timeout: 15000,
-      interval: 200,
-    });
+    const ready = await waitForCondition(
+      () => pingEndpoint(port, readinessRoute),
+      {
+        timeout: 15000,
+        interval: 200,
+      }
+    );
 
     if (!ready) {
       throw new Error('Proxy server failed to start within timeout');
     }
 
     const shutdown = async (signal = 'SIGTERM') => {
-      const selectedHandlers = handlers?.[signal]?.length ? handlers[signal] : handlers?.SIGTERM || [];
+      const selectedHandlers = handlers?.[signal]?.length
+        ? handlers[signal]
+        : handlers?.SIGTERM || [];
       for (const handler of selectedHandlers) {
         handler(signal);
       }

@@ -5,7 +5,10 @@ import { join } from 'path';
 describe('Tortoise Foot Entity Validation', () => {
   const footEntity = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_foot.entity.json'),
+      join(
+        process.cwd(),
+        'data/mods/anatomy/entities/definitions/tortoise_foot.entity.json'
+      ),
       'utf-8'
     )
   );
@@ -21,7 +24,9 @@ describe('Tortoise Foot Entity Validation', () => {
 
     it('should have anatomy:part component with tortoise_foot subType', () => {
       expect(footEntity.components['anatomy:part']).toBeDefined();
-      expect(footEntity.components['anatomy:part'].subType).toBe('tortoise_foot');
+      expect(footEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_foot'
+      );
     });
 
     it('should have core:name component with text "foot"', () => {
@@ -31,18 +36,24 @@ describe('Tortoise Foot Entity Validation', () => {
 
     it('should have descriptors:texture component with "leathery" texture', () => {
       expect(footEntity.components['descriptors:texture']).toBeDefined();
-      expect(footEntity.components['descriptors:texture'].texture).toBe('leathery');
+      expect(footEntity.components['descriptors:texture'].texture).toBe(
+        'leathery'
+      );
     });
 
     it('should have descriptors:digit_count component with string "3"', () => {
       expect(footEntity.components['descriptors:digit_count']).toBeDefined();
       expect(footEntity.components['descriptors:digit_count'].count).toBe('3');
-      expect(typeof footEntity.components['descriptors:digit_count'].count).toBe('string');
+      expect(
+        typeof footEntity.components['descriptors:digit_count'].count
+      ).toBe('string');
     });
 
     it('should have descriptors:projection component with "clawed" projection', () => {
       expect(footEntity.components['descriptors:projection']).toBeDefined();
-      expect(footEntity.components['descriptors:projection'].projection).toBe('clawed');
+      expect(footEntity.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
     });
 
     it('should have descriptors:color_extended component with "sickly-gray-green" color', () => {
@@ -99,7 +110,9 @@ describe('Tortoise Foot Entity Validation', () => {
     });
 
     it('should have subType matching leg socket allowedTypes', () => {
-      expect(footEntity.components['anatomy:part'].subType).toBe('tortoise_foot');
+      expect(footEntity.components['anatomy:part'].subType).toBe(
+        'tortoise_foot'
+      );
     });
   });
 
@@ -143,12 +156,16 @@ describe('Tortoise Foot Entity Validation', () => {
         'velvety',
         'webbed-clawed',
       ];
-      expect(validTextures).toContain(footEntity.components['descriptors:texture'].texture);
+      expect(validTextures).toContain(
+        footEntity.components['descriptors:texture'].texture
+      );
     });
 
     it('should use valid digit count from schema enum', () => {
       const validCounts = ['3', '4', '5', '6+', 'abnormal'];
-      expect(validCounts).toContain(footEntity.components['descriptors:digit_count'].count);
+      expect(validCounts).toContain(
+        footEntity.components['descriptors:digit_count'].count
+      );
     });
 
     it('should use valid projection from schema enum', () => {
@@ -210,7 +227,9 @@ describe('Tortoise Foot Entity Validation', () => {
         'violet',
         'warm-brown',
       ];
-      expect(validColors).toContain(footEntity.components['descriptors:color_extended'].color);
+      expect(validColors).toContain(
+        footEntity.components['descriptors:color_extended'].color
+      );
     });
   });
 
@@ -220,7 +239,9 @@ describe('Tortoise Foot Entity Validation', () => {
     });
 
     it('should have leathery texture consistent with reptilian anatomy', () => {
-      expect(footEntity.components['descriptors:texture'].texture).toBe('leathery');
+      expect(footEntity.components['descriptors:texture'].texture).toBe(
+        'leathery'
+      );
     });
 
     it('should have exactly 3 digits as specified for tortoise anatomy', () => {
@@ -228,7 +249,9 @@ describe('Tortoise Foot Entity Validation', () => {
     });
 
     it('should have clawed projection characteristic', () => {
-      expect(footEntity.components['descriptors:projection'].projection).toBe('clawed');
+      expect(footEntity.components['descriptors:projection'].projection).toBe(
+        'clawed'
+      );
     });
 
     it('should have color consistent with tortoise appearance', () => {
@@ -241,7 +264,10 @@ describe('Tortoise Foot Entity Validation', () => {
   describe('Compatibility with leg socket', () => {
     const legEntity = JSON.parse(
       readFileSync(
-        join(process.cwd(), 'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'),
+        join(
+          process.cwd(),
+          'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'
+        ),
         'utf-8'
       )
     );
@@ -258,7 +284,9 @@ describe('Tortoise Foot Entity Validation', () => {
       const footSocket = legEntity.components['anatomy:sockets'].sockets.find(
         (s) => s.id === 'foot'
       );
-      expect(footEntity.components['anatomy:part'].subType).toBe(footSocket.allowedTypes[0]);
+      expect(footEntity.components['anatomy:part'].subType).toBe(
+        footSocket.allowedTypes[0]
+      );
     });
   });
 });

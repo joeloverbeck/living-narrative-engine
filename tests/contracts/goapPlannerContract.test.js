@@ -38,7 +38,9 @@ function createPlannerDependencies() {
     },
     spatialIndexManager: {},
     planningEffectsSimulator: {
-      simulateEffects: jest.fn().mockReturnValue({ success: true, state: {}, cost: 0 }),
+      simulateEffects: jest
+        .fn()
+        .mockReturnValue({ success: true, state: {}, cost: 0 }),
     },
     heuristicRegistry: {
       calculate: jest.fn().mockReturnValue(0),
@@ -60,7 +62,9 @@ describe('GOAP Planner Contract', () => {
   });
 
   it('uses the expected plan signature', () => {
-    expect(planner.plan.length).toBe(GOAP_PLANNER_CONTRACT.methodSignatures.plan);
+    expect(planner.plan.length).toBe(
+      GOAP_PLANNER_CONTRACT.methodSignatures.plan
+    );
     expect(hasValidPlanArity(planner.plan)).toBe(true);
   });
 

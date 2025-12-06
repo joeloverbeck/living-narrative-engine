@@ -4,9 +4,7 @@
   "name": "Drop Wielded Item",
   "description": "Release and drop an item you are currently wielding",
   "required_components": {
-    "actor": [
-      "positioning:wielding"
-    ]
+    "actor": ["positioning:wielding"]
   },
   "targets": {
     "primary": {

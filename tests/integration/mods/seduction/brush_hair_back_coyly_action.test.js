@@ -92,7 +92,9 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
     });
 
     it('should have appropriate action template', () => {
-      expect(brushHairBackCoylyAction.template).toBe('brush your hair back coyly');
+      expect(brushHairBackCoylyAction.template).toBe(
+        'brush your hair back coyly'
+      );
       expect(brushHairBackCoylyAction.template).toMatch(/^[a-z]/); // starts with lowercase
     });
   });
@@ -114,7 +116,9 @@ describe('Seduction Mod: Brush Hair Back Coyly Action', () => {
 
     it('should require other actors at location (third prerequisite)', () => {
       const otherActorsPrerequisite = brushHairBackCoylyAction.prerequisites[2];
-      expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toBeDefined();
+      expect(
+        otherActorsPrerequisite.logic.hasOtherActorsAtLocation
+      ).toBeDefined();
       expect(otherActorsPrerequisite.logic.hasOtherActorsAtLocation).toEqual([
         'actor',
       ]);

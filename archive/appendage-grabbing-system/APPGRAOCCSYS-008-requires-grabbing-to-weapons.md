@@ -14,10 +14,10 @@ Add the `anatomy:requires_grabbing` component to weapon entity definitions to sp
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json` | Add `anatomy:requires_grabbing` with `handsRequired: 1` |
-| `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json` | Add `anatomy:requires_grabbing` with `handsRequired: 1` |
+| File                                                                              | Change                                                  |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `data/mods/fantasy/entities/definitions/vespera_rapier.entity.json`               | Add `anatomy:requires_grabbing` with `handsRequired: 1` |
+| `data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json`          | Add `anatomy:requires_grabbing` with `handsRequired: 1` |
 | `data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json` | Add `anatomy:requires_grabbing` with `handsRequired: 2` |
 
 ## Out of Scope
@@ -110,11 +110,11 @@ Add the `anatomy:requires_grabbing` component to weapon entity definitions to sp
 
 ### Hands Required Values
 
-| Weapon | handsRequired | minGripStrength | Rationale |
-|--------|---------------|-----------------|-----------|
-| Rapier | 1 | - | One-handed fencing weapon |
-| Main-gauche | 1 | - | Parrying dagger, off-hand weapon |
-| Longsword | 2 | - | Two-handed weapon for full control |
+| Weapon      | handsRequired | minGripStrength | Rationale                          |
+| ----------- | ------------- | --------------- | ---------------------------------- |
+| Rapier      | 1             | -               | One-handed fencing weapon          |
+| Main-gauche | 1             | -               | Parrying dagger, off-hand weapon   |
+| Longsword   | 2             | -               | Two-handed weapon for full control |
 
 ## Acceptance Criteria
 
@@ -169,12 +169,12 @@ npx jest tests/integration/fantasy/fantasyWeaponGrabbingRequirements.test.js --n
 
 ### What Was Actually Changed vs Originally Planned
 
-| Originally Planned | Actual Implementation |
-|-------------------|----------------------|
-| Modify 3 weapon entity files | ✅ Modified all 3 files as planned |
+| Originally Planned                        | Actual Implementation                                       |
+| ----------------------------------------- | ----------------------------------------------------------- |
+| Modify 3 weapon entity files              | ✅ Modified all 3 files as planned                          |
 | Add `anatomy:requires_grabbing` component | ✅ Added to all weapons with correct `handsRequired` values |
-| Run `npm run validate:mod:fantasy` | ⚠️ Script does not exist; used `npm run validate` instead |
-| Run existing tests | ✅ All tests pass |
+| Run `npm run validate:mod:fantasy`        | ⚠️ Script does not exist; used `npm run validate` instead   |
+| Run existing tests                        | ✅ All tests pass                                           |
 
 ### Additional Work Done (Not Originally Planned)
 

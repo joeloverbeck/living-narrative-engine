@@ -3,9 +3,6 @@
   "id": "distress:event-is-action-throw-self-to-ground",
   "description": "Checks if the triggering event is for the 'distress:throw_self_to_ground' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "distress:throw_self_to_ground"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "distress:throw_self_to_ground"]
   }
 }

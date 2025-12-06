@@ -499,6 +499,5 @@ describe('EntityInstanceData', () => {
       );
       expect(ids.length).toBe(4);
     });
-
   });
 });

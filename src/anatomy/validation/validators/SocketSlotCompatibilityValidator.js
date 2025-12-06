@@ -75,7 +75,8 @@ function suggestSocketFix(
   rootEntityId,
   entitySourceFile
 ) {
-  const sourceFile = entitySourceFile || buildEntityDefinitionPath(rootEntityId);
+  const sourceFile =
+    entitySourceFile || buildEntityDefinitionPath(rootEntityId);
 
   if (!availableSockets || availableSockets.size === 0) {
     return `Root entity has no sockets. Add anatomy:sockets component to entity file: ${sourceFile}`;
@@ -207,7 +208,10 @@ export async function validateSocketSlotCompatibility(blueprint, dataRegistry) {
     }
 
     // Check if socket exists in hierarchical socket map
-    if (hierarchicalSockets.has(slotConfig.socket) || slotConfig.optional === true) {
+    if (
+      hierarchicalSockets.has(slotConfig.socket) ||
+      slotConfig.optional === true
+    ) {
       continue;
     }
 
@@ -382,9 +386,8 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
   async performValidation(recipe, _options, builder) {
     try {
       const blueprintId = recipe?.blueprintId;
-      const blueprint = await this.#anatomyBlueprintRepository.getBlueprint(
-        blueprintId
-      );
+      const blueprint =
+        await this.#anatomyBlueprintRepository.getBlueprint(blueprintId);
 
       if (!blueprint) {
         return;
@@ -401,10 +404,9 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
           blueprint?.additionalSlots || {}
         ).length;
         const totalCount = slotsCount + additionalSlotsCount;
-        builder.addPassed(
-          `All ${totalCount} slot socket references valid`,
-          { check: 'socket_slot_compatibility' }
-        );
+        builder.addPassed(`All ${totalCount} slot socket references valid`, {
+          check: 'socket_slot_compatibility',
+        });
       } else {
         builder.addIssues(issues);
       }
@@ -420,7 +422,6 @@ export class SocketSlotCompatibilityValidator extends BaseValidator {
       );
     }
   }
-
 }
 
 export const __testables__ = {

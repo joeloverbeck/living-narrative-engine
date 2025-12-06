@@ -226,7 +226,9 @@ describe('EventBus Batch Mode and Warnings', () => {
         expect.any(String)
       );
       // Check that the error message includes batch mode context
-      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: limit-test');
+      expect(consoleSpy.error.mock.calls[0][0]).toContain(
+        'batch mode: limit-test'
+      );
     });
 
     it('should block recursion when global limit is exceeded in batch mode', async () => {
@@ -256,7 +258,9 @@ describe('EventBus Batch Mode and Warnings', () => {
         expect.stringContaining('Global recursion limit (5) exceeded')
       );
       // Check that the error message includes batch mode context
-      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: global-limit-test');
+      expect(consoleSpy.error.mock.calls[0][0]).toContain(
+        'batch mode: global-limit-test'
+      );
     });
   });
 
@@ -322,7 +326,9 @@ describe('EventBus Batch Mode and Warnings', () => {
         expect.any(String)
       );
       // Check that the error message includes batch mode context
-      expect(consoleSpy.error.mock.calls[0][0]).toContain('batch mode: batch-limits');
+      expect(consoleSpy.error.mock.calls[0][0]).toContain(
+        'batch mode: batch-limits'
+      );
     });
   });
 

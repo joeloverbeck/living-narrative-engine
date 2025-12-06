@@ -50,16 +50,20 @@ describe('targetFormatters edge cases', () => {
   });
 
   it('still warns about stray placeholders for none targets when debug logging is disabled', () => {
-    const result = formatNoneTarget('wait for {target}', {}, {
-      actionId: 'core:wait',
-      logger,
-      debug: false,
-    });
+    const result = formatNoneTarget(
+      'wait for {target}',
+      {},
+      {
+        actionId: 'core:wait',
+        logger,
+        debug: false,
+      }
+    );
 
     expect(result).toEqual({ ok: true, value: 'wait for {target}' });
     expect(logger.debug).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledWith(
-      "formatActionCommand: Action core:wait has target_domain 'none' but template \"wait for {target}\" contains placeholders."
+      'formatActionCommand: Action core:wait has target_domain \'none\' but template "wait for {target}" contains placeholders.'
     );
   });
 });

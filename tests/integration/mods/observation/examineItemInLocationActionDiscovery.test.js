@@ -38,12 +38,16 @@ describe('observation:examine_item_in_location action definition', () => {
   describe('Action structure validation', () => {
     it('should have correct action structure', () => {
       expect(examineItemInLocationAction).toBeDefined();
-      expect(examineItemInLocationAction.id).toBe('observation:examine_item_in_location');
+      expect(examineItemInLocationAction.id).toBe(
+        'observation:examine_item_in_location'
+      );
       expect(examineItemInLocationAction.name).toBe('Examine Item in Location');
       expect(examineItemInLocationAction.description).toBe(
         'Inspect an item at your current location to learn its details'
       );
-      expect(examineItemInLocationAction.template).toBe('examine {target} in location');
+      expect(examineItemInLocationAction.template).toBe(
+        'examine {target} in location'
+      );
     });
 
     it('should use correct scope for primary targets (items at location)', () => {
@@ -52,7 +56,9 @@ describe('observation:examine_item_in_location action definition', () => {
       expect(examineItemInLocationAction.targets.primary.scope).toBe(
         'items:items_at_actor_location'
       );
-      expect(examineItemInLocationAction.targets.primary.placeholder).toBe('target');
+      expect(examineItemInLocationAction.targets.primary.placeholder).toBe(
+        'target'
+      );
       expect(examineItemInLocationAction.targets.primary.description).toBe(
         'Item at location to examine'
       );
@@ -60,7 +66,9 @@ describe('observation:examine_item_in_location action definition', () => {
 
     it('should require item and description components on primary target', () => {
       expect(examineItemInLocationAction.required_components).toBeDefined();
-      expect(examineItemInLocationAction.required_components.primary).toBeDefined();
+      expect(
+        examineItemInLocationAction.required_components.primary
+      ).toBeDefined();
       expect(examineItemInLocationAction.required_components.primary).toEqual([
         'items:item',
         'core:description',
@@ -79,7 +87,9 @@ describe('observation:examine_item_in_location action definition', () => {
 
     it('should have empty prerequisites array', () => {
       expect(examineItemInLocationAction.prerequisites).toBeDefined();
-      expect(Array.isArray(examineItemInLocationAction.prerequisites)).toBe(true);
+      expect(Array.isArray(examineItemInLocationAction.prerequisites)).toBe(
+        true
+      );
       expect(examineItemInLocationAction.prerequisites).toEqual([]);
     });
   });
@@ -112,7 +122,8 @@ describe('observation:examine_item_in_location action definition', () => {
 
       expect(examineActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -120,11 +131,10 @@ describe('observation:examine_item_in_location action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:items_at_actor_location',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:items_at_actor_location',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['test_item_2']);
@@ -156,7 +166,8 @@ describe('observation:examine_item_in_location action definition', () => {
 
       expect(examineActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -164,11 +175,10 @@ describe('observation:examine_item_in_location action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:items_at_actor_location',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:items_at_actor_location',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['heavy_furniture']);
@@ -206,7 +216,10 @@ describe('observation:examine_item_in_location action definition', () => {
     });
 
     it('should NOT appear when no items present at location', () => {
-      const room = ModEntityScenarios.createRoom('empty_location', 'Empty Room');
+      const room = ModEntityScenarios.createRoom(
+        'empty_location',
+        'Empty Room'
+      );
 
       const actor = new ModEntityBuilder('lonely_actor')
         .withName('Lonely')
@@ -315,7 +328,8 @@ describe('observation:examine_item_in_location action definition', () => {
 
       expect(examineActions.length).toBeGreaterThan(0);
 
-      const actorInstance = testFixture.entityManager.getEntityInstance('actor1');
+      const actorInstance =
+        testFixture.entityManager.getEntityInstance('actor1');
       const scopeContext = {
         actor: {
           id: 'actor1',
@@ -323,11 +337,10 @@ describe('observation:examine_item_in_location action definition', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'items:items_at_actor_location',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'items:items_at_actor_location',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(new Set(scopeResult.value)).toEqual(

@@ -3,6 +3,9 @@
   "id": "affection:event-is-action-place-hands-on-shoulders",
   "description": "Checks if the triggering event is for the 'affection:place_hands_on_shoulders' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "affection:place_hands_on_shoulders"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:place_hands_on_shoulders"
+    ]
   }
 }

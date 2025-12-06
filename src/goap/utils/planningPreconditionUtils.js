@@ -10,7 +10,8 @@ import { rewriteActorPath } from '../planner/goalPathValidator.js';
 
 const legacyPreconditionWarnings = new Set();
 const requiresWarnings = new Set();
-const LEGACY_PRECONDITION_ASSERTION_CODE = 'GOAP_LEGACY_PRECONDITIONS_ASSERTION';
+const LEGACY_PRECONDITION_ASSERTION_CODE =
+  'GOAP_LEGACY_PRECONDITIONS_ASSERTION';
 
 /**
  * Normalize a task's planning preconditions.
@@ -52,7 +53,11 @@ export function normalizePlanningPreconditions(task, logger, options = {}) {
   if (hasModernPreconditions) {
     for (let index = 0; index < task.planningPreconditions.length; index++) {
       normalized.push(
-        normalizePreconditionEntry(task.planningPreconditions[index], index, task.id)
+        normalizePreconditionEntry(
+          task.planningPreconditions[index],
+          index,
+          task.id
+        )
       );
     }
   }
@@ -222,7 +227,11 @@ function buildRequiresCondition(entry) {
  * @param normalizedEntries
  * @param context
  */
-function recordPreconditionNormalization(task, normalizedEntries, context = {}) {
+function recordPreconditionNormalization(
+  task,
+  normalizedEntries,
+  context = {}
+) {
   const diagnostics = context.diagnostics;
   if (!diagnostics) {
     return;

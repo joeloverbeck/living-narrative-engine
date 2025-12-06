@@ -123,9 +123,7 @@ describe('actionMatchers integration - real action discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      testFixture.testEnv.actionIndex.buildIndex([
-        placeHandsOnShouldersAction,
-      ]);
+      testFixture.testEnv.actionIndex.buildIndex([placeHandsOnShouldersAction]);
 
       const actions = testFixture.testEnv.getAvailableActions(
         scenario.actor.id

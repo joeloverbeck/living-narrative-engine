@@ -8,7 +8,8 @@
  * @param {string} message - Error message used when the assertion fails.
  */
 export function devOnlyAssert(condition, message) {
-  const nodeEnv = typeof process !== 'undefined' ? process.env?.NODE_ENV : 'production';
+  const nodeEnv =
+    typeof process !== 'undefined' ? process.env?.NODE_ENV : 'production';
 
   if (nodeEnv === 'production') {
     return;

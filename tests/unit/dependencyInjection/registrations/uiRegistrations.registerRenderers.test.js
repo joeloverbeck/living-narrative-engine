@@ -125,7 +125,6 @@ describe('registerRenderers', () => {
     });
   });
 
-
   describe('LocationRenderer factory', () => {
     it('should register LocationRenderer as singleton factory', () => {
       registerRenderers(mockRegistrar, mockLogger);

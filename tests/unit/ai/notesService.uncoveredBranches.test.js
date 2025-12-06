@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import { DEFAULT_SUBJECT_TYPE } from '../../../src/constants/subjectTypes.js';
 
 describe('notesService uncovered branches', () => {
@@ -28,7 +30,9 @@ describe('notesService uncovered branches', () => {
       )
     );
 
-    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(TypeError);
+    expect(() => service.addNotes({ notes: 'not-an-array' }, [])).toThrow(
+      TypeError
+    );
   });
 
   it('returns the original component untouched when newNotes is not an array', () => {
@@ -37,7 +41,11 @@ describe('notesService uncovered branches', () => {
 
     const result = service.addNotes(notesComp, null);
 
-    expect(result).toEqual({ wasModified: false, component: notesComp, addedNotes: [] });
+    expect(result).toEqual({
+      wasModified: false,
+      component: notesComp,
+      addedNotes: [],
+    });
     expect(notesComp.notes).toHaveLength(0);
   });
 
@@ -89,6 +97,8 @@ describe('notesService uncovered branches', () => {
 
     expect(notesComp.notes).toContainEqual(firstAdded);
     expect(notesComp.notes).toContainEqual(secondAdded);
-    expect(notesComp.notes.length).toBe(existingNotes.length + result.addedNotes.length);
+    expect(notesComp.notes.length).toBe(
+      existingNotes.length + result.addedNotes.length
+    );
   });
 });

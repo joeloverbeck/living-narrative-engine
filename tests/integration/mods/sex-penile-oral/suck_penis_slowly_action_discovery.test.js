@@ -78,7 +78,6 @@ function buildSuckPenisSlowlyScenario(options = {}) {
   };
 }
 
-
 /**
  * Installs a scope resolver override for receiving_blowjob_from_actor that matches the fixed scope logic.
  * This uses raw closeness.partners (no kneeling filter) with blowjob component validation.
@@ -99,7 +98,8 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const givingBlowjob = actor?.components?.['positioning:giving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       // IMPORTANT: No kneeling filter here (unlike positioning:close_actors)
       // This allows the action to work when actor is kneeling before target
@@ -113,12 +113,14 @@ function installReceivingBlowjobFromActorScopeOverride(fixture) {
       }
 
       // Check if receiving entity exists and has matching receiving_blowjob component
-      const receivingEntity = fixture.entityManager.getEntityInstance(receivingEntityId);
+      const receivingEntity =
+        fixture.entityManager.getEntityInstance(receivingEntityId);
       if (!receivingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const receivingBlowjob = receivingEntity.components?.['positioning:receiving_blowjob'];
+      const receivingBlowjob =
+        receivingEntity.components?.['positioning:receiving_blowjob'];
       if (!receivingBlowjob) {
         return { success: true, value: new Set() };
       }
@@ -157,7 +159,8 @@ describe('sex-penile-oral:suck_penis_slowly action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installReceivingBlowjobFromActorScopeOverride(testFixture);
+    restoreScopeResolver =
+      installReceivingBlowjobFromActorScopeOverride(testFixture);
   });
 
   afterEach(() => {

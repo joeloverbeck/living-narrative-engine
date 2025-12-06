@@ -253,10 +253,7 @@ describe('Server Endpoint Integration', () => {
 
       let result = false;
       try {
-        const response = await postTraces(
-          { url: serverUrl },
-          formattedTraces
-        );
+        const response = await postTraces({ url: serverUrl }, formattedTraces);
         result = response.ok;
       } catch (error) {
         result = false;

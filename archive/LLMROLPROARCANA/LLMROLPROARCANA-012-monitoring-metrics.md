@@ -30,6 +30,7 @@ Add debug logging at LLM request point using existing `TokenEstimator` (~30 minu
 ## Problem Statement
 
 The current system lacks metrics and monitoring for prompt template performance, making it impossible to:
+
 - Measure effectiveness of optimization changes
 - Identify failure patterns systematically
 - Track prompt quality over time
@@ -37,6 +38,7 @@ The current system lacks metrics and monitoring for prompt template performance,
 - Validate that changes actually improve outcomes
 
 **Missing Capabilities:**
+
 - Token count tracking per generation
 - Output format compliance monitoring
 - Note classification accuracy measurement
@@ -110,12 +112,18 @@ class PromptMetricsCollector {
       noteClassification: this.validateNoteClassification(response),
 
       // Quality metrics
-      characterVoiceScore: this.scoreCharacterVoice(response, metadata.character),
-      freshThoughtsScore: this.scoreFreshThoughts(response, metadata.recentThoughts),
+      characterVoiceScore: this.scoreCharacterVoice(
+        response,
+        metadata.character
+      ),
+      freshThoughtsScore: this.scoreFreshThoughts(
+        response,
+        metadata.recentThoughts
+      ),
 
       // Performance
       generationTime: metadata.generationTime,
-      llmLatency: metadata.llmLatency
+      llmLatency: metadata.llmLatency,
     };
 
     this.metrics.push(metrics);
@@ -129,10 +137,10 @@ class PromptMetricsCollector {
       this.hasRequiredSections(response),
       this.validateActionTags(response),
       this.validateThoughtVsSpeech(response),
-      this.validateNoteFormat(response)
+      this.validateNoteFormat(response),
     ];
 
-    const passed = validators.filter(v => v === true).length;
+    const passed = validators.filter((v) => v === true).length;
     return passed / validators.length; // Compliance score 0-1
   }
 
@@ -140,12 +148,13 @@ class PromptMetricsCollector {
     const violations = [];
 
     // Check for internal states in asterisks
-    const internalStatePattern = /\*(feels?|thinks?|realizes?|remembers?|knows?)/gi;
+    const internalStatePattern =
+      /\*(feels?|thinks?|realizes?|remembers?|knows?)/gi;
     const internalMatches = response.match(internalStatePattern);
     if (internalMatches) {
       violations.push({
         type: 'internal_state_in_action',
-        count: internalMatches.length
+        count: internalMatches.length,
       });
     }
 
@@ -155,7 +164,7 @@ class PromptMetricsCollector {
     if (dialogueMatches) {
       violations.push({
         type: 'asterisks_in_dialogue',
-        count: dialogueMatches.length
+        count: dialogueMatches.length,
       });
     }
 
@@ -165,14 +174,14 @@ class PromptMetricsCollector {
     if (pastTenseMatches) {
       violations.push({
         type: 'past_tense_action',
-        count: pastTenseMatches.length
+        count: pastTenseMatches.length,
       });
     }
 
     return {
       compliant: violations.length === 0,
       violations,
-      score: Math.max(0, 1 - (violations.length * 0.2)) // Deduct for each violation
+      score: Math.max(0, 1 - violations.length * 0.2), // Deduct for each violation
     };
   }
 
@@ -183,7 +192,7 @@ class PromptMetricsCollector {
       if (!parsed.thoughts || !parsed.speech) {
         return {
           compliant: false,
-          reason: 'Missing thoughts or speech section'
+          reason: 'Missing thoughts or speech section',
         };
       }
 
@@ -198,13 +207,13 @@ class PromptMetricsCollector {
       return {
         compliant,
         similarity,
-        score: compliant ? 1.0 : (1 - similarity)
+        score: compliant ? 1.0 : 1 - similarity,
       };
     } catch (err) {
       return {
         compliant: false,
         reason: 'Invalid JSON response',
-        error: err.message
+        error: err.message,
       };
     }
   }
@@ -217,7 +226,14 @@ class PromptMetricsCollector {
         return { compliant: true, noteCount: 0 }; // No notes is valid
       }
 
-      const validTypes = ['entity', 'event', 'plan', 'knowledge', 'state', 'other'];
+      const validTypes = [
+        'entity',
+        'event',
+        'plan',
+        'knowledge',
+        'state',
+        'other',
+      ];
       const violations = [];
 
       parsed.notes.forEach((note, index) => {
@@ -225,7 +241,7 @@ class PromptMetricsCollector {
           violations.push({
             noteIndex: index,
             invalidType: note.subjectType,
-            validTypes
+            validTypes,
           });
         }
 
@@ -236,7 +252,7 @@ class PromptMetricsCollector {
             noteIndex: index,
             issue: 'exceeds_word_limit',
             wordCount,
-            limit: 60
+            limit: 60,
           });
         }
       });
@@ -245,13 +261,13 @@ class PromptMetricsCollector {
         compliant: violations.length === 0,
         noteCount: parsed.notes.length,
         violations,
-        score: Math.max(0, 1 - (violations.length * 0.3))
+        score: Math.max(0, 1 - violations.length * 0.3),
       };
     } catch (err) {
       return {
         compliant: false,
         reason: 'Invalid JSON response',
-        error: err.message
+        error: err.message,
       };
     }
   }
@@ -263,18 +279,19 @@ class PromptMetricsCollector {
     const indicators = [
       this.checkSpeechPatternUsage(response, character.speechPatterns),
       this.checkPsychologicalDepth(response, character.psychology),
-      this.checkTraitConsistency(response, character.traits)
+      this.checkTraitConsistency(response, character.traits),
     ];
 
-    const avgScore = indicators.reduce((sum, score) => sum + score, 0) / indicators.length;
+    const avgScore =
+      indicators.reduce((sum, score) => sum + score, 0) / indicators.length;
 
     return {
       score: avgScore,
       indicators: {
         speechPatterns: indicators[0],
         psychologicalDepth: indicators[1],
-        traitConsistency: indicators[2]
-      }
+        traitConsistency: indicators[2],
+      },
     };
   }
 
@@ -285,7 +302,7 @@ class PromptMetricsCollector {
       if (!parsed.thoughts) return { score: 0, reason: 'No thoughts section' };
 
       // Calculate similarity with recent thoughts
-      const similarities = recentThoughts.map(recentThought =>
+      const similarities = recentThoughts.map((recentThought) =>
         this.calculateSimilarity(parsed.thoughts, recentThought)
       );
 
@@ -295,13 +312,13 @@ class PromptMetricsCollector {
       return {
         score: freshness,
         maxSimilarity,
-        compliant: freshness >= 0.7 // >70% fresh
+        compliant: freshness >= 0.7, // >70% fresh
       };
     } catch (err) {
       return {
         score: 0,
         reason: 'Invalid JSON response',
-        error: err.message
+        error: err.message,
       };
     }
   }
@@ -313,8 +330,9 @@ class PromptMetricsCollector {
     const tokens1 = text1.toLowerCase().split(/\s+/);
     const tokens2 = text2.toLowerCase().split(/\s+/);
 
-    const commonTokens = tokens1.filter(token => tokens2.includes(token));
-    const similarity = (2 * commonTokens.length) / (tokens1.length + tokens2.length);
+    const commonTokens = tokens1.filter((token) => tokens2.includes(token));
+    const similarity =
+      (2 * commonTokens.length) / (tokens1.length + tokens2.length);
 
     return similarity;
   }
@@ -324,13 +342,21 @@ class PromptMetricsCollector {
 
     return {
       totalGenerations: filtered.length,
-      avgPromptTokens: this.avg(filtered.map(m => m.promptTokens)),
-      avgResponseTokens: this.avg(filtered.map(m => m.responseTokens)),
-      formatComplianceRate: this.avg(filtered.map(m => m.formatCompliance)),
-      actionTagComplianceRate: this.avg(filtered.map(m => m.actionTagCompliance?.score || 0)),
-      thoughtSpeechComplianceRate: this.avg(filtered.map(m => m.thoughtSpeechDistinction?.score || 0)),
-      avgCharacterVoiceScore: this.avg(filtered.map(m => m.characterVoiceScore?.score || 0)),
-      avgFreshThoughtsScore: this.avg(filtered.map(m => m.freshThoughtsScore?.score || 0))
+      avgPromptTokens: this.avg(filtered.map((m) => m.promptTokens)),
+      avgResponseTokens: this.avg(filtered.map((m) => m.responseTokens)),
+      formatComplianceRate: this.avg(filtered.map((m) => m.formatCompliance)),
+      actionTagComplianceRate: this.avg(
+        filtered.map((m) => m.actionTagCompliance?.score || 0)
+      ),
+      thoughtSpeechComplianceRate: this.avg(
+        filtered.map((m) => m.thoughtSpeechDistinction?.score || 0)
+      ),
+      avgCharacterVoiceScore: this.avg(
+        filtered.map((m) => m.characterVoiceScore?.score || 0)
+      ),
+      avgFreshThoughtsScore: this.avg(
+        filtered.map((m) => m.freshThoughtsScore?.score || 0)
+      ),
     };
   }
 
@@ -389,23 +415,33 @@ ${this.generateRecommendations(summary)}
     const recommendations = [];
 
     if (summary.formatComplianceRate < 0.95) {
-      recommendations.push('⚠️ Format compliance below target (95%). Review action tag rules and examples.');
+      recommendations.push(
+        '⚠️ Format compliance below target (95%). Review action tag rules and examples.'
+      );
     }
 
-    if (summary.actionTagComplianceRate < 0.90) {
-      recommendations.push('⚠️ Action tag compliance below target (90%). Consider enhancing action tag guidance.');
+    if (summary.actionTagComplianceRate < 0.9) {
+      recommendations.push(
+        '⚠️ Action tag compliance below target (90%). Consider enhancing action tag guidance.'
+      );
     }
 
     if (summary.avgCharacterVoiceScore < 0.8) {
-      recommendations.push('⚠️ Character voice quality below target (8/10). Review speech pattern usage.');
+      recommendations.push(
+        '⚠️ Character voice quality below target (8/10). Review speech pattern usage.'
+      );
     }
 
     if (summary.avgFreshThoughtsScore < 0.7) {
-      recommendations.push('⚠️ Fresh thoughts score below target (70%). Check anti-repetition mechanism.');
+      recommendations.push(
+        '⚠️ Fresh thoughts score below target (70%). Check anti-repetition mechanism.'
+      );
     }
 
     if (summary.avgPromptTokens > 5500) {
-      recommendations.push('💡 Prompt tokens above target. Consider additional compression opportunities.');
+      recommendations.push(
+        '💡 Prompt tokens above target. Consider additional compression opportunities.'
+      );
     }
 
     return recommendations.length > 0
@@ -432,8 +468,8 @@ ${this.generateRecommendations(summary)}
 
   convertToCSV(data) {
     const headers = Object.keys(data[0]);
-    const rows = data.map(row =>
-      headers.map(header => JSON.stringify(row[header])).join(',')
+    const rows = data.map((row) =>
+      headers.map((header) => JSON.stringify(row[header])).join(',')
     );
 
     return [headers.join(','), ...rows].join('\n');
@@ -460,10 +496,13 @@ class ABTestManager {
       description: testConfig.description,
       variants: testConfig.variants, // e.g., ['v1.0', 'v2.0']
       trafficSplit: testConfig.trafficSplit || [0.5, 0.5],
-      metrics: testConfig.metrics || ['formatCompliance', 'characterVoiceScore'],
+      metrics: testConfig.metrics || [
+        'formatCompliance',
+        'characterVoiceScore',
+      ],
       startDate: new Date(),
       status: 'active',
-      sampleSize: testConfig.sampleSize || 100
+      sampleSize: testConfig.sampleSize || 100,
     };
 
     this.activeTests.set(test.id, test);
@@ -478,7 +517,7 @@ class ABTestManager {
 
     // Consistent variant assignment based on character ID
     const hash = this.hashString(characterId);
-    const normalizedHash = hash % 100 / 100;
+    const normalizedHash = (hash % 100) / 100;
 
     let cumulative = 0;
     for (let i = 0; i < test.variants.length; i++) {
@@ -497,17 +536,18 @@ class ABTestManager {
 
     const variantMetrics = {};
 
-    test.variants.forEach(variant => {
-      const metrics = this.metricsCollector.metrics.filter(m =>
-        m.templateVersion === variant &&
-        m.timestamp >= test.startDate
+    test.variants.forEach((variant) => {
+      const metrics = this.metricsCollector.metrics.filter(
+        (m) => m.templateVersion === variant && m.timestamp >= test.startDate
       );
 
       variantMetrics[variant] = {
         sampleSize: metrics.length,
-        formatCompliance: this.avg(metrics.map(m => m.formatCompliance)),
-        characterVoiceScore: this.avg(metrics.map(m => m.characterVoiceScore?.score || 0)),
-        promptTokens: this.avg(metrics.map(m => m.promptTokens))
+        formatCompliance: this.avg(metrics.map((m) => m.formatCompliance)),
+        characterVoiceScore: this.avg(
+          metrics.map((m) => m.characterVoiceScore?.score || 0)
+        ),
+        promptTokens: this.avg(metrics.map((m) => m.promptTokens)),
       };
     });
 
@@ -520,7 +560,7 @@ class ABTestManager {
       variantMetrics,
       winner,
       confidence: this.calculateConfidence(variantMetrics),
-      recommendation: this.generateRecommendation(winner, variantMetrics)
+      recommendation: this.generateRecommendation(winner, variantMetrics),
     };
   }
 
@@ -529,13 +569,14 @@ class ABTestManager {
     const scores = {};
 
     Object.entries(variantMetrics).forEach(([variant, metrics]) => {
-      scores[variant] = metricNames.reduce((sum, metric) =>
-        sum + (metrics[metric] || 0), 0
-      ) / metricNames.length;
+      scores[variant] =
+        metricNames.reduce((sum, metric) => sum + (metrics[metric] || 0), 0) /
+        metricNames.length;
     });
 
-    const winner = Object.entries(scores).reduce((best, [variant, score]) =>
-      score > best.score ? { variant, score } : best,
+    const winner = Object.entries(scores).reduce(
+      (best, [variant, score]) =>
+        score > best.score ? { variant, score } : best,
       { variant: null, score: -Infinity }
     );
 
@@ -550,7 +591,7 @@ class ABTestManager {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
@@ -574,7 +615,7 @@ describe('Prompt Metrics Collection', () => {
   beforeEach(() => {
     collector = new PromptMetricsCollector({
       storage: mockStorage,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
@@ -587,7 +628,9 @@ describe('Prompt Metrics Collection', () => {
 
     expect(metrics.promptTokens).toBeGreaterThan(0);
     expect(metrics.responseTokens).toBeGreaterThan(0);
-    expect(metrics.totalTokens).toBe(metrics.promptTokens + metrics.responseTokens);
+    expect(metrics.totalTokens).toBe(
+      metrics.promptTokens + metrics.responseTokens
+    );
   });
 
   it('should validate output format', () => {
@@ -595,7 +638,7 @@ describe('Prompt Metrics Collection', () => {
       thoughts: 'Some fresh thought',
       action: 'wait',
       speech: 'Something different from thoughts',
-      notes: []
+      notes: [],
     });
 
     const validation = collector.validateFormat(validResponse);
@@ -618,11 +661,11 @@ describe('Prompt Metrics Collection', () => {
   it('should score fresh thoughts correctly', () => {
     const recentThoughts = [
       'I should examine the notice board',
-      'This tavern is quite boring'
+      'This tavern is quite boring',
     ];
 
     const freshResponse = JSON.stringify({
-      thoughts: 'Bertram seems knowledgeable about local opportunities'
+      thoughts: 'Bertram seems knowledgeable about local opportunities',
     });
 
     const score = collector.scoreFreshThoughts(freshResponse, recentThoughts);
@@ -634,6 +677,7 @@ describe('Prompt Metrics Collection', () => {
 ```
 
 ### Unit Tests
+
 - [ ] Test metrics collection for all metric types
 - [ ] Test output format validation
 - [ ] Test action tag compliance checking
@@ -641,6 +685,7 @@ describe('Prompt Metrics Collection', () => {
 - [ ] Test character voice scoring
 
 ### Integration Tests
+
 - [ ] Test full metrics collection pipeline
 - [ ] Test metrics storage and retrieval
 - [ ] Test report generation
@@ -655,16 +700,17 @@ describe('Prompt Metrics Collection', () => {
 
 ## Success Metrics
 
-| Metric | Baseline | Target | Measurement Method |
-|--------|----------|--------|-------------------|
-| Metrics collection coverage | 0% | 100% | Coverage analysis |
-| Format compliance tracking | None | Real-time | Automated validation |
-| Report generation | Manual | Automated | Daily reports |
-| A/B testing capability | None | Ready | Test framework |
+| Metric                      | Baseline | Target    | Measurement Method   |
+| --------------------------- | -------- | --------- | -------------------- |
+| Metrics collection coverage | 0%       | 100%      | Coverage analysis    |
+| Format compliance tracking  | None     | Real-time | Automated validation |
+| Report generation           | Manual   | Automated | Daily reports        |
+| A/B testing capability      | None     | Ready     | Test framework       |
 
 ## Rollback Plan
 
 Monitoring is additive and non-intrusive:
+
 1. Can be disabled without affecting prompt function
 2. Metrics collection can be throttled if performance impact
 3. A/B testing is opt-in
@@ -674,12 +720,14 @@ Monitoring is additive and non-intrusive:
 ### Metric Categories
 
 **Quantitative Metrics:**
+
 - Token counts (prompt, response, total)
 - Compliance rates (format, action tags, thought/speech)
 - Classification accuracy (note types)
 - Generation performance (time, latency)
 
 **Qualitative Metrics:**
+
 - Character voice consistency (scored)
 - Fresh thoughts quality (scored)
 - Roleplay depth (human evaluation)
@@ -690,18 +738,21 @@ Monitoring is additive and non-intrusive:
 From Report Section 10:
 
 **Minimum Viable Improvement:**
+
 - ✅ 25% token reduction
 - ✅ 90% format compliance
 - ✅ Zero critical instruction conflicts
 - ✅ Maintained character voice quality
 
 **Target Improvement:**
+
 - ✅ 37% token reduction
 - ✅ 95% format compliance
 - ✅ 85% note classification accuracy
 - ✅ Improved character voice consistency
 
 **Stretch Goal:**
+
 - ✅ 40% token reduction
 - ✅ 98% format compliance
 - ✅ 90% note classification accuracy

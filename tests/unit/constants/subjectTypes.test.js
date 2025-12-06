@@ -48,13 +48,13 @@ describe('subjectTypes constants', () => {
     // Ensure descriptions do not introduce extra unexpected keys
     const descriptionKeys = Object.keys(SUBJECT_TYPE_DESCRIPTIONS);
     expect(descriptionKeys.sort()).toEqual(
-      typeKeys.map((key) => SUBJECT_TYPES[key]).sort(),
+      typeKeys.map((key) => SUBJECT_TYPES[key]).sort()
     );
   });
 
   it('should expose an enum values array containing every subject type value exactly once', () => {
     expect(SUBJECT_TYPE_ENUM_VALUES).toHaveLength(
-      Object.keys(SUBJECT_TYPES).length,
+      Object.keys(SUBJECT_TYPES).length
     );
     // Unique check via Set size
     const uniqueValues = new Set(SUBJECT_TYPE_ENUM_VALUES);
@@ -69,10 +69,18 @@ describe('subjectTypes constants', () => {
   });
 
   it('should clearly distinguish simplified taxonomy concepts', () => {
-    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.ENTITY]).toContain('People, places, things');
-    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.EVENT]).toContain('Past occurrences');
-    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.PLAN]).toContain('Future intentions');
-    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.KNOWLEDGE]).toContain('Information');
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.ENTITY]).toContain(
+      'People, places, things'
+    );
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.EVENT]).toContain(
+      'Past occurrences'
+    );
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.PLAN]).toContain(
+      'Future intentions'
+    );
+    expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.KNOWLEDGE]).toContain(
+      'Information'
+    );
     expect(SUBJECT_TYPE_DESCRIPTIONS[SUBJECT_TYPES.STATE]).toContain('Mental');
   });
 });
@@ -100,7 +108,7 @@ describe('subjectTypes helpers', () => {
 
   it('should fall back to a friendly message when description is unavailable', () => {
     expect(getSubjectTypeDescription('non-existent-type')).toBe(
-      'Unknown subject type',
+      'Unknown subject type'
     );
   });
 });

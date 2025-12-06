@@ -5,7 +5,15 @@
  *               suspicious patterns manager lifecycle.
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -95,7 +103,9 @@ describe('rate limiting maintenance and lifecycle integration', () => {
       const success = await agent.post('/auth').send({ attempt: 'success' });
       expect(success.status).toBe(200);
 
-      const fifthFailure = await agent.post('/auth').send({ attempt: 'fifth-failure' });
+      const fifthFailure = await agent
+        .post('/auth')
+        .send({ attempt: 'fifth-failure' });
       expect(fifthFailure.status).toBe(401);
 
       const blocked = await agent.post('/auth').send({ attempt: 'blocked' });
@@ -337,13 +347,22 @@ describe('rate limiting maintenance and lifecycle integration', () => {
       expect(manager.size()).toBe(0);
 
       jest.setSystemTime(new Date('2024-01-01T00:00:10.000Z'));
-      manager.set('client-one', { requests: [Date.now()], createdAt: Date.now() - 5 });
+      manager.set('client-one', {
+        requests: [Date.now()],
+        createdAt: Date.now() - 5,
+      });
       jest.setSystemTime(new Date('2024-01-01T00:00:11.000Z'));
-      manager.set('client-two', { requests: [Date.now()], createdAt: Date.now() - 5 });
+      manager.set('client-two', {
+        requests: [Date.now()],
+        createdAt: Date.now() - 5,
+      });
       expect(manager.size()).toBe(2);
 
       jest.setSystemTime(new Date('2024-01-01T00:00:12.000Z'));
-      manager.set('client-three', { requests: [Date.now()], createdAt: Date.now() - 5 });
+      manager.set('client-three', {
+        requests: [Date.now()],
+        createdAt: Date.now() - 5,
+      });
       expect(manager.size()).toBe(2);
       expect(manager.get('client-one')).toBeUndefined();
 

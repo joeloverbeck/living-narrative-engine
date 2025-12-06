@@ -2,7 +2,14 @@
  * @file Unit tests for CanActorGrabItemOperator
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { createTestBed } from '../../../common/testBed.js';
 import { CanActorGrabItemOperator } from '../../../../src/logic/operators/canActorGrabItemOperator.js';
 import * as grabbingUtils from '../../../../src/utils/grabbingUtils.js';
@@ -85,7 +92,10 @@ describe('CanActorGrabItemOperator', () => {
     });
 
     it('should return false when actor lacks sufficient free appendages', () => {
-      const context = { actor: { id: 'actor_1' }, entity: { id: 'longsword_1' } };
+      const context = {
+        actor: { id: 'actor_1' },
+        entity: { id: 'longsword_1' },
+      };
       // Item requires 2 hands
       mockEntityManager.getComponentData.mockReturnValue({ handsRequired: 2 });
       // Actor has only 1 free hand
@@ -147,7 +157,10 @@ describe('CanActorGrabItemOperator', () => {
       mockEntityManager.getComponentData.mockReturnValue({ handsRequired: 1 });
       grabbingUtils.countFreeGrabbingAppendages.mockReturnValue(2);
 
-      const result = operator.evaluate([{ var: 'event.payload.actorId' }, 'entity'], context);
+      const result = operator.evaluate(
+        [{ var: 'event.payload.actorId' }, 'entity'],
+        context
+      );
 
       expect(result).toBe(true);
       expect(grabbingUtils.countFreeGrabbingAppendages).toHaveBeenCalledWith(
@@ -296,7 +309,9 @@ describe('CanActorGrabItemOperator', () => {
       operator.evaluate(['actor', 'entity'], context);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('has 3 free grabbing appendages, item item_1 requires 2, result=true')
+        expect.stringContaining(
+          'has 3 free grabbing appendages, item item_1 requires 2, result=true'
+        )
       );
     });
 

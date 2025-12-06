@@ -7,6 +7,7 @@ A comprehensive guide for mod authors creating GOAP planning tasks and refinemen
 Planning tasks are high-level goals in the GOAP (Goal-Oriented Action Planning) system. They represent complex objectives that NPCs can work toward, such as "find shelter" or "acquire weapon". Tasks decompose into sequences of primitive actions through refinement methods.
 
 This guide will teach you how to:
+
 - Design effective planning tasks
 - Create refinement methods
 - Structure task files correctly
@@ -24,6 +25,7 @@ Skim those files whenever you need concrete examples of the patterns described b
 ## Prerequisites
 
 Before creating tasks, you should understand:
+
 - [JSON Logic expressions](./json-logic-guide.md)
 - [Component system](./component-system.md)
 - [Scope DSL](./scope-dsl.md)
@@ -114,12 +116,14 @@ Before creating tasks, you should understand:
 ### Step 1: Define the Goal
 
 Ask yourself:
+
 - **What is the high-level objective?** (e.g., "obtain food")
 - **What changes when successful?** (effects on world state)
 - **What must be true to attempt this?** (preconditions)
 - **Who/what is involved?** (planning scope entities)
 
 Example: "Acquire Weapon" task
+
 - Objective: Actor obtains and readies a weapon
 - Changes: Actor gains `equipped_weapon` component
 - Requirements: Actor has free hands, weapon exists
@@ -134,6 +138,7 @@ The planning scope defines which entities the planner queries:
 ```
 
 **Scope options:**
+
 - `"none"` - No entity binding (self-contained task)
 - `"self"` - Actor binds to themselves
 - `"modId:scope_name"` - Custom scope query
@@ -161,11 +166,13 @@ Structural gates are fast, coarse checks that reject obviously inapplicable task
 ```
 
 **When to use:**
+
 - Actor lacks fundamental ability (no hands for manipulation)
 - Task category is completely inappropriate (combat task for pacifist)
 - Fast rejection before expensive scope queries
 
 **When NOT to use:**
+
 - Detailed precondition checks (use planningPreconditions instead)
 - State-dependent conditions (those belong in preconditions)
 
@@ -194,6 +201,7 @@ Preconditions are evaluated against entities from the planning scope:
 ```
 
 **Tips:**
+
 - Use descriptive descriptions for debugging
 - Check both actor and target entity states
 - Keep conditions simple and composable
@@ -223,11 +231,13 @@ Effects describe the state changes the task achieves:
 ```
 
 **Effect types:**
+
 - `ADD_COMPONENT` - Add component to entity
 - `REMOVE_COMPONENT` - Remove component from entity
 - Custom operations (register in operation handlers)
 
 **Best practices:**
+
 - Be explicit about all state changes
 - Include both additions and removals
 - Consider side effects (removing "unarmed" when equipping weapon)
@@ -249,8 +259,8 @@ Refinement methods define how the task decomposes into actions. Create separate 
     "description": "Weapon must be in inventory",
     "condition": {
       "and": [
-        {"has_component": ["task.params.weapon", "core:in_inventory"]},
-        {"not": {"has_component": ["task.params.weapon", "core:equipped"]}}
+        { "has_component": ["task.params.weapon", "core:in_inventory"] },
+        { "not": { "has_component": ["task.params.weapon", "core:equipped"] } }
       ]
     }
   },
@@ -276,6 +286,7 @@ Refinement methods define how the task decomposes into actions. Create separate 
 ```
 
 **Method ID format:** `modId:task_id.method_name`
+
 - Must match task ID in the first part
 - Method name describes the strategy
 
@@ -287,6 +298,7 @@ Refinement methods define how the task decomposes into actions. Create separate 
 ```
 
 **Cost** (default: 10):
+
 - Computational cost for planning this task
 - Higher = more expensive to plan
 - Simple tasks: 5-10
@@ -294,6 +306,7 @@ Refinement methods define how the task decomposes into actions. Create separate 
 - Complex tasks: 20-30
 
 **Priority** (default: 50):
+
 - Task selection preference
 - Higher = preferred over lower priority tasks
 - Survival tasks: 70-90
@@ -310,10 +323,7 @@ Add task to your mod's manifest:
   "version": "1.0.0",
   "name": "My Mod",
   "content": {
-    "tasks": [
-      "tasks/my_task.task.json",
-      "tasks/another_task.task.json"
-    ]
+    "tasks": ["tasks/my_task.task.json", "tasks/another_task.task.json"]
   }
 }
 ```
@@ -332,8 +342,8 @@ Add task to your mod's manifest:
       "description": "Item must be accessible",
       "condition": {
         "or": [
-          {"has_component": ["item", "core:in_reach"]},
-          {"has_component": ["item", "core:tradeable"]}
+          { "has_component": ["item", "core:in_reach"] },
+          { "has_component": ["item", "core:tradeable"] }
         ]
       }
     }
@@ -417,8 +427,8 @@ Add task to your mod's manifest:
       "description": "NPC must be present and receptive",
       "condition": {
         "and": [
-          {"has_component": ["npc", "core:conscious"]},
-          {"not": {"has_component": ["npc", "my_mod:hostile_to_actor"]}}
+          { "has_component": ["npc", "core:conscious"] },
+          { "not": { "has_component": ["npc", "my_mod:hostile_to_actor"] } }
         ]
       }
     }
@@ -450,6 +460,7 @@ Add task to your mod's manifest:
 ### Validation Tests
 
 1. **Schema Validation**:
+
    ```bash
    npm run validate
    ```
@@ -468,6 +479,7 @@ Add task to your mod's manifest:
 ### Integration Tests
 
 1. **Planner Integration**:
+
    ```javascript
    describe('Task Planning', () => {
      it('should select task when preconditions met', () => {
@@ -498,6 +510,7 @@ Add task to your mod's manifest:
 **Symptoms**: Planner ignores your task
 
 **Checklist**:
+
 - ✓ Structural gates pass for actor
 - ✓ Planning scope returns entities
 - ✓ Preconditions satisfied
@@ -505,6 +518,7 @@ Add task to your mod's manifest:
 - ✓ Priority is appropriate
 
 **Debug strategy**:
+
 1. Enable GOAP logging
 2. Check structural gate evaluation
 3. Verify scope query results
@@ -515,11 +529,13 @@ Add task to your mod's manifest:
 **Symptoms**: Task selected but no method applies
 
 **Checklist**:
+
 - ✓ Method applicability conditions correct
 - ✓ Task parameters bound correctly
 - ✓ Entity states match expected values
 
 **Debug strategy**:
+
 1. Log method applicability evaluation
 2. Check task parameter bindings
 3. Verify entity component states
@@ -529,12 +545,14 @@ Add task to your mod's manifest:
 **Symptoms**: Task completes but world state unchanged
 
 **Checklist**:
+
 - ✓ Effect operations registered
 - ✓ Entity references correct
 - ✓ Component IDs valid
 - ✓ Operations executed
 
 **Debug strategy**:
+
 1. Add logging to operation handlers
 2. Verify effect operations exist
 3. Check entity IDs in effects
@@ -573,8 +591,8 @@ Create methods that only apply in specific situations:
   "applicability": {
     "condition": {
       "and": [
-        {"has_component": ["actor", "my_mod:skilled"]},
-        {">=": [{"get_component": ["actor", "my_mod:skill_level"]}, 5]}
+        { "has_component": ["actor", "my_mod:skilled"] },
+        { ">=": [{ "get_component": ["actor", "my_mod:skill_level"] }, 5] }
       ]
     }
   }
@@ -590,7 +608,7 @@ Methods can include conditional logic and nested sequences:
   "steps": [
     {
       "stepType": "conditional",
-      "condition": {"has_component": ["target", "my_mod:locked"]},
+      "condition": { "has_component": ["target", "my_mod:locked"] },
       "thenSteps": [
         {
           "stepType": "primitive_action",

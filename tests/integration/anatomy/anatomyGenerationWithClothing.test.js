@@ -124,7 +124,13 @@ describe('Anatomy Generation with Clothing Integration', () => {
         ),
       getPrecedenceOrder: jest
         .fn()
-        .mockReturnValue(['underwear', 'base', 'outer', 'accessories', 'armor']),
+        .mockReturnValue([
+          'underwear',
+          'base',
+          'outer',
+          'accessories',
+          'armor',
+        ]),
     };
 
     // Create mock dependencies for ClothingInstantiationService
@@ -373,9 +379,10 @@ describe('Anatomy Generation with Clothing Integration', () => {
           }
         }
 
-        const currentEntities = Array.from(entityManager.entities).map(
-          (e) => ({ id: e.id, components: e.components })
-        );
+        const currentEntities = Array.from(entityManager.entities).map((e) => ({
+          id: e.id,
+          components: e.components,
+        }));
         currentEntities.push({
           id: clothingId,
           components,
@@ -673,9 +680,10 @@ describe('Anatomy Generation with Clothing Integration', () => {
           }
         }
 
-        const currentEntities = Array.from(entityManager.entities).map(
-          (e) => ({ id: e.id, components: e.components })
-        );
+        const currentEntities = Array.from(entityManager.entities).map((e) => ({
+          id: e.id,
+          components: e.components,
+        }));
         currentEntities.push({
           id: clothingId,
           components,

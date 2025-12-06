@@ -16,7 +16,14 @@
  * 2. "{Actor} swings their {weapon} at {target}, cutting their flesh." (success message)
  */
 
-import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  jest,
+  afterEach,
+} from '@jest/globals';
 
 describe('APPLY_DAMAGE message ordering', () => {
   describe('expected message order', () => {
@@ -41,7 +48,10 @@ describe('APPLY_DAMAGE message ordering', () => {
 
       const expectedRuleStructure = {
         then_actions: [
-          { type: 'DISPATCH_PERCEPTIBLE_EVENT', comment: 'success message first' },
+          {
+            type: 'DISPATCH_PERCEPTIBLE_EVENT',
+            comment: 'success message first',
+          },
           { type: 'SET_VARIABLE', comment: 'set logMessage' },
           { type: 'FOR_EACH', comment: 'damage loop after success message' },
           { macro: 'core:endTurnOnly', comment: 'end turn without message' },
@@ -107,7 +117,9 @@ describe('APPLY_DAMAGE message ordering', () => {
       const currentSuccessBranch = {
         type: 'IF',
         parameters: {
-          condition: { '==': [{ var: 'context.attackResult.outcome' }, 'SUCCESS'] },
+          condition: {
+            '==': [{ var: 'context.attackResult.outcome' }, 'SUCCESS'],
+          },
           then_actions: [
             { type: 'DISPATCH_PERCEPTIBLE_EVENT' }, // 1. Dispatch success event
             { type: 'FOR_EACH', comment: 'damage loop' }, // 2. FOR_EACH with APPLY_DAMAGE
@@ -143,24 +155,19 @@ describe('APPLY_DAMAGE message ordering', () => {
       // If DamageEventMessageRenderer uses queueMicrotask for ALL messages
       // including batching, and the success message is dispatched to a
       // different renderer that is synchronous, they could interleave
-
       // Let's verify what happens:
       // 1. FOR_EACH → APPLY_DAMAGE → anatomy:damage_applied event
       // 2. DamageEventMessageRenderer receives event, calls queueMicrotask
       // 3. macro → DISPLAY_MESSAGE or DISPATCH_EVENT for success
       // 4. Success message rendered (synchronously?)
       // 5. Microtask runs, damage message rendered
-
       // If step 4 is synchronous and step 5 is deferred, order would be:
       // Success → Damage (correct!)
-
       // But user reports Damage → Success (wrong!)
-
       // This suggests either:
       // A) The success message is ALSO deferred somehow
       // B) The FOR_EACH is happening AFTER the success message display
       // C) There's another batching mechanism
-
       // Need to look at core:display_successful_action_result handler
     });
   });

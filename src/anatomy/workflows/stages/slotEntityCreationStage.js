@@ -52,9 +52,7 @@ export async function executeSlotEntityCreation(context, dependencies) {
     logger
   );
 
-  logger.debug(
-    `SlotEntityCreationStage: Completed for entity '${ownerId}'`
-  );
+  logger.debug(`SlotEntityCreationStage: Completed for entity '${ownerId}'`);
 
   return { slotEntityMappings };
 }

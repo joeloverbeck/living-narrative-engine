@@ -12,40 +12,40 @@ Integration tests are located in `tests/integration/characterBuilder/controllers
 
 #### BaseCharacterBuilderController Integration Tests
 
-| Test Suite | File | Purpose |
-|------------|------|---------|
-| **DI Registration** | `BaseCharacterBuilderController.di.integration.test.js` | Tests dependency injection registration and service resolution |
-| **DOM Caching** | `BaseCharacterBuilderController.domCaching.integration.test.js` | Tests DOM element caching map, cache invalidation, and memory management |
-| **Lifecycle** | `BaseCharacterBuilderController.lifecycle.integration.test.js` | Tests lifecycle orchestration, initialize/reinitialize/destroy flows, phase transitions |
-| **Async Utilities** | `BaseCharacterBuilderController.asyncUtilities.integration.test.js` | Tests debounce, throttle, timeout management, async toolkit registration/cleanup |
-| **Validation** | `BaseCharacterBuilderController.validation.integration.test.js` | Tests schema validation, error propagation, ValidationService integration |
-| **Utilities** | `BaseCharacterBuilderController.utilities.integration.test.js` | Tests utility helpers, performance monitoring, memory management |
-| **Error Handling** | `BaseCharacterBuilderController.errorHandling.integration.test.js` | Tests error recovery, error handling strategy integration |
-| **Recovery** | `BaseCharacterBuilderController.recovery.integration.test.js` | Tests error recovery workflows and resilience patterns |
+| Test Suite          | File                                                                | Purpose                                                                                 |
+| ------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **DI Registration** | `BaseCharacterBuilderController.di.integration.test.js`             | Tests dependency injection registration and service resolution                          |
+| **DOM Caching**     | `BaseCharacterBuilderController.domCaching.integration.test.js`     | Tests DOM element caching map, cache invalidation, and memory management                |
+| **Lifecycle**       | `BaseCharacterBuilderController.lifecycle.integration.test.js`      | Tests lifecycle orchestration, initialize/reinitialize/destroy flows, phase transitions |
+| **Async Utilities** | `BaseCharacterBuilderController.asyncUtilities.integration.test.js` | Tests debounce, throttle, timeout management, async toolkit registration/cleanup        |
+| **Validation**      | `BaseCharacterBuilderController.validation.integration.test.js`     | Tests schema validation, error propagation, ValidationService integration               |
+| **Utilities**       | `BaseCharacterBuilderController.utilities.integration.test.js`      | Tests utility helpers, performance monitoring, memory management                        |
+| **Error Handling**  | `BaseCharacterBuilderController.errorHandling.integration.test.js`  | Tests error recovery, error handling strategy integration                               |
+| **Recovery**        | `BaseCharacterBuilderController.recovery.integration.test.js`       | Tests error recovery workflows and resilience patterns                                  |
 
 #### Controller-Specific Integration Tests
 
-| Controller | Test Suite | File | Focus Areas |
-|------------|------------|------|-------------|
-| **TraitsGenerator** | UI State & DOM | `TraitsGeneratorController.uiState.integration.test.js` | UI state transitions, DOM caching, event-driven workflows |
-| **TraitsGenerator** | Main Integration | `traitsGeneratorController.integration.test.js` | Service layer integration, event flows |
-| **TraitsGenerator** | Additional Flows | `traitsGeneratorController.additionalFlows.integration.test.js` | Edge cases, complex workflows |
-| **TraitsGenerator** | Error States | `traitsGeneratorController.errorStates.integration.test.js` | Error handling, recovery scenarios |
-| **SpeechPatternsGenerator** | Lifecycle | `SpeechPatternsGeneratorController.lifecycle.integration.test.js` | Lifecycle management, DOM caching, event listeners, cleanup |
-| **TraitsRewriter** | Main Integration | `TraitsRewriterController.integration.test.js` | Rewriter-specific workflows |
+| Controller                  | Test Suite       | File                                                              | Focus Areas                                                 |
+| --------------------------- | ---------------- | ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| **TraitsGenerator**         | UI State & DOM   | `TraitsGeneratorController.uiState.integration.test.js`           | UI state transitions, DOM caching, event-driven workflows   |
+| **TraitsGenerator**         | Main Integration | `traitsGeneratorController.integration.test.js`                   | Service layer integration, event flows                      |
+| **TraitsGenerator**         | Additional Flows | `traitsGeneratorController.additionalFlows.integration.test.js`   | Edge cases, complex workflows                               |
+| **TraitsGenerator**         | Error States     | `traitsGeneratorController.errorStates.integration.test.js`       | Error handling, recovery scenarios                          |
+| **SpeechPatternsGenerator** | Lifecycle        | `SpeechPatternsGeneratorController.lifecycle.integration.test.js` | Lifecycle management, DOM caching, event listeners, cleanup |
+| **TraitsRewriter**          | Main Integration | `TraitsRewriterController.integration.test.js`                    | Rewriter-specific workflows                                 |
 
 ### E2E Tests
 
 E2E tests are located in `tests/e2e/` and `tests/e2e/characterBuilder/`, validating complete user journeys using the Jest-based harness (jsdom, not Playwright/Puppeteer).
 
-| Test Suite | File | Purpose |
-|------------|------|---------|
+| Test Suite               | File                                                       | Purpose                                                                        |
+| ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | **Controller Workflows** | `characterBuilder/characterBuilderControllers.e2e.test.js` | Complete user journeys, UI state transitions, event flows, service integration |
-| **Traits Generator** | `traitsGenerator.e2e.test.js` | Traits generation user workflow |
-| **User Workflow** | `traitsGeneratorUserWorkflow.e2e.test.js` | Step-by-step user interaction validation |
-| **Accessibility** | `traitsGeneratorAccessibility.e2e.test.js` | WCAG compliance, keyboard navigation |
-| **Error Handling** | `traitsGeneratorErrorHandling.e2e.test.js` | Error recovery user experience |
-| **Export** | `traitsGeneratorExport.e2e.test.js` | Export functionality validation |
+| **Traits Generator**     | `traitsGenerator.e2e.test.js`                              | Traits generation user workflow                                                |
+| **User Workflow**        | `traitsGeneratorUserWorkflow.e2e.test.js`                  | Step-by-step user interaction validation                                       |
+| **Accessibility**        | `traitsGeneratorAccessibility.e2e.test.js`                 | WCAG compliance, keyboard navigation                                           |
+| **Error Handling**       | `traitsGeneratorErrorHandling.e2e.test.js`                 | Error recovery user experience                                                 |
+| **Export**               | `traitsGeneratorExport.e2e.test.js`                        | Export functionality validation                                                |
 
 ## Test Commands
 
@@ -102,19 +102,19 @@ npm run test:ci
 
 This table maps each controller responsibility to the test suites that cover it:
 
-| Responsibility | Integration Tests | E2E Tests | Notes |
-|----------------|-------------------|-----------|-------|
-| **DOM Element Caching** | `BaseCharacterBuilderController.domCaching.integration.test.js` | `characterBuilderControllers.e2e.test.js` | Cache map, invalidation, performance |
-| **Lifecycle Orchestration** | `BaseCharacterBuilderController.lifecycle.integration.test.js` | `characterBuilderControllers.e2e.test.js` | Init/reinit/destroy phases |
-| **Async Utilities** | `BaseCharacterBuilderController.asyncUtilities.integration.test.js` | - | Debounce, throttle, timeout management |
-| **Validation** | `BaseCharacterBuilderController.validation.integration.test.js` | `traitsGeneratorUserWorkflow.e2e.test.js` | Schema validation, error propagation |
-| **Error Recovery** | `BaseCharacterBuilderController.errorHandling.integration.test.js`, `BaseCharacterBuilderController.recovery.integration.test.js` | `traitsGeneratorErrorHandling.e2e.test.js`, `characterBuilderControllers.e2e.test.js` | Error handling strategy, recovery workflows |
-| **UI State Management** | `TraitsGeneratorController.uiState.integration.test.js` | `characterBuilderControllers.e2e.test.js`, `traitsGeneratorUserWorkflow.e2e.test.js` | State transitions, UIStateManager integration |
-| **Event Listener Management** | `SpeechPatternsGeneratorController.lifecycle.integration.test.js`, `BaseCharacterBuilderController.utilities.integration.test.js` | `characterBuilderControllers.e2e.test.js` | Registration, cleanup, EventListenerRegistry |
-| **Performance Monitoring** | `BaseCharacterBuilderController.utilities.integration.test.js` | - | PerformanceMonitor integration, markers |
-| **Memory Management** | `BaseCharacterBuilderController.domCaching.integration.test.js`, `BaseCharacterBuilderController.utilities.integration.test.js` | - | Weak references, cleanup, leak prevention |
-| **DOMElementManager Integration** | `BaseCharacterBuilderController.domCaching.integration.test.js` | `characterBuilderControllers.e2e.test.js` | Element queries, caching coordination |
-| **Service Composition** | `BaseCharacterBuilderController.di.integration.test.js` | - | DI container, service resolution |
+| Responsibility                    | Integration Tests                                                                                                                 | E2E Tests                                                                             | Notes                                         |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **DOM Element Caching**           | `BaseCharacterBuilderController.domCaching.integration.test.js`                                                                   | `characterBuilderControllers.e2e.test.js`                                             | Cache map, invalidation, performance          |
+| **Lifecycle Orchestration**       | `BaseCharacterBuilderController.lifecycle.integration.test.js`                                                                    | `characterBuilderControllers.e2e.test.js`                                             | Init/reinit/destroy phases                    |
+| **Async Utilities**               | `BaseCharacterBuilderController.asyncUtilities.integration.test.js`                                                               | -                                                                                     | Debounce, throttle, timeout management        |
+| **Validation**                    | `BaseCharacterBuilderController.validation.integration.test.js`                                                                   | `traitsGeneratorUserWorkflow.e2e.test.js`                                             | Schema validation, error propagation          |
+| **Error Recovery**                | `BaseCharacterBuilderController.errorHandling.integration.test.js`, `BaseCharacterBuilderController.recovery.integration.test.js` | `traitsGeneratorErrorHandling.e2e.test.js`, `characterBuilderControllers.e2e.test.js` | Error handling strategy, recovery workflows   |
+| **UI State Management**           | `TraitsGeneratorController.uiState.integration.test.js`                                                                           | `characterBuilderControllers.e2e.test.js`, `traitsGeneratorUserWorkflow.e2e.test.js`  | State transitions, UIStateManager integration |
+| **Event Listener Management**     | `SpeechPatternsGeneratorController.lifecycle.integration.test.js`, `BaseCharacterBuilderController.utilities.integration.test.js` | `characterBuilderControllers.e2e.test.js`                                             | Registration, cleanup, EventListenerRegistry  |
+| **Performance Monitoring**        | `BaseCharacterBuilderController.utilities.integration.test.js`                                                                    | -                                                                                     | PerformanceMonitor integration, markers       |
+| **Memory Management**             | `BaseCharacterBuilderController.domCaching.integration.test.js`, `BaseCharacterBuilderController.utilities.integration.test.js`   | -                                                                                     | Weak references, cleanup, leak prevention     |
+| **DOMElementManager Integration** | `BaseCharacterBuilderController.domCaching.integration.test.js`                                                                   | `characterBuilderControllers.e2e.test.js`                                             | Element queries, caching coordination         |
+| **Service Composition**           | `BaseCharacterBuilderController.di.integration.test.js`                                                                           | -                                                                                     | DI container, service resolution              |
 
 ## Test Patterns and Best Practices
 
@@ -131,8 +131,8 @@ let controller;
 beforeEach(async () => {
   testBase = new BaseCharacterBuilderControllerIntegrationTestBase();
   await testBase.setup({
-    includeFullDOM: true,          // Setup complete DOM structure
-    mockGlobalFunctions: true,      // Mock setTimeout, fetch, etc.
+    includeFullDOM: true, // Setup complete DOM structure
+    mockGlobalFunctions: true, // Mock setTimeout, fetch, etc.
     additionalMocks: ['localStorage'], // Optional mocks
   });
 
@@ -210,7 +210,8 @@ expect(mockFn).toHaveBeenCalledTimes(1);
 
 **Symptom**: Tests fail with "Required element not found: #element-id"
 
-**Solution**: 
+**Solution**:
+
 - Verify DOM structure in test setup includes the required element
 - Check element ID matches exactly (case-sensitive)
 - Use `includeFullDOM: true` in testBase.setup()
@@ -220,6 +221,7 @@ expect(mockFn).toHaveBeenCalledTimes(1);
 **Symptom**: Memory leak warnings or "removeEventListener called on null"
 
 **Solution**:
+
 - Ensure `controller.destroy()` is called in `afterEach`
 - Verify EventListenerRegistry is properly initialized
 - Check that listeners are registered through the registry
@@ -229,6 +231,7 @@ expect(mockFn).toHaveBeenCalledTimes(1);
 **Symptom**: Tests intermittently fail with "Expected X but received Y"
 
 **Solution**:
+
 - Use `jest.useFakeTimers()` and `jest.advanceTimersByTime()`
 - Await async operations with proper error handling
 - Verify mock async functions return promises
@@ -238,6 +241,7 @@ expect(mockFn).toHaveBeenCalledTimes(1);
 **Symptom**: Cached elements not cleared after destroy
 
 **Solution**:
+
 - Call `controller.clearElementCache()` in destroy
 - Verify cache cleanup in `afterEach` hook
 - Check that cache references are actually cleared (null)

@@ -82,7 +82,11 @@ const createControllerEnv = ({
     errorReporter ??
     new ErrorReporter(
       { logger, eventDispatcher: dispatcher },
-      { enableMetrics: false, reportLevels: ['CRITICAL', 'HIGH'], maxStackTraceLines: 2 }
+      {
+        enableMetrics: false,
+        reportLevels: ['CRITICAL', 'HIGH'],
+        maxStackTraceLines: 2,
+      }
     );
   const recovery =
     errorRecovery ??
@@ -271,8 +275,12 @@ describe('VisualizerStateController integration', () => {
       expect.any(AnatomyDataError)
     );
     expect(errorRecovery.handleError).toHaveBeenCalledTimes(2);
-    expect(errorRecovery.handleError.mock.calls[0][0]).toBeInstanceOf(AnatomyDataError);
-    expect(errorRecovery.handleError.mock.calls[1][0]).toBeInstanceOf(AnatomyDataError);
+    expect(errorRecovery.handleError.mock.calls[0][0]).toBeInstanceOf(
+      AnatomyDataError
+    );
+    expect(errorRecovery.handleError.mock.calls[1][0]).toBeInstanceOf(
+      AnatomyDataError
+    );
   });
 
   it('applies structured recovery results and advances rendering state', async () => {
@@ -281,9 +289,15 @@ describe('VisualizerStateController integration', () => {
     const errorRecovery = {
       handleError: jest
         .fn()
-        .mockResolvedValueOnce({ success: true, result: { emptyVisualization: true } })
+        .mockResolvedValueOnce({
+          success: true,
+          result: { emptyVisualization: true },
+        })
         .mockResolvedValueOnce({ success: true, result: { stateReset: true } })
-        .mockResolvedValueOnce({ success: true, result: { textFallback: true } }),
+        .mockResolvedValueOnce({
+          success: true,
+          result: { textFallback: true },
+        }),
       dispose: jest.fn(),
     };
     const errorReporter = {
@@ -296,7 +310,9 @@ describe('VisualizerStateController integration', () => {
       errorReporter,
     });
 
-    await env.controller.handleError(new Error('empty'), { operation: 'rendering' });
+    await env.controller.handleError(new Error('empty'), {
+      operation: 'rendering',
+    });
     expect(env.logger.warn).toHaveBeenCalledWith(
       'Failed to apply recovery result:',
       expect.any(Error)
@@ -304,13 +320,17 @@ describe('VisualizerStateController integration', () => {
 
     env.visualizerState.selectEntity(entity.id);
     env.visualizerState.setError(new Error('state-reset'));
-    await env.controller.handleError(new Error('reset'), { operation: 'rendering' });
+    await env.controller.handleError(new Error('reset'), {
+      operation: 'rendering',
+    });
     expect(env.controller.getCurrentState()).toBe('IDLE');
 
     env.visualizerState.selectEntity(entity.id);
     env.visualizerState.setAnatomyData(bodyData);
     env.visualizerState.startRendering();
-    await env.controller.handleError(new Error('text'), { operation: 'rendering' });
+    await env.controller.handleError(new Error('text'), {
+      operation: 'rendering',
+    });
     expect(env.controller.getCurrentState()).toBe('READY');
     expect(env.logger.info).toHaveBeenCalledWith(
       'Error recovery successful for operation: rendering'
@@ -351,7 +371,9 @@ describe('VisualizerStateController integration', () => {
     expect(env.controller.getError()).toBeNull();
     expect(env.controller.isDisposed()).toBe(false);
 
-    expect(() => env.controller.retry()).toThrow('Cannot retry when not in ERROR state');
+    expect(() => env.controller.retry()).toThrow(
+      'Cannot retry when not in ERROR state'
+    );
 
     env.visualizerState.selectEntity(entity.id);
     env.visualizerState.setAnatomyData(bodyData);

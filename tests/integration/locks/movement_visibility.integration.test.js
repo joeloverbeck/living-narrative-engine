@@ -8,18 +8,27 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
-const MOVEMENT_CONDITIONS_DIR = path.resolve(process.cwd(), 'data/mods/movement/conditions');
-const MOVEMENT_SCOPES_DIR = path.resolve(process.cwd(), 'data/mods/movement/scopes');
+const MOVEMENT_CONDITIONS_DIR = path.resolve(
+  process.cwd(),
+  'data/mods/movement/conditions'
+);
+const MOVEMENT_SCOPES_DIR = path.resolve(
+  process.cwd(),
+  'data/mods/movement/scopes'
+);
 
 // Helper to load conditions/scopes
 /**
  *
  */
 function loadConditions() {
-  const entries = fs.readdirSync(MOVEMENT_CONDITIONS_DIR)
-    .filter(f => f.endsWith('.condition.json'))
-    .map(f => {
-      const content = JSON.parse(fs.readFileSync(path.join(MOVEMENT_CONDITIONS_DIR, f), 'utf8'));
+  const entries = fs
+    .readdirSync(MOVEMENT_CONDITIONS_DIR)
+    .filter((f) => f.endsWith('.condition.json'))
+    .map((f) => {
+      const content = JSON.parse(
+        fs.readFileSync(path.join(MOVEMENT_CONDITIONS_DIR, f), 'utf8')
+      );
       return [content.id, content];
     });
   return Object.fromEntries(entries);
@@ -30,7 +39,9 @@ function loadConditions() {
  */
 function loadScopes() {
   const scopeDefs = {};
-  const files = fs.readdirSync(MOVEMENT_SCOPES_DIR).filter(f => f.endsWith('.scope'));
+  const files = fs
+    .readdirSync(MOVEMENT_SCOPES_DIR)
+    .filter((f) => f.endsWith('.scope'));
   for (const f of files) {
     const p = path.join(MOVEMENT_SCOPES_DIR, f);
     const parsed = parseScopeDefinitions(fs.readFileSync(p, 'utf8'), p);
@@ -51,14 +62,14 @@ function buildEntityManager({ isLocked, hasOpenable }) {
   const blocker = {
     id: 'blocker1',
     components: {
-      'core:name': { text: 'Door' }
-    }
+      'core:name': { text: 'Door' },
+    },
   };
-  
+
   if (hasOpenable) {
     blocker.components['mechanisms:openable'] = {
       isLocked,
-      requiredKeyId: 'key1'
+      requiredKeyId: 'key1',
     };
   }
 
@@ -67,24 +78,24 @@ function buildEntityManager({ isLocked, hasOpenable }) {
     components: {
       'core:location': {},
       'movement:exits': [
-        { direction: 'north', target: 'room2', blocker: blocker.id }
-      ]
-    }
+        { direction: 'north', target: 'room2', blocker: blocker.id },
+      ],
+    },
   };
-  
+
   // Need target room too? Scope just returns the ID, doesn't check target room existence usually unless specified.
   // But let's add it just in case.
   const room2 = {
     id: 'room2',
-    components: { 'core:location': {} }
+    components: { 'core:location': {} },
   };
 
   const actor = {
     id: 'actor1',
     components: {
       'core:actor': {},
-      'core:position': { locationId: 'room1' }
-    }
+      'core:position': { locationId: 'room1' },
+    },
   };
 
   return new SimpleEntityManager([actor, blocker, location, room2]);
@@ -104,24 +115,29 @@ describe('Movement visibility integration', () => {
   function createHarness({ isLocked, hasOpenable }) {
     const entityManager = buildEntityManager({ isLocked, hasOpenable });
     const jsonLogicEval = new JsonLogicEvaluationService({
-       logger,
-       gameDataRepository: { getConditionDefinition: (id) => conditions[id] }
+      logger,
+      gameDataRepository: { getConditionDefinition: (id) => conditions[id] },
     });
-    
+
     // Register get_component_value
-    jsonLogicEval.addOperation('get_component_value', (entityRef, componentId, propertyPath = null) => {
-      const entityId = typeof entityRef === 'string' ? entityRef : entityRef?.id;
-      if (!entityId) return null;
-      const data = entityManager.getComponentData(entityId, componentId);
-      if (!data || typeof data !== 'object') return null;
-      if (!propertyPath) return data;
-      return propertyPath.split('.').reduce((v, k) => v && v[k], data);
-    });
-    
+    jsonLogicEval.addOperation(
+      'get_component_value',
+      (entityRef, componentId, propertyPath = null) => {
+        const entityId =
+          typeof entityRef === 'string' ? entityRef : entityRef?.id;
+        if (!entityId) return null;
+        const data = entityManager.getComponentData(entityId, componentId);
+        if (!data || typeof data !== 'object') return null;
+        if (!propertyPath) return data;
+        return propertyPath.split('.').reduce((v, k) => v && v[k], data);
+      }
+    );
+
     // Register has_component
     jsonLogicEval.addOperation('has_component', (entityRef, componentId) => {
-       const entityId = typeof entityRef === 'string' ? entityRef : entityRef?.id;
-       return !!entityManager.getComponentData(entityId, componentId);
+      const entityId =
+        typeof entityRef === 'string' ? entityRef : entityRef?.id;
+      return !!entityManager.getComponentData(entityId, componentId);
     });
 
     const scopeRegistry = new ScopeRegistry({ logger });
@@ -134,7 +150,7 @@ describe('Movement visibility integration', () => {
       logger,
       actor,
       jsonLogicEval,
-      location: entityManager.getEntityInstance('room1')
+      location: entityManager.getEntityInstance('room1'),
     };
 
     /**
@@ -142,9 +158,13 @@ describe('Movement visibility integration', () => {
      * @param scopeName
      */
     function resolve(scopeName) {
-      return scopeEngine.resolve(scopeRegistry.getScope(scopeName).ast, actor, runtimeCtx);
+      return scopeEngine.resolve(
+        scopeRegistry.getScope(scopeName).ast,
+        actor,
+        runtimeCtx
+      );
     }
-    
+
     return { resolve };
   }
 

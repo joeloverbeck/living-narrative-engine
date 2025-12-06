@@ -9,18 +9,20 @@ import breakFreeCondition from '../../../../data/mods/physical-control/condition
 
 const ACTION_ID = 'physical-control:break_free_from_restraint';
 
-const forceOutcome = (outcome = 'SUCCESS') => (params, ctx) => {
-  ctx.evaluationContext.context[params.result_variable] = {
-    outcome,
-    roll: 1,
-    threshold: 100,
-    margin: -99,
-    isCritical: outcome === 'CRITICAL_SUCCESS',
-    actorSkill: 10,
-    targetSkill: 10,
-    breakdown: {},
+const forceOutcome =
+  (outcome = 'SUCCESS') =>
+  (params, ctx) => {
+    ctx.evaluationContext.context[params.result_variable] = {
+      outcome,
+      roll: 1,
+      threshold: 100,
+      margin: -99,
+      isCritical: outcome === 'CRITICAL_SUCCESS',
+      actorSkill: 10,
+      targetSkill: 10,
+      breakdown: {},
+    };
   };
-};
 
 describe('physical-control:break_free_from_restraint closeness handling', () => {
   let testFixture;

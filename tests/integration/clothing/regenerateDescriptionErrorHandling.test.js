@@ -236,7 +236,7 @@ describe('Description Regeneration Error Handling', () => {
       );
 
       // Assert: Success logged even with null description
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'RegenerateDescriptionHandler: Successfully regenerated entity description',
         expect.objectContaining({
           entityId: 'test-entity',
@@ -690,7 +690,7 @@ describe('Description Regeneration Error Handling', () => {
       }
 
       // Assert: Successes and failures handled independently
-      expect(mockLogger.info).toHaveBeenCalledTimes(3); // 3 successes
+      expect(mockLogger.debug).toHaveBeenCalledTimes(3); // 3 successes
       expect(mockLogger.error).toHaveBeenCalledTimes(2); // 2 failures
       expect(mockEntityManager.addComponent).toHaveBeenCalledTimes(3); // 3 successful updates
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledTimes(2); // 2 error events

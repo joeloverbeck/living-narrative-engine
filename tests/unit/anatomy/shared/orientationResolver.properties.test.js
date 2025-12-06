@@ -243,9 +243,7 @@ describe('OrientationResolver - Property-Based Tests', () => {
     it('should fallback to indexed for non-octagonal counts without positions', () => {
       fc.assert(
         fc.property(
-          fc
-            .integer({ min: 1, max: 20 })
-            .filter((n) => n !== 8), // Exclude 8
+          fc.integer({ min: 1, max: 20 }).filter((n) => n !== 8), // Exclude 8
           (count) => {
             const orientations = [];
             for (let i = 1; i <= count; i++) {

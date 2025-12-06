@@ -33,7 +33,9 @@ describe('PerformanceMonitor environment fallbacks', () => {
     const logger = createMockLogger();
 
     await jest.isolateModulesAsync(async () => {
-      const { default: PerformanceMonitor } = await import('../../../../src/entities/monitoring/PerformanceMonitor.js');
+      const { default: PerformanceMonitor } = await import(
+        '../../../../src/entities/monitoring/PerformanceMonitor.js'
+      );
       const monitor = new PerformanceMonitor({ logger });
 
       expect(() => monitor.checkMemoryUsage()).not.toThrow();

@@ -7,9 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import EventBus from '../../../src/events/eventBus.js';
 import UnifiedCache from '../../../src/cache/UnifiedCache.js';
@@ -100,7 +98,9 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
       lifecycle: 'singleton',
       dependencies: ['ILogger'],
     });
-    container.register('IUnifiedCache', () => container.resolve('UnifiedCache'));
+    container.register('IUnifiedCache', () =>
+      container.resolve('UnifiedCache')
+    );
     container.register('IntegrationTestFacade', () => IntegrationTestFacade);
 
     eventBus = container.resolve('EventBus');
@@ -152,9 +152,12 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
     expect(cacheHit.source).toBe('integration-test');
     expect(facade.invocationCount).toBe(1);
 
-    const result = await facade.performResilientOperation('ping-backend', async () => {
-      return 'pong';
-    });
+    const result = await facade.performResilientOperation(
+      'ping-backend',
+      async () => {
+        return 'pong';
+      }
+    );
     expect(result).toBe('pong');
 
     facade.announce({ shard: 'alpha' });
@@ -163,7 +166,9 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
 
     console.error.mockClear();
     const targetManager = new TargetManager({ logger });
-    expect(() => targetManager.setTargets(null)).toThrow('Targets object is required');
+    expect(() => targetManager.setTargets(null)).toThrow(
+      'Targets object is required'
+    );
     expect(console.error).toHaveBeenCalled();
 
     // UnifiedCache should now contain the computed payload.
@@ -172,43 +177,49 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
   });
 
   it('surfaces invalid wiring through dependency guards across factory and registry', () => {
-    expect(() =>
-      new FacadeFactory({
-        logger,
-        container: { resolve() {} },
-      })
+    expect(
+      () =>
+        new FacadeFactory({
+          logger,
+          container: { resolve() {} },
+        })
     ).toThrow(InvalidArgumentError);
 
-    expect(() =>
-      new FacadeFactory({
-        logger,
-        container: null,
-      })
+    expect(
+      () =>
+        new FacadeFactory({
+          logger,
+          container: null,
+        })
     ).toThrow(InvalidArgumentError);
 
     const brokenEventBus = { subscribe: () => {}, dispatch: null };
-    expect(() =>
-      new FacadeRegistry({
-        logger,
-        eventBus: brokenEventBus,
-        facadeFactory,
-      })
+    expect(
+      () =>
+        new FacadeRegistry({
+          logger,
+          eventBus: brokenEventBus,
+          facadeFactory,
+        })
     ).toThrow(InvalidArgumentError);
 
-    expect(() => facadeFactory.createFacade('   ')).toThrow(InvalidArgumentError);
+    expect(() => facadeFactory.createFacade('   ')).toThrow(
+      InvalidArgumentError
+    );
 
-    expect(() =>
-      new EventDispatchService({ safeEventDispatcher: null, logger })
+    expect(
+      () => new EventDispatchService({ safeEventDispatcher: null, logger })
     ).toThrow('EventDispatchService: safeEventDispatcher is required');
 
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: {
-          validatedEventDispatcher: {},
-          safeEventDispatcher: { subscribe() {} },
-        },
-      })
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger },
+          events: {
+            validatedEventDispatcher: {},
+            safeEventDispatcher: { subscribe() {} },
+          },
+        })
     ).toThrow(SystemInitializationError);
   });
 
@@ -259,24 +270,26 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
 
     await initializer.initializeAll();
 
-    expect(() =>
-      new SystemInitializer({
-        resolver: {},
-        logger,
-        validatedEventDispatcher: new NoopDispatcher(),
-        eventDispatchService,
-        initializationTag: 'boot',
-      })
+    expect(
+      () =>
+        new SystemInitializer({
+          resolver: {},
+          logger,
+          validatedEventDispatcher: new NoopDispatcher(),
+          eventDispatchService,
+          initializationTag: 'boot',
+        })
     ).toThrow(/resolveByTag/);
 
-    expect(() =>
-      new SystemInitializer({
-        resolver,
-        logger: null,
-        validatedEventDispatcher: new NoopDispatcher(),
-        eventDispatchService,
-        initializationTag: 'boot',
-      })
+    expect(
+      () =>
+        new SystemInitializer({
+          resolver,
+          logger: null,
+          validatedEventDispatcher: new NoopDispatcher(),
+          eventDispatchService,
+          initializationTag: 'boot',
+        })
     ).toThrow('SystemInitializer requires an ILogger instance.');
   });
 
@@ -301,13 +314,14 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
     const worldInitializer = new WorldInitializer(dependencies);
     expect(worldInitializer.getWorldContext()).toBe(dependencies.worldContext);
 
-    expect(() =>
-      new WorldInitializer({
-        ...dependencies,
-        gameDataRepository: {
-          getWorld: () => ({}),
-        },
-      })
+    expect(
+      () =>
+        new WorldInitializer({
+          ...dependencies,
+          gameDataRepository: {
+            getWorld: () => ({}),
+          },
+        })
     ).toThrow(WorldInitializationError);
   });
 
@@ -338,19 +352,22 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
       }
     }
 
-    const EnhancedService = withValidatedDeps(ServiceBase, ({
-      handler,
-      aggregator,
-      logger: suppliedLogger,
-    }) => [
-      { dependency: suppliedLogger, name: 'ILogger', methods: ['info', 'error'] },
-      { dependency: handler, name: 'handler', isFunction: true },
-      {
-        dependency: aggregator,
-        name: 'aggregator',
-        methods: ['add', 'flush'],
-      },
-    ]);
+    const EnhancedService = withValidatedDeps(
+      ServiceBase,
+      ({ handler, aggregator, logger: suppliedLogger }) => [
+        {
+          dependency: suppliedLogger,
+          name: 'ILogger',
+          methods: ['info', 'error'],
+        },
+        { dependency: handler, name: 'handler', isFunction: true },
+        {
+          dependency: aggregator,
+          name: 'aggregator',
+          methods: ['add', 'flush'],
+        },
+      ]
+    );
 
     const handler = () => 'handled';
     const aggregator = {
@@ -366,20 +383,22 @@ describe('dependencyUtils integration orchestrated across real modules', () => {
 
     expect(service.logger).toBe(logger);
 
-    expect(() =>
-      new EnhancedService({
-        logger,
-        handler: {},
-        aggregator,
-      })
+    expect(
+      () =>
+        new EnhancedService({
+          logger,
+          handler: {},
+          aggregator,
+        })
     ).toThrow(InvalidArgumentError);
 
-    expect(() =>
-      new EnhancedService({
-        logger,
-        handler,
-        aggregator: { add: () => {} },
-      })
+    expect(
+      () =>
+        new EnhancedService({
+          logger,
+          handler,
+          aggregator: { add: () => {} },
+        })
     ).toThrow(InvalidArgumentError);
   });
 });

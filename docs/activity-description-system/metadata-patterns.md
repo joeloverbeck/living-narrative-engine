@@ -50,18 +50,18 @@ instantiated.
 
 ### Field reference
 
-| Field | Description |
-| --- | --- |
+| Field                      | Description                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
 | `shouldDescribeInActivity` | Toggle visibility without removing metadata. Set to `false` for debugging or hidden states. |
-| `template` | Template string with `{actor}`, `{target}`, `{verb}`, `{adverb}` placeholders. |
-| `targetRole` | Property on the component data that points to the target entity ID. |
-| `priority` | Integer (0-100) used for sorting. Higher values render earlier. |
+| `template`                 | Template string with `{actor}`, `{target}`, `{verb}`, `{adverb}` placeholders.              |
+| `targetRole`               | Property on the component data that points to the target entity ID.                         |
+| `priority`                 | Integer (0-100) used for sorting. Higher values render earlier.                             |
 
 ### Tips
 
-* Add defaults in the schema so mods can omit values safely.
-* Use inline metadata when only one activity phrase is possible for the component.
-* When toggling visibility at runtime, modify the component data rather than deleting the
+- Add defaults in the schema so mods can omit values safely.
+- Use inline metadata when only one activity phrase is possible for the component.
+- When toggling visibility at runtime, modify the component data rather than deleting the
   metadata object—caching relies on deterministic shapes.
 
 ## Dedicated Metadata Components
@@ -130,10 +130,10 @@ rendering behaviour from the source component and is discovered by the service a
 
 ### Common use cases
 
-* Multiple templates for a single component based on state flags.
-* Hiding activities when the target already exposes an equivalent descriptor.
-* Grouping related activities (e.g., intimate interactions) into combined phrases.
-* Sharing verb/adverb combinations across several components.
+- Multiple templates for a single component based on state flags.
+- Hiding activities when the target already exposes an equivalent descriptor.
+- Grouping related activities (e.g., intimate interactions) into combined phrases.
+- Sharing verb/adverb combinations across several components.
 
 ### Authoring workflow
 
@@ -146,13 +146,13 @@ rendering behaviour from the source component and is discovered by the service a
 
 ## Choosing a Pattern
 
-| Requirement | Recommendation |
-| --- | --- |
-| Single phrase, no conditions | Inline metadata |
-| Needs JSON Logic conditions | Dedicated metadata |
+| Requirement                                | Recommendation     |
+| ------------------------------------------ | ------------------ |
+| Single phrase, no conditions               | Inline metadata    |
+| Needs JSON Logic conditions                | Dedicated metadata |
 | Shared description for multiple components | Dedicated metadata |
-| Simple toggleable visibility | Inline metadata |
-| Complex grouping or adverb injection | Dedicated metadata |
+| Simple toggleable visibility               | Inline metadata    |
+| Complex grouping or adverb injection       | Dedicated metadata |
 
 Most large mods use both: inline metadata for straightforward posture/relationship states
 and dedicated metadata for conditional, multi-entity experiences.
@@ -161,6 +161,6 @@ and dedicated metadata for conditional, multi-entity experiences.
 
 Add schema tests or rely on the existing validation suites:
 
-* `tests/unit/schemas/inlineActivityMetadata.test.js` verifies inline schema constraints.
-* `tests/unit/anatomy/services/activityDescriptionService.test.js` exercises discovery logic
+- `tests/unit/schemas/inlineActivityMetadata.test.js` verifies inline schema constraints.
+- `tests/unit/anatomy/services/activityDescriptionService.test.js` exercises discovery logic
   for both patterns and ensures invalid metadata is ignored gracefully.

@@ -11,9 +11,7 @@ import {
 import { webcrypto, createHash } from 'crypto';
 import ChecksumService from '../../../src/persistence/checksumService.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
-import ConsoleLogger, {
-  LogLevel,
-} from '../../../src/logging/consoleLogger.js';
+import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -73,9 +71,8 @@ describe('ChecksumService integration', () => {
       integrityChecks: {},
     };
 
-    const { compressedData, finalSaveObject } = await serializer.compressPreparedState(
-      saveObject
-    );
+    const { compressedData, finalSaveObject } =
+      await serializer.compressPreparedState(saveObject);
 
     expect(compressedData).toBeInstanceOf(Uint8Array);
     expect(compressedData.byteLength).toBeGreaterThan(0);
@@ -139,13 +136,20 @@ describe('ChecksumService integration', () => {
       integrityChecks: {},
     };
 
-    await expect(serializer.compressPreparedState(saveObject)).rejects.toMatchObject({
+    await expect(
+      serializer.compressPreparedState(saveObject)
+    ).rejects.toMatchObject({
       name: PersistenceError.name,
       code: PersistenceErrorCodes.CHECKSUM_GENERATION_FAILED,
     });
 
     const errorCalls = consoleSpies[2].mock.calls;
-    expect(errorCalls.some(([message]) => message.includes('ChecksumService: Error generating checksum using Web Crypto API:')))
-      .toBe(true);
+    expect(
+      errorCalls.some(([message]) =>
+        message.includes(
+          'ChecksumService: Error generating checksum using Web Crypto API:'
+        )
+      )
+    ).toBe(true);
   });
 });

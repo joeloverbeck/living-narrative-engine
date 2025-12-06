@@ -16,7 +16,12 @@
   </head>
 
   <body>
-    <div id="turn-order-ticker" role="region" aria-label="Turn order" aria-live="polite">
+    <div
+      id="turn-order-ticker"
+      role="region"
+      aria-label="Turn order"
+      aria-live="polite"
+    >
       <div class="ticker-round-label">
         <span id="ticker-round-number">ROUND 1</span>
       </div>
@@ -217,33 +222,24 @@
               </label>
 
               <label>
-                <input
-                  type="radio"
-                  name="filter-mode"
-                  value="specific"
-                />
+                <input type="radio" name="filter-mode" value="specific" />
                 Specific actors only
               </label>
 
               <label>
-                <input
-                  type="radio"
-                  name="filter-mode"
-                  value="exclude"
-                />
+                <input type="radio" name="filter-mode" value="exclude" />
                 Exclude specific actors
               </label>
             </div>
 
-            <div id="actor-filter-container" style="display: none;">
+            <div id="actor-filter-container" style="display: none">
               <select
                 id="perceptible-event-actors"
                 class="perceptible-event-select"
                 multiple
                 size="4"
                 aria-label="Select actors"
-              >
-              </select>
+              ></select>
             </div>
 
             <span id="filter-mode-help" class="help-text">
@@ -278,7 +274,11 @@
           aria-labelledby="llm-prompt-debug-heading"
         >
           <h3 id="llm-prompt-debug-heading">LLM Prompt Debug</h3>
-          <button type="button" id="llm-prompt-debug-button" class="menu-button">
+          <button
+            type="button"
+            id="llm-prompt-debug-button"
+            class="menu-button"
+          >
             Prompt to LLM
           </button>
         </div>
@@ -519,7 +519,9 @@
           </div>
           <div class="prompt-meta-item">
             <span class="prompt-meta-label">Actions:</span>
-            <span id="llm-prompt-meta-actions" class="prompt-meta-value">-</span>
+            <span id="llm-prompt-meta-actions" class="prompt-meta-value"
+              >-</span
+            >
           </div>
         </div>
 

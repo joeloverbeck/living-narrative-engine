@@ -17,9 +17,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness"
-    ]
+    "actor": ["positioning:closeness"]
   },
   "forbidden_components": {
     "primary": ["positioning:giving_blowjob"]

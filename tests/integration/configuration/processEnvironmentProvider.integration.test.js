@@ -2,7 +2,14 @@
  * @file Integration tests for ProcessEnvironmentProvider coordinating with EntityConfigProvider.
  * @jest-environment node
  */
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import EntityConfigProvider from '../../../src/entities/config/EntityConfigProvider.js';
 import { ProcessEnvironmentProvider } from '../../../src/configuration/ProcessEnvironmentProvider.js';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';

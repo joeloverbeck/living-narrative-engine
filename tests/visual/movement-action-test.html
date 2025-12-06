@@ -1,457 +1,488 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movement Action Visual Test - Theme Comparison</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      padding: 40px;
-      background: #f5f5f5;
-      line-height: 1.6;
-    }
-
-    h1 {
-      color: #333;
-      margin-bottom: 30px;
-      text-align: center;
-    }
-
-    .comparison-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 40px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .theme-section {
-      background: white;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    h2 {
-      color: #444;
-      margin-bottom: 20px;
-      font-size: 1.25rem;
-    }
-
-    .action-button {
-      display: inline-block;
-      padding: 12px 24px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Explorer Cyan Theme - New */
-    .explorer-cyan {
-      background-color: #006064;
-      color: #e0f7fa;
-    }
-
-    .explorer-cyan:hover {
-      background-color: #00838f;
-      color: #ffffff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 96, 100, 0.3);
-    }
-
-    .explorer-cyan:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(0, 96, 100, 0.2);
-    }
-
-    /* Classic Blue-Grey Theme - Old */
-    .classic-blue {
-      background-color: #455a64;
-      color: #ffffff;
-    }
-
-    .classic-blue:hover {
-      background-color: #37474f;
-      color: #ffffff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(69, 90, 100, 0.3);
-    }
-
-    .classic-blue:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(69, 90, 100, 0.2);
-    }
-
-    /* Color Details */
-    .color-details {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    h3 {
-      color: #555;
-      margin-bottom: 15px;
-      font-size: 1.1rem;
-    }
-
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .color-swatch {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      border-radius: 4px;
-      background: #f9f9f9;
-      border: 1px solid #e0e0e0;
-    }
-
-    .swatch {
-      width: 40px;
-      height: 40px;
-      border-radius: 4px;
-      margin-right: 10px;
-      border: 1px solid #ddd;
-    }
-
-    .swatch-info {
-      flex: 1;
-    }
-
-    .swatch-label {
-      font-size: 12px;
-      color: #666;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .swatch-value {
-      font-family: 'Courier New', monospace;
-      font-weight: 600;
-      color: #333;
-    }
-
-    /* WCAG Compliance */
-    .wcag-compliance {
-      margin-top: 20px;
-    }
-
-    .compliance-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .compliance-item {
-      display: flex;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .compliance-item:last-child {
-      border-bottom: none;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 3px;
-      font-size: 12px;
-      font-weight: 600;
-      margin-right: 10px;
-      min-width: 45px;
-      text-align: center;
-    }
-
-    .badge-aaa {
-      background: #4caf50;
-      color: white;
-    }
-
-    .badge-aa {
-      background: #2196f3;
-      color: white;
-    }
-
-    .badge-a {
-      background: #ff9800;
-      color: white;
-    }
-
-    .ratio {
-      font-family: 'Courier New', monospace;
-      color: #666;
-      margin-left: 10px;
-    }
-
-    /* Demo Section */
-    .demo-section {
-      margin-top: 30px;
-      padding: 20px;
-      background: #f9f9f9;
-      border-radius: 4px;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      margin-top: 15px;
-    }
-
-    /* Animation Demo */
-    @keyframes pulse {
-      0% {
-        box-shadow: 0 0 0 0 rgba(0, 96, 100, 0.7);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movement Action Visual Test - Theme Comparison</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-      70% {
-        box-shadow: 0 0 0 10px rgba(0, 96, 100, 0);
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
+          sans-serif;
+        padding: 40px;
+        background: #f5f5f5;
+        line-height: 1.6;
       }
-      100% {
-        box-shadow: 0 0 0 0 rgba(0, 96, 100, 0);
+
+      h1 {
+        color: #333;
+        margin-bottom: 30px;
+        text-align: center;
       }
-    }
 
-    .pulse-animation:hover {
-      animation: pulse 1.5s infinite;
-    }
+      .comparison-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
 
-    /* Migration Info */
-    .migration-info {
-      grid-column: 1 / -1;
-      background: #fff3e0;
-      border: 1px solid #ffb74d;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-    }
+      .theme-section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
 
-    .migration-info h2 {
-      color: #e65100;
-    }
+      h2 {
+        color: #444;
+        margin-bottom: 20px;
+        font-size: 1.25rem;
+      }
 
-    .migration-info ul {
-      margin-top: 10px;
-      padding-left: 20px;
-    }
+      .action-button {
+        display: inline-block;
+        padding: 12px 24px;
+        margin: 10px 0;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-    .migration-info li {
-      margin: 5px 0;
-    }
+      /* Explorer Cyan Theme - New */
+      .explorer-cyan {
+        background-color: #006064;
+        color: #e0f7fa;
+      }
 
-    .code-block {
-      background: #263238;
-      color: #aed581;
-      padding: 10px;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-      margin: 10px 0;
-      overflow-x: auto;
-    }
-  </style>
-</head>
-<body>
-  <h1>Movement Action Visual Comparison</h1>
+      .explorer-cyan:hover {
+        background-color: #00838f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 96, 100, 0.3);
+      }
 
-  <div class="comparison-container">
-    <!-- New Explorer Cyan Theme -->
-    <div class="theme-section">
-      <h2>✨ New: Explorer Cyan Theme</h2>
-      <button class="action-button explorer-cyan">Go</button>
-      <button class="action-button explorer-cyan pulse-animation">Go (with animation)</button>
+      .explorer-cyan:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 96, 100, 0.2);
+      }
 
-      <div class="color-details">
-        <h3>Color Palette</h3>
-        <div class="color-grid">
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #006064;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Background</div>
-              <div class="swatch-value">#006064</div>
+      /* Classic Blue-Grey Theme - Old */
+      .classic-blue {
+        background-color: #455a64;
+        color: #ffffff;
+      }
+
+      .classic-blue:hover {
+        background-color: #37474f;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(69, 90, 100, 0.3);
+      }
+
+      .classic-blue:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(69, 90, 100, 0.2);
+      }
+
+      /* Color Details */
+      .color-details {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+      }
+
+      h3 {
+        color: #555;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+      }
+
+      .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .color-swatch {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        border-radius: 4px;
+        background: #f9f9f9;
+        border: 1px solid #e0e0e0;
+      }
+
+      .swatch {
+        width: 40px;
+        height: 40px;
+        border-radius: 4px;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+      }
+
+      .swatch-info {
+        flex: 1;
+      }
+
+      .swatch-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .swatch-value {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #333;
+      }
+
+      /* WCAG Compliance */
+      .wcag-compliance {
+        margin-top: 20px;
+      }
+
+      .compliance-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .compliance-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .compliance-item:last-child {
+        border-bottom: none;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 3px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-right: 10px;
+        min-width: 45px;
+        text-align: center;
+      }
+
+      .badge-aaa {
+        background: #4caf50;
+        color: white;
+      }
+
+      .badge-aa {
+        background: #2196f3;
+        color: white;
+      }
+
+      .badge-a {
+        background: #ff9800;
+        color: white;
+      }
+
+      .ratio {
+        font-family: 'Courier New', monospace;
+        color: #666;
+        margin-left: 10px;
+      }
+
+      /* Demo Section */
+      .demo-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 4px;
+      }
+
+      .button-row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-top: 15px;
+      }
+
+      /* Animation Demo */
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(0, 96, 100, 0.7);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(0, 96, 100, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(0, 96, 100, 0);
+        }
+      }
+
+      .pulse-animation:hover {
+        animation: pulse 1.5s infinite;
+      }
+
+      /* Migration Info */
+      .migration-info {
+        grid-column: 1 / -1;
+        background: #fff3e0;
+        border: 1px solid #ffb74d;
+        border-radius: 8px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      .migration-info h2 {
+        color: #e65100;
+      }
+
+      .migration-info ul {
+        margin-top: 10px;
+        padding-left: 20px;
+      }
+
+      .migration-info li {
+        margin: 5px 0;
+      }
+
+      .code-block {
+        background: #263238;
+        color: #aed581;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        margin: 10px 0;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Movement Action Visual Comparison</h1>
+
+    <div class="comparison-container">
+      <!-- New Explorer Cyan Theme -->
+      <div class="theme-section">
+        <h2>✨ New: Explorer Cyan Theme</h2>
+        <button class="action-button explorer-cyan">Go</button>
+        <button class="action-button explorer-cyan pulse-animation">
+          Go (with animation)
+        </button>
+
+        <div class="color-details">
+          <h3>Color Palette</h3>
+          <div class="color-grid">
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #006064"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Background</div>
+                <div class="swatch-value">#006064</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #e0f7fa"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Text</div>
+                <div class="swatch-value">#e0f7fa</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #00838f"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Hover BG</div>
+                <div class="swatch-value">#00838f</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #ffffff"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Hover Text</div>
+                <div class="swatch-value">#ffffff</div>
+              </div>
             </div>
           </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #e0f7fa;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Text</div>
-              <div class="swatch-value">#e0f7fa</div>
-            </div>
-          </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #00838f;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Hover BG</div>
-              <div class="swatch-value">#00838f</div>
-            </div>
-          </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #ffffff;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Hover Text</div>
-              <div class="swatch-value">#ffffff</div>
-            </div>
-          </div>
+
+          <h3>WCAG Compliance</h3>
+          <ul class="compliance-list">
+            <li class="compliance-item">
+              <span class="badge badge-aaa">AAA</span>
+              Normal State <span class="ratio">(12.3:1 contrast ratio)</span>
+            </li>
+            <li class="compliance-item">
+              <span class="badge badge-aa">AA</span>
+              Hover State <span class="ratio">(5.8:1 contrast ratio)</span>
+            </li>
+          </ul>
         </div>
 
-        <h3>WCAG Compliance</h3>
-        <ul class="compliance-list">
-          <li class="compliance-item">
-            <span class="badge badge-aaa">AAA</span>
-            Normal State <span class="ratio">(12.3:1 contrast ratio)</span>
+        <div class="demo-section">
+          <h3>Action Button Examples</h3>
+          <div class="button-row">
+            <button class="action-button explorer-cyan">Go North</button>
+            <button class="action-button explorer-cyan">Go South</button>
+            <button class="action-button explorer-cyan">Go to Market</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Old Classic Blue-Grey Theme -->
+      <div class="theme-section">
+        <h2>📦 Old: Classic Blue-Grey Theme</h2>
+        <button class="action-button classic-blue">Go</button>
+        <button class="action-button classic-blue">Go (standard)</button>
+
+        <div class="color-details">
+          <h3>Color Palette</h3>
+          <div class="color-grid">
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #455a64"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Background</div>
+                <div class="swatch-value">#455a64</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #ffffff"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Text</div>
+                <div class="swatch-value">#ffffff</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #37474f"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Hover BG</div>
+                <div class="swatch-value">#37474f</div>
+              </div>
+            </div>
+            <div class="color-swatch">
+              <div class="swatch" style="background-color: #ffffff"></div>
+              <div class="swatch-info">
+                <div class="swatch-label">Hover Text</div>
+                <div class="swatch-value">#ffffff</div>
+              </div>
+            </div>
+          </div>
+
+          <h3>WCAG Compliance</h3>
+          <ul class="compliance-list">
+            <li class="compliance-item">
+              <span class="badge badge-aaa">AAA</span>
+              Normal State <span class="ratio">(7.9:1 contrast ratio)</span>
+            </li>
+            <li class="compliance-item">
+              <span class="badge badge-aaa">AAA</span>
+              Hover State <span class="ratio">(9.8:1 contrast ratio)</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="demo-section">
+          <h3>Action Button Examples</h3>
+          <div class="button-row">
+            <button class="action-button classic-blue">Go North</button>
+            <button class="action-button classic-blue">Go South</button>
+            <button class="action-button classic-blue">Go to Market</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Migration Information -->
+      <div class="migration-info">
+        <h2>📋 Migration Information</h2>
+        <ul>
+          <li><strong>Migration Ticket:</strong> MOVMODMIG-004</li>
+          <li>
+            <strong>Action ID:</strong> Changed from <code>movement:go</code> to
+            <code>movement:go</code>
           </li>
-          <li class="compliance-item">
-            <span class="badge badge-aa">AA</span>
-            Hover State <span class="ratio">(5.8:1 contrast ratio)</span>
+          <li>
+            <strong>File Location:</strong> Moved from
+            <code>data/mods/core/actions/</code> to
+            <code>data/mods/movement/actions/</code>
+          </li>
+          <li>
+            <strong>Theme Name:</strong> Explorer Cyan (enhanced exploration
+            theme)
+          </li>
+          <li>
+            <strong>Accessibility:</strong> Both themes meet WCAG standards,
+            with Explorer Cyan optimized for exploration contexts
           </li>
         </ul>
-      </div>
 
-      <div class="demo-section">
-        <h3>Action Button Examples</h3>
-        <div class="button-row">
-          <button class="action-button explorer-cyan">Go North</button>
-          <button class="action-button explorer-cyan">Go South</button>
-          <button class="action-button explorer-cyan">Go to Market</button>
+        <h3>Namespace Changes</h3>
+        <div class="code-block">
+          // Before "id": "movement:go" "scope": "core:clear_directions"
+          "condition_ref": "core:actor-can-move" // After "id": "movement:go"
+          "scope": "movement:clear_directions" "condition_ref":
+          "movement:actor-can-move"
         </div>
       </div>
     </div>
 
-    <!-- Old Classic Blue-Grey Theme -->
-    <div class="theme-section">
-      <h2>📦 Old: Classic Blue-Grey Theme</h2>
-      <button class="action-button classic-blue">Go</button>
-      <button class="action-button classic-blue">Go (standard)</button>
-
-      <div class="color-details">
-        <h3>Color Palette</h3>
-        <div class="color-grid">
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #455a64;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Background</div>
-              <div class="swatch-value">#455a64</div>
-            </div>
-          </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #ffffff;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Text</div>
-              <div class="swatch-value">#ffffff</div>
-            </div>
-          </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #37474f;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Hover BG</div>
-              <div class="swatch-value">#37474f</div>
-            </div>
-          </div>
-          <div class="color-swatch">
-            <div class="swatch" style="background-color: #ffffff;"></div>
-            <div class="swatch-info">
-              <div class="swatch-label">Hover Text</div>
-              <div class="swatch-value">#ffffff</div>
-            </div>
-          </div>
-        </div>
-
-        <h3>WCAG Compliance</h3>
-        <ul class="compliance-list">
-          <li class="compliance-item">
-            <span class="badge badge-aaa">AAA</span>
-            Normal State <span class="ratio">(7.9:1 contrast ratio)</span>
-          </li>
-          <li class="compliance-item">
-            <span class="badge badge-aaa">AAA</span>
-            Hover State <span class="ratio">(9.8:1 contrast ratio)</span>
-          </li>
-        </ul>
-      </div>
-
-      <div class="demo-section">
-        <h3>Action Button Examples</h3>
-        <div class="button-row">
-          <button class="action-button classic-blue">Go North</button>
-          <button class="action-button classic-blue">Go South</button>
-          <button class="action-button classic-blue">Go to Market</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Migration Information -->
-    <div class="migration-info">
-      <h2>📋 Migration Information</h2>
-      <ul>
-        <li><strong>Migration Ticket:</strong> MOVMODMIG-004</li>
-        <li><strong>Action ID:</strong> Changed from <code>movement:go</code> to <code>movement:go</code></li>
-        <li><strong>File Location:</strong> Moved from <code>data/mods/core/actions/</code> to <code>data/mods/movement/actions/</code></li>
-        <li><strong>Theme Name:</strong> Explorer Cyan (enhanced exploration theme)</li>
-        <li><strong>Accessibility:</strong> Both themes meet WCAG standards, with Explorer Cyan optimized for exploration contexts</li>
-      </ul>
-
-      <h3>Namespace Changes</h3>
-      <div class="code-block">
-// Before
-"id": "movement:go"
-"scope": "core:clear_directions"
-"condition_ref": "core:actor-can-move"
-
-// After
-"id": "movement:go"
-"scope": "movement:clear_directions"
-"condition_ref": "movement:actor-can-move"
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Add interactive logging for testing
-    document.querySelectorAll('.action-button').forEach(button => {
-      button.addEventListener('click', (e) => {
-        console.log(`Button clicked: ${e.target.textContent} - Theme: ${e.target.className}`);
+    <script>
+      // Add interactive logging for testing
+      document.querySelectorAll('.action-button').forEach((button) => {
+        button.addEventListener('click', (e) => {
+          console.log(
+            `Button clicked: ${e.target.textContent} - Theme: ${e.target.className}`
+          );
+        });
       });
-    });
 
-    // Log contrast calculations for verification
-    function calculateContrast(bg, fg) {
-      const getLuminance = (hex) => {
-        const rgb = hex.replace('#', '').match(/.{2}/g).map(x => parseInt(x, 16) / 255);
-        const [r, g, b] = rgb.map(x => x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4));
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      };
+      // Log contrast calculations for verification
+      function calculateContrast(bg, fg) {
+        const getLuminance = (hex) => {
+          const rgb = hex
+            .replace('#', '')
+            .match(/.{2}/g)
+            .map((x) => parseInt(x, 16) / 255);
+          const [r, g, b] = rgb.map((x) =>
+            x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4)
+          );
+          return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        };
 
-      const lum1 = getLuminance(bg);
-      const lum2 = getLuminance(fg);
-      const lighter = Math.max(lum1, lum2);
-      const darker = Math.min(lum1, lum2);
-      return (lighter + 0.05) / (darker + 0.05);
-    }
+        const lum1 = getLuminance(bg);
+        const lum2 = getLuminance(fg);
+        const lighter = Math.max(lum1, lum2);
+        const darker = Math.min(lum1, lum2);
+        return (lighter + 0.05) / (darker + 0.05);
+      }
 
-    console.log('Explorer Cyan Contrast Ratios:');
-    console.log('Normal:', calculateContrast('#006064', '#e0f7fa').toFixed(1) + ':1');
-    console.log('Hover:', calculateContrast('#00838f', '#ffffff').toFixed(1) + ':1');
+      console.log('Explorer Cyan Contrast Ratios:');
+      console.log(
+        'Normal:',
+        calculateContrast('#006064', '#e0f7fa').toFixed(1) + ':1'
+      );
+      console.log(
+        'Hover:',
+        calculateContrast('#00838f', '#ffffff').toFixed(1) + ':1'
+      );
 
-    console.log('Classic Blue-Grey Contrast Ratios:');
-    console.log('Normal:', calculateContrast('#455a64', '#ffffff').toFixed(1) + ':1');
-    console.log('Hover:', calculateContrast('#37474f', '#ffffff').toFixed(1) + ':1');
-  </script>
-</body>
+      console.log('Classic Blue-Grey Contrast Ratios:');
+      console.log(
+        'Normal:',
+        calculateContrast('#455a64', '#ffffff').toFixed(1) + ':1'
+      );
+      console.log(
+        'Hover:',
+        calculateContrast('#37474f', '#ffffff').toFixed(1) + ':1'
+      );
+    </script>
+  </body>
 </html>

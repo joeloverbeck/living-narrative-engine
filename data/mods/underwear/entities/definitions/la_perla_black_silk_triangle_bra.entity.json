@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "torso_upper"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "silk"
@@ -28,9 +26,7 @@
       "texture": "silky"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "underwear"
     },
     "items:item": {},

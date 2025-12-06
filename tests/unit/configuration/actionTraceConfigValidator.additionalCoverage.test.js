@@ -76,7 +76,10 @@ describe('ActionTraceConfigValidator additional coverage', () => {
         },
       });
 
-      const result = validator.validateProperty('tracedActions', tracedActionsProxy);
+      const result = validator.validateProperty(
+        'tracedActions',
+        tracedActionsProxy
+      );
 
       expect(result.isValid).toBe(false);
       expect(result.errors[0]).toContain('length access blocked');
@@ -137,7 +140,7 @@ describe('ActionTraceConfigValidator additional coverage', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toEqual(
         expect.arrayContaining([
-          expect.stringContaining("Invalid action ID patterns: prefix*"),
+          expect.stringContaining('Invalid action ID patterns: prefix*'),
         ])
       );
       expect(result.warnings).toEqual(
@@ -173,7 +176,7 @@ describe('ActionTraceConfigValidator additional coverage', () => {
       expect(result.isValid).toBe(false);
       expect(result.errors).toEqual(
         expect.arrayContaining([
-          "Property enabled must be of type boolean, got string",
+          'Property enabled must be of type boolean, got string',
         ])
       );
       expect(logger.warn).toHaveBeenCalledWith(
@@ -183,4 +186,3 @@ describe('ActionTraceConfigValidator additional coverage', () => {
     });
   });
 });
-

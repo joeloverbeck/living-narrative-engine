@@ -21,7 +21,9 @@ describe('Straddling Waist System - Condition Tests', () => {
 
   describe('event-is-action-straddle-waist-facing', () => {
     it('should return true when actionId matches straddle_waist_facing', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing'
+      );
 
       const data = {
         event: {
@@ -29,9 +31,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:straddle_waist_facing',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -39,7 +41,9 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId does not match', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing'
+      );
 
       const data = {
         event: {
@@ -47,9 +51,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:straddle_waist_facing_away',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -57,16 +61,18 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId is missing', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing'
+      );
 
       const data = {
         event: {
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -74,7 +80,9 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false for other action IDs', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing'
+      );
 
       const data = {
         event: {
@@ -82,9 +90,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'deference:kneel_before',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -94,7 +102,9 @@ describe('Straddling Waist System - Condition Tests', () => {
 
   describe('event-is-action-straddle-waist-facing-away', () => {
     it('should return true when actionId matches straddle_waist_facing_away', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing-away');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing-away'
+      );
 
       const data = {
         event: {
@@ -102,9 +112,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:straddle_waist_facing_away',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -112,7 +122,9 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId does not match', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing-away');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing-away'
+      );
 
       const data = {
         event: {
@@ -120,9 +132,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:straddle_waist_facing',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -130,16 +142,18 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId is missing', async () => {
-      const condition = await loadCondition('event-is-action-straddle-waist-facing-away');
+      const condition = await loadCondition(
+        'event-is-action-straddle-waist-facing-away'
+      );
 
       const data = {
         event: {
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -149,7 +163,9 @@ describe('Straddling Waist System - Condition Tests', () => {
 
   describe('event-is-action-dismount-from-straddling', () => {
     it('should return true when actionId matches dismount_from_straddling', async () => {
-      const condition = await loadCondition('event-is-action-dismount-from-straddling');
+      const condition = await loadCondition(
+        'event-is-action-dismount-from-straddling'
+      );
 
       const data = {
         event: {
@@ -157,9 +173,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:dismount_from_straddling',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -167,7 +183,9 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId does not match', async () => {
-      const condition = await loadCondition('event-is-action-dismount-from-straddling');
+      const condition = await loadCondition(
+        'event-is-action-dismount-from-straddling'
+      );
 
       const data = {
         event: {
@@ -175,9 +193,9 @@ describe('Straddling Waist System - Condition Tests', () => {
           payload: {
             actionId: 'positioning:straddle_waist_facing',
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -185,16 +203,18 @@ describe('Straddling Waist System - Condition Tests', () => {
     });
 
     it('should return false when actionId is missing', async () => {
-      const condition = await loadCondition('event-is-action-dismount-from-straddling');
+      const condition = await loadCondition(
+        'event-is-action-dismount-from-straddling'
+      );
 
       const data = {
         event: {
           type: 'core:attempt_action',
           payload: {
             actorId: 'actor_1',
-            targetId: 'actor_2'
-          }
-        }
+            targetId: 'actor_2',
+          },
+        },
       };
 
       const result = jsonLogic.apply(condition.logic, data);
@@ -207,26 +227,26 @@ describe('Straddling Waist System - Condition Tests', () => {
       const conditionNames = [
         'event-is-action-straddle-waist-facing',
         'event-is-action-straddle-waist-facing-away',
-        'event-is-action-dismount-from-straddling'
+        'event-is-action-dismount-from-straddling',
       ];
 
       const conditions = await Promise.all(
-        conditionNames.map(name => loadCondition(name))
+        conditionNames.map((name) => loadCondition(name))
       );
 
       const events = [
         {
           type: 'core:attempt_action',
-          payload: { actionId: 'positioning:straddle_waist_facing' }
+          payload: { actionId: 'positioning:straddle_waist_facing' },
         },
         {
           type: 'core:attempt_action',
-          payload: { actionId: 'positioning:straddle_waist_facing_away' }
+          payload: { actionId: 'positioning:straddle_waist_facing_away' },
         },
         {
           type: 'core:attempt_action',
-          payload: { actionId: 'positioning:dismount_from_straddling' }
-        }
+          payload: { actionId: 'positioning:dismount_from_straddling' },
+        },
       ];
 
       // Each event should match exactly one condition
@@ -248,7 +268,7 @@ describe('Straddling Waist System - Condition Tests', () => {
       const conditions = [
         'event-is-action-straddle-waist-facing',
         'event-is-action-straddle-waist-facing-away',
-        'event-is-action-dismount-from-straddling'
+        'event-is-action-dismount-from-straddling',
       ];
 
       for (const conditionName of conditions) {

@@ -39,11 +39,7 @@ describe('dependencyUtils default parameter integrations', () => {
   describe('assertFunction defaults with EventDispatchService', () => {
     it('uses the default Error type and integrates with EventDispatchService', async () => {
       expect(() =>
-        assertFunction(
-          {},
-          'dispatch',
-          'Dispatcher must implement dispatch()'
-        )
+        assertFunction({}, 'dispatch', 'Dispatcher must implement dispatch()')
       ).toThrow(Error);
 
       const logger = new MemoryLogger('dispatcher: ');

@@ -21,31 +21,24 @@
       "properties": {
         "entity_ref": {
           "description": "Reference to the target entity (the creature/character). Can be a string or JSON Logic.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "part_ref": {
           "description": "Reference to the specific body part entity. Optional. If missing, logic will attempt to resolve a hit location. Can be a string or JSON Logic.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "damage_entry": {
           "description": "Full damage entry object from weapon's damage_capabilities component. Preferred over legacy amount/damage_type parameters.",
           "anyOf": [
-            { "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json" },
+            {
+              "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json"
+            },
             { "type": "object" }
           ]
         },
         "damage_multiplier": {
           "description": "Optional multiplier applied to damage_entry.amount (and legacy amount). Must be non-negative. Defaults to 1.",
-          "oneOf": [
-            { "type": "number" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "number" }, { "type": "object" }]
         },
         "exclude_damage_types": {
           "description": "Array of damage type names to skip. If the damage_entry's name matches any value, the damage is not applied. Can be a direct array or JSON Logic expression that resolves to an array.",
@@ -60,17 +53,13 @@
         },
         "amount": {
           "description": "DEPRECATED: Use damage_entry instead. Amount of damage to apply. Required only when not using damage_entry.",
-          "oneOf": [
-            { "type": "number" },
-            { "type": "object" }
-          ]
+          "deprecated": true,
+          "oneOf": [{ "type": "number" }, { "type": "object" }]
         },
         "damage_type": {
           "description": "DEPRECATED: Use damage_entry instead. Type of damage (e.g., 'blunt', 'piercing', 'slashing'). Required only when not using damage_entry.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "deprecated": true,
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         },
         "metadata": {
           "description": "Optional metadata describing the source of the damage (weapon id, action id, rule id). Ignored by the interpreter when absent.",
@@ -102,10 +91,7 @@
                 },
                 "hint_part": {
                   "description": "Optional hint for the target part to prefer before random selection. Can be a string or JSON Logic.",
-                  "oneOf": [
-                    { "type": "string" },
-                    { "type": "object" }
-                  ]
+                  "oneOf": [{ "type": "string" }, { "type": "object" }]
                 }
               },
               "additionalProperties": false
@@ -115,10 +101,7 @@
         },
         "rng_ref": {
           "description": "Optional reference to a named RNG provider in the execution context.",
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" }
-          ]
+          "oneOf": [{ "type": "string" }, { "type": "object" }]
         }
       },
       "required": ["entity_ref"],

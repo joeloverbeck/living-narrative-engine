@@ -177,7 +177,10 @@ describe('Cliché Validators', () => {
     });
 
     it('should detect directions that lose required identifiers after retrieval', () => {
-      const dynamicDirection = { title: 'Fluxing Title', description: 'Fluxing' };
+      const dynamicDirection = {
+        title: 'Fluxing Title',
+        description: 'Fluxing',
+      };
       let accessCount = 0;
       Object.defineProperty(dynamicDirection, 'id', {
         configurable: true,
@@ -432,7 +435,11 @@ describe('Cliché Validators', () => {
     it('should throw ClicheValidationError when categories container is not an object', () => {
       const malformedResponse = {
         categories: 'not-an-object',
-        tropesAndStereotypes: ['Valid trope', 'Another trope', 'Yet another trope'],
+        tropesAndStereotypes: [
+          'Valid trope',
+          'Another trope',
+          'Yet another trope',
+        ],
       };
 
       expect(() => {
@@ -533,8 +540,9 @@ describe('Cliché Validators', () => {
 
     it('should throw ClicheValidationError for too many tropes', () => {
       const invalidResponse = { ...validResponse };
-      invalidResponse.tropesAndStereotypes = Array.from({ length: 11 }, () =>
-        'A remarkably descriptive trope'
+      invalidResponse.tropesAndStereotypes = Array.from(
+        { length: 11 },
+        () => 'A remarkably descriptive trope'
       );
 
       expect(() => {

@@ -48,11 +48,19 @@ describe('handlerUtils/indexUtils integration', () => {
   it('assertParamsObject integrates with safeDispatchError for dispatcher-style loggers', () => {
     const dispatcherLogger = new RecordingDispatcher();
 
-    const validResult = assertParamsObject({ value: 1 }, dispatcherLogger, 'OperationX');
+    const validResult = assertParamsObject(
+      { value: 1 },
+      dispatcherLogger,
+      'OperationX'
+    );
     expect(validResult).toBe(true);
     expect(dispatcherLogger.events).toHaveLength(0);
 
-    const invalidResult = assertParamsObject(null, dispatcherLogger, 'OperationX');
+    const invalidResult = assertParamsObject(
+      null,
+      dispatcherLogger,
+      'OperationX'
+    );
     expect(invalidResult).toBe(false);
     expect(dispatcherLogger.events).toHaveLength(1);
 
@@ -75,7 +83,11 @@ describe('handlerUtils/indexUtils integration', () => {
       },
     };
 
-    const handlerLogger = initHandlerLogger('CommandHandler', baseLogger, dependencies);
+    const handlerLogger = initHandlerLogger(
+      'CommandHandler',
+      baseLogger,
+      dependencies
+    );
 
     handlerLogger.info('started');
     handlerLogger.warn('check state', { ok: false });

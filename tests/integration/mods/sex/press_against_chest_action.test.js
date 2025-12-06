@@ -53,10 +53,14 @@ describe('sex-breastplay:press_against_chest action integration', () => {
 
     await testFixture.executeAction(actorId, targetId);
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,

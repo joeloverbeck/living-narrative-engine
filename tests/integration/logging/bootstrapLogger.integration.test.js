@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 const MODULE_PATH = '../../../src/logging/bootstrapLogger.js';
 const ENV_UTILS_PATH = '../../../src/utils/environmentUtils.js';
@@ -26,7 +33,9 @@ describe('bootstrapLogger integration coverage', () => {
     savedGlobalEnv = Object.prototype.hasOwnProperty.call(globalThis, 'env')
       ? globalThis.env
       : undefined;
-    if (Object.prototype.hasOwnProperty.call(globalThis, '__DEBUG_LOG_LEVEL__')) {
+    if (
+      Object.prototype.hasOwnProperty.call(globalThis, '__DEBUG_LOG_LEVEL__')
+    ) {
       savedGlobalDebugLevel = globalThis.__DEBUG_LOG_LEVEL__;
     } else {
       savedGlobalDebugLevel = undefined;
@@ -73,9 +82,8 @@ describe('bootstrapLogger integration coverage', () => {
   it('resolves log level from environment variables and routes console calls appropriately', async () => {
     process.env.DEBUG_LOG_LEVEL = 'info';
 
-    const { createBootstrapLogger, resolveBootstrapLogLevel, LogLevel } = await import(
-      MODULE_PATH
-    );
+    const { createBootstrapLogger, resolveBootstrapLogLevel, LogLevel } =
+      await import(MODULE_PATH);
 
     const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
     const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
@@ -169,7 +177,10 @@ describe('bootstrapLogger integration coverage', () => {
     await jest.isolateModulesAsync(async () => {
       jest.doMock(ENV_UTILS_PATH, () => ({}));
 
-      const previousEnv = Object.prototype.hasOwnProperty.call(globalThis, 'env')
+      const previousEnv = Object.prototype.hasOwnProperty.call(
+        globalThis,
+        'env'
+      )
         ? globalThis.env
         : undefined;
       const previousDebug = Object.prototype.hasOwnProperty.call(
@@ -180,9 +191,8 @@ describe('bootstrapLogger integration coverage', () => {
         : undefined;
 
       try {
-        const { createBootstrapLogger, resolveBootstrapLogLevel, LogLevel } = await import(
-          MODULE_PATH
-        );
+        const { createBootstrapLogger, resolveBootstrapLogLevel, LogLevel } =
+          await import(MODULE_PATH);
 
         process.env.DEBUG_LOG_LEVEL = 'error';
         expect(resolveBootstrapLogLevel()).toBe(LogLevel.ERROR);
@@ -192,23 +202,25 @@ describe('bootstrapLogger integration coverage', () => {
         expect(resolveBootstrapLogLevel()).toBe(LogLevel.WARN);
 
         globalThis.__DEBUG_LOG_LEVEL__ = null;
-        expect(
-          resolveBootstrapLogLevel({ defaultLevel: LogLevel.ERROR })
-        ).toBe(LogLevel.ERROR);
+        expect(resolveBootstrapLogLevel({ defaultLevel: LogLevel.ERROR })).toBe(
+          LogLevel.ERROR
+        );
 
         delete globalThis.__DEBUG_LOG_LEVEL__;
         globalThis.env = { DEBUG_LOG_MODE: 'console' };
-        expect(
-          resolveBootstrapLogLevel({ defaultLevel: LogLevel.ERROR })
-        ).toBe(LogLevel.DEBUG);
+        expect(resolveBootstrapLogLevel({ defaultLevel: LogLevel.ERROR })).toBe(
+          LogLevel.DEBUG
+        );
 
         globalThis.env.DEBUG_LOG_MODE = null;
-        expect(
-          resolveBootstrapLogLevel({ defaultLevel: LogLevel.WARN })
-        ).toBe(LogLevel.WARN);
+        expect(resolveBootstrapLogLevel({ defaultLevel: LogLevel.WARN })).toBe(
+          LogLevel.WARN
+        );
 
         delete globalThis.env;
-        const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const errorSpy = jest
+          .spyOn(console, 'error')
+          .mockImplementation(() => {});
         const logger = createBootstrapLogger({ defaultLevel: LogLevel.ERROR });
         expect(logger.getLevel()).toBe(LogLevel.ERROR);
         logger.error('default fallback');

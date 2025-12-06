@@ -19,7 +19,10 @@
  * @augments BaseOperationHandler
  */
 
-import { assertParamsObject, validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
@@ -65,15 +68,32 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
    * @private
    */
   #validateParams(params, logger) {
-    if (!assertParamsObject(params, this.#dispatcher, 'DROP_ITEM_AT_LOCATION')) {
+    if (
+      !assertParamsObject(params, this.#dispatcher, 'DROP_ITEM_AT_LOCATION')
+    ) {
       return null;
     }
 
     const { actorEntity, itemEntity, locationId } = params;
 
-    const validatedActor = validateStringParam(actorEntity, 'actorEntity', logger, this.#dispatcher);
-    const validatedItem = validateStringParam(itemEntity, 'itemEntity', logger, this.#dispatcher);
-    const validatedLocation = validateStringParam(locationId, 'locationId', logger, this.#dispatcher);
+    const validatedActor = validateStringParam(
+      actorEntity,
+      'actorEntity',
+      logger,
+      this.#dispatcher
+    );
+    const validatedItem = validateStringParam(
+      itemEntity,
+      'itemEntity',
+      logger,
+      this.#dispatcher
+    );
+    const validatedLocation = validateStringParam(
+      locationId,
+      'locationId',
+      logger,
+      this.#dispatcher
+    );
 
     if (!validatedActor || !validatedItem || !validatedLocation) {
       return null;
@@ -161,7 +181,9 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       });
 
       // Prepare batch updates: remove from inventory and set position
-      const newInventoryItems = inventory.items.filter((id) => id !== itemEntity);
+      const newInventoryItems = inventory.items.filter(
+        (id) => id !== itemEntity
+      );
       const updates = [
         {
           instanceId: actorEntity,
@@ -195,17 +217,31 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
       });
 
       // Apply atomically with batch update
-      log.debug('[DROP_ITEM] Executing batch update', { updateCount: updates.length });
-      const batchResult = await this.#entityManager.batchAddComponentsOptimized(updates, true);
+      log.debug('[DROP_ITEM] Executing batch update', {
+        updateCount: updates.length,
+      });
+      const batchResult = await this.#entityManager.batchAddComponentsOptimized(
+        updates,
+        true
+      );
       log.debug('[DROP_ITEM] Batch update completed', {
         batchResult,
         updateCount: updates.length,
       });
 
       // DIAGNOSTIC: Verify item components after drop (INFO level to avoid browser crash from excessive logs)
-      const itemPosition = this.#entityManager.getComponentData(itemEntity, POSITION_COMPONENT_ID);
-      const itemItemMarker = this.#entityManager.getComponentData(itemEntity, 'items:item');
-      const itemPortableMarker = this.#entityManager.getComponentData(itemEntity, 'items:portable');
+      const itemPosition = this.#entityManager.getComponentData(
+        itemEntity,
+        POSITION_COMPONENT_ID
+      );
+      const itemItemMarker = this.#entityManager.getComponentData(
+        itemEntity,
+        'items:item'
+      );
+      const itemPortableMarker = this.#entityManager.getComponentData(
+        itemEntity,
+        'items:portable'
+      );
 
       log.info('[DROP_ITEM] POST-DROP VERIFICATION', {
         itemEntity,
@@ -213,7 +249,10 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
         itemPosition,
         hasItemMarker: !!itemItemMarker,
         hasPortableMarker: !!itemPortableMarker,
-        allComponents: this.#entityManager.getEntityInstance(itemEntity)?.getComponentTypeIds?.() || 'N/A'
+        allComponents:
+          this.#entityManager
+            .getEntityInstance(itemEntity)
+            ?.getComponentTypeIds?.() || 'N/A',
       });
 
       // Dispatch success event using the event bus signature of (eventId, payload)
@@ -233,7 +272,6 @@ class DropItemAtLocationHandler extends BaseOperationHandler {
         locationId,
       });
       return { success: true };
-
     } catch (error) {
       log.error('[DROP_ITEM] Operation failed with exception', error, {
         actorEntity,

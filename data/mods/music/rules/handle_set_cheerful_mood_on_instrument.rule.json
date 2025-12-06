@@ -13,7 +13,10 @@
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "instrumentName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "instrumentName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -29,7 +32,11 @@
         "lookup_id": "music:mood_lexicon",
         "entry_key": "cheerful",
         "result_variable": "moodData",
-        "missing_value": { "adj": "cheerful", "adjectives": "cheerful", "noun": "cheerful" }
+        "missing_value": {
+          "adj": "cheerful",
+          "adjectives": "cheerful",
+          "noun": "cheerful"
+        }
       }
     },
     {

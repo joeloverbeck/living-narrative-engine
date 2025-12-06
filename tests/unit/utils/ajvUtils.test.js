@@ -46,7 +46,9 @@ describe('formatAjvErrors', () => {
     );
     const errors = [...fillerErrors, ...targetedErrors];
 
-    const result = formatAjvErrors(errors, { parameters: { type: 'operationAlpha' } });
+    const result = formatAjvErrors(errors, {
+      parameters: { type: 'operationAlpha' },
+    });
 
     expect(result).toBe(
       `Validation failed for operation type 'operationAlpha':\\n${JSON.stringify(targetedErrors, null, 2)}`
@@ -132,6 +134,8 @@ describe('formatAjvErrors', () => {
 
     expect(result).toContain('Warning: 60 validation errors detected');
     expect(result).toContain('Showing first 10 errors');
-    expect(result).toContain('This usually indicates a structural issue with the operation.');
+    expect(result).toContain(
+      'This usually indicates a structural issue with the operation.'
+    );
   });
 });

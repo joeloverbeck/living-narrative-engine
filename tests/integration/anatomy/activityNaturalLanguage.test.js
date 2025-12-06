@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';

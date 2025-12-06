@@ -137,8 +137,8 @@ describe('ApiKeyService path normalization and configuration safeguards', () => 
     );
     expect(normalizationWarning).toBeDefined();
 
-    const envVarCall = createErrorSpy.mock.calls.find(([, stage]) =>
-      stage === 'api_key_env_var_not_set_or_empty'
+    const envVarCall = createErrorSpy.mock.calls.find(
+      ([, stage]) => stage === 'api_key_env_var_not_set_or_empty'
     );
     expect(envVarCall?.[2]).toEqual(
       expect.objectContaining({
@@ -147,8 +147,8 @@ describe('ApiKeyService path normalization and configuration safeguards', () => 
       })
     );
 
-    const fileFailureCall = createErrorSpy.mock.calls.find(([, stage]) =>
-      stage === 'api_key_file_not_found_or_unreadable'
+    const fileFailureCall = createErrorSpy.mock.calls.find(
+      ([, stage]) => stage === 'api_key_file_not_found_or_unreadable'
     );
     expect(fileFailureCall?.[2]).toEqual(
       expect.objectContaining({
@@ -159,8 +159,8 @@ describe('ApiKeyService path normalization and configuration safeguards', () => 
       })
     );
 
-    const combinedFailureCall = createErrorSpy.mock.calls.find(([, stage]) =>
-      stage === 'api_key_all_sources_failed'
+    const combinedFailureCall = createErrorSpy.mock.calls.find(
+      ([, stage]) => stage === 'api_key_all_sources_failed'
     );
     expect(combinedFailureCall?.[2]).toEqual(
       expect.objectContaining({
@@ -190,6 +190,8 @@ describe('ApiKeyService path normalization and configuration safeguards', () => 
     expect(result.errorDetails.details.reason).toContain(
       "File '../nested/provider.key' retrieval also failed"
     );
-    expect(result.errorDetails.details.reason).toContain('File system error code: ENOENT');
+    expect(result.errorDetails.details.reason).toContain(
+      'File system error code: ENOENT'
+    );
   });
 });

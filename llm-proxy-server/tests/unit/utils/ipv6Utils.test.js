@@ -3,7 +3,14 @@
  * @description Comprehensive test coverage for IPv6 validation edge cases
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ipaddr from 'ipaddr.js';
 import {
   validateIPv6Address,

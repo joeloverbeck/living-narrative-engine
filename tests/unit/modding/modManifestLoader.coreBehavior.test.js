@@ -124,7 +124,9 @@ describe('ModManifestLoader core behavior', () => {
 
     it('rejects invalid identifiers and logs details', () => {
       const { loader, dependencies } = instantiateLoader();
-      expect(() => loader._validateRequestIds(['valid', ''])).toThrow(TypeError);
+      expect(() => loader._validateRequestIds(['valid', ''])).toThrow(
+        TypeError
+      );
       expect(dependencies.logger.error).toHaveBeenCalledWith(
         'MODLOADER_INVALID_REQUEST_ID',
         expect.stringContaining('mod-IDs must be non-empty strings.'),
@@ -184,16 +186,24 @@ describe('ModManifestLoader core behavior', () => {
         Promise.resolve({ id: path })
       );
 
-      const { fetchJobs, settled } = await loader._fetchManifests(['core', 'addon']);
-      expect(dependencies.pathResolver.resolveModManifestPath).toHaveBeenCalledWith(
-        'core'
-      );
-      expect(dependencies.pathResolver.resolveModManifestPath).toHaveBeenCalledWith(
-        'addon'
-      );
+      const { fetchJobs, settled } = await loader._fetchManifests([
+        'core',
+        'addon',
+      ]);
+      expect(
+        dependencies.pathResolver.resolveModManifestPath
+      ).toHaveBeenCalledWith('core');
+      expect(
+        dependencies.pathResolver.resolveModManifestPath
+      ).toHaveBeenCalledWith('addon');
       expect(fetchJobs).toHaveLength(2);
-      expect(fetchJobs[0]).toMatchObject({ modId: 'core', path: '/mods/core/manifest.json' });
-      expect(settled.every((result) => result.status === 'fulfilled')).toBe(true);
+      expect(fetchJobs[0]).toMatchObject({
+        modId: 'core',
+        path: '/mods/core/manifest.json',
+      });
+      expect(settled.every((result) => result.status === 'fulfilled')).toBe(
+        true
+      );
     });
   });
 
@@ -209,7 +219,9 @@ describe('ModManifestLoader core behavior', () => {
       const fetchJobs = [{ modId: 'alpha', path: '/alpha.json' }];
       const settled = [{ status: 'rejected', reason: error }];
 
-      expect(() => loader._validateAndCheckIds(fetchJobs, settled, jest.fn())).toThrow(
+      expect(() =>
+        loader._validateAndCheckIds(fetchJobs, settled, jest.fn())
+      ).toThrow(
         "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'alpha'. Path: /alpha.json. Reason: network down"
       );
       expect(dependencies.logger.error).toHaveBeenCalledWith(
@@ -228,14 +240,21 @@ describe('ModManifestLoader core behavior', () => {
           value: { id: 'alpha' },
         },
       ];
-      const validator = jest.fn(() => ({ isValid: false, errors: [{ field: 'id' }] }));
+      const validator = jest.fn(() => ({
+        isValid: false,
+        errors: [{ field: 'id' }],
+      }));
 
-      expect(() => loader._validateAndCheckIds(fetchJobs, settled, validator)).toThrow(
-        'ModManifestLoader.loadRequestedManifests: manifest for \'alpha\' failed schema validation. See log for Ajv error details.'
+      expect(() =>
+        loader._validateAndCheckIds(fetchJobs, settled, validator)
+      ).toThrow(
+        "ModManifestLoader.loadRequestedManifests: manifest for 'alpha' failed schema validation. See log for Ajv error details."
       );
       expect(dependencies.logger.error).toHaveBeenCalledWith(
         'MOD_MANIFEST_SCHEMA_INVALID',
-        expect.stringContaining("manifest for 'alpha' failed schema validation."),
+        expect.stringContaining(
+          "manifest for 'alpha' failed schema validation."
+        ),
         expect.objectContaining({
           modId: 'alpha',
           path: '/alpha.json',
@@ -254,7 +273,9 @@ describe('ModManifestLoader core behavior', () => {
       ];
       const validator = jest.fn(() => ({ isValid: true }));
 
-      expect(() => loader._validateAndCheckIds(fetchJobs, settled, validator)).toThrow(
+      expect(() =>
+        loader._validateAndCheckIds(fetchJobs, settled, validator)
+      ).toThrow(
         "ModManifestLoader.loadRequestedManifests: manifest '/alpha.json' is missing an 'id' field."
       );
       expect(dependencies.logger.error).toHaveBeenCalledWith(
@@ -275,7 +296,9 @@ describe('ModManifestLoader core behavior', () => {
       ];
       const validator = jest.fn(() => ({ isValid: true }));
 
-      expect(() => loader._validateAndCheckIds(fetchJobs, settled, validator)).toThrow(
+      expect(() =>
+        loader._validateAndCheckIds(fetchJobs, settled, validator)
+      ).toThrow(
         "ModManifestLoader.loadRequestedManifests: manifest ID 'beta' does not match expected mod ID 'alpha'."
       );
       expect(dependencies.logger.error).toHaveBeenCalledWith(
@@ -296,8 +319,14 @@ describe('ModManifestLoader core behavior', () => {
       ];
       const validator = jest.fn(() => ({ isValid: true }));
 
-      const validated = loader._validateAndCheckIds(fetchJobs, settled, validator);
-      expect(validated).toEqual([{ modId: 'alpha', data: { id: 'alpha' }, path: '/alpha.json' }]);
+      const validated = loader._validateAndCheckIds(
+        fetchJobs,
+        settled,
+        validator
+      );
+      expect(validated).toEqual([
+        { modId: 'alpha', data: { id: 'alpha' }, path: '/alpha.json' },
+      ]);
       expect(dependencies.logger.debug).toHaveBeenCalledWith(
         "ModManifestLoader.loadRequestedManifests: manifest for 'alpha' schema-validated OK."
       );
@@ -335,7 +364,9 @@ describe('ModManifestLoader core behavior', () => {
         }),
       };
       const { loader, dependencies } = instantiateLoader({ dataRegistry });
-      const validated = [{ modId: 'alpha', data: { id: 'alpha' }, path: '/alpha.json' }];
+      const validated = [
+        { modId: 'alpha', data: { id: 'alpha' }, path: '/alpha.json' },
+      ];
 
       expect(() => loader._storeValidatedManifests(validated)).toThrow(
         "ModManifestLoader.loadRequestedManifests: failed to store manifest 'alpha'. – db down"

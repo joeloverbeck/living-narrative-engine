@@ -2,7 +2,7 @@
 
 ## A Blog Report on Living Narrative Engine's New AI Decision-Making System
 
-*Written for readers interested in AI, storytelling, and game development*
+_Written for readers interested in AI, storytelling, and game development_
 
 ---
 
@@ -21,6 +21,7 @@ In the Living Narrative Engine, this system is now fully implemented and working
 Before GOAP, creating believable AI behavior was like writing a gigantic flowchart of "if this, then that" rules. Want an NPC to find food when hungry?
 
 **Old way:**
+
 ```
 IF hungry AND food_nearby:
   → walk to food
@@ -29,6 +30,7 @@ IF hungry AND food_nearby:
 ```
 
 Seems simple, right? But what if:
+
 - The food is in a locked container?
 - The character needs to pick up a key first?
 - The character is sitting and needs to stand up?
@@ -40,16 +42,18 @@ You'd need dozens of rules for every possible situation. It quickly becomes a ni
 
 ## What GOAP Changes: Characters That Think
 
-With GOAP, you don't tell characters *how* to do things—you tell them *what* they can do, and they figure out the rest.
+With GOAP, you don't tell characters _how_ to do things—you tell them _what_ they can do, and they figure out the rest.
 
 **The GOAP Way:**
 
 **You define:**
+
 - **Goals**: "I want to have food" or "I want to rest safely"
 - **Actions**: "Pick up item," "Open container," "Stand up," "Move to location"
 - **Effects**: What each action changes in the world
 
 **The AI figures out:**
+
 - Which actions will help achieve the goal
 - The correct order to perform them
 - Alternative paths if the first plan doesn't work
@@ -64,6 +68,7 @@ One of the end-to-end tests in the system demonstrates a cat NPC with a "find fo
 4. **Acts** by picking up a nearby food item
 
 If the food were locked in a container, the cat would automatically:
+
 1. Check if it can open the container
 2. Open the container first
 3. Then take the food
@@ -81,10 +86,12 @@ If you're creating content (or "mods") for the Living Narrative Engine, GOAP giv
 Instead of writing complex scripts for every situation, you define simple actions:
 
 **Example: "Sit Down" Action**
+
 - **What it does**: Removes "standing" state, adds "sitting" state
 - **When it's available**: When the character is standing and near a chair
 
 GOAP handles everything else. The character will automatically:
+
 - Consider sitting when tired
 - Stand up before walking if they're sitting
 - Chain actions together naturally
@@ -124,11 +131,13 @@ The system includes **multi-actor support** with smart caching. Tests show 5 act
 Characters don't follow scripts—they respond to situations. This creates:
 
 **Unexpected Moments:**
+
 - A guard who's supposed to patrol might sit down because they're tired
 - An NPC who notices you're injured might abandon their task to help
 - Characters might form plans you didn't anticipate
 
 **Reactive Behavior:**
+
 - NPCs adapt to world changes
 - If you take the food they were going to get, they find another way
 - Characters respond to your actions in contextually appropriate ways
@@ -176,6 +185,7 @@ The world feels alive because characters are actively pursuing goals even when y
 ### 4. **Complex Scenarios Without Complex Code**
 
 Want to create a scenario where:
+
 - NPCs negotiate for resources?
 - Characters form alliances based on complementary goals?
 - A character pursues revenge but struggles with moral constraints?
@@ -239,6 +249,7 @@ For those curious about how this works under the hood:
 ### Comprehensive Testing
 
 The system includes **15 end-to-end tests** covering:
+
 - Complete decision workflows with real game mods
 - Goal relevance and satisfaction checking
 - Multi-turn goal achievement
@@ -302,10 +313,10 @@ This aligns perfectly with the Living Narrative Engine's philosophy: **create sy
 
 ### A Note on AI and LLMs
 
-The Living Narrative Engine already uses Large Language Models (like Claude and GPT) for character dialogue and thoughts. GOAP complements this by handling the *decision-making* aspect. Think of it as:
+The Living Narrative Engine already uses Large Language Models (like Claude and GPT) for character dialogue and thoughts. GOAP complements this by handling the _decision-making_ aspect. Think of it as:
 
-- **LLMs**: Generate what characters *say* and *think*
-- **GOAP**: Determine what characters *want* and *do*
+- **LLMs**: Generate what characters _say_ and _think_
+- **GOAP**: Determine what characters _want_ and _do_
 
 Together, these create characters who think, speak, and act in coherent, goal-driven ways. They're not just chatbots—they're agents pursuing objectives in a simulated world.
 
@@ -321,6 +332,7 @@ The Living Narrative Engine is open source and available now. The GOAP system is
 - Contributing to an AI-driven narrative platform
 
 The code is on GitHub, documented and tested. The GOAP docs at `docs/goap/` provide complete guides for:
+
 - Understanding the system architecture
 - Creating goals and actions
 - Testing AI behavior
@@ -361,4 +373,4 @@ The system is fully documented with examples, test cases, and integration guides
 
 ---
 
-*This report was created as part of Living Narrative Engine development documentation, analyzing the GOAP system's capabilities and potential for narrative gaming.*
+_This report was created as part of Living Narrative Engine development documentation, analyzing the GOAP system's capabilities and potential for narrative gaming._

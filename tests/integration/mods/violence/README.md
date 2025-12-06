@@ -36,7 +36,11 @@ For actions requiring custom scope resolvers (e.g., tear_out_throat), use factor
 ```javascript
 const customResolver = ScopeResolverHelpers.createComponentLookupResolver(
   'positioning:custom_scope',
-  { componentType: 'mod:component', sourceField: 'field', contextSource: 'actor' }
+  {
+    componentType: 'mod:component',
+    sourceField: 'field',
+    contextSource: 'actor',
+  }
 );
 
 ScopeResolverHelpers._registerResolvers(

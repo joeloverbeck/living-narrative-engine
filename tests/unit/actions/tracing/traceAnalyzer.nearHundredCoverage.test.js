@@ -146,7 +146,9 @@ describe('TraceAnalyzer near total coverage scenarios', () => {
         'alphaOp',
       ]);
       expect(bottlenecks.map((entry) => entry.depth)).toEqual([0, 1, 2, 1]);
-      expect(bottlenecks.filter((entry) => entry.criticalPath === 'yes')).toHaveLength(3);
+      expect(
+        bottlenecks.filter((entry) => entry.criticalPath === 'yes')
+      ).toHaveLength(3);
     });
 
     it('summarizes operation statistics including error rates', () => {
@@ -230,7 +232,9 @@ describe('TraceAnalyzer near total coverage scenarios', () => {
     });
 
     it('validates bottleneck thresholds', () => {
-      expect(() => analyzer.getBottlenecks(null)).toThrow('Threshold is required');
+      expect(() => analyzer.getBottlenecks(null)).toThrow(
+        'Threshold is required'
+      );
       expect(() => analyzer.getBottlenecks(-10)).toThrow(
         'Threshold must be a non-negative number'
       );

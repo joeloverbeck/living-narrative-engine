@@ -19,14 +19,8 @@ describe('LoggerConfiguration', () => {
     originalEnv = { ...process.env };
     originalStdout = process.stdout.isTTY;
     originalStderr = process.stderr.isTTY;
-    stdoutDescriptor = Object.getOwnPropertyDescriptor(
-      process.stdout,
-      'isTTY'
-    );
-    stderrDescriptor = Object.getOwnPropertyDescriptor(
-      process.stderr,
-      'isTTY'
-    );
+    stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
 
     // Clear require cache to get fresh instances
     jest.resetModules();

@@ -7,20 +7,24 @@
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create `handle_unwield_item.rule.json` file
 - Ticket initially stated "Files to Modify: None" (incorrect assumption)
 
 **Actually Changed:**
+
 1. **Created**: `data/mods/weapons/rules/handle_unwield_item.rule.json` - as planned
 2. **Modified**: `data/mods/weapons/mod-manifest.json` - added `anatomy` dependency (deviation from original plan)
    - **Reason**: The rule uses `anatomy:requires_grabbing` component, which requires declaring the `anatomy` mod as a dependency for cross-reference validation to pass
 3. **Created**: `tests/integration/mods/weapons/unwield_item_rule_execution.test.js` - 7 integration tests
 
 **Ticket Corrections Made:**
+
 - Updated "Files to Modify" section to include manifest modification
 - Removed incorrect invariant "No changes to any other files"
 
 **Tests:**
+
 - All 102 weapons tests pass (95 existing + 7 new)
 - Schema validation passes (`npm run validate`)
 
@@ -29,6 +33,7 @@
 ## Summary
 
 Create the rule file that handles the `unwield_item` action execution. This rule:
+
 1. Queries the item's grabbing requirements
 2. Unlocks the appropriate number of grabbing appendages
 3. Removes the item from the `wielded_item_ids` array
@@ -183,6 +188,7 @@ Create the rule file that handles the `unwield_item` action execution. This rule
 **Reason**: The rule uses `anatomy:requires_grabbing` component, requiring an `anatomy` dependency.
 
 Add to `dependencies` array:
+
 ```json
 {
   "id": "anatomy",
@@ -199,6 +205,7 @@ Add to `dependencies` array:
 ## Key Operations Explained
 
 ### 1. `QUERY_COMPONENT` for `anatomy:requires_grabbing`
+
 ```json
 {
   "type": "QUERY_COMPONENT",
@@ -210,11 +217,13 @@ Add to `dependencies` array:
   }
 }
 ```
+
 - Queries the item for its grabbing requirements
 - If the component is missing, defaults to `{ "handsRequired": 1 }`
 - This ensures single-handed weapons work even without the component
 
 ### 2. `UNLOCK_GRABBING`
+
 ```json
 {
   "type": "UNLOCK_GRABBING",
@@ -225,11 +234,13 @@ Add to `dependencies` array:
   }
 }
 ```
+
 - Releases the specified number of grabbing appendages
 - Uses `item_id` to only release appendages holding THIS specific item
 - Critical for proper appendage tracking when wielding multiple items
 
 ### 3. `MODIFY_ARRAY_FIELD` with `remove_by_value`
+
 ```json
 {
   "type": "MODIFY_ARRAY_FIELD",
@@ -242,10 +253,12 @@ Add to `dependencies` array:
   }
 }
 ```
+
 - Removes the item ID from the `wielded_item_ids` array
 - Uses `remove_by_value` mode to find and remove the specific item
 
 ### 4. `IF` condition for component cleanup
+
 ```json
 {
   "type": "IF",
@@ -260,11 +273,13 @@ Add to `dependencies` array:
   }
 }
 ```
+
 - Checks if the array is now empty
 - If empty, removes the entire `positioning:wielding` component
 - This keeps the ECS clean and prevents the action from showing when not wielding
 
 ### 5. `REGENERATE_DESCRIPTION`
+
 - Updates the actor's description to remove "wielding" activity metadata
 - Ensures the actor's appearance reflects their current state
 

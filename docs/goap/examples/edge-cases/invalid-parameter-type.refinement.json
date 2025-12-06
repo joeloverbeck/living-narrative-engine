@@ -8,8 +8,8 @@
     "description": "Task parameters are provided",
     "condition": {
       "and": [
-        {"!=": [{"var": "task.params"}, null]},
-        {"!=": [{"var": "task.params.targetItem"}, null]}
+        { "!=": [{ "var": "task.params" }, null] },
+        { "!=": [{ "var": "task.params.targetItem" }, null] }
       ]
     }
   },
@@ -21,16 +21,13 @@
       "condition": {
         "and": [
           {
-            "!=": [{"var": "task.params.targetItem"}, null]
+            "!=": [{ "var": "task.params.targetItem" }, null]
           },
           {
-            "!=": [{"var": "task.params.targetItem"}, ""]
+            "!=": [{ "var": "task.params.targetItem" }, ""]
           },
           {
-            "===": [
-              {"typeof": {"var": "task.params.targetItem"}},
-              "string"
-            ]
+            "===": [{ "typeof": { "var": "task.params.targetItem" } }, "string"]
           }
         ]
       },
@@ -40,7 +37,7 @@
           "stepType": "conditional",
           "condition": {
             "has_component": [
-              {"var": "task.params.targetItem"},
+              { "var": "task.params.targetItem" },
               "core:identity"
             ]
           },
@@ -92,7 +89,7 @@
       "cause": "Not validating numeric parameters",
       "wrongCode": {
         "condition": {
-          ">": [{"var": "task.params.quantity"}, 0]
+          ">": [{ "var": "task.params.quantity" }, 0]
         }
       },
       "fix": "Check typeof === 'number' AND !isNaN before comparisons"
@@ -102,7 +99,7 @@
       "cause": "Only checking != null, not checking for empty strings",
       "wrongCode": {
         "condition": {
-          "!=": [{"var": "task.params.targetItem"}, null]
+          "!=": [{ "var": "task.params.targetItem" }, null]
         }
       },
       "fix": "Also check != \"\" for string parameters"
@@ -114,9 +111,9 @@
       "description": "Validate string parameter is non-empty string",
       "pattern": {
         "and": [
-          {"!=": [{"var": "param"}, null]},
-          {"!=": [{"var": "param"}, ""]},
-          {"===": [{"typeof": {"var": "param"}}, "string"]}
+          { "!=": [{ "var": "param" }, null] },
+          { "!=": [{ "var": "param" }, ""] },
+          { "===": [{ "typeof": { "var": "param" } }, "string"] }
         ]
       }
     },
@@ -124,9 +121,9 @@
       "description": "Validate number parameter is valid number",
       "pattern": {
         "and": [
-          {"!=": [{"var": "param"}, null]},
-          {"===": [{"typeof": {"var": "param"}}, "number"]},
-          {"===": [{"isNaN": {"var": "param"}}, false]}
+          { "!=": [{ "var": "param" }, null] },
+          { "===": [{ "typeof": { "var": "param" } }, "number"] },
+          { "===": [{ "isNaN": { "var": "param" } }, false] }
         ]
       }
     },
@@ -134,10 +131,10 @@
       "description": "Validate entity ID and entity exists",
       "pattern": {
         "and": [
-          {"!=": [{"var": "param"}, null]},
-          {"!=": [{"var": "param"}, ""]},
-          {"===": [{"typeof": {"var": "param"}}, "string"]},
-          {"has_component": [{"var": "param"}, "core:identity"]}
+          { "!=": [{ "var": "param" }, null] },
+          { "!=": [{ "var": "param" }, ""] },
+          { "===": [{ "typeof": { "var": "param" } }, "string"] },
+          { "has_component": [{ "var": "param" }, "core:identity"] }
         ]
       }
     },
@@ -145,8 +142,8 @@
       "description": "Validate boolean parameter",
       "pattern": {
         "and": [
-          {"!=": [{"var": "param"}, null]},
-          {"===": [{"typeof": {"var": "param"}}, "boolean"]}
+          { "!=": [{ "var": "param" }, null] },
+          { "===": [{ "typeof": { "var": "param" } }, "boolean"] }
         ]
       }
     },
@@ -154,9 +151,9 @@
       "description": "Validate array parameter has elements",
       "pattern": {
         "and": [
-          {"!=": [{"var": "param"}, null]},
-          {"===": [{"typeof": {"var": "param"}}, "array"]},
-          {">": [{"var": "param.length"}, 0]}
+          { "!=": [{ "var": "param" }, null] },
+          { "===": [{ "typeof": { "var": "param" } }, "array"] },
+          { ">": [{ "var": "param.length" }, 0] }
         ]
       }
     }

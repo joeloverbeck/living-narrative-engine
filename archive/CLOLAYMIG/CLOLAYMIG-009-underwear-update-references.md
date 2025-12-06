@@ -14,12 +14,12 @@ Update all recipe files that reference underwear entities to use the new `underw
 
 ### Recipe Files to Modify
 
-| Recipe File | Entity References to Update |
-|------------|----------------------------|
+| Recipe File                                                | Entity References to Update                                                      |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | `graphite_wool_briefs`, `charcoal_nylon_sports_bra`, `dark_gray_wool_boot_socks` |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | `graphite_wool_briefs`, `dark_gray_wool_boot_socks` |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | `graphite_wool_briefs`, `dark_gray_wool_boot_socks` |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | `charcoal_nylon_sports_bra`, `graphite_wool_briefs`, `dark_gray_wool_boot_socks` |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`  | `graphite_wool_briefs`, `dark_gray_wool_boot_socks`                              |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`         | `graphite_wool_briefs`, `dark_gray_wool_boot_socks`                              |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`          | `charcoal_nylon_sports_bra`, `graphite_wool_briefs`, `dark_gray_wool_boot_socks` |
 
 **Note**: `vespera_nightwhisper` does NOT reference any underwear items.
 
@@ -108,14 +108,14 @@ Add to `dependencies` array:
 
 ## Files Summary
 
-| File | Action |
-|------|--------|
+| File                                                       | Action              |
+| ---------------------------------------------------------- | ------------------- |
 | `data/mods/fantasy/recipes/threadscar_melissa.recipe.json` | Update 3 references |
-| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json` | Update 2 references |
-| `data/mods/patrol/recipes/dylan_crace.recipe.json` | Update 2 references |
-| `data/mods/patrol/recipes/len_amezua.recipe.json` | Update 3 references |
-| `data/mods/fantasy/mod-manifest.json` | Add dependency |
-| `data/mods/patrol/mod-manifest.json` | Add dependency |
+| `data/mods/fantasy/recipes/bertram_the_muddy.recipe.json`  | Update 2 references |
+| `data/mods/patrol/recipes/dylan_crace.recipe.json`         | Update 2 references |
+| `data/mods/patrol/recipes/len_amezua.recipe.json`          | Update 3 references |
+| `data/mods/fantasy/mod-manifest.json`                      | Add dependency      |
+| `data/mods/patrol/mod-manifest.json`                       | Add dependency      |
 
 **Total: 10 references across 4 recipe files, 2 manifest updates**
 

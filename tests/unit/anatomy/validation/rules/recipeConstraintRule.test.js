@@ -1,4 +1,11 @@
-import { beforeEach, describe, expect, it, jest, afterEach } from '@jest/globals';
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  afterEach,
+} from '@jest/globals';
 import { RecipeConstraintRule } from '../../../../../src/anatomy/validation/rules/recipeConstraintRule.js';
 import { RecipeConstraintEvaluator } from '../../../../../src/anatomy/recipeConstraintEvaluator.js';
 import { createMockLogger } from '../../../../common/mockFactories/loggerMocks.js';
@@ -24,7 +31,9 @@ describe('RecipeConstraintRule', () => {
       entityManager: {},
     };
 
-    rule = new RecipeConstraintRule({ recipeConstraintEvaluator: providedEvaluator });
+    rule = new RecipeConstraintRule({
+      recipeConstraintEvaluator: providedEvaluator,
+    });
   });
 
   afterEach(() => {
@@ -116,7 +125,10 @@ describe('RecipeConstraintRule', () => {
     });
 
     it('returns an empty array when evaluator reports no problems', async () => {
-      providedEvaluator.evaluateConstraints.mockReturnValue({ errors: [], warnings: [] });
+      providedEvaluator.evaluateConstraints.mockReturnValue({
+        errors: [],
+        warnings: [],
+      });
 
       const issues = await rule.validate(context);
 
@@ -145,14 +157,22 @@ describe('RecipeConstraintRule', () => {
           warnings: ['auto-generated warning'],
         });
 
-      const fallbackRule = new RecipeConstraintRule({ recipeConstraintEvaluator: undefined });
+      const fallbackRule = new RecipeConstraintRule({
+        recipeConstraintEvaluator: undefined,
+      });
 
       const issues = await fallbackRule.validate({
         ...context,
-        entityManager: { getComponentData: jest.fn(), getAllComponentTypesForEntity: jest.fn() },
+        entityManager: {
+          getComponentData: jest.fn(),
+          getAllComponentTypesForEntity: jest.fn(),
+        },
       });
 
-      expect(evaluateSpy).toHaveBeenCalledWith(context.entityIds, context.recipe);
+      expect(evaluateSpy).toHaveBeenCalledWith(
+        context.entityIds,
+        context.recipe
+      );
       expect(logger.debug).toHaveBeenNthCalledWith(
         1,
         'RecipeConstraintRule: Validating recipe constraints for 2 entities'

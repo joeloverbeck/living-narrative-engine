@@ -90,7 +90,8 @@ describe('quickly_wield_weapon action', () => {
 
       await fixture.executeAction('test-actor', 'test-sword');
 
-      const weaponEntity = fixture.entityManager.getEntityInstance('test-sword');
+      const weaponEntity =
+        fixture.entityManager.getEntityInstance('test-sword');
       expect(weaponEntity.components['core:position']).toBeUndefined();
     });
 
@@ -122,7 +123,9 @@ describe('quickly_wield_weapon action', () => {
 
       const actorEntity = fixture.entityManager.getEntityInstance('test-actor');
       expect(actorEntity.components['positioning:wielding']).toBeDefined();
-      expect(actorEntity.components['positioning:wielding'].wielded_item_ids).toContain('test-sword');
+      expect(
+        actorEntity.components['positioning:wielding'].wielded_item_ids
+      ).toContain('test-sword');
     });
 
     it('should dispatch perceptible_event with correct message', async () => {
@@ -233,8 +236,12 @@ describe('quickly_wield_weapon action', () => {
       await fixture.executeAction('test-actor', 'new-sword');
 
       const actorEntity = fixture.entityManager.getEntityInstance('test-actor');
-      expect(actorEntity.components['positioning:wielding'].wielded_item_ids).toContain('existing-sword');
-      expect(actorEntity.components['positioning:wielding'].wielded_item_ids).toContain('new-sword');
+      expect(
+        actorEntity.components['positioning:wielding'].wielded_item_ids
+      ).toContain('existing-sword');
+      expect(
+        actorEntity.components['positioning:wielding'].wielded_item_ids
+      ).toContain('new-sword');
     });
   });
 });

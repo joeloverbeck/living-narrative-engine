@@ -40,7 +40,10 @@ class InMemoryStorageAdapter {
  * @param root0.beforeImport
  * @param root0.disableQueueProcessor
  */
-async function loadService({ beforeImport, disableQueueProcessor = false } = {}) {
+async function loadService({
+  beforeImport,
+  disableQueueProcessor = false,
+} = {}) {
   jest.resetModules();
 
   if (disableQueueProcessor) {
@@ -191,8 +194,9 @@ describe('ActionTraceOutputService additional integration coverage', () => {
     expect(writes[1].trace.actionId).toBe('structured-action');
     expect(typeof writes[1].data).toBe('string');
     expect(
-      logger.warn.mock.calls.some(([message]) =>
-        message === 'Failed to use human-readable formatter, falling back'
+      logger.warn.mock.calls.some(
+        ([message]) =>
+          message === 'Failed to use human-readable formatter, falling back'
       )
     ).toBe(true);
   });
@@ -306,7 +310,8 @@ describe('ActionTraceOutputService additional integration coverage', () => {
     expect(emptyResult.reason).toBe('No traces to export');
 
     const noAdapterService = new ActionTraceOutputService({ logger });
-    const noAdapterResult = await noAdapterService.exportTracesAsDownload('json');
+    const noAdapterResult =
+      await noAdapterService.exportTracesAsDownload('json');
     expect(noAdapterResult.success).toBe(false);
     expect(noAdapterResult.reason).toBe('No storage adapter available');
   });

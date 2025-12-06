@@ -52,9 +52,14 @@ class PlanInvalidationDetector {
   constructor({ logger, jsonLogicEvaluationService, dataRegistry }) {
     this.#logger = ensureValidLogger(logger);
 
-    validateDependency(jsonLogicEvaluationService, 'JsonLogicEvaluationService', this.#logger, {
-      requiredMethods: ['evaluate'],
-    });
+    validateDependency(
+      jsonLogicEvaluationService,
+      'JsonLogicEvaluationService',
+      this.#logger,
+      {
+        requiredMethods: ['evaluate'],
+      }
+    );
     this.#jsonLogicService = jsonLogicEvaluationService;
 
     validateDependency(dataRegistry, 'IDataRegistry', this.#logger, {
@@ -137,7 +142,10 @@ class PlanInvalidationDetector {
     const stepsToCheck = this.#selectStepsForPolicy(plan.tasks, policy);
 
     // 4. Build evaluation context from current state
-    const evaluationContext = this.#buildEvaluationContext(currentState, context.actorId);
+    const evaluationContext = this.#buildEvaluationContext(
+      currentState,
+      context.actorId
+    );
 
     // 5. Collect diagnostics for each task
     const diagnostics = [];

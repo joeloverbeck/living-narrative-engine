@@ -690,7 +690,9 @@ describe('ActionTraceOutputService - Naming Integration', () => {
       // Should still store trace with proper naming despite formatter failure
       expect(storageAdapter.setItem).toHaveBeenCalled();
       const storedTraces = storageAdapter.setItem.mock.calls[0][1];
-      expect(storedTraces[0].id).toMatch(/^\d{8}_\d{6}_movement-go_[a-f0-9]{6}$/);
+      expect(storedTraces[0].id).toMatch(
+        /^\d{8}_\d{6}_movement-go_[a-f0-9]{6}$/
+      );
     });
 
     it('should handle storage adapter failures', async () => {

@@ -10,8 +10,8 @@ Create a new event definition `anatomy:body_part_spawned` that fires when a dism
 
 ## Files to Touch
 
-| File | Change Type | Description |
-|------|-------------|-------------|
+| File                                                    | Change Type  | Description               |
+| ------------------------------------------------------- | ------------ | ------------------------- |
 | `data/mods/anatomy/events/body_part_spawned.event.json` | Create (NEW) | New event definition file |
 
 ---
@@ -33,6 +33,7 @@ The following are **explicitly NOT part of this ticket**:
 ### New File: `data/mods/anatomy/events/body_part_spawned.event.json`
 
 > **Note (Assumption Corrections):**
+>
 > - The `$schema` uses a relative path (`../../../schemas/event.schema.json`) consistent with other anatomy events, not the schema URI format shown in JSON schema files.
 > - The `timestamp` field uses `"type": "integer"` consistent with other anatomy events (`anatomy:dismembered`, `anatomy:limb_detached`), not `"number"`.
 
@@ -169,19 +170,23 @@ When "Sarah" loses her left leg:
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create event definition file with `$schema` using URI format (`schema://living-narrative-engine/event.schema.json`)
 - Use `"type": "number"` for timestamp field
 
 **Actual Changes:**
+
 - Created `data/mods/anatomy/events/body_part_spawned.event.json` with corrected schema path (relative path `../../../schemas/event.schema.json` consistent with other anatomy events)
 - Used `"type": "integer"` for timestamp field (consistent with `anatomy:dismembered`, `anatomy:limb_detached`)
 
 **Tests Added (originally marked as out-of-scope but added for robustness):**
+
 - Updated `tests/integration/mods/anatomy/missingEventDefinitions.integration.test.js`:
   - File existence test for `body_part_spawned.event.json`
   - JSON structure validation test
   - 6 payload schema validation tests covering valid payloads, missing required fields, and additional properties rejection
 
 **Validation Results:**
+
 - `npm run validate` passes
 - All 42 tests in the anatomy event definitions test suite pass

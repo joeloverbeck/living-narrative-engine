@@ -146,7 +146,13 @@ class SlotGenerator {
    */
   #generateSlotsFromLimbSet(limbSet) {
     const slots = {};
-    const { type, count, socketPattern, optional = false, arrangement } = limbSet;
+    const {
+      type,
+      count,
+      socketPattern,
+      optional = false,
+      arrangement,
+    } = limbSet;
 
     for (let index = 1; index <= count; index++) {
       // Generate slot key (also determines orientation)
@@ -258,12 +264,7 @@ class SlotGenerator {
    * @returns {string} Generated slot key
    * @private
    */
-  #generateSlotKey(
-    socketPattern,
-    index,
-    totalCount,
-    arrangement = null
-  ) {
+  #generateSlotKey(socketPattern, index, totalCount, arrangement = null) {
     const { idTemplate, orientationScheme, allowedTypes, positions } =
       socketPattern;
 
@@ -277,7 +278,10 @@ class SlotGenerator {
     );
 
     // Warn about custom scheme without positions (helpful for mod developers)
-    if (orientationScheme === 'custom' && (!positions || positions.length === 0)) {
+    if (
+      orientationScheme === 'custom' &&
+      (!positions || positions.length === 0)
+    ) {
       this.#logger.warn(
         'SlotGenerator: Custom orientation scheme used without positions array. ' +
           'Falling back to indexed positions. Provide positions array for proper naming.'

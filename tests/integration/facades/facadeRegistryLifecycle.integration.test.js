@@ -179,8 +179,12 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
     const secondaryInventoryInstance = registry.getFacade('InventoryFacade');
     expect(secondaryInventoryInstance).toBe(inventoryFacade);
 
-    const nonSingletonMovement = registry.getFacade('MovementFacade', { singleton: false });
-    const otherNonSingletonMovement = registry.getFacade('MovementFacade', { singleton: false });
+    const nonSingletonMovement = registry.getFacade('MovementFacade', {
+      singleton: false,
+    });
+    const otherNonSingletonMovement = registry.getFacade('MovementFacade', {
+      singleton: false,
+    });
     expect(otherNonSingletonMovement).not.toBe(nonSingletonMovement);
 
     const inventoryResult = await inventoryFacade.listItems('hero-1');
@@ -191,9 +195,15 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
     expect(cachedInventory).toEqual(inventoryResult);
 
     const movementResult = await nonSingletonMovement.move('hero-1', 'north');
-    expect(movementResult).toEqual({ success: true, entityId: 'hero-1', direction: 'north' });
+    expect(movementResult).toEqual({
+      success: true,
+      entityId: 'hero-1',
+      direction: 'north',
+    });
 
-    const registrationEvents = recordedEvents.filter((event) => event.type === 'FACADE_REGISTERED');
+    const registrationEvents = recordedEvents.filter(
+      (event) => event.type === 'FACADE_REGISTERED'
+    );
     expect(registrationEvents).toHaveLength(2);
     expect(registrationEvents.map((event) => event.payload.name)).toEqual(
       expect.arrayContaining(['InventoryFacade', 'MovementFacade'])
@@ -211,14 +221,19 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
     expect(registry.getRegisteredFacades()).toHaveLength(2);
 
     const categories = registry.getCategories();
-    expect(categories).toEqual(expect.arrayContaining(['inventory', 'movement']));
+    expect(categories).toEqual(
+      expect.arrayContaining(['inventory', 'movement'])
+    );
 
-    expect(registry.getFacadesByCategory('inventory').map((facade) => facade.name)).toEqual([
-      'InventoryFacade',
-    ]);
+    expect(
+      registry.getFacadesByCategory('inventory').map((facade) => facade.name)
+    ).toEqual(['InventoryFacade']);
     expect(registry.getFacadesByCategory('missing-category')).toEqual([]);
 
-    expect(registry.getCapabilities('InventoryFacade')).toEqual(['list', 'equip']);
+    expect(registry.getCapabilities('InventoryFacade')).toEqual([
+      'list',
+      'equip',
+    ]);
     expect(registry.getCapabilities('Unregistered')).toEqual([]);
 
     expect(registry.getTags('InventoryFacade')).toEqual(['inventory', 'core']);
@@ -234,14 +249,20 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
     expect(facadeInfo.config).toMatchObject({ name: 'InventoryFacade' });
     expect(registry.getFacadeInfo('NonExistent')).toBeNull();
 
-    expect(registry.searchByTags('movement').map((facade) => facade.name)).toEqual(['MovementFacade']);
-    expect(registry.searchByTags(['inventory', 'core'], true).map((facade) => facade.name)).toEqual([
-      'InventoryFacade',
-    ]);
+    expect(
+      registry.searchByTags('movement').map((facade) => facade.name)
+    ).toEqual(['MovementFacade']);
+    expect(
+      registry
+        .searchByTags(['inventory', 'core'], true)
+        .map((facade) => facade.name)
+    ).toEqual(['InventoryFacade']);
     expect(registry.searchByTags([])).toEqual([]);
     expect(registry.searchByTags(null)).toEqual([]);
 
-    expect(registry.findByCapabilities('move').map((facade) => facade.name)).toEqual(['MovementFacade']);
+    expect(
+      registry.findByCapabilities('move').map((facade) => facade.name)
+    ).toEqual(['MovementFacade']);
     expect(registry.findByCapabilities()).toHaveLength(2);
     expect(registry.findByCapabilities('non-existent')).toEqual([]);
 
@@ -260,7 +281,9 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
         },
         { name: 'InventoryFacade' }
       )
-    ).toThrow(new InvalidArgumentError('Facade InventoryFacade is already registered'));
+    ).toThrow(
+      new InvalidArgumentError('Facade InventoryFacade is already registered')
+    );
   });
 
   it('manages singleton lifecycle and unregisters facades', () => {
@@ -375,7 +398,9 @@ describe('FacadeRegistry lifecycle integration with production services', () => 
         },
         {}
       )
-    ).toThrow(new InvalidArgumentError('Facade singleton flag must be boolean'));
+    ).toThrow(
+      new InvalidArgumentError('Facade singleton flag must be boolean')
+    );
   });
 
   it('wraps facade creation failures from the factory', async () => {

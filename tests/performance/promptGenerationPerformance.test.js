@@ -7,7 +7,14 @@
  * @description Tests focused on measuring and validating prompt generation performance
  */
 
-import { describe, it, expect, beforeAll, beforeEach, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterAll,
+} from '@jest/globals';
 import { PromptGenerationTestBed } from '../e2e/prompting/common/promptGenerationTestBed.js';
 
 describe('Prompt Generation Performance', () => {

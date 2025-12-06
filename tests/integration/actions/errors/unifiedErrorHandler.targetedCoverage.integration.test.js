@@ -9,7 +9,10 @@ import { UnifiedErrorHandler } from '../../../../src/actions/errors/unifiedError
 import { ActionErrorContextBuilder } from '../../../../src/actions/errors/actionErrorContextBuilder.js';
 import { FixSuggestionEngine } from '../../../../src/actions/errors/fixSuggestionEngine.js';
 import { ActionIndex } from '../../../../src/actions/actionIndex.js';
-import { FIX_TYPES, ERROR_PHASES } from '../../../../src/actions/errors/actionErrorTypes.js';
+import {
+  FIX_TYPES,
+  ERROR_PHASES,
+} from '../../../../src/actions/errors/actionErrorTypes.js';
 import SimpleEntityManager from '../../../common/entities/simpleEntityManager.js';
 
 class RecordingLogger {
@@ -128,7 +131,9 @@ describe('UnifiedErrorHandler targeted real-module coverage', () => {
   });
 
   it('builds actionable error context with suggestions when createContext is invoked', () => {
-    const error = new Error("Missing component 'core:position' on actor hero-1");
+    const error = new Error(
+      "Missing component 'core:position' on actor hero-1"
+    );
     error.name = 'ComponentNotFoundError';
 
     const context = handler.createContext({
@@ -275,13 +280,17 @@ describe('UnifiedErrorHandler targeted real-module coverage', () => {
     });
 
     expect(result.phase).toBe(ERROR_PHASES.EXECUTION);
-    expect(result.environmentContext.stage).toBe('command_processing_directive');
+    expect(result.environmentContext.stage).toBe(
+      'command_processing_directive'
+    );
     expect(result.environmentContext.queueDepth).toBe(5);
   });
 
   it('logError forwards diagnostic details without building context', () => {
     const error = new Error('Non-critical failure');
-    handler.logError('Transient issue detected', error, { component: 'observer' });
+    handler.logError('Transient issue detected', error, {
+      component: 'observer',
+    });
 
     expect(logger.errorLogs).toContainEqual({
       message: 'Transient issue detected',

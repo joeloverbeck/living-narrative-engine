@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { DebugLevel, PrerequisiteDebugger } from '../../../../src/actions/validation/prerequisiteDebugger.js';
+import {
+  DebugLevel,
+  PrerequisiteDebugger,
+} from '../../../../src/actions/validation/prerequisiteDebugger.js';
 import { PrerequisiteEvaluationError } from '../../../../src/actions/validation/errors/prerequisiteEvaluationError.js';
 
 const defaultTargets = { primary: { id: 'target' } };
@@ -25,7 +28,11 @@ function createLogger() {
  * @param {Array<string>|Record<string, boolean>} [options.hasComponents] - Keys treated as existing components
  * @returns {{getComponentData: jest.Mock, getEntityIds: jest.Mock, hasComponent: jest.Mock}} Mock entity manager
  */
-function buildEntityManager({ components = {}, entityIds = [], hasComponents = [] } = {}) {
+function buildEntityManager({
+  components = {},
+  entityIds = [],
+  hasComponents = [],
+} = {}) {
   const componentMap = new Map();
   Object.entries(components).forEach(([key, value]) => {
     componentMap.set(key, value);
@@ -43,7 +50,9 @@ function buildEntityManager({ components = {}, entityIds = [], hasComponents = [
   }
 
   return {
-    getComponentData: jest.fn((entityId, componentType) => componentMap.get(`${entityId}:${componentType}`)),
+    getComponentData: jest.fn((entityId, componentType) =>
+      componentMap.get(`${entityId}:${componentType}`)
+    ),
     getEntityIds: jest.fn(() => new Set(entityIds)),
     hasComponent: jest.fn((entityId, componentType) => {
       const key = `${entityId}:${componentType}`;
@@ -146,10 +155,12 @@ describe('PrerequisiteDebugger', () => {
       targetLocation: 'room-2',
       bodyParts: ['arm'],
     });
-    expect(response.error.hint).toBe('Review prerequisite logic and entity state above.');
+    expect(response.error.hint).toBe(
+      'Review prerequisite logic and entity state above.'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Prerequisite evaluation failed',
-      response.error.toJSON(),
+      response.error.toJSON()
     );
   });
 
@@ -181,7 +192,7 @@ describe('PrerequisiteDebugger', () => {
       bodyParts: [],
     });
     expect(response.error.hint).toBe(
-      'Actor does not have any body parts of type "wing". Check anatomy:body component.',
+      'Actor does not have any body parts of type "wing". Check anatomy:body component.'
     );
   });
 
@@ -219,7 +230,7 @@ describe('PrerequisiteDebugger', () => {
       entitiesAtLocation: 1,
     });
     expect(response.error.hint).toBe(
-      'Only the actor is at this location. Add other actors to the scene.',
+      'Only the actor is at this location. Add other actors to the scene.'
     );
   });
 
@@ -250,7 +261,9 @@ describe('PrerequisiteDebugger', () => {
       targetLocation: null,
       entitiesAtLocation: 0,
     });
-    expect(response.error.hint).toBe('Review prerequisite logic and entity state above.');
+    expect(response.error.hint).toBe(
+      'Review prerequisite logic and entity state above.'
+    );
   });
 
   it('offers guidance when clothing slot is empty', () => {
@@ -281,7 +294,7 @@ describe('PrerequisiteDebugger', () => {
       wornItems: [],
     });
     expect(response.error.hint).toBe(
-      'No clothing in slot "head". Add worn_items component with slot.',
+      'No clothing in slot "head". Add worn_items component with slot.'
     );
   });
 
@@ -305,7 +318,10 @@ describe('PrerequisiteDebugger', () => {
       evaluator,
     });
 
-    expect(entityManager.hasComponent).toHaveBeenCalledWith('actor', 'core:inventory');
+    expect(entityManager.hasComponent).toHaveBeenCalledWith(
+      'actor',
+      'core:inventory'
+    );
     expect(response.error.entityState).toEqual({
       actorId: 'actor',
       actorLocation: null,
@@ -314,7 +330,7 @@ describe('PrerequisiteDebugger', () => {
       hasComponent: false,
     });
     expect(response.error.hint).toBe(
-      'Entity missing component "core:inventory". Add component to entity.',
+      'Entity missing component "core:inventory". Add component to entity.'
     );
   });
 
@@ -347,6 +363,8 @@ describe('PrerequisiteDebugger', () => {
       targetLocation: null,
       hasComponent: true,
     });
-    expect(response.error.hint).toBe('Review prerequisite logic and entity state above.');
+    expect(response.error.hint).toBe(
+      'Review prerequisite logic and entity state above.'
+    );
   });
 });

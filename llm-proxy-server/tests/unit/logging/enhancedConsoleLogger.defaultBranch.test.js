@@ -66,13 +66,16 @@ describe('EnhancedConsoleLogger default console routing', () => {
         expect(entryKey).toBeDefined();
         if (entryKey) {
           const fileCoverage = coverageMap[entryKey];
-          const matchingStatements = Object.entries(fileCoverage.statementMap).filter(
-            ([, loc]) => loc.start.line === 238
-          );
+          const matchingStatements = Object.entries(
+            fileCoverage.statementMap
+          ).filter(([, loc]) => loc.start.line === 238);
           expect(matchingStatements.length).toBeGreaterThan(0);
           for (const [statementId] of matchingStatements) {
             const statementCoverage = fileCoverage.s;
-            if (statementCoverage && typeof statementCoverage[statementId] === 'number') {
+            if (
+              statementCoverage &&
+              typeof statementCoverage[statementId] === 'number'
+            ) {
               statementCoverage[statementId] = Math.max(
                 1,
                 statementCoverage[statementId] + 1

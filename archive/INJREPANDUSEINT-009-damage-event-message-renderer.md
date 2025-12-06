@@ -6,15 +6,15 @@ Create chat panel integration for rendering damage events.
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/domUI/damageEventMessageRenderer.js` | CREATE |
-| `css/components/_damage-messages.css` | CREATE |
-| `css/style.css` | MODIFY - import new CSS |
-| `src/domUI/domUiFacade.js` | MODIFY - add damageEventMessageRenderer |
-| `src/dependencyInjection/tokens/tokens-ui.js` | MODIFY - add token |
-| `src/dependencyInjection/registrations/uiRegistrations.js` | MODIFY - add registration |
-| `tests/unit/domUI/damageEventMessageRenderer.test.js` | CREATE |
+| File                                                       | Action                                  |
+| ---------------------------------------------------------- | --------------------------------------- |
+| `src/domUI/damageEventMessageRenderer.js`                  | CREATE                                  |
+| `css/components/_damage-messages.css`                      | CREATE                                  |
+| `css/style.css`                                            | MODIFY - import new CSS                 |
+| `src/domUI/domUiFacade.js`                                 | MODIFY - add damageEventMessageRenderer |
+| `src/dependencyInjection/tokens/tokens-ui.js`              | MODIFY - add token                      |
+| `src/dependencyInjection/registrations/uiRegistrations.js` | MODIFY - add registration               |
+| `tests/unit/domUI/damageEventMessageRenderer.test.js`      | CREATE                                  |
 
 ## Out of Scope
 

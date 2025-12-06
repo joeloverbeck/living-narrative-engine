@@ -208,7 +208,9 @@ describe('SpeechPatternsResponseProcessor - Schema Validation Fix', () => {
       // Mock enhanced validation to fail for examples without quotes
       mockSchemaValidator.validate.mockReturnValue({
         isValid: false,
-        errors: ['Pattern 1: examples should contain quoted speech or dialogue'],
+        errors: [
+          'Pattern 1: examples should contain quoted speech or dialogue',
+        ],
       });
 
       const invalidResponse = JSON.stringify({

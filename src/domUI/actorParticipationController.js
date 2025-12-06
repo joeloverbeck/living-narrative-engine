@@ -78,9 +78,14 @@ class ActorParticipationController {
       try {
         const actors = this.#loadActors();
         this.#renderActorList(actors);
-        this.#logger.debug('[ActorParticipation] Defensive actor loading succeeded');
+        this.#logger.debug(
+          '[ActorParticipation] Defensive actor loading succeeded'
+        );
       } catch (err) {
-        this.#logger.debug('[ActorParticipation] Defensive actor loading failed (expected if actors not yet loaded)', err);
+        this.#logger.debug(
+          '[ActorParticipation] Defensive actor loading failed (expected if actors not yet loaded)',
+          err
+        );
       }
 
       this.#logger.info('[ActorParticipation] Initialization complete');
@@ -97,20 +102,30 @@ class ActorParticipationController {
    * @private
    */
   #cacheElements() {
-    this.#actorParticipationWidget = this.#documentContext.query('#actor-participation-widget');
+    this.#actorParticipationWidget = this.#documentContext.query(
+      '#actor-participation-widget'
+    );
     this.#actorParticipationList = this.#documentContext.query(
       '#actor-participation-list-container'
     );
-    this.#actorParticipationStatus = this.#documentContext.query('#actor-participation-status');
+    this.#actorParticipationStatus = this.#documentContext.query(
+      '#actor-participation-status'
+    );
 
     if (!this.#actorParticipationWidget) {
-      this.#logger.warn('[ActorParticipation] Widget element not found (#actor-participation-widget)');
+      this.#logger.warn(
+        '[ActorParticipation] Widget element not found (#actor-participation-widget)'
+      );
     }
     if (!this.#actorParticipationList) {
-      this.#logger.warn('[ActorParticipation] List element not found (#actor-participation-list-container)');
+      this.#logger.warn(
+        '[ActorParticipation] List element not found (#actor-participation-list-container)'
+      );
     }
     if (!this.#actorParticipationStatus) {
-      this.#logger.warn('[ActorParticipation] Status element not found (#actor-participation-status)');
+      this.#logger.warn(
+        '[ActorParticipation] Status element not found (#actor-participation-status)'
+      );
     }
   }
 
@@ -122,14 +137,21 @@ class ActorParticipationController {
    */
   #attachEventListeners() {
     if (!this.#actorParticipationList) {
-      this.#logger.warn('[ActorParticipation] Cannot attach event listeners - list container not found');
+      this.#logger.warn(
+        '[ActorParticipation] Cannot attach event listeners - list container not found'
+      );
       return;
     }
 
     // Event delegation: listen on list container for checkbox changes
     this.#boundHandleToggle = this.#handleParticipationToggle.bind(this);
-    this.#actorParticipationList.addEventListener('change', this.#boundHandleToggle);
-    this.#logger.debug('[ActorParticipation] Event listeners attached to actor participation list');
+    this.#actorParticipationList.addEventListener(
+      'change',
+      this.#boundHandleToggle
+    );
+    this.#logger.debug(
+      '[ActorParticipation] Event listeners attached to actor participation list'
+    );
   }
 
   /**
@@ -140,12 +162,19 @@ class ActorParticipationController {
    */
   #subscribeToGameEvents() {
     this.#gameReadyHandler = this.#handleGameReady.bind(this);
-    const unsubscribe = this.#eventBus.subscribe(ENGINE_READY_UI, this.#gameReadyHandler);
+    const unsubscribe = this.#eventBus.subscribe(
+      ENGINE_READY_UI,
+      this.#gameReadyHandler
+    );
 
     if (!unsubscribe) {
-      this.#logger.error('[ActorParticipation] CRITICAL: Failed to subscribe to ENGINE_READY_UI');
+      this.#logger.error(
+        '[ActorParticipation] CRITICAL: Failed to subscribe to ENGINE_READY_UI'
+      );
     } else {
-      this.#logger.debug('[ActorParticipation] Successfully subscribed to ENGINE_READY_UI');
+      this.#logger.debug(
+        '[ActorParticipation] Successfully subscribed to ENGINE_READY_UI'
+      );
     }
   }
 
@@ -157,7 +186,9 @@ class ActorParticipationController {
    */
   #handleGameReady() {
     try {
-      this.#logger.info('[ActorParticipation] Loading actors for participation panel');
+      this.#logger.info(
+        '[ActorParticipation] Loading actors for participation panel'
+      );
       const actors = this.#loadActors();
       this.#renderActorList(actors);
     } catch (err) {
@@ -184,14 +215,21 @@ class ActorParticipationController {
     const newParticipationState = checkbox.checked;
 
     if (!actorId) {
-      this.#logger.warn('[ActorParticipation] Checkbox missing data-actor-id attribute');
+      this.#logger.warn(
+        '[ActorParticipation] Checkbox missing data-actor-id attribute'
+      );
       return;
     }
 
-    this.#logger.debug(`[ActorParticipation] Toggling participation for actor ${actorId} to ${newParticipationState}`);
+    this.#logger.debug(
+      `[ActorParticipation] Toggling participation for actor ${actorId} to ${newParticipationState}`
+    );
 
     try {
-      const success = await this.#updateParticipation(actorId, newParticipationState);
+      const success = await this.#updateParticipation(
+        actorId,
+        newParticipationState
+      );
       if (success) {
         const statusMessage = newParticipationState
           ? `Enabled participation for ${actorId}`
@@ -201,7 +239,10 @@ class ActorParticipationController {
         throw new Error('Failed to update participation component');
       }
     } catch (err) {
-      this.#logger.error(`[ActorParticipation] Error updating participation for actor ${actorId}`, err);
+      this.#logger.error(
+        `[ActorParticipation] Error updating participation for actor ${actorId}`,
+        err
+      );
       // Revert checkbox state
       checkbox.checked = !newParticipationState;
       this.#showStatus('Error updating participation', 'error');
@@ -227,14 +268,21 @@ class ActorParticipationController {
       );
 
       if (success) {
-        this.#logger.info(`[ActorParticipation] Updated participation for actor ${actorId} to ${participating}`);
+        this.#logger.info(
+          `[ActorParticipation] Updated participation for actor ${actorId} to ${participating}`
+        );
         return true;
       }
 
-      this.#logger.warn(`[ActorParticipation] Failed to update participation component for actor ${actorId}`);
+      this.#logger.warn(
+        `[ActorParticipation] Failed to update participation component for actor ${actorId}`
+      );
       return false;
     } catch (err) {
-      this.#logger.error(`[ActorParticipation] Error updating participation component for actor ${actorId}`, err);
+      this.#logger.error(
+        `[ActorParticipation] Error updating participation component for actor ${actorId}`,
+        err
+      );
       return false;
     }
   }
@@ -248,14 +296,17 @@ class ActorParticipationController {
    */
   #loadActors() {
     // Use getEntitiesWithComponent - returns Entity[] already filtered
-    const actorEntities = this.#entityManager.getEntitiesWithComponent(ACTOR_COMPONENT_ID);
+    const actorEntities =
+      this.#entityManager.getEntitiesWithComponent(ACTOR_COMPONENT_ID);
 
     const actors = actorEntities.map((entity) => {
       // Get name from core:name component (has 'text' property)
       const nameData = entity.getComponentData(NAME_COMPONENT_ID);
 
       // Get participation from core:participation component (has 'participating' property)
-      const participationData = entity.getComponentData(PARTICIPATION_COMPONENT_ID);
+      const participationData = entity.getComponentData(
+        PARTICIPATION_COMPONENT_ID
+      );
 
       return {
         id: entity.id,
@@ -283,7 +334,9 @@ class ActorParticipationController {
    */
   #renderActorList(actors) {
     if (!this.#actorParticipationList) {
-      this.#logger.warn('[ActorParticipation] Cannot render actors: list container not found');
+      this.#logger.warn(
+        '[ActorParticipation] Cannot render actors: list container not found'
+      );
       return;
     }
 
@@ -301,7 +354,9 @@ class ActorParticipationController {
       this.#actorParticipationList.appendChild(listItem);
     });
 
-    this.#logger.info(`[ActorParticipation] Rendered ${actors.length} actors in participation panel`);
+    this.#logger.info(
+      `[ActorParticipation] Rendered ${actors.length} actors in participation panel`
+    );
   }
 
   /**
@@ -343,7 +398,9 @@ class ActorParticipationController {
     emptyMessage.className = 'empty-list-message';
     emptyMessage.textContent = 'No actors found';
     this.#actorParticipationList.appendChild(emptyMessage);
-    this.#logger.debug('[ActorParticipation] Rendered empty actor list message');
+    this.#logger.debug(
+      '[ActorParticipation] Rendered empty actor list message'
+    );
   }
 
   /**
@@ -356,7 +413,9 @@ class ActorParticipationController {
    */
   #showStatus(message, type = 'success') {
     if (!this.#actorParticipationStatus) {
-      this.#logger.warn('[ActorParticipation] Cannot show status: status element not found');
+      this.#logger.warn(
+        '[ActorParticipation] Cannot show status: status element not found'
+      );
       return;
     }
 
@@ -379,7 +438,9 @@ class ActorParticipationController {
       this.#statusTimeout = null;
     }, 3000);
 
-    this.#logger.debug(`[ActorParticipation] Displayed status: ${message} (${type})`);
+    this.#logger.debug(
+      `[ActorParticipation] Displayed status: ${message} (${type})`
+    );
   }
 
   /**
@@ -388,7 +449,9 @@ class ActorParticipationController {
    * Can be called externally when actor data changes
    */
   refresh() {
-    this.#logger.info('[ActorParticipation] Refreshing actor participation panel');
+    this.#logger.info(
+      '[ActorParticipation] Refreshing actor participation panel'
+    );
     const actors = this.#loadActors();
     this.#renderActorList(actors);
   }
@@ -411,12 +474,17 @@ class ActorParticipationController {
       if (this.#gameReadyHandler) {
         this.#eventBus.unsubscribe(ENGINE_READY_UI, this.#gameReadyHandler);
         this.#gameReadyHandler = null;
-        this.#logger.debug('[ActorParticipation] Unsubscribed from game events');
+        this.#logger.debug(
+          '[ActorParticipation] Unsubscribed from game events'
+        );
       }
 
       // Remove DOM event listeners
       if (this.#actorParticipationList && this.#boundHandleToggle) {
-        this.#actorParticipationList.removeEventListener('change', this.#boundHandleToggle);
+        this.#actorParticipationList.removeEventListener(
+          'change',
+          this.#boundHandleToggle
+        );
       }
 
       // Clear references

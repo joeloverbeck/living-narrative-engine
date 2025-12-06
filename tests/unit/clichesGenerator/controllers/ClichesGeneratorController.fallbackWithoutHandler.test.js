@@ -62,7 +62,9 @@ describe('ClichesGeneratorController without error handler', () => {
     expect(messages).toContain(
       'An unexpected error occurred. Please refresh the page and try again.'
     );
-    expect(testBed.controller._testGetCurrentState().selectedDirectionId).toBeNull();
+    expect(
+      testBed.controller._testGetCurrentState().selectedDirectionId
+    ).toBeNull();
 
     loadSpy.mockRestore();
   });

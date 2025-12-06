@@ -590,7 +590,9 @@ describe('JsonTraceFormatter - Integration', () => {
         shouldRemove: true,
       });
       expect(verboseResult.error.context.items).toEqual(['ctx-one', 'ctx-two']);
-      expect(verboseResult.error.context.circular.self).toBe('[Circular reference]');
+      expect(verboseResult.error.context.circular.self).toBe(
+        '[Circular reference]'
+      );
       const contextDepth = walkToTerminalDepth(
         verboseResult.error.context.deep
       );

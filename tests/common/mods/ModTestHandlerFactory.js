@@ -232,7 +232,9 @@ export class ModTestHandlerFactory {
 
       const nestedMacroRefs = new Set();
       this.#collectOperationsFromNode(
-        macroDefinition.actions || macroDefinition.operations || macroDefinition,
+        macroDefinition.actions ||
+          macroDefinition.operations ||
+          macroDefinition,
         operations,
         nestedMacroRefs
       );
@@ -512,7 +514,12 @@ export class ModTestHandlerFactory {
    * @returns {object} Extended handlers object including ADD_COMPONENT handler
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithAddComponent(entityManager, eventBus, logger, gameDataRepository) {
+  static createHandlersWithAddComponent(
+    entityManager,
+    eventBus,
+    logger,
+    gameDataRepository
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -558,7 +565,12 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers object with component mutation support
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithComponentMutations(entityManager, eventBus, logger, gameDataRepository) {
+  static createHandlersWithComponentMutations(
+    entityManager,
+    eventBus,
+    logger,
+    gameDataRepository
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -617,7 +629,12 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers object with mouth engagement support
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithMouthEngagement(entityManager, eventBus, logger, gameDataRepository) {
+  static createHandlersWithMouthEngagement(
+    entityManager,
+    eventBus,
+    logger,
+    gameDataRepository
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -711,7 +728,13 @@ export class ModTestHandlerFactory {
    * @returns {object} Custom handlers object based on options
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createCustomHandlers(entityManager, eventBus, logger, gameDataRepository, options = {}) {
+  static createCustomHandlers(
+    entityManager,
+    eventBus,
+    logger,
+    gameDataRepository,
+    options = {}
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -790,7 +813,12 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers with item operation handlers included
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithItemsSupport(entityManager, eventBus, logger, dataRegistry) {
+  static createHandlersWithItemsSupport(
+    entityManager,
+    eventBus,
+    logger,
+    dataRegistry
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -950,8 +978,8 @@ export class ModTestHandlerFactory {
   static getHandlerFactoryForCategory(modCategory) {
     const profileHint = this.#buildProfileHint(modCategory);
 
-    const buildAutoDetectedFactory = (hint) =>
-      (entityManager, eventBus, logger, dataRegistry) => {
+    const buildAutoDetectedFactory =
+      (hint) => (entityManager, eventBus, logger, dataRegistry) => {
         const shouldUseSupersetBase =
           hint.needsSuperset ||
           hint.needsItems ||
@@ -1078,7 +1106,12 @@ export class ModTestHandlerFactory {
    * @returns {object} Handlers with ADD_PERCEPTION_LOG_ENTRY included
    * @throws {Error} If any required parameter is missing or invalid
    */
-  static createHandlersWithPerceptionLogging(entityManager, eventBus, logger, gameDataRepository) {
+  static createHandlersWithPerceptionLogging(
+    entityManager,
+    eventBus,
+    logger,
+    gameDataRepository
+  ) {
     this.#validateDependencies(
       entityManager,
       eventBus,
@@ -1130,7 +1163,10 @@ export class ModTestHandlerFactory {
 
     // Ensure entityManager has batchAddComponentsOptimized for ConsumeItemHandler
     if (typeof entityManager.batchAddComponentsOptimized !== 'function') {
-      entityManager.batchAddComponentsOptimized = async (componentSpecs, _emitBatchEvent = true) => {
+      entityManager.batchAddComponentsOptimized = async (
+        componentSpecs,
+        _emitBatchEvent = true
+      ) => {
         const results = [];
         const errors = [];
         let updateCount = 0;
@@ -1138,7 +1174,11 @@ export class ModTestHandlerFactory {
         for (const spec of componentSpecs) {
           try {
             const { instanceId, componentTypeId, componentData } = spec;
-            await entityManager.addComponent(instanceId, componentTypeId, componentData);
+            await entityManager.addComponent(
+              instanceId,
+              componentTypeId,
+              componentData
+            );
             results.push({ instanceId, componentTypeId, success: true });
             updateCount++;
           } catch (error) {
@@ -1334,13 +1374,14 @@ export class ModTestHandlerFactory {
       logger,
       safeEventDispatcher: safeDispatcher,
     });
-    const autoMoveClosenessPartnersHandler = new AutoMoveClosenessPartnersHandler({
-      logger,
-      entityManager,
-      safeEventDispatcher: safeDispatcher,
-      systemMoveEntityHandler,
-      operationInterpreter,
-    });
+    const autoMoveClosenessPartnersHandler =
+      new AutoMoveClosenessPartnersHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        systemMoveEntityHandler,
+        operationInterpreter,
+      });
     const chanceCalculationService = {
       resolveOutcome: jest.fn(() => ({
         outcome: 'SUCCESS',
@@ -1392,12 +1433,13 @@ export class ModTestHandlerFactory {
         safeEventDispatcher: safeDispatcher,
         closenessCircleService,
       }),
-      ESTABLISH_BIDIRECTIONAL_CLOSENESS: new EstablishBidirectionalClosenessHandler({
-        entityManager,
-        safeEventDispatcher: safeDispatcher,
-        regenerateDescriptionHandler,
-        logger,
-      }),
+      ESTABLISH_BIDIRECTIONAL_CLOSENESS:
+        new EstablishBidirectionalClosenessHandler({
+          entityManager,
+          safeEventDispatcher: safeDispatcher,
+          regenerateDescriptionHandler,
+          logger,
+        }),
       BREAK_BIDIRECTIONAL_CLOSENESS: new BreakBidirectionalClosenessHandler({
         entityManager,
         safeEventDispatcher: safeDispatcher,

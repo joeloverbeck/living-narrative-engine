@@ -81,8 +81,7 @@
   border-left: 3px solid var(--speech-border-color);
 
   /* Speech Bubble Enhancements */
-  border-radius: var(--border-radius-lg,
-      12px);
+  border-radius: var(--border-radius-lg, 12px);
   /* More rounded corners, fallback to 12px */
   margin-top: var(--spacing-sm);
   /* Increased top margin */

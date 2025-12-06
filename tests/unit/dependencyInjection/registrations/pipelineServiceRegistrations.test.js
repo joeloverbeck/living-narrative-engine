@@ -128,7 +128,9 @@ describe('registerPipelineServices', () => {
 
     const scopeBuilder = instantiate(tokens.IScopeContextBuilder);
     expect(scopeBuilder).toBeInstanceOf(ScopeContextBuilder);
-    expect(container.resolve).toHaveBeenCalledWith(tokens.ITargetContextBuilder);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.ITargetContextBuilder
+    );
     expect(container.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
 
     const displayNameResolver = instantiate(tokens.ITargetDisplayNameResolver);
@@ -154,7 +156,10 @@ describe('registerPipelineServices', () => {
     resolvedMap.set(tokens.IUnifiedScopeResolver, unifiedScopeResolver);
     resolvedMap.set(tokens.IEntityManager, stubEntityManager);
     resolvedMap.set(tokens.ILogger, logger);
-    resolvedMap.set(tokens.ITargetResolutionTracingOrchestrator, tracingOrchestrator);
+    resolvedMap.set(
+      tokens.ITargetResolutionTracingOrchestrator,
+      tracingOrchestrator
+    );
     resolvedMap.set(tokens.ITargetResolutionResultBuilder, resultBuilder);
 
     const coordinator = instantiate(tokens.ITargetResolutionCoordinator);
@@ -166,7 +171,9 @@ describe('registerPipelineServices', () => {
     expect(container.resolve).toHaveBeenCalledWith(
       tokens.ITargetDisplayNameResolver
     );
-    expect(container.resolve).toHaveBeenCalledWith(tokens.IUnifiedScopeResolver);
+    expect(container.resolve).toHaveBeenCalledWith(
+      tokens.IUnifiedScopeResolver
+    );
     expect(container.resolve).toHaveBeenCalledWith(tokens.IEntityManager);
     expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
     expect(container.resolve).toHaveBeenCalledWith(

@@ -6,12 +6,12 @@ Create service that monitors vital organ damage and manages dying/death state tr
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/anatomy/services/deathCheckService.js` | CREATE |
-| `src/dependencyInjection/tokens/tokens-core.js` | MODIFY - add token alphabetically |
-| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | MODIFY - add registration |
-| `tests/unit/anatomy/services/deathCheckService.test.js` | CREATE |
+| File                                                                   | Action                            |
+| ---------------------------------------------------------------------- | --------------------------------- |
+| `src/anatomy/services/deathCheckService.js`                            | CREATE                            |
+| `src/dependencyInjection/tokens/tokens-core.js`                        | MODIFY - add token alphabetically |
+| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | MODIFY - add registration         |
+| `tests/unit/anatomy/services/deathCheckService.test.js`                | CREATE                            |
 
 ## Out of Scope
 
@@ -63,10 +63,12 @@ See `specs/injury-reporting-and-user-interface.md` section 5.3 for death check a
 ### Implementation Summary
 
 **Files Created:**
+
 - `src/anatomy/services/deathCheckService.js` - Full service implementation (414 lines)
 - `tests/unit/anatomy/services/deathCheckService.test.js` - Comprehensive test suite (41 tests)
 
 **Files Modified:**
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Added `DeathCheckService` token alphabetically after `DamagePropagationService`
 - `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` - Added import and singletonFactory registration
 
@@ -94,6 +96,7 @@ See `specs/injury-reporting-and-user-interface.md` section 5.3 for death check a
    - Returns `boolean` indicating if entity died this turn
 
 **Private helpers:**
+
 - `#checkVitalOrganDestruction()` - Finds destroyed vital organs
 - `#checkOverallHealthCritical()` - Checks if health below 10%
 - `#finalizeDeath()` - Adds dead component, dispatches event
@@ -104,6 +107,7 @@ See `specs/injury-reporting-and-user-interface.md` section 5.3 for death check a
 ### Test Coverage
 
 41 tests organized into:
+
 - Constructor validation (10 tests)
 - checkDeathConditions - vital organ destruction (7 tests)
 - checkDeathConditions - critical health (5 tests)

@@ -94,7 +94,9 @@ describe('ActionFormattingDecider', () => {
 
     expect(outcome.strategy).toBeNull();
     expect(outcome.validationFailures).toHaveLength(1);
-    expect(outcome.validationFailures[0].code).toBe('per_action_metadata_missing');
+    expect(outcome.validationFailures[0].code).toBe(
+      'per_action_metadata_missing'
+    );
     expect(errorFactory.create).toHaveBeenCalledTimes(1);
   });
 

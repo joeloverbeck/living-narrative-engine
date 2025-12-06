@@ -190,11 +190,7 @@ class DamagePropagationService extends BaseService {
     rngProvider,
   }) {
     // Skip invalid rules or self-reference
-    if (
-      !rule ||
-      typeof rule !== 'object' ||
-      childIdentifier === parentPartId
-    ) {
+    if (!rule || typeof rule !== 'object' || childIdentifier === parentPartId) {
       return null;
     }
 
@@ -204,7 +200,10 @@ class DamagePropagationService extends BaseService {
     let childPartId;
     if (rule.childSocketId) {
       // New format: identifier is a socket ID, resolve to entity
-      childPartId = this.#resolveSocketToEntityId(parentPartId, childIdentifier);
+      childPartId = this.#resolveSocketToEntityId(
+        parentPartId,
+        childIdentifier
+      );
       if (!childPartId) {
         this.#logger.debug(
           `DamagePropagation: No entity attached to socket '${childIdentifier}' on parent '${parentPartId}'`
@@ -232,7 +231,10 @@ class DamagePropagationService extends BaseService {
     }
 
     // Calculate damage fraction
-    const propagatedAmount = this.#calculatePropagatedAmount(rule, damageAmount);
+    const propagatedAmount = this.#calculatePropagatedAmount(
+      rule,
+      damageAmount
+    );
     if (propagatedAmount <= 0) {
       return null;
     }
@@ -334,7 +336,8 @@ class DamagePropagationService extends BaseService {
       Math.max(0, baseProbability * typeModifier)
     );
 
-    const roll = typeof rngProvider === 'function' ? rngProvider() : Math.random();
+    const roll =
+      typeof rngProvider === 'function' ? rngProvider() : Math.random();
     return roll <= effectiveProbability;
   }
 

@@ -127,10 +127,7 @@ describe('dispatchTestUtils', () => {
             inputDisabledMessage: 'Saving game "Save1"...',
           },
         ],
-        [
-          GAME_SAVED_ID,
-          { saveName: 'Save1', path: undefined, type: 'manual' },
-        ],
+        [GAME_SAVED_ID, { saveName: 'Save1', path: undefined, type: 'manual' }],
         [
           ENGINE_READY_UI,
           {
@@ -167,7 +164,8 @@ describe('dispatchTestUtils', () => {
         [
           ENGINE_OPERATION_FAILED_UI,
           {
-            errorMessage: 'Failed to save game: Unexpected error during save: disk full',
+            errorMessage:
+              'Failed to save game: Unexpected error during save: disk full',
             errorTitle: 'Save Failed',
           },
         ],

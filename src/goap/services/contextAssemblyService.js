@@ -4,7 +4,10 @@
  * @see docs/goap/refinement-condition-context.md
  */
 
-import { validateDependency, assertNonBlankString } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+} from '../../utils/dependencyUtils.js';
 import { deepClone } from '../../utils/cloneUtils.js';
 import ContextAssemblyError from '../errors/contextAssemblyError.js';
 

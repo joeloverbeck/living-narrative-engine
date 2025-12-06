@@ -63,7 +63,7 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
       null,
       null,
       {
-        supportingActions: ['sex-vaginal-penetration:pull_penis_out_of_vagina']
+        supportingActions: ['sex-vaginal-penetration:pull_penis_out_of_vagina'],
       }
     );
   });
@@ -87,14 +87,24 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     });
 
     // Assert: Components are set correctly after insertion
-    const aliceAfterInsert = testFixture.entityManager.getEntityInstance('actorA');
-    const bobAfterInsert = testFixture.entityManager.getEntityInstance('actorB');
+    const aliceAfterInsert =
+      testFixture.entityManager.getEntityInstance('actorA');
+    const bobAfterInsert =
+      testFixture.entityManager.getEntityInstance('actorB');
 
-    expect(aliceAfterInsert.components['positioning:being_fucked_vaginally']).toBeDefined();
-    expect(aliceAfterInsert.components['positioning:being_fucked_vaginally'].actorId).toBe('actorB');
+    expect(
+      aliceAfterInsert.components['positioning:being_fucked_vaginally']
+    ).toBeDefined();
+    expect(
+      aliceAfterInsert.components['positioning:being_fucked_vaginally'].actorId
+    ).toBe('actorB');
 
-    expect(bobAfterInsert.components['positioning:fucking_vaginally']).toBeDefined();
-    expect(bobAfterInsert.components['positioning:fucking_vaginally'].targetId).toBe('actorA');
+    expect(
+      bobAfterInsert.components['positioning:fucking_vaginally']
+    ).toBeDefined();
+    expect(
+      bobAfterInsert.components['positioning:fucking_vaginally'].targetId
+    ).toBe('actorA');
 
     // Act - Turn 2: Bob discovers and uses pull_penis_out_of_vagina action
     // This is the CRITICAL test - previously failed due to scope resolution bug
@@ -108,7 +118,9 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     expect(pullOutAction.targets).toBeDefined();
     expect(pullOutAction.targets.primary).toBeDefined();
     // Action discovery returns the action definition with scope, not resolved target IDs
-    expect(pullOutAction.targets.primary.scope).toBe('sex-vaginal-penetration:actors_being_fucked_vaginally_by_me');
+    expect(pullOutAction.targets.primary.scope).toBe(
+      'sex-vaginal-penetration:actors_being_fucked_vaginally_by_me'
+    );
 
     // Execute the pull out action using executeActionManual (supports different actionId)
     await testFixture.executeActionManual(
@@ -118,11 +130,17 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     );
 
     // Assert: Components are removed after withdrawal
-    const aliceAfterPullOut = testFixture.entityManager.getEntityInstance('actorA');
-    const bobAfterPullOut = testFixture.entityManager.getEntityInstance('actorB');
+    const aliceAfterPullOut =
+      testFixture.entityManager.getEntityInstance('actorA');
+    const bobAfterPullOut =
+      testFixture.entityManager.getEntityInstance('actorB');
 
-    expect(aliceAfterPullOut.components['positioning:being_fucked_vaginally']).toBeUndefined();
-    expect(bobAfterPullOut.components['positioning:fucking_vaginally']).toBeUndefined();
+    expect(
+      aliceAfterPullOut.components['positioning:being_fucked_vaginally']
+    ).toBeUndefined();
+    expect(
+      bobAfterPullOut.components['positioning:fucking_vaginally']
+    ).toBeUndefined();
   });
 
   it('should not discover pull out action when no penetration exists', async () => {
@@ -156,7 +174,9 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
 
     // Assert: Clean state after first cycle
     const aliceCycle1 = testFixture.entityManager.getEntityInstance('actorA');
-    expect(aliceCycle1.components['positioning:being_fucked_vaginally']).toBeUndefined();
+    expect(
+      aliceCycle1.components['positioning:being_fucked_vaginally']
+    ).toBeUndefined();
 
     // Act: Cycle 2 - Insert again
     await testFixture.executeAction('actorA', 'actorB', {
@@ -166,9 +186,15 @@ describe('Vaginal Penetration Workflow - Insert → Pull Out', () => {
     // Assert: Components set again after second insertion
     const aliceCycle2 = testFixture.entityManager.getEntityInstance('actorA');
     const bobCycle2 = testFixture.entityManager.getEntityInstance('actorB');
-    expect(aliceCycle2.components['positioning:being_fucked_vaginally']).toBeDefined();
-    expect(aliceCycle2.components['positioning:being_fucked_vaginally'].actorId).toBe('actorB');
+    expect(
+      aliceCycle2.components['positioning:being_fucked_vaginally']
+    ).toBeDefined();
+    expect(
+      aliceCycle2.components['positioning:being_fucked_vaginally'].actorId
+    ).toBe('actorB');
     expect(bobCycle2.components['positioning:fucking_vaginally']).toBeDefined();
-    expect(bobCycle2.components['positioning:fucking_vaginally'].targetId).toBe('actorA');
+    expect(bobCycle2.components['positioning:fucking_vaginally'].targetId).toBe(
+      'actorA'
+    );
   });
 });

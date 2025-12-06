@@ -1,6 +1,13 @@
 // tests/unit/loaders/modManifestProcessor.test.js
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { createTestBed } from '../../common/testBed.js';
 import ModManifestProcessor from '../../../src/loaders/ModManifestProcessor.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
@@ -356,7 +363,9 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
       expect(result.finalModOrder).toEqual(['core']);
       expect(result.incompatibilityCount).toBe(0);
 
-      expect(mockDependencies.modDependencyValidator.validate).toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).toHaveBeenCalled();
       expect(mockDependencies.modVersionValidator).toHaveBeenCalled();
     });
 
@@ -369,12 +378,18 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         new Map([['core', { id: 'core', version: '1.0.0' }]])
       );
 
-      const result = await processor.processManifests(requestedIds, worldName, options);
+      const result = await processor.processManifests(
+        requestedIds,
+        worldName,
+        options
+      );
 
       expect(result).toBeDefined();
       expect(result.validationWarnings).toEqual([]);
 
-      expect(mockDependencies.modDependencyValidator.validate).toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).toHaveBeenCalled();
     });
   });
 
@@ -410,7 +425,11 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         new Map([['core', { id: 'core', version: '1.0.0' }]])
       );
 
-      const result = await processor.processManifests(requestedIds, worldName, options);
+      const result = await processor.processManifests(
+        requestedIds,
+        worldName,
+        options
+      );
 
       expect(result).toBeDefined();
       expect(result.validationWarnings).toEqual(['test warning']);
@@ -430,7 +449,9 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         '  - test warning'
       );
 
-      expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).not.toHaveBeenCalled();
     });
 
     it('should fall back to traditional validation when orchestrator fails', async () => {
@@ -438,17 +459,25 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
       const worldName = 'test-world';
       const options = { validateCrossReferences: true, strictMode: false };
 
-      mockOrchestrator.validateForLoading.mockRejectedValue(new Error('Orchestrator failed'));
+      mockOrchestrator.validateForLoading.mockRejectedValue(
+        new Error('Orchestrator failed')
+      );
       mockDependencies.modManifestLoader.loadRequestedManifests.mockResolvedValue(
         new Map([['core', { id: 'core', version: '1.0.0' }]])
       );
 
-      const result = await processor.processManifests(requestedIds, worldName, options);
+      const result = await processor.processManifests(
+        requestedIds,
+        worldName,
+        options
+      );
 
       expect(result).toBeDefined();
       expect(result.loadedManifestsMap).toBeDefined();
 
-      expect(mockDependencies.modDependencyValidator.validate).toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).toHaveBeenCalled();
       expect(mockDependencies.modVersionValidator).toHaveBeenCalled();
 
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
@@ -476,7 +505,9 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
       );
 
       expect(result.finalModOrder).toEqual(['core']);
-      expect(mockDependencies.modDependencyValidator.validate).toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).toHaveBeenCalled();
       expect(testBed.mockLogger.warn).toHaveBeenCalledWith(
         'Validation orchestrator failed, falling back to traditional validation',
         expect.any(ModDependencyError)
@@ -496,7 +527,9 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         processor.processManifests(requestedIds, 'world', options)
       ).rejects.toBeInstanceOf(ModDependencyError);
 
-      expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).not.toHaveBeenCalled();
       expect(testBed.mockLogger.warn).not.toHaveBeenCalledWith(
         'Validation orchestrator failed, falling back to traditional validation',
         expect.anything()
@@ -514,7 +547,9 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
         processor.processManifests(requestedIds, 'world', options)
       ).rejects.toBe(failure);
 
-      expect(mockDependencies.modDependencyValidator.validate).not.toHaveBeenCalled();
+      expect(
+        mockDependencies.modDependencyValidator.validate
+      ).not.toHaveBeenCalled();
       expect(testBed.mockLogger.warn).not.toHaveBeenCalledWith(
         'Validation orchestrator failed, falling back to traditional validation',
         expect.anything()
@@ -549,4 +584,3 @@ describe('ModManifestProcessor - Optional Orchestrator Dependency', () => {
     });
   });
 });
-

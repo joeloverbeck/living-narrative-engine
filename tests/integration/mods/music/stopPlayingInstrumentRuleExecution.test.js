@@ -34,7 +34,10 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
   describe('Successfully executes stop_playing_instrument action', () => {
     it('should remove playing_music component from actor', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Lyra')
@@ -61,7 +64,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('musician1', 'lute1');
 
-      const musicianAfter = testFixture.entityManager.getEntityInstance('musician1');
+      const musicianAfter =
+        testFixture.entityManager.getEntityInstance('musician1');
       expect(musicianAfter).not.toHaveComponent('music:playing_music');
     });
 
@@ -93,7 +97,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('musician1', 'piano1');
 
-      const musicianAfter = testFixture.entityManager.getEntityInstance('musician1');
+      const musicianAfter =
+        testFixture.entityManager.getEntityInstance('musician1');
       expect(musicianAfter).not.toHaveComponent('music:performance_mood');
     });
 
@@ -125,12 +130,18 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('musician1', 'violin1');
 
-      const musicianAfter = testFixture.entityManager.getEntityInstance('musician1');
-      expect(musicianAfter).not.toHaveComponent('positioning:doing_complex_performance');
+      const musicianAfter =
+        testFixture.entityManager.getEntityInstance('musician1');
+      expect(musicianAfter).not.toHaveComponent(
+        'positioning:doing_complex_performance'
+      );
     });
 
     it('should dispatch perceptible event with correct message', async () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Lyra')
@@ -225,7 +236,8 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       await testFixture.executeAction('musician1', 'harp1');
 
-      const musicianAfter = testFixture.entityManager.getEntityInstance('musician1');
+      const musicianAfter =
+        testFixture.entityManager.getEntityInstance('musician1');
       expect(musicianAfter).not.toHaveComponent('music:playing_music');
 
       expect(testFixture.events).toHaveActionSuccess();
@@ -368,24 +380,40 @@ describe('music:stop_playing_instrument - Rule Execution', () => {
 
       // First stop
       await testFixture.executeAction('musician1', 'violin1');
-      const musicianAfterFirstStop = testFixture.entityManager.getEntityInstance('musician1');
+      const musicianAfterFirstStop =
+        testFixture.entityManager.getEntityInstance('musician1');
       expect(musicianAfterFirstStop).not.toHaveComponent('music:playing_music');
 
       // Re-add components for second cycle
-      testFixture.entityManager.addComponent('musician1', 'music:playing_music', {
-        playing_on: 'violin1',
-      });
-      testFixture.entityManager.addComponent('musician1', 'music:performance_mood', {
-        mood: 'cheerful',
-      });
-      testFixture.entityManager.addComponent('musician1', 'positioning:doing_complex_performance', {});
+      testFixture.entityManager.addComponent(
+        'musician1',
+        'music:playing_music',
+        {
+          playing_on: 'violin1',
+        }
+      );
+      testFixture.entityManager.addComponent(
+        'musician1',
+        'music:performance_mood',
+        {
+          mood: 'cheerful',
+        }
+      );
+      testFixture.entityManager.addComponent(
+        'musician1',
+        'positioning:doing_complex_performance',
+        {}
+      );
 
       testFixture.clearEvents();
 
       // Second stop
       await testFixture.executeAction('musician1', 'violin1');
-      const musicianAfterSecondStop = testFixture.entityManager.getEntityInstance('musician1');
-      expect(musicianAfterSecondStop).not.toHaveComponent('music:playing_music');
+      const musicianAfterSecondStop =
+        testFixture.entityManager.getEntityInstance('musician1');
+      expect(musicianAfterSecondStop).not.toHaveComponent(
+        'music:playing_music'
+      );
       expect(testFixture.events).toHaveActionSuccess();
     });
   });

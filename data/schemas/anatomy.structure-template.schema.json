@@ -105,7 +105,14 @@
         },
         "attachment": {
           "type": "string",
-          "enum": ["anterior", "posterior", "dorsal", "ventral", "lateral", "custom"],
+          "enum": [
+            "anterior",
+            "posterior",
+            "dorsal",
+            "ventral",
+            "lateral",
+            "custom"
+          ],
           "description": "Anatomical attachment location: anterior (front), posterior (back), dorsal (top), ventral (bottom), lateral (side), custom (specified in pattern)"
         },
         "socketPattern": {

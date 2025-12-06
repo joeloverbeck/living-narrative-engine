@@ -5,7 +5,6 @@ import ActivityConditionValidator from '../../../src/anatomy/services/validation
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { registerActivityComponents } from './activityNaturalLanguageTestUtils.js';
 
-
 describe('ActivityFilteringSystem integration coverage', () => {
   let testBed;
   let entityManager;
@@ -21,7 +20,9 @@ describe('ActivityFilteringSystem integration coverage', () => {
     logger = testBed.logger;
 
     const conditionValidator = new ActivityConditionValidator({ logger });
-    const jsonLogicEvaluationService = new JsonLogicEvaluationService({ logger });
+    const jsonLogicEvaluationService = new JsonLogicEvaluationService({
+      logger,
+    });
 
     filteringSystem = new ActivityFilteringSystem({
       logger,
@@ -74,8 +75,12 @@ describe('ActivityFilteringSystem integration coverage', () => {
     await entityManager.addComponent(actor.id, 'positioning:closeness', {
       partners: [partner.id],
     });
-    await entityManager.addComponent(actor.id, 'core:gender', { value: 'nonbinary' });
-    await entityManager.addComponent(partner.id, 'core:gender', { value: 'female' });
+    await entityManager.addComponent(actor.id, 'core:gender', {
+      value: 'nonbinary',
+    });
+    await entityManager.addComponent(partner.id, 'core:gender', {
+      value: 'female',
+    });
 
     const activity = {
       id: 'activity_visible',
@@ -137,7 +142,9 @@ describe('ActivityFilteringSystem integration coverage', () => {
       instanceId: 'actor_custom_logic_false',
     });
 
-    await entityManager.addComponent(actor.id, 'core:gender', { value: 'male' });
+    await entityManager.addComponent(actor.id, 'core:gender', {
+      value: 'male',
+    });
 
     const activity = {
       id: 'activity_logic_false',
@@ -200,7 +207,10 @@ describe('ActivityFilteringSystem integration coverage', () => {
       targetEntityId: 123,
     };
 
-    const result = failOpenFilteringSystem.filterByConditions([activity], actor);
+    const result = failOpenFilteringSystem.filterByConditions(
+      [activity],
+      actor
+    );
 
     expect(result).toHaveLength(1);
     expect(logger.warn).toHaveBeenCalledWith(

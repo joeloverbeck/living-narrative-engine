@@ -137,7 +137,11 @@ describe('metrics middleware route & payload accounting integration', () => {
     });
 
     await request(app).get('/no-body').expect(204);
-    await request(app).post('/text-body').set('content-type', 'text/plain').send('raw-body').expect(207);
+    await request(app)
+      .post('/text-body')
+      .set('content-type', 'text/plain')
+      .send('raw-body')
+      .expect(207);
     await request(app)
       .post('/buffer-response')
       .set('content-type', 'application/json')

@@ -17,7 +17,11 @@ const createEntityManager = () => ({
   getComponentData: jest.fn(),
   batchAddComponentsOptimized: jest.fn().mockResolvedValue(undefined),
   getEntityInstance: jest.fn(() => ({
-    getComponentTypeIds: jest.fn(() => ['core:position', 'items:item', 'items:portable']),
+    getComponentTypeIds: jest.fn(() => [
+      'core:position',
+      'items:item',
+      'items:portable',
+    ]),
   })),
 });
 
@@ -166,12 +170,14 @@ describe('DropItemAtLocationHandler', () => {
     const params = validParams();
     const contextLogger = createLogger();
 
-    entityManager.getComponentData.mockImplementation((entityId, componentId) => {
-      if (entityId === 'actor-123' && componentId === 'items:inventory') {
-        return { items: ['item-999'], capacity: 3 };
+    entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        if (entityId === 'actor-123' && componentId === 'items:inventory') {
+          return { items: ['item-999'], capacity: 3 };
+        }
+        return null;
       }
-      return null;
-    });
+    );
     entityManager.getEntityInstance.mockReturnValueOnce(null);
 
     const result = await handler.execute(params, { logger: contextLogger });

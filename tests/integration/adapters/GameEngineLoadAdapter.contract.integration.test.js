@@ -42,6 +42,8 @@ describe('GameEngineLoadAdapter contract integration', () => {
       },
     });
 
-    await expect(adapter.load('slot-bad')).rejects.toThrow('synchronous failure');
+    await expect(adapter.load('slot-bad')).rejects.toThrow(
+      'synchronous failure'
+    );
   });
 });

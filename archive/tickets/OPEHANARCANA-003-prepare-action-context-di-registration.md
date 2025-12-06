@@ -10,6 +10,7 @@
 ## Objective
 
 Register the `PrepareActionContextHandler` in the dependency injection system:
+
 1. Define DI token
 2. Register handler factory
 3. Map operation type to handler
@@ -20,6 +21,7 @@ Register the `PrepareActionContextHandler` in the dependency injection system:
 ## Files to Touch
 
 ### Modified Files
+
 - `src/dependencyInjection/tokens/tokens-core.js` - Add token
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Add factory
 - `src/dependencyInjection/registrations/interpreterRegistrations.js` - Add mapping
@@ -30,6 +32,7 @@ Register the `PrepareActionContextHandler` in the dependency injection system:
 ## Out of Scope
 
 **DO NOT modify:**
+
 - The handler implementation file (done in OPEHANARCANA-002)
 - Any schema files (done in OPEHANARCANA-001)
 - Any test files (covered in OPEHANARCANA-004)
@@ -73,7 +76,10 @@ Add factory to `handlerFactories` array (alphabetically by token name):
 Add to the registry.register calls (keep alphabetical):
 
 ```javascript
-registry.register('PREPARE_ACTION_CONTEXT', bind(tokens.PrepareActionContextHandler));
+registry.register(
+  'PREPARE_ACTION_CONTEXT',
+  bind(tokens.PrepareActionContextHandler)
+);
 ```
 
 ### 4. Pre-Validation Whitelist (`preValidationUtils.js`)
@@ -91,21 +97,25 @@ Add to `KNOWN_OPERATION_TYPES` array (alphabetically):
 ### Tests That Must Pass
 
 1. **Type checking:**
+
    ```bash
    npm run typecheck
    ```
 
 2. **Validation passes:**
+
    ```bash
    npm run validate
    ```
 
 3. **Unit test suite passes:**
+
    ```bash
    npm run test:unit
    ```
 
 4. **Integration test suite passes:**
+
    ```bash
    npm run test:integration
    ```
@@ -156,14 +166,17 @@ npx eslint src/utils/preValidationUtils.js
 ## Common Pitfalls
 
 ❌ **Forgetting pre-validation whitelist**
+
 - Symptom: "Unknown operation type" error during mod loading
 - Fix: Add to `KNOWN_OPERATION_TYPES` in `preValidationUtils.js`
 
 ❌ **Type string mismatch**
+
 - Symptom: "No handler registered" error at runtime
 - Fix: Ensure `'PREPARE_ACTION_CONTEXT'` matches exactly in schema, registry, and whitelist
 
 ❌ **Missing import statement**
+
 - Symptom: Runtime error "PrepareActionContextHandler is not defined"
 - Fix: Add import at top of `operationHandlerRegistrations.js`
 

@@ -433,7 +433,9 @@ describe('Server - Comprehensive Tests', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     // Extract handlers from the mocked app
-    rootHandler = serverController.app.get.mock.calls.find((c) => c[0] === '/')[1];
+    rootHandler = serverController.app.get.mock.calls.find(
+      (c) => c[0] === '/'
+    )[1];
     errorHandler = serverController.app.use.mock.calls.find(
       (c) => typeof c[0] === 'function' && c[0].length === 4
     )[0];
@@ -970,7 +972,9 @@ describe('Server - Comprehensive Tests', () => {
 
       // Verify the rate limiter was found and the next middleware exists
       expect(generalTimeoutIndex).toBeGreaterThanOrEqual(0);
-      expect(serverController.app.use.mock.calls[generalTimeoutIndex + 1]).toBeDefined();
+      expect(
+        serverController.app.use.mock.calls[generalTimeoutIndex + 1]
+      ).toBeDefined();
 
       const generalTimeoutMiddleware =
         serverController.app.use.mock.calls[generalTimeoutIndex + 1][0];
@@ -979,11 +983,7 @@ describe('Server - Comprehensive Tests', () => {
 
       const nextForLlm = jest.fn();
       createTimeoutMiddlewareMock.mockClear();
-      generalTimeoutMiddleware(
-        { path: '/api/llm-request' },
-        {},
-        nextForLlm
-      );
+      generalTimeoutMiddleware({ path: '/api/llm-request' }, {}, nextForLlm);
 
       expect(nextForLlm).toHaveBeenCalledTimes(1);
       expect(createTimeoutMiddlewareMock).not.toHaveBeenCalled();
@@ -1020,11 +1020,7 @@ describe('Server - Comprehensive Tests', () => {
       expect(corsMock).toHaveBeenCalledWith({
         origin: ['https://example.com'],
         methods: [HTTP_METHOD_POST, HTTP_METHOD_OPTIONS],
-        allowedHeaders: [
-          HTTP_HEADER_CONTENT_TYPE,
-          'X-Title',
-          'HTTP-Referer',
-        ],
+        allowedHeaders: [HTTP_HEADER_CONTENT_TYPE, 'X-Title', 'HTTP-Referer'],
       });
     });
 

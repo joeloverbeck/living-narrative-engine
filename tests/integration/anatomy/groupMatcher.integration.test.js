@@ -80,7 +80,7 @@ describe('groupMatcher integration', () => {
     dataRegistry.store(
       'anatomyStructureTemplates',
       'test:multi_template',
-      buildValidTemplate(),
+      buildValidTemplate()
     );
 
     deps = { dataRegistry, slotGenerator, logger };
@@ -90,14 +90,14 @@ describe('groupMatcher integration', () => {
     it('throws when blueprint lacks structure template and allowMissing is false', () => {
       const missingBlueprint = { id: 'test:missing', schemaVersion: '2.0' };
       expect(() =>
-        resolveSlotGroup('limbSet:arm', missingBlueprint, {}, deps),
+        resolveSlotGroup('limbSet:arm', missingBlueprint, {}, deps)
       ).toThrow(
         new ValidationError(
-          "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template",
-        ),
+          "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template"
+        )
       );
       expect(logger.warn).toHaveBeenCalledWith(
-        "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template",
+        "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template"
       );
     });
 
@@ -114,40 +114,42 @@ describe('groupMatcher integration', () => {
         'limbSet:arm',
         missingBlueprint,
         { allowMissing: true },
-        localDeps,
+        localDeps
       );
 
       expect(result).toEqual([]);
       expect(localLogger.warn).toHaveBeenCalledWith(
-        "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template",
+        "Cannot resolve slot group 'limbSet:arm': blueprint has no structure template"
       );
     });
 
     it('rejects invalid group reference formats', () => {
       expect(() =>
-        resolveSlotGroup('limbSet-only', blueprint, {}, deps),
+        resolveSlotGroup('limbSet-only', blueprint, {}, deps)
       ).toThrow(
-        new ValidationError("Invalid slot group reference format: 'limbSet-only'"),
+        new ValidationError(
+          "Invalid slot group reference format: 'limbSet-only'"
+        )
       );
     });
 
     it('rejects unknown group types', () => {
       expect(() =>
-        resolveSlotGroup('invalid:arm', blueprint, {}, deps),
+        resolveSlotGroup('invalid:arm', blueprint, {}, deps)
       ).toThrow(
         new ValidationError(
-          "Invalid slot group type: 'invalid'. Expected 'limbSet' or 'appendage'",
-        ),
+          "Invalid slot group type: 'invalid'. Expected 'limbSet' or 'appendage'"
+        )
       );
     });
 
     it('provides available group hints when requested group is missing', () => {
       expect(() =>
-        resolveSlotGroup('limbSet:wing', blueprint, {}, deps),
+        resolveSlotGroup('limbSet:wing', blueprint, {}, deps)
       ).toThrow(
         new ValidationError(
-          "Slot group 'limbSet:wing' not found in structure template 'test:multi_template'. Available groups: 'limbSet:arm'.",
-        ),
+          "Slot group 'limbSet:wing' not found in structure template 'test:multi_template'. Available groups: 'limbSet:arm'."
+        )
       );
     });
   });
@@ -156,12 +158,10 @@ describe('groupMatcher integration', () => {
     it('rejects unsupported group types with informative error', () => {
       const pattern = { matchesGroup: 'invalid:thing' };
 
-      expect(() =>
-        validateMatchesGroup(pattern, blueprint, 0, deps),
-      ).toThrow(
+      expect(() => validateMatchesGroup(pattern, blueprint, 0, deps)).toThrow(
         new ValidationError(
-          "Pattern 1: Slot group 'invalid:thing' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'.",
-        ),
+          "Pattern 1: Slot group 'invalid:thing' format invalid. Expected 'limbSet:{type}' or 'appendage:{type}'."
+        )
       );
     });
 
@@ -170,7 +170,7 @@ describe('groupMatcher integration', () => {
       flakyRegistry.store(
         'anatomyStructureTemplates',
         'test:multi_template',
-        buildValidTemplate(),
+        buildValidTemplate()
       );
 
       const flakyDeps = {
@@ -182,11 +182,11 @@ describe('groupMatcher integration', () => {
       const pattern = { matchesGroup: 'limbSet:arm' };
 
       expect(() =>
-        validateMatchesGroup(pattern, blueprint, 0, flakyDeps),
+        validateMatchesGroup(pattern, blueprint, 0, flakyDeps)
       ).toThrow(
         new ValidationError(
-          "Pattern 1: Structure template not found: test:multi_template",
-        ),
+          'Pattern 1: Structure template not found: test:multi_template'
+        )
       );
     });
 
@@ -207,7 +207,7 @@ describe('groupMatcher integration', () => {
       dataRegistry.store(
         'anatomyStructureTemplates',
         'test:fragile_template',
-        fragileTemplate,
+        fragileTemplate
       );
 
       const fragileBlueprint = {
@@ -218,9 +218,8 @@ describe('groupMatcher integration', () => {
       const pattern = { matchesGroup: 'limbSet:arm' };
 
       expect(() =>
-        validateMatchesGroup(pattern, fragileBlueprint, 0, deps),
+        validateMatchesGroup(pattern, fragileBlueprint, 0, deps)
       ).toThrow(TypeError);
     });
   });
 });
-

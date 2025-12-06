@@ -28,7 +28,8 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
@@ -154,7 +155,9 @@ function createScopeEvaluatingMock(dependencies) {
               const targetId = target.id || target.entityId || null;
               if (targetId) {
                 const entity =
-                  target.entity || entityManager.getEntityInstance(targetId) || null;
+                  target.entity ||
+                  entityManager.getEntityInstance(targetId) ||
+                  null;
                 return {
                   id: targetId,
                   displayName:
@@ -333,7 +336,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
         unsubscribe: jest.fn(),
       },
     });
-    
+
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -343,7 +346,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()
@@ -565,7 +568,9 @@ const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
         id: actorInstance.id,
         components: actorInstance.getAllComponents(),
       };
-      expect(actorWithComponents.components['positioning:closeness']).toBeDefined();
+      expect(
+        actorWithComponents.components['positioning:closeness']
+      ).toBeDefined();
       expect(
         actorWithComponents.components['positioning:closeness'].partners
       ).toContain('target1');

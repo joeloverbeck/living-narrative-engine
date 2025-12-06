@@ -3,7 +3,14 @@
  * @description Verifies the nursing card appears only when closeness, facing, and lactation requirements are satisfied.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import {
   buildLatchAndDrinkMilkScenario,
@@ -57,13 +64,17 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
       expect(latchAndDrinkMilkAction.id).toBe(ACTION_ID);
       expect(latchAndDrinkMilkAction.name).toBe('Latch and Drink Milk');
       expect(latchAndDrinkMilkAction.description).toBe(
-        'Seal your lips around the target\'s nipple and draw down their milk in slow, greedy pulls.'
+        "Seal your lips around the target's nipple and draw down their milk in slow, greedy pulls."
       );
-      expect(latchAndDrinkMilkAction.template).toBe("nurse at {target}'s breast");
+      expect(latchAndDrinkMilkAction.template).toBe(
+        "nurse at {target}'s breast"
+      );
       expect(latchAndDrinkMilkAction.prerequisites).toEqual([]);
 
       expect(latchAndDrinkMilkAction.targets.primary.scope).toBe(SCOPE_ID);
-      expect(latchAndDrinkMilkAction.targets.primary.placeholder).toBe('target');
+      expect(latchAndDrinkMilkAction.targets.primary.placeholder).toBe(
+        'target'
+      );
       expect(latchAndDrinkMilkAction.targets.primary.description).toBe(
         "Partner whose milk you're nursing"
       );
@@ -102,7 +113,9 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
 
     it('does not appear when the partners are not in closeness', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { entities } = buildLatchAndDrinkMilkScenario({ includeCloseness: false });
+      const { entities } = buildLatchAndDrinkMilkScenario({
+        includeCloseness: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery(testFixture);
 
@@ -115,7 +128,9 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
 
     it('does not appear when the target is not lactating', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { entities } = buildLatchAndDrinkMilkScenario({ targetLactating: false });
+      const { entities } = buildLatchAndDrinkMilkScenario({
+        targetLactating: false,
+      });
       testFixture.reset(entities);
       configureActionDiscovery(testFixture);
 
@@ -128,7 +143,9 @@ describe('sex-breastplay:latch_and_drink_milk action discovery', () => {
 
     it('does not appear when the actor is giving a blowjob', () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const { entities } = buildLatchAndDrinkMilkScenario({ actorGivingBlowjob: true });
+      const { entities } = buildLatchAndDrinkMilkScenario({
+        actorGivingBlowjob: true,
+      });
       testFixture.reset(entities);
       configureActionDiscovery(testFixture);
 

@@ -1,4 +1,11 @@
-import { describe, beforeEach, afterEach, it, expect, jest } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  afterEach,
+  it,
+  expect,
+  jest,
+} from '@jest/globals';
 import { TraitsRewriterController } from '../../../../src/characterBuilder/controllers/TraitsRewriterController.js';
 import { CHARACTER_BUILDER_EVENTS } from '../../../../src/characterBuilder/services/characterBuilderService.js';
 import { TraitsRewriterError } from '../../../../src/characterBuilder/errors/TraitsRewriterError.js';
@@ -76,7 +83,8 @@ function createDependencies(elements, listeners, subscriptions) {
     cacheElementsFromMap: jest.fn((elementMap) => {
       Object.entries(elementMap).forEach(([key, config]) => {
         const selector = typeof config === 'string' ? config : config.selector;
-        const required = typeof config === 'object' ? config.required !== false : true;
+        const required =
+          typeof config === 'object' ? config.required !== false : true;
         const el = document.querySelector(selector);
         if (!el && required) {
           throw new Error(`Missing element for ${selector}`);
@@ -453,7 +461,9 @@ describe('TraitsRewriterController', () => {
     clearHandler();
 
     expect(elements['character-definition'].value).toBe('');
-    expect(deps.domElementManager.showElement).toHaveBeenCalledWith('emptyState');
+    expect(deps.domElementManager.showElement).toHaveBeenCalledWith(
+      'emptyState'
+    );
     expect(elements['rewrite-traits-button'].disabled).toBe(true);
   });
 

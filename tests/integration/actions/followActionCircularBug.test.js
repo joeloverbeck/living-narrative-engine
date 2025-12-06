@@ -138,7 +138,9 @@ describe('Follow Action Circular Following Bug', () => {
     );
 
     // Find the follow action
-    const followActionResult = validActions.find((a) => a.id === 'companionship:follow');
+    const followActionResult = validActions.find(
+      (a) => a.id === 'companionship:follow'
+    );
     const hasIkerAsTarget =
       followActionResult?.targets?.some(
         (t) => t.id === 'p_erotica:iker_aguirre_instance'
@@ -153,7 +155,9 @@ describe('Follow Action Circular Following Bug', () => {
       console.log(
         '\n✅ FIX VERIFIED: Iker was correctly filtered out as a potential leader'
       );
-      console.log('The scope "companionship:potential_leaders" correctly used:');
+      console.log(
+        'The scope "companionship:potential_leaders" correctly used:'
+      );
       console.log('1. The condition "companionship:entity-is-following-actor"');
       console.log(
         '2. The check for entity.id in actor.components.companionship:leading.followers'
@@ -184,7 +188,9 @@ describe('Follow Action Circular Following Bug', () => {
 
     // Verify the scope contains the necessary conditions
     expect(scopeContent).toContain('companionship:entity-is-following-actor');
-    expect(scopeContent).toContain('actor.components.companionship:leading.followers');
+    expect(scopeContent).toContain(
+      'actor.components.companionship:leading.followers'
+    );
 
     // The scope should have BOTH conditions to prevent circular following:
     // 1. NOT entity-is-following-actor (entity's following.leaderId != actor.id)

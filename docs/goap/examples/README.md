@@ -24,6 +24,7 @@ A single planning-task can have multiple refinement methods for different world 
 This is the simplest refinement path. When the actor already possesses food, the method directly consumes it without needing to acquire it first.
 
 **Key Features**:
+
 - Single-step refinement (one primitive action)
 - Applicability condition checks for item in inventory
 - Demonstrates basic structure and required fields
@@ -39,10 +40,12 @@ This is the simplest refinement path. When the actor already possesses food, the
 **Scenario**: Handles both in-inventory and needs-pickup scenarios
 
 Demonstrates basic if-then-else branching:
+
 - **If** item is in inventory → consume directly
 - **Else** → pick up item, then consume
 
 **Key Features**:
+
 - Single conditional step with thenSteps and elseSteps
 - Safe component existence checks before property access
 - Demonstrates onFailure handling
@@ -55,11 +58,13 @@ Demonstrates basic if-then-else branching:
 **Scenario**: Comprehensive item acquisition with nested conditionals
 
 Demonstrates nested conditional logic (2 levels deep):
+
 1. **If** item in inventory → consume
 2. **Else if** item in current location → pick up, consume
 3. **Else** → move to location, pick up, consume
 
 **Key Features**:
+
 - Nested conditionals up to 2 levels
 - Location-aware logic
 - Progressive condition checking
@@ -72,11 +77,13 @@ Demonstrates nested conditional logic (2 levels deep):
 **Scenario**: Different healing strategies with failure handling
 
 Demonstrates different `onFailure` behaviors:
+
 - **replan**: Critical healing path fails → replan entire goal
 - **skip**: Optional rest fails → skip and continue
 - **fail**: Quality check fails → fail entire refinement
 
 **Key Features**:
+
 - Multiple conditional steps in sequence
 - Different failure strategies per conditional
 - Quality validation pattern
@@ -89,6 +96,7 @@ Demonstrates different `onFailure` behaviors:
 **Scenario**: Reference guide for common condition patterns
 
 A comprehensive reference showing 10 common condition patterns:
+
 1. Component existence check
 2. Item in inventory check
 3. Same location check
@@ -101,6 +109,7 @@ A comprehensive reference showing 10 common condition patterns:
 10. Safe nested property access
 
 **Key Features**:
+
 - All patterns use correct operator names
 - Safe property access patterns
 - Uses all major custom operators
@@ -157,14 +166,17 @@ Every refinement method has the following structure:
 Executes a concrete game action.
 
 **Required fields**:
+
 - `stepType`: Must be `"primitive_action"`
 - `actionId`: Reference to a primitive action (e.g., `"items:consume_item"`)
 
 **Optional fields**:
+
 - `targetBindings`: Maps action targets to entities
 - `parameters`: Additional action-specific parameters
 
 **Example**:
+
 ```json
 {
   "stepType": "primitive_action",
@@ -180,16 +192,19 @@ Executes a concrete game action.
 Branches execution based on runtime conditions (if-then-else logic).
 
 **Required fields**:
+
 - `stepType`: Must be `"conditional"`
 - `condition`: JSON Logic expression to evaluate
 - `thenSteps`: Steps to execute if condition is truthy
 
 **Optional fields**:
+
 - `description`: Human-readable explanation of the check
 - `elseSteps`: Steps to execute if condition is falsy
 - `onFailure`: Behavior when condition evaluation fails (`"replan"`, `"skip"`, or `"fail"`)
 
 **Example**:
+
 ```json
 {
   "stepType": "conditional",
@@ -197,15 +212,32 @@ Branches execution based on runtime conditions (if-then-else logic).
   "condition": {
     "and": [
       { "has_component": [{ "var": "actor" }, "items:inventory"] },
-      { "in": [{ "var": "task.params.item" }, { "var": "actor.components.items:inventory.items" }] }
+      {
+        "in": [
+          { "var": "task.params.item" },
+          { "var": "actor.components.items:inventory.items" }
+        ]
+      }
     ]
   },
   "thenSteps": [
-    { "stepType": "primitive_action", "actionId": "items:consume_item", "targetBindings": { "target": "task.params.item" } }
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": { "target": "task.params.item" }
+    }
   ],
   "elseSteps": [
-    { "stepType": "primitive_action", "actionId": "items:pick_up_item", "targetBindings": { "target": "task.params.item" } },
-    { "stepType": "primitive_action", "actionId": "items:consume_item", "targetBindings": { "target": "task.params.item" } }
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:pick_up_item",
+      "targetBindings": { "target": "task.params.item" }
+    },
+    {
+      "stepType": "primitive_action",
+      "actionId": "items:consume_item",
+      "targetBindings": { "target": "task.params.item" }
+    }
   ],
   "onFailure": "replan"
 }
@@ -214,6 +246,7 @@ Branches execution based on runtime conditions (if-then-else logic).
 **Nesting**: Conditionals can be nested up to 3 levels deep to prevent complexity explosion.
 
 **Future step types** (not yet implemented):
+
 - `parallel`: Concurrent action execution
 - `subtask`: Nested planning-task reference
 
@@ -232,10 +265,12 @@ Applicability conditions use JSON Logic expressions to determine when a refineme
 The system includes many domain-specific operators. **Important**: Use correct snake_case names.
 
 **Component Checking**:
+
 - `has_component(entityPath, componentId)` - ✅ Correct
 - ~~`hasComponent`~~ - ❌ Wrong (old camelCase name)
 
 **Common Operators**:
+
 - `has_component` - Check component existence
 - `hasClothingInSlot` - Check clothing in body slot
 - `isRemovalBlocked` - Check if clothing removal blocked
@@ -277,6 +312,7 @@ See [Condition Patterns Guide](../condition-patterns-guide.md) for comprehensive
 ### Evaluation Context
 
 Conditions in conditional steps are evaluated with:
+
 - Current world state (as modified by previous steps)
 - Actor components (current state)
 - Task parameters (from planning scope)
@@ -368,9 +404,11 @@ The refinement method system is designed for extensibility. Future versions will
 ## Additional Resources
 
 ### Templates for Modders
+
 **Location**: `docs/goap/templates/`
 
 Ready-to-use templates for creating your own refinement methods:
+
 - `simple-sequential-task.template.json` - Linear action sequences
 - `conditional-acquisition-task.template.json` - If-then-else branching
 - `multi-step-state-task.template.json` - State accumulation with storeResultAs
@@ -379,9 +417,11 @@ Ready-to-use templates for creating your own refinement methods:
 Each template includes placeholder markers, inline documentation, and usage instructions. See `docs/goap/templates/README.md` for quick start guide.
 
 ### Edge Cases & Error Prevention
+
 **Location**: `docs/goap/examples/edge-cases/`
 
 Common error scenarios and defensive programming patterns:
+
 - `empty-inventory-conditional.refinement.json` - Safe array access
 - `unreachable-location.refinement.json` - Precondition validation
 - `missing-component.refinement.json` - Component existence checks
@@ -393,6 +433,7 @@ See `docs/goap/examples/edge-cases/README.md` for troubleshooting guide and erro
 ## Questions or Issues?
 
 For questions about refinement methods or GOAP system design, refer to:
+
 - Main GOAP specification: `specs/goap-system-specs.md`
 - Schema definition: `data/schemas/refinement-method.schema.json`
 - Implementation tickets: `tickets/GOAPIMPL-*.md`

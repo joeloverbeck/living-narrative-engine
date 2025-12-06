@@ -236,7 +236,7 @@ describe('AbstractTurnState logging fallbacks and default implementations', () =
     consoleLogSpy.mockRestore();
   });
 
-  test("startTurn warns and throws when invoked on abstract state", async () => {
+  test('startTurn warns and throws when invoked on abstract state', async () => {
     const handlerLogger = makeLogger();
     const handler = {
       getLogger: jest.fn(() => handlerLogger),

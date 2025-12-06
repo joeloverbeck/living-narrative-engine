@@ -59,7 +59,8 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         logger: mockLogger,
       });
 
-      const schemaId = 'schema://living-narrative-engine/unexpected-error.schema.json';
+      const schemaId =
+        'schema://living-narrative-engine/unexpected-error.schema.json';
       const simulatedError = new Error('Simulated internal failure');
 
       validator.getValidator = jest.fn(() => {
@@ -100,7 +101,8 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
 
       validator._setAjvInstanceForTesting(null);
 
-      const schemaId = 'schema://living-narrative-engine/missing-ajv.schema.json';
+      const schemaId =
+        'schema://living-narrative-engine/missing-ajv.schema.json';
       const result = validator.validate(schemaId, { foo: 'bar' });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -400,7 +402,12 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
         dataRegistry,
       });
 
-      return { validator, generatedValidatorFn, validatorGenerator, dataRegistry };
+      return {
+        validator,
+        generatedValidatorFn,
+        validatorGenerator,
+        dataRegistry,
+      };
     };
 
     it('returns AJV validation result when generated validator succeeds', async () => {
@@ -480,10 +487,7 @@ describe('AjvSchemaValidator - Uncovered Lines Targeted Tests', () => {
       const result = validator.validate(schemaId, { duplicateField: 1 });
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toEqual([
-        generatedErrors[0],
-        ajvErrors[1],
-      ]);
+      expect(result.errors).toEqual([generatedErrors[0], ajvErrors[1]]);
     });
   });
 

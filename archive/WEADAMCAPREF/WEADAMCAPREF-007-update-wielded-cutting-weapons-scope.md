@@ -11,8 +11,8 @@ Update the `wielded_cutting_weapons` scope to check for the new `damage-types:da
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
+| File                                                     | Action | Description                             |
+| -------------------------------------------------------- | ------ | --------------------------------------- |
 | `data/mods/weapons/scopes/wielded_cutting_weapons.scope` | UPDATE | Change component check and add operator |
 
 ## Out of Scope
@@ -63,11 +63,13 @@ weapons:wielded_cutting_weapons := actor.components.positioning:wielding.wielded
 ### Integration Tests (Run after WEADAMCAPREF-009)
 
 After weapons are migrated:
+
 - Scope resolves to weapons with slashing damage capability
 - Scope excludes weapons without slashing (e.g., blunt-only weapons)
 - Scope correctly filters from wielded items
 
 Test cases:
+
 - Actor wielding rapier (slashing) → included in scope
 - Actor wielding longsword (slashing) → included in scope
 - Actor wielding practice stick (blunt only) → excluded from scope

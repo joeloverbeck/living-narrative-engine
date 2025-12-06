@@ -1,5 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 import {
   DEFAULT_SUBJECT_TYPE,
   SUBJECT_TYPES,
@@ -77,7 +79,8 @@ describe('NotesService duplicate merging integration', () => {
     expect(notesComponent.notes).toHaveLength(6);
     expect(notesComponent.notes.slice(-3)).toEqual(result.addedNotes);
 
-    const [duplicateTextDifferentType, defaultedNote, preservedNote] = result.addedNotes;
+    const [duplicateTextDifferentType, defaultedNote, preservedNote] =
+      result.addedNotes;
 
     expect(duplicateTextDifferentType).toEqual({
       text: 'Existing Insight',
@@ -105,14 +108,20 @@ describe('NotesService duplicate merging integration', () => {
 
     // Validate that normalization includes subject and subject type to prevent cross-subject collisions
     const normalizedExisting = normalizeNoteText(notesComponent.notes[0]);
-    const normalizedDuplicateTextDifferentType = normalizeNoteText(duplicateTextDifferentType);
+    const normalizedDuplicateTextDifferentType = normalizeNoteText(
+      duplicateTextDifferentType
+    );
     const normalizedDefaulted = normalizeNoteText(defaultedNote);
     const normalizedPreserved = normalizeNoteText(preservedNote);
 
     expect(normalizedExisting).toBe('entity:lorekeeper:existing insight');
-    expect(normalizedDuplicateTextDifferentType).toBe('other:lorekeeper:existing insight');
+    expect(normalizedDuplicateTextDifferentType).toBe(
+      'other:lorekeeper:existing insight'
+    );
     expect(normalizedDefaulted).toBe('other:investigation:new clue discovered');
-    expect(normalizedPreserved).toBe('entity:records office:check the archives');
+    expect(normalizedPreserved).toBe(
+      'entity:records office:check the archives'
+    );
   });
 
   it('returns early without modification when provided notes collection is malformed', () => {

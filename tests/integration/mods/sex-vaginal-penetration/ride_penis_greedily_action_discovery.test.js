@@ -29,7 +29,10 @@ describe('sex-vaginal-penetration:ride_penis_greedily action discovery', () => {
   }
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-vaginal-penetration', ACTION_ID);
+    testFixture = await ModTestFixture.forAction(
+      'sex-vaginal-penetration',
+      ACTION_ID
+    );
     restoreScopeResolver = installStraddlingMilkingScopeOverrides(testFixture);
   });
 

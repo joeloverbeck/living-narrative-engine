@@ -53,8 +53,7 @@ describe('affection:tickle_target_playfully action integration', () => {
     expect(successEvent).toBeDefined();
     expect(perceptibleEvent).toBeDefined();
 
-    const expectedMessage =
-      "Amelia drives a playful tickle up Jonah's sides.";
+    const expectedMessage = "Amelia drives a playful tickle up Jonah's sides.";
     expect(successEvent.payload.message).toBe(expectedMessage);
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
     expect(perceptibleEvent.payload.perceptionType).toBe(

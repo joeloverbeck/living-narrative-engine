@@ -59,16 +59,48 @@ function hasAnatomyPart(entity) {
 describe('Human Intimate Part Weight Validation', () => {
   describe('Ass Cheeks (11 files)', () => {
     const ASS_CHEEK_PARTS = [
-      { file: 'human_ass_cheek.entity.json', weight: 1.5, desc: 'Base ass cheek' },
+      {
+        file: 'human_ass_cheek.entity.json',
+        weight: 1.5,
+        desc: 'Base ass cheek',
+      },
       { file: 'human_ass_cheek_round.entity.json', weight: 1.6, desc: 'Round' },
       { file: 'human_ass_cheek_firm.entity.json', weight: 1.5, desc: 'Firm' },
-      { file: 'human_ass_cheek_bubbly.entity.json', weight: 1.7, desc: 'Bubbly' },
-      { file: 'human_ass_cheek_small_round.entity.json', weight: 1.2, desc: 'Small round' },
-      { file: 'human_ass_cheek_round_soft.entity.json', weight: 1.6, desc: 'Round soft' },
-      { file: 'human_ass_cheek_small_bubbly.entity.json', weight: 1.3, desc: 'Small bubbly' },
-      { file: 'human_ass_cheek_firm_athletic_shelf.entity.json', weight: 1.6, desc: 'Athletic shelf' },
-      { file: 'human_ass_cheek_firm_muscular_shelf.entity.json', weight: 1.8, desc: 'Muscular shelf' },
-      { file: 'human_ass_cheek_firm_thick.entity.json', weight: 2.0, desc: 'Thick' },
+      {
+        file: 'human_ass_cheek_bubbly.entity.json',
+        weight: 1.7,
+        desc: 'Bubbly',
+      },
+      {
+        file: 'human_ass_cheek_small_round.entity.json',
+        weight: 1.2,
+        desc: 'Small round',
+      },
+      {
+        file: 'human_ass_cheek_round_soft.entity.json',
+        weight: 1.6,
+        desc: 'Round soft',
+      },
+      {
+        file: 'human_ass_cheek_small_bubbly.entity.json',
+        weight: 1.3,
+        desc: 'Small bubbly',
+      },
+      {
+        file: 'human_ass_cheek_firm_athletic_shelf.entity.json',
+        weight: 1.6,
+        desc: 'Athletic shelf',
+      },
+      {
+        file: 'human_ass_cheek_firm_muscular_shelf.entity.json',
+        weight: 1.8,
+        desc: 'Muscular shelf',
+      },
+      {
+        file: 'human_ass_cheek_firm_thick.entity.json',
+        weight: 2.0,
+        desc: 'Thick',
+      },
     ];
 
     it.each(ASS_CHEEK_PARTS)(
@@ -99,13 +131,48 @@ describe('Human Intimate Part Weight Validation', () => {
 
   describe('Breasts (7 files)', () => {
     const BREAST_PARTS = [
-      { file: 'human_breast.entity.json', minWeight: 0.4, maxWeight: 0.6, desc: 'Base breast' },
-      { file: 'human_breast_a_cup.entity.json', minWeight: 0.2, maxWeight: 0.3, desc: 'A cup' },
-      { file: 'human_breast_c_cup_firm.entity.json', minWeight: 0.4, maxWeight: 0.6, desc: 'C cup firm' },
-      { file: 'human_breast_c_cup_soft.entity.json', minWeight: 0.4, maxWeight: 0.6, desc: 'C cup soft' },
-      { file: 'human_breast_d_cup.entity.json', minWeight: 0.6, maxWeight: 0.9, desc: 'D cup' },
-      { file: 'human_breast_g_cup.entity.json', minWeight: 1.2, maxWeight: 1.8, desc: 'G cup' },
-      { file: 'human_breast_shelf.entity.json', minWeight: 0.5, maxWeight: 0.8, desc: 'Shelf' },
+      {
+        file: 'human_breast.entity.json',
+        minWeight: 0.4,
+        maxWeight: 0.6,
+        desc: 'Base breast',
+      },
+      {
+        file: 'human_breast_a_cup.entity.json',
+        minWeight: 0.2,
+        maxWeight: 0.3,
+        desc: 'A cup',
+      },
+      {
+        file: 'human_breast_c_cup_firm.entity.json',
+        minWeight: 0.4,
+        maxWeight: 0.6,
+        desc: 'C cup firm',
+      },
+      {
+        file: 'human_breast_c_cup_soft.entity.json',
+        minWeight: 0.4,
+        maxWeight: 0.6,
+        desc: 'C cup soft',
+      },
+      {
+        file: 'human_breast_d_cup.entity.json',
+        minWeight: 0.6,
+        maxWeight: 0.9,
+        desc: 'D cup',
+      },
+      {
+        file: 'human_breast_g_cup.entity.json',
+        minWeight: 1.2,
+        maxWeight: 1.8,
+        desc: 'G cup',
+      },
+      {
+        file: 'human_breast_shelf.entity.json',
+        minWeight: 0.5,
+        maxWeight: 0.8,
+        desc: 'Shelf',
+      },
     ];
 
     it.each(BREAST_PARTS)(
@@ -136,10 +203,30 @@ describe('Human Intimate Part Weight Validation', () => {
 
   describe('Penis (4 files)', () => {
     const PENIS_PARTS = [
-      { file: 'human_penis.entity.json', minWeight: 0.08, maxWeight: 0.12, desc: 'Base penis' },
-      { file: 'human_penis_small.entity.json', minWeight: 0.05, maxWeight: 0.1, desc: 'Small' },
-      { file: 'human_penis_thick_large.entity.json', minWeight: 0.12, maxWeight: 0.18, desc: 'Large' },
-      { file: 'human_penis_thick_huge.entity.json', minWeight: 0.15, maxWeight: 0.25, desc: 'Huge' },
+      {
+        file: 'human_penis.entity.json',
+        minWeight: 0.08,
+        maxWeight: 0.12,
+        desc: 'Base penis',
+      },
+      {
+        file: 'human_penis_small.entity.json',
+        minWeight: 0.05,
+        maxWeight: 0.1,
+        desc: 'Small',
+      },
+      {
+        file: 'human_penis_thick_large.entity.json',
+        minWeight: 0.12,
+        maxWeight: 0.18,
+        desc: 'Large',
+      },
+      {
+        file: 'human_penis_thick_huge.entity.json',
+        minWeight: 0.15,
+        maxWeight: 0.25,
+        desc: 'Huge',
+      },
     ];
 
     it.each(PENIS_PARTS)(
@@ -182,8 +269,18 @@ describe('Human Intimate Part Weight Validation', () => {
 
   describe('Testicles (2 files)', () => {
     const TESTICLE_PARTS = [
-      { file: 'human_testicle.entity.json', minWeight: 0.02, maxWeight: 0.03, desc: 'Base testicle' },
-      { file: 'human_testicle_thick.entity.json', minWeight: 0.03, maxWeight: 0.05, desc: 'Thick' },
+      {
+        file: 'human_testicle.entity.json',
+        minWeight: 0.02,
+        maxWeight: 0.03,
+        desc: 'Base testicle',
+      },
+      {
+        file: 'human_testicle_thick.entity.json',
+        minWeight: 0.03,
+        maxWeight: 0.05,
+        desc: 'Thick',
+      },
     ];
 
     it.each(TESTICLE_PARTS)(
@@ -239,16 +336,22 @@ describe('Human Intimate Part Weight Validation', () => {
         'human_vagina',
       ];
 
-      const allFiles = fs.readdirSync(DEFINITIONS_PATH).filter((f) => f.endsWith('.entity.json'));
+      const allFiles = fs
+        .readdirSync(DEFINITIONS_PATH)
+        .filter((f) => f.endsWith('.entity.json'));
       const targetFiles = allFiles.filter((f) =>
         targetPrefixes.some((prefix) => f.startsWith(prefix))
       );
 
       // All target files should have anatomy:part
-      const bodyParts = targetFiles.filter((f) => hasAnatomyPart(loadEntityFile(f)));
+      const bodyParts = targetFiles.filter((f) =>
+        hasAnatomyPart(loadEntityFile(f))
+      );
 
       // All body parts should have weight
-      const bodyPartsWithWeight = bodyParts.filter((f) => getWeight(loadEntityFile(f)) !== undefined);
+      const bodyPartsWithWeight = bodyParts.filter(
+        (f) => getWeight(loadEntityFile(f)) !== undefined
+      );
 
       expect(bodyParts.length).toBe(34);
       expect(bodyPartsWithWeight.length).toBe(34);
@@ -267,7 +370,9 @@ describe('Human Intimate Part Weight Validation', () => {
         'human_vagina',
       ];
 
-      const allFiles = fs.readdirSync(DEFINITIONS_PATH).filter((f) => f.endsWith('.entity.json'));
+      const allFiles = fs
+        .readdirSync(DEFINITIONS_PATH)
+        .filter((f) => f.endsWith('.entity.json'));
       const targetFiles = allFiles.filter((f) =>
         targetPrefixes.some((prefix) => f.startsWith(prefix))
       );

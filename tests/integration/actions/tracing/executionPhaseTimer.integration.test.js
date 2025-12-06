@@ -20,12 +20,16 @@ describe('ExecutionPhaseTimer integration', () => {
     expect(timer.isActive()).toBe(true);
 
     timer.startPhase('initialization', { stage: 'pre' });
-    timer.addMarker('init-checkpoint', null, { checkpoint: 'post-initialization' });
+    timer.addMarker('init-checkpoint', null, {
+      checkpoint: 'post-initialization',
+    });
 
     await wait(1);
 
     timer.startPhase('processing', { stage: 'mid' });
-    timer.addMarker('processing-midpoint', 'processing', { detail: 'midpoint' });
+    timer.addMarker('processing-midpoint', 'processing', {
+      detail: 'midpoint',
+    });
 
     await wait(1);
 
@@ -55,14 +59,21 @@ describe('ExecutionPhaseTimer integration', () => {
 
     const processingPhase = timer.getPhaseData('processing');
     expect(processingPhase.metadata).toEqual({ stage: 'mid' });
-    expect(processingPhase.markers.some((marker) => marker.label === 'processing-midpoint'))
-      .toBe(true);
+    expect(
+      processingPhase.markers.some(
+        (marker) => marker.label === 'processing-midpoint'
+      )
+    ).toBe(true);
 
     const exported = timer.exportTimingData();
     expect(exported.summary.markerCount).toBe(summary.markerCount);
     expect(exported.phases.processing.metadata).toEqual({ stage: 'mid' });
-    expect(exported.markers['processing-midpoint'].metadata).toEqual({ detail: 'midpoint' });
-    expect(exported.markers['final-check'].metadata).toEqual({ status: 'ready' });
+    expect(exported.markers['processing-midpoint'].metadata).toEqual({
+      detail: 'midpoint',
+    });
+    expect(exported.markers['final-check'].metadata).toEqual({
+      status: 'ready',
+    });
     expect(exported.precision.api).toBeDefined();
 
     const report = timer.createReport();
@@ -73,24 +84,34 @@ describe('ExecutionPhaseTimer integration', () => {
 
   it('should enforce lifecycle guard rails for execution and phases', () => {
     expect(timer.isActive()).toBe(false);
-    expect(() => timer.endExecution()).toThrow('Execution timing was not started');
+    expect(() => timer.endExecution()).toThrow(
+      'Execution timing was not started'
+    );
     expect(() => timer.startPhase('orphan')).toThrow(
       'Must start execution before starting phases'
     );
     expect(() => timer.addMarker('no-phase')).toThrow(
       'No active phase and no phase specified for marker'
     );
-    expect(() => timer.endPhase('missing')).toThrow("Phase 'missing' was not started");
+    expect(() => timer.endPhase('missing')).toThrow(
+      "Phase 'missing' was not started"
+    );
 
     timer.startExecution('guard_flow');
-    expect(() => timer.startExecution()).toThrow('Execution timing already started');
+    expect(() => timer.startExecution()).toThrow(
+      'Execution timing already started'
+    );
 
     timer.startPhase('guard');
     timer.endPhase('guard');
-    expect(() => timer.endPhase('guard')).toThrow("Phase 'guard' already ended");
+    expect(() => timer.endPhase('guard')).toThrow(
+      "Phase 'guard' already ended"
+    );
 
     timer.endExecution();
-    expect(() => timer.endExecution()).toThrow('Execution timing already ended');
+    expect(() => timer.endExecution()).toThrow(
+      'Execution timing already ended'
+    );
     expect(timer.getPhaseData('unknown')).toBeNull();
   });
 

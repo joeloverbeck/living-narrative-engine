@@ -64,7 +64,8 @@ function createServerEnvironment(loggerOverrides = {}) {
 
 describe('Integration: OpenRouterToolCallingStrategy', () => {
   it('executes a tool-calling request with request-specific overrides', async () => {
-    const rawArguments = '  {"action":"investigate","speech":"Approaching the shrine."}  ';
+    const rawArguments =
+      '  {"action":"investigate","speech":"Approaching the shrine."}  ';
     const httpClient = new RecordingHttpClient(() => ({
       choices: [
         {
@@ -113,7 +114,9 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
       },
     });
 
-    expect(result).toBe('{"action":"investigate","speech":"Approaching the shrine."}');
+    expect(result).toBe(
+      '{"action":"investigate","speech":"Approaching the shrine."}'
+    );
     expect(httpClient.calls).toHaveLength(1);
 
     const [call] = httpClient.calls;
@@ -150,14 +153,11 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
       },
     };
 
-    const schema = strategy.buildToolSchema(
-      [{}],
-      {
-        toolSchema: customSchema,
-        toolName: 'custom_tool',
-        toolDescription: 'Custom tool description.',
-      }
-    );
+    const schema = strategy.buildToolSchema([{}], {
+      toolSchema: customSchema,
+      toolName: 'custom_tool',
+      toolDescription: 'Custom tool description.',
+    });
 
     expect(schema).toEqual({
       type: 'function',
@@ -175,11 +175,12 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
       logger: createEnhancedMockLogger(),
     });
 
-    const schema = strategy.buildToolSchema([
-      { function: { name: 'ignored' } },
-    ], {
-      toolSchema: 'not-an-object',
-    });
+    const schema = strategy.buildToolSchema(
+      [{ function: { name: 'ignored' } }],
+      {
+        toolSchema: 'not-an-object',
+      }
+    );
 
     expect(schema).toEqual({
       type: 'function',
@@ -309,11 +310,7 @@ describe('Integration: OpenRouterToolCallingStrategy', () => {
     });
 
     await expect(
-      strategy._extractJsonOutput(
-        {},
-        { configId: 'missing-tool-name' },
-        {}
-      )
+      strategy._extractJsonOutput({}, { configId: 'missing-tool-name' }, {})
     ).rejects.toThrow(LLMStrategyError);
   });
 

@@ -160,7 +160,11 @@ describe('SpeechPatternsGeneratorController - Runtime Errors', () => {
       const mockSpeechPatternsGenerator = {
         generateSpeechPatterns: jest.fn().mockResolvedValue({
           speechPatterns: [
-            { type: 'Test pattern', contexts: ['always'], examples: ['"Example dialogue"'] },
+            {
+              type: 'Test pattern',
+              contexts: ['always'],
+              examples: ['"Example dialogue"'],
+            },
           ],
           characterName: 'Test Character',
           generatedAt: new Date().toISOString(),

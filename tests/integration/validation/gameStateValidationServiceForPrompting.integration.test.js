@@ -83,7 +83,7 @@ describe('GameStateValidationServiceForPrompting (integration)', () => {
 
     await schemaValidator.addSchema(
       systemErrorPayloadSchema,
-      systemErrorPayloadSchema.$id,
+      systemErrorPayloadSchema.$id
     );
 
     registry.store('events', SYSTEM_ERROR_OCCURRED_ID, {
@@ -147,12 +147,16 @@ describe('GameStateValidationServiceForPrompting (integration)', () => {
 
     await flushAsync();
 
-    expect(logger.warnMessages.some(({ message }) =>
-      message.includes("AIGameStateDTO is missing 'actorState'"),
-    )).toBe(true);
-    expect(logger.warnMessages.some(({ message }) =>
-      message.includes("AIGameStateDTO is missing 'actorPromptData'"),
-    )).toBe(true);
+    expect(
+      logger.warnMessages.some(({ message }) =>
+        message.includes("AIGameStateDTO is missing 'actorState'")
+      )
+    ).toBe(true);
+    expect(
+      logger.warnMessages.some(({ message }) =>
+        message.includes("AIGameStateDTO is missing 'actorPromptData'")
+      )
+    ).toBe(true);
     expect(dispatchedEvents).toHaveLength(0);
   });
 
@@ -173,23 +177,25 @@ describe('GameStateValidationServiceForPrompting (integration)', () => {
   });
 
   it('guards against missing logger dependencies during integration wiring', () => {
-    expect(() =>
-      new GameStateValidationServiceForPrompting({
-        safeEventDispatcher,
-      }),
+    expect(
+      () =>
+        new GameStateValidationServiceForPrompting({
+          safeEventDispatcher,
+        })
     ).toThrow(
-      'GameStateValidationServiceForPrompting: Logger dependency is required.',
+      'GameStateValidationServiceForPrompting: Logger dependency is required.'
     );
   });
 
   it('guards against event dispatchers that do not expose a dispatch function', () => {
-    expect(() =>
-      new GameStateValidationServiceForPrompting({
-        logger,
-        safeEventDispatcher: {},
-      }),
+    expect(
+      () =>
+        new GameStateValidationServiceForPrompting({
+          logger,
+          safeEventDispatcher: {},
+        })
     ).toThrow(
-      'GameStateValidationServiceForPrompting: safeEventDispatcher with dispatch method is required.',
+      'GameStateValidationServiceForPrompting: safeEventDispatcher with dispatch method is required.'
     );
   });
 });

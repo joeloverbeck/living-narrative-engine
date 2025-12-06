@@ -6,8 +6,8 @@ Create the base directory structure and mod manifest for the new `ranged` mod th
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
+| File                                 | Purpose                        |
+| ------------------------------------ | ------------------------------ |
 | `data/mods/ranged/mod-manifest.json` | Mod manifest with dependencies |
 
 ## Directories to Create

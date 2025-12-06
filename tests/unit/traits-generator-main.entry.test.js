@@ -1,9 +1,19 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 const TRAITS_GENERATOR_PATH = '../../src/traits-generator-main.js';
-const BOOTSTRAP_PATH = '../../src/characterBuilder/CharacterBuilderBootstrap.js';
-const CONTROLLER_PATH = '../../src/characterBuilder/controllers/TraitsGeneratorController.js';
-const ENHANCER_PATH = '../../src/characterBuilder/services/TraitsDisplayEnhancer.js';
+const BOOTSTRAP_PATH =
+  '../../src/characterBuilder/CharacterBuilderBootstrap.js';
+const CONTROLLER_PATH =
+  '../../src/characterBuilder/controllers/TraitsGeneratorController.js';
+const ENHANCER_PATH =
+  '../../src/characterBuilder/services/TraitsDisplayEnhancer.js';
 
 const flushPromises = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -43,7 +53,9 @@ describe('traits-generator-main entrypoint', () => {
         bootstrap: bootstrapMock,
       })),
     }));
-    jest.doMock(CONTROLLER_PATH, () => ({ TraitsGeneratorController: jest.fn() }));
+    jest.doMock(CONTROLLER_PATH, () => ({
+      TraitsGeneratorController: jest.fn(),
+    }));
     jest.doMock(ENHANCER_PATH, () => ({ TraitsDisplayEnhancer: jest.fn() }));
     return bootstrapMock;
   };
@@ -73,13 +85,16 @@ describe('traits-generator-main entrypoint', () => {
     expect(bootstrapMock).not.toHaveBeenCalled();
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'DOMContentLoaded',
-      expect.any(Function),
+      expect.any(Function)
     );
 
     const handler = addEventListenerSpy.mock.calls[0][1];
     const result = await handler();
 
-    expect(result).toEqual({ controller: expectedController, container: { id: 'container' } });
+    expect(result).toEqual({
+      controller: expectedController,
+      container: { id: 'container' },
+    });
     expect(bootstrapMock).toHaveBeenCalledTimes(1);
     expect(window.__traitsGeneratorController).toBe(expectedController);
   });
@@ -89,7 +104,10 @@ describe('traits-generator-main entrypoint', () => {
 
     const bootstrapMock = mockBootstrapModule(async (config) => {
       config.hooks?.postInit?.({ id: 'controller-2' });
-      return { controller: { id: 'controller-2' }, container: { id: 'container-2' } };
+      return {
+        controller: { id: 'controller-2' },
+        container: { id: 'container-2' },
+      };
     });
 
     await jest.isolateModulesAsync(async () => {
@@ -111,7 +129,9 @@ describe('traits-generator-main entrypoint', () => {
       throw failure;
     });
 
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     await jest.isolateModulesAsync(async () => {
       await import(TRAITS_GENERATOR_PATH);
@@ -123,7 +143,7 @@ describe('traits-generator-main entrypoint', () => {
     expect(bootstrapMock).toHaveBeenCalledTimes(1);
     expect(consoleSpy).toHaveBeenCalledWith(
       'Failed to initialize Traits Generator:',
-      failure,
+      failure
     );
   });
 });

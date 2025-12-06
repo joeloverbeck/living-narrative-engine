@@ -54,11 +54,9 @@ describe('Metrics middleware hierarchical OpenRouter provider integration', () =
   });
 
   it('normalizes hierarchical OpenRouter identifiers and records token usage', async () => {
-    const response = await request(app)
-      .post('/llm/observability')
-      .send({
-        llmId: 'OpenRouter/Anthropic/Claude-3.5-Sonnet',
-      });
+    const response = await request(app).post('/llm/observability').send({
+      llmId: 'OpenRouter/Anthropic/Claude-3.5-Sonnet',
+    });
 
     expect(response.status).toBe(503);
     expect(metricsService.llmRequests).toHaveLength(1);

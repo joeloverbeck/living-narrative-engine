@@ -37,6 +37,7 @@ Structure Template      Pattern Matching      Component Data
 ```
 
 **Key Architecture Strengths**:
+
 - **Component-based variation**: Parts differentiated by components, not type names
 - **Flexible socket system**: `allowedTypes` arrays support multiple part type variants
 - **Pattern-based recipes**: Enable bulk slot configuration with type overrides
@@ -53,24 +54,25 @@ Structure Template      Pattern Matching      Component Data
   "id": "anatomy:kraken_mantle",
   "components": {
     "anatomy:part": {
-      "subType": "kraken_mantle"  // ← Creature-specific
+      "subType": "kraken_mantle" // ← Creature-specific
     },
     "anatomy:sockets": {
       "sockets": [
-        {"id": "ink_sac", "allowedTypes": ["ink_reservoir", "ink_sac"]},
-        {"id": "beak", "allowedTypes": ["beak", "cephalopod_beak"]}
+        { "id": "ink_sac", "allowedTypes": ["ink_reservoir", "ink_sac"] },
+        { "id": "beak", "allowedTypes": ["beak", "cephalopod_beak"] }
       ]
     },
-    "core:name": {"text": "kraken mantle"},
-    "descriptors:size_category": {"size": "massive"},
-    "descriptors:color_extended": {"color": "abyssal-black"},
-    "descriptors:texture": {"texture": "smooth"},
-    "descriptors:shape_general": {"shape": "oval"}
+    "core:name": { "text": "kraken mantle" },
+    "descriptors:size_category": { "size": "massive" },
+    "descriptors:color_extended": { "color": "abyssal-black" },
+    "descriptors:texture": { "texture": "smooth" },
+    "descriptors:shape_general": { "shape": "oval" }
   }
 }
 ```
 
 **Analysis**:
+
 - ❌ `subType: "kraken_mantle"` is unnecessarily specific
 - ✅ Descriptors (color, size, texture) are already component-based and variable
 - ✅ Socket structure is cephalopod-generic (accepts `cephalopod_beak`, not just kraken beak)
@@ -85,19 +87,20 @@ Structure Template      Pattern Matching      Component Data
   "id": "anatomy:kraken_tentacle",
   "components": {
     "anatomy:part": {
-      "subType": "kraken_tentacle"  // ← Creature-specific
+      "subType": "kraken_tentacle" // ← Creature-specific
     },
-    "core:name": {"text": "kraken tentacle"},
-    "descriptors:size_category": {"size": "enormous"},
-    "descriptors:length_category": {"length": "extremely-long"},
-    "descriptors:texture": {"texture": "suckered"},
-    "descriptors:color_extended": {"color": "dark-purple"},
-    "descriptors:shape_general": {"shape": "cylindrical"}
+    "core:name": { "text": "kraken tentacle" },
+    "descriptors:size_category": { "size": "enormous" },
+    "descriptors:length_category": { "length": "extremely-long" },
+    "descriptors:texture": { "texture": "suckered" },
+    "descriptors:color_extended": { "color": "dark-purple" },
+    "descriptors:shape_general": { "shape": "cylindrical" }
   }
 }
 ```
 
 **Analysis**:
+
 - ❌ `subType: "kraken_tentacle"` is unnecessarily specific
 - ✅ No sockets or special components - purely descriptive part
 - ✅ All kraken-specific qualities (size, length, color) are already component properties
@@ -112,7 +115,7 @@ Structure Template      Pattern Matching      Component Data
   "id": "anatomy:kraken_head",
   "components": {
     "anatomy:part": {
-      "subType": "kraken_head"  // ← Creature-specific
+      "subType": "kraken_head" // ← Creature-specific
     },
     "anatomy:sensory": {
       "vision": true,
@@ -121,15 +124,16 @@ Structure Template      Pattern Matching      Component Data
       "acuity": "abyssal",
       "echolocation": true
     },
-    "core:name": {"text": "kraken head"},
-    "descriptors:size_category": {"size": "gigantic"},
-    "descriptors:shape_general": {"shape": "bulbous"},
-    "descriptors:color_extended": {"color": "murky-green"}
+    "core:name": { "text": "kraken head" },
+    "descriptors:size_category": { "size": "gigantic" },
+    "descriptors:shape_general": { "shape": "bulbous" },
+    "descriptors:color_extended": { "color": "murky-green" }
   }
 }
 ```
 
 **Analysis**:
+
 - ❌ `subType: "kraken_head"` is creature-specific
 - ✅ Sensory component already handles variation (echolocation is property, not type)
 - ⚠️ **Missing sockets**: Unlike `humanoid_head`, kraken_head has no eye/ear/mouth sockets
@@ -145,24 +149,29 @@ Structure Template      Pattern Matching      Component Data
 ```json
 {
   "topology": {
-    "rootType": "mantle",  // ← Generic type
-    "limbSets": [{
-      "type": "tentacle",  // ← Generic type
-      "socketPattern": {
-        "allowedTypes": ["tentacle", "cephalopod_tentacle", "kraken_tentacle"]
+    "rootType": "mantle", // ← Generic type
+    "limbSets": [
+      {
+        "type": "tentacle", // ← Generic type
+        "socketPattern": {
+          "allowedTypes": ["tentacle", "cephalopod_tentacle", "kraken_tentacle"]
+        }
       }
-    }],
-    "appendages": [{
-      "type": "head",  // ← Generic type
-      "socketPattern": {
-        "allowedTypes": ["head", "cephalopod_head", "kraken_head"]
+    ],
+    "appendages": [
+      {
+        "type": "head", // ← Generic type
+        "socketPattern": {
+          "allowedTypes": ["head", "cephalopod_head", "kraken_head"]
+        }
       }
-    }]
+    ]
   }
 }
 ```
 
 **Critical Finding**: **Structure template already uses generic types** (`mantle`, `tentacle`, `head`) but allows kraken-specific variants via `allowedTypes`. This demonstrates:
+
 1. ✅ System **already designed** for generic base types with specific variants
 2. ✅ Socket validation **already flexible** enough to accept both generic and specific types
 3. ⚠️ Current implementation is **redundant** - maintaining both generic and specific types unnecessarily
@@ -176,11 +185,11 @@ Structure Template      Pattern Matching      Component Data
   "patterns": [
     {
       "matchesGroup": "limbSet:tentacle",
-      "partType": "kraken_tentacle"  // ← Pattern specifies kraken type
+      "partType": "kraken_tentacle" // ← Pattern specifies kraken type
     },
     {
       "matchesGroup": "appendage:head",
-      "partType": "kraken_head",  // ← Pattern specifies kraken type
+      "partType": "kraken_head", // ← Pattern specifies kraken type
       "properties": {
         "anatomy:sensory": {
           "acuity": "abyssal",
@@ -193,6 +202,7 @@ Structure Template      Pattern Matching      Component Data
 ```
 
 **Analysis**:
+
 - ✅ Recipe patterns **correctly use properties** for kraken-specific traits (echolocation)
 - ❌ `partType` still references creature-specific types instead of generic
 - **Migration path**: Change `partType` values, properties remain unchanged
@@ -206,6 +216,7 @@ Structure Template      Pattern Matching      Component Data
 #### Viability: ✅ **HIGH** (95% confidence)
 
 **Benefits**:
+
 - Enables reuse across all cephalopods (squid, octopus, cuttlefish, nautilus)
 - Simplifies mod creation - generic mantle definition, creature variations via components
 - Aligns with structure template which already uses `rootType: "mantle"`
@@ -214,6 +225,7 @@ Structure Template      Pattern Matching      Component Data
 **Implementation Strategy**:
 
 1. **Create generic mantle definition**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -221,47 +233,51 @@ Structure Template      Pattern Matching      Component Data
   "description": "Generic cephalopod mantle body",
   "components": {
     "anatomy:part": {
-      "subType": "mantle"  // ← Generic type
+      "subType": "mantle" // ← Generic type
     },
     "anatomy:sockets": {
       "sockets": [
-        {"id": "ink_sac", "allowedTypes": ["ink_reservoir", "ink_sac"]},
-        {"id": "beak", "allowedTypes": ["beak", "cephalopod_beak"]}
+        { "id": "ink_sac", "allowedTypes": ["ink_reservoir", "ink_sac"] },
+        { "id": "beak", "allowedTypes": ["beak", "cephalopod_beak"] }
       ]
     },
-    "core:name": {"text": "mantle"}
+    "core:name": { "text": "mantle" }
     // Descriptors would be specified in recipes for creature-specific instances
   }
 }
 ```
 
 2. **Create size/color variants** (optional, or use recipe properties):
+
 ```json
 {
-  "id": "anatomy:mantle_titanic",  // Size variant
+  "id": "anatomy:mantle_titanic", // Size variant
   "components": {
-    "anatomy:part": {"subType": "mantle"},
-    "descriptors:size_category": {"size": "massive"},
-    "descriptors:color_extended": {"color": "abyssal-black"}
+    "anatomy:part": { "subType": "mantle" },
+    "descriptors:size_category": { "size": "massive" },
+    "descriptors:color_extended": { "color": "abyssal-black" }
   }
 }
 ```
 
 3. **Update kraken blueprint**:
+
 ```json
 {
-  "root": "anatomy:mantle"  // ← Changed from kraken_mantle
+  "root": "anatomy:mantle" // ← Changed from kraken_mantle
 }
 ```
 
 4. **Update kraken recipe** (no change needed if using properties):
+
 ```json
 {
   "slots": {
-    "root": {  // Mantle-specific properties via recipe
+    "root": {
+      // Mantle-specific properties via recipe
       "properties": {
-        "descriptors:size_category": {"size": "massive"},
-        "descriptors:color_extended": {"color": "abyssal-black"}
+        "descriptors:size_category": { "size": "massive" },
+        "descriptors:color_extended": { "color": "abyssal-black" }
       }
     }
   }
@@ -269,11 +285,13 @@ Structure Template      Pattern Matching      Component Data
 ```
 
 **Risks**:
+
 - **LOW**: Mantle structure is unique to cephalopods, low collision risk with other creatures
 - **Migration**: Blueprint and recipe must be updated together (atomic change)
 - **Validation**: Socket compatibility already validates via `allowedTypes`
 
 **Backward Compatibility**:
+
 - ⚠️ Breaking change for existing kraken blueprints/recipes referencing `kraken_mantle`
 - ✅ Can maintain `kraken_mantle` as deprecated alias temporarily via `allowedTypes`
 
@@ -284,6 +302,7 @@ Structure Template      Pattern Matching      Component Data
 #### Viability: ✅ **VERY HIGH** (98% confidence)
 
 **Benefits**:
+
 - **Highest reuse potential**: Tentacles used by krakens, octopuses, squids, cuttlefish, nautiluses
 - Pure descriptor-based part - no structural differences between creature tentacles
 - Eliminates need for creature-specific tentacle definitions
@@ -292,6 +311,7 @@ Structure Template      Pattern Matching      Component Data
 **Implementation Strategy**:
 
 1. **Create generic tentacle definition**:
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
@@ -299,64 +319,74 @@ Structure Template      Pattern Matching      Component Data
   "description": "Generic cephalopod tentacle or arm",
   "components": {
     "anatomy:part": {
-      "subType": "tentacle"  // ← Generic type
+      "subType": "tentacle" // ← Generic type
     },
-    "core:name": {"text": "tentacle"}
+    "core:name": { "text": "tentacle" }
     // Size, length, color, texture all specified via recipes
   }
 }
 ```
 
 2. **Create common variants** (optional):
+
 ```json
 {
   "id": "anatomy:tentacle_suckered",
   "components": {
-    "anatomy:part": {"subType": "tentacle"},
-    "descriptors:texture": {"texture": "suckered"}
+    "anatomy:part": { "subType": "tentacle" },
+    "descriptors:texture": { "texture": "suckered" }
   }
 }
 ```
 
 3. **Update structure template** (already uses generic `tentacle` type):
+
 ```json
 {
-  "limbSets": [{
-    "type": "tentacle",
-    "socketPattern": {
-      "allowedTypes": ["tentacle"]  // ← Simplified, just generic
+  "limbSets": [
+    {
+      "type": "tentacle",
+      "socketPattern": {
+        "allowedTypes": ["tentacle"] // ← Simplified, just generic
+      }
     }
-  }]
+  ]
 }
 ```
 
 4. **Update kraken recipe patterns**:
+
 ```json
 {
-  "patterns": [{
-    "matchesGroup": "limbSet:tentacle",
-    "partType": "tentacle",  // ← Changed from kraken_tentacle
-    "properties": {
-      "descriptors:size_category": {"size": "enormous"},
-      "descriptors:length_category": {"length": "extremely-long"},
-      "descriptors:texture": {"texture": "suckered"},
-      "descriptors:color_extended": {"color": "dark-purple"}
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle", // ← Changed from kraken_tentacle
+      "properties": {
+        "descriptors:size_category": { "size": "enormous" },
+        "descriptors:length_category": { "length": "extremely-long" },
+        "descriptors:texture": { "texture": "suckered" },
+        "descriptors:color_extended": { "color": "dark-purple" }
+      }
     }
-  }]
+  ]
 }
 ```
 
 **Risks**:
+
 - **MINIMAL**: Tentacles are structurally identical across cephalopods
 - **No socket complexity**: Tentacles have no child sockets in current implementation
 - **Naming clarity**: "tentacle" is clear and unambiguous
 
 **Backward Compatibility**:
+
 - ⚠️ Breaking change for recipes using `partType: "kraken_tentacle"`
 - ✅ Structure template already allows generic type via `allowedTypes`
 - ✅ Can maintain `kraken_tentacle` temporarily as variant of `tentacle`
 
 **Migration Validation**:
+
 ```javascript
 // PartSelectionService already handles partType matching
 // From src/anatomy/partSelectionService.js:
@@ -371,6 +401,7 @@ Structure Template      Pattern Matching      Component Data
 #### Viability: ⚠️ **MEDIUM** (70% confidence)
 
 **Benefits**:
+
 - Conceptual consistency - all creatures have "head" part type
 - Simplifies recipe authoring - use properties to differentiate
 - Reduces part type proliferation
@@ -382,6 +413,7 @@ Structure Template      Pattern Matching      Component Data
    - Consolidation would require socket handling for headless creatures
 
 2. **Socket structural differences**:
+
    ```
    humanoid_head: 7 sockets (2 eyes, 2 ears, nose, mouth, scalp)
    kraken_head:   0 sockets (no facial features defined)
@@ -404,15 +436,16 @@ Create universal `head` type that handles all creature variations:
 {
   "id": "anatomy:head",
   "components": {
-    "anatomy:part": {"subType": "head"},
+    "anatomy:part": { "subType": "head" },
     "anatomy:sockets": {
-      "sockets": []  // ← Empty by default, populated by recipes
+      "sockets": [] // ← Empty by default, populated by recipes
     }
   }
 }
 ```
 
 **Problems**:
+
 - Requires dynamic socket population system
 - Breaks existing humanoid_head socket structure
 - High migration complexity for existing recipes
@@ -425,18 +458,19 @@ Keep creature-family specificity but generalize within cephalopods:
 {
   "id": "anatomy:cephalopod_head",
   "components": {
-    "anatomy:part": {"subType": "cephalopod_head"},
+    "anatomy:part": { "subType": "cephalopod_head" },
     "anatomy:sensory": {
       "vision": true,
       "smell": true,
       "touch": true
     },
-    "core:name": {"text": "head"}
+    "core:name": { "text": "head" }
   }
 }
 ```
 
 **Rationale**:
+
 - Aligns with existing pattern (structure template already allows `cephalopod_head`)
 - Provides biological accuracy - cephalopod heads are structurally different from vertebrate heads
 - Reusable across squid, octopus, nautilus, kraken, cuttlefish
@@ -447,6 +481,7 @@ Keep creature-family specificity but generalize within cephalopods:
 Maintain `kraken_head` but document as acceptable creature-specific variant:
 
 **Rationale**:
+
 - Kraken heads may genuinely differ from other cephalopod heads (size, beak integration)
 - Current pattern (dragon_head, kraken_head) is consistent
 - Focus refactoring efforts on higher-value targets (mantle, tentacle)
@@ -454,6 +489,7 @@ Maintain `kraken_head` but document as acceptable creature-specific variant:
 **Recommendation**: **Option B** (cephalopod_head) provides best balance of reusability and biological accuracy.
 
 **Risks**:
+
 - **MEDIUM**: Head consolidation more complex due to socket variations
 - **Migration**: Would require updates to structure template and all cephalopod recipes
 - **Testing**: Need comprehensive validation that sensory components work across creatures
@@ -482,6 +518,7 @@ Pattern Observation:
 ```
 
 **Analysis**:
+
 - **Inconsistent pattern**: No clear rule for when to use generic vs specific
 - **Opportunity**: Standardize approach - generic base types with creature variations via components
 - **Best practice**: Generic for structurally similar parts (tentacle, mantle), specific for unique structures (dragon_wing)
@@ -507,11 +544,11 @@ Deprecated (migrated to generic):
 
 **Reusability Metrics**:
 
-| Part Type | Current Reusability | Post-Refactor | Potential Creatures |
-|-----------|---------------------|---------------|---------------------|
+| Part Type         | Current Reusability | Post-Refactor    | Potential Creatures                          |
+| ----------------- | ------------------- | ---------------- | -------------------------------------------- |
 | `kraken_tentacle` | 1 creature (kraken) | **5+ creatures** | Kraken, octopus, squid, cuttlefish, nautilus |
-| `kraken_mantle` | 1 creature (kraken) | **5+ creatures** | All cephalopods |
-| `kraken_head` | 1 creature (kraken) | **5+ creatures** | All cephalopods (as cephalopod_head) |
+| `kraken_mantle`   | 1 creature (kraken) | **5+ creatures** | All cephalopods                              |
+| `kraken_head`     | 1 creature (kraken) | **5+ creatures** | All cephalopods (as cephalopod_head)         |
 
 ---
 
@@ -535,25 +572,32 @@ Deprecated (migrated to generic):
 ```
 
 **Recipe-Level Variation**:
+
 ```json
 {
-  "patterns": [{
-    "matchesGroup": "limbSet:tentacle",
-    "partType": "tentacle",  // Generic type
-    "properties": {  // Kraken-specific properties
-      "descriptors:size_category": {"size": "enormous"}
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle", // Generic type
+      "properties": {
+        // Kraken-specific properties
+        "descriptors:size_category": { "size": "enormous" }
+      }
     }
-  }]
+  ]
 }
 ```
 
 **Validation System Compatibility**:
 
 From `src/anatomy/validation/rules/partTypeCompatibilityRule.js`:
+
 ```javascript
 // Validates subType against socket allowedTypes
-if (!socket.allowedTypes.includes('*') &&
-    !socket.allowedTypes.includes(anatomyPart.subType)) {
+if (
+  !socket.allowedTypes.includes('*') &&
+  !socket.allowedTypes.includes(anatomyPart.subType)
+) {
   // Error: part type not allowed
 }
 ```
@@ -563,6 +607,7 @@ if (!socket.allowedTypes.includes('*') &&
 ### Part Selection Service Analysis
 
 From `src/anatomy/partSelectionService.js`:
+
 ```javascript
 async selectPart(requirements, allowedTypes, recipeSlot, rng) {
   // 1. Check for preferId first
@@ -579,6 +624,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 ```
 
 **Compatibility**: ✅ **Fully compatible** - service already:
+
 1. Accepts `partType` from multiple sources (blueprint, recipe, socket)
 2. Filters candidates by matching `subType` against allowed types
 3. Supports recipe overrides via `recipeSlot.partType`
@@ -594,10 +640,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
     "components": {
       "type": "object",
       "additionalProperties": {
-        "oneOf": [
-          {"type": "object"},
-          {"type": "array"}
-        ]
+        "oneOf": [{ "type": "object" }, { "type": "array" }]
       }
     }
   }
@@ -605,6 +648,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 ```
 
 **Finding**: ✅ **Maximum flexibility** - component data can be any valid JSON object, enabling:
+
 - Arbitrary property nesting (e.g., `sensory.echolocation`)
 - Array-based components (e.g., multiple sockets)
 - No schema constraints on component content (validated at runtime)
@@ -626,6 +670,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 ```
 
 **Finding**: ✅ **Subtype is freeform string** - no enum validation, allows:
+
 - Any part type name (generic or specific)
 - No schema updates needed for new types
 - Runtime validation via `allowedTypes` in sockets
@@ -637,32 +682,38 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 ### Required Schema Changes: **NONE**
 
 **Entity Definition Schema**: No changes needed
+
 - `subType` is already a freeform string
 - No enum constraints to update
 
 **Blueprint Schema**: No changes needed
+
 - `partType` in requirements is freeform string
 - `allowedTypes` is array of strings (no validation)
 
 **Recipe Schema**: No changes needed
+
 - Pattern `partType` is freeform string
 - Properties support arbitrary component data
 
 **Structure Template Schema**: No changes needed
+
 - Already uses generic types (`mantle`, `tentacle`, `head`)
 - `allowedTypes` arrays support migration path
 
 ### Validation System Impact
 
 **Runtime Validation** (AJV-based):
+
 - ✅ No AJV schema updates needed
 - ✅ Validation rules already handle type matching via `allowedTypes`
 - ✅ Component property validation is content-based, not type-based
 
 **Part Type Compatibility Rule**:
+
 ```javascript
 // From partTypeCompatibilityRule.js - unchanged
-!socket.allowedTypes.includes(anatomyPart.subType)
+!socket.allowedTypes.includes(anatomyPart.subType);
 ```
 
 **Finding**: Validation system is **agnostic to specific part type names** - works with any string value.
@@ -708,6 +759,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
    - Plan removal for next major version
 
 **Validation Checklist**:
+
 - [ ] Generic tentacle entity created
 - [ ] Structure template updated
 - [ ] Kraken recipe migrated
@@ -717,6 +769,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 - [ ] Visual validation of tentacles in UI
 
 **Rollback Plan**:
+
 - Revert `allowedTypes` to include `kraken_tentacle`
 - Keep both generic and specific types temporarily
 - Migration can be paused without breaking changes
@@ -756,6 +809,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
    - Validate structure template compatibility
 
 **Validation Checklist**:
+
 - [ ] Generic mantle entity created
 - [ ] Kraken blueprint updated
 - [ ] Kraken recipe migrated
@@ -765,6 +819,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 - [ ] Anatomy graph visualization correct
 
 **Risk Mitigation**:
+
 - Test socket compatibility extensively
 - Verify beak and ink_sac still attach correctly
 - Check anatomy cache invalidation
@@ -776,6 +831,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 **Priority**: **LOW** - Complex consolidation, moderate benefit
 
 **Decision Point**: Choose between:
+
 - **Option B**: Create `cephalopod_head` (recommended)
 - **Option C**: Maintain `kraken_head` as acceptable specific type
 
@@ -819,6 +875,7 @@ async selectPart(requirements, allowedTypes, recipeSlot, rng) {
 #### Unit Tests (Required)
 
 **Part Selection Service** (`tests/unit/anatomy/partSelectionService.test.js`):
+
 ```javascript
 describe('PartSelectionService - Generic Part Types', () => {
   it('should select generic tentacle for kraken recipe pattern', async () => {
@@ -834,6 +891,7 @@ describe('PartSelectionService - Generic Part Types', () => {
 ```
 
 **Entity Graph Builder** (`tests/unit/anatomy/entityGraphBuilder.test.js`):
+
 ```javascript
 describe('EntityGraphBuilder - Generic Mantle Root', () => {
   it('should build kraken graph with generic mantle root', async () => {
@@ -846,6 +904,7 @@ describe('EntityGraphBuilder - Generic Mantle Root', () => {
 #### Integration Tests (Required)
 
 **Kraken Anatomy Generation** (`tests/integration/anatomy/krakenAnatomyGeneration.test.js`):
+
 ```javascript
 describe('Kraken Anatomy - Generic Parts', () => {
   it('should generate complete kraken with generic tentacle/mantle', async () => {
@@ -862,6 +921,7 @@ describe('Kraken Anatomy - Generic Parts', () => {
 ```
 
 **Multi-Species Cephalopod Test** (`tests/integration/anatomy/cephalopodVariation.test.js`):
+
 ```javascript
 describe('Cephalopod Reusability', () => {
   it('should create squid with different tentacle properties', async () => {
@@ -879,6 +939,7 @@ describe('Cephalopod Reusability', () => {
 #### End-to-End Tests (Optional)
 
 **Visual Anatomy Renderer** (`tests/e2e/anatomy/visualKrakenGeneration.test.js`):
+
 ```javascript
 describe('Kraken Visualization - Generic Parts', () => {
   it('should render kraken with correct tentacle appearance', async () => {
@@ -891,12 +952,14 @@ describe('Kraken Visualization - Generic Parts', () => {
 #### Regression Tests (Critical)
 
 **Existing Kraken Tests** (must continue passing):
+
 - All current kraken anatomy tests
 - Part selection tests
 - Socket connection tests
 - Constraint validation tests
 
 **Test Coverage Targets**:
+
 - Unit: 90%+ coverage of modified services
 - Integration: 100% coverage of kraken generation workflow
 - E2E: At least one full kraken generation test
@@ -910,6 +973,7 @@ describe('Kraken Visualization - Generic Parts', () => {
 **Source Code**: **ZERO changes** (validation: no TypeScript/JavaScript modifications)
 
 **Data Files**:
+
 - **Modify**: 3 files (mantle, tentacle, head entity definitions)
 - **Modify**: 1 file (kraken.recipe.json)
 - **Modify**: 1 file (kraken.blueprint.json)
@@ -920,25 +984,27 @@ describe('Kraken Visualization - Generic Parts', () => {
 
 ### System Compatibility
 
-| Component | Impact | Changes Needed |
-|-----------|--------|----------------|
-| Part Selection Service | None | No code changes |
-| Entity Graph Builder | None | No code changes |
-| Validation System | None | No code changes |
-| Socket Manager | None | No code changes |
-| Recipe Processor | None | No code changes |
-| Anatomy Cache | Minor | Cache invalidation on data change |
-| UI Renderer | None | Descriptor-based, type-agnostic |
+| Component              | Impact | Changes Needed                    |
+| ---------------------- | ------ | --------------------------------- |
+| Part Selection Service | None   | No code changes                   |
+| Entity Graph Builder   | None   | No code changes                   |
+| Validation System      | None   | No code changes                   |
+| Socket Manager         | None   | No code changes                   |
+| Recipe Processor       | None   | No code changes                   |
+| Anatomy Cache          | Minor  | Cache invalidation on data change |
+| UI Renderer            | None   | Descriptor-based, type-agnostic   |
 
 **Finding**: ✅ **Entire codebase is type-agnostic** - operates on `subType` as opaque string
 
 ### Performance Impact
 
 **Positive**:
+
 - Fewer entity definitions to load (3 fewer files per cephalopod species)
 - Simpler part type matching (fewer specific types in allowedTypes arrays)
 
 **Neutral**:
+
 - Part selection performance unchanged (same filtering logic)
 - Recipe processing unchanged (property application same cost)
 
@@ -947,17 +1013,20 @@ describe('Kraken Visualization - Generic Parts', () => {
 ### Developer Experience Impact
 
 **Positive**:
+
 - **Easier mod creation**: Use generic parts, customize with properties
 - **Less duplication**: No need to create creature-specific variants
 - **Clearer patterns**: Obvious separation of structure (type) vs. appearance (components)
 - **Better documentation**: Generic types easier to explain and understand
 
 **Negative**:
+
 - **Learning curve**: Need to understand component-based variation
 - **Recipe complexity**: More properties to specify in recipes
 - **Less obvious**: Generic tentacle less self-documenting than kraken_tentacle
 
 **Mitigation**:
+
 - Create recipe templates for common creature types
 - Document component-based variation pattern
 - Provide examples for each generic part type
@@ -974,6 +1043,7 @@ describe('Kraken Visualization - Generic Parts', () => {
 **Scenario**: Third-party mods reference `kraken_tentacle` in custom recipes/blueprints
 
 **Mitigation**:
+
 1. **Deprecation period**: Maintain `kraken_tentacle` as alias for 6 months
 2. **Dual support**: Include both types in `allowedTypes` during transition
 3. **Migration guide**: Document upgrade path for mod authors
@@ -981,6 +1051,7 @@ describe('Kraken Visualization - Generic Parts', () => {
 5. **Validation warnings**: Add runtime warnings for deprecated types
 
 **Implementation**:
+
 ```json
 // Structure template during transition
 "allowedTypes": ["tentacle", "kraken_tentacle"]  // Both supported
@@ -1004,12 +1075,14 @@ describe('Kraken Visualization - Generic Parts', () => {
 **Scenario**: Generic mantle sockets don't connect properly with beak/ink_sac
 
 **Mitigation**:
+
 1. **Comprehensive testing**: Validate all socket connections in integration tests
 2. **Socket validation**: Run PartTypeCompatibilityRule after migration
 3. **Rollback readiness**: Keep old entity definitions for quick revert
 4. **Gradual migration**: Migrate tentacle first (no sockets), then mantle
 
 **Validation**:
+
 ```javascript
 // Test socket connections
 it('should attach beak to generic mantle', async () => {
@@ -1028,26 +1101,34 @@ it('should attach beak to generic mantle', async () => {
 **Scenario**: Recipe properties not correctly applied to generic parts
 
 **Mitigation**:
+
 1. **Property validation**: Verify component properties set correctly
 2. **Visual testing**: Check rendered anatomy matches recipe descriptors
 3. **Comparison tests**: Generate kraken with old vs new system, compare outputs
 
 **Test Strategy**:
+
 ```javascript
 it('should apply recipe descriptors to generic tentacle', async () => {
   const recipe = {
-    patterns: [{
-      partType: "tentacle",
-      properties: {
-        "descriptors:size_category": {"size": "enormous"},
-        "descriptors:color_extended": {"color": "dark-purple"}
-      }
-    }]
+    patterns: [
+      {
+        partType: 'tentacle',
+        properties: {
+          'descriptors:size_category': { size: 'enormous' },
+          'descriptors:color_extended': { color: 'dark-purple' },
+        },
+      },
+    ],
   };
 
   const tentacle = await generatePart(recipe);
-  expect(tentacle.components['descriptors:size_category'].size).toBe('enormous');
-  expect(tentacle.components['descriptors:color_extended'].color).toBe('dark-purple');
+  expect(tentacle.components['descriptors:size_category'].size).toBe(
+    'enormous'
+  );
+  expect(tentacle.components['descriptors:color_extended'].color).toBe(
+    'dark-purple'
+  );
 });
 ```
 
@@ -1059,16 +1140,19 @@ it('should apply recipe descriptors to generic tentacle', async () => {
 **Scenario**: Insufficient tests for generic part variations
 
 **Current State**:
+
 - Limited kraken-specific tests found (`tests/unit/anatomy/partSelectionService.branches.test.js`)
 - No dedicated kraken anatomy integration tests discovered
 
 **Mitigation**:
+
 1. **Create comprehensive test suite** before migration
 2. **Test matrix**: Cover all combinations (kraken, squid, octopus) × (tentacle, mantle, head)
 3. **Visual regression tests**: Screenshot-based validation
 4. **Manual testing**: QA pass for each phase
 
 **Test Creation Priority**:
+
 - **Pre-migration**: Create baseline kraken tests (current system)
 - **During migration**: Update tests for generic types
 - **Post-migration**: Add multi-species variation tests
@@ -1083,6 +1167,7 @@ it('should apply recipe descriptors to generic tentacle', async () => {
 **Migration Version**: 2.0.0 (breaking change)
 
 **Change Classification**:
+
 - **Breaking**: `partType` values changed in data files
 - **Non-breaking**: Code changes (none required)
 - **Additive**: New generic entity definitions
@@ -1092,24 +1177,30 @@ it('should apply recipe descriptors to generic tentacle', async () => {
 **6-Month Transition Period**:
 
 **Month 1-2**: Introduce generic types alongside specific types
+
 ```json
 // Both types supported
 "allowedTypes": ["tentacle", "kraken_tentacle", "cephalopod_tentacle"]
 ```
 
 **Month 3-4**: Deprecation warnings
+
 ```javascript
 // Runtime warning when kraken_tentacle used
-logger.warn(`partType 'kraken_tentacle' is deprecated. Use 'tentacle' instead.`);
+logger.warn(
+  `partType 'kraken_tentacle' is deprecated. Use 'tentacle' instead.`
+);
 ```
 
 **Month 5-6**: Final migration notices
+
 ```
 Console: "kraken_tentacle will be removed in version 3.0.0"
 Docs: Migration guide prominently featured
 ```
 
 **Version 3.0.0**: Remove deprecated types
+
 ```json
 // Only generic type supported
 "allowedTypes": ["tentacle"]
@@ -1118,18 +1209,20 @@ Docs: Migration guide prominently featured
 ### Compatibility Layers
 
 **Alias System** (temporary):
+
 ```json
 {
   "id": "anatomy:kraken_tentacle",
   "aliasFor": "anatomy:tentacle",
   "deprecated": true,
   "components": {
-    "anatomy:part": {"subType": "tentacle"}
+    "anatomy:part": { "subType": "tentacle" }
   }
 }
 ```
 
 **Runtime Translation**:
+
 ```javascript
 // In part selection service
 const normalizedType = DEPRECATED_TYPE_MAP[partType] || partType;
@@ -1182,6 +1275,7 @@ Week 5-6: Head evaluation (Complex decision)
 ### Success Criteria
 
 **Phase 1 (Tentacle) Success Metrics**:
+
 - [ ] Generic tentacle entity created and validated
 - [ ] Kraken recipe produces identical visual output
 - [ ] At least one other cephalopod (squid/octopus) uses generic tentacle
@@ -1190,6 +1284,7 @@ Week 5-6: Head evaluation (Complex decision)
 - [ ] Documentation updated
 
 **Phase 2 (Mantle) Success Metrics**:
+
 - [ ] Generic mantle entity functional with sockets
 - [ ] Beak and ink_sac attach correctly
 - [ ] Kraken blueprint uses generic mantle root
@@ -1198,6 +1293,7 @@ Week 5-6: Head evaluation (Complex decision)
 - [ ] All validation rules pass
 
 **Phase 3 (Head) Success Metrics**:
+
 - [ ] Decision made: cephalopod_head vs status quo
 - [ ] If cephalopod_head: All cephalopod recipes migrated
 - [ ] If status quo: Pattern documented and justified
@@ -1215,14 +1311,15 @@ Week 5-6: Head evaluation (Complex decision)
 {
   "id": "anatomy:cephalopod_tentacle_kraken",
   "components": {
-    "anatomy:part": {},  // No subType
-    "anatomy:limb": {"type": "tentacle"},  // Type in component
-    "anatomy:creature": {"species": "kraken"}
+    "anatomy:part": {}, // No subType
+    "anatomy:limb": { "type": "tentacle" }, // Type in component
+    "anatomy:creature": { "species": "kraken" }
   }
 }
 ```
 
 **Rejection Reasons**:
+
 - **Breaking change**: Massive codebase refactor required
 - **Complexity**: Component-based type matching more complex than string comparison
 - **Over-engineering**: Current subType system works well
@@ -1243,6 +1340,7 @@ Week 5-6: Head evaluation (Complex decision)
 ```
 
 **Rejection Reasons**:
+
 - **Non-standard**: Namespace separator (`:`) already used for component IDs
 - **Complexity**: Requires parsing logic for type hierarchies
 - **Overkill**: Simple string matching sufficient for current needs
@@ -1254,13 +1352,14 @@ Week 5-6: Head evaluation (Complex decision)
 ```json
 {
   "components": {
-    "anatomy:part": {"subType": "tentacle"},
-    "tags": ["kraken", "massive", "suckered"]  // Variation via tags
+    "anatomy:part": { "subType": "tentacle" },
+    "tags": ["kraken", "massive", "suckered"] // Variation via tags
   }
 }
 ```
 
 **Evaluation**:
+
 - **Pros**: Simpler than property objects, easier filtering
 - **Cons**: Less structured than component properties, no validation
 - **Decision**: Use for simple flags, properties for complex data (sizes, colors)
@@ -1292,17 +1391,19 @@ Week 5-6: Head evaluation (Complex decision)
 ```json
 // In kraken.recipe.json
 {
-  "patterns": [{
-    "matchesGroup": "limbSet:tentacle",
-    "partType": "tentacle",
-    "properties": {
-      "descriptors:size_category": {"size": "enormous"},
-      "descriptors:length_category": {"length": "extremely-long"},
-      "descriptors:texture": {"texture": "suckered"},
-      "descriptors:color_extended": {"color": "dark-purple"},
-      "descriptors:shape_general": {"shape": "cylindrical"}
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle",
+      "properties": {
+        "descriptors:size_category": { "size": "enormous" },
+        "descriptors:length_category": { "length": "extremely-long" },
+        "descriptors:texture": { "texture": "suckered" },
+        "descriptors:color_extended": { "color": "dark-purple" },
+        "descriptors:shape_general": { "shape": "cylindrical" }
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -1311,16 +1412,18 @@ Week 5-6: Head evaluation (Complex decision)
 ```json
 // In squid.recipe.json
 {
-  "patterns": [{
-    "matchesGroup": "limbSet:tentacle",
-    "partType": "tentacle",
-    "properties": {
-      "descriptors:size_category": {"size": "medium"},
-      "descriptors:length_category": {"length": "long"},
-      "descriptors:texture": {"texture": "suckered"},
-      "descriptors:color_extended": {"color": "translucent-white"}
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle",
+      "properties": {
+        "descriptors:size_category": { "size": "medium" },
+        "descriptors:length_category": { "length": "long" },
+        "descriptors:texture": { "texture": "suckered" },
+        "descriptors:color_extended": { "color": "translucent-white" }
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -1395,6 +1498,7 @@ Week 5-6: Head evaluation (Complex decision)
 ### Phase 1: Tentacle Migration
 
 **Week 1**:
+
 - [ ] Create `anatomy:tentacle` entity definition
 - [ ] Update `structure_octopoid.structure-template.json` allowedTypes
 - [ ] Update `kraken.recipe.json` pattern partType
@@ -1403,6 +1507,7 @@ Week 5-6: Head evaluation (Complex decision)
 - [ ] Visual validation of tentacle rendering
 
 **Week 2**:
+
 - [ ] Create squid recipe using generic tentacle
 - [ ] Create octopus recipe using generic tentacle
 - [ ] Multi-species integration tests
@@ -1413,6 +1518,7 @@ Week 5-6: Head evaluation (Complex decision)
 ### Phase 2: Mantle Migration
 
 **Week 3**:
+
 - [ ] Create `anatomy:mantle` entity definition with sockets
 - [ ] Update `kraken.blueprint.json` root reference
 - [ ] Update `kraken.recipe.json` mantle descriptors
@@ -1421,6 +1527,7 @@ Week 5-6: Head evaluation (Complex decision)
 - [ ] Socket compatibility validation
 
 **Week 4**:
+
 - [ ] Create squid/octopus blueprints with generic mantle
 - [ ] Multi-blueprint integration tests
 - [ ] Visual validation of complete cephalopod bodies
@@ -1431,6 +1538,7 @@ Week 5-6: Head evaluation (Complex decision)
 ### Phase 3: Head Evaluation
 
 **Week 5**:
+
 - [ ] Analyze head structure requirements for planned cephalopod species
 - [ ] Decision: Proceed with Option B (cephalopod_head) or Option C (status quo)
 - [ ] If Option B: Create `anatomy:cephalopod_head` entity
@@ -1438,6 +1546,7 @@ Week 5-6: Head evaluation (Complex decision)
 - [ ] If Option C: Document reasoning and pattern justification
 
 **Week 6**:
+
 - [ ] Final integration tests across all phases
 - [ ] Complete visual regression testing
 - [ ] Performance validation (no degradation)
@@ -1462,6 +1571,7 @@ Week 5-6: Head evaluation (Complex decision)
 ### Key Files Analyzed
 
 **Entity Definitions**:
+
 - `/data/mods/anatomy/entities/definitions/kraken_mantle.entity.json`
 - `/data/mods/anatomy/entities/definitions/kraken_tentacle.entity.json`
 - `/data/mods/anatomy/entities/definitions/kraken_head.entity.json`
@@ -1469,13 +1579,16 @@ Week 5-6: Head evaluation (Complex decision)
 - `/data/mods/anatomy/entities/definitions/dragon_head.entity.json`
 
 **Blueprints & Templates**:
+
 - `/data/mods/anatomy/blueprints/kraken.blueprint.json`
 - `/data/mods/anatomy/structure-templates/structure_octopoid.structure-template.json`
 
 **Recipes**:
+
 - `/data/mods/anatomy/recipes/kraken.recipe.json`
 
 **Schemas**:
+
 - `/data/schemas/entity-definition.schema.json`
 - `/data/schemas/anatomy.blueprint.schema.json`
 - `/data/schemas/anatomy.recipe.schema.json`
@@ -1483,12 +1596,14 @@ Week 5-6: Head evaluation (Complex decision)
 - `/data/mods/anatomy/components/part.component.json`
 
 **Source Code**:
+
 - `/src/anatomy/partSelectionService.js`
 - `/src/anatomy/validation/rules/partTypeCompatibilityRule.js`
 
 ### Code Dependencies (No Changes Required)
 
 **Services** (all type-agnostic):
+
 - `PartSelectionService` - Operates on `subType` as opaque string
 - `EntityGraphBuilder` - Uses blueprint/recipe data directly
 - `SocketManager` - Validates via `allowedTypes` arrays
@@ -1496,6 +1611,7 @@ Week 5-6: Head evaluation (Complex decision)
 - `AnatomyCacheManager` - Cache keys include entity IDs, not types
 
 **Validation Rules** (schema-agnostic):
+
 - `PartTypeCompatibilityRule` - String matching against `allowedTypes`
 - All other validation rules operate on components, not part types
 
@@ -1518,6 +1634,7 @@ The kraken anatomy system refactoring is **highly viable** and **strategically b
 **Recommended Action**: **PROCEED** with Phase 1 (Tentacle) and Phase 2 (Mantle) generalization. **DEFER** Phase 3 (Head) decision until multi-species requirements clarified.
 
 **Next Steps**:
+
 1. Review and approve migration strategy
 2. Create comprehensive test suite for current kraken system
 3. Begin Phase 1 (Tentacle) implementation

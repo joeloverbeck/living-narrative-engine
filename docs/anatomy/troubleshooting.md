@@ -25,10 +25,12 @@ This guide provides both symptom-based troubleshooting and a complete error cata
 **Symptom**: The CLI logs `ValidationPipeline:invalid_result` with `{ recipeId, validatorCount, issue }` or monitoring dashboards report non-zero `validationPipelineHealth`.
 
 **Why it happens**:
+
 - Custom validators short-circuited the pipeline and returned `undefined`, forcing `normalizeValidationResult` to synthesize output.
 - A custom registry removed `component-existence` or `property-schemas`, or modified their `priority`/`failFast` configuration so the Stage 2 contract cannot be guaranteed.
 
 **How to fix**:
+
 - Guardrails are enabled by default; only set `VALIDATION_PIPELINE_GUARDS=0` (or `features.validationPipelineGuards: false`) when you intentionally need to debug the legacy behavior.
 - Keep the fail-fast validators in the registry with `priority: 0/5` and `failFast: true`. `ValidatorRegistry.assertRegistered` throws in non-production environments to surface misconfigurations immediately and only downgrades to warnings in production.
 - When the CLI emits the structured log, inspect the `issue` field (`missing_payload`, `missing_fields`, etc.) to understand whether a validator returned the wrong shape or never executed.
@@ -42,25 +44,34 @@ This guide provides both symptom-based troubleshooting and a complete error cata
 **Evidence**: Debug logs from `RecipePatternResolver` mention `Pattern matched zero slots`.
 
 **Why it happens**:
+
 - Structure-template socket patterns and recipe patterns are out of sync
 - Orientation schemes differ (e.g., template uses `bilateral` while recipe assumes `indexed`)
 - Template variables were renamed without updating recipes
 
 **How to debug**:
+
 ```javascript
 // Inspect the resolved blueprint and recipe
 const blueprint = dataRegistry.get('anatomyBlueprints', 'anatomy:giant_spider');
 console.log(Object.keys(blueprint.slots));
 
-const recipe = dataRegistry.get('anatomyRecipes', 'anatomy:giant_forest_spider');
+const recipe = dataRegistry.get(
+  'anatomyRecipes',
+  'anatomy:giant_forest_spider'
+);
 console.log(recipe.patterns);
 
 // Review the structure template used by the blueprint
-const template = dataRegistry.get('anatomyStructureTemplates', 'anatomy:structure_arachnid_8leg');
+const template = dataRegistry.get(
+  'anatomyStructureTemplates',
+  'anatomy:structure_arachnid_8leg'
+);
 console.log(template.topology.limbSets.map((set) => set.socketPattern));
 ```
 
 **Fixes**:
+
 - Prefer `matchesGroup` selectors such as `"limbSet:leg"` so recipes survive socket renames
 - Align `orientationScheme` values (see `orientationResolver` for valid options)
 - Update recipe patterns whenever template topology changes
@@ -71,12 +82,14 @@ console.log(template.topology.limbSets.map((set) => set.socketPattern));
 **Evidence**: Loader or workflow logs emit schema validation errors or warnings such as `Recipe 'X' does not specify a blueprintId`.
 
 **How to confirm**:
+
 1. Ensure the blueprint exists: `dataRegistry.get('anatomyBlueprints', blueprintId)`
 2. Confirm the recipe points at the correct blueprint ID
 3. Use `validateRecipeSlots(processedRecipe, blueprint, eventBus)` from `src/anatomy/bodyBlueprintFactory/blueprintValidator.js` to catch missing slots
 4. Run `checkBlueprintRecipeCompatibility(blueprint, recipe, deps)` to list missing or unexpected slots
 
 **Fixes**:
+
 - Correct the `blueprintId` on the recipe
 - Ensure loader order in `data/mods/anatomy/mod-manifest.json` loads blueprints before recipes
 - Treat validator errors as blocking
@@ -86,16 +99,19 @@ console.log(template.topology.limbSets.map((set) => set.socketPattern));
 **Evidence**: `anatomyStructureTemplateLoader` logs schema violations, or `BodyBlueprintFactory` throws during template resolution.
 
 **Common pitfalls**:
+
 - Limb/appendage counts exceed schema bounds
 - Socket patterns omit required properties
 - `topology.rootType` or `id` is missing
 - Orientation schemes use unsupported values (allowed: `bilateral`, `quadrupedal`, `radial`, `indexed`, or `custom`)
 
 **How to confirm**:
+
 - Validate the JSON against `data/schemas/anatomy.structure-template.schema.json`
 - Inspect the processed template via `dataRegistry.get('anatomyStructureTemplates', templateId)`
 
 **Fixes**:
+
 - Bring the template back into schema compliance
 - When introducing new orientation schemes, extend `src/anatomy/shared/orientationResolver.js`
 
@@ -104,6 +120,7 @@ console.log(template.topology.limbSets.map((set) => set.socketPattern));
 **Evidence**: Logs from `PartSelectionService` show messages like `subType 'leg' not in allowedTypes`. The service ultimately throws `No entity definitions found matching anatomy requirements`.
 
 **How to confirm**:
+
 ```javascript
 const partType = 'spider_leg';
 const defs = dataRegistry
@@ -113,6 +130,7 @@ console.log(`${defs.length} definitions expose subType ${partType}`);
 ```
 
 **Fixes**:
+
 - Ensure every required `partType` has a matching entity definition with `components['anatomy:part'].subType` set to the same value
 - Align socket `allowedTypes` with the specific subType the recipe expects
 - Use `tests/unit/anatomy/partSelectionService*.test.js` as patterns for regression tests
@@ -126,6 +144,7 @@ console.log(`${defs.length} definitions expose subType ${partType}`);
 **Evidence**: `ClothingInstantiationService` logs `Socket not found` warnings.
 
 **How to confirm**:
+
 ```javascript
 const sockets = await anatomySocketIndex.getEntitySockets(entityId);
 console.log(sockets.map((s) => s.id));
@@ -140,6 +159,7 @@ console.log(slotMetadata?.slotMappings);
 `SlotResolver` logs messages such as `Resolved slot 'torso' to ... using BlueprintSlotStrategy` while working through mappings.
 
 **Fixes**:
+
 - Regenerate clothing slot metadata via `executeSlotEntityCreation` (part of the workflow) after altering templates
 - Update clothing slot mappings in mods to use the new socket IDs
 - Confirm `SlotResolver` is registered in `dependencyInjection/registrations/worldAndEntityRegistrations.js`
@@ -149,6 +169,7 @@ console.log(slotMetadata?.slotMappings);
 **Evidence**: `AnatomySocketIndex` reports stale or missing entries even after regeneration.
 
 **How to confirm**:
+
 ```javascript
 await anatomySocketIndex.buildIndex(rootEntityId);
 const entities = await anatomySocketIndex.getEntitiesWithSockets(rootEntityId);
@@ -156,6 +177,7 @@ console.log(entities);
 ```
 
 **Fixes**:
+
 - Call `invalidateIndex(rootEntityId)` after structural changes, then `buildIndex` before querying
 - Ensure any cache coordinator registers the socket-index caches
 
@@ -164,10 +186,12 @@ console.log(entities);
 **Evidence**: No logs from `EventPublicationStage` and downstream listeners never run.
 
 **How to confirm**:
+
 - Verify `AnatomyGenerationWorkflow` received an event bus and socket index; otherwise the stage short-circuits
 - Inspect `src/anatomy/workflows/stages/eventPublicationStage.js` to confirm dispatch executed without errors
 
 **Fixes**:
+
 - Pass an `ISafeEventDispatcher` into the workflow during composition
 - Register clothing or gameplay listeners before triggering anatomy generation
 
@@ -176,8 +200,10 @@ console.log(entities);
 **Symptom**: Parts or clothing attach to unexpected sides (left/right swapped, fore/hind reversed).
 
 **Diagnosis**:
+
 - Both `src/anatomy/slotGenerator.js` and `src/anatomy/socketGenerator.js` import `OrientationResolver`
 - Run quick checks:
+
 ```javascript
 import { OrientationResolver } from 'src/anatomy/shared/orientationResolver.js';
 OrientationResolver.resolveOrientation('bilateral', 1, 2); // 'left'
@@ -185,6 +211,7 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 ```
 
 **Fixes**:
+
 - Never duplicate orientation math; extend `OrientationResolver` when adding schemes
 - Re-run blueprints through the loader after modifying orientation logic
 
@@ -193,6 +220,7 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 **Symptom**: Anatomy integration or contract tests start failing after modifying templates or recipes.
 
 **Actions**:
+
 1. Review recent changes to `data/mods/anatomy/structure-templates/` and note any renamed sockets
 2. Sync recipes and tests with the new slot keys (e.g., `leg_1` → `leg_left`)
 3. Execute the focused suites:
@@ -201,6 +229,7 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 4. Update fixtures under `tests/integration/anatomy/` to mirror the new topology
 
 **Fixes**:
+
 - Prefer `matchesGroup` patterns in recipes so topology tweaks require fewer test changes
 - Re-run blueprint compatibility tests
 
@@ -210,18 +239,20 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 
 **The three-layer contract**:
 
-| Layer | Location | Purpose | Example |
-| --- | --- | --- | --- |
-| Socket `allowedTypes` | Generated by `SocketGenerator` | What the socket physically accepts | `["leg", "spider_leg"]` |
-| Recipe `partType` | `data/mods/anatomy/recipes/*.recipe.json` | What selectors request | `"spider_leg"` |
-| Entity `subType` | `data/mods/anatomy/entities/definitions/*.entity.json` | What the entity advertises | `"spider_leg"` |
+| Layer                 | Location                                               | Purpose                            | Example                 |
+| --------------------- | ------------------------------------------------------ | ---------------------------------- | ----------------------- |
+| Socket `allowedTypes` | Generated by `SocketGenerator`                         | What the socket physically accepts | `["leg", "spider_leg"]` |
+| Recipe `partType`     | `data/mods/anatomy/recipes/*.recipe.json`              | What selectors request             | `"spider_leg"`          |
+| Entity `subType`      | `data/mods/anatomy/entities/definitions/*.entity.json` | What the entity advertises         | `"spider_leg"`          |
 
 **Rule**: `partType` **must exactly match** `subType`. Socket `allowedTypes` can be broader, but cannot exclude the specific value.
 
 **Troubleshooting steps**:
+
 1. Locate the recipe entry: `grep -r "partType.*spider_leg" data/mods/anatomy/recipes/`
 2. Inspect the entity definition such as `data/mods/anatomy/entities/definitions/spider_leg.entity.json`
 3. Update the entity to advertise the precise `subType`:
+
 ```json
 {
   "id": "anatomy:spider_leg",
@@ -232,6 +263,7 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
   }
 }
 ```
+
 4. If using structure templates, align `socketPattern.allowedTypes` so it includes `"spider_leg"`
 5. Add a regression test similar to `tests/unit/anatomy/partSelectionService*.test.js`
 
@@ -240,10 +272,12 @@ OrientationResolver.resolveOrientation('bilateral', 4, 4); // 'right_rear'
 **Symptom**: Anatomy generation slows dramatically or consumes excessive memory.
 
 **Common drivers**:
+
 - Templates define very large limb sets or deep hierarchies
 - Recipes use broad patterns (`matchesPattern: "*"`) causing extensive scanning
 
 **Mitigations**:
+
 - Keep limb counts realistic (existing creatures stay below ~20 limbs)
 - Reuse `AnatomySocketIndex` for O(1) lookups once built
 - Narrow recipe patterns with specific `matchesGroup` or `matchesPattern` filters
@@ -257,22 +291,22 @@ This catalog documents individual error messages, the code that raises them, and
 
 ### Quick Reference
 
-| Message Snippet | Error / Warning | Raised By | Section |
-| --- | --- | --- | --- |
-| `Recipe validation failed` | `RecipeValidationError` | `RecipeValidationRunner` | [Recipe validation failures](#recipe-validation-failures) |
-| `Component '…' does not exist in the component registry` | `ComponentNotFoundError` | `componentExistenceValidationRule` | [Missing component references](#missing-component-references) |
-| `Property '…' has invalid value '…'` | `InvalidPropertyError` | `propertySchemaValidationRule` | [Property schema violations](#property-schema-violations) |
-| `Pattern matchesGroup '…' has no matching slots` | Warning object | `patternMatchingValidator` | [Pattern dry-run warnings](#pattern-dry-run-warnings) |
-| `Blueprint '…' does not exist` | Validation issue | `BlueprintExistenceValidator` | [Blueprint availability](#blueprint-availability) |
-| `No entity definitions found for slot '…'` | Validation issue | `PartAvailabilityValidator` / `GeneratedSlotPartsValidator` | [Part availability at load time](#part-availability-at-load-time) |
-| `No entity definitions found matching anatomy requirements` | `ValidationError` | `PartSelectionService` | [Runtime part selection failures](#runtime-part-selection-failures) |
-| `Socket '…' not found on root entity '…'` | `SocketNotFoundError` | `socketSlotCompatibilityValidator` or `SocketLimitRule` | [Socket reference issues](#socket-reference-issues) |
-| `Required constraint not satisfied: …` | Validation issue | `RecipeConstraintEvaluator` | [Runtime constraint violations](#runtime-constraint-violations) |
-| `Cycle detected in anatomy graph` | Validation issue | `cycleDetectionRule` | [Cycle detection](#cycle-detection) |
-| `Part type '…' not allowed in socket '…'` | Validation issue | `partTypeCompatibilityRule` | [Socket/part type mismatches](#socketpart-type-mismatches) |
-| `Orphaned part '…' has parent '…' not in graph` | Validation issue | `orphanDetectionRule` | [Orphan detection](#orphan-detection) |
-| `Entity '…' has incomplete joint data` | Validation issue | `jointConsistencyRule` | [Joint consistency issues](#joint-consistency-issues) |
-| `Invalid … descriptor: '…' in …` | `BodyDescriptorValidationError` | `bodyDescriptorValidator` | [Body descriptor validation](#body-descriptor-validation) |
+| Message Snippet                                             | Error / Warning                 | Raised By                                                   | Section                                                             |
+| ----------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| `Recipe validation failed`                                  | `RecipeValidationError`         | `RecipeValidationRunner`                                    | [Recipe validation failures](#recipe-validation-failures)           |
+| `Component '…' does not exist in the component registry`    | `ComponentNotFoundError`        | `componentExistenceValidationRule`                          | [Missing component references](#missing-component-references)       |
+| `Property '…' has invalid value '…'`                        | `InvalidPropertyError`          | `propertySchemaValidationRule`                              | [Property schema violations](#property-schema-violations)           |
+| `Pattern matchesGroup '…' has no matching slots`            | Warning object                  | `patternMatchingValidator`                                  | [Pattern dry-run warnings](#pattern-dry-run-warnings)               |
+| `Blueprint '…' does not exist`                              | Validation issue                | `BlueprintExistenceValidator`                               | [Blueprint availability](#blueprint-availability)                   |
+| `No entity definitions found for slot '…'`                  | Validation issue                | `PartAvailabilityValidator` / `GeneratedSlotPartsValidator` | [Part availability at load time](#part-availability-at-load-time)   |
+| `No entity definitions found matching anatomy requirements` | `ValidationError`               | `PartSelectionService`                                      | [Runtime part selection failures](#runtime-part-selection-failures) |
+| `Socket '…' not found on root entity '…'`                   | `SocketNotFoundError`           | `socketSlotCompatibilityValidator` or `SocketLimitRule`     | [Socket reference issues](#socket-reference-issues)                 |
+| `Required constraint not satisfied: …`                      | Validation issue                | `RecipeConstraintEvaluator`                                 | [Runtime constraint violations](#runtime-constraint-violations)     |
+| `Cycle detected in anatomy graph`                           | Validation issue                | `cycleDetectionRule`                                        | [Cycle detection](#cycle-detection)                                 |
+| `Part type '…' not allowed in socket '…'`                   | Validation issue                | `partTypeCompatibilityRule`                                 | [Socket/part type mismatches](#socketpart-type-mismatches)          |
+| `Orphaned part '…' has parent '…' not in graph`             | Validation issue                | `orphanDetectionRule`                                       | [Orphan detection](#orphan-detection)                               |
+| `Entity '…' has incomplete joint data`                      | Validation issue                | `jointConsistencyRule`                                      | [Joint consistency issues](#joint-consistency-issues)               |
+| `Invalid … descriptor: '…' in …`                            | `BodyDescriptorValidationError` | `bodyDescriptorValidator`                                   | [Body descriptor validation](#body-descriptor-validation)           |
 
 ### Load-Time Validation Errors
 

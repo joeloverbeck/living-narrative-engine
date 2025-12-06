@@ -76,7 +76,10 @@ describe('Pipeline & TraceContext integration', () => {
         initialCandidateCount: context.candidateActions.length,
       });
 
-      context.trace.data('Component filtering heartbeat', 'component-filtering');
+      context.trace.data(
+        'Component filtering heartbeat',
+        'component-filtering'
+      );
 
       context.trace.info('Filtering with payload', 'component-filtering', {
         actorId: context.actor.id,
@@ -99,9 +102,13 @@ describe('Pipeline & TraceContext integration', () => {
         stage: 'component-filtering',
       });
 
-      context.trace.failure('Soft failure for diagnostics', 'component-filtering', {
-        recovered: true,
-      });
+      context.trace.failure(
+        'Soft failure for diagnostics',
+        'component-filtering',
+        {
+          recovered: true,
+        }
+      );
 
       context.trace.error('Pre-validation warning', 'component-filtering');
 
@@ -140,8 +147,9 @@ describe('Pipeline & TraceContext integration', () => {
       ])
     );
 
-    const haltLog = trace.logs.find((entry) =>
-      entry.type === TRACE_INFO && entry.message.includes('Pipeline halted')
+    const haltLog = trace.logs.find(
+      (entry) =>
+        entry.type === TRACE_INFO && entry.message.includes('Pipeline halted')
     );
     expect(haltLog).toBeDefined();
 
@@ -174,9 +182,13 @@ describe('Pipeline & TraceContext integration', () => {
     let formattingExecuted = false;
     const stageTwo = new TestStage('formatting', (context) => {
       formattingExecuted = true;
-      context.trace.error('Formatting invoked despite upstream warning', 'formatting', {
-        recoverable: context.recoverable === true,
-      });
+      context.trace.error(
+        'Formatting invoked despite upstream warning',
+        'formatting',
+        {
+          recoverable: context.recoverable === true,
+        }
+      );
 
       return PipelineResult.success({
         actions: [{ id: 'action:formatted' }],
@@ -193,14 +205,17 @@ describe('Pipeline & TraceContext integration', () => {
       stageName: 'prerequisite-evaluation',
     });
 
-    const failureLog = trace.logs.find((entry) =>
-      entry.type === TRACE_FAILURE &&
-      entry.message.includes('prerequisite-evaluation')
+    const failureLog = trace.logs.find(
+      (entry) =>
+        entry.type === TRACE_FAILURE &&
+        entry.message.includes('prerequisite-evaluation')
     );
     expect(failureLog).toBeDefined();
 
-    const errorLog = trace.logs.find((entry) =>
-      entry.type === TRACE_ERROR && entry.message.includes('Formatting invoked')
+    const errorLog = trace.logs.find(
+      (entry) =>
+        entry.type === TRACE_ERROR &&
+        entry.message.includes('Formatting invoked')
     );
     expect(errorLog?.data).toMatchObject({ recoverable: true });
   });
@@ -227,9 +242,10 @@ describe('Pipeline & TraceContext integration', () => {
       phase: 'PIPELINE_EXECUTION',
     });
 
-    const failureLog = trace.logs.find((entry) =>
-      entry.type === TRACE_FAILURE &&
-      entry.message.includes('target-resolution threw an error')
+    const failureLog = trace.logs.find(
+      (entry) =>
+        entry.type === TRACE_FAILURE &&
+        entry.message.includes('target-resolution threw an error')
     );
     expect(failureLog).toBeDefined();
   });

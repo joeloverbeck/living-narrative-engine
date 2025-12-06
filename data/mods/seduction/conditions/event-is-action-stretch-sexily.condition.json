@@ -3,9 +3,6 @@
   "id": "seduction:event-is-action-stretch-sexily",
   "description": "Checks if the triggering event is for the 'seduction:stretch_sexily' action.",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "seduction:stretch_sexily"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "seduction:stretch_sexily"]
   }
 }

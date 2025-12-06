@@ -73,7 +73,9 @@ export function buildLickGlansLyingCloseScenario(options = {}) {
   }
 
   if (actorGivingBlowjob) {
-    actorBuilder.withComponent('positioning:giving_blowjob', { target_id: primaryId });
+    actorBuilder.withComponent('positioning:giving_blowjob', {
+      target_id: primaryId,
+    });
   }
 
   const primaryBuilder = new ModEntityBuilder(primaryId)
@@ -141,7 +143,11 @@ export function buildLickGlansLyingCloseScenario(options = {}) {
 
   const primaryClothing = coverPrimaryPenis
     ? new ModEntityBuilder(primaryClothingId)
-        .withComponent('items:item', { name: 'Underwear', volume: 1, weight: 1 })
+        .withComponent('items:item', {
+          name: 'Underwear',
+          volume: 1,
+          weight: 1,
+        })
         .withComponent('items:clothing', {
           slot: 'torso_lower',
           layer: 'base',
@@ -194,9 +200,14 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
 
       const actor = testFixture.entityManager.getEntityInstance(actorId);
       const actorLying = actor?.components?.['positioning:lying_down'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
-      if (!actorLying || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      if (
+        !actorLying ||
+        !Array.isArray(closenessPartners) ||
+        closenessPartners.length === 0
+      ) {
         return { success: true, value: new Set() };
       }
 
@@ -238,7 +249,8 @@ export function installLyingCloseUncoveredPenisScopeOverride(testFixture) {
         }
 
         // Check not currently fucking actor vaginally
-        const fuckingVaginally = partner.components?.['positioning:fucking_vaginally'];
+        const fuckingVaginally =
+          partner.components?.['positioning:fucking_vaginally'];
         if (fuckingVaginally?.target_id === actorId) {
           return false;
         }

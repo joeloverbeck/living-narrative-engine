@@ -42,8 +42,6 @@ If Vespera keeps chasing violence for clarity, keeps killing for that crystallin
 
 But Melissa found something Vespera hasn't: acceptance. She's not running from what she is. She's not trying to justify it with art or meaning. She just is. And weirdly, there's peace in that.
 
-
-
 ## Backstory
 
 Started at sixteen as a caravan guard, killed her first person at seventeen (bandits, self-defense, the usual story)
@@ -55,6 +53,7 @@ Came to Mudbrook because it's forgettable. She's semi-retired, takes occasional 
 The garden matters: She's trying to figure out if she can create something instead of just ending things. The vegetables aren't metaphorical—she genuinely cares about whether the tomatoes survive frost.
 
 ## Melissa's Speech Patterns
+
 Economical: No wasted words. Complete thoughts in minimal language.
 Direct Questions: She asks what she wants to know. No manipulation, no social dancing.
 Casual Profanity: Not performative or aggressive, just vernacular. "Fuck knows" and "bullshit" delivered matter-of-factly.

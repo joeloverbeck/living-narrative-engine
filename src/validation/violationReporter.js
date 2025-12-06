@@ -72,7 +72,10 @@ class ViolationReporter {
 
     // Handle ecosystem wrapper structure with nested crossReferences Map
     if (data.crossReferences instanceof Map) {
-      return this._generateEcosystemConsoleReport(data.crossReferences, options);
+      return this._generateEcosystemConsoleReport(
+        data.crossReferences,
+        options
+      );
     }
 
     // Handle file existence validation results
@@ -214,9 +217,10 @@ class ViolationReporter {
     const modsWithViolations = Array.from(results.entries()).filter(
       ([, report]) => {
         // Handle both flat structure (hasViolations) and nested structure (crossReferences.hasViolations)
-        return report && (
-          report.hasViolations || 
-          (report.crossReferences && report.crossReferences.hasViolations)
+        return (
+          report &&
+          (report.hasViolations ||
+            (report.crossReferences && report.crossReferences.hasViolations))
         );
       }
     );
@@ -231,17 +235,14 @@ class ViolationReporter {
       return lines.join('\n');
     }
 
-    const totalViolations = modsWithViolations.reduce(
-      (sum, [, report]) => {
-        // Handle both flat and nested structures
-        if (report.crossReferences) {
-          return sum + report.crossReferences.violations.length;
-        } else {
-          return sum + report.violations.length;
-        }
-      },
-      0
-    );
+    const totalViolations = modsWithViolations.reduce((sum, [, report]) => {
+      // Handle both flat and nested structures
+      if (report.crossReferences) {
+        return sum + report.crossReferences.violations.length;
+      } else {
+        return sum + report.violations.length;
+      }
+    }, 0);
 
     lines.push(
       `❌ Found ${totalViolations} violations across ${modsWithViolations.length} mods`
@@ -250,7 +251,9 @@ class ViolationReporter {
 
     // Enhanced summary table with severity if available
     const hasSeverityData = modsWithViolations.some(([, report]) => {
-      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      const violations = report.crossReferences
+        ? report.crossReferences.violations
+        : report.violations;
       return violations.some((v) => v.severity);
     });
 
@@ -285,13 +288,21 @@ class ViolationReporter {
 
     modsWithViolations
       .sort((a, b) => {
-        const aViolations = a[1].crossReferences ? a[1].crossReferences.violations : a[1].violations;
-        const bViolations = b[1].crossReferences ? b[1].crossReferences.violations : b[1].violations;
+        const aViolations = a[1].crossReferences
+          ? a[1].crossReferences.violations
+          : a[1].violations;
+        const bViolations = b[1].crossReferences
+          ? b[1].crossReferences.violations
+          : b[1].violations;
         return bViolations.length - aViolations.length; // Sort by violation count
       })
       .forEach(([modId, report]) => {
-        const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
-        const missingDeps = report.crossReferences ? report.crossReferences.missingDependencies : report.missingDependencies;
+        const violations = report.crossReferences
+          ? report.crossReferences.violations
+          : report.violations;
+        const missingDeps = report.crossReferences
+          ? report.crossReferences.missingDependencies
+          : report.missingDependencies;
         const violationCount = violations.length.toString();
         const depsStr = missingDeps ? missingDeps.join(', ') : '';
         lines.push(modId.padEnd(20) + violationCount.padEnd(12) + depsStr);
@@ -306,7 +317,9 @@ class ViolationReporter {
       lines.push('');
       lines.push(`📦 ${modId}:`);
 
-      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      const violations = report.crossReferences
+        ? report.crossReferences.violations
+        : report.violations;
       const violationsByMod = this._groupByMod(violations);
 
       for (const [referencedMod, violations] of violationsByMod) {
@@ -520,7 +533,9 @@ class ViolationReporter {
     const totals = { critical: 0, high: 0, medium: 0, low: 0 };
 
     modsWithViolations.forEach(([, report]) => {
-      const violations = report.crossReferences ? report.crossReferences.violations : report.violations;
+      const violations = report.crossReferences
+        ? report.crossReferences.violations
+        : report.violations;
       violations.forEach((violation) => {
         const severity = violation.severity || 'low';
         if (Object.prototype.hasOwnProperty.call(totals, severity)) {
@@ -541,20 +556,21 @@ class ViolationReporter {
   _generateEcosystemSummary(results) {
     const totalMods = results.size;
     const values = Array.from(results.values());
-    
+
     // Handle both nested and flat validation result structures
     // Nested: { modId, dependencies, crossReferences: { hasViolations, violations, ... }, isValid, errors, warnings }
     // Flat: { modId, hasViolations, violations, ... }
     const modsWithViolations = values.filter((r) => {
-      return r && (
-        r.hasViolations ||
-        (r.crossReferences && r.crossReferences.hasViolations)
+      return (
+        r &&
+        (r.hasViolations ||
+          (r.crossReferences && r.crossReferences.hasViolations))
       );
     }).length;
-    
+
     const totalViolations = values.reduce((sum, r) => {
       if (!r) return sum;
-      
+
       // Handle nested structure
       if (r.crossReferences && r.crossReferences.violations) {
         return sum + r.crossReferences.violations.length;
@@ -563,7 +579,7 @@ class ViolationReporter {
       else if (r.violations) {
         return sum + r.violations.length;
       }
-      
+
       return sum;
     }, 0);
 
@@ -840,7 +856,7 @@ class ViolationReporter {
    */
   _generateFileExistenceReport(results, options = {}) {
     const lines = [];
-    const invalidMods = Array.from(results.values()).filter(r => !r.isValid);
+    const invalidMods = Array.from(results.values()).filter((r) => !r.isValid);
 
     lines.push('Living Narrative Engine - File Existence Validation Report');
     lines.push('='.repeat(60));
@@ -852,10 +868,18 @@ class ViolationReporter {
       return lines.join('\n');
     }
 
-    const totalMissing = invalidMods.reduce((sum, r) => sum + r.missingFiles.length, 0);
-    const totalNamingIssues = invalidMods.reduce((sum, r) => sum + r.namingIssues.length, 0);
+    const totalMissing = invalidMods.reduce(
+      (sum, r) => sum + r.missingFiles.length,
+      0
+    );
+    const totalNamingIssues = invalidMods.reduce(
+      (sum, r) => sum + r.namingIssues.length,
+      0
+    );
 
-    lines.push(`❌ Found ${totalMissing + totalNamingIssues} issues in ${invalidMods.length} mod(s):`);
+    lines.push(
+      `❌ Found ${totalMissing + totalNamingIssues} issues in ${invalidMods.length} mod(s):`
+    );
     lines.push(`   - ${totalMissing} missing files`);
     lines.push(`   - ${totalNamingIssues} naming convention mismatches`);
     lines.push('');

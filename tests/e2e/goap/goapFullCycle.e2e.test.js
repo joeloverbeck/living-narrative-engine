@@ -176,17 +176,19 @@ describe('GOAP System - Full Cycle E2E', () => {
     );
 
     // Mock parameter resolution to resolve placeholders in bindings object
-    mockParameterResolutionService.resolve.mockImplementation((bindings, context) => {
-      const resolved = {};
-      for (const [key, value] of Object.entries(bindings)) {
-        if (value === 'task.params.item') {
-          resolved[key] = context.task.params.item;
-        } else {
-          resolved[key] = value;
+    mockParameterResolutionService.resolve.mockImplementation(
+      (bindings, context) => {
+        const resolved = {};
+        for (const [key, value] of Object.entries(bindings)) {
+          if (value === 'task.params.item') {
+            resolved[key] = context.task.params.item;
+          } else {
+            resolved[key] = value;
+          }
         }
+        return resolved;
       }
-      return resolved;
-    });
+    );
 
     // Planner creates complete plan with goal and tasks
     mockPlanner.plan.mockImplementation((actorId, goal) => {

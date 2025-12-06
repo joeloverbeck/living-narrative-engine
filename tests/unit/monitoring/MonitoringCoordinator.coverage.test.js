@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
 const ORIGINAL_SET_INTERVAL = global.setInterval;
@@ -88,7 +95,9 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       reset: jest.fn(),
     };
 
-    performanceMonitorCtor = jest.fn().mockImplementation(() => performanceMonitorInstance);
+    performanceMonitorCtor = jest
+      .fn()
+      .mockImplementation(() => performanceMonitorInstance);
 
     createdCircuitBreakers = [];
     circuitBreakerCtor = jest.fn().mockImplementation((params) => {
@@ -116,7 +125,8 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
         heapTotal: 512 * 1024 * 1024,
         rss: 768 * 1024 * 1024,
       })),
-      getPressureLevel: jest.fn()
+      getPressureLevel: jest
+        .fn()
         .mockReturnValueOnce('critical')
         .mockReturnValueOnce('warning')
         .mockReturnValue('normal'),
@@ -155,14 +165,22 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
         : {}
     );
 
-    jest.doMock('../../../src/entities/monitoring/PerformanceMonitor.js', () => performanceMonitorCtor);
-    jest.doMock('../../../src/entities/monitoring/CircuitBreaker.js', () => circuitBreakerCtor);
+    jest.doMock(
+      '../../../src/entities/monitoring/PerformanceMonitor.js',
+      () => performanceMonitorCtor
+    );
+    jest.doMock(
+      '../../../src/entities/monitoring/CircuitBreaker.js',
+      () => circuitBreakerCtor
+    );
     jest.doMock('../../../src/config/errorHandling.config.js', () => ({
       getErrorConfig: getErrorConfigMock,
       getCircuitBreakerConfig: getCircuitBreakerConfigMock,
     }));
 
-    ({ default: MonitoringCoordinator } = await import('../../../src/entities/monitoring/MonitoringCoordinator.js'));
+    ({ default: MonitoringCoordinator } = await import(
+      '../../../src/entities/monitoring/MonitoringCoordinator.js'
+    ));
 
     logger = createMockLogger();
     logger.warning = jest.fn();
@@ -224,13 +242,19 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     const stats = coordinator.getStats();
     expect(stats.recentAlerts).toHaveLength(4);
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Monitoring alert: Memory heap threshold exceeded: critical (95%)')
+      expect.stringContaining(
+        'Monitoring alert: Memory heap threshold exceeded: critical (95%)'
+      )
     );
     expect(logger.warning).toHaveBeenCalledWith(
-      expect.stringContaining('Monitoring alert: Potential memory leak detected')
+      expect.stringContaining(
+        'Monitoring alert: Potential memory leak detected'
+      )
     );
     expect(logger.warning).toHaveBeenCalledWith(
-      expect.stringContaining('Monitoring alert: Memory heap threshold exceeded: warning (85%)')
+      expect.stringContaining(
+        'Monitoring alert: Memory heap threshold exceeded: warning (85%)'
+      )
     );
     expect(logger.info).toHaveBeenCalledWith(
       expect.stringContaining('Monitoring alert: Memory gc strategy executed')
@@ -259,15 +283,21 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     );
 
     expect(recoveryStrategyManager.registerStrategy).toHaveBeenCalledTimes(2);
-    const performanceStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
-      ([name]) => name === 'PerformanceError'
-    )[1];
-    const performanceFallback = performanceStrategy.fallback(new Error('perf'));  
-    expect(performanceFallback).toEqual({ totalOperations: 0, averageTime: 0, maxTime: 0 });
+    const performanceStrategy =
+      recoveryStrategyManager.registerStrategy.mock.calls.find(
+        ([name]) => name === 'PerformanceError'
+      )[1];
+    const performanceFallback = performanceStrategy.fallback(new Error('perf'));
+    expect(performanceFallback).toEqual({
+      totalOperations: 0,
+      averageTime: 0,
+      maxTime: 0,
+    });
 
-    const circuitStrategy = recoveryStrategyManager.registerStrategy.mock.calls.find(
-      ([name]) => name === 'CircuitBreakerError'
-    )[1];
+    const circuitStrategy =
+      recoveryStrategyManager.registerStrategy.mock.calls.find(
+        ([name]) => name === 'CircuitBreakerError'
+      )[1];
     const circuitFallback = circuitStrategy.fallback(new Error('cb'));
     expect(circuitFallback).toEqual({ allowed: true, fallback: true });
 
@@ -277,9 +307,14 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       message: 'Operation timed out',
     });
 
-    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith('error_timeout', 1);
+    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith(
+      'error_timeout',
+      1
+    );
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Monitoring alert: Critical error: Operation timed out')
+      expect.stringContaining(
+        'Monitoring alert: Critical error: Operation timed out'
+      )
     );
 
     dispatchEvent('ERROR_OCCURRED', {
@@ -287,7 +322,10 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       severity: 'error',
       message: 'Recoverable issue',
     });
-    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith('error_db', 1);
+    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith(
+      'error_db',
+      1
+    );
     expect(logger.warning).toHaveBeenCalledWith(
       expect.stringContaining('Monitoring alert: Error occurred: db')
     );
@@ -296,7 +334,10 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       severity: 'error',
       message: 'Recoverable without type',
     });
-    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith('error_unknown', 1);
+    expect(performanceMonitorInstance.recordMetric).toHaveBeenCalledWith(
+      'error_unknown',
+      1
+    );
     expect(logger.warning).toHaveBeenCalledWith(
       expect.stringContaining('Monitoring alert: Error occurred: unknown')
     );
@@ -330,11 +371,17 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       executeWithRecovery: jest.fn(async (fn) => fn()),
     };
 
-    coordinator.injectErrorHandlers(centralErrorHandler, recoveryStrategyManager, null);
+    coordinator.injectErrorHandlers(
+      centralErrorHandler,
+      recoveryStrategyManager,
+      null
+    );
 
-    performanceMonitorInstance.timeOperation.mockImplementationOnce(async () => {
-      throw error;
-    });
+    performanceMonitorInstance.timeOperation.mockImplementationOnce(
+      async () => {
+        throw error;
+      }
+    );
 
     await expect(
       coordinator.executeMonitored('failing-operation', async () => {
@@ -361,7 +408,9 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     breaker.execute.mockImplementationOnce(async () => {
       throw new Error('breaker-open');
     });
-    performanceMonitorInstance.timeOperation.mockImplementation(async () => 'recovered');
+    performanceMonitorInstance.timeOperation.mockImplementation(
+      async () => 'recovered'
+    );
 
     await expect(
       coordinator.executeMonitored('flaky-service', async () => 'ok')
@@ -377,13 +426,17 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     );
 
     const coordinatorWithoutHandlers = setupCoordinator();
-    const breaker2 = coordinatorWithoutHandlers.getCircuitBreaker('always-fail');
+    const breaker2 =
+      coordinatorWithoutHandlers.getCircuitBreaker('always-fail');
     breaker2.execute.mockImplementationOnce(async () => {
       throw new Error('no-recovery');
     });
 
     await expect(
-      coordinatorWithoutHandlers.executeMonitored('always-fail', async () => 'x')
+      coordinatorWithoutHandlers.executeMonitored(
+        'always-fail',
+        async () => 'x'
+      )
     ).rejects.toThrow('no-recovery');
   });
 
@@ -401,9 +454,15 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     const errorReporter = {
       getTopErrors: jest.fn(() => [{ name: 'ErrorX', count: 5 }]),
     };
-    coordinator.injectErrorHandlers(centralErrorHandler, recoveryStrategyManager, errorReporter);
+    coordinator.injectErrorHandlers(
+      centralErrorHandler,
+      recoveryStrategyManager,
+      errorReporter
+    );
 
-    const circuit = coordinator.getCircuitBreaker('service-with-config', { custom: true });
+    const circuit = coordinator.getCircuitBreaker('service-with-config', {
+      custom: true,
+    });
     circuit.getStats.mockReturnValue({
       state: 'OPEN',
       totalRequests: 30,
@@ -422,7 +481,10 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     expect(stats.errors).toEqual({ totalErrors: 8, recoveredErrors: 2 });
     expect(stats.topErrors).toEqual([{ name: 'ErrorX', count: 5 }]);
     expect(stats.memory).toEqual(
-      expect.objectContaining({ pressureLevel: 'warning', managementHistory: ['managed'] })
+      expect.objectContaining({
+        pressureLevel: 'warning',
+        managementHistory: ['managed'],
+      })
     );
     expect(stats.circuitBreakers['service-with-config']).toEqual({
       state: 'OPEN',
@@ -495,25 +557,32 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
   it('supports synchronous monitoring paths and getters', () => {
     const coordinator = setupCoordinator();
 
-    const syncResult = coordinator.executeSyncMonitored('sync-op', () => 'sync-value');
+    const syncResult = coordinator.executeSyncMonitored(
+      'sync-op',
+      () => 'sync-value'
+    );
     expect(syncResult).toBe('sync-value');
     expect(performanceMonitorInstance.timeSync).toHaveBeenCalled();
 
-    const breakerForSync = createdCircuitBreakers[createdCircuitBreakers.length - 1];
+    const breakerForSync =
+      createdCircuitBreakers[createdCircuitBreakers.length - 1];
     const executeSyncCallsBefore = breakerForSync.executeSync.mock.calls.length;
-    coordinator.executeSyncMonitored(
-      'sync-no-breaker',
-      () => 'no-breaker',
-      { useCircuitBreaker: false }
+    coordinator.executeSyncMonitored('sync-no-breaker', () => 'no-breaker', {
+      useCircuitBreaker: false,
+    });
+    expect(breakerForSync.executeSync.mock.calls.length).toBe(
+      executeSyncCallsBefore
     );
-    expect(breakerForSync.executeSync.mock.calls.length).toBe(executeSyncCallsBefore);
 
     coordinator.setEnabled(false);
     coordinator.executeSyncMonitored('sync-disabled', () => 'disabled');
     expect(performanceMonitorInstance.timeSync).toHaveBeenCalledTimes(2);
 
     const timerId = coordinator.startTimer('manual', 'ctx');
-    expect(performanceMonitorInstance.startTimer).toHaveBeenCalledWith('manual', 'ctx');
+    expect(performanceMonitorInstance.startTimer).toHaveBeenCalledWith(
+      'manual',
+      'ctx'
+    );
     coordinator.startTimer('manual-default');
     expect(performanceMonitorInstance.startTimer).toHaveBeenCalledWith(
       'manual-default',
@@ -522,7 +591,9 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     coordinator.stopTimer(timerId);
     expect(performanceMonitorInstance.stopTimer).toHaveBeenCalledWith(timerId);
 
-    expect(coordinator.getPerformanceMonitor()).toBe(performanceMonitorInstance);
+    expect(coordinator.getPerformanceMonitor()).toBe(
+      performanceMonitorInstance
+    );
     expect(coordinator.getMemoryMonitor()).toBe(memoryMonitor);
     expect(coordinator.getMemoryPressureManager()).toBe(memoryPressureManager);
     expect(coordinator.getMemoryReporter()).toBe(memoryReporter);
@@ -570,7 +641,10 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     });
 
     const central = { handle: jest.fn(), getMetrics: jest.fn(() => null) };
-    const recovery = { registerStrategy: jest.fn(), executeWithRecovery: jest.fn() };
+    const recovery = {
+      registerStrategy: jest.fn(),
+      executeWithRecovery: jest.fn(),
+    };
     coordinator.injectErrorHandlers(central, recovery, null);
 
     isolatedLogger.warning.mockClear();
@@ -591,10 +665,17 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       handle: jest.fn(),
       getMetrics: jest.fn(() => ({ totalErrors: 0, recoveredErrors: 0 })),
     };
-    coordinatorWithoutRecovery.injectErrorHandlers(centralNoRecovery, null, null);
+    coordinatorWithoutRecovery.injectErrorHandlers(
+      centralNoRecovery,
+      null,
+      null
+    );
 
     const statsWithoutRecovery = coordinatorWithoutRecovery.getStats();
-    expect(statsWithoutRecovery.errors).toEqual({ totalErrors: 0, recoveredErrors: 0 });
+    expect(statsWithoutRecovery.errors).toEqual({
+      totalErrors: 0,
+      recoveredErrors: 0,
+    });
     expect(statsWithoutRecovery.healthStatus.factors.errorRate).toBe(0);
 
     const recoveryOnlyManager = {
@@ -634,7 +715,9 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
       activeTimers: 0,
     });
 
-    const minimalCoordinator = new MonitoringCoordinator({ logger: minimalLogger });
+    const minimalCoordinator = new MonitoringCoordinator({
+      logger: minimalLogger,
+    });
 
     intervalCallback();
 
@@ -715,10 +798,14 @@ describe('MonitoringCoordinator comprehensive coverage', () => {
     intervalCallback();
 
     expect(logger.info).toHaveBeenCalledWith(
-      expect.stringContaining("Circuit breaker 'half-open-service' is HALF_OPEN")
+      expect.stringContaining(
+        "Circuit breaker 'half-open-service' is HALF_OPEN"
+      )
     );
     expect(logger.warning).toHaveBeenCalledWith(
-      expect.stringContaining("High failure rate (75%) for circuit breaker 'failing-service'")
+      expect.stringContaining(
+        "High failure rate (75%) for circuit breaker 'failing-service'"
+      )
     );
   });
 

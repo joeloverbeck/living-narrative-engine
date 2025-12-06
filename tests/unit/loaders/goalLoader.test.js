@@ -44,7 +44,8 @@ describe('GoalLoader._processFetchedItem', () => {
   let mocks;
   let loader;
   const originalAllowDefaults = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
-  const originalDiagnosticsFlag = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
+  const originalDiagnosticsFlag =
+    process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
 
   beforeEach(() => {
     mocks = createMocks();
@@ -68,7 +69,8 @@ describe('GoalLoader._processFetchedItem', () => {
     if (typeof originalDiagnosticsFlag === 'undefined') {
       delete process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
     } else {
-      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = originalDiagnosticsFlag;
+      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS =
+        originalDiagnosticsFlag;
     }
   });
 
@@ -325,7 +327,8 @@ describe('GoalLoader diagnostics and error helpers', () => {
   let mocks;
   let loader;
   const originalAllowDefaults = process.env.GOAL_LOADER_ALLOW_DEFAULTS;
-  const originalDiagnosticsFlag = process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
+  const originalDiagnosticsFlag =
+    process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
 
   beforeEach(() => {
     mocks = createMocks();
@@ -348,7 +351,8 @@ describe('GoalLoader diagnostics and error helpers', () => {
     if (typeof originalDiagnosticsFlag === 'undefined') {
       delete process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS;
     } else {
-      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS = originalDiagnosticsFlag;
+      process.env.GOAL_LOADER_NORMALIZATION_DIAGNOSTICS =
+        originalDiagnosticsFlag;
     }
     jest.restoreAllMocks();
   });
@@ -432,7 +436,12 @@ describe('GoalLoader diagnostics and error helpers', () => {
   it('skips schema validation when no primary schema is configured', () => {
     loader._primarySchemaId = null;
 
-    const result = loader._validatePrimarySchema({}, 'goal.json', 'mod-e', '/path');
+    const result = loader._validatePrimarySchema(
+      {},
+      'goal.json',
+      'mod-e',
+      '/path'
+    );
 
     expect(result).toEqual({ isValid: true, errors: null });
     expect(mocks.logger.debug).toHaveBeenCalled();

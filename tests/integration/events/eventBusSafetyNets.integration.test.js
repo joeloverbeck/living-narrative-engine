@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EventBus from '../../../src/events/eventBus.js';
@@ -212,7 +219,10 @@ describe('EventBus integration safety nets', () => {
     expect(env.eventBus.getBatchModeOptions()).toBeNull();
 
     // Invalid subscribe attempts should be rejected and logged.
-    const invalidNameResult = env.validatedEventDispatcher.subscribe('', () => {});
+    const invalidNameResult = env.validatedEventDispatcher.subscribe(
+      '',
+      () => {}
+    );
     expect(invalidNameResult).toBeNull();
     const invalidListenerResult = env.validatedEventDispatcher.subscribe(
       'integration:valid',
@@ -231,22 +241,37 @@ describe('EventBus integration safety nets', () => {
     expect(env.eventBus.listenerCount(/** @type {any} */ (null))).toBe(0);
     expect(env.eventBus.listenerCount('integration:valid')).toBe(0);
 
-    const errorMessages = env.logger.calls.error.map(([message]) => String(message));
+    const errorMessages = env.logger.calls.error.map(([message]) =>
+      String(message)
+    );
     expect(
-      errorMessages.some((message) => message.includes('Invalid event name provided'))
+      errorMessages.some((message) =>
+        message.includes('Invalid event name provided')
+      )
     ).toBe(true);
     expect(
-      errorMessages.some((message) => message.includes('Invalid listener provided'))
+      errorMessages.some((message) =>
+        message.includes('Invalid listener provided')
+      )
     ).toBe(true);
   });
 
   it('raises global recursion warnings and stops at the configured limit', async () => {
     const env = createDispatcherEnvironment();
-    const nonWorkflowEvents = Array.from({ length: 6 }, (_, idx) => `integration:chain:${idx}`);
-    nonWorkflowEvents.forEach((eventId) => registerEventDefinition(env.registry, eventId));
+    const nonWorkflowEvents = Array.from(
+      { length: 6 },
+      (_, idx) => `integration:chain:${idx}`
+    );
+    nonWorkflowEvents.forEach((eventId) =>
+      registerEventDefinition(env.registry, eventId)
+    );
 
-    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleWarnSpy = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     env.validatedEventDispatcher.setBatchMode(true, {
       context: 'recursion-limit',
@@ -263,7 +288,8 @@ describe('EventBus integration safety nets', () => {
           return;
         }
         step += 1;
-        const nextEvent = nonWorkflowEvents[(idx + 1) % nonWorkflowEvents.length];
+        const nextEvent =
+          nonWorkflowEvents[(idx + 1) % nonWorkflowEvents.length];
         await env.validatedEventDispatcher.dispatch(nextEvent, { step });
       });
     });
@@ -295,9 +321,13 @@ describe('EventBus integration safety nets', () => {
       'core:player_turn_prompt',
       'core:action_decided',
     ];
-    workflowEvents.forEach((eventId) => registerEventDefinition(env.registry, eventId));
+    workflowEvents.forEach((eventId) =>
+      registerEventDefinition(env.registry, eventId)
+    );
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     env.validatedEventDispatcher.setBatchMode(true, {
       context: 'workflow-batch',
@@ -337,9 +367,13 @@ describe('EventBus integration safety nets', () => {
       'core:component_removed',
       'core:entity_created',
     ];
-    componentEvents.forEach((eventId) => registerEventDefinition(env.registry, eventId));
+    componentEvents.forEach((eventId) =>
+      registerEventDefinition(env.registry, eventId)
+    );
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     env.validatedEventDispatcher.setBatchMode(true, {
       context: 'game-initialization',
@@ -375,12 +409,17 @@ describe('EventBus integration safety nets', () => {
   it('uses console directly when recursion load exceeds safe thresholds during errors', async () => {
     const env = createDispatcherEnvironment();
     const chainLength = 12;
-    const eventChain = Array.from({ length: chainLength }, (_, idx) =>
-      `integration:recursion-error:${idx}`
+    const eventChain = Array.from(
+      { length: chainLength },
+      (_, idx) => `integration:recursion-error:${idx}`
     );
-    eventChain.forEach((eventId) => registerEventDefinition(env.registry, eventId));
+    eventChain.forEach((eventId) =>
+      registerEventDefinition(env.registry, eventId)
+    );
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     env.validatedEventDispatcher.setBatchMode(true, {
       context: 'error-recursion',
@@ -415,7 +454,9 @@ describe('EventBus integration safety nets', () => {
     const env = createDispatcherEnvironment({ throwOnError: true });
     registerEventDefinition(env.registry, 'integration:listener-error');
 
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleErrorSpy = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     env.validatedEventDispatcher.subscribe('integration:listener-error', () => {
       throw new Error('listener failure');
@@ -426,7 +467,9 @@ describe('EventBus integration safety nets', () => {
     });
     expect(
       consoleErrorSpy.mock.calls.some((call) =>
-        String(call[0]).includes('Logger failed while handling error in "integration:listener-error" listener')
+        String(call[0]).includes(
+          'Logger failed while handling error in "integration:listener-error" listener'
+        )
       )
     ).toBe(true);
   });

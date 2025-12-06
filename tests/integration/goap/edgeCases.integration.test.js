@@ -32,7 +32,6 @@ function createTaskRegistry(taskList, modId = 'test') {
   };
 }
 
-
 describe('GOAP Edge Cases', () => {
   let setup;
 

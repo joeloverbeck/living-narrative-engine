@@ -24,33 +24,33 @@ Only two edge case tests needed to be added to verify idempotent behavior throug
 
 ## Files Modified
 
-| File | Purpose |
-|------|---------|
+| File                                                               | Purpose                                       |
+| ------------------------------------------------------------------ | --------------------------------------------- |
 | `tests/integration/mods/items/unwield_item_rule_execution.test.js` | Added edge case tests for idempotent behavior |
 
 ## Test Scenarios - Coverage Summary
 
 ### Core Operation Tests (Already Covered)
 
-| Test Case | Coverage File | Status |
-|-----------|---------------|--------|
-| Full unwield flow | `unwield_item_rule_execution.test.js` | ✅ Existed |
-| Unwield one of multiple | `unwield_item_rule_execution.test.js` | ✅ Existed |
+| Test Case                 | Coverage File                         | Status     |
+| ------------------------- | ------------------------------------- | ---------- |
+| Full unwield flow         | `unwield_item_rule_execution.test.js` | ✅ Existed |
+| Unwield one of multiple   | `unwield_item_rule_execution.test.js` | ✅ Existed |
 | Two-handed weapon unwield | `unwield_item_rule_execution.test.js` | ✅ Existed |
 
 ### Drop Wielded Item Tests (Already Covered)
 
-| Test Case | Coverage File | Status |
-|-----------|---------------|--------|
-| Drop wielded item | `dropItemRuleExecution.test.js` | ✅ Existed |
-| Drop non-wielded item | `dropItemRuleExecution.test.js` | ✅ Existed |
+| Test Case                    | Coverage File                   | Status     |
+| ---------------------------- | ------------------------------- | ---------- |
+| Drop wielded item            | `dropItemRuleExecution.test.js` | ✅ Existed |
+| Drop non-wielded item        | `dropItemRuleExecution.test.js` | ✅ Existed |
 | Drop one of multiple wielded | `dropItemRuleExecution.test.js` | ✅ Existed |
 
 ### Edge Case Tests (Added)
 
-| Test Case | Coverage File | Status |
-|-----------|---------------|--------|
-| Item not wielded (idempotent) | `unwield_item_rule_execution.test.js` | ✅ Added |
+| Test Case                                | Coverage File                         | Status   |
+| ---------------------------------------- | ------------------------------------- | -------- |
+| Item not wielded (idempotent)            | `unwield_item_rule_execution.test.js` | ✅ Added |
 | Actor not wielding anything (idempotent) | `unwield_item_rule_execution.test.js` | ✅ Added |
 
 ## Acceptance Criteria
@@ -91,13 +91,13 @@ npm run test:integration
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `tests/integration/mods/items/unwield_item_rule_execution.test.js` | Unwield action integration tests |
-| `tests/integration/mods/items/unwield_item_action_discovery.test.js` | Action structure validation |
-| `tests/integration/mods/items/dropItemRuleExecution.test.js` | Drop action with wielding scenarios |
-| `tests/common/mods/ModTestFixture.js` | Test fixture utilities |
-| `tests/common/mods/ModEntityBuilder.js` | Entity building utility |
+| File                                                                 | Purpose                             |
+| -------------------------------------------------------------------- | ----------------------------------- |
+| `tests/integration/mods/items/unwield_item_rule_execution.test.js`   | Unwield action integration tests    |
+| `tests/integration/mods/items/unwield_item_action_discovery.test.js` | Action structure validation         |
+| `tests/integration/mods/items/dropItemRuleExecution.test.js`         | Drop action with wielding scenarios |
+| `tests/common/mods/ModTestFixture.js`                                | Test fixture utilities              |
+| `tests/common/mods/ModEntityBuilder.js`                              | Entity building utility             |
 
 ## Success Metrics
 
@@ -114,16 +114,17 @@ Upon completion of this ticket:
 
 ### What Was Actually Changed vs Originally Planned
 
-| Originally Planned | What Actually Happened |
-|-------------------|------------------------|
-| Create new file `unwieldItemOperation.test.js` | File not created - tests already existed |
-| 8 new test scenarios | Only 2 tests added (edge cases for idempotent behavior) |
-| Use `ModTestFixture.forRule()` pattern | Used existing `ModTestFixture.forAction()` pattern |
-| Reference `wieldWeaponRuleExecution.test.js` | File doesn't exist; used existing patterns |
+| Originally Planned                             | What Actually Happened                                  |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| Create new file `unwieldItemOperation.test.js` | File not created - tests already existed                |
+| 8 new test scenarios                           | Only 2 tests added (edge cases for idempotent behavior) |
+| Use `ModTestFixture.forRule()` pattern         | Used existing `ModTestFixture.forAction()` pattern      |
+| Reference `wieldWeaponRuleExecution.test.js`   | File doesn't exist; used existing patterns              |
 
 ### Changes Made
 
 **Modified**: `tests/integration/mods/items/unwield_item_rule_execution.test.js`
+
 - Added `describe('Idempotent Behavior - Edge Cases')` section with 2 tests:
   1. `should succeed silently when attempting to unwield an item not currently wielded`
   2. `should succeed silently when actor has no wielding component at all`

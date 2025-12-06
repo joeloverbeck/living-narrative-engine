@@ -35,7 +35,7 @@ function createMockLogger() {
 function createMockEntityManager(entityComponents = {}) {
   return {
     hasComponent: jest.fn((entityId, componentId) => {
-      return !!(entityComponents[entityId]?.[componentId]);
+      return !!entityComponents[entityId]?.[componentId];
     }),
     getComponentData: jest.fn((entityId, componentId) => {
       return entityComponents[entityId]?.[componentId] ?? null;
@@ -67,17 +67,17 @@ describe('Modifier System Flow Integration', () => {
   describe('Context Building', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Test Actor' },
           'skills:grappling_skill': { value: 60 },
           'core:position': { locationId: 'location1' },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Test Target' },
           'positioning:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
-        'location1': {
+        location1: {
           'core:location': { name: 'Test Room' },
           'environment:lighting': { level: 'dim' },
         },
@@ -96,8 +96,12 @@ describe('Modifier System Flow Integration', () => {
 
       // Verify actor data
       expect(context.entity.actor.id).toBe('actor1');
-      expect(context.entity.actor.components['core:actor'].name).toBe('Test Actor');
-      expect(context.entity.actor.components['skills:grappling_skill'].value).toBe(60);
+      expect(context.entity.actor.components['core:actor'].name).toBe(
+        'Test Actor'
+      );
+      expect(
+        context.entity.actor.components['skills:grappling_skill'].value
+      ).toBe(60);
     });
 
     it('should build context with primary target data', () => {
@@ -108,8 +112,12 @@ describe('Modifier System Flow Integration', () => {
 
       // Verify target data
       expect(context.entity.primary.id).toBe('target1');
-      expect(context.entity.primary.components['positioning:being_restrained']).toBeDefined();
-      expect(context.entity.primary.components['skills:defense_skill'].value).toBe(30);
+      expect(
+        context.entity.primary.components['positioning:being_restrained']
+      ).toBeDefined();
+      expect(
+        context.entity.primary.components['skills:defense_skill'].value
+      ).toBe(30);
     });
 
     it('should resolve location from actor position component', () => {
@@ -120,7 +128,9 @@ describe('Modifier System Flow Integration', () => {
       // Verify location from actor's position
       expect(context.entity.location).toBeDefined();
       expect(context.entity.location.id).toBe('location1');
-      expect(context.entity.location.components['environment:lighting'].level).toBe('dim');
+      expect(
+        context.entity.location.components['environment:lighting'].level
+      ).toBe('dim');
     });
 
     it('should handle missing optional targets gracefully', () => {
@@ -138,21 +148,21 @@ describe('Modifier System Flow Integration', () => {
   describe('Modifier Collection with JSON Logic Conditions', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Test Actor' },
           'skills:grappling_skill': { value: 60 },
           'core:position': { locationId: 'location1' },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Restrained Target' },
           'positioning:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
-        'target2': {
+        target2: {
           'core:actor': { name: 'Free Target' },
           'skills:defense_skill': { value: 40 },
         },
-        'location1': {
+        location1: {
           'core:location': { name: 'Test Room' },
           'environment:lighting': { level: 'dim' },
         },
@@ -177,8 +187,12 @@ describe('Modifier System Flow Integration', () => {
           {
             condition: {
               logic: {
-                '!!': [{ 'var': 'entity.primary.components.positioning:being_restrained' }]
-              }
+                '!!': [
+                  {
+                    var: 'entity.primary.components.positioning:being_restrained',
+                  },
+                ],
+              },
             },
             value: 20,
             type: 'flat',
@@ -207,8 +221,12 @@ describe('Modifier System Flow Integration', () => {
           {
             condition: {
               logic: {
-                '!!': [{ 'var': 'entity.primary.components.positioning:being_restrained' }]
-              }
+                '!!': [
+                  {
+                    var: 'entity.primary.components.positioning:being_restrained',
+                  },
+                ],
+              },
             },
             value: 20,
             type: 'flat',
@@ -234,8 +252,12 @@ describe('Modifier System Flow Integration', () => {
           {
             condition: {
               logic: {
-                '!!': [{ 'var': 'entity.primary.components.positioning:being_restrained' }]
-              }
+                '!!': [
+                  {
+                    var: 'entity.primary.components.positioning:being_restrained',
+                  },
+                ],
+              },
             },
             value: 20,
             type: 'flat',
@@ -245,10 +267,12 @@ describe('Modifier System Flow Integration', () => {
             condition: {
               logic: {
                 '==': [
-                  { 'var': 'entity.location.components.environment:lighting.level' },
-                  'dim'
-                ]
-              }
+                  {
+                    var: 'entity.location.components.environment:lighting.level',
+                  },
+                  'dim',
+                ],
+              },
             },
             value: -10,
             type: 'flat',
@@ -268,7 +292,7 @@ describe('Modifier System Flow Integration', () => {
       expect(result.totalFlat).toBe(10); // 20 - 10
 
       // Verify both tags are present
-      const tags = result.modifiers.map(m => m.tag);
+      const tags = result.modifiers.map((m) => m.tag);
       expect(tags).toContain('target restrained');
       expect(tags).toContain('low light');
     });
@@ -300,7 +324,7 @@ describe('Modifier System Flow Integration', () => {
   describe('Stacking Rules', () => {
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Test Actor' },
         },
       });
@@ -417,16 +441,16 @@ describe('Modifier System Flow Integration', () => {
 
     beforeEach(() => {
       entityManager = createMockEntityManager({
-        'actor1': {
+        actor1: {
           'core:actor': { name: 'Test Actor' },
           'skills:grappling_skill': { value: 60 },
         },
-        'target1': {
+        target1: {
           'core:actor': { name: 'Restrained Target' },
           'positioning:being_restrained': { restrainedBy: 'someone' },
           'skills:defense_skill': { value: 30 },
         },
-        'target2': {
+        target2: {
           'core:actor': { name: 'Free Target' },
           'skills:defense_skill': { value: 30 },
         },
@@ -487,8 +511,12 @@ describe('Modifier System Flow Integration', () => {
             {
               condition: {
                 logic: {
-                  '!!': [{ 'var': 'entity.primary.components.positioning:being_restrained' }]
-                }
+                  '!!': [
+                    {
+                      var: 'entity.primary.components.positioning:being_restrained',
+                    },
+                  ],
+                },
               },
               value: 20,
               type: 'flat',
@@ -510,18 +538,23 @@ describe('Modifier System Flow Integration', () => {
       expect(resultWithModifier.breakdown.modifiers).toHaveLength(1);
 
       // Calculate with non-restrained target
-      const resultWithoutModifier = chanceCalculationService.calculateForDisplay({
-        actorId: 'actor1',
-        primaryTargetId: 'target2', // NOT restrained
-        actionDef,
-      });
+      const resultWithoutModifier =
+        chanceCalculationService.calculateForDisplay({
+          actorId: 'actor1',
+          primaryTargetId: 'target2', // NOT restrained
+          actionDef,
+        });
 
       // Should NOT have modifier active
-      expect(resultWithoutModifier.activeTags).not.toContain('target restrained');
+      expect(resultWithoutModifier.activeTags).not.toContain(
+        'target restrained'
+      );
       expect(resultWithoutModifier.breakdown.modifiers).toHaveLength(0);
 
       // Chance should be higher with modifier (flat +20)
-      expect(resultWithModifier.chance).toBeGreaterThan(resultWithoutModifier.chance);
+      expect(resultWithModifier.chance).toBeGreaterThan(
+        resultWithoutModifier.chance
+      );
     });
 
     it('should include all active tags in result', () => {

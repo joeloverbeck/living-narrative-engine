@@ -15,7 +15,11 @@ import eventIsActionExamineItemInLocation from '../../../../data/mods/observatio
 function setupExamineItemInLocationScenario(
   actorName = 'Alice',
   locationId = 'saloon1',
-  item = { id: 'horseshoe-1', description: 'A rusty iron horseshoe.', portable: true }
+  item = {
+    id: 'horseshoe-1',
+    description: 'A rusty iron horseshoe.',
+    portable: true,
+  }
 ) {
   const room = new ModEntityBuilder(locationId).asRoom('Saloon').build();
 
@@ -135,18 +139,23 @@ describe('observation:examine_item_in_location rule execution', () => {
       expectSuccessfulTurnEnd(testFixture.events);
 
       // Assert: Verify item still at location (no state change)
-      const item = testFixture.entityManager.getEntityInstance('heavy_furniture');
+      const item =
+        testFixture.entityManager.getEntityInstance('heavy_furniture');
       expect(item.components['core:position']).toBeDefined();
       expect(item.components['core:position'].locationId).toBe('room1');
     });
 
     it('handles examination with detailed multi-sentence description', async () => {
-      const scenario = setupExamineItemInLocationScenario('Charlie', 'library', {
-        id: 'old-book',
-        description:
-          'An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.',
-        portable: true,
-      });
+      const scenario = setupExamineItemInLocationScenario(
+        'Charlie',
+        'library',
+        {
+          id: 'old-book',
+          description:
+            'An ancient leather-bound tome. The pages are yellowed and brittle. Strange symbols cover the binding.',
+          portable: true,
+        }
+      );
       testFixture.reset([scenario.room, scenario.actor, scenario.item]);
 
       await testFixture.executeAction('test:actor1', 'old-book');
@@ -195,7 +204,9 @@ describe('observation:examine_item_in_location rule execution', () => {
       expect(examineEvent.payload.descriptionText).toContain('Dave');
       expect(examineEvent.payload.descriptionText).not.toContain('their');
       expect(examineEvent.payload.descriptionText).toContain('tool-1');
-      expect(examineEvent.payload.descriptionText).toContain('A well-worn hammer.');
+      expect(examineEvent.payload.descriptionText).toContain(
+        'A well-worn hammer.'
+      );
 
       expectSuccessfulTurnEnd(testFixture.events);
     });
@@ -237,7 +248,8 @@ describe('observation:examine_item_in_location rule execution', () => {
       testFixture.reset([scenario.room, scenario.actor, scenario.item]);
 
       // Get initial item state
-      const itemBefore = testFixture.entityManager.getEntityInstance('hay-bale');
+      const itemBefore =
+        testFixture.entityManager.getEntityInstance('hay-bale');
       const positionBefore = itemBefore.components['core:position'];
 
       await testFixture.executeAction('test:actor1', 'hay-bale');

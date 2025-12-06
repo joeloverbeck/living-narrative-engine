@@ -62,12 +62,12 @@ tests/
 
 ### Quick Reference
 
-| Suite | Command | Purpose | Coverage Target |
-|-------|---------|---------|----------------|
-| Unit Tests | `npm run test:unit -- anatomy/services` | Service behavior, caching, logic | 90%+ functions/lines |
-| Integration Tests | `npm run test:integration -- anatomy` | Full pipeline, real modules | 80%+ branches |
-| Performance Tests | `npm run test:performance -- anatomy` | Throughput, caching efficiency | <50ms per operation |
-| Memory Tests | `npm run test:memory -- anatomy` | Leak detection, cache cleanup | No sustained growth |
+| Suite             | Command                                 | Purpose                          | Coverage Target      |
+| ----------------- | --------------------------------------- | -------------------------------- | -------------------- |
+| Unit Tests        | `npm run test:unit -- anatomy/services` | Service behavior, caching, logic | 90%+ functions/lines |
+| Integration Tests | `npm run test:integration -- anatomy`   | Full pipeline, real modules      | 80%+ branches        |
+| Performance Tests | `npm run test:performance -- anatomy`   | Throughput, caching efficiency   | <50ms per operation  |
+| Memory Tests      | `npm run test:memory -- anatomy`        | Leak detection, cache cleanup    | No sustained growth  |
 
 ### Running Tests
 
@@ -101,6 +101,7 @@ Each service is tested in isolation with mocked dependencies.
 **Location**: `tests/unit/anatomy/services/activityDescriptionFacade.test.js`
 
 **Coverage Areas**:
+
 - Dependency validation
 - Service orchestration
 - Configuration merging
@@ -109,6 +110,7 @@ Each service is tested in isolation with mocked dependencies.
 - Event dispatching
 
 **Example Test**:
+
 ```javascript
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
@@ -122,15 +124,15 @@ describe('ActivityDescriptionFacade', () => {
       entityManager: createMockEntityManager(),
       cacheManager: createMockCacheManager(),
       metadataCollectionSystem: {
-        collectActivityMetadata: jest.fn().mockReturnValue([
-          { template: '{actor} waves', priority: 100 }
-        ])
+        collectActivityMetadata: jest
+          .fn()
+          .mockReturnValue([{ template: '{actor} waves', priority: 100 }]),
       },
       nlgSystem: {
-        generatePhrase: jest.fn().mockReturnValue('waves')
+        generatePhrase: jest.fn().mockReturnValue('waves'),
       },
       groupingSystem: {
-        groupActivities: jest.fn().mockReturnValue(['waves'])
+        groupActivities: jest.fn().mockReturnValue(['waves']),
       },
       // ... other services
     };
@@ -141,18 +143,20 @@ describe('ActivityDescriptionFacade', () => {
   it('should orchestrate services correctly', async () => {
     const result = await facade.generateActivityDescription('actor_123');
 
-    expect(mockServices.metadataCollectionSystem.collectActivityMetadata)
-      .toHaveBeenCalledWith('actor_123', expect.any(Object));
-    expect(mockServices.nlgSystem.generatePhrase)
-      .toHaveBeenCalled();
+    expect(
+      mockServices.metadataCollectionSystem.collectActivityMetadata
+    ).toHaveBeenCalledWith('actor_123', expect.any(Object));
+    expect(mockServices.nlgSystem.generatePhrase).toHaveBeenCalled();
     expect(result).toBe('waves');
   });
 
   it('should invalidate cache correctly', () => {
     facade.invalidateCache('actor_123', 'name');
 
-    expect(mockServices.cacheManager.invalidate)
-      .toHaveBeenCalledWith('entityName', 'actor_123');
+    expect(mockServices.cacheManager.invalidate).toHaveBeenCalledWith(
+      'entityName',
+      'actor_123'
+    );
   });
 });
 ```
@@ -162,6 +166,7 @@ describe('ActivityDescriptionFacade', () => {
 **Location**: `tests/unit/anatomy/cache/activityCacheManager.test.js`
 
 **Coverage Areas**:
+
 - Cache registration
 - TTL expiration
 - LRU pruning
@@ -169,6 +174,7 @@ describe('ActivityDescriptionFacade', () => {
 - Multi-cache coordination
 
 **Example Test**:
+
 ```javascript
 describe('ActivityCacheManager', () => {
   let cacheManager;
@@ -178,7 +184,7 @@ describe('ActivityCacheManager', () => {
     mockEventBus = createMockEventBus();
     cacheManager = new ActivityCacheManager({
       logger: createMockLogger(),
-      eventBus: mockEventBus
+      eventBus: mockEventBus,
     });
   });
 
@@ -224,12 +230,13 @@ describe('ActivityCacheManager', () => {
     cacheManager.set('entityName', 'actor_123', 'Alice');
 
     // Trigger event
-    const componentAddedHandler = mockEventBus.subscribe.mock.calls
-      .find(call => call[0] === 'COMPONENT_ADDED')[1];
+    const componentAddedHandler = mockEventBus.subscribe.mock.calls.find(
+      (call) => call[0] === 'COMPONENT_ADDED'
+    )[1];
 
     componentAddedHandler({
       type: 'COMPONENT_ADDED',
-      payload: { entityId: 'actor_123', componentId: 'core:name' }
+      payload: { entityId: 'actor_123', componentId: 'core:name' },
     });
 
     expect(cacheManager.get('entityName', 'actor_123')).toBeNull();
@@ -242,6 +249,7 @@ describe('ActivityCacheManager', () => {
 **Location**: `tests/unit/anatomy/services/activityMetadataCollectionSystem.test.js`
 
 **Coverage Areas**:
+
 - 3-tier metadata collection
 - Deduplication by signature
 - Index integration
@@ -249,6 +257,7 @@ describe('ActivityCacheManager', () => {
 - Dedicated metadata components
 
 **Example Test**:
+
 ```javascript
 describe('ActivityMetadataCollectionSystem', () => {
   let collector;
@@ -258,19 +267,22 @@ describe('ActivityMetadataCollectionSystem', () => {
     mockEntityManager = {
       getEntityInstance: jest.fn().mockReturnValue({
         components: new Map([
-          ['positioning:kneeling', {
-            activityMetadata: {
-              template: '{actor} kneels',
-              priority: 100
-            }
-          }]
-        ])
-      })
+          [
+            'positioning:kneeling',
+            {
+              activityMetadata: {
+                template: '{actor} kneels',
+                priority: 100,
+              },
+            },
+          ],
+        ]),
+      }),
     };
 
     collector = new ActivityMetadataCollectionSystem({
       entityManager: mockEntityManager,
-      logger: createMockLogger()
+      logger: createMockLogger(),
     });
   });
 
@@ -281,20 +293,26 @@ describe('ActivityMetadataCollectionSystem', () => {
     expect(activities[0]).toMatchObject({
       type: 'inline',
       template: '{actor} kneels',
-      priority: 100
+      priority: 100,
     });
   });
 
   it('should deduplicate activities by signature', () => {
     mockEntityManager.getEntityInstance.mockReturnValue({
       components: new Map([
-        ['comp1', {
-          activityMetadata: { template: '{actor} waves', priority: 100 }
-        }],
-        ['comp2', {
-          activityMetadata: { template: '{actor} waves', priority: 100 }
-        }]
-      ])
+        [
+          'comp1',
+          {
+            activityMetadata: { template: '{actor} waves', priority: 100 },
+          },
+        ],
+        [
+          'comp2',
+          {
+            activityMetadata: { template: '{actor} waves', priority: 100 },
+          },
+        ],
+      ]),
     });
 
     const activities = collector.collectActivityMetadata('actor_123');
@@ -309,6 +327,7 @@ describe('ActivityMetadataCollectionSystem', () => {
 **Location**: `tests/unit/anatomy/services/activityNLGSystem.test.js`
 
 **Coverage Areas**:
+
 - Pronoun resolution
 - Template processing
 - Softener injection
@@ -317,6 +336,7 @@ describe('ActivityMetadataCollectionSystem', () => {
 - Name sanitization
 
 **Example Test**:
+
 ```javascript
 describe('ActivityNLGSystem', () => {
   let nlgSystem;
@@ -327,16 +347,14 @@ describe('ActivityNLGSystem', () => {
     mockCacheManager = createMockCacheManager();
     mockEntityManager = {
       getEntityInstance: jest.fn().mockReturnValue({
-        components: new Map([
-          ['core:gender', { gender: 'female' }]
-        ])
-      })
+        components: new Map([['core:gender', { gender: 'female' }]]),
+      }),
     };
 
     nlgSystem = new ActivityNLGSystem({
       logger: createMockLogger(),
       entityManager: mockEntityManager,
-      cacheManager: mockCacheManager
+      cacheManager: mockCacheManager,
     });
   });
 
@@ -344,7 +362,9 @@ describe('ActivityNLGSystem', () => {
     const pronoun = nlgSystem.resolvePronoun('actor_123', 'subject');
 
     expect(pronoun).toBe('she');
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith('actor_123');
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+      'actor_123'
+    );
   });
 
   it('should generate phrase with template placeholders', () => {
@@ -353,7 +373,7 @@ describe('ActivityNLGSystem', () => {
       {
         actorName: 'Alice',
         targetName: 'Bob',
-        targetPronoun: 'he'
+        targetPronoun: 'he',
       }
     );
 
@@ -364,11 +384,11 @@ describe('ActivityNLGSystem', () => {
     const phrase = nlgSystem.generatePhrase(
       {
         template: '{actor} {descriptor} touches {target}',
-        descriptor: 'gently'
+        descriptor: 'gently',
       },
       {
         actorName: 'Alice',
-        targetName: 'Bob'
+        targetName: 'Bob',
       }
     );
 
@@ -382,7 +402,7 @@ describe('ActivityNLGSystem', () => {
   });
 
   it('should sanitize entity names', () => {
-    const clean = nlgSystem.sanitizeEntityName("Alice\u0000\t\n  ");
+    const clean = nlgSystem.sanitizeEntityName('Alice\u0000\t\n  ');
 
     expect(clean).toBe('Alice');
   });
@@ -394,12 +414,14 @@ describe('ActivityNLGSystem', () => {
 **Location**: `tests/unit/anatomy/services/grouping/activityGroupingSystem.test.js`
 
 **Coverage Areas**:
+
 - Grouping by target
 - Simultaneity threshold
 - Conjunction selection
 - Priority ordering
 
 **Example Test**:
+
 ```javascript
 describe('ActivityGroupingSystem', () => {
   let groupingSystem;
@@ -407,7 +429,7 @@ describe('ActivityGroupingSystem', () => {
   beforeEach(() => {
     groupingSystem = new ActivityGroupingSystem({
       logger: createMockLogger(),
-      config: { simultaneityThreshold: 10 }
+      config: { simultaneityThreshold: 10 },
     });
   });
 
@@ -415,7 +437,7 @@ describe('ActivityGroupingSystem', () => {
     const grouped = groupingSystem.groupActivities([
       { target: 'target_1', priority: 100, phrase: 'kisses her' },
       { target: 'target_1', priority: 95, phrase: 'caresses her' },
-      { target: 'target_2', priority: 80, phrase: 'waves to him' }
+      { target: 'target_2', priority: 80, phrase: 'waves to him' },
     ]);
 
     expect(grouped).toHaveLength(2);
@@ -426,7 +448,7 @@ describe('ActivityGroupingSystem', () => {
   it('should respect simultaneity threshold', () => {
     const grouped = groupingSystem.groupActivities([
       { target: 'target_1', priority: 100, phrase: 'kisses her' },
-      { target: 'target_1', priority: 50, phrase: 'waves to her' } // > 10 diff
+      { target: 'target_1', priority: 50, phrase: 'waves to her' }, // > 10 diff
     ]);
 
     expect(grouped).toHaveLength(2); // Not grouped
@@ -439,12 +461,14 @@ describe('ActivityGroupingSystem', () => {
 **Location**: `tests/unit/anatomy/services/context/activityContextBuildingSystem.test.js`
 
 **Coverage Areas**:
+
 - Name resolution
 - Closeness detection
 - Tone adjustment
 - Context structure
 
 **Example Test**:
+
 ```javascript
 describe('ActivityContextBuildingSystem', () => {
   let contextBuilder;
@@ -454,21 +478,21 @@ describe('ActivityContextBuildingSystem', () => {
   beforeEach(() => {
     mockCacheManager = createMockCacheManager();
     mockEntityManager = {
-      getEntityInstance: jest.fn()
-        .mockImplementation((id) => ({
-          components: new Map([
-            ['core:actor', { name: id === 'actor_123' ? 'Alice' : 'Bob' }],
-            ['positioning:closeness', id === 'actor_123' ?
-              { partners: ['target_456'] } : null
-            ]
-          ])
-        }))
+      getEntityInstance: jest.fn().mockImplementation((id) => ({
+        components: new Map([
+          ['core:actor', { name: id === 'actor_123' ? 'Alice' : 'Bob' }],
+          [
+            'positioning:closeness',
+            id === 'actor_123' ? { partners: ['target_456'] } : null,
+          ],
+        ]),
+      })),
     };
 
     contextBuilder = new ActivityContextBuildingSystem({
       logger: createMockLogger(),
       entityManager: mockEntityManager,
-      cacheManager: mockCacheManager
+      cacheManager: mockCacheManager,
     });
   });
 
@@ -479,15 +503,15 @@ describe('ActivityContextBuildingSystem', () => {
       actorName: 'Alice',
       targetName: 'Bob',
       closeness: expect.any(Number),
-      relationshipTone: expect.stringMatching(/intimate|formal/)
+      relationshipTone: expect.stringMatching(/intimate|formal/),
     });
   });
 
   it('should set intimate tone for high closeness', () => {
     mockEntityManager.getEntityInstance.mockReturnValue({
       components: new Map([
-        ['positioning:closeness', { partners: ['target_456'], closeness: 0.9 }]
-      ])
+        ['positioning:closeness', { partners: ['target_456'], closeness: 0.9 }],
+      ]),
     });
 
     const context = contextBuilder.buildContext('actor_123', 'target_456');
@@ -502,12 +526,14 @@ describe('ActivityContextBuildingSystem', () => {
 **Location**: `tests/unit/anatomy/services/filtering/activityFilteringSystem.test.js`
 
 **Coverage Areas**:
+
 - Visibility filtering
 - JSON Logic evaluation
 - Context-aware conditions
 - Error handling
 
 **Example Test**:
+
 ```javascript
 describe('ActivityFilteringSystem', () => {
   let filteringSystem;
@@ -515,12 +541,12 @@ describe('ActivityFilteringSystem', () => {
 
   beforeEach(() => {
     mockJsonLogic = {
-      evaluate: jest.fn().mockReturnValue(true)
+      evaluate: jest.fn().mockReturnValue(true),
     };
 
     filteringSystem = new ActivityFilteringSystem({
       logger: createMockLogger(),
-      jsonLogicEvaluationService: mockJsonLogic
+      jsonLogicEvaluationService: mockJsonLogic,
     });
   });
 
@@ -528,7 +554,7 @@ describe('ActivityFilteringSystem', () => {
     const filtered = filteringSystem.filterActivities(
       [
         { template: 'visible', visibility: true },
-        { template: 'hidden', visibility: false }
+        { template: 'hidden', visibility: false },
       ],
       {}
     );
@@ -539,10 +565,12 @@ describe('ActivityFilteringSystem', () => {
 
   it('should evaluate JSON Logic conditions', () => {
     const filtered = filteringSystem.filterActivities(
-      [{
-        template: 'conditional',
-        condition: { '>=': [{ var: 'closeness' }, 0.7] }
-      }],
+      [
+        {
+          template: 'conditional',
+          condition: { '>=': [{ var: 'closeness' }, 0.7] },
+        },
+      ],
       { closeness: 0.85 }
     );
 
@@ -568,12 +596,14 @@ Integration tests verify the complete pipeline with real module interactions.
 **Location**: `tests/integration/anatomy/activityDescriptionIntegration.test.js`
 
 **Coverage Areas**:
+
 - End-to-end pipeline
 - Real mod data
 - Multi-source metadata merging
 - Configuration application
 
 **Example Test**:
+
 ```javascript
 describe('Activity Description Integration', () => {
   let container;
@@ -587,11 +617,12 @@ describe('Activity Description Integration', () => {
   it('should generate description from real mod data', async () => {
     // Setup: Create entity with positioning component
     const entityId = 'test_actor';
-    const entity = await container.resolve('IEntityManager')
+    const entity = await container
+      .resolve('IEntityManager')
       .createEntity(entityId, 'core:actor');
 
     await entity.addComponent('positioning:kneeling', {
-      target: 'target_npc'
+      target: 'target_npc',
     });
 
     // Act
@@ -603,13 +634,14 @@ describe('Activity Description Integration', () => {
   });
 
   it('should merge configuration from mods', async () => {
-    const config = container.resolve('AnatomyFormattingService')
+    const config = container
+      .resolve('AnatomyFormattingService')
       .getActivityIntegrationConfig();
 
     expect(config).toMatchObject({
       prefix: expect.any(String),
       separator: expect.any(String),
-      maxActivities: expect.any(Number)
+      maxActivities: expect.any(Number),
     });
   });
 });
@@ -620,11 +652,13 @@ describe('Activity Description Integration', () => {
 **Location**: `tests/integration/anatomy/activityContextAwareness.test.js`
 
 **Coverage Areas**:
+
 - Closeness-based filtering
 - Tone adjustment
 - Pronoun usage
 
 **Example Test**:
+
 ```javascript
 describe('Activity Context Awareness', () => {
   it('should use pronouns for close relationships', async () => {
@@ -660,11 +694,13 @@ Performance tests measure throughput, latency, and caching efficiency.
 **Location**: `tests/performance/anatomy/activityDescriptionPerformance.test.js`
 
 **Coverage Areas**:
+
 - Generation speed
 - Cache hit rates
 - Bulk operations
 
 **Example Test**:
+
 ```javascript
 describe('Activity Description Performance', () => {
   it('should generate descriptions within 50ms (uncached)', async () => {
@@ -711,6 +747,7 @@ describe('Activity Description Performance', () => {
 **Location**: `tests/performance/anatomy/activityCacheManager.performance.test.js`
 
 **Example Test**:
+
 ```javascript
 describe('ActivityCacheManager Performance', () => {
   it('should handle 10,000 cache operations in <100ms', () => {
@@ -742,6 +779,7 @@ Memory tests detect leaks and verify proper cleanup.
 **Location**: `tests/memory/anatomy/activityDescriptionService.memory.test.js`
 
 **Example Test**:
+
 ```javascript
 describe('Activity Description Memory', () => {
   it('should not leak memory on repeated generation', async () => {
@@ -792,12 +830,13 @@ Characterization tests ensure refactored system behaves identically to original.
 **Purpose**: Verify new services match old behavior exactly.
 
 **Example Test**:
+
 ```javascript
 describe('ActivityMetadataCollectionSystem - Migration', () => {
   it('should produce same results as old ActivityDescriptionService', () => {
     const newSystem = new ActivityMetadataCollectionSystem({
       entityManager: mockEntityManager,
-      logger: mockLogger
+      logger: mockLogger,
     });
 
     const oldResults = legacyCollectMetadata(entityId); // Saved snapshot
@@ -826,7 +865,7 @@ export function createMockLogger() {
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   };
 }
 
@@ -836,17 +875,19 @@ export function createMockCacheManager() {
   return {
     registerCache: jest.fn((name) => caches.set(name, new Map())),
     get: jest.fn((cacheName, key) => caches.get(cacheName)?.get(key) || null),
-    set: jest.fn((cacheName, key, value) => caches.get(cacheName)?.set(key, value)),
+    set: jest.fn((cacheName, key, value) =>
+      caches.get(cacheName)?.set(key, value)
+    ),
     invalidate: jest.fn((cacheName, key) => caches.get(cacheName)?.delete(key)),
-    clearAllCaches: jest.fn(() => caches.clear())
+    clearAllCaches: jest.fn(() => caches.clear()),
   };
 }
 
 export function createMockEntityManager() {
   return {
     getEntityInstance: jest.fn().mockReturnValue({
-      components: new Map()
-    })
+      components: new Map(),
+    }),
   };
 }
 ```
@@ -869,7 +910,7 @@ export async function createClosePair(container) {
 
   await actor.addComponent('positioning:closeness', {
     partners: [target.id],
-    closeness: 0.9
+    closeness: 0.9,
   });
 
   return { actor, target };
@@ -957,6 +998,7 @@ npm run test:integration -- anatomy --bail
 ### Updating Existing Tests
 
 **Old pattern** (monolithic service):
+
 ```javascript
 import ActivityDescriptionService from '../../../src/anatomy/services/activityDescriptionService.js';
 
@@ -964,6 +1006,7 @@ const service = new ActivityDescriptionService({ ... });
 ```
 
 **New pattern** (facade + services):
+
 ```javascript
 import ActivityDescriptionFacade from '../../../src/anatomy/services/activityDescriptionFacade.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';

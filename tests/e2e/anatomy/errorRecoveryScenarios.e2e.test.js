@@ -2,7 +2,7 @@
  * @file tests/e2e/anatomy/errorRecoveryScenarios.e2e.test.js
  * @description End-to-end tests for advanced error recovery scenarios in the anatomy system
  * Tests AnatomyUnitOfWork rollback, cache invalidation/recovery, and constraint violations
- * 
+ *
  * IMPORTANT ARCHITECTURAL NOTE:
  * The BodyGraphService creates and manages its own internal AnatomyCacheManager instance.
  * The test bed also creates a separate AnatomyCacheManager for testing purposes.
@@ -78,7 +78,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
     anatomyCacheManager = testBed.anatomyCacheManager;
     anatomyOrchestrator = testBed.anatomyOrchestrator;
     logger = testBed.logger;
-    
+
     // Create RecipeConstraintEvaluator manually since it's not exposed by test bed
     recipeConstraintEvaluator = new RecipeConstraintEvaluator({
       entityManager,
@@ -172,7 +172,10 @@ describe('Anatomy Error Recovery E2E Tests', () => {
             { partType: 'torso', min: 1 },
           ],
           excludes: [
-            { parts: ['wing', 'arm'], message: 'Cannot have both wings and arms' },
+            {
+              parts: ['wing', 'arm'],
+              message: 'Cannot have both wings and arms',
+            },
           ],
         },
       },
@@ -211,7 +214,8 @@ describe('Anatomy Error Recovery E2E Tests', () => {
     testBed.loadEntityDefinitions({
       'anatomy:blueprint_slot': {
         id: 'anatomy:blueprint_slot',
-        description: 'A blueprint slot entity that represents a slot from the anatomy blueprint',
+        description:
+          'A blueprint slot entity that represents a slot from the anatomy blueprint',
         components: {
           'core:name': { text: 'Blueprint Slot' },
         },
@@ -280,7 +284,8 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       });
 
       // Track initial entity count
-      const initialPartCount = entityManager.getEntitiesWithComponent('anatomy:part').length;
+      const initialPartCount =
+        entityManager.getEntitiesWithComponent('anatomy:part').length;
 
       // Attempt generation - should fail during recipe validation
       await expect(
@@ -288,7 +293,8 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       ).rejects.toThrow();
 
       // Verify no new anatomy parts were created
-      const finalPartCount = entityManager.getEntitiesWithComponent('anatomy:part').length;
+      const finalPartCount =
+        entityManager.getEntitiesWithComponent('anatomy:part').length;
       expect(finalPartCount).toBe(initialPartCount);
 
       // Verify no anatomy body was added
@@ -299,7 +305,8 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       expect(anatomyData.body).toBeUndefined();
 
       // Verify no orphaned anatomy parts exist
-      const anatomyParts = entityManager.getEntitiesWithComponent('anatomy:part');
+      const anatomyParts =
+        entityManager.getEntitiesWithComponent('anatomy:part');
       expect(anatomyParts.length).toBe(0);
     });
 
@@ -408,8 +415,9 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       });
 
       const deletionOrder = [];
-      const originalRemove = entityManager.removeEntityInstance.bind(entityManager);
-      
+      const originalRemove =
+        entityManager.removeEntityInstance.bind(entityManager);
+
       // Mock to track deletion order
       entityManager.removeEntityInstance = jest.fn(async (entityId) => {
         deletionOrder.push(entityId);
@@ -468,10 +476,10 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // The BodyGraphService manages its own internal cache, which is built during generation
       // We'll test with our test bed's cache manager to verify the cache operations work
-      
+
       // Build cache manually in test cache manager
       await anatomyCacheManager.buildCache(rootId, entityManager);
-      
+
       // Verify cache exists
       expect(anatomyCacheManager.hasCacheForRoot(rootId)).toBe(true);
       const initialCacheSize = anatomyCacheManager.size();
@@ -499,7 +507,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       // Get a part entity from the cache
       const cacheEntries = Array.from(anatomyCacheManager.entries());
       const partEntry = cacheEntries.find(([id]) => id !== rootId);
-      
+
       if (!partEntry) {
         // If no parts, skip this specific test
         console.warn('No anatomy parts found to test cache validation');
@@ -513,7 +521,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // Validate cache - should detect the missing entity
       const validation = anatomyCacheManager.validateCache(entityManager);
-      
+
       expect(validation.valid).toBe(false);
       expect(validation.issues).toContainEqual(
         expect.stringContaining(`Cached entity '${partId}' no longer exists`)
@@ -544,7 +552,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // Verify cache rebuilt correctly
       expect(anatomyCacheManager.hasCacheForRoot(rootId)).toBe(true);
-      
+
       // The cache size should match the number of parts plus the root
       // Note: actual count may vary based on how the anatomy is structured
       expect(anatomyCacheManager.size()).toBeGreaterThan(0);
@@ -559,15 +567,19 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       const { rootId } = await generateBasicAnatomy();
 
       // Find a part with a joint to modify
-      const entitiesWithJoints = entityManager.getEntitiesWithComponent('anatomy:joint');
-      
+      const entitiesWithJoints =
+        entityManager.getEntitiesWithComponent('anatomy:joint');
+
       if (entitiesWithJoints.length === 0) {
         console.warn('No joints found to test parent-child validation');
         return;
       }
 
       const entityWithJoint = entitiesWithJoints[0];
-      const jointData = entityManager.getComponentData(entityWithJoint.id, 'anatomy:joint');
+      const jointData = entityManager.getComponentData(
+        entityWithJoint.id,
+        'anatomy:joint'
+      );
       const originalParent = jointData.parentId || jointData.parentEntityId;
 
       // Modify the joint parent relationship
@@ -579,7 +591,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // Validate cache - should detect mismatch
       const validation = anatomyCacheManager.validateCache(entityManager);
-      
+
       // The validation may not detect this specific issue if the cache
       // wasn't rebuilt, but we can verify the cache is now invalid
       if (validation.issues.length > 0) {
@@ -592,13 +604,12 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // The rebuild should now reflect the modified relationships
       const revalidation = anatomyCacheManager.validateCache(entityManager);
-      
+
       // The validation after rebuild should be consistent with current state
       // (even if that state has the modified parent)
       expect(revalidation.issues.length).toBeGreaterThanOrEqual(0);
     });
   });
-
 
   describe('Integration Error Scenarios', () => {
     it('should perform complete pipeline rollback on description generation failure', async () => {
@@ -615,23 +626,27 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       });
 
       // Track initial state
-      const initialPartCount = entityManager.getEntitiesWithComponent('anatomy:part').length;
+      const initialPartCount =
+        entityManager.getEntitiesWithComponent('anatomy:part').length;
 
       // Mock description generation to fail (only if service is exposed)
       let originalGenerateAll;
       let generationFailed = false;
-      
-      if (testBed.anatomyDescriptionService && testBed.anatomyDescriptionService.generateAll) {
+
+      if (
+        testBed.anatomyDescriptionService &&
+        testBed.anatomyDescriptionService.generateAll
+      ) {
         originalGenerateAll = testBed.anatomyDescriptionService.generateAll;
-        testBed.anatomyDescriptionService.generateAll = jest.fn().mockRejectedValue(
-          new Error('Description generation failed')
-        );
+        testBed.anatomyDescriptionService.generateAll = jest
+          .fn()
+          .mockRejectedValue(new Error('Description generation failed'));
       }
 
       try {
         // Attempt generation - should fail during description phase if service was mocked
         await anatomyGenerationService.generateAnatomyIfNeeded(entityId);
-        
+
         // If we reach here and service was mocked, test should fail
         if (originalGenerateAll) {
           throw new Error('Expected generation to fail but it succeeded');
@@ -654,22 +669,25 @@ describe('Anatomy Error Recovery E2E Tests', () => {
         entityId,
         ANATOMY_BODY_COMPONENT_ID
       );
-      
+
       if (generationFailed) {
         // If generation failed, anatomy body should not be populated (rollback should prevent it)
         if (anatomyData) {
           expect(anatomyData.body).toBeUndefined();
         }
       } else {
-        // If generation succeeded (because we couldn't mock the service), 
+        // If generation succeeded (because we couldn't mock the service),
         // skip the rollback validation since no rollback occurred
-        console.warn('Skipping rollback validation - description service could not be mocked');
+        console.warn(
+          'Skipping rollback validation - description service could not be mocked'
+        );
         return;
       }
 
       // Verify no orphaned parts
-      const anatomyParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const orphanedParts = anatomyParts.filter(part => {
+      const anatomyParts =
+        entityManager.getEntitiesWithComponent('anatomy:part');
+      const orphanedParts = anatomyParts.filter((part) => {
         const partData = part.getComponentData('anatomy:part');
         // Check if this part was from our failed generation
         return !partData.parentId || partData.ownerId === entityId;
@@ -685,7 +703,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
     it('should handle batch processing with mixed success and failure', async () => {
       // Create multiple entities
       const entities = [];
-      
+
       // Create successful entities
       for (let i = 0; i < 2; i++) {
         const mockEntity = testBed.createMockEntity();
@@ -717,8 +735,9 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       entities.push({ id: failEntityId, shouldSucceed: false });
 
       // Process all entities
-      const entityIds = entities.map(e => e.id);
-      const results = await anatomyGenerationService.generateAnatomyForEntities(entityIds);
+      const entityIds = entities.map((e) => e.id);
+      const results =
+        await anatomyGenerationService.generateAnatomyForEntities(entityIds);
 
       // Verify results
       expect(results.generated.length).toBe(2); // Two should succeed
@@ -726,7 +745,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       expect(results.failed[0].entityId).toBe(failEntityId);
 
       // Verify successful entities have complete anatomy
-      for (const entity of entities.filter(e => e.shouldSucceed)) {
+      for (const entity of entities.filter((e) => e.shouldSucceed)) {
         const anatomyData = entityManager.getComponentData(
           entity.id,
           ANATOMY_BODY_COMPONENT_ID
@@ -745,7 +764,7 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // Verify no orphaned parts from failed entity
       const allParts = entityManager.getEntitiesWithComponent('anatomy:part');
-      const orphanedParts = allParts.filter(part => {
+      const orphanedParts = allParts.filter((part) => {
         const partData = part.getComponentData('anatomy:part');
         // Check if part belongs to failed entity
         return partData.ownerId === failEntityId;
@@ -756,10 +775,10 @@ describe('Anatomy Error Recovery E2E Tests', () => {
     it('should maintain consistency when processing entities with interdependencies', async () => {
       // This test verifies that when multiple entities are processed,
       // failures don't affect the successful ones
-      
+
       const successEntity1 = testBed.createMockEntity();
       const successEntity2 = testBed.createMockEntity();
-      
+
       // Create and setup entities
       for (const entityId of [successEntity1.id, successEntity2.id]) {
         await entityManager.createEntityInstance('test:actor', {
@@ -772,10 +791,9 @@ describe('Anatomy Error Recovery E2E Tests', () => {
       }
 
       // Process both successfully
-      const results = await anatomyGenerationService.generateAnatomyForEntities([
-        successEntity1.id,
-        successEntity2.id,
-      ]);
+      const results = await anatomyGenerationService.generateAnatomyForEntities(
+        [successEntity1.id, successEntity2.id]
+      );
 
       expect(results.generated.length).toBe(2);
       expect(results.failed.length).toBe(0);
@@ -796,38 +814,46 @@ describe('Anatomy Error Recovery E2E Tests', () => {
 
       // Verify that each anatomy was generated successfully and independently
       // The core concern is that processing multiple entities works correctly
-      
+
       // Verify first anatomy has proper structure
-      const bodyGraph1 = await testBed.bodyGraphService.getBodyGraph(successEntity1.id);
+      const bodyGraph1 = await testBed.bodyGraphService.getBodyGraph(
+        successEntity1.id
+      );
       expect(bodyGraph1).toBeDefined();
       expect(bodyGraph1.getAllPartIds).toBeDefined();
-      
+
       // Get all parts for first anatomy to verify completeness
       const parts1 = bodyGraph1.getAllPartIds();
       expect(parts1.length).toBeGreaterThan(0);
-      
-      // Verify second anatomy has proper structure  
-      const bodyGraph2 = await testBed.bodyGraphService.getBodyGraph(successEntity2.id);
+
+      // Verify second anatomy has proper structure
+      const bodyGraph2 = await testBed.bodyGraphService.getBodyGraph(
+        successEntity2.id
+      );
       expect(bodyGraph2).toBeDefined();
       expect(bodyGraph2.getAllPartIds).toBeDefined();
-      
+
       // Get all parts for second anatomy to verify completeness
       const parts2 = bodyGraph2.getAllPartIds();
       expect(parts2.length).toBeGreaterThan(0);
-      
+
       // Verify both anatomies are structurally sound and independent
       expect(parts1).not.toEqual(parts2); // Different structures
-      expect(parts1.every(id => typeof id === 'string')).toBe(true); // Valid IDs
-      expect(parts2.every(id => typeof id === 'string')).toBe(true); // Valid IDs
-      
+      expect(parts1.every((id) => typeof id === 'string')).toBe(true); // Valid IDs
+      expect(parts2.every((id) => typeof id === 'string')).toBe(true); // Valid IDs
+
       // Verify connectivity by checking we can get connected parts for roots
       if (parts1.length > 1) {
-        const connectedParts1 = bodyGraph1.getConnectedParts(anatomy1.body.root);
+        const connectedParts1 = bodyGraph1.getConnectedParts(
+          anatomy1.body.root
+        );
         expect(Array.isArray(connectedParts1)).toBe(true);
       }
-      
+
       if (parts2.length > 1) {
-        const connectedParts2 = bodyGraph2.getConnectedParts(anatomy2.body.root);
+        const connectedParts2 = bodyGraph2.getConnectedParts(
+          anatomy2.body.root
+        );
         expect(Array.isArray(connectedParts2)).toBe(true);
       }
     });

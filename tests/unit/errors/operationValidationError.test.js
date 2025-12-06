@@ -10,7 +10,9 @@ import OperationValidationError from '../../../src/errors/operationValidationErr
 describe('OperationValidationError', () => {
   describe('constructor', () => {
     it('should create error with operation type and missing registrations', () => {
-      const error = new OperationValidationError('TEST_OPERATION', ['whitelist']);
+      const error = new OperationValidationError('TEST_OPERATION', [
+        'whitelist',
+      ]);
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toBeInstanceOf(OperationValidationError);
@@ -20,7 +22,9 @@ describe('OperationValidationError', () => {
     });
 
     it('should generate detailed error message', () => {
-      const error = new OperationValidationError('TEST_OPERATION', ['whitelist']);
+      const error = new OperationValidationError('TEST_OPERATION', [
+        'whitelist',
+      ]);
 
       expect(error.message).toContain('TEST_OPERATION');
       expect(error.message).toContain('Missing registrations detected');
@@ -32,7 +36,9 @@ describe('OperationValidationError', () => {
       it('should include whitelist guidance when missing', () => {
         const error = new OperationValidationError('NEW_OP', ['whitelist']);
 
-        expect(error.message).toContain('STEP 7: NOT IN PRE-VALIDATION WHITELIST');
+        expect(error.message).toContain(
+          'STEP 7: NOT IN PRE-VALIDATION WHITELIST'
+        );
         expect(error.message).toContain('src/utils/preValidationUtils.js');
         expect(error.message).toContain('KNOWN_OPERATION_TYPES array');
         expect(error.message).toContain("'NEW_OP',");
@@ -51,13 +57,17 @@ describe('OperationValidationError', () => {
         const error = new OperationValidationError('NEW_OP', ['schema']);
 
         expect(error.message).toContain('STEP 1: SCHEMA FILE NOT FOUND');
-        expect(error.message).toContain('data/schemas/operations/newOp.schema.json');
+        expect(error.message).toContain(
+          'data/schemas/operations/newOp.schema.json'
+        );
         expect(error.message).toContain('Extend base-operation.schema.json');
         expect(error.message).toContain('"NEW_OP"');
       });
 
       it('should use correct schema file name convention', () => {
-        const error = new OperationValidationError('VALIDATE_INVENTORY', ['schema']);
+        const error = new OperationValidationError('VALIDATE_INVENTORY', [
+          'schema',
+        ]);
 
         // Should be camelCase
         expect(error.message).toContain('validateInventory.schema.json');
@@ -79,7 +89,9 @@ describe('OperationValidationError', () => {
         expect(error.message).toContain('STEP 2: SCHEMA NOT REFERENCED');
         expect(error.message).toContain('data/schemas/operation.schema.json');
         expect(error.message).toContain('$defs.Operation.anyOf array');
-        expect(error.message).toContain('"$ref": "./operations/newOp.schema.json"');
+        expect(error.message).toContain(
+          '"$ref": "./operations/newOp.schema.json"'
+        );
       });
 
       it('should include correct path structure', () => {
@@ -96,7 +108,9 @@ describe('OperationValidationError', () => {
         const error = new OperationValidationError('NEW_OP', ['token']);
 
         expect(error.message).toContain('STEP 4: DI TOKEN NOT DEFINED');
-        expect(error.message).toContain('src/dependencyInjection/tokens/tokens-core.js');
+        expect(error.message).toContain(
+          'src/dependencyInjection/tokens/tokens-core.js'
+        );
         expect(error.message).toContain('NewOpHandler');
         expect(error.message).toContain("NewOpHandler: 'NewOpHandler',");
       });
@@ -104,12 +118,16 @@ describe('OperationValidationError', () => {
       it('should note that operation handlers do not use "I" prefix', () => {
         const error = new OperationValidationError('NEW_OP', ['token']);
 
-        expect(error.message).toContain('Operation handlers do NOT use "I" prefix');
+        expect(error.message).toContain(
+          'Operation handlers do NOT use "I" prefix'
+        );
         expect(error.message).not.toContain('INewOpHandler');
       });
 
       it('should use correct token name convention', () => {
-        const error = new OperationValidationError('VALIDATE_CAPACITY', ['token']);
+        const error = new OperationValidationError('VALIDATE_CAPACITY', [
+          'token',
+        ]);
 
         expect(error.message).toContain('ValidateCapacityHandler');
         expect(error.message).not.toContain('IValidateCapacityHandler');
@@ -174,7 +192,9 @@ describe('OperationValidationError', () => {
           'mapping',
         ]);
 
-        expect(error.message).toContain('STEP 7: NOT IN PRE-VALIDATION WHITELIST');
+        expect(error.message).toContain(
+          'STEP 7: NOT IN PRE-VALIDATION WHITELIST'
+        );
         expect(error.message).toContain('STEP 1: SCHEMA FILE NOT FOUND');
         expect(error.message).toContain('STEP 2: SCHEMA NOT REFERENCED');
         expect(error.message).toContain('STEP 4: DI TOKEN NOT DEFINED');
@@ -213,17 +233,22 @@ describe('OperationValidationError', () => {
       });
 
       it('should correctly convert VALIDATE_INVENTORY_CAPACITY', () => {
-        const error = new OperationValidationError('VALIDATE_INVENTORY_CAPACITY', [
-          'schema',
-          'token',
-        ]);
+        const error = new OperationValidationError(
+          'VALIDATE_INVENTORY_CAPACITY',
+          ['schema', 'token']
+        );
 
-        expect(error.message).toContain('validateInventoryCapacity.schema.json');
+        expect(error.message).toContain(
+          'validateInventoryCapacity.schema.json'
+        );
         expect(error.message).toContain('ValidateInventoryCapacityHandler');
       });
 
       it('should handle single-word operations', () => {
-        const error = new OperationValidationError('SEQUENCE', ['schema', 'token']);
+        const error = new OperationValidationError('SEQUENCE', [
+          'schema',
+          'token',
+        ]);
 
         expect(error.message).toContain('sequence.schema.json');
         expect(error.message).toContain('SequenceHandler');
@@ -314,14 +339,18 @@ describe('OperationValidationError', () => {
     });
 
     it('should provide concise message when only whitelist is missing', () => {
-      const error = new OperationValidationError('FORGOT_WHITELIST', ['whitelist']);
+      const error = new OperationValidationError('FORGOT_WHITELIST', [
+        'whitelist',
+      ]);
 
       // Should mention whitelist
       expect(error.message).toContain('NOT IN PRE-VALIDATION WHITELIST');
 
       // Should not mention other steps if not in missing array
       const message = error.message;
-      const hasSchemaMissing = message.includes('STEP 1: SCHEMA FILE NOT FOUND');
+      const hasSchemaMissing = message.includes(
+        'STEP 1: SCHEMA FILE NOT FOUND'
+      );
       expect(hasSchemaMissing).toBe(false);
     });
   });

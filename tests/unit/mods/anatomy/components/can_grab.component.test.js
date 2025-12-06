@@ -183,7 +183,8 @@ describe('anatomy:can_grab Component Definition', () => {
     });
 
     test('should allow heldItemId to be string or null', () => {
-      const heldItemIdType = canGrabComponent.dataSchema.properties.heldItemId.type;
+      const heldItemIdType =
+        canGrabComponent.dataSchema.properties.heldItemId.type;
       expect(heldItemIdType).toEqual(['string', 'null']);
     });
   });

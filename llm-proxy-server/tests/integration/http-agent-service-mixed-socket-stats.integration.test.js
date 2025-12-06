@@ -14,7 +14,10 @@ jest.setTimeout(20000);
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const waitForCondition = async (predicate, { timeoutMs = 2000, stepMs = 25 } = {}) => {
+const waitForCondition = async (
+  predicate,
+  { timeoutMs = 2000, stepMs = 25 } = {}
+) => {
   const start = Date.now();
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -73,7 +76,11 @@ const createTestServer = () => {
   return server;
 };
 
-const sendRequestThroughService = (service, targetUrl, { method = 'GET', body, headers } = {}) => {
+const sendRequestThroughService = (
+  service,
+  targetUrl,
+  { method = 'GET', body, headers } = {}
+) => {
   const { agent } = service.getFetchOptions(targetUrl);
   const parsed = new URL(targetUrl);
 
@@ -184,7 +191,11 @@ describe('HttpAgentService mixed socket diagnostics integration', () => {
       const cleaned = service.cleanupIdleAgents(5);
       expect(cleaned).toBeGreaterThanOrEqual(1);
 
-      expect(entries.some((entry) => entry.message?.includes('Cleaned up idle agent'))).toBe(true);
+      expect(
+        entries.some((entry) =>
+          entry.message?.includes('Cleaned up idle agent')
+        )
+      ).toBe(true);
       expect(service.hasAgent(`${baseUrl}/fast-a`)).toBe(false);
 
       service.getFetchOptions(`${baseUrl}/recreated`);

@@ -180,9 +180,7 @@ describe('errorFormatter', () => {
         detailsWithOriginalMessage
       );
 
-      expect(result.details.originalErrorMessage).toBe(
-        'Pre-sanitized message'
-      );
+      expect(result.details.originalErrorMessage).toBe('Pre-sanitized message');
       expect(result.details.context).toBe('important');
     });
 

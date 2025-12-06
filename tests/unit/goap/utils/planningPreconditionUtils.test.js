@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { normalizePlanningPreconditions } from '../../../../src/goap/utils/planningPreconditionUtils.js';
 
 const createLogger = () => ({
@@ -35,7 +42,9 @@ describe('normalizePlanningPreconditions', () => {
           condition: { has_component: ['actor-1', 'core:hunger'] },
         },
         {
-          condition: { '==': [{ var: 'state.actor.components.core_needs.hunger' }, 50] },
+          condition: {
+            '==': [{ var: 'state.actor.components.core_needs.hunger' }, 50],
+          },
         },
       ],
     };
@@ -45,8 +54,12 @@ describe('normalizePlanningPreconditions', () => {
     expect(normalized).toHaveLength(2);
     expect(normalized[0].description).toBe('Must know hunger');
     expect(normalized[1].description).toBe('Precondition 2 for task:modern');
-    expect(normalized[0].condition).not.toBe(task.planningPreconditions[0].condition);
-    expect(normalized[0].condition).toEqual(task.planningPreconditions[0].condition);
+    expect(normalized[0].condition).not.toBe(
+      task.planningPreconditions[0].condition
+    );
+    expect(normalized[0].condition).toEqual(
+      task.planningPreconditions[0].condition
+    );
   });
 
   it('initializes diagnostics tracking for planningPreconditions without mutating entries', () => {
@@ -56,7 +69,9 @@ describe('normalizePlanningPreconditions', () => {
       planningPreconditions: ['{ var: "actor.health" }'],
     };
 
-    const normalized = normalizePlanningPreconditions(task, logger, { diagnostics });
+    const normalized = normalizePlanningPreconditions(task, logger, {
+      diagnostics,
+    });
 
     expect(Array.isArray(diagnostics.preconditionNormalizations)).toBe(true);
     expect(diagnostics.preconditionNormalizations).toHaveLength(0);
@@ -127,10 +142,15 @@ describe('normalizePlanningPreconditions', () => {
     };
 
     const diagnostics = { preconditionNormalizations: [] };
-    const normalized = normalizePlanningPreconditions(task, logger, { diagnostics });
+    const normalized = normalizePlanningPreconditions(task, logger, {
+      diagnostics,
+    });
 
     expect(normalized[0].condition).toEqual({ '==': [true, true] });
-    expect(diagnostics.preconditionNormalizations[0].normalizedPreconditions[0].condition).toEqual({
+    expect(
+      diagnostics.preconditionNormalizations[0].normalizedPreconditions[0]
+        .condition
+    ).toEqual({
       '==': [true, true],
     });
   });
@@ -158,7 +178,9 @@ describe('normalizePlanningPreconditions', () => {
       requires: ['actor.health', null, { condition: { '==': [1, 1] } }],
     };
 
-    const normalized = normalizePlanningPreconditions(task, logger, { diagnostics });
+    const normalized = normalizePlanningPreconditions(task, logger, {
+      diagnostics,
+    });
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('uses shorthand "requires"'),

@@ -6,13 +6,16 @@ const mockGetLayersByMode = jest.fn();
 const mockCalculatePriorityWithValidation = jest.fn();
 const mockSortCandidatesWithTieBreaking = jest.fn();
 
-jest.mock('../../../../src/scopeDsl/prioritySystem/priorityCalculator.js', () => ({
-  getLayersByMode: (...args) => mockGetLayersByMode(...args),
-  calculatePriorityWithValidation: (...args) =>
-    mockCalculatePriorityWithValidation(...args),
-  sortCandidatesWithTieBreaking: (...args) =>
-    mockSortCandidatesWithTieBreaking(...args),
-}));
+jest.mock(
+  '../../../../src/scopeDsl/prioritySystem/priorityCalculator.js',
+  () => ({
+    getLayersByMode: (...args) => mockGetLayersByMode(...args),
+    calculatePriorityWithValidation: (...args) =>
+      mockCalculatePriorityWithValidation(...args),
+    sortCandidatesWithTieBreaking: (...args) =>
+      mockSortCandidatesWithTieBreaking(...args),
+  })
+);
 
 describe('slotAccessResolver validation branches', () => {
   let entitiesGateway;
@@ -38,10 +41,12 @@ describe('slotAccessResolver validation branches', () => {
       return mapping[mode] || ['outer', 'base', 'underwear'];
     });
 
-    mockCalculatePriorityWithValidation.mockImplementation((coveragePriority, layer) => {
-      const weights = { outer: 30, base: 20, underwear: 10, direct: 5 };
-      return weights[coveragePriority] ?? weights[layer] ?? 0;
-    });
+    mockCalculatePriorityWithValidation.mockImplementation(
+      (coveragePriority, layer) => {
+        const weights = { outer: 30, base: 20, underwear: 10, direct: 5 };
+        return weights[coveragePriority] ?? weights[layer] ?? 0;
+      }
+    );
 
     mockSortCandidatesWithTieBreaking.mockImplementation((candidates) =>
       [...candidates].sort((a, b) => b.priority - a.priority)
@@ -74,7 +79,10 @@ describe('slotAccessResolver validation branches', () => {
     expect(result.size).toBe(0);
     expect(errorHandler.handleError).toHaveBeenCalledWith(
       'No equipped items data found',
-      expect.objectContaining({ entityId: 'actor-empty', slotName: 'torso_upper' }),
+      expect.objectContaining({
+        entityId: 'actor-empty',
+        slotName: 'torso_upper',
+      }),
       'SlotAccessResolver',
       ErrorCodes.MISSING_CONTEXT_GENERIC
     );
@@ -128,7 +136,11 @@ describe('slotAccessResolver validation branches', () => {
     const result = resolver.resolve(createNode(), { dispatcher });
 
     expect(Array.from(result)).toEqual(['jacket']);
-    expect(mockCalculatePriorityWithValidation).toHaveBeenCalledWith('outer', 'outer', null);
+    expect(mockCalculatePriorityWithValidation).toHaveBeenCalledWith(
+      'outer',
+      'outer',
+      null
+    );
     expect(mockCalculatePriorityWithValidation).not.toHaveBeenCalledWith(
       'underwear',
       'underwear',
@@ -183,7 +195,9 @@ describe('slotAccessResolver validation branches', () => {
       return null;
     });
 
-    mockSortCandidatesWithTieBreaking.mockImplementation((candidates) => candidates);
+    mockSortCandidatesWithTieBreaking.mockImplementation(
+      (candidates) => candidates
+    );
 
     const result = resolver.resolve(createNode(), { dispatcher });
 

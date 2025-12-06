@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 import { ConsoleLogger } from '../../src/consoleLogger.js';
 import CacheService from '../../src/services/cacheService.js';
@@ -60,7 +67,9 @@ describe('CacheService race condition resilience integration', () => {
     expect(removedCount).toBe(0);
     expect(cacheService.getSize()).toBe(1);
 
-    const infoMessages = consoleSpies.infoSpy.mock.calls.map(([message]) => message);
+    const infoMessages = consoleSpies.infoSpy.mock.calls.map(
+      ([message]) => message
+    );
     const emittedSummaries = infoMessages.filter(
       (message) =>
         typeof message === 'string' &&

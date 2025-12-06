@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { ANATOMY_BODY_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
@@ -86,7 +93,9 @@ describe('BodyDescriptionComposer edge case integration', () => {
 
     composer.descriptionTemplate.createStructuredLine = jest
       .fn()
-      .mockImplementation((type, parts) => `${type}:${parts.map((p) => p.id).join(',')}`);
+      .mockImplementation(
+        (type, parts) => `${type}:${parts.map((p) => p.id).join(',')}`
+      );
     composer.config.getDescriptionOrder = jest
       .fn()
       .mockReturnValue(['build', 'arm', 'equipment']);
@@ -112,7 +121,8 @@ describe('BodyDescriptionComposer edge case integration', () => {
     expect(
       logger.error.mock.calls.some(
         ([message, context]) =>
-          message.includes('does not have hasComponent method') && context.bodyEntityId === 'no-has'
+          message.includes('does not have hasComponent method') &&
+          context.bodyEntityId === 'no-has'
       )
     ).toBe(true);
 
@@ -134,7 +144,9 @@ describe('BodyDescriptionComposer edge case integration', () => {
       hasComponent: (componentId) => componentId === 'something-else',
       getComponentData: () => null,
     };
-    await expect(composer.composeDescription(missingBodyComponent)).resolves.toBe('');
+    await expect(
+      composer.composeDescription(missingBodyComponent)
+    ).resolves.toBe('');
     expect(
       logger.debug.mock.calls.some(
         ([message, context]) =>
@@ -149,7 +161,9 @@ describe('BodyDescriptionComposer edge case integration', () => {
       getComponentData: (componentId) =>
         componentId === ANATOMY_BODY_COMPONENT_ID ? { body: {} } : null,
     };
-    await expect(composer.composeDescription(noRootComponent)).resolves.toBe('');
+    await expect(composer.composeDescription(noRootComponent)).resolves.toBe(
+      ''
+    );
 
     bodyGraphService.setParts([]);
     const noPartsEntity = {
@@ -214,17 +228,22 @@ describe('BodyDescriptionComposer edge case integration', () => {
 
     expect(grouped.get('arm')).toHaveLength(2);
     expect(grouped.get('head')).toHaveLength(1);
-    expect(Array.from(grouped.keys())).toEqual(expect.arrayContaining(['arm', 'head']));
+    expect(Array.from(grouped.keys())).toEqual(
+      expect.arrayContaining(['arm', 'head'])
+    );
 
     expect(
-      logger.warn.mock.calls.some(([message, details]) =>
-        message.includes('Part entity missing hasComponent method') && details.partId === 'missing-has'
+      logger.warn.mock.calls.some(
+        ([message, details]) =>
+          message.includes('Part entity missing hasComponent method') &&
+          details.partId === 'missing-has'
       )
     ).toBe(true);
     expect(
-      logger.warn.mock.calls.some(([message, details]) =>
-        message.includes('Part entity missing getComponentData method') &&
-        details.partId === 'missing-get'
+      logger.warn.mock.calls.some(
+        ([message, details]) =>
+          message.includes('Part entity missing getComponentData method') &&
+          details.partId === 'missing-get'
       )
     ).toBe(true);
   });
@@ -263,7 +282,9 @@ describe('BodyDescriptionComposer edge case integration', () => {
 
     expect(composer.extractHeightDescription(fallbackEntity)).toBe('6 ft');
     expect(composer.extractBuildDescription(fallbackEntity)).toBe('athletic');
-    expect(composer.extractBodyCompositionDescription(fallbackEntity)).toBe('lean muscle');
+    expect(composer.extractBodyCompositionDescription(fallbackEntity)).toBe(
+      'lean muscle'
+    );
     expect(composer.extractBodyHairDescription(fallbackEntity)).toBe('trimmed');
     expect(composer.extractSkinColorDescription(fallbackEntity)).toBe('tan');
 
@@ -293,11 +314,19 @@ describe('BodyDescriptionComposer edge case integration', () => {
 
     expect(composer.extractHeightDescription(emptyDescriptorsEntity)).toBe('');
     expect(composer.extractBuildDescription(emptyDescriptorsEntity)).toBe('');
-    expect(composer.extractBodyCompositionDescription(emptyDescriptorsEntity)).toBe('');
-    expect(composer.extractBodyHairDescription(emptyDescriptorsEntity)).toBe('');
-    expect(composer.extractSkinColorDescription(emptyDescriptorsEntity)).toBe('');
+    expect(
+      composer.extractBodyCompositionDescription(emptyDescriptorsEntity)
+    ).toBe('');
+    expect(composer.extractBodyHairDescription(emptyDescriptorsEntity)).toBe(
+      ''
+    );
+    expect(composer.extractSkinColorDescription(emptyDescriptorsEntity)).toBe(
+      ''
+    );
 
-    expect(composer.extractBodyLevelDescriptors(emptyDescriptorsEntity)).toEqual({});
+    expect(
+      composer.extractBodyLevelDescriptors(emptyDescriptorsEntity)
+    ).toEqual({});
 
     const loggerWithoutDebug = {
       info: jest.fn(),
@@ -321,7 +350,9 @@ describe('BodyDescriptionComposer edge case integration', () => {
       logger: loggerWithoutDebug,
     });
 
-    expect(composerWithoutDebug.extractHeightDescription(emptyDescriptorsEntity)).toBe('');
+    expect(
+      composerWithoutDebug.extractHeightDescription(emptyDescriptorsEntity)
+    ).toBe('');
 
     warnSpy.mockRestore();
   });
@@ -342,7 +373,12 @@ describe('BodyDescriptionComposer edge case integration', () => {
         componentId === 'anatomy:part' ? { subType: 'arm' } : null,
     });
 
-    composer.config.getDescriptionOrder.mockReturnValue(['build', 'arm', 'equipment', 'arm']);
+    composer.config.getDescriptionOrder.mockReturnValue([
+      'build',
+      'arm',
+      'equipment',
+      'arm',
+    ]);
     equipmentDescriptionService.generateEquipmentDescription.mockResolvedValueOnce(
       'Equipped: reinforced gauntlets'
     );
@@ -384,26 +420,37 @@ describe('BodyDescriptionComposer edge case integration', () => {
       skin_color: 'Skin color: copper',
     });
 
-    expect(composer.descriptionTemplate.createStructuredLine).toHaveBeenCalledTimes(1);
-    expect(composer.descriptionTemplate.createStructuredLine).toHaveBeenCalledWith(
+    expect(
+      composer.descriptionTemplate.createStructuredLine
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      composer.descriptionTemplate.createStructuredLine
+    ).toHaveBeenCalledWith(
       'arm',
       expect.arrayContaining([
         expect.objectContaining({ id: 'arm-left' }),
         expect.objectContaining({ id: 'arm-right' }),
       ])
     );
-    expect(equipmentDescriptionService.generateEquipmentDescription).toHaveBeenCalledWith(
-      'actor-1'
-    );
+    expect(
+      equipmentDescriptionService.generateEquipmentDescription
+    ).toHaveBeenCalledWith('actor-1');
 
     const withoutEquipment = await composer.composeDescription(bodyEntity);
     expect(withoutEquipment).not.toContain('Equipped: reinforced gauntlets');
-    expect(composer.descriptionTemplate.createStructuredLine).toHaveBeenCalledTimes(2);
-    expect(equipmentDescriptionService.generateEquipmentDescription).toHaveBeenCalledTimes(2);
+    expect(
+      composer.descriptionTemplate.createStructuredLine
+    ).toHaveBeenCalledTimes(2);
+    expect(
+      equipmentDescriptionService.generateEquipmentDescription
+    ).toHaveBeenCalledTimes(2);
 
     const descriptorOrder = composer.getBodyDescriptorOrder(['build', 'arm']);
     expect(descriptorOrder[0]).toBe('height');
-    const descriptorOrderWithHeight = composer.getBodyDescriptorOrder(['height', 'build']);
+    const descriptorOrderWithHeight = composer.getBodyDescriptorOrder([
+      'height',
+      'build',
+    ]);
     expect(descriptorOrderWithHeight).toEqual(['height', 'build']);
   });
 });

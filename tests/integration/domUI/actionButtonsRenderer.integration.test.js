@@ -87,7 +87,13 @@ describe('ActionButtonsRenderer Integration', () => {
     document.body.innerHTML = '';
   });
 
-  const buildAction = (index, actionId, commandString, description, overrides = {}) => ({
+  const buildAction = (
+    index,
+    actionId,
+    commandString,
+    description,
+    overrides = {}
+  ) => ({
     index,
     actionId,
     commandString,
@@ -174,7 +180,9 @@ describe('ActionButtonsRenderer Integration', () => {
 
     firstButton.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
     await wait(60);
-    expect(firstButton.classList.contains('action-button-hovering')).toBe(false);
+    expect(firstButton.classList.contains('action-button-hovering')).toBe(
+      false
+    );
     expect(window.getComputedStyle(firstButton).backgroundColor).toBe(
       'rgb(0, 0, 0)'
     );
@@ -188,7 +196,9 @@ describe('ActionButtonsRenderer Integration', () => {
     expect(window.getComputedStyle(firstButton).backgroundColor).toBe(
       'rgb(0, 68, 255)'
     );
-    expect(window.getComputedStyle(firstButton).color).toBe('rgb(255, 255, 255)');
+    expect(window.getComputedStyle(firstButton).color).toBe(
+      'rgb(255, 255, 255)'
+    );
 
     actionButtonsRenderer.updateButtonVisual('core:wait', null);
     expect(firstButton.classList.contains('action-button-custom-visual')).toBe(
@@ -261,9 +271,9 @@ describe('ActionButtonsRenderer Integration', () => {
     ).toBe(true);
 
     container.dispatchEvent(new Event('animationend'));
-    expect(container.classList.contains(ActionButtonsRenderer.DISABLED_CLASS)).toBe(
-      true
-    );
+    expect(
+      container.classList.contains(ActionButtonsRenderer.DISABLED_CLASS)
+    ).toBe(true);
     expect(container.querySelectorAll('button.action-button')).toHaveLength(0);
   });
 
@@ -357,7 +367,9 @@ describe('ActionButtonsRenderer Integration', () => {
 
     const parsedColor = actionButtonsRenderer.colorParseCache.get('#112233');
     expect(parsedColor).toEqual({ r: 17, g: 34, b: 51 });
-    expect(actionButtonsRenderer.colorParseCache.get('not-a-real-color')).toBeNull();
+    expect(
+      actionButtonsRenderer.colorParseCache.get('not-a-real-color')
+    ).toBeNull();
 
     getComputedSpy.mockClear();
     actionButtonsRenderer.updateButtonVisual('core:inspect', {
@@ -415,7 +427,7 @@ describe('ActionButtonsRenderer Integration', () => {
     await wait();
     expect(testBed.mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining(
-        "#handleSendAction called, but sendButtonElement is null."
+        '#handleSendAction called, but sendButtonElement is null.'
       )
     );
 

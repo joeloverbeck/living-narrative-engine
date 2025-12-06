@@ -77,14 +77,12 @@ describe('JsonLogicEvaluationService additional coverage', () => {
   test('validateJsonLogic detects dangerous properties discovered via getOwnPropertyNames', () => {
     const suspiciousRule = { safe: true };
     const originalGetOwnPropertyNames = Object.getOwnPropertyNames;
-    jest
-      .spyOn(Object, 'getOwnPropertyNames')
-      .mockImplementation((target) => {
-        if (target === suspiciousRule) {
-          return ['safe', '__proto__'];
-        }
-        return originalGetOwnPropertyNames(target);
-      });
+    jest.spyOn(Object, 'getOwnPropertyNames').mockImplementation((target) => {
+      if (target === suspiciousRule) {
+        return ['safe', '__proto__'];
+      }
+      return originalGetOwnPropertyNames(target);
+    });
 
     const result = service.evaluate(suspiciousRule, {});
 

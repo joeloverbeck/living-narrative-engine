@@ -425,8 +425,7 @@ export class RecoveryManager {
         this.#circuitBreakers.get(componentName),
       setLastResetTime: (componentName, timestamp) =>
         this.#lastResetTimes.set(componentName, timestamp),
-      getErrorCount: (componentName) =>
-        this.#errorCounts.get(componentName),
+      getErrorCount: (componentName) => this.#errorCounts.get(componentName),
     };
   }
 }

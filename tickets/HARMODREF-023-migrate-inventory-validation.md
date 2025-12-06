@@ -5,12 +5,15 @@
 **Status:** Not Started
 
 ## Report Reference
+
 [reports/hardcoded-mod-references-analysis.md](../reports/hardcoded-mod-references-analysis.md) - "Inventory Validation Hardcoding"
 
 ## Problem Statement
+
 Migrate inventory capacity validation from hardcoded weight-based system to pluggable capacity validators. Enable alternative inventory systems (slot-based, magical, etc.).
 
 ## Affected Files
+
 1. `src/logic/operationHandlers/validateInventoryCapacityHandler.js`
 2. `data/mods/items/plugins/weightCapacityValidator.js` (new)
 3. `data/mods/items/mod-manifest.json`
@@ -21,29 +24,36 @@ Migrate inventory capacity validation from hardcoded weight-based system to plug
 ## Plugin Implementations
 
 ### WeightCapacityValidator
+
 ```javascript
 export class WeightCapacityValidator extends BaseCapacityValidatorPlugin {
   canValidate(actorId, itemId) {
-    return this.entityManager.hasComponent(actorId, 'items:inventory') &&
-           this.entityManager.hasComponent(itemId, 'items:weight');
+    return (
+      this.entityManager.hasComponent(actorId, 'items:inventory') &&
+      this.entityManager.hasComponent(itemId, 'items:weight')
+    );
   }
 
   validate(actorId, itemId) {
-    const inventory = this.entityManager.getComponent(actorId, 'items:inventory');
+    const inventory = this.entityManager.getComponent(
+      actorId,
+      'items:inventory'
+    );
     const weight = this.entityManager.getComponent(itemId, 'items:weight');
-    
+
     const currentWeight = this.calculateCurrentWeight(inventory);
-    const canAdd = (currentWeight + weight.value) <= inventory.maxWeight;
-    
+    const canAdd = currentWeight + weight.value <= inventory.maxWeight;
+
     return {
       canAdd,
-      reason: canAdd ? null : 'Exceeds weight capacity'
+      reason: canAdd ? null : 'Exceeds weight capacity',
     };
   }
 }
 ```
 
 ### Example: SlotCapacityValidator
+
 ```javascript
 export class SlotCapacityValidator extends BaseCapacityValidatorPlugin {
   canValidate(actorId, itemId) {
@@ -51,18 +61,22 @@ export class SlotCapacityValidator extends BaseCapacityValidatorPlugin {
   }
 
   validate(actorId, itemId) {
-    const inventory = this.entityManager.getComponent(actorId, 'slot_inventory:inventory');
+    const inventory = this.entityManager.getComponent(
+      actorId,
+      'slot_inventory:inventory'
+    );
     const canAdd = inventory.usedSlots < inventory.totalSlots;
-    
+
     return {
       canAdd,
-      reason: canAdd ? null : 'No available slots'
+      reason: canAdd ? null : 'No available slots',
     };
   }
 }
 ```
 
 ## Acceptance Criteria
+
 - [ ] CapacityValidator interface defined
 - [ ] Weight validation moved to plugin
 - [ ] No hardcoded validation logic
@@ -71,4 +85,5 @@ export class SlotCapacityValidator extends BaseCapacityValidatorPlugin {
 - [ ] Mod development guide updated
 
 ## Dependencies
+
 HARMODREF-021 (plugin infrastructure)

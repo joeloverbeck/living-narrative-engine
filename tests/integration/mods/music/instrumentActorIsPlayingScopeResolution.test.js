@@ -63,11 +63,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       const resolvedIds = Array.from(scopeResult.value);
@@ -107,11 +106,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       const resolvedIds = Array.from(scopeResult.value);
@@ -140,11 +138,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toHaveLength(0);
@@ -173,11 +170,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toHaveLength(0);
@@ -206,11 +202,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toHaveLength(0);
@@ -247,11 +242,10 @@ describe('music:instrument_actor_is_playing - Scope Resolution', () => {
         },
       };
 
-      const scopeResult =
-        testFixture.testEnv.unifiedScopeResolver.resolveSync(
-          'music:instrument_actor_is_playing',
-          scopeContext
-        );
+      const scopeResult = testFixture.testEnv.unifiedScopeResolver.resolveSync(
+        'music:instrument_actor_is_playing',
+        scopeContext
+      );
 
       expect(scopeResult.success).toBe(true);
       expect(Array.from(scopeResult.value)).toEqual(['specific_id_12345']);

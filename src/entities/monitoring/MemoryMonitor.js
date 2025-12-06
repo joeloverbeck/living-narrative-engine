@@ -4,7 +4,11 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { validateDependency, assertNonBlankString, assertPresent } from '../../utils/dependencyUtils.js';
+import {
+  validateDependency,
+  assertNonBlankString,
+  assertPresent,
+} from '../../utils/dependencyUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import { getMemoryUsage } from '../../utils/environmentUtils.js';
 
@@ -149,15 +153,21 @@ export default class MemoryMonitor extends BaseService {
     const { heapWarning, heapCritical } = this.#thresholds;
 
     if (heapWarning < 0 || heapWarning > 1) {
-      throw new InvalidArgumentError('Heap warning threshold must be between 0 and 1');
+      throw new InvalidArgumentError(
+        'Heap warning threshold must be between 0 and 1'
+      );
     }
 
     if (heapCritical < 0 || heapCritical > 1) {
-      throw new InvalidArgumentError('Heap critical threshold must be between 0 and 1');
+      throw new InvalidArgumentError(
+        'Heap critical threshold must be between 0 and 1'
+      );
     }
 
     if (heapCritical <= heapWarning) {
-      throw new InvalidArgumentError('Critical threshold must be higher than warning threshold');
+      throw new InvalidArgumentError(
+        'Critical threshold must be higher than warning threshold'
+      );
     }
   }
 
@@ -184,8 +194,10 @@ export default class MemoryMonitor extends BaseService {
       this.#checkThresholds();
 
       // Check for memory leaks periodically
-      if (this.#leakDetectionConfig.enabled &&
-          this.#history.length >= this.#leakDetectionConfig.windowSize) {
+      if (
+        this.#leakDetectionConfig.enabled &&
+        this.#history.length >= this.#leakDetectionConfig.windowSize
+      ) {
         const timeSinceLastCheck = Date.now() - (this.#lastLeakCheck || 0);
         if (timeSinceLastCheck >= this.#leakDetectionConfig.checkInterval) {
           this.#checkForLeaks();
@@ -266,9 +278,10 @@ export default class MemoryMonitor extends BaseService {
         heapTotal: mem.totalJSHeapSize || 0,
         heapLimit: mem.jsHeapSizeLimit || 0,
         external: 0, // Not available in browser
-        usagePercent: mem.jsHeapSizeLimit > 0
-          ? (mem.usedJSHeapSize / mem.jsHeapSizeLimit)
-          : 0,
+        usagePercent:
+          mem.jsHeapSizeLimit > 0
+            ? mem.usedJSHeapSize / mem.jsHeapSizeLimit
+            : 0,
       };
     }
 
@@ -285,7 +298,7 @@ export default class MemoryMonitor extends BaseService {
         heapLimit: heapTotal, // Approximate
         external: memUsage.external || 0,
         rss: memUsage.rss || 0,
-        usagePercent: heapTotal > 0 ? (heapUsed / heapTotal) : 0,
+        usagePercent: heapTotal > 0 ? heapUsed / heapTotal : 0,
       };
     }
 
@@ -309,7 +322,8 @@ export default class MemoryMonitor extends BaseService {
     if (!this.#lastSnapshot) return;
 
     const { usagePercent, rss } = this.#lastSnapshot;
-    const { heapWarning, heapCritical, rssWarning, rssCritical } = this.#thresholds;
+    const { heapWarning, heapCritical, rssWarning, rssCritical } =
+      this.#thresholds;
 
     let newPressureLevel = 'normal';
 
@@ -351,7 +365,9 @@ export default class MemoryMonitor extends BaseService {
       const oldLevel = this.#pressureLevel;
       this.#pressureLevel = newPressureLevel;
 
-      this.#logger.info(`Memory pressure level changed: ${oldLevel} -> ${newPressureLevel}`);
+      this.#logger.info(
+        `Memory pressure level changed: ${oldLevel} -> ${newPressureLevel}`
+      );
 
       this.#eventBus.dispatch({
         type: 'MEMORY_PRESSURE_CHANGED',
@@ -383,9 +399,10 @@ export default class MemoryMonitor extends BaseService {
 
     this.#logger.warn(`Memory ${level} alert`, {
       type,
-      value: type === 'heap'
-        ? (value * 100).toFixed(1) + '%'
-        : (value / 1048576).toFixed(2) + 'MB',
+      value:
+        type === 'heap'
+          ? (value * 100).toFixed(1) + '%'
+          : (value / 1048576).toFixed(2) + 'MB',
     });
 
     // Dispatch event
@@ -396,7 +413,7 @@ export default class MemoryMonitor extends BaseService {
 
     // Call registered handlers
     const handlers = this.#alertHandlers.get(level) || [];
-    handlers.forEach(handler => {
+    handlers.forEach((handler) => {
       try {
         handler(alert);
       } catch (error) {
@@ -423,7 +440,7 @@ export default class MemoryMonitor extends BaseService {
 
       // Call leak handlers
       const handlers = this.#alertHandlers.get('leak') || [];
-      handlers.forEach(handler => {
+      handlers.forEach((handler) => {
         try {
           handler(result);
         } catch (error) {
@@ -454,7 +471,7 @@ export default class MemoryMonitor extends BaseService {
     }
 
     const cutoff = Date.now() - duration;
-    return this.#history.filter(snapshot => snapshot.timestamp >= cutoff);
+    return this.#history.filter((snapshot) => snapshot.timestamp >= cutoff);
   }
 
   /**
@@ -513,7 +530,7 @@ export default class MemoryMonitor extends BaseService {
     const endMemory = window[window.length - 1].heapUsed;
     const totalGrowth = endMemory - startMemory;
     const growthRate = totalGrowth / minuteSpan; // Bytes per minute
-    const growthPercent = startMemory > 0 ? (totalGrowth / startMemory) : 0;
+    const growthPercent = startMemory > 0 ? totalGrowth / startMemory : 0;
 
     // Sensitivity thresholds
     const thresholds = {
@@ -523,7 +540,8 @@ export default class MemoryMonitor extends BaseService {
     };
 
     const threshold = thresholds[sensitivity] || thresholds.medium;
-    const detected = growthPercent >= threshold.growth || growthRate >= threshold.rate;
+    const detected =
+      growthPercent >= threshold.growth || growthRate >= threshold.rate;
 
     // Analyze trend
     let trend = 'stable';
@@ -535,8 +553,10 @@ export default class MemoryMonitor extends BaseService {
       const firstHalf = window.slice(0, midpoint);
       const secondHalf = window.slice(midpoint);
 
-      const firstHalfGrowth = firstHalf[firstHalf.length - 1].heapUsed - firstHalf[0].heapUsed;
-      const secondHalfGrowth = secondHalf[secondHalf.length - 1].heapUsed - secondHalf[0].heapUsed;
+      const firstHalfGrowth =
+        firstHalf[firstHalf.length - 1].heapUsed - firstHalf[0].heapUsed;
+      const secondHalfGrowth =
+        secondHalf[secondHalf.length - 1].heapUsed - secondHalf[0].heapUsed;
 
       if (firstHalfGrowth > 0 && secondHalfGrowth > 0) {
         trend = 'growing';
@@ -593,16 +613,21 @@ export default class MemoryMonitor extends BaseService {
     const averageGrowth = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
 
     // Calculate volatility (standard deviation)
-    const variance = deltas.reduce((sum, d) => sum + Math.pow(d - averageGrowth, 2), 0) / deltas.length;
+    const variance =
+      deltas.reduce((sum, d) => sum + Math.pow(d - averageGrowth, 2), 0) /
+      deltas.length;
     const volatility = Math.sqrt(variance);
 
     // Determine pattern
     let pattern = 'stable';
-    if (averageGrowth > 1024 * 1024) { // Growing more than 1MB average
+    if (averageGrowth > 1024 * 1024) {
+      // Growing more than 1MB average
       pattern = 'growing';
-    } else if (volatility > 5 * 1024 * 1024) { // High volatility (5MB)
+    } else if (volatility > 5 * 1024 * 1024) {
+      // High volatility (5MB)
       pattern = 'volatile';
-    } else if (averageGrowth < -1024 * 1024) { // Shrinking
+    } else if (averageGrowth < -1024 * 1024) {
+      // Shrinking
       pattern = 'shrinking';
     }
 

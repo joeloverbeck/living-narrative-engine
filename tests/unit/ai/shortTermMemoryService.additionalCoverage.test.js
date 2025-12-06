@@ -47,7 +47,9 @@ describe('ShortTermMemoryService additional coverage', () => {
         ],
         maxEntries: 2,
       };
-      const now = { toISOString: jest.fn().mockReturnValue('2024-01-02T03:04:05.000Z') };
+      const now = {
+        toISOString: jest.fn().mockReturnValue('2024-01-02T03:04:05.000Z'),
+      };
 
       const result = service.addThought(mem, 'new idea', now);
 
@@ -101,9 +103,15 @@ describe('ShortTermMemoryService additional coverage', () => {
   describe('emitThoughtAdded', () => {
     it('dispatches events when a compatible dispatcher is configured', () => {
       const dispatch = jest.fn();
-      const service = new ShortTermMemoryService({ eventDispatcher: { dispatch } });
+      const service = new ShortTermMemoryService({
+        eventDispatcher: { dispatch },
+      });
 
-      service.emitThoughtAdded('entity-1', 'remember this', '2024-01-02T03:04:05.000Z');
+      service.emitThoughtAdded(
+        'entity-1',
+        'remember this',
+        '2024-01-02T03:04:05.000Z'
+      );
 
       expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
         entityId: 'entity-1',

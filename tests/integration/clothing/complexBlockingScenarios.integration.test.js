@@ -9,11 +9,11 @@ describe('Complex Blocking Scenarios', () => {
     fixture = await ModTestFixture.forAction(
       'clothing',
       'clothing:remove_clothing',
-      null,  // ruleFile - auto-loaded
-      null,  // conditionFile - auto-loaded
+      null, // ruleFile - auto-loaded
+      null, // conditionFile - auto-loaded
       {
         autoRegisterScopes: true,
-        scopeCategories: ['clothing']
+        scopeCategories: ['clothing'],
       }
     );
   });
@@ -25,7 +25,10 @@ describe('Complex Blocking Scenarios', () => {
   // Helper to get removable items via scope resolution
   const getRemovableItems = (actorId) => {
     const testContext = { actor: { id: actorId, components: {} } };
-    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync('clothing:topmost_clothing', testContext);
+    const scopeResult = fixture.testEnv.unifiedScopeResolver.resolveSync(
+      'clothing:topmost_clothing',
+      testContext
+    );
     return Array.from(scopeResult.value);
   };
 
@@ -229,7 +232,9 @@ describe('Complex Blocking Scenarios', () => {
 
     // Act: Verify action is discovered
     const actions = fixture.discoverActions(actor.id);
-    const removeAction = actions.find((a) => a.id === 'clothing:remove_clothing');
+    const removeAction = actions.find(
+      (a) => a.id === 'clothing:remove_clothing'
+    );
     expect(removeAction).toBeDefined();
 
     // Check removable items via scope resolution

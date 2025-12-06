@@ -67,8 +67,7 @@ export default class EntityConstructionFactory {
 
     this.#applyDefaultComponents(entity);
 
-    const completionMessage =
-      `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`;
+    const completionMessage = `[EntityConstructionFactory] Entity instance '${instanceId}' (def: '${definitionId}') ${action}`;
 
     this.#logger.debug(completionMessage);
 

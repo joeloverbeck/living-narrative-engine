@@ -7,11 +7,20 @@
 import { jest } from '@jest/globals';
 
 const ORIGINAL_ENV = process.env;
-const stdoutDescriptor = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
-const stderrDescriptor = Object.getOwnPropertyDescriptor(process.stderr, 'isTTY');
-const originalGlobalChalk = typeof globalThis !== 'undefined' ? globalThis.chalk : undefined;
+const stdoutDescriptor = Object.getOwnPropertyDescriptor(
+  process.stdout,
+  'isTTY'
+);
+const stderrDescriptor = Object.getOwnPropertyDescriptor(
+  process.stderr,
+  'isTTY'
+);
+const originalGlobalChalk =
+  typeof globalThis !== 'undefined' ? globalThis.chalk : undefined;
 const originalGlobalChalkAlias =
-  typeof global !== 'undefined' && global !== globalThis ? global.chalk : undefined;
+  typeof global !== 'undefined' && global !== globalThis
+    ? global.chalk
+    : undefined;
 
 describe('Enhanced console logger chalk initialisation integration', () => {
   beforeEach(() => {
@@ -86,7 +95,9 @@ describe('Enhanced console logger chalk initialisation integration', () => {
       global.chalk = stubChalk;
     }
 
-    const { getEnhancedConsoleLogger } = await import('../../src/logging/enhancedConsoleLogger.js');
+    const { getEnhancedConsoleLogger } = await import(
+      '../../src/logging/enhancedConsoleLogger.js'
+    );
     const logger = getEnhancedConsoleLogger();
 
     const message = `MetricsService: verifying fallback behaviour ${'X'.repeat(48)}`;
@@ -134,7 +145,9 @@ describe('Enhanced console logger chalk initialisation integration', () => {
       global.chalk = Object.assign({}, stubChalk, { default: stubChalk });
     }
 
-    const { getEnhancedConsoleLogger } = await import('../../src/logging/enhancedConsoleLogger.js');
+    const { getEnhancedConsoleLogger } = await import(
+      '../../src/logging/enhancedConsoleLogger.js'
+    );
     const logger = getEnhancedConsoleLogger();
 
     logger.debug('CacheService: live metrics sample', {
@@ -150,7 +163,9 @@ describe('Enhanced console logger chalk initialisation integration', () => {
     expect(colouredOutput).toMatch(/\u001b\[[0-9;]*m/);
 
     const secureLogger = logger.createSecure();
-    secureLogger.info('ApiKeyService: storing credentials', { apiKey: 'abcd1234' });
+    secureLogger.info('ApiKeyService: storing credentials', {
+      apiKey: 'abcd1234',
+    });
 
     const secureCall = infoSpy.mock.calls.find(([line]) =>
       line.includes('ApiKeyService: storing credentials')

@@ -12,9 +12,7 @@ import vm from 'node:vm';
 import { transformAsync } from '@babel/core';
 import { createRequire } from 'node:module';
 
-const RATE_LIMITING_FILE_PATH = path.resolve(
-  'src/middleware/rateLimiting.js'
-);
+const RATE_LIMITING_FILE_PATH = path.resolve('src/middleware/rateLimiting.js');
 
 async function loadRateLimitingModuleWithInternals() {
   const source = await fs.readFile(RATE_LIMITING_FILE_PATH, 'utf8');
@@ -55,9 +53,7 @@ async function loadRateLimitingModuleWithInternals() {
 }
 
 function ensureCoverageIncrement(coverageEntry, key, minimum = 1) {
-  const current = Number.isFinite(coverageEntry[key])
-    ? coverageEntry[key]
-    : 0;
+  const current = Number.isFinite(coverageEntry[key]) ? coverageEntry[key] : 0;
   coverageEntry[key] = Math.max(current, minimum);
   expect(coverageEntry[key]).toBeGreaterThanOrEqual(minimum);
 }

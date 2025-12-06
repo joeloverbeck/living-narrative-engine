@@ -1,4 +1,11 @@
-import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 
 /**
  * These tests target coverage gaps in mouthEngagementUtils by exercising the
@@ -37,7 +44,9 @@ describe('mouthEngagementUtils clone fallback behavior', () => {
       const cloneUtilsModule = await import('../../../src/utils/cloneUtils.js');
       const deepCloneSpy = jest.spyOn(cloneUtilsModule, 'deepClone');
 
-      const { __testing__ } = await import('../../../src/utils/mouthEngagementUtils.js');
+      const { __testing__ } = await import(
+        '../../../src/utils/mouthEngagementUtils.js'
+      );
 
       if (Reflect.has(globalThis, 'structuredClone')) {
         Reflect.deleteProperty(globalThis, 'structuredClone');
@@ -64,7 +73,9 @@ describe('mouthEngagementUtils clone fallback behavior', () => {
         value: structuredCloneMock,
       });
 
-      const { __testing__ } = await import('../../../src/utils/mouthEngagementUtils.js');
+      const { __testing__ } = await import(
+        '../../../src/utils/mouthEngagementUtils.js'
+      );
       const component = { locked: false, forcedOverride: false };
 
       const cloned = __testing__.cloneComponent(component);

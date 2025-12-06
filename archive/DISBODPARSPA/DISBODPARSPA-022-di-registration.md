@@ -10,22 +10,22 @@ Register the `DismemberedBodyPartSpawner` service in the dependency injection co
 
 The original ticket had incorrect file paths and dependencies. Corrections:
 
-| Original Assumption | Actual Codebase |
-|---------------------|-----------------|
-| `tokens-anatomy.js` | `tokens-core.js` (no separate anatomy tokens file exists) |
-| `anatomyRegistrations.js` | `worldAndEntityRegistrations.js` (anatomy services registered here) |
-| Dependency: `entityFactory` | Dependency: `entityLifecycleManager` (see spawner constructor) |
-| Token: `IEventBus` | Token: `ISafeEventDispatcher` (per codebase patterns) |
+| Original Assumption         | Actual Codebase                                                     |
+| --------------------------- | ------------------------------------------------------------------- |
+| `tokens-anatomy.js`         | `tokens-core.js` (no separate anatomy tokens file exists)           |
+| `anatomyRegistrations.js`   | `worldAndEntityRegistrations.js` (anatomy services registered here) |
+| Dependency: `entityFactory` | Dependency: `entityLifecycleManager` (see spawner constructor)      |
+| Token: `IEventBus`          | Token: `ISafeEventDispatcher` (per codebase patterns)               |
 
 ---
 
 ## Files to Touch
 
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `src/dependencyInjection/tokens/tokens-core.js` | Modify | Add token for DismemberedBodyPartSpawner |
-| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | Modify | Register spawner factory |
-| `src/main/main.js` or initialization file | Modify | Initialize spawner during startup |
+| File                                                                   | Change Type | Description                              |
+| ---------------------------------------------------------------------- | ----------- | ---------------------------------------- |
+| `src/dependencyInjection/tokens/tokens-core.js`                        | Modify      | Add token for DismemberedBodyPartSpawner |
+| `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | Modify      | Register spawner factory                 |
+| `src/main/main.js` or initialization file                              | Modify      | Initialize spawner during startup        |
 
 ---
 

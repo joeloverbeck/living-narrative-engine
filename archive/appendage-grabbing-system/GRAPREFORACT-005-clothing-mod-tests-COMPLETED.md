@@ -5,6 +5,7 @@
 ## Summary
 
 Create 2 integration test files to verify the grabbing prerequisites added in GRAPREFORACT-001 work correctly:
+
 - `remove_clothing_prerequisites.test.js`
 - `remove_others_clothing_prerequisites.test.js`
 
@@ -16,24 +17,27 @@ Each action with grabbing prerequisites requires a dedicated integration test fi
 
 ## Files Created
 
-| File | Action Tested |
-|------|---------------|
-| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js` | `clothing:remove_clothing` |
+| File                                                                           | Action Tested                     |
+| ------------------------------------------------------------------------------ | --------------------------------- |
+| `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js`        | `clothing:remove_clothing`        |
 | `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js` | `clothing:remove_others_clothing` |
 
 ## Acceptance Criteria
 
 ### Tests Must Pass
+
 - [x] `npx jest tests/integration/mods/clothing/remove_clothing_prerequisites.test.js` passes (14 tests)
 - [x] `npx jest tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js` passes (14 tests)
 
 ### Test Coverage Requirements
+
 - [x] Each test file covers all 5 test scenario groups
 - [x] Tests verify both success (2+ appendages) and failure (<2 appendages) cases
 - [x] Tests verify the exact condition ID `anatomy:actor-has-two-free-grabbing-appendages`
 - [x] Tests verify action structure preservation
 
 ### Invariants That Must Remain True
+
 - [x] No modifications to action files
 - [x] No modifications to condition files
 - [x] No modifications to source code
@@ -56,6 +60,7 @@ Each action with grabbing prerequisites requires a dedicated integration test fi
 **Originally Planned**: Create 2 new integration test files for the clothing mod grabbing prerequisites.
 
 **Actual State**: Upon reassessment, the test files were found to **already exist** and pass all required tests:
+
 - `tests/integration/mods/clothing/remove_clothing_prerequisites.test.js` - 14 tests passing
 - `tests/integration/mods/clothing/remove_others_clothing_prerequisites.test.js` - 14 tests passing
 
@@ -64,6 +69,7 @@ The tests were previously created (likely as part of GRAPREFORACT-001 implementa
 ### Test Coverage Summary (28 total tests)
 
 Each test file includes:
+
 1. **Action definition structure** (4 tests each)
    - Prerequisites array defined
    - Correct condition reference

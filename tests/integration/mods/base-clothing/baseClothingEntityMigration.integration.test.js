@@ -215,9 +215,9 @@ describe('CLOLAYMIG-011: Base-Clothing Entity Migration', () => {
 
       expect(manifest.id).toBe('base-clothing');
       // Should have at least the originally migrated entities (may grow over time)
-      expect(manifest.content.entities.definitions.length).toBeGreaterThanOrEqual(
-        baseClothingEntityFiles.length
-      );
+      expect(
+        manifest.content.entities.definitions.length
+      ).toBeGreaterThanOrEqual(baseClothingEntityFiles.length);
     });
 
     it('should reference all entity files in manifest', async () => {

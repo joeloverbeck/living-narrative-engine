@@ -84,7 +84,9 @@ describe('Verbose Planning Diagnostic', () => {
 
     const goal = createTestGoal({
       id: 'test:heal_self',
-      goalState: { '>=': [{ var: 'state.actor.components.core_stats.health' }, 80] },
+      goalState: {
+        '>=': [{ var: 'state.actor.components.core_stats.health' }, 80],
+      },
       relevance: { '==': [true, true] },
       priority: 10,
     });
@@ -101,14 +103,21 @@ describe('Verbose Planning Diagnostic', () => {
 
     const events = setup.eventBus.getEvents();
 
-    const planningCompleted = events.find(e => e.type === 'goap:planning_completed');
-    const planningFailed = events.find(e => e.type === 'goap:planning_failed');
+    const planningCompleted = events.find(
+      (e) => e.type === 'goap:planning_completed'
+    );
+    const planningFailed = events.find(
+      (e) => e.type === 'goap:planning_failed'
+    );
 
     console.log('\n3. Results:');
     if (planningCompleted) {
       console.log('   ✓ PLANNING_COMPLETED');
       console.log('   Plan length:', planningCompleted.payload?.planLength);
-      console.log('   Tasks:', JSON.stringify(planningCompleted.payload?.tasks));
+      console.log(
+        '   Tasks:',
+        JSON.stringify(planningCompleted.payload?.tasks)
+      );
     }
 
     if (planningFailed) {

@@ -27,9 +27,15 @@ describe('positioning:turn_your_back action discovery', () => {
   describe('Forbidden components validation', () => {
     it('should have correct forbidden components structure', () => {
       expect(turnYourBackAction.forbidden_components).toBeDefined();
-      expect(turnYourBackAction.forbidden_components.actor).toBeInstanceOf(Array);
-      expect(turnYourBackAction.forbidden_components.actor).toContain('positioning:biting_neck');
-      expect(turnYourBackAction.forbidden_components.actor).toContain('positioning:facing_away');
+      expect(turnYourBackAction.forbidden_components.actor).toBeInstanceOf(
+        Array
+      );
+      expect(turnYourBackAction.forbidden_components.actor).toContain(
+        'positioning:biting_neck'
+      );
+      expect(turnYourBackAction.forbidden_components.actor).toContain(
+        'positioning:facing_away'
+      );
     });
 
     it('should NOT appear when actor has fucking_anally component', () => {
@@ -44,7 +50,9 @@ describe('positioning:turn_your_back action discovery', () => {
       const room = ModEntityScenarios.createRoom('room1', 'Test Room');
       testFixture.reset([room, scenario.actor, scenario.target]);
 
-      const actions = testFixture.testEnv.getAvailableActions(scenario.actor.id);
+      const actions = testFixture.testEnv.getAvailableActions(
+        scenario.actor.id
+      );
       const ids = actions.map((action) => action.id);
 
       expect(ids).not.toContain('positioning:turn_your_back');

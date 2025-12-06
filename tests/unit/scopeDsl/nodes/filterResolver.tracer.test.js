@@ -91,7 +91,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -100,7 +104,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations.length).toBe(1);
     });
@@ -118,7 +124,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -127,7 +137,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations.length).toBe(0);
     });
@@ -145,7 +157,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -154,7 +170,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations[0].entityId).toBe('entity1');
     });
@@ -173,7 +191,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic,
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -182,7 +204,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations[0].logic).toEqual(logic);
     });
@@ -204,7 +228,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -213,7 +241,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations.length).toBe(2);
       expect(filterEvaluations[0].result).toBe(true);
@@ -233,7 +263,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity1'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -242,7 +276,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations[0].context).toBeDefined();
       expect(filterEvaluations[0].context.entity).toBeDefined();
@@ -263,7 +299,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [1, 1] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -272,7 +312,9 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations.length).toBe(3);
       expect(filterEvaluations[0].entityId).toBe('entity1');
@@ -297,7 +339,11 @@ describe('FilterResolver - Tracer Integration', () => {
         logic: { '==': [{ var: 'entity.id' }, 'entity2'] },
       };
       const ctx = {
-        actorEntity: { id: 'actor123', componentTypeIds: ['core:actor'], components: new Map() },
+        actorEntity: {
+          id: 'actor123',
+          componentTypeIds: ['core:actor'],
+          components: new Map(),
+        },
         dispatcher,
         tracer: tracer,
         runtimeCtx: {},
@@ -306,11 +352,13 @@ describe('FilterResolver - Tracer Integration', () => {
       resolver.resolve(node, ctx);
 
       const trace = tracer.getTrace();
-      const filterEvaluations = trace.steps.filter(s => s.type === 'FILTER_EVALUATION');
+      const filterEvaluations = trace.steps.filter(
+        (s) => s.type === 'FILTER_EVALUATION'
+      );
 
       expect(filterEvaluations.length).toBe(3);
       expect(filterEvaluations[0].result).toBe(false); // entity1
-      expect(filterEvaluations[1].result).toBe(true);  // entity2
+      expect(filterEvaluations[1].result).toBe(true); // entity2
       expect(filterEvaluations[2].result).toBe(false); // entity3
     });
   });

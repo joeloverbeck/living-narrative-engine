@@ -27,7 +27,8 @@ describe('sex-penile-oral:lick_glans_sitting_close action discovery', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installSittingCloseUncoveredPenisScopeOverride(testFixture);
+    restoreScopeResolver =
+      installSittingCloseUncoveredPenisScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -43,7 +44,8 @@ describe('sex-penile-oral:lick_glans_sitting_close action discovery', () => {
   });
 
   it('appears when both participants are sitting close with an uncovered penis', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario();
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario();
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -55,9 +57,10 @@ describe('sex-penile-oral:lick_glans_sitting_close action discovery', () => {
   });
 
   it("does not appear when the partner's penis is covered", async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      coverPrimaryPenis: true,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        coverPrimaryPenis: true,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -68,9 +71,10 @@ describe('sex-penile-oral:lick_glans_sitting_close action discovery', () => {
   });
 
   it('does not appear when the actor is not sitting', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      includeActorSitting: false,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        includeActorSitting: false,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 
@@ -81,9 +85,10 @@ describe('sex-penile-oral:lick_glans_sitting_close action discovery', () => {
   });
 
   it('does not appear without mutual closeness', async () => {
-    const { entities, actorId } = buildBreatheTeasinglyOnPenisSittingCloseScenario({
-      includeCloseness: false,
-    });
+    const { entities, actorId } =
+      buildBreatheTeasinglyOnPenisSittingCloseScenario({
+        includeCloseness: false,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

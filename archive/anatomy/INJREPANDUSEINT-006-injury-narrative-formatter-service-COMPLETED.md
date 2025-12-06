@@ -8,12 +8,12 @@ Create service that converts InjurySummaryDTO into first-person and third-person
 
 ## File List
 
-| File | Action |
-|------|--------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | CREATE ✅ |
-| `src/dependencyInjection/tokens/tokens-core.js` | MODIFY - add token alphabetically ✅ |
+| File                                                                   | Action                                                                           |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`              | CREATE ✅                                                                        |
+| `src/dependencyInjection/tokens/tokens-core.js`                        | MODIFY - add token alphabetically ✅                                             |
 | `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | MODIFY - add registration (consistent with InjuryAggregationService location) ✅ |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | CREATE ✅ |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js`  | CREATE ✅                                                                        |
 
 ## Out of Scope
 
@@ -89,12 +89,12 @@ Created `InjuryNarrativeFormatterService` that formats injury data into natural 
 
 ### Files Created/Modified
 
-| File | Change |
-|------|--------|
-| `src/anatomy/services/injuryNarrativeFormatterService.js` | Created (395 lines) |
-| `src/dependencyInjection/tokens/tokens-core.js` | Added token |
+| File                                                                   | Change                |
+| ---------------------------------------------------------------------- | --------------------- |
+| `src/anatomy/services/injuryNarrativeFormatterService.js`              | Created (395 lines)   |
+| `src/dependencyInjection/tokens/tokens-core.js`                        | Added token           |
 | `src/dependencyInjection/registrations/worldAndEntityRegistrations.js` | Added DI registration |
-| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js` | Created (39 tests) |
+| `tests/unit/anatomy/services/injuryNarrativeFormatterService.test.js`  | Created (39 tests)    |
 
 ### Ticket Discrepancy Corrected
 

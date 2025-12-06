@@ -32,7 +32,10 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action integration', 
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forActionAutoLoad('sex-physical-control', ACTION_ID);
+    testFixture = await ModTestFixture.forActionAutoLoad(
+      'sex-physical-control',
+      ACTION_ID
+    );
     restoreScopeResolver = installActorsSittingCloseScopeOverride(testFixture);
   });
 
@@ -57,10 +60,14 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action integration', 
       additionalPayload: { primaryId: PRIMARY_ID },
     });
 
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, EXPECTED_MESSAGE, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      EXPECTED_MESSAGE,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: EXPECTED_MESSAGE,
@@ -72,9 +79,10 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action integration', 
   });
 
   it('fails the clothing coverage prerequisite when the actor loses their clothed tease', async () => {
-    const { entities, actorId, primaryId } = buildPullHeadToClothedCrotchScenario({
-      coverActorPenis: false,
-    });
+    const { entities, actorId, primaryId } =
+      buildPullHeadToClothedCrotchScenario({
+        coverActorPenis: false,
+      });
     testFixture.reset(entities);
     configureActionDiscovery(testFixture);
 

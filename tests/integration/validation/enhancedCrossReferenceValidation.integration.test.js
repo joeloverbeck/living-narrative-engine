@@ -172,7 +172,9 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
         expect.objectContaining({
           type: 'add_dependency',
           priority: 'primary',
-          description: expect.stringMatching(/Add "(affection|kissing|caressing)" to dependencies/),
+          description: expect.stringMatching(
+            /Add "(affection|kissing|caressing)" to dependencies/
+          ),
           implementation: expect.objectContaining({
             file: 'mod-manifest.json',
             action: 'add_to_dependencies_array',
@@ -198,7 +200,9 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     expect(consoleReport).toContain('HIGH (');
     expect(consoleReport).toContain('📁 actions/');
     expect(consoleReport).toMatch(/📝 "(affection|kissing|caressing):/);
-    expect(consoleReport).toMatch(/💡 Add "(affection|kissing|caressing)" to dependencies/);
+    expect(consoleReport).toMatch(
+      /💡 Add "(affection|kissing|caressing)" to dependencies/
+    );
     expect(consoleReport).toContain('📊 Impact: loading=');
 
     // Test JSON reporting
@@ -350,11 +354,11 @@ describe('Enhanced Cross-Reference Validation Integration', () => {
     expect(ecosystemJsonData).toMatchObject({
       type: 'ecosystem',
       mods: expect.objectContaining({
-        clean_mod: expect.objectContaining({ 
-          crossReferences: expect.objectContaining({ hasViolations: false })
+        clean_mod: expect.objectContaining({
+          crossReferences: expect.objectContaining({ hasViolations: false }),
         }),
-        violating_mod: expect.objectContaining({ 
-          crossReferences: expect.objectContaining({ hasViolations: true })
+        violating_mod: expect.objectContaining({
+          crossReferences: expect.objectContaining({ hasViolations: true }),
         }),
       }),
       summary: expect.objectContaining({

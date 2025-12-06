@@ -41,11 +41,13 @@
 **Refactoring Strategy**: Component/Event Type Registry Pattern
 
 **Examples**:
+
 - `positioning:closeness` - Component type ID used in 40+ closeness system handlers
 - `items:inventory` - Component type ID used in 15+ inventory handlers
 - `clothing:equipment` - Component type ID used in equipment system
 
 **Affected Systems**:
+
 - Operation handlers (60+ references)
 - Event dispatching (30+ references)
 - Core service integration (67+ references)
@@ -63,9 +65,11 @@
 **Refactoring Strategy**: Plugin/Extension Point Pattern
 
 **Examples**:
+
 - `positioning:allows_sitting` - Special debug logging in EntityQueryManager (lines 202, 204)
 
 **Affected Systems**:
+
 - Entity query manager
 
 **Recommendation**: Implement plugin hooks allowing mods to register custom debugging or optimization behaviors without hardcoding in core.
@@ -83,30 +87,36 @@
 **Sub-categories**:
 
 #### C1: Scope Resolution (15 references)
+
 - Special scope names like `positioning:available_furniture`
 - Component presence checks in scope DSL
 - **Recommendation**: Move to configuration-based scope definitions
 
 #### C2: State Validation (30 references)
+
 - Component state validators
 - State consistency checkers
 - **Recommendation**: Configuration-based validation rules
 
 #### C3: Cache Keys (10 references)
+
 - String prefixes for cache management (`clothing:accessible:`, etc.)
 - **Recommendation**: Registry-based or keep as-is (low impact)
 
 #### C4: Debug Logging (20 references)
+
 - Debug messages mentioning specific components
 - Repository indexing logs
 - **Recommendation**: Reduce verbosity or use plugin hooks
 
 #### C5: Documentation/Examples (8 references)
+
 - JSDoc comments
 - Code examples in comments
 - **Recommendation**: Keep as-is (informational only)
 
 #### C6: Miscellaneous Config (48 references)
+
 - Layer compatibility checks
 - Slot category mappings
 - UI event subscriptions
@@ -121,6 +131,7 @@
 **Severity**: None - Not actual dependencies
 
 **Examples**:
+
 - JSON Schema `items` property (array definitions)
 - CSS `align-items: center` property
 - JavaScript object field names like `cliche.items`
@@ -141,6 +152,7 @@ Component: `positioning:closeness`
 Events: `positioning:closeness_with_target_broken`, `positioning:sitting_closeness_established`, `positioning:lying_closeness_established`, `positioning:entity_exited_location`, `positioning:entity_entered_location`
 
 **Files**:
+
 - `src/logic/operationHandlers/autoMoveClosenessPartnersHandler.js` (lines 36, 316, 322)
 - `src/logic/operationHandlers/breakClosenessWithTargetHandler.js` (lines 193, 197, 256, 265, 321, 332, 374)
 - `src/logic/operationHandlers/establishLyingClosenessHandler.js` (lines 210, 231, 247, 286, 290, 318, 325, 437)
@@ -151,45 +163,54 @@ Events: `positioning:closeness_with_target_broken`, `positioning:sitting_closene
 - `src/logic/operationHandlers/removeSittingClosenessHandler.js` (lines 124, 135, 220, 226, 242, 319, 365, 390, 445)
 
 **Sitting/Lying Components** (18 references):
+
 - `positioning:allows_sitting` (8 references) - Activity metadata, context building
 - `positioning:sitting_on` (4 references) - Sitting state tracking
 - `positioning:allows_lying_on` (2 references) - Lying support
 - `positioning:lying_down` (4 references) - Lying state tracking
 
 **Files**:
+
 - `src/anatomy/services/activityMetadataCollectionSystem.js` (lines 161, 345)
 - `src/anatomy/services/context/activityContextBuildingSystem.js` (lines 48, 87, 104)
 - Various operation handlers
 
 **Documentation/Service References** (5 references):
+
 - `src/logic/services/closenessCircleService.js` (line 6) - JSDoc
 - `src/entities/services/entityRepositoryAdapter.js` (lines 289-292) - Debug logging
 
 #### 1.2 High - Plugin Candidates (2 references)
 
 **Entity Query Special Handling**:
+
 - `src/entities/managers/EntityQueryManager.js` (lines 202, 204)
 - Special debugging for `positioning:allows_sitting` queries
 
 #### 1.3 Medium - Config Candidates (33 references)
 
 **Scope Resolution** (6 references):
+
 - `src/actions/scopes/unifiedScopeResolver.js` (lines 375, 422, 442)
 - `positioning:available_furniture` scope definition
 
 **Validation Examples** (3 references):
+
 - `src/actions/validation/TargetRequiredComponentsValidator.js` (lines 46-47, 51)
 - JSDoc examples using positioning components
 
 **Debug Logging** (6 references):
+
 - `src/entities/entityManager.js` (lines 545, 547, 554)
 - Entity definition debug output
 
 **State Validation** (12 references):
+
 - `src/utils/componentStateValidator.js` (lines 212, 216)
 - `src/utils/stateConsistencyValidator.js` (lines 49, 56, 70, 120, 124, 157, 164, 174, 320, 328, 371)
 
 **Miscellaneous** (6 references):
+
 - Entity definition properties
 - Furniture operator base class
 - Scope DSL component checks
@@ -206,6 +227,7 @@ Components: `items:liquid_container`, `items:drinkable`, `items:empty`
 Events: `items:liquid_consumed`, `items:liquid_consumed_entirely`
 
 **Files**:
+
 - `src/logic/operationHandlers/drinkEntirelyHandler.js`
 - `src/logic/operationHandlers/drinkFromHandler.js`
 
@@ -215,6 +237,7 @@ Components: `items:inventory` (15 references), `items:item`, `items:portable`
 Events: `items:item_dropped`, `items:item_picked_up`, `items:item_transferred`
 
 **Files**:
+
 - `src/logic/operationHandlers/dropItemAtLocationHandler.js`
 - `src/logic/operationHandlers/pickUpItemFromLocationHandler.js`
 - `src/logic/operationHandlers/transferItemHandler.js`
@@ -227,6 +250,7 @@ Components: `items:container`, `items:openable`
 Events: `items:container_opened`, `items:item_put_in_container`, `items:item_taken_from_container`
 
 **Files**:
+
 - `src/logic/operationHandlers/openContainerHandler.js`
 - `src/logic/operationHandlers/putInContainerHandler.js`
 - `src/logic/operationHandlers/takeFromContainerHandler.js`
@@ -236,30 +260,37 @@ Events: `items:container_opened`, `items:item_put_in_container`, `items:item_tak
 Component: `items:weight`
 
 **Files**:
+
 - `src/logic/operationHandlers/validateContainerCapacityHandler.js`
 - `src/logic/operationHandlers/validateInventoryCapacityHandler.js`
 
 **Service Integration** (5 references):
+
 - `src/clothing/services/equipmentDescriptionService.js` (6 references) - Equipment/item integration
 
 #### 2.2 Medium - Config Candidates (38 references)
 
 **False Positives - JSON Schema** (12 references):
+
 - Character builder prompts use `items` as JSON Schema array property
 - NOT actual mod references - these are schema field names
 
 **Scope DSL Markers** (2 references):
+
 - `src/scopeDsl/nodes/filterResolver.js` (lines 271-272)
 - `items:item` and `items:portable` component checks
 
 **Documentation** (3 references):
+
 - `src/data/providers/availableActionsProvider.js` (line 34) - Comment
 - GOAP documentation references
 
 **Pipeline Validation** (1 reference):
+
 - `src/actions/pipeline/stages/TargetComponentValidationStage.js` (line 236)
 
 **Miscellaneous** (20 references):
+
 - Character builder services (mostly false positives)
 - Cliche services
 - UI/logging references
@@ -276,6 +307,7 @@ Component: `clothing:equipment`
 Events: `clothing:equipped`, `clothing:unequipped`, `clothing:equipment_updated`
 
 **Files**:
+
 - `src/clothing/services/equipmentOrchestrator.js`
 - `src/clothing/services/clothingManagementService.js`
 - Various clothing operators
@@ -285,6 +317,7 @@ Events: `clothing:equipped`, `clothing:unequipped`, `clothing:equipment_updated`
 Components: `clothing:wearable` (8 references), `clothing:blocks_removal` (4 references)
 
 **Files**:
+
 - `src/clothing/services/clothingAccessibilityService.js`
 - `src/clothing/services/clothingInstantiationService.js`
 - `src/logic/operators/isRemovalBlockedOperator.js`
@@ -294,6 +327,7 @@ Components: `clothing:wearable` (8 references), `clothing:blocks_removal` (4 ref
 Components: `clothing:coverage_mapping` (4 references), `clothing:slot_metadata` (6 references)
 
 **Files**:
+
 - `src/clothing/services/coverageAnalyzer.js`
 - `src/clothing/services/equipmentDescriptionService.js`
 - `src/logic/operators/isSocketCoveredOperator.js`
@@ -301,38 +335,47 @@ Components: `clothing:coverage_mapping` (4 references), `clothing:slot_metadata`
 - `src/actions/pipeline/stages/SlotEntityCreationStage.js`
 
 **Event Dispatching** (1 reference):
+
 - `clothing:instantiation_completed` event
 - `src/clothing/services/clothingInstantiationService.js` (line 414)
 
 #### 3.2 Medium - Config Candidates (60 references)
 
 **Cache Key Prefixes** (10 references):
+
 - `src/clothing/facades/IClothingSystemFacade.js`
 - Cache keys: `clothing:accessible:`, `clothing:equipped:`, `clothing:coverage:`, etc.
 
 **Slot Category Mappings** (11 references):
+
 - `src/clothing/services/equipmentDescriptionService.js` (lines 222-251)
 - Mappings: `jacket_clothing`, `shirt_clothing`, `pants_clothing`, etc.
 
 **Layer Compatibility Checks** (3 references):
+
 - `src/clothing/validation/layerCompatibilityService.js` (lines 79, 88, 216)
 
 **Scope DSL Integration** (5 references):
+
 - `src/scopeDsl/nodes/clothingStepResolver.js` (lines 32, 34-36, 91)
 - `src/scopeDsl/engine.js` (line 170)
 - Step aliases and equipment access
 
 **Operator Logging** (6 references):
+
 - Various operator debug messages mentioning `clothing:equipment`
 
 **UI/Config Integration** (6 references):
+
 - `src/domUI/AnatomyVisualizerUI.js` - Event subscriptions
 - `src/config/errorHandling.config.js` - Error handling
 
 **Validation Debug** (1 reference):
+
 - `src/actions/validation/prerequisiteDebugger.js` (line 250)
 
 **Miscellaneous** (18 references):
+
 - Service documentation
 - CSS false positives
 - Object property names
@@ -346,6 +389,7 @@ Components: `clothing:coverage_mapping` (4 references), `clothing:slot_metadata`
 **Target**: Category A (157 critical references)
 
 **Design Pattern**:
+
 ```javascript
 // Component Type Registry
 class ComponentTypeRegistry {
@@ -372,6 +416,7 @@ constructor({ componentRegistry }) {
 ```
 
 **Implementation Steps**:
+
 1. Create `ComponentTypeRegistry` and `EventTypeRegistry` classes
 2. Add registry to dependency injection container
 3. Modify mod loader to register component/event types during mod initialization
@@ -389,6 +434,7 @@ constructor({ componentRegistry }) {
 **Target**: Category B (2 high references)
 
 **Design Pattern**:
+
 ```javascript
 // Plugin Hook System
 class EntityQueryPluginHooks {
@@ -400,8 +446,8 @@ class EntityQueryPluginHooks {
 
   executeDebugHooks(query, result) {
     this.#hooks
-      .filter(h => h.predicate(query))
-      .forEach(h => h.callback(query, result));
+      .filter((h) => h.predicate(query))
+      .forEach((h) => h.callback(query, result));
   }
 }
 
@@ -413,6 +459,7 @@ pluginHooks.registerDebugHook(
 ```
 
 **Implementation Steps**:
+
 1. Create plugin hook system for entity queries
 2. Move special-case logic to positioning mod
 3. Register hooks during mod initialization
@@ -466,6 +513,7 @@ Move state validation to configuration:
 **Sub-Recommendation 3C: Cache Key Prefixes**
 
 Options:
+
 1. Keep as-is (low impact, internal implementation)
 2. Move to registry if implementing component registry
 
@@ -478,6 +526,7 @@ Options:
 **Target**: Category C4 (20 debug logging references)
 
 **Options**:
+
 1. Remove verbose debug logging entirely
 2. Make debug logging configurable via log levels
 3. Use plugin hooks for mod-specific debug output
@@ -491,6 +540,7 @@ Options:
 **Target**: Category D (50 false positives)
 
 **Action**: Create documentation noting these are NOT actual mod dependencies:
+
 - JSON Schema `items` properties
 - CSS properties
 - Object field names
@@ -508,6 +558,7 @@ Options:
 **Scope**: 157 critical references in operation handlers and core services
 
 **Deliverables**:
+
 1. Component Type Registry implementation
 2. Event Type Registry implementation
 3. Mod loader integration
@@ -527,6 +578,7 @@ Options:
 **Scope**: 2 high priority references in entity query manager
 
 **Deliverables**:
+
 1. Plugin hook system for entity queries
 2. Positioning mod debug hook registration
 3. Tests
@@ -544,6 +596,7 @@ Options:
 **Scope**: 15 scope resolution references
 
 **Deliverables**:
+
 1. Scope definition configuration schema
 2. Scope loader refactoring
 3. Migration of hardcoded scopes to config
@@ -562,6 +615,7 @@ Options:
 **Scope**: 20 debug logging references
 
 **Deliverables**:
+
 1. Log level configuration
 2. Debug output reduction
 3. Optional: Plugin-based debug hooks
@@ -579,6 +633,7 @@ Options:
 **Scope**: 40+ cache and validation references
 
 **Deliverables**:
+
 1. Validation rule configuration
 2. Cache key management refactoring (if needed)
 3. Layer compatibility config
@@ -612,14 +667,16 @@ Options:
 ### Positioning Mod - Complete List
 
 **Critical (63)**:
+
 1. `autoMoveClosenessPartnersHandler.js:36` - `positioning:closeness`
 2. `autoMoveClosenessPartnersHandler.js:316` - `positioning:entity_exited_location`
 3. `autoMoveClosenessPartnersHandler.js:322` - `positioning:entity_entered_location`
 4. `breakClosenessWithTargetHandler.js:193` - `positioning:closeness`
 5. `breakClosenessWithTargetHandler.js:197` - `positioning:closeness`
-... (complete list in audit document)
+   ... (complete list in audit document)
 
 **High (2)**:
+
 1. `EntityQueryManager.js:202` - `positioning:allows_sitting`
 2. `EntityQueryManager.js:204` - `positioning:allows_sitting`
 
@@ -679,7 +736,7 @@ class ComponentTypeRegistry {
       modId,
       componentId,
       fullId,
-      ...metadata
+      ...metadata,
     });
 
     this.#logger.debug(`Registered component type: ${fullId}`);
@@ -709,8 +766,9 @@ class ComponentTypeRegistry {
    * @returns {Array<Object>} Array of component metadata
    */
   getByMod(modId) {
-    return Array.from(this.#registry.values())
-      .filter(meta => meta.modId === modId);
+    return Array.from(this.#registry.values()).filter(
+      (meta) => meta.modId === modId
+    );
   }
 
   /**
@@ -732,7 +790,9 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
     // Lookup component type from registry
     const closenessComponent = componentRegistry.get('positioning:closeness');
     if (!closenessComponent) {
-      throw new Error('Required component type not registered: positioning:closeness');
+      throw new Error(
+        'Required component type not registered: positioning:closeness'
+      );
     }
     this.#closenessComponentId = closenessComponent.fullId;
     this.#eventRegistry = eventRegistry;
@@ -743,10 +803,14 @@ class EstablishSittingClosenessHandler extends BaseOperationHandler {
     const closeness = context.entity.getComponent(this.#closenessComponentId);
 
     // Use registered event type
-    const eventType = this.#eventRegistry.get('positioning:sitting_closeness_established');
+    const eventType = this.#eventRegistry.get(
+      'positioning:sitting_closeness_established'
+    );
     this.#eventBus.dispatch({
       type: eventType.fullId,
-      payload: { /* ... */ }
+      payload: {
+        /* ... */
+      },
     });
   }
 }
@@ -793,8 +857,8 @@ class EntityQueryPluginHooks {
    */
   executeDebugHooks(query, result) {
     this.#debugHooks
-      .filter(h => h.predicate(query))
-      .forEach(h => {
+      .filter((h) => h.predicate(query))
+      .forEach((h) => {
         try {
           h.callback(query, result);
         } catch (err) {
@@ -808,7 +872,7 @@ class EntityQueryPluginHooks {
    */
   executeTransformHooks(query, result) {
     return this.#transformHooks
-      .filter(h => h.predicate(query))
+      .filter((h) => h.predicate(query))
       .reduce((acc, h) => {
         try {
           return h.transformer(acc);
@@ -830,7 +894,7 @@ class PositioningModInitializer {
         logger.debug('Sitting furniture query', {
           componentId: query.componentId,
           resultCount: result.length,
-          entities: result.map(e => e.id)
+          entities: result.map((e) => e.id),
         });
       }
     );
@@ -853,7 +917,7 @@ class MyOperationHandler extends BaseOperationHandler {
     // Hardcoded event type
     this.#eventBus.dispatch({
       type: 'items:item_picked_up',
-      payload: { entityId: context.entityId }
+      payload: { entityId: context.entityId },
     });
   }
 }
@@ -888,7 +952,7 @@ class MyOperationHandler extends BaseOperationHandler {
 
     this.#eventBus.dispatch({
       type: this.#itemPickedUpEventType,
-      payload: { entityId: context.entityId }
+      payload: { entityId: context.entityId },
     });
   }
 }

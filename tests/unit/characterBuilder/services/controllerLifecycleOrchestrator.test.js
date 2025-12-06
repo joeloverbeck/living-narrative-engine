@@ -272,12 +272,9 @@ describe('ControllerLifecycleOrchestrator', () => {
 
   it('requires a controller when creating controller method hooks', () => {
     expect(() =>
-      orchestrator.createControllerMethodHook(
-        null,
-        'method',
-        'phase',
-        { required: true }
-      )
+      orchestrator.createControllerMethodHook(null, 'method', 'phase', {
+        required: true,
+      })
     ).toThrow('controller is required to create lifecycle hooks');
   });
 
@@ -338,9 +335,8 @@ describe('ControllerLifecycleOrchestrator', () => {
 
   it('logs async destruction hook rejections', async () => {
     const rejection = new Error('async cleanup failed');
-    orchestrator.registerHook(
-      DESTRUCTION_PHASES.CLEAR_ELEMENTS,
-      () => Promise.reject(rejection)
+    orchestrator.registerHook(DESTRUCTION_PHASES.CLEAR_ELEMENTS, () =>
+      Promise.reject(rejection)
     );
 
     orchestrator.destroy();

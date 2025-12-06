@@ -57,37 +57,39 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
       return null;
     });
     bodyPartDescriptionBuilder.buildDescription.mockImplementation(
-      (entity) => `desc:${entity.id}`,
+      (entity) => `desc:${entity.id}`
     );
     bodyDescriptionComposer.composeDescription.mockResolvedValue('body desc');
 
     await service.generateAllDescriptions(bodyEntity);
 
-    expect(bodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledTimes(2);
+    expect(bodyPartDescriptionBuilder.buildDescription).toHaveBeenCalledTimes(
+      2
+    );
     expect(componentManager.addComponent).toHaveBeenCalledWith(
       'head',
       DESCRIPTION_COMPONENT_ID,
-      { text: 'desc:head' },
+      { text: 'desc:head' }
     );
     expect(componentManager.addComponent).toHaveBeenCalledWith(
       'actor-1',
       DESCRIPTION_COMPONENT_ID,
-      { text: 'body desc' },
+      { text: 'body desc' }
     );
   });
 
   it('throws the documented errors when anatomy prerequisites are missing', async () => {
     const missingBody = createEntity('actor-1', {});
-    await expect(
-      service.generateAllDescriptions(missingBody),
-    ).rejects.toThrow('Entity must have an anatomy:body component');
+    await expect(service.generateAllDescriptions(missingBody)).rejects.toThrow(
+      'Entity must have an anatomy:body component'
+    );
 
     const missingRoot = createEntity('actor-1', {
       [ANATOMY_BODY_COMPONENT_ID]: { body: {} },
     });
-    await expect(
-      service.generateAllDescriptions(missingRoot),
-    ).rejects.toThrow('Body component must have a body.root property');
+    await expect(service.generateAllDescriptions(missingRoot)).rejects.toThrow(
+      'Body component must have a body.root property'
+    );
   });
 
   it('skips part generation when the entity lookup fails or lacks anatomy data', () => {
@@ -143,7 +145,10 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
     service.eventDispatchService = { safeDispatchEvent: jest.fn() };
 
     const entity = createEntity('actor-1', {
-      [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'torso' }, recipeId: 'recipe:1' },
+      [ANATOMY_BODY_COMPONENT_ID]: {
+        body: { root: 'torso' },
+        recipeId: 'recipe:1',
+      },
       'core:name': { text: 'Test Actor' },
     });
     bodyDescriptionComposer.composeDescription.mockResolvedValue('');
@@ -172,7 +177,7 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
     entityFinder.getEntityInstance.mockReturnValue(
       createEntity('core', {
         [ANATOMY_PART_COMPONENT_ID]: { type: 'core' },
-      }),
+      })
     );
     bodyPartDescriptionBuilder.buildDescription.mockReturnValue('part desc');
     bodyDescriptionComposer.composeDescription.mockResolvedValue('full body');
@@ -182,12 +187,14 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
     expect(componentManager.addComponent).toHaveBeenCalledWith(
       'body-entity',
       DESCRIPTION_COMPONENT_ID,
-      { text: 'full body' },
+      { text: 'full body' }
     );
   });
 
   it('returns null immediately when getOrGenerateBodyDescription receives no entity', async () => {
-    await expect(service.getOrGenerateBodyDescription(null)).resolves.toBeNull();
+    await expect(
+      service.getOrGenerateBodyDescription(null)
+    ).resolves.toBeNull();
   });
 
   it('exits early when updateDescription cannot resolve the entity', () => {
@@ -259,37 +266,35 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
         ],
       };
       bodyDescriptionOrchestrator.generateAllDescriptions.mockResolvedValue(
-        orchestrationResult,
+        orchestrationResult
       );
 
       await orchestratedService.generateAllDescriptions(entity);
 
       expect(
-        bodyDescriptionOrchestrator.generateAllDescriptions,
+        bodyDescriptionOrchestrator.generateAllDescriptions
       ).toHaveBeenCalledWith(entity);
-      expect(descriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'hero',
-        'assembled body',
-      );
       expect(
-        descriptionPersistenceService.updateMultipleDescriptions,
+        descriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('hero', 'assembled body');
+      expect(
+        descriptionPersistenceService.updateMultipleDescriptions
       ).toHaveBeenCalledWith(orchestrationResult.partDescriptions);
     });
 
     it('uses the dedicated part generator and persistence helpers', () => {
       partDescriptionGenerator.generatePartDescription.mockReturnValue(
-        'tail description',
+        'tail description'
       );
 
       orchestratedService.generatePartDescription('tail');
 
-      expect(partDescriptionGenerator.generatePartDescription).toHaveBeenCalledWith(
-        'tail',
-      );
-      expect(descriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'tail',
-        'tail description',
-      );
+      expect(
+        partDescriptionGenerator.generatePartDescription
+      ).toHaveBeenCalledWith('tail');
+      expect(
+        descriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('tail', 'tail description');
     });
 
     it('delegates body description generation to the orchestrator', async () => {
@@ -297,18 +302,17 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'core' } },
       });
       bodyDescriptionOrchestrator.generateBodyDescription.mockResolvedValue(
-        'heroic description',
+        'heroic description'
       );
 
       await orchestratedService.generateBodyDescription(entity);
 
       expect(
-        bodyDescriptionOrchestrator.generateBodyDescription,
+        bodyDescriptionOrchestrator.generateBodyDescription
       ).toHaveBeenCalledWith(entity);
-      expect(descriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'hero',
-        'heroic description',
-      );
+      expect(
+        descriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('hero', 'heroic description');
     });
 
     it('returns orchestrated descriptions via getOrGenerateBodyDescription', async () => {
@@ -316,29 +320,26 @@ describe('AnatomyDescriptionService fallback branch coverage', () => {
         [ANATOMY_BODY_COMPONENT_ID]: { body: { root: 'core' } },
       });
       bodyDescriptionOrchestrator.getOrGenerateBodyDescription.mockResolvedValue(
-        'cached orchestrated body',
+        'cached orchestrated body'
       );
 
-      const result = await orchestratedService.getOrGenerateBodyDescription(
-        entity,
-      );
+      const result =
+        await orchestratedService.getOrGenerateBodyDescription(entity);
 
       expect(
-        bodyDescriptionOrchestrator.getOrGenerateBodyDescription,
+        bodyDescriptionOrchestrator.getOrGenerateBodyDescription
       ).toHaveBeenCalledWith(entity);
       expect(result).toBe('cached orchestrated body');
-      expect(descriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'hero',
-        'cached orchestrated body',
-      );
+      expect(
+        descriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('hero', 'cached orchestrated body');
     });
 
     it('routes updateDescription through the persistence service when present', () => {
       orchestratedService.updateDescription('actor', 'from orchestrator');
-      expect(descriptionPersistenceService.updateDescription).toHaveBeenCalledWith(
-        'actor',
-        'from orchestrator',
-      );
+      expect(
+        descriptionPersistenceService.updateDescription
+      ).toHaveBeenCalledWith('actor', 'from orchestrator');
     });
   });
 });

@@ -12,11 +12,11 @@ Existing operators (`hasPartOfType`, `hasPartWithComponentValue`) use strict equ
 
 ## Files to Touch
 
-| File | Change Type |
-|------|-------------|
-| `src/logic/operators/hasPartSubTypeContainingOperator.js` | **Create** |
-| `src/logic/jsonLogicCustomOperators.js` | Modify - add import and registration |
-| `tests/unit/logic/operators/hasPartSubTypeContainingOperator.test.js` | **Create** |
+| File                                                                  | Change Type                          |
+| --------------------------------------------------------------------- | ------------------------------------ |
+| `src/logic/operators/hasPartSubTypeContainingOperator.js`             | **Create**                           |
+| `src/logic/jsonLogicCustomOperators.js`                               | Modify - add import and registration |
+| `tests/unit/logic/operators/hasPartSubTypeContainingOperator.test.js` | **Create**                           |
 
 ## Out of Scope
 
@@ -70,9 +70,7 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     const [substring] = params;
 
     if (!substring || typeof substring !== 'string') {
-      this.logger.warn(
-        `hasPartSubTypeContaining: Invalid substring parameter`
-      );
+      this.logger.warn(`hasPartSubTypeContaining: Invalid substring parameter`);
       return false;
     }
 
@@ -88,10 +86,13 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
     // Get all body parts and check subType
     const allParts = this.bodyGraphService.getAllParts(rootId);
 
-    const matchingParts = allParts.filter(part => {
+    const matchingParts = allParts.filter((part) => {
       const subType = part.subType;
-      return subType && typeof subType === 'string' &&
-             subType.toLowerCase().includes(lowerSubstring);
+      return (
+        subType &&
+        typeof subType === 'string' &&
+        subType.toLowerCase().includes(lowerSubstring)
+      );
     });
 
     this.logger.debug(
@@ -109,11 +110,13 @@ export class HasPartSubTypeContainingOperator extends BaseBodyPartOperator {
 **File**: `src/logic/jsonLogicCustomOperators.js`
 
 Add import at top of file (after line 24):
+
 ```javascript
 import { HasPartSubTypeContainingOperator } from './operators/hasPartSubTypeContainingOperator.js';
 ```
 
 Add operator instantiation (around line 125, after `hasPartOfTypeWithComponentValueOp`):
+
 ```javascript
 const hasPartSubTypeContainingOp = new HasPartSubTypeContainingOperator({
   entityManager: this.#entityManager,
@@ -123,6 +126,7 @@ const hasPartSubTypeContainingOp = new HasPartSubTypeContainingOperator({
 ```
 
 Add operator registration (around line 295, after `hasPartOfTypeWithComponentValue` registration):
+
 ```javascript
 // Register hasPartSubTypeContaining operator
 this.#registerOperator(
@@ -228,12 +232,12 @@ npm run typecheck
 
 ### What Was Actually Changed vs Originally Planned
 
-| Planned | Actual | Notes |
-|---------|--------|-------|
-| Create `hasPartSubTypeContainingOperator.js` | ✅ Created as planned | Exact implementation as specified |
-| Modify `jsonLogicCustomOperators.js` | ✅ Modified as planned | Added import, instantiation, and registration |
-| Create unit tests | ✅ Created with 19 tests | Exceeded planned coverage |
-| **Not in ticket**: Add to whitelist | ✅ Added to `jsonLogicEvaluationService.js` | Required for operator to work - discovered during implementation |
+| Planned                                      | Actual                                      | Notes                                                            |
+| -------------------------------------------- | ------------------------------------------- | ---------------------------------------------------------------- |
+| Create `hasPartSubTypeContainingOperator.js` | ✅ Created as planned                       | Exact implementation as specified                                |
+| Modify `jsonLogicCustomOperators.js`         | ✅ Modified as planned                      | Added import, instantiation, and registration                    |
+| Create unit tests                            | ✅ Created with 19 tests                    | Exceeded planned coverage                                        |
+| **Not in ticket**: Add to whitelist          | ✅ Added to `jsonLogicEvaluationService.js` | Required for operator to work - discovered during implementation |
 
 ### Additional Work Required
 
@@ -247,6 +251,7 @@ The ticket did not mention that operators must be added to the `#allowedOperatio
 ### Test Summary
 
 **19 unit tests created** covering:
+
 - Exact substring match (`'beak'` in `'beak'`)
 - Partial substring match (`'beak'` in `'chicken_beak'`)
 - Tortoise beak variant (`'beak'` in `'tortoise_beak'`)
@@ -269,9 +274,9 @@ The ticket did not mention that operators must be added to the `#allowedOperatio
 
 ### Files Modified/Created
 
-| File | Action |
-|------|--------|
-| `src/logic/operators/hasPartSubTypeContainingOperator.js` | Created |
-| `src/logic/jsonLogicCustomOperators.js` | Modified |
-| `src/logic/jsonLogicEvaluationService.js` | Modified (whitelist) |
-| `tests/unit/logic/operators/hasPartSubTypeContainingOperator.test.js` | Created |
+| File                                                                  | Action               |
+| --------------------------------------------------------------------- | -------------------- |
+| `src/logic/operators/hasPartSubTypeContainingOperator.js`             | Created              |
+| `src/logic/jsonLogicCustomOperators.js`                               | Modified             |
+| `src/logic/jsonLogicEvaluationService.js`                             | Modified (whitelist) |
+| `tests/unit/logic/operators/hasPartSubTypeContainingOperator.test.js` | Created              |

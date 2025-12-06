@@ -1,10 +1,4 @@
-import {
-  describe,
-  expect,
-  test,
-  beforeEach,
-  jest,
-} from '@jest/globals';
+import { describe, expect, test, beforeEach, jest } from '@jest/globals';
 import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
@@ -220,7 +214,11 @@ describe('TurnEndingState integration', () => {
       dispatcher,
       turnEndPort: failingPort,
     });
-    const state = new TurnEndingState(handler, actor.id, new Error('turn failed'));
+    const state = new TurnEndingState(
+      handler,
+      actor.id,
+      new Error('turn failed')
+    );
     handler._currentState = state;
 
     await state.enterState(handler, new TurnIdleState(handler));

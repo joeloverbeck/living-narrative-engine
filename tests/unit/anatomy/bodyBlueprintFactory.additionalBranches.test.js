@@ -56,7 +56,7 @@ describe('BodyBlueprintFactory uncovered branches', () => {
         generateBlueprintSlots: jest.fn().mockReturnValue({}),
       },
       recipePatternResolver: {
-        resolveRecipePatterns: jest.fn(recipe => recipe),
+        resolveRecipePatterns: jest.fn((recipe) => recipe),
       },
       blueprintProcessorService: {
         processBlueprint: jest.fn((blueprint) => blueprint),

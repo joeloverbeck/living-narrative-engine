@@ -44,7 +44,9 @@ export default class SimpleEntityManager {
     for (const e of entities) {
       if (!e) {
         // eslint-disable-next-line no-console
-        console.warn('SimpleEntityManager.setEntities: Skipping null/undefined entity');
+        console.warn(
+          'SimpleEntityManager.setEntities: Skipping null/undefined entity'
+        );
         continue;
       }
       const cloned = deepClone(e);

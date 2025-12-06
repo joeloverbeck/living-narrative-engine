@@ -6,9 +6,9 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Rule definition |
+| File                                                                    | Purpose          |
+| ----------------------------------------------------------------------- | ---------------- |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`              | Rule definition  |
 | `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` | Integration test |
 
 ## Implementation Details
@@ -28,7 +28,10 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
@@ -56,7 +59,9 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
     {
       "type": "IF",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -74,7 +79,9 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
           {
             "type": "IF",
             "parameters": {
-              "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+              "condition": {
+                "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+              },
               "then_actions": [
                 {
                   "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -92,7 +99,12 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
                 {
                   "type": "IF",
                   "parameters": {
-                    "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+                    "condition": {
+                      "==": [
+                        { "var": "context.attackResult.outcome" },
+                        "FUMBLE"
+                      ]
+                    },
                     "then_actions": [
                       {
                         "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -132,12 +144,12 @@ Create the rule that handles the `swing_at_target` action execution. This rule u
 
 ### Outcome Messages
 
-| Outcome | Message | Turn Result |
-|---------|---------|-------------|
-| CRITICAL_SUCCESS | "{actor} lands a devastating blow with their {weapon} on {target}!" | Success |
-| SUCCESS | "{actor} swings their {weapon} at {target}, cutting their flesh." | Success |
-| FAILURE | "{actor} swings their {weapon} at {target}, but the swing fails to connect." | Failure |
-| FUMBLE | "{actor} swings wildly and loses grip on their {weapon}!" | Failure |
+| Outcome          | Message                                                                      | Turn Result |
+| ---------------- | ---------------------------------------------------------------------------- | ----------- |
+| CRITICAL_SUCCESS | "{actor} lands a devastating blow with their {weapon} on {target}!"          | Success     |
+| SUCCESS          | "{actor} swings their {weapon} at {target}, cutting their flesh."            | Success     |
+| FAILURE          | "{actor} swings their {weapon} at {target}, but the swing fails to connect." | Failure     |
+| FUMBLE           | "{actor} swings wildly and loses grip on their {weapon}!"                    | Failure     |
 
 ### Rule Flow
 
@@ -228,12 +240,12 @@ Required test cases:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/rules/handle_wield_weapon.rule.json` | Rule structure pattern |
-| `data/mods/positioning/rules/handle_turn_around.rule.json` | Simple rule pattern |
-| `data/core/macros/logSuccessAndEndTurn.macro.json` | Turn ending macro |
-| `tests/integration/mods/weapons/wieldWeaponRuleExecution.test.js` | Rule test pattern |
+| File                                                              | Purpose                |
+| ----------------------------------------------------------------- | ---------------------- |
+| `data/mods/weapons/rules/handle_wield_weapon.rule.json`           | Rule structure pattern |
+| `data/mods/positioning/rules/handle_turn_around.rule.json`        | Simple rule pattern    |
+| `data/core/macros/logSuccessAndEndTurn.macro.json`                | Turn ending macro      |
+| `tests/integration/mods/weapons/wieldWeaponRuleExecution.test.js` | Rule test pattern      |
 
 ---
 
@@ -245,9 +257,9 @@ Required test cases:
 
 ### Deliverables Created
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | Rule definition with outcome branching |
+| File                                                                    | Purpose                                    |
+| ----------------------------------------------------------------------- | ------------------------------------------ |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`              | Rule definition with outcome branching     |
 | `tests/integration/mods/weapons/swingAtTargetOutcomeResolution.test.js` | Comprehensive integration tests (27 tests) |
 
 ### Ticket Discrepancy Corrected
@@ -262,6 +274,7 @@ Tests:       27 passed, 27 total
 ```
 
 **Test Coverage**:
+
 - Rule structure validation (rule_id, event_type, condition reference)
 - Operations validation (GET_NAME, QUERY_COMPONENT, RESOLVE_OUTCOME, IF)
 - Outcome branch validation (CRITICAL_SUCCESS, SUCCESS, FUMBLE, FAILURE)
@@ -284,6 +297,7 @@ Tests:       27 passed, 27 total
 ### Notes
 
 The integration tests focus on structural validation rather than full execution testing because:
+
 1. ModTestHandlerFactory doesn't yet support RESOLVE_OUTCOME handler injection
 2. Unit tests for ResolveOutcomeHandler and OutcomeDeterminerService (NONDETACTSYS-008) already cover execution logic
 3. Structural tests validate the rule's integration with the event system and schema compliance

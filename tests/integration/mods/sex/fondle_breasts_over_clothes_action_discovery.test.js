@@ -29,7 +29,9 @@ describe('sex-breastplay:fondle_breasts_over_clothes action discovery', () => {
       expect(fondleBreastsOverClothesAction.id).toBe(
         'sex-breastplay:fondle_breasts_over_clothes'
       );
-      expect(fondleBreastsOverClothesAction.name).toBe('Fondle Breasts Over Clothes');
+      expect(fondleBreastsOverClothesAction.name).toBe(
+        'Fondle Breasts Over Clothes'
+      );
       expect(fondleBreastsOverClothesAction.description).toBe(
         "Gently fondle the target's breasts over their clothing."
       );
@@ -65,12 +67,16 @@ describe('sex-breastplay:fondle_breasts_over_clothes action discovery', () => {
 
     it('should have correct visual styling matching other sex-breastplay actions', () => {
       expect(fondleBreastsOverClothesAction.visual).toBeDefined();
-      expect(fondleBreastsOverClothesAction.visual.backgroundColor).toBe('#7a1d58');
+      expect(fondleBreastsOverClothesAction.visual.backgroundColor).toBe(
+        '#7a1d58'
+      );
       expect(fondleBreastsOverClothesAction.visual.textColor).toBe('#fde6f2');
       expect(fondleBreastsOverClothesAction.visual.hoverBackgroundColor).toBe(
         '#8d2465'
       );
-      expect(fondleBreastsOverClothesAction.visual.hoverTextColor).toBe('#fff2f9');
+      expect(fondleBreastsOverClothesAction.visual.hoverTextColor).toBe(
+        '#fff2f9'
+      );
     });
   });
 

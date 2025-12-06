@@ -25,7 +25,8 @@
  */
 export const IFileSystemReaderMetadata = Object.freeze({
   name: 'IFileSystemReader',
-  description: 'Defines the minimal contract required for asynchronous file reads.',
+  description:
+    'Defines the minimal contract required for asynchronous file reads.',
   methods: [
     {
       name: 'readFile',

@@ -7,7 +7,8 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../../common/mods/ModTestFixture.js';
 
 const ACTION_ID = 'distress:bury_face_in_hands';
-const EXPECTED_MESSAGE = '{context.actorName} buries their face in their hands.';
+const EXPECTED_MESSAGE =
+  '{context.actorName} buries their face in their hands.';
 
 describe('Distress Mod: Bury Face in Hands Rule', () => {
   let testFixture;
@@ -84,7 +85,15 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
       const actions = testFixture.ruleFile.actions;
       expect(actions).toHaveLength(7);
 
-      const [getName, queryComponent, messageAction, perceptionType, locationId, targetId, macro] = actions;
+      const [
+        getName,
+        queryComponent,
+        messageAction,
+        perceptionType,
+        locationId,
+        targetId,
+        macro,
+      ] = actions;
 
       expect(getName.type).toBe('GET_NAME');
       expect(getName.parameters.entity_ref).toBe('actor');
@@ -102,7 +111,9 @@ describe('Distress Mod: Bury Face in Hands Rule', () => {
       expect(perceptionType.parameters.value).toBe('action_self_general');
 
       expect(locationId.parameters.variable_name).toBe('locationId');
-      expect(locationId.parameters.value).toBe('{context.actorPosition.locationId}');
+      expect(locationId.parameters.value).toBe(
+        '{context.actorPosition.locationId}'
+      );
 
       expect(targetId.parameters.variable_name).toBe('targetId');
       expect(targetId.parameters.value).toBeNull();

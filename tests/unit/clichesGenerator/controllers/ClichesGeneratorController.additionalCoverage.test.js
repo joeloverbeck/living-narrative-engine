@@ -40,7 +40,9 @@ describe('ClichesGeneratorController additional coverage', () => {
     expect(testBed.getStatusMessages().textContent).toContain(
       'Direction not found: missing-direction'
     );
-    expect(testBed.controller._testGetCurrentState().selectedDirectionId).toBeNull();
+    expect(
+      testBed.controller._testGetCurrentState().selectedDirectionId
+    ).toBeNull();
   });
 
   it('allows cancelling regeneration through the confirmation dialog', async () => {
@@ -163,7 +165,9 @@ describe('ClichesGeneratorController additional coverage', () => {
     expect(
       testBed.mockCharacterBuilderService.getCharacterConcept
     ).not.toHaveBeenCalled();
-    expect(testBed.controller.getCacheStats().conceptsCacheSize).toBeGreaterThan(0);
+    expect(
+      testBed.controller.getCacheStats().conceptsCacheSize
+    ).toBeGreaterThan(0);
   });
 
   it('maintains a maximum of 10 state history entries', async () => {

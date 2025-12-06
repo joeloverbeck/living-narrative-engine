@@ -42,7 +42,9 @@ describe('traitsRewriterPrompts', () => {
         ],
       };
 
-      const prompt = createTraitsRewriterPrompt(characterData, { arbitrary: true });
+      const prompt = createTraitsRewriterPrompt(characterData, {
+        arbitrary: true,
+      });
 
       const serialized = JSON.stringify(characterData, null, 2);
       expect(prompt).toContain('<role>');
@@ -90,7 +92,11 @@ describe('traitsRewriterPrompts', () => {
     });
 
     it('falls back to defaults when name and speech patterns are missing', () => {
-      const prompt = createFocusedTraitPrompt({}, 'core:motivations', 'Wants to explore.');
+      const prompt = createFocusedTraitPrompt(
+        {},
+        'core:motivations',
+        'Wants to explore.'
+      );
 
       expect(prompt).toContain('the character');
       expect(prompt).toContain('Transform this motivations description');

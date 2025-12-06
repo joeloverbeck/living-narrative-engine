@@ -91,7 +91,10 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
     .atLocation(roomId)
     .withLocationComponent(roomId)
     .withComponent('positioning:allows_sitting', {
-      spots: [includeActorSitting ? actorId : null, includePrimarySitting ? primaryId : null],
+      spots: [
+        includeActorSitting ? actorId : null,
+        includePrimarySitting ? primaryId : null,
+      ],
     })
     .build();
 
@@ -164,7 +167,10 @@ export function buildPullHeadToClothedCrotchScenario(options = {}) {
       children: [actorPenisId],
       subType: 'groin',
       sockets: {
-        penis: { coveredBy: coverActorPenis ? actorClothingId : null, attachedPart: actorPenisId },
+        penis: {
+          coveredBy: coverActorPenis ? actorClothingId : null,
+          attachedPart: actorPenisId,
+        },
       },
     })
     .build();
@@ -226,9 +232,14 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
       }
 
       const actorSitting = actor.components?.['positioning:sitting_on'];
-      const closenessPartners = actor.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor.components?.['positioning:closeness']?.partners;
 
-      if (!actorSitting || !Array.isArray(closenessPartners) || closenessPartners.length === 0) {
+      if (
+        !actorSitting ||
+        !Array.isArray(closenessPartners) ||
+        closenessPartners.length === 0
+      ) {
         return { success: true, value: new Set() };
       }
 
@@ -245,9 +256,13 @@ export function installActorsSittingCloseScopeOverride(testFixture) {
           return false;
         }
 
-        const partnerCloseness = partner.components?.['positioning:closeness']?.partners;
+        const partnerCloseness =
+          partner.components?.['positioning:closeness']?.partners;
 
-        if (!Array.isArray(partnerCloseness) || !partnerCloseness.includes(actorId)) {
+        if (
+          !Array.isArray(partnerCloseness) ||
+          !partnerCloseness.includes(actorId)
+        ) {
           return false;
         }
 

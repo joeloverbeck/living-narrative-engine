@@ -3,13 +3,7 @@
  * @description Tests the integration test bed enhancements and helper functions
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { IntegrationTestBed } from '../../common/integrationTestBed.js';
 import path from 'path';
 import { promises as fs } from 'fs';
@@ -25,7 +19,9 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
     await testBed.initialize();
 
     // Create temporary directory for test mods
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'simple-validation-test-'));
+    tempDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'simple-validation-test-')
+    );
     modsDir = path.join(tempDir, 'data', 'mods');
     await fs.mkdir(modsDir, { recursive: true });
   });
@@ -64,7 +60,7 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
       const positioningData = JSON.parse(positioningManifest);
       expect(positioningData.id).toBe('positioning');
       expect(positioningData.dependencies).toEqual([
-        { id: 'core', version: '^1.0.0', required: true }
+        { id: 'core', version: '^1.0.0', required: true },
       ]);
 
       // Verify component files exist
@@ -91,14 +87,18 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'utf-8'
       );
       const violation1 = JSON.parse(violationFile1);
-      expect(violation1.required_components.actor).toContain('unknown-mod-0:component');
+      expect(violation1.required_components.actor).toContain(
+        'unknown-mod-0:component'
+      );
 
       const violationFile2 = await fs.readFile(
         path.join(modsDir, 'positioning', 'actions', 'violation-1.action.json'),
         'utf-8'
       );
       const violation2 = JSON.parse(violationFile2);
-      expect(violation2.required_components.actor).toContain('unknown-mod-1:component');
+      expect(violation2.required_components.actor).toContain(
+        'unknown-mod-1:component'
+      );
     });
 
     it('should create large ecosystem for performance testing', async () => {
@@ -120,7 +120,9 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'utf-8'
       );
       const action1 = JSON.parse(mod001Action);
-      expect(action1.required_components.target).toContain('violation-mod:missing-component');
+      expect(action1.required_components.target).toContain(
+        'violation-mod:missing-component'
+      );
     });
 
     it('should create real positioning/intimacy violation scenario', async () => {
@@ -137,7 +139,9 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'utf-8'
       );
       const turnAround = JSON.parse(turnAroundAction);
-      expect(turnAround.forbidden_components.actor).toContain('kissing:kissing');
+      expect(turnAround.forbidden_components.actor).toContain(
+        'kissing:kissing'
+      );
 
       // Verify positioning manifest doesn't declare intimacy dependency
       const positioningManifest = await fs.readFile(
@@ -145,7 +149,9 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'utf-8'
       );
       const positioning = JSON.parse(positioningManifest);
-      const intimacyDep = positioning.dependencies.find(dep => dep.id === 'intimacy');
+      const intimacyDep = positioning.dependencies.find(
+        (dep) => dep.id === 'intimacy'
+      );
       expect(intimacyDep).toBeUndefined();
     });
 
@@ -177,7 +183,10 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
         'actions',
         'turn_around.action.json'
       );
-      const turnAroundExists = await fs.access(turnAroundPath).then(() => true).catch(() => false);
+      const turnAroundExists = await fs
+        .access(turnAroundPath)
+        .then(() => true)
+        .catch(() => false);
       expect(turnAroundExists).toBe(true);
     });
   });
@@ -213,7 +222,12 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
       expect(actionData.id).toBe('positioning:new_action');
 
       const newComponent = await fs.readFile(
-        path.join(modsDir, 'core', 'components', 'new_component.component.json'),
+        path.join(
+          modsDir,
+          'core',
+          'components',
+          'new_component.component.json'
+        ),
         'utf-8'
       );
       const componentData = JSON.parse(newComponent);
@@ -338,7 +352,10 @@ describe('Mod Validation Workflow - Simple Integration Tests', () => {
       await fs.rm(tempTestDir, { recursive: true, force: true });
 
       // Assert: Directory is cleaned up
-      const exists = await fs.access(tempTestDir).then(() => true).catch(() => false);
+      const exists = await fs
+        .access(tempTestDir)
+        .then(() => true)
+        .catch(() => false);
       expect(exists).toBe(false);
     });
   });
@@ -461,10 +478,7 @@ async function createEcosystemWithViolations(baseDir, options = {}) {
  * @returns {Promise<object>} Created ecosystem metadata
  */
 async function createLargeModEcosystem(baseDir, options = {}) {
-  const {
-    modCount = 50,
-    includeViolations = 5,
-  } = options;
+  const { modCount = 50, includeViolations = 5 } = options;
 
   const ecosystemSpec = {};
 
@@ -623,7 +637,12 @@ async function createProductionLikeEcosystem(baseDir, options = {}) {
   // Core mods (foundation)
   if (coreMods.includes('core')) {
     productionSpec.core = {
-      manifest: { id: 'core', version: '1.0.0', name: 'Core', dependencies: [] },
+      manifest: {
+        id: 'core',
+        version: '1.0.0',
+        name: 'Core',
+        dependencies: [],
+      },
       files: {
         'components/actor.component.json': {
           id: 'core:actor',
@@ -783,10 +802,7 @@ async function createModEcosystem(baseDir, ecosystemSpec) {
 
     // Create manifest
     const manifestPath = path.join(modDir, 'mod-manifest.json');
-    await fs.writeFile(
-      manifestPath,
-      JSON.stringify(modSpec.manifest, null, 2)
-    );
+    await fs.writeFile(manifestPath, JSON.stringify(modSpec.manifest, null, 2));
 
     // Create files
     for (const [filePath, content] of Object.entries(modSpec.files || {})) {
@@ -830,9 +846,7 @@ async function applyFileChanges(baseDir, changes) {
     await fs.mkdir(dir, { recursive: true });
 
     const fileContent =
-      typeof content === 'string'
-        ? content
-        : JSON.stringify(content, null, 2);
+      typeof content === 'string' ? content : JSON.stringify(content, null, 2);
 
     await fs.writeFile(fullPath, fileContent);
     changedFiles.push(fullPath);

@@ -401,9 +401,9 @@ describe('BodyDescriptionOrchestrator', () => {
     });
 
     it('should throw error when entity is null', async () => {
-      await expect(
-        orchestrator.generateAllDescriptions(null)
-      ).rejects.toThrow('Entity must have an anatomy:body component');
+      await expect(orchestrator.generateAllDescriptions(null)).rejects.toThrow(
+        'Entity must have an anatomy:body component'
+      );
     });
   });
 

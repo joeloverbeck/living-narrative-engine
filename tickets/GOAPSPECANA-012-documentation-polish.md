@@ -9,6 +9,7 @@
 ## Problem Statement
 
 After resolving all critical and major issues, specification needs professional polish:
+
 - Passive voice hides responsibility ("we ensure" → who?)
 - Preferences stated as requirements ("I prefer")
 - Uncertainty in specification ("I think")
@@ -36,6 +37,7 @@ Transform specification into professional, unambiguous, production-ready documen
 ### 1. Language Precision Cleanup
 
 **Passive Voice Fixes (lines 139-140)**:
+
 ```
 Before: "we ensure that all visible entities... include..."
 After: "KnowledgeManager SHALL ensure that all visible entities..."
@@ -43,6 +45,7 @@ OR: "TurnInitializer SHALL invoke KnowledgeManager.updateVisibility(actor)"
 ```
 
 **Preference to Requirement (lines 91-93)**:
+
 ```
 Before: "Note: I'd prefer to keep this refinement / concretization fully data-driven"
 After: "Refinement MUST be data-driven using HTN methods."
@@ -50,12 +53,14 @@ OR: "Phase 1 MAY use code-based refinement. Phase 2 MUST migrate to HTN methods.
 ```
 
 **Remove Uncertainty (line 137)**:
+
 ```
 Before: "I think the scopeDsl is currently limited for this"
 After: "scopeDsl currently does not support world-wide queries. Section 4.2 specifies required extensions."
 ```
 
 **RFC 2119 Keywords Review**:
+
 - [ ] Search for informal language: "should", "could", "might", "probably"
 - [ ] Replace with RFC 2119 keywords:
   - MUST / REQUIRED / SHALL: Absolute requirement
@@ -68,17 +73,20 @@ After: "scopeDsl currently does not support world-wide queries. Section 4.2 spec
 ### 2. Phasing Strategy Definition
 
 **Define MVP (Phase 1)**:
+
 ```markdown
 ## Phasing and Implementation Roadmap
 
 ### Phase 1: MVP (Minimum Viable Product)
+
 **Timeline**: 8-12 weeks
 **Goal**: Basic GOAP system with single-actor planning
 
 Features:
+
 - ✅ Task loading from mods
 - ✅ Structural gates evaluation
-- ✅ Simple planning (A* or forward search)
+- ✅ Simple planning (A\* or forward search)
 - ✅ Basic refinement (chosen approach from GOAPSPECANA-001)
 - ✅ Single-actor planning (no concurrency)
 - ✅ Basic knowledge system (simplified if needed)
@@ -86,6 +94,7 @@ Features:
 - ✅ 3-5 example tasks (consume, heal, move)
 
 Success Criteria:
+
 - NPCs can plan and execute simple goals
 - Planning completes within performance targets
 - No state corruption
@@ -93,12 +102,15 @@ Success Criteria:
 ```
 
 **Define Phase 2**:
+
 ```markdown
 ### Phase 2: Advanced Features
+
 **Timeline**: +8-12 weeks
 **Goal**: Multi-actor coordination and advanced planning
 
 Features:
+
 - ✅ Concurrent planning (multiple actors)
 - ✅ Resource conflict resolution
 - ✅ Advanced knowledge system (if not in Phase 1)
@@ -108,18 +120,22 @@ Features:
 - ✅ Performance optimizations
 
 Success Criteria:
+
 - 50 concurrent actors supported
 - Minimal plan interference
 - Resource conflicts resolved gracefully
 ```
 
 **Define Phase 3**:
+
 ```markdown
 ### Phase 3: Production Hardening
+
 **Timeline**: +4-8 weeks
 **Goal**: Production-ready robustness and observability
 
 Features:
+
 - ✅ Advanced failure recovery
 - ✅ Comprehensive observability
 - ✅ Performance tuning
@@ -134,6 +150,7 @@ Features:
 ## Observability and Debugging
 
 ### Logging Requirements
+
 - Planning decisions: Goal selected, task library size, plan found/failed
 - Refinement: Input task, output actions, failure reasons
 - Execution: Actions executed, preconditions checked, invalidations
@@ -141,13 +158,16 @@ Features:
 - Errors: Exceptions, validation failures, timeout events
 
 Log Levels:
+
 - DEBUG: Detailed planning steps, state snapshots
 - INFO: Goal selection, plan execution, refinement results
 - WARN: Plan invalidations, repeated failures, performance warnings
 - ERROR: Exceptions, critical failures, state corruption
 
 ### Performance Monitoring
+
 Metrics to track:
+
 - Planning time (mean, p95, p99) by task count
 - Memory overhead per actor
 - Plan success rate by scenario type
@@ -155,6 +175,7 @@ Metrics to track:
 - Goal abandonment rate
 
 ### Debugging Tools
+
 - Plan visualizer: Show planning search tree
 - State inspector: Inspect world state snapshot
 - Task library viewer: See which tasks included/excluded
@@ -162,6 +183,7 @@ Metrics to track:
 - Timeline view: Visualize multi-actor interactions
 
 ### Development Mode Features
+
 - Verbose logging (all planning steps)
 - Plan validation (catch bugs early)
 - Performance assertions (fail if targets exceeded)
@@ -173,6 +195,7 @@ Metrics to track:
 Create diagrams for:
 
 **Diagram 1: System Overview**
+
 ```
 +----------------+     +------------------+     +------------------+
 |   Game World   |<--->|  GOAP Planner    |<--->| Task Library     |
@@ -188,6 +211,7 @@ Create diagrams for:
 ```
 
 **Diagram 2: Planning Flow**
+
 ```
 Goal Selection → Task Library Building → GOAP Search → Plan Validation
        ↓                   ↓                   ↓              ↓
@@ -198,6 +222,7 @@ Goal Selection → Task Library Building → GOAP Search → Plan Validation
 ```
 
 **Diagram 3: Refinement to Execution**
+
 ```
 Planning Task (Abstract) → Refinement → Primitive Actions → Execution
    consume_item(apple)       ↓            [consume(apple)]      ↓
@@ -207,6 +232,7 @@ Planning Task (Abstract) → Refinement → Primitive Actions → Execution
 ```
 
 **Diagram 4: Knowledge System**
+
 ```
 Turn Start → Visibility Check → Update known_to → Scope Resolution
     ↓              ↓                   ↓                  ↓
@@ -231,18 +257,21 @@ Turn Start → Visibility Check → Update known_to → Scope Resolution
 ## Stakeholder Goals and Success Metrics
 
 ### Player Experience Goals
+
 - NPCs make intelligent, believable decisions
 - NPC behavior feels reactive and adaptive
 - No noticeable lag from NPC planning (<300ms)
 - NPCs don't exhibit omniscience (only use known info)
 
 ### Modder Experience Goals
+
 - Easy to create new tasks (data-driven)
 - Clear examples and documentation
 - Fast iteration cycle (reload without restart)
 - Good error messages for validation failures
 
 ### Technical Goals
+
 - Memory efficient (browser-friendly)
 - Performant (50+ NPCs planning)
 - Maintainable (clear architecture)
@@ -256,16 +285,19 @@ Turn Start → Visibility Check → Update known_to → Scope Resolution
 ## Schema Versioning
 
 All GOAP schemas follow semantic versioning:
+
 - Major version: Breaking changes (require migration)
 - Minor version: Backward-compatible additions
 - Patch version: Bug fixes, clarifications
 
 Schema Version Compatibility:
+
 - Task schema v1.x.x compatible with loader v1.x.x
 - Goal schema v1.x.x compatible with loader v1.x.x
 - Breaking changes require migration guide
 
 Deprecation Policy:
+
 - Deprecated fields supported for 2 major versions
 - Warnings logged when deprecated fields used
 - Migration guide provided for each breaking change
@@ -279,21 +311,25 @@ Deprecation Policy:
 Tasks can reference components, scopes, and actions from other mods:
 
 Dependency Rules:
+
 - Explicit dependencies in mod-manifest.json
 - Cannot use components from non-dependent mods
 - Load order: Dependencies before dependents
 
 Scope Resolution:
+
 - Scopes resolved across all loaded mods
 - Scope namespace must match mod providing component
 - Example: mod "survival" can use "core:actor" scope
 
 Action References:
+
 - Refinement can produce actions from any loaded mod
 - Action namespace validation at load time
 - Missing action = validation error
 
 Conflict Resolution:
+
 - Task ID conflicts: Later mod overrides (with warning)
 - Scope ID conflicts: First mod wins
 - Action ID conflicts: Validation error (must be unique)

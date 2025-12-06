@@ -80,7 +80,9 @@ describe('BlueprintRecipeValidationRule - Dependency Validation', () => {
     const context = {
       hasBlueprints: () => true,
       hasRecipes: () => true,
-      getBlueprints: () => ({ 'test:blueprint': { id: 'test:blueprint', slots: {} } }),
+      getBlueprints: () => ({
+        'test:blueprint': { id: 'test:blueprint', slots: {} },
+      }),
       getRecipes: () => ({
         'test:recipe': {
           id: 'test:recipe',

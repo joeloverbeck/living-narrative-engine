@@ -26,7 +26,8 @@ describe('ContextAssemblyService', () => {
     mockEntityManager = {
       getEntity: jest.fn((id) => {
         if (id === 'actor-123') return mockEntity;
-        if (id === 'other-entity') return { id: 'other-entity', components: {} };
+        if (id === 'other-entity')
+          return { id: 'other-entity', components: {} };
         return null;
       }),
       getComponent: jest.fn(),
@@ -79,7 +80,9 @@ describe('ContextAssemblyService', () => {
       });
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Knowledge limitation enabled but full knowledge filtering not yet integrated')
+        expect.stringContaining(
+          'Knowledge limitation enabled but full knowledge filtering not yet integrated'
+        )
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('GOAPIMPL-023')
@@ -570,7 +573,9 @@ describe('ContextAssemblyService', () => {
         thrownError = err;
       }
       expect(thrownError.details.cause).toBeDefined();
-      expect(thrownError.details.cause.message).toBe('Database connection failed');
+      expect(thrownError.details.cause.message).toBe(
+        'Database connection failed'
+      );
     });
 
     it('should have proper error name', () => {
@@ -625,7 +630,9 @@ describe('ContextAssemblyService', () => {
           id: 'actor-123',
           components: {
             'core:position': { location: 'room-1' },
-            'core:known_to': { entities: ['actor-123', 'entity-1', 'entity-2'] },
+            'core:known_to': {
+              entities: ['actor-123', 'entity-1', 'entity-2'],
+            },
           },
         };
 
@@ -640,9 +647,14 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: true,
         });
 
-        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithKnowledge.assemblePlanningContext('actor-123');
 
-        expect(context.actor.knowledge).toEqual(['actor-123', 'entity-1', 'entity-2']);
+        expect(context.actor.knowledge).toEqual([
+          'actor-123',
+          'entity-1',
+          'entity-2',
+        ]);
         expect(context.actor.knowledge).toHaveLength(3);
       });
 
@@ -665,7 +677,8 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: true,
         });
 
-        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithKnowledge.assemblePlanningContext('actor-123');
 
         expect(context.actor.knowledge).toEqual(['actor-123']);
         expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -696,7 +709,9 @@ describe('ContextAssemblyService', () => {
         serviceWithKnowledge.assemblePlanningContext('actor-123');
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Actor missing core:known_to component: actor-123'),
+          expect.stringContaining(
+            'Actor missing core:known_to component: actor-123'
+          ),
           expect.objectContaining({
             actorId: 'actor-123',
             fallback: 'self-knowledge only',
@@ -724,7 +739,8 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: true,
         });
 
-        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithKnowledge.assemblePlanningContext('actor-123');
 
         expect(context.actor.knowledge).toEqual([]);
         expect(Array.isArray(context.actor.knowledge)).toBe(true);
@@ -750,7 +766,8 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: true,
         });
 
-        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithKnowledge.assemblePlanningContext('actor-123');
 
         // Should fallback to self-knowledge
         expect(context.actor.knowledge).toEqual(['actor-123']);
@@ -782,7 +799,8 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: true,
         });
 
-        const context = serviceWithKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithKnowledge.assemblePlanningContext('actor-123');
 
         expect(context.actor.knowledge).toBeDefined();
         expect(Array.isArray(context.actor.knowledge)).toBe(true);
@@ -808,7 +826,8 @@ describe('ContextAssemblyService', () => {
           enableKnowledgeLimitation: false,
         });
 
-        const context = serviceWithoutKnowledge.assemblePlanningContext('actor-123');
+        const context =
+          serviceWithoutKnowledge.assemblePlanningContext('actor-123');
 
         expect(context.actor.knowledge).toBeUndefined();
       });

@@ -2,7 +2,14 @@
  * @file Integration tests for ErrorReporter analytics, thresholds, and batching behavior
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ErrorReporter from '../../../src/errors/ErrorReporter.js';
 import BaseError from '../../../src/errors/baseError.js';
 import EventBus from '../../../src/events/eventBus.js';
@@ -30,7 +37,9 @@ class EventBusCompatibilityWrapper {
       return this.eventBus.dispatch(eventOrName.type, eventOrName.payload);
     }
 
-    throw new Error('Invalid event object passed to EventBusCompatibilityWrapper.dispatch');
+    throw new Error(
+      'Invalid event object passed to EventBusCompatibilityWrapper.dispatch'
+    );
   }
 }
 
@@ -43,7 +52,9 @@ describe('ErrorReporter integration coverage', () => {
   let originalSampling;
 
   beforeAll(() => {
-    originalSampling = JSON.parse(JSON.stringify(errorHandlingConfig.reporting.sampling));
+    originalSampling = JSON.parse(
+      JSON.stringify(errorHandlingConfig.reporting.sampling)
+    );
   });
 
   beforeEach(() => {
@@ -53,13 +64,15 @@ describe('ErrorReporter integration coverage', () => {
     eventBus.eventBus.setBatchMode(true, {
       maxRecursionDepth: 500,
       maxGlobalRecursion: 2000,
-      context: 'error-reporter-integration-tests'
+      context: 'error-reporter-integration-tests',
     });
     activeReporters = [];
   });
 
   afterEach(async () => {
-    errorHandlingConfig.reporting.sampling = JSON.parse(JSON.stringify(originalSampling));
+    errorHandlingConfig.reporting.sampling = JSON.parse(
+      JSON.stringify(originalSampling)
+    );
 
     for (const currentReporter of activeReporters) {
       await currentReporter.flush();
@@ -86,7 +99,7 @@ describe('ErrorReporter integration coverage', () => {
       batchSize: 25,
       flushInterval: 60_000,
       enabled: true,
-      ...overrides
+      ...overrides,
     });
     activeReporters.push(reporter);
     return reporter;
@@ -96,16 +109,18 @@ describe('ErrorReporter integration coverage', () => {
     errorHandlingConfig.reporting.sampling = {
       enabled: true,
       rate: 0,
-      alwaysReport: ['critical']
+      alwaysReport: ['critical'],
     };
 
     const samplingReporter = createReporter({ batchSize: 10 });
 
-    samplingReporter.report(new Error('transient spike'), { module: 'integration' });
+    samplingReporter.report(new Error('transient spike'), {
+      module: 'integration',
+    });
 
     expect(logger.debug).toHaveBeenCalledWith('Error sampled out', {
       errorType: 'Error',
-      severity: undefined
+      severity: undefined,
     });
 
     class CriticalTestError extends BaseError {
@@ -121,18 +136,18 @@ describe('ErrorReporter integration coverage', () => {
     }
 
     const capturedAlerts = [];
-    eventBus.subscribe('ERROR_ALERT', event => {
+    eventBus.subscribe('ERROR_ALERT', (event) => {
       capturedAlerts.push(event.payload);
     });
 
     await eventBus.dispatch('SYSTEM_ERROR_OCCURRED', {
       error: new CriticalTestError('system failure'),
-      context: { subsystem: 'systems' }
+      context: { subsystem: 'systems' },
     });
 
     await eventBus.dispatch('ERROR_OCCURRED', {
       error: new CriticalTestError('workflow failure'),
-      context: { subsystem: 'workflows' }
+      context: { subsystem: 'workflows' },
     });
 
     const analytics = samplingReporter.getAnalytics();
@@ -147,12 +162,15 @@ describe('ErrorReporter integration coverage', () => {
     errorHandlingConfig.reporting.sampling = {
       enabled: false,
       rate: 1,
-      alwaysReport: []
+      alwaysReport: [],
     };
 
-    const insightsReporter = createReporter({ batchSize: 80, flushInterval: 120_000 });
+    const insightsReporter = createReporter({
+      batchSize: 80,
+      flushInterval: 120_000,
+    });
     const alertEvents = [];
-    eventBus.subscribe('ERROR_ALERT', event => {
+    eventBus.subscribe('ERROR_ALERT', (event) => {
       alertEvents.push(event.payload);
     });
 
@@ -188,7 +206,7 @@ describe('ErrorReporter integration coverage', () => {
       insightsReporter.report(new CriticalSpikeError(i));
     }
 
-    await new Promise(resolve => setImmediate(resolve));
+    await new Promise((resolve) => setImmediate(resolve));
 
     const analyticsBeforeFlush = insightsReporter.getAnalytics();
     expect(analyticsBeforeFlush.totalReported).toBe(65);
@@ -196,11 +214,13 @@ describe('ErrorReporter integration coverage', () => {
     expect(analyticsBeforeFlush.errorsBySeverity.info).toBe(55);
     expect(analyticsBeforeFlush.errorsBySeverity.critical).toBe(10);
 
-    const failureRandom = jest.spyOn(Math, 'random').mockImplementation(() => 0);
+    const failureRandom = jest
+      .spyOn(Math, 'random')
+      .mockImplementation(() => 0);
     await insightsReporter.flush();
     expect(logger.error).toHaveBeenCalledWith('Failed to send error batch', {
       error: 'Network error',
-      batchSize: 65
+      batchSize: 65,
     });
 
     failureRandom.mockImplementation(() => 0.9);
@@ -214,9 +234,15 @@ describe('ErrorReporter integration coverage', () => {
     );
     expect(report.recommendations).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ message: expect.stringContaining('critical errors') }),
-        expect.objectContaining({ message: expect.stringContaining('Investigate root cause') }),
-        expect.objectContaining({ message: expect.stringContaining('Error rate increasing') })
+        expect.objectContaining({
+          message: expect.stringContaining('critical errors'),
+        }),
+        expect.objectContaining({
+          message: expect.stringContaining('Investigate root cause'),
+        }),
+        expect.objectContaining({
+          message: expect.stringContaining('Error rate increasing'),
+        }),
       ])
     );
 
@@ -229,8 +255,14 @@ describe('ErrorReporter integration coverage', () => {
     const analyticsAfterFlush = insightsReporter.getAnalytics();
     expect(analyticsAfterFlush.totalReported).toBe(65);
 
-    expect(alertEvents.some(alert => alert.severity === 'critical')).toBe(true);
-    expect(alertEvents.some(alert => alert.message.startsWith('High error rate'))).toBe(true);
-    expect(alertEvents.some(alert => alert.message.startsWith('Repeated error'))).toBe(true);
+    expect(alertEvents.some((alert) => alert.severity === 'critical')).toBe(
+      true
+    );
+    expect(
+      alertEvents.some((alert) => alert.message.startsWith('High error rate'))
+    ).toBe(true);
+    expect(
+      alertEvents.some((alert) => alert.message.startsWith('Repeated error'))
+    ).toBe(true);
   });
 });

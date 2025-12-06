@@ -142,10 +142,11 @@ describe('EnhancedActionTraceFilter integration behaviour', () => {
     expect(
       logger
         .findMessages('info')
-        .some((message) =>
-          typeof message === 'string' &&
-          message.includes('Removed') &&
-          message.includes('enhanced filter cache')
+        .some(
+          (message) =>
+            typeof message === 'string' &&
+            message.includes('Removed') &&
+            message.includes('enhanced filter cache')
         )
     ).toBe(true);
 
@@ -253,9 +254,10 @@ describe('EnhancedActionTraceFilter integration behaviour', () => {
     expect(
       logger
         .findMessages('error')
-        .some((message) =>
-          typeof message === 'string' &&
-          message.includes("Error applying dynamic rule 'unstableRule'")
+        .some(
+          (message) =>
+            typeof message === 'string' &&
+            message.includes("Error applying dynamic rule 'unstableRule'")
         )
     ).toBe(true);
   });

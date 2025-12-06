@@ -89,7 +89,9 @@ describe('initializeGlobalConfigStage integration', () => {
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Global Configuration Initialization');
-    expect(result.error.message).toContain('Fatal Error during global configuration initialization');
+    expect(result.error.message).toContain(
+      'Fatal Error during global configuration initialization'
+    );
     expect(result.error.cause).toBeInstanceOf(InvalidArgumentError);
 
     expect(brokenLogger.error).toHaveBeenCalledWith(

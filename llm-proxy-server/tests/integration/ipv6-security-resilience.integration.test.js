@@ -68,15 +68,15 @@ describe('IPv6 validation resilience integration', () => {
     });
 
     const originalRange = ipaddr.IPv6.prototype.range;
-    jest
-      .spyOn(ipaddr.IPv6.prototype, 'range')
-      .mockImplementation(function (...args) {
-        const normalized = this.toNormalizedString();
-        if (normalized === '2001:db8:ffff:0:0:0:0:1') {
-          return 'mysteryRange';
-        }
-        return originalRange.apply(this, args);
-      });
+    jest.spyOn(ipaddr.IPv6.prototype, 'range').mockImplementation(function (
+      ...args
+    ) {
+      const normalized = this.toNormalizedString();
+      if (normalized === '2001:db8:ffff:0:0:0:0:1') {
+        return 'mysteryRange';
+      }
+      return originalRange.apply(this, args);
+    });
 
     const originalToIpv4 = ipaddr.IPv6.prototype.toIPv4Address;
     jest
@@ -104,11 +104,7 @@ describe('IPv6 validation resilience integration', () => {
 
     const { normalized, classifications, summary } = response.body;
 
-    expect(normalized).toEqual([
-      '::ffff:808:404',
-      '2001:db8:ffff::1',
-      null,
-    ]);
+    expect(normalized).toEqual(['::ffff:808:404', '2001:db8:ffff::1', null]);
 
     const mappedClassification = classifications[0];
     expect(mappedClassification.isValid).toBe(true);

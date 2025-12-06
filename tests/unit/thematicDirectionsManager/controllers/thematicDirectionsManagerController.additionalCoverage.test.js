@@ -45,27 +45,20 @@ function defaultEditorFactory() {
 jest.mock(
   '../../../../src/shared/characterBuilder/previousItemsDropdown.js',
   () => ({
-    PreviousItemsDropdown: jest
-      .fn()
-      .mockImplementation((options) => {
-        dropdownConfigs.push(options);
-        const instance = mockDropdownFactory(options);
-        return instance;
-      }),
+    PreviousItemsDropdown: jest.fn().mockImplementation((options) => {
+      dropdownConfigs.push(options);
+      const instance = mockDropdownFactory(options);
+      return instance;
+    }),
   })
 );
 
-jest.mock(
-  '../../../../src/shared/characterBuilder/inPlaceEditor.js',
-  () => ({
-    InPlaceEditor: jest
-      .fn()
-      .mockImplementation(() => {
-        const instance = mockEditorFactory();
-        return instance;
-      }),
-  })
-);
+jest.mock('../../../../src/shared/characterBuilder/inPlaceEditor.js', () => ({
+  InPlaceEditor: jest.fn().mockImplementation(() => {
+    const instance = mockEditorFactory();
+    return instance;
+  }),
+}));
 
 const addControllerDom = (testBase) => {
   testBase.addDOMElement(`<select id="concept-selector"></select>`);
@@ -217,11 +210,15 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
       },
     ];
 
-    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(dataset);
-    testBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue({
-      id: 'concept-1',
-      concept: 'Concept 1',
-    });
+    testBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
+      dataset
+    );
+    testBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue(
+      {
+        id: 'concept-1',
+        concept: 'Concept 1',
+      }
+    );
 
     await controller.initialize();
 
@@ -271,10 +268,12 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
     secondBase.mocks.characterBuilderService.getAllThematicDirectionsWithConcepts.mockResolvedValue(
       secondDataset
     );
-    secondBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue({
-      id: 'concept-1',
-      concept: 'Concept 1',
-    });
+    secondBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue(
+      {
+        id: 'concept-1',
+        concept: 'Concept 1',
+      }
+    );
 
     await secondController.initialize();
 
@@ -332,10 +331,12 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
     ];
 
     serviceMock.mockResolvedValueOnce(firstDataset);
-    testBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue({
-      id: 'concept-1',
-      concept: 'Concept 1',
-    });
+    testBase.mocks.characterBuilderService.getCharacterConcept.mockResolvedValue(
+      {
+        id: 'concept-1',
+        concept: 'Concept 1',
+      }
+    );
 
     await controller.initialize();
 
@@ -385,7 +386,9 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
 
     controller._cacheElements();
 
-    await expect(controller._initializeAdditionalServices()).resolves.toBeUndefined();
+    await expect(
+      controller._initializeAdditionalServices()
+    ).resolves.toBeUndefined();
 
     expect(testBase.mocks.logger.error).toHaveBeenCalledWith(
       'Failed to initialize dropdown:',
@@ -405,7 +408,9 @@ describe('ThematicDirectionsManagerController additional coverage', () => {
 
     const initError = new Error('service init failed');
     const showErrorSpy = jest.spyOn(controller, '_showError');
-    testBase.mocks.characterBuilderService.initialize.mockRejectedValue(initError);
+    testBase.mocks.characterBuilderService.initialize.mockRejectedValue(
+      initError
+    );
 
     await expect(controller._initializeServices()).rejects.toThrow(initError);
 

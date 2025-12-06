@@ -11,6 +11,7 @@ Rule JSON → SystemLogicInterpreter → OperationInterpreter → OperationRegis
 ```
 
 **Key Files:**
+
 - `src/logic/operationInterpreter.js` - Orchestrates operation execution
 - `src/logic/operationRegistry.js` - Stores handler mappings
 - `src/utils/preValidationUtils.js` - Contains `KNOWN_OPERATION_TYPES` whitelist
@@ -31,10 +32,8 @@ When operation handlers are missing from the system, execution fails silently. T
 ```javascript
 const handler = this.#registry.getHandler(opType);
 if (!handler) {
-  this.#logger.error(
-    `---> HANDLER NOT FOUND for operation type: "${opType}".`
-  );
-  return;  // ← SILENT FAILURE: returns undefined, execution continues
+  this.#logger.error(`---> HANDLER NOT FOUND for operation type: "${opType}".`);
+  return; // ← SILENT FAILURE: returns undefined, execution continues
 }
 ```
 
@@ -53,13 +52,13 @@ The `UNWIELD_ITEM` handler was implemented but not added to `ModTestHandlerFacto
 
 ### Existing Code References
 
-| File | Line | Purpose |
-|------|------|---------|
-| `src/logic/operationInterpreter.js` | 418-425 | Silent failure point |
-| `src/logic/operationRegistry.js` | 83-101 | Handler lookup returns undefined |
-| `src/utils/preValidationUtils.js` | 32-99 | `KNOWN_OPERATION_TYPES` whitelist |
-| `src/dependencyInjection/registrations/interpreterRegistrations.js` | all | Operation type → handler mappings |
-| `tests/common/mods/ModTestHandlerFactory.js` | all | Test infrastructure handler setup |
+| File                                                                | Line    | Purpose                           |
+| ------------------------------------------------------------------- | ------- | --------------------------------- |
+| `src/logic/operationInterpreter.js`                                 | 418-425 | Silent failure point              |
+| `src/logic/operationRegistry.js`                                    | 83-101  | Handler lookup returns undefined  |
+| `src/utils/preValidationUtils.js`                                   | 32-99   | `KNOWN_OPERATION_TYPES` whitelist |
+| `src/dependencyInjection/registrations/interpreterRegistrations.js` | all     | Operation type → handler mappings |
+| `tests/common/mods/ModTestHandlerFactory.js`                        | all     | Test infrastructure handler setup |
 
 ### Current Validation Flow
 
@@ -94,21 +93,21 @@ Runtime:
 
 ### Edge Cases
 
-| Scenario | Desired Behavior |
-|----------|------------------|
-| Operation type in whitelist but no handler | `ConfigurationError` at rule load time |
-| Handler registered but not in whitelist | Warning at startup (valid but unusual) |
-| Rule references unknown operation type | `ConfigurationError` at rule load time (existing) |
-| Handler throws during execution | Propagate error (existing behavior, unchanged) |
-| Test infrastructure missing handler | Same `ConfigurationError` behavior |
+| Scenario                                   | Desired Behavior                                  |
+| ------------------------------------------ | ------------------------------------------------- |
+| Operation type in whitelist but no handler | `ConfigurationError` at rule load time            |
+| Handler registered but not in whitelist    | Warning at startup (valid but unusual)            |
+| Rule references unknown operation type     | `ConfigurationError` at rule load time (existing) |
+| Handler throws during execution            | Propagate error (existing behavior, unchanged)    |
+| Test infrastructure missing handler        | Same `ConfigurationError` behavior                |
 
 ### Failure Modes
 
-| Failure Type | Response |
-|--------------|----------|
+| Failure Type                 | Response                                                                         |
+| ---------------------------- | -------------------------------------------------------------------------------- |
 | Missing handler at rule load | `ConfigurationError`: "Rule 'X' uses operation 'Y' but no handler is registered" |
-| Missing handler at runtime | `MissingHandlerError`: "Cannot execute operation 'Y': handler not found" |
-| Whitelist/registry mismatch | Startup warning with list of mismatched types |
+| Missing handler at runtime   | `MissingHandlerError`: "Cannot execute operation 'Y': handler not found"         |
+| Whitelist/registry mismatch  | Startup warning with list of mismatched types                                    |
 
 ## Invariants
 
@@ -187,22 +186,22 @@ if (!handler) {
 
 ### Implementation Flexibility
 
-| Aspect | Flexibility |
-|--------|-------------|
-| Validation timing | Can be at rule load, handler registration, or both |
-| Error class names | Names can vary, behavior must be fail-fast |
+| Aspect             | Flexibility                                                |
+| ------------------ | ---------------------------------------------------------- |
+| Validation timing  | Can be at rule load, handler registration, or both         |
+| Error class names  | Names can vary, behavior must be fail-fast                 |
 | Whitelist location | Can remain in preValidationUtils or move to dedicated file |
-| Startup validation | Can be opt-in via configuration flag |
-| Reporting format | Log format and structure flexible |
+| Startup validation | Can be opt-in via configuration flag                       |
+| Reporting format   | Log format and structure flexible                          |
 
 ### Must NOT Change
 
-| Aspect | Requirement |
-|--------|-------------|
-| Fail-fast behavior | Missing handler = thrown error, not logged warning |
-| Rule loading contract | Invalid rules do not load |
-| Existing rule JSON format | No changes to rule schema |
-| Handler interface | Handlers continue to implement `execute()` |
+| Aspect                    | Requirement                                        |
+| ------------------------- | -------------------------------------------------- |
+| Fail-fast behavior        | Missing handler = thrown error, not logged warning |
+| Rule loading contract     | Invalid rules do not load                          |
+| Existing rule JSON format | No changes to rule schema                          |
+| Handler interface         | Handlers continue to implement `execute()`         |
 
 ## Testing Plan
 
@@ -210,79 +209,79 @@ if (!handler) {
 
 **File**: `tests/unit/logic/operationInterpreter.missingHandler.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Missing handler throws | Verify `MissingHandlerError` is thrown, not silent return |
-| Error contains operation type | Error message includes the missing type |
-| Error contains rule ID | Error message includes the rule being executed |
+| Test Case                     | Description                                               |
+| ----------------------------- | --------------------------------------------------------- |
+| Missing handler throws        | Verify `MissingHandlerError` is thrown, not silent return |
+| Error contains operation type | Error message includes the missing type                   |
+| Error contains rule ID        | Error message includes the rule being executed            |
 
 **File**: `tests/unit/logic/operationRegistry.completeness.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| hasHandler returns true | For registered handler |
-| hasHandler returns false | For unregistered handler |
-| getRegisteredTypes | Returns all registered types |
+| Test Case                | Description                  |
+| ------------------------ | ---------------------------- |
+| hasHandler returns true  | For registered handler       |
+| hasHandler returns false | For unregistered handler     |
+| getRegisteredTypes       | Returns all registered types |
 
 **File**: `tests/unit/validation/handlerValidation.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Rule with valid operations | Validation passes |
-| Rule with missing handler | Throws ConfigurationError |
+| Test Case                   | Description                          |
+| --------------------------- | ------------------------------------ |
+| Rule with valid operations  | Validation passes                    |
+| Rule with missing handler   | Throws ConfigurationError            |
 | Rule with unknown operation | Throws ConfigurationError (existing) |
-| Multiple missing handlers | Error lists all missing |
+| Multiple missing handlers   | Error lists all missing              |
 
 ### Integration Tests
 
 **File**: `tests/integration/validation/operationHandlerCompleteness.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
+| Test Case                         | Description                                   |
+| --------------------------------- | --------------------------------------------- |
 | All core operations have handlers | Verify KNOWN_OPERATION_TYPES matches registry |
-| Rule loading validates handlers | Rule with fake operation type fails to load |
-| Runtime handler check | Defense-in-depth throw behavior |
+| Rule loading validates handlers   | Rule with fake operation type fails to load   |
+| Runtime handler check             | Defense-in-depth throw behavior               |
 
 ### Regression Tests
 
 **File**: `tests/integration/loaders/ruleLoaderRegression.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Existing rules still load | All current mod rules load successfully |
-| Handler execution unchanged | Rules execute with same behavior |
+| Test Case                   | Description                             |
+| --------------------------- | --------------------------------------- |
+| Existing rules still load   | All current mod rules load successfully |
+| Handler execution unchanged | Rules execute with same behavior        |
 
 ### Test Infrastructure Tests
 
 **File**: `tests/unit/common/mods/ModTestHandlerFactory.completeness.test.js`
 
-| Test Case | Description |
-|-----------|-------------|
-| Items handlers cover required ops | createHandlersWithItemsSupport has all item operations |
+| Test Case                               | Description                                                         |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| Items handlers cover required ops       | createHandlersWithItemsSupport has all item operations              |
 | Positioning handlers cover required ops | createHandlersWithPositioningSupport has all positioning operations |
-| Handler creation consistency | Test handlers match production handler interfaces |
+| Handler creation consistency            | Test handlers match production handler interfaces                   |
 
 ## Files Summary
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/errors/missingHandlerError.js` | Custom error class |
-| `src/validation/handlerCompletenessValidator.js` | Validation service |
-| `tests/unit/logic/operationInterpreter.missingHandler.test.js` | Unit tests |
-| `tests/unit/logic/operationRegistry.completeness.test.js` | Unit tests |
-| `tests/unit/validation/handlerValidation.test.js` | Unit tests |
-| `tests/integration/validation/operationHandlerCompleteness.test.js` | Integration tests |
+| File                                                                | Purpose            |
+| ------------------------------------------------------------------- | ------------------ |
+| `src/errors/missingHandlerError.js`                                 | Custom error class |
+| `src/validation/handlerCompletenessValidator.js`                    | Validation service |
+| `tests/unit/logic/operationInterpreter.missingHandler.test.js`      | Unit tests         |
+| `tests/unit/logic/operationRegistry.completeness.test.js`           | Unit tests         |
+| `tests/unit/validation/handlerValidation.test.js`                   | Unit tests         |
+| `tests/integration/validation/operationHandlerCompleteness.test.js` | Integration tests  |
 
 ### Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/logic/operationInterpreter.js` | Throw instead of silent return |
-| `src/logic/operationRegistry.js` | Add `hasHandler()` and `getRegisteredTypes()` |
-| `src/loaders/ruleLoader.js` | Add handler validation after parse |
-| `tests/common/mods/ModTestHandlerFactory.js` | Use centralized validation |
+| File                                         | Change                                        |
+| -------------------------------------------- | --------------------------------------------- |
+| `src/logic/operationInterpreter.js`          | Throw instead of silent return                |
+| `src/logic/operationRegistry.js`             | Add `hasHandler()` and `getRegisteredTypes()` |
+| `src/loaders/ruleLoader.js`                  | Add handler validation after parse            |
+| `tests/common/mods/ModTestHandlerFactory.js` | Use centralized validation                    |
 
 ## Implementation Priority
 

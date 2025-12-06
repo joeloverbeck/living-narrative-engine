@@ -440,15 +440,12 @@ export class UnifiedScopeResolver {
 
       // Debug logging for sit_down action issue
       if (scopeName === 'positioning:available_furniture') {
-        this.#logger.debug(
-          'UnifiedScopeResolver: After scope engine resolve',
-          {
-            scopeName,
-            resolvedIds: resolvedIds ? Array.from(resolvedIds) : null,
-            resolvedCount: resolvedIds ? resolvedIds.size : 0,
-            isSet: resolvedIds instanceof Set,
-          }
-        );
+        this.#logger.debug('UnifiedScopeResolver: After scope engine resolve', {
+          scopeName,
+          resolvedIds: resolvedIds ? Array.from(resolvedIds) : null,
+          resolvedCount: resolvedIds ? resolvedIds.size : 0,
+          isSet: resolvedIds instanceof Set,
+        });
       }
 
       if (!resolvedIds || !(resolvedIds instanceof Set)) {
@@ -500,7 +497,8 @@ export class UnifiedScopeResolver {
 
     if (!result.success) {
       // Extract error message from ActionResult
-      const errorMessage = result.errors?.[0]?.message || 'Scope resolution failed';
+      const errorMessage =
+        result.errors?.[0]?.message || 'Scope resolution failed';
       throw new Error(errorMessage);
     }
 

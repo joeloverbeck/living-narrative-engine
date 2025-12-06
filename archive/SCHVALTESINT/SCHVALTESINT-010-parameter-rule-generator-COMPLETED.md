@@ -16,18 +16,18 @@ Create `parameterRuleGenerator.js` that automatically generates parameter valida
 
 ### Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/utils/parameterRuleGenerator.js` | Auto-generation of parameter rules from schemas |
-| `tests/unit/utils/parameterRuleGenerator.test.js` | Unit tests for generator |
+| File                                              | Purpose                                         |
+| ------------------------------------------------- | ----------------------------------------------- |
+| `src/utils/parameterRuleGenerator.js`             | Auto-generation of parameter rules from schemas |
+| `tests/unit/utils/parameterRuleGenerator.test.js` | Unit tests for generator                        |
 
 ### Files to Read (for reference)
 
-| File | Purpose |
-|------|---------|
-| `src/utils/preValidationUtils.js` | Current OPERATION_PARAMETER_RULES structure |
-| `data/schemas/operations/*.schema.json` | All operation schemas to parse |
-| `data/schemas/base-operation.schema.json` | Base structure for all operations |
+| File                                      | Purpose                                     |
+| ----------------------------------------- | ------------------------------------------- |
+| `src/utils/preValidationUtils.js`         | Current OPERATION_PARAMETER_RULES structure |
+| `data/schemas/operations/*.schema.json`   | All operation schemas to parse              |
+| `data/schemas/base-operation.schema.json` | Base structure for all operations           |
 
 ---
 
@@ -59,23 +59,23 @@ const OPERATION_PARAMETER_RULES = {
   GET_NAME: {
     required: ['entity_ref', 'result_variable'],
     invalidFields: ['entity_id'], // Common mistake
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   QUERY_COMPONENT: {
     required: ['entity_ref', 'component_type', 'result_variable'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   ADD_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
+    fieldCorrections: { entity_id: 'entity_ref' },
   },
   REMOVE_COMPONENT: {
     required: ['entity_ref', 'component_type'],
     invalidFields: ['entity_id'],
-    fieldCorrections: { entity_id: 'entity_ref' }
-  }
+    fieldCorrections: { entity_id: 'entity_ref' },
+  },
   // Only 4 of 62 operations have rules defined
 };
 ```
@@ -125,7 +125,7 @@ const OPERATIONS_DIR = 'data/schemas/operations';
  */
 export async function generateParameterRules() {
   const files = await readdir(OPERATIONS_DIR);
-  const schemaFiles = files.filter(f => f.endsWith('.schema.json'));
+  const schemaFiles = files.filter((f) => f.endsWith('.schema.json'));
 
   const rules = {};
 
@@ -139,7 +139,7 @@ export async function generateParameterRules() {
         required: rule.required,
         optional: rule.optional,
         templateFields: rule.templateFields,
-        schemaId: schema.$id
+        schemaId: schema.$id,
       };
     }
   }
@@ -179,7 +179,7 @@ export function extractRuleFromSchema(schema) {
   // Extract required and optional fields
   const required = parameters.required || [];
   const allProperties = Object.keys(parameters.properties || {});
-  const optional = allProperties.filter(p => !required.includes(p));
+  const optional = allProperties.filter((p) => !required.includes(p));
 
   // Detect template-capable fields (those with oneOf or $ref to template types)
   const templateFields = detectTemplateFields(parameters.properties || {});
@@ -188,7 +188,7 @@ export function extractRuleFromSchema(schema) {
     operationType,
     required,
     optional,
-    templateFields
+    templateFields,
   };
 }
 
@@ -222,9 +222,10 @@ function isTemplateCapable(def) {
 
   // Check for local oneOf with string pattern (legacy detection)
   if (def.oneOf) {
-    return def.oneOf.some(branch =>
-      branch.type === 'string' &&
-      (branch.pattern || branch.$ref?.includes('templateString'))
+    return def.oneOf.some(
+      (branch) =>
+        branch.type === 'string' &&
+        (branch.pattern || branch.$ref?.includes('templateString'))
     );
   }
 
@@ -245,8 +246,8 @@ function isTemplateCapable(def) {
 export function validateCoverage(rules, knownTypes) {
   const generatedTypes = Object.keys(rules);
 
-  const missing = knownTypes.filter(t => !generatedTypes.includes(t));
-  const extra = generatedTypes.filter(t => !knownTypes.includes(t));
+  const missing = knownTypes.filter((t) => !generatedTypes.includes(t));
+  const extra = generatedTypes.filter((t) => !knownTypes.includes(t));
 
   return { missing, extra };
 }
@@ -255,7 +256,7 @@ export default {
   generateParameterRules,
   extractRuleFromSchema,
   detectTemplateFields,
-  validateCoverage
+  validateCoverage,
 };
 ```
 
@@ -305,6 +306,7 @@ describe('parameterRuleGenerator', () => {
 ### Manual Verification Steps
 
 1. Run generator on current schemas:
+
    ```javascript
    import { generateParameterRules } from './src/utils/parameterRuleGenerator.js';
    const rules = await generateParameterRules();
@@ -313,9 +315,13 @@ describe('parameterRuleGenerator', () => {
    ```
 
 2. Verify coverage against KNOWN_OPERATION_TYPES:
+
    ```javascript
    import { KNOWN_OPERATION_TYPES } from './src/utils/preValidationUtils.js';
-   import { validateCoverage, generateParameterRules } from './src/utils/parameterRuleGenerator.js';
+   import {
+     validateCoverage,
+     generateParameterRules,
+   } from './src/utils/parameterRuleGenerator.js';
 
    const rules = await generateParameterRules();
    const { missing, extra } = validateCoverage(rules, KNOWN_OPERATION_TYPES);
@@ -381,6 +387,7 @@ Tests:       31 passed, 31 total
 ```
 
 **Coverage Verification**:
+
 - Generated rules: 62 operations (matches 62 schema files)
 - Known operation types: 64
 - Missing schemas: `HAS_BODY_PART_WITH_COMPONENT_VALUE`, `SEQUENCE` (operations in whitelist but no schema files)
@@ -389,11 +396,12 @@ Tests:       31 passed, 31 total
 
 ### New Tests Added
 
-| Test File | Test Count | Purpose |
-|-----------|------------|---------|
-| `tests/unit/utils/parameterRuleGenerator.test.js` | 31 | Comprehensive unit tests for all exported functions |
+| Test File                                         | Test Count | Purpose                                             |
+| ------------------------------------------------- | ---------- | --------------------------------------------------- |
+| `tests/unit/utils/parameterRuleGenerator.test.js` | 31         | Comprehensive unit tests for all exported functions |
 
 **Test Categories**:
+
 - `extractRuleFromSchema` - 9 tests covering schema parsing, edge cases, missing fields
 - `detectTemplateFields` - 10 tests covering template type detection, edge cases
 - `generateParameterRules` - 6 tests covering full generation, structure validation
@@ -402,10 +410,10 @@ Tests:       31 passed, 31 total
 
 ### Files Created
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `src/utils/parameterRuleGenerator.js` | 236 | Schema parser and rule generator |
-| `tests/unit/utils/parameterRuleGenerator.test.js` | 450 | Unit tests |
+| File                                              | Lines | Purpose                          |
+| ------------------------------------------------- | ----- | -------------------------------- |
+| `src/utils/parameterRuleGenerator.js`             | 236   | Schema parser and rule generator |
+| `tests/unit/utils/parameterRuleGenerator.test.js` | 450   | Unit tests                       |
 
 ### Sample Generated Rule
 

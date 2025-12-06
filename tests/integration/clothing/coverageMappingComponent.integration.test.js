@@ -69,7 +69,13 @@ describe('Clothing Coverage Mapping Component Integration', () => {
       const component = JSON.parse(content);
 
       const priorities = component.dataSchema.properties.coveragePriority.enum;
-      const expectedPriorities = ['outer', 'armor', 'base', 'underwear', 'accessories'];
+      const expectedPriorities = [
+        'outer',
+        'armor',
+        'base',
+        'underwear',
+        'accessories',
+      ];
 
       expect(priorities).toEqual(expectedPriorities);
     });

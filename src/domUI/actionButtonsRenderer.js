@@ -689,7 +689,8 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   _addHoverListeners(button) {
     // Event delegation handles the performance in production
     // But we maintain individual listeners for test compatibility
-    const isTestEnvironment = typeof globalThis !== 'undefined' &&
+    const isTestEnvironment =
+      typeof globalThis !== 'undefined' &&
       globalThis.process?.env?.NODE_ENV === 'test';
 
     if (isTestEnvironment) {
@@ -714,7 +715,8 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    */
   _removeHoverListeners(button) {
     if (button.dataset.hasHoverListeners === 'true') {
-      const isTestEnvironment = typeof globalThis !== 'undefined' &&
+      const isTestEnvironment =
+        typeof globalThis !== 'undefined' &&
         globalThis.process?.env?.NODE_ENV === 'test';
 
       if (isTestEnvironment) {
@@ -1113,9 +1115,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
   #findActionByIndex(index, actions = this.availableActions) {
     if (!Number.isInteger(index) || !Array.isArray(actions)) return null;
-    return (
-      actions.find((candidate) => candidate?.index === index) || null
-    );
+    return actions.find((candidate) => candidate?.index === index) || null;
   }
 
   #findWaitLikeAction(actions = this.availableActions) {
@@ -1127,8 +1127,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     return (
       actions.find(
-        (action) =>
-          matcher(action?.actionId) || matcher(action?.commandString)
+        (action) => matcher(action?.actionId) || matcher(action?.commandString)
       ) || null
     );
   }
@@ -1189,7 +1188,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     this.selectedAction = action;
 
     if (!beforeRender && this.elements.listContainerElement) {
-      const attrName = DATASET_ACTION_INDEX.replace(/([A-Z])/g, '-$1').toLowerCase();
+      const attrName = DATASET_ACTION_INDEX.replace(
+        /([A-Z])/g,
+        '-$1'
+      ).toLowerCase();
       const selectedButton = this.elements.listContainerElement.querySelector(
         `button.action-button[data-${attrName}='${action.index}']`
       );
@@ -1284,7 +1286,9 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       this.#suggestionCalloutElement.parentElement !==
       this.elements.listContainerElement
     ) {
-      this.elements.listContainerElement.prepend(this.#suggestionCalloutElement);
+      this.elements.listContainerElement.prepend(
+        this.#suggestionCalloutElement
+      );
     }
   }
 
@@ -1310,7 +1314,11 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     const payload = eventObject?.payload;
     const actorId = payload?.actorId;
 
-    if (!actorId || typeof actorId !== 'string' || actorId.trim().length === 0) {
+    if (
+      !actorId ||
+      typeof actorId !== 'string' ||
+      actorId.trim().length === 0
+    ) {
       this.logger.warn(
         `${this._logPrefix} Received '${LLM_SUGGESTED_ACTION_ID}' with an invalid actorId.`,
         { eventObject }

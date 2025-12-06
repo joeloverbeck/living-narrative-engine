@@ -5,9 +5,7 @@
   "description": "Stop bending over the surface",
   "targets": "positioning:surface_im_bending_over",
   "required_components": {
-    "actor": [
-      "positioning:bending_over"
-    ]
+    "actor": ["positioning:bending_over"]
   },
   "forbidden_components": {
     "actor": [

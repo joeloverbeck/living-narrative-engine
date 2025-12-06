@@ -7,15 +7,9 @@
       "layer": "base",
       "equipmentSlots": {
         "primary": "torso_upper",
-        "secondary": [
-          "left_arm_clothing",
-          "right_arm_clothing"
-        ]
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
       },
-      "allowedLayers": [
-        "underwear",
-        "base"
-      ]
+      "allowedLayers": ["underwear", "base"]
     },
     "core:material": {
       "material": "linen"
@@ -33,9 +27,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_upper"
-      ],
+      "covers": ["torso_upper"],
       "coveragePriority": "base"
     },
     "items:item": {},

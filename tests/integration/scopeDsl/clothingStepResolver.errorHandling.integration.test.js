@@ -90,7 +90,9 @@ describe('ClothingStepResolver error handling integration', () => {
     const resolver = createClothingStepResolver({ entitiesGateway });
     expect(resolver.canResolve(createNode('topmost_clothing'))).toBe(true);
     expect(resolver.canResolve(createNode('outer_clothing'))).toBe(true);
-    expect(resolver.canResolve({ type: 'Step', field: 'nonexistent' })).toBe(false);
+    expect(resolver.canResolve({ type: 'Step', field: 'nonexistent' })).toBe(
+      false
+    );
     expect(resolver.canResolve(null)).toBe(false);
   });
 
@@ -166,7 +168,10 @@ describe('ClothingStepResolver error handling integration', () => {
     const [entry] = errorHandler.getErrorBuffer();
     expect(entry.code).toBe(ErrorCodes.INVALID_ENTITY_ID);
     expect(entry.resolverName).toBe('ClothingStepResolver');
-    expect(entry.sanitizedContext).toMatchObject({ entityId: '', field: 'topmost_clothing' });
+    expect(entry.sanitizedContext).toMatchObject({
+      entityId: '',
+      field: 'topmost_clothing',
+    });
   });
 
   it('records invalid clothing reference errors when the field is unknown', async () => {
@@ -189,7 +194,10 @@ describe('ClothingStepResolver error handling integration', () => {
     const [entry] = errorHandler.getErrorBuffer();
     expect(entry.code).toBe(ErrorCodes.INVALID_ENTITY_ID);
     expect(entry.message).toContain('Invalid clothing reference');
-    expect(entry.sanitizedContext).toMatchObject({ field: 'nonexistent_clothing_field', entityId: actorId });
+    expect(entry.sanitizedContext).toMatchObject({
+      field: 'nonexistent_clothing_field',
+      entityId: actorId,
+    });
   });
 
   it('captures component resolution failures from the entities gateway', () => {
@@ -215,7 +223,10 @@ describe('ClothingStepResolver error handling integration', () => {
     );
     const [entry] = errorHandler.getErrorBuffer();
     expect(entry.code).toBe(ErrorCodes.COMPONENT_RESOLUTION_FAILED);
-    expect(entry.sanitizedContext).toMatchObject({ entityId: 'actor:missing-component', field: 'topmost_clothing' });
+    expect(entry.sanitizedContext).toMatchObject({
+      entityId: 'actor:missing-component',
+      field: 'topmost_clothing',
+    });
   });
 
   it('reports missing dispatcher scenarios through the error handler', () => {

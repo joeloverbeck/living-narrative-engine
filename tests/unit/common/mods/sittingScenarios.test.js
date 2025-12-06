@@ -69,9 +69,9 @@ describe('ModEntityScenarios sitting helpers', () => {
     expect(getComponent(standingActor, 'positioning:standing_behind')).toEqual({
       entityId: 'actor1',
     });
-    expect(getComponent(standingActor, 'positioning:closeness').partners).toContain(
-      'actor1'
-    );
+    expect(
+      getComponent(standingActor, 'positioning:closeness').partners
+    ).toContain('actor1');
   });
 
   it('should throw when attempting to create a sitting arrangement with no seated actors', () => {
@@ -87,15 +87,19 @@ describe('ModEntityScenarios sitting helpers', () => {
     expect(scenario.furniture).toHaveLength(2);
 
     const [leftFurniture, rightFurniture] = scenario.furniture;
-    expect(getComponent(leftFurniture, 'positioning:allows_sitting').spots).toEqual([
-      'actor1',
-    ]);
-    expect(getComponent(rightFurniture, 'positioning:allows_sitting').spots).toEqual([
-      'actor2',
-    ]);
+    expect(
+      getComponent(leftFurniture, 'positioning:allows_sitting').spots
+    ).toEqual(['actor1']);
+    expect(
+      getComponent(rightFurniture, 'positioning:allows_sitting').spots
+    ).toEqual(['actor2']);
 
-    const actor1 = scenario.seatedActors.find((entity) => entity.id === 'actor1');
-    const actor2 = scenario.seatedActors.find((entity) => entity.id === 'actor2');
+    const actor1 = scenario.seatedActors.find(
+      (entity) => entity.id === 'actor1'
+    );
+    const actor2 = scenario.seatedActors.find(
+      (entity) => entity.id === 'actor2'
+    );
     expect(getComponent(actor1, 'positioning:sitting_on').furniture_id).toBe(
       leftFurniture.id
     );
@@ -112,8 +116,8 @@ describe('ModEntityScenarios sitting helpers', () => {
     expect(getComponent(kneelingActor, 'positioning:kneeling_before')).toEqual({
       entityId: 'actor1',
     });
-    expect(getComponent(kneelingActor, 'positioning:closeness').partners).toContain(
-      'actor1'
-    );
+    expect(
+      getComponent(kneelingActor, 'positioning:closeness').partners
+    ).toContain('actor1');
   });
 });

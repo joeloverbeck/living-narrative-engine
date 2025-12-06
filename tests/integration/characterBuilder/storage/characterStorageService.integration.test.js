@@ -187,7 +187,10 @@ describe('CharacterStorageService + CharacterDatabase integration', () => {
     const missingConcept = await service.getCharacterConcept('missing-concept');
     expect(missingConcept).toBeNull();
 
-    const emptyDirections = await service.storeThematicDirections(concept.id, []);
+    const emptyDirections = await service.storeThematicDirections(
+      concept.id,
+      []
+    );
     expect(emptyDirections).toEqual([]);
 
     const direction = createThematicDirection(concept.id, {
@@ -213,10 +216,13 @@ describe('CharacterStorageService + CharacterDatabase integration', () => {
     const allDirections = await service.getAllThematicDirections();
     expect(allDirections.map((item) => item.id)).toContain(direction.id);
 
-    const updatedDirection = await service.updateThematicDirection(direction.id, {
-      uniqueTwist:
-        'Their phantom projections evolve, revealing futures they desperately hope to avoid.',
-    });
+    const updatedDirection = await service.updateThematicDirection(
+      direction.id,
+      {
+        uniqueTwist:
+          'Their phantom projections evolve, revealing futures they desperately hope to avoid.',
+      }
+    );
     expect(updatedDirection.uniqueTwist).toContain('phantom projections');
 
     const fetchedDirection = await service.getThematicDirection(direction.id);
@@ -251,7 +257,9 @@ describe('CharacterStorageService + CharacterDatabase integration', () => {
 
     await service.deleteThematicDirection(orphanDirection.id);
 
-    const deleteConceptResult = await service.deleteCharacterConcept(concept.id);
+    const deleteConceptResult = await service.deleteCharacterConcept(
+      concept.id
+    );
     expect(deleteConceptResult).toBe(true);
 
     const afterDeleteConcept = await service.getCharacterConcept(concept.id);
@@ -328,4 +336,3 @@ describe('CharacterStorageService + CharacterDatabase integration', () => {
     await service.close();
   });
 });
-

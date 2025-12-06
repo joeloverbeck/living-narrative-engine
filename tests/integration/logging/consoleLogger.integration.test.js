@@ -3,7 +3,14 @@
  *       logging level transitions and console method gating behave as expected.
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
 
 describe('ConsoleLogger Integration', () => {
@@ -167,7 +174,10 @@ describe('ConsoleLogger Integration', () => {
 
     expect(consoleSpies.groupCollapsed).toHaveBeenLastCalledWith('group');
     expect(consoleSpies.groupEnd).toHaveBeenCalledTimes(1);
-    expect(consoleSpies.table).toHaveBeenCalledWith([{ label: 'row' }], ['label']);
+    expect(consoleSpies.table).toHaveBeenCalledWith(
+      [{ label: 'row' }],
+      ['label']
+    );
   });
 
   it('returns UNKNOWN for unsupported numeric levels', () => {

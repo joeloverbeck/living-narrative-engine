@@ -9,7 +9,9 @@ import GameEngineLoadAdapter from '../../../src/adapters/GameEngineLoadAdapter.j
  */
 describe('GameEngineLoadAdapter delegation guarantees', () => {
   it('stores the engine instance provided at construction time', async () => {
-    const loadGame = jest.fn().mockResolvedValue({ saveSlot: 'alpha', loaded: true });
+    const loadGame = jest
+      .fn()
+      .mockResolvedValue({ saveSlot: 'alpha', loaded: true });
     const fakeEngine = { loadGame };
 
     const adapter = new GameEngineLoadAdapter(fakeEngine);
@@ -28,7 +30,10 @@ describe('GameEngineLoadAdapter delegation guarantees', () => {
 
     const adapter = new GameEngineLoadAdapter({ loadGame });
 
-    await expect(adapter.load('resume-42')).resolves.toEqual({ ok: true, id: 'resume-42' });
+    await expect(adapter.load('resume-42')).resolves.toEqual({
+      ok: true,
+      id: 'resume-42',
+    });
     expect(loadGame).toHaveBeenCalledTimes(1);
   });
 });

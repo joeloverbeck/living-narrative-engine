@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
-import { ModEntityBuilder, ModEntityScenarios } from '../../common/mods/ModEntityBuilder.js';
+import {
+  ModEntityBuilder,
+  ModEntityScenarios,
+} from '../../common/mods/ModEntityBuilder.js';
 
 describe('Targetless Actions - Prerequisite Evaluation', () => {
   let fixture;
@@ -40,7 +43,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .asBodyPart({
           parent: null, // Root part
           children: [leftBreastId, rightBreastId],
-          subType: 'torso'
+          subType: 'torso',
         })
         .build();
 
@@ -48,7 +51,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .asBodyPart({
           parent: torsoId,
           children: [],
-          subType: 'breast' // hasPartOfType checks subType
+          subType: 'breast', // hasPartOfType checks subType
         })
         .build();
 
@@ -56,7 +59,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .asBodyPart({
           parent: torsoId,
           children: [],
-          subType: 'breast'
+          subType: 'breast',
         })
         .build();
 
@@ -76,7 +79,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       // Assert
       expect(actions).toContainEqual(
         expect.objectContaining({
-          id: 'seduction:squeeze_breasts_draw_attention'
+          id: 'seduction:squeeze_breasts_draw_attention',
         })
       );
     });
@@ -100,7 +103,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .asBodyPart({
           parent: null,
           children: [], // No breast parts
-          subType: 'torso'
+          subType: 'torso',
         })
         .build();
 
@@ -119,7 +122,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       // Assert - Action should not be discovered (missing breast anatomy)
       expect(actions).not.toContainEqual(
         expect.objectContaining({
-          id: 'seduction:squeeze_breasts_draw_attention'
+          id: 'seduction:squeeze_breasts_draw_attention',
         })
       );
     });
@@ -142,21 +145,25 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .withBody(torsoId)
         .withComponent('clothing:equipment', {
           equipped: {
-            torso_upper: { base: [shirtId] }
-          }
+            torso_upper: { base: [shirtId] },
+          },
         })
         .withComponent('clothing:slot_metadata', {
           slotMappings: {
             torso_upper: {
               coveredSockets: ['left_chest', 'right_chest'], // Both breasts covered
-              allowedLayers: ['base', 'outer']
-            }
-          }
+              allowedLayers: ['base', 'outer'],
+            },
+          },
         })
         .build();
 
       const torso = new ModEntityBuilder(torsoId)
-        .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+        .asBodyPart({
+          parent: null,
+          children: [leftBreastId, rightBreastId],
+          subType: 'torso',
+        })
         .build();
 
       const leftBreast = new ModEntityBuilder(leftBreastId)
@@ -178,7 +185,15 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .withLocationComponent('test-room')
         .build();
 
-      fixture.reset([room, actor, torso, leftBreast, rightBreast, shirt, otherActor]);
+      fixture.reset([
+        room,
+        actor,
+        torso,
+        leftBreast,
+        rightBreast,
+        shirt,
+        otherActor,
+      ]);
 
       // Act
       const actions = fixture.discoverActions(actorId);
@@ -186,7 +201,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       // Assert - Action requires at least one breast uncovered
       expect(actions).not.toContainEqual(
         expect.objectContaining({
-          id: 'seduction:squeeze_breasts_draw_attention'
+          id: 'seduction:squeeze_breasts_draw_attention',
         })
       );
     });
@@ -210,12 +225,16 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
         .withBody(torsoId)
         .withComponent('positioning:hugging', {
           embraced_entity_id: 'target-id',
-          initiated: true
+          initiated: true,
         })
         .build();
 
       const torso = new ModEntityBuilder(torsoId)
-        .asBodyPart({ parent: null, children: [leftBreastId, rightBreastId], subType: 'torso' })
+        .asBodyPart({
+          parent: null,
+          children: [leftBreastId, rightBreastId],
+          subType: 'torso',
+        })
         .build();
 
       const leftBreast = new ModEntityBuilder(leftBreastId)
@@ -241,7 +260,7 @@ describe('Targetless Actions - Prerequisite Evaluation', () => {
       // Assert - Action forbidden when hugging (forbidden_components check)
       expect(actions).not.toContainEqual(
         expect.objectContaining({
-          id: 'seduction:squeeze_breasts_draw_attention'
+          id: 'seduction:squeeze_breasts_draw_attention',
         })
       );
     });

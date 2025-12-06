@@ -97,7 +97,9 @@ describe('EntityCreationManager', () => {
   it('throws SerializedEntityError when reconstructing without an object payload', () => {
     const manager = instantiateManager();
 
-    expect(() => manager.reconstructEntity(null)).toThrow(SerializedEntityError);
+    expect(() => manager.reconstructEntity(null)).toThrow(
+      SerializedEntityError
+    );
     expect(() => manager.reconstructEntity(null)).toThrow(
       'EntityCreationManager.reconstructEntity: serializedEntity must be an object.'
     );

@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -53,7 +60,9 @@ describe('rate limiting proxy fallbacks integration coverage', () => {
   });
 
   const buildApp = async (identityMiddleware) => {
-    const { createApiRateLimiter } = await import('../../src/middleware/rateLimiting.js');
+    const { createApiRateLimiter } = await import(
+      '../../src/middleware/rateLimiting.js'
+    );
 
     const app = express();
     app.get(

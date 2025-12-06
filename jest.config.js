@@ -34,7 +34,9 @@ const baseCollectCoverageFrom = [
 
 const isTargetedRun = process.argv.some(
   (arg) =>
-    arg.includes('tests/') || arg.endsWith('.test.js') || arg.endsWith('.spec.js')
+    arg.includes('tests/') ||
+    arg.endsWith('.test.js') ||
+    arg.endsWith('.spec.js')
 );
 
 module.exports = {

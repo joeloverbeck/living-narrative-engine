@@ -34,11 +34,13 @@ function createMockValidator() {
       if (schemaId.includes('actor') || schemaId.includes('test:')) {
         return {
           isValid: false,
-          errors: [{
-            keyword: 'schemaNotFound',
-            params: { schemaId },
-            message: `Schema with id '${schemaId}' not found, is invalid, or validator could not be retrieved.`
-          }]
+          errors: [
+            {
+              keyword: 'schemaNotFound',
+              params: { schemaId },
+              message: `Schema with id '${schemaId}' not found, is invalid, or validator could not be retrieved.`,
+            },
+          ],
         };
       }
 
@@ -136,7 +138,7 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor1',
           componentTypeId: 'core:position',
           componentData: { locationId: 'room-1' },
-        }
+        },
       ];
 
       // Act: Execute batch add
@@ -161,13 +163,16 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor1',
           componentTypeId: 'core:position',
           componentData: { locationId: 'room-1' },
-        }
+        },
       ];
 
       // Act & Assert: If bug exists, validator will be called with instanceId as schemaId
       // and will fail validation because entity IDs are not valid component schemas
 
-      const result = await service.batchAddComponentsOptimized(batchSpec, false);
+      const result = await service.batchAddComponentsOptimized(
+        batchSpec,
+        false
+      );
 
       // With correct implementation: should succeed
       expect(result.errors).toHaveLength(0);
@@ -185,10 +190,12 @@ describe('ComponentMutationService - Batch Operations', () => {
         if (schemaId === 'items:inventory') {
           return {
             isValid: false,
-            errors: [{
-              keyword: 'required',
-              message: 'Missing required property: items'
-            }]
+            errors: [
+              {
+                keyword: 'required',
+                message: 'Missing required property: items',
+              },
+            ],
           };
         }
         return { isValid: true };
@@ -199,15 +206,21 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor1',
           componentTypeId: 'items:inventory',
           componentData: {}, // Invalid - missing required fields
-        }
+        },
       ];
 
       // Act
-      const result = await service.batchAddComponentsOptimized(batchSpec, false);
+      const result = await service.batchAddComponentsOptimized(
+        batchSpec,
+        false
+      );
 
       // Assert: Error should reference componentTypeId, not instanceId
       expect(result.errors).toHaveLength(1);
-      expect(mockValidator.validate).toHaveBeenCalledWith('items:inventory', {});
+      expect(mockValidator.validate).toHaveBeenCalledWith(
+        'items:inventory',
+        {}
+      );
 
       // Error message should include correct component type AND entity ID for context
       const errorMessage = result.errors[0].error.message;
@@ -247,11 +260,14 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor2',
           componentTypeId: 'core:position',
           componentData: { locationId: 'room-2' },
-        }
+        },
       ];
 
       // Act
-      const result = await service.batchAddComponentsOptimized(batchSpec, false);
+      const result = await service.batchAddComponentsOptimized(
+        batchSpec,
+        false
+      );
 
       // Assert: Both operations should succeed
       expect(result.errors).toHaveLength(0);
@@ -271,7 +287,7 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor1',
           componentTypeId: 'core:position',
           componentData: { locationId: 'room-1' },
-        }
+        },
       ];
 
       // Act
@@ -291,11 +307,13 @@ describe('ComponentMutationService - Batch Operations', () => {
       // Arrange: Force validation to fail
       mockValidator.validate.mockReturnValue({
         isValid: false,
-        errors: [{
-          keyword: 'type',
-          message: 'must be string',
-          params: { type: 'string' }
-        }]
+        errors: [
+          {
+            keyword: 'type',
+            message: 'must be string',
+            params: { type: 'string' },
+          },
+        ],
       });
 
       const batchSpec = [
@@ -303,11 +321,14 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor1',
           componentTypeId: 'core:position',
           componentData: { locationId: 123 }, // Wrong type
-        }
+        },
       ];
 
       // Act
-      const result = await service.batchAddComponentsOptimized(batchSpec, false);
+      const result = await service.batchAddComponentsOptimized(
+        batchSpec,
+        false
+      );
 
       // Assert: Error details should be captured
       expect(result.errors).toHaveLength(1);
@@ -346,7 +367,7 @@ describe('ComponentMutationService - Batch Operations', () => {
         if (data.locationId === 'invalid') {
           return {
             isValid: false,
-            errors: [{ message: 'Invalid location' }]
+            errors: [{ message: 'Invalid location' }],
           };
         }
         return { isValid: true };
@@ -362,11 +383,14 @@ describe('ComponentMutationService - Batch Operations', () => {
           instanceId: 'test:actor2',
           componentTypeId: 'core:position',
           componentData: { locationId: 'room-2' }, // Will succeed
-        }
+        },
       ];
 
       // Act
-      const result = await service.batchAddComponentsOptimized(batchSpec, false);
+      const result = await service.batchAddComponentsOptimized(
+        batchSpec,
+        false
+      );
 
       // Assert: One error, one success
       // Note: results array only contains successful operations, not failed ones

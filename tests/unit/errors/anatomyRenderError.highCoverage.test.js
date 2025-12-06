@@ -63,7 +63,10 @@ describe('AnatomyRenderError', () => {
 
   describe('factory helpers', () => {
     it('creates a domElementNotFound error with high severity', () => {
-      const error = AnatomyRenderError.domElementNotFound('canvas-root', 'initialization');
+      const error = AnatomyRenderError.domElementNotFound(
+        'canvas-root',
+        'initialization'
+      );
 
       expect(error.code).toBe('DOM_ELEMENT_NOT_FOUND');
       expect(error.renderStage).toBe('initialization');
@@ -84,9 +87,13 @@ describe('AnatomyRenderError', () => {
 
     it('creates an svgRenderingFailed error that captures the cause', () => {
       const cause = new Error('DOMException');
-      const error = AnatomyRenderError.svgRenderingFailed('path creation', cause, {
-        segments: 5,
-      });
+      const error = AnatomyRenderError.svgRenderingFailed(
+        'path creation',
+        cause,
+        {
+          segments: 5,
+        }
+      );
 
       expect(error.code).toBe('SVG_RENDERING_FAILED');
       expect(error.renderStage).toBe('svg_creation');
@@ -106,18 +113,27 @@ describe('AnatomyRenderError', () => {
 
     it('creates a layoutCalculationFailed error with metadata', () => {
       const cause = new Error('overflow');
-      const error = AnatomyRenderError.layoutCalculationFailed('grid', { limbs: 4 }, cause);
+      const error = AnatomyRenderError.layoutCalculationFailed(
+        'grid',
+        { limbs: 4 },
+        cause
+      );
 
       expect(error.code).toBe('LAYOUT_CALCULATION_FAILED');
       expect(error.layoutType).toBe('grid');
       expect(error.renderData).toEqual({ limbs: 4 });
       expect(error.cause).toBe(cause);
-      expect(error.userMessage).toBe('Could not arrange the anatomy visualization layout.');
+      expect(error.userMessage).toBe(
+        'Could not arrange the anatomy visualization layout.'
+      );
     });
 
     it('creates a viewportConfigError with viewport details', () => {
       const viewport = { width: 640, height: 480 };
-      const error = AnatomyRenderError.viewportConfigError('invalid dimensions', viewport);
+      const error = AnatomyRenderError.viewportConfigError(
+        'invalid dimensions',
+        viewport
+      );
 
       expect(error.code).toBe('VIEWPORT_CONFIG_ERROR');
       expect(error.renderStage).toBe('viewport_setup');
@@ -134,7 +150,9 @@ describe('AnatomyRenderError', () => {
       expect(error.code).toBe('INTERACTION_SETUP_FAILED');
       expect(error.renderStage).toBe('interaction_setup');
       expect(error.metadata).toEqual({ interactionType: 'zoom' });
-      expect(error.userMessage).toBe('Some interactive features may not work properly.');
+      expect(error.userMessage).toBe(
+        'Some interactive features may not work properly.'
+      );
     });
 
     it('uses a friendly fallback when interaction setup lacks a cause', () => {
@@ -151,8 +169,13 @@ describe('AnatomyRenderError', () => {
 
       expect(error.code).toBe('RENDERING_PERFORMANCE_ISSUE');
       expect(error.renderStage).toBe('performance_monitoring');
-      expect(error.metadata).toEqual({ performanceIssue: 'frame drops', metrics: { fps: 12 } });
-      expect(error.userMessage).toBe('The anatomy visualization is running slowly.');
+      expect(error.metadata).toEqual({
+        performanceIssue: 'frame drops',
+        metrics: { fps: 12 },
+      });
+      expect(error.userMessage).toBe(
+        'The anatomy visualization is running slowly.'
+      );
     });
   });
 
@@ -219,20 +242,20 @@ describe('AnatomyRenderError', () => {
           'Try refreshing the page',
         ])
       );
-      expect(AnatomyRenderError._getSuggestions('performance_monitoring')).toEqual(
+      expect(
+        AnatomyRenderError._getSuggestions('performance_monitoring')
+      ).toEqual(
         expect.arrayContaining([
           'Try selecting an entity with simpler anatomy',
           'Close other browser tabs',
           'The visualization may respond slowly',
         ])
       );
-      expect(AnatomyRenderError._getSuggestions('something_else')).toEqual(
-        [
-          'Try refreshing the page',
-          'Try selecting a different entity',
-          'Wait a moment and try again',
-        ]
-      );
+      expect(AnatomyRenderError._getSuggestions('something_else')).toEqual([
+        'Try refreshing the page',
+        'Try selecting a different entity',
+        'Wait a moment and try again',
+      ]);
     });
   });
 });

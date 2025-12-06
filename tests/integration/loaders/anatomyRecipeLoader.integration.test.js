@@ -207,7 +207,8 @@ describe('AnatomyRecipeLoader integration coverage', () => {
       },
     };
 
-    const resolvedPath = '/virtual-mods/core/anatomy/recipes/humanoid.recipe.json';
+    const resolvedPath =
+      '/virtual-mods/core/anatomy/recipes/humanoid.recipe.json';
     fileMap.set(resolvedPath, {
       recipeId: 'core:humanoid',
       includes: ['core:macro.base', 'core:macro.extra'],
@@ -336,7 +337,7 @@ describe('AnatomyRecipeLoader integration coverage', () => {
     expect(constraintFailure).toBeDefined();
     expect(constraintFailure.error).toBeInstanceOf(ValidationError);
     expect(constraintFailure.error.message).toContain(
-      "must contain at least 2 items"
+      'must contain at least 2 items'
     );
 
     const descriptorFailure = result.failures.find(

@@ -34,7 +34,9 @@ describe('violence:handleBeakFumble macro', () => {
       );
       expect(addComponentOp).toBeDefined();
       expect(addComponentOp.parameters.entity_ref).toBe('actor');
-      expect(addComponentOp.parameters.component_type).toBe('positioning:fallen');
+      expect(addComponentOp.parameters.component_type).toBe(
+        'positioning:fallen'
+      );
     });
 
     it('should pass empty value object to fallen component', () => {
@@ -109,7 +111,9 @@ describe('violence:handleBeakFumble macro', () => {
       const dispatchOp = handleBeakFumble.actions.find(
         (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
-      expect(dispatchOp.parameters.perception_type).toBe('action_target_general');
+      expect(dispatchOp.parameters.perception_type).toBe(
+        'action_target_general'
+      );
     });
   });
 

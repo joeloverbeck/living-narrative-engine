@@ -31,23 +31,23 @@ describe('AnatomyCacheManager - Scalability', () => {
     // Arrange: Create 10 characters with varied anatomies
     // Use only recipes loaded by testBed.loadAnatomyModData()
     const recipes = [
-      'anatomy:human_male',      // 4x human male
+      'anatomy:human_male', // 4x human male
       'anatomy:human_male',
       'anatomy:human_male',
       'anatomy:human_male',
-      'anatomy:human_female',    // 4x human female  
+      'anatomy:human_female', // 4x human female
       'anatomy:human_female',
       'anatomy:human_female',
       'anatomy:human_female',
       'anatomy:tortoise_person', // 2x tortoise
-      'anatomy:tortoise_person'
+      'anatomy:tortoise_person',
     ];
 
     // Act: Generate all concurrently using testBed API and measure time
     const startTime = performance.now();
 
     const actorIds = await Promise.all(
-      recipes.map(recipeId => testBed.createCharacterFromRecipe(recipeId))
+      recipes.map((recipeId) => testBed.createCharacterFromRecipe(recipeId))
     );
 
     const duration = performance.now() - startTime;
@@ -74,7 +74,7 @@ describe('AnatomyCacheManager - Scalability', () => {
     // Validate no overlap (45 comparisons for 10 actors)
     for (let i = 0; i < allPartSets.length; i++) {
       for (let j = i + 1; j < allPartSets.length; j++) {
-        const overlap = allPartSets[i].parts.filter(id =>
+        const overlap = allPartSets[i].parts.filter((id) =>
           allPartSets[j].parts.includes(id)
         );
 
@@ -96,7 +96,9 @@ describe('AnatomyCacheManager - Scalability', () => {
     }
 
     // Log performance metrics
-    console.log(`10 concurrent characters generated in ${duration.toFixed(2)}ms`);
+    console.log(
+      `10 concurrent characters generated in ${duration.toFixed(2)}ms`
+    );
     console.log(`Average per character: ${(duration / 10).toFixed(2)}ms`);
   }, 10000); // 10 second timeout
 
@@ -109,14 +111,14 @@ describe('AnatomyCacheManager - Scalability', () => {
     const batches = [
       Array.from({ length: 5 }, () => 'anatomy:human_male'),
       Array.from({ length: 5 }, () => 'anatomy:human_female'),
-      Array.from({ length: 5 }, () => 'anatomy:tortoise_person')
+      Array.from({ length: 5 }, () => 'anatomy:tortoise_person'),
     ];
 
     // Act: Process each batch concurrently, batches sequentially
     const allActorIds = [];
     for (const batch of batches) {
       const batchActorIds = await Promise.all(
-        batch.map(recipeId => testBed.createCharacterFromRecipe(recipeId))
+        batch.map((recipeId) => testBed.createCharacterFromRecipe(recipeId))
       );
       allActorIds.push(...batchActorIds);
     }
@@ -133,7 +135,7 @@ describe('AnatomyCacheManager - Scalability', () => {
     // Validate no overlap across all 15 characters
     for (let i = 0; i < allPartSets.length; i++) {
       for (let j = i + 1; j < allPartSets.length; j++) {
-        const overlap = allPartSets[i].parts.filter(id =>
+        const overlap = allPartSets[i].parts.filter((id) =>
           allPartSets[j].parts.includes(id)
         );
         expect(overlap).toEqual([]);

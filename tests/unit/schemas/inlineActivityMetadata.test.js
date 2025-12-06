@@ -45,7 +45,9 @@ describe('Inline Activity Metadata Pattern', () => {
     it('should load the kneeling_before schema with inline metadata', () => {
       expect(kneelingBeforeSchema).toBeDefined();
       expect(kneelingBeforeSchema.id).toBe('positioning:kneeling_before');
-      expect(kneelingBeforeSchema.dataSchema.properties.activityMetadata).toBeDefined();
+      expect(
+        kneelingBeforeSchema.dataSchema.properties.activityMetadata
+      ).toBeDefined();
     });
 
     it('should validate against component schema', () => {
@@ -197,7 +199,10 @@ describe('Inline Activity Metadata Pattern', () => {
         };
         const valid = validate(validData);
         if (!valid) {
-          console.error(`Priority ${priority} validation errors:`, validate.errors);
+          console.error(
+            `Priority ${priority} validation errors:`,
+            validate.errors
+          );
         }
         expect(valid).toBe(true);
       });
@@ -400,7 +405,9 @@ describe('Inline Activity Metadata Pattern', () => {
     it('should define default value for template', () => {
       const metadata =
         kneelingBeforeSchema.dataSchema.properties.activityMetadata.properties;
-      expect(metadata.template.default).toBe('{actor} is kneeling before {target}');
+      expect(metadata.template.default).toBe(
+        '{actor} is kneeling before {target}'
+      );
     });
 
     it('should define default value for targetRole', () => {
@@ -499,7 +506,10 @@ describe('Inline Activity Metadata Pattern', () => {
 
     it('should accept very long template string', () => {
       const validate = ajv.compile(kneelingBeforeSchema.dataSchema);
-      const longTemplate = '{actor} is ' + 'very '.repeat(100) + 'respectfully kneeling before {target}';
+      const longTemplate =
+        '{actor} is ' +
+        'very '.repeat(100) +
+        'respectfully kneeling before {target}';
       const validData = {
         entityId: 'core:entity_123',
         activityMetadata: {

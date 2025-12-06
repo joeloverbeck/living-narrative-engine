@@ -4,12 +4,12 @@
  * @file Comprehensive mod validation CLI tool
  * @description Provides powerful validation capabilities for mod dependencies and cross-references
  * with multiple output formats, flexible options, and CI/CD integration.
- * 
+ *
  * Usage:
  *   validateMods [OPTIONS]
  *   npm run validate [OPTIONS]
  *   npx living-narrative-validate [OPTIONS]
- * 
+ *
  * Examples:
  *   validateMods                                    # Validate entire ecosystem
  *   validateMods --mod positioning --mod intimacy  # Validate specific mods
@@ -50,40 +50,40 @@ const TEST_EXIT_SIGNAL = Symbol.for('validateMods.test.exit');
 const CLI_VERSION = '1.0.0';
 const DEFAULT_CONFIG = {
   // Validation scope
-  mods: null,              // null = all mods, or array of mod names
-  ecosystem: true,         // validate entire ecosystem vs individual mods
+  mods: null, // null = all mods, or array of mod names
+  ecosystem: true, // validate entire ecosystem vs individual mods
 
   // Validation types
-  dependencies: true,      // validate dependencies
-  crossReferences: true,   // validate cross-references
-  loadOrder: false,        // validate load order
+  dependencies: true, // validate dependencies
+  crossReferences: true, // validate cross-references
+  loadOrder: false, // validate load order
 
   // Output options
-  format: 'console',       // console, json, html, markdown, junit, csv
-  output: null,           // output file path (null = stdout)
-  colors: null,           // null = auto-detect, true/false = force
-  verbose: false,         // verbose output
-  quiet: false,           // minimal output
+  format: 'console', // console, json, html, markdown, junit, csv
+  output: null, // output file path (null = stdout)
+  colors: null, // null = auto-detect, true/false = force
+  verbose: false, // verbose output
+  quiet: false, // minimal output
 
   // Behavior options
-  failFast: false,        // stop on first failure
-  continueOnError: true,  // continue validation even if individual mods fail
-  showSuggestions: true,  // show fix suggestions
-  showSummary: true,      // show summary at end
+  failFast: false, // stop on first failure
+  continueOnError: true, // continue validation even if individual mods fail
+  showSuggestions: true, // show fix suggestions
+  showSummary: true, // show summary at end
 
   // Performance options
-  concurrency: 3,         // concurrent validation limit
-  timeout: 60000,         // validation timeout per mod (ms)
+  concurrency: 3, // concurrent validation limit
+  timeout: 60000, // validation timeout per mod (ms)
 
   // Advanced options
-  strictMode: false,      // treat warnings as errors
+  strictMode: false, // treat warnings as errors
   includeMetadata: false, // include detailed metadata in output
-  cacheResults: true,     // cache validation results
+  cacheResults: true, // cache validation results
 
   // Filter options
-  severity: null,         // filter by severity (critical, high, medium, low)
-  violationType: null,    // filter by violation type
-  modFilter: null,        // regex filter for mod names
+  severity: null, // filter by severity (critical, high, medium, low)
+  violationType: null, // filter by violation type
+  modFilter: null, // regex filter for mod names
 };
 
 /**
@@ -114,35 +114,38 @@ async function main() {
 
     // Create and configure container with minimal configuration
     const container = new AppContainer();
-    
+
     // Use minimal container configuration for CLI tools with validation services
     await configureMinimalContainer(container, {
-      includeValidationServices: true
+      includeValidationServices: true,
     });
-    
+
     // Override data fetcher for CLI environment
-    const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js')).default;
+    const NodeDataFetcher = (await import('./utils/nodeDataFetcher.js'))
+      .default;
     container.register(tokens.IDataFetcher, () => new NodeDataFetcher());
 
     // Load schemas before validation
     if (!config.quiet) {
       console.log('📚 Loading schemas...');
     }
-    
+
     try {
       const schemaPhase = container.resolve(tokens.SchemaPhase);
       const registry = container.resolve(tokens.IDataRegistry);
-      
+
       // Create minimal load context for schema loading
-      const { createLoadContext } = await import('../src/loaders/LoadContext.js');
+      const { createLoadContext } = await import(
+        '../src/loaders/LoadContext.js'
+      );
       const loadContext = createLoadContext({
         worldName: 'validation-context',
         requestedMods: [],
-        registry
+        registry,
       });
-      
+
       await schemaPhase.execute(loadContext);
-      
+
       if (!config.quiet) {
         console.log('✅ Schemas loaded successfully');
       }
@@ -161,12 +164,12 @@ async function main() {
       if (!config.quiet) {
         console.log('🔧 Resolving validation services...');
       }
-      
+
       orchestrator = container.resolve(tokens.IModValidationOrchestrator);
       if (!config.quiet) {
         console.log('✅ ModValidationOrchestrator resolved');
       }
-      
+
       reporter = container.resolve(tokens.IViolationReporter);
       if (!config.quiet) {
         console.log('✅ ViolationReporter resolved');
@@ -196,20 +199,27 @@ async function main() {
 
     // Generate and output report
     const reportOptions = {
-      colors: config.colors !== false && (config.colors === true || process.stdout.isTTY),
+      colors:
+        config.colors !== false &&
+        (config.colors === true || process.stdout.isTTY),
       verbose: config.verbose,
       showSuggestions: config.showSuggestions,
       includeMetadata: config.includeMetadata,
       severity: config.severity,
-      violationType: config.violationType
+      violationType: config.violationType,
     };
 
     // Extract crossReferences Map for ecosystem validation to match reporter's expected structure
-    const reportData = config.ecosystem && results.crossReferences instanceof Map
-      ? results.crossReferences
-      : results;
+    const reportData =
+      config.ecosystem && results.crossReferences instanceof Map
+        ? results.crossReferences
+        : results;
 
-    const report = reporter.generateReport(reportData, config.format, reportOptions);
+    const report = reporter.generateReport(
+      reportData,
+      config.format,
+      reportOptions
+    );
 
     if (config.output) {
       await fs.writeFile(config.output, report);
@@ -228,7 +238,6 @@ async function main() {
     // Determine exit code
     const exitCode = calculateExitCode(results, config);
     process.exit(exitCode);
-
   } catch (error) {
     if (error === TEST_EXIT_SIGNAL) {
       // Testing harness intercepted process.exit; rethrow so tests can capture output
@@ -249,12 +258,16 @@ async function main() {
  */
 async function runFastTestMode(config) {
   const mods = Array.isArray(config.mods) ? config.mods : [];
-  const scopeSummary = mods.length > 0 ? `mods: ${mods.join(', ')}` : 'mods: ecosystem';
+  const scopeSummary =
+    mods.length > 0 ? `mods: ${mods.join(', ')}` : 'mods: ecosystem';
   const optionsSummary = {
     quiet: Boolean(config.quiet),
     verbose: Boolean(config.verbose),
     strictMode: Boolean(config.strictMode),
-    concurrency: Number.parseInt(config.concurrency ?? DEFAULT_CONFIG.concurrency, 10)
+    concurrency: Number.parseInt(
+      config.concurrency ?? DEFAULT_CONFIG.concurrency,
+      10
+    ),
   };
 
   let outputContent;
@@ -263,7 +276,7 @@ async function runFastTestMode(config) {
     const jsonReport = {
       status: 'ok',
       scope: scopeSummary,
-      options: optionsSummary
+      options: optionsSummary,
     };
     outputContent = config.quiet
       ? JSON.stringify(jsonReport)
@@ -273,7 +286,7 @@ async function runFastTestMode(config) {
       'Fast validation stub report',
       `Scope: ${scopeSummary}`,
       `Format: ${config.format}`,
-      `Concurrency: ${optionsSummary.concurrency}`
+      `Concurrency: ${optionsSummary.concurrency}`,
     ];
 
     if (config.verbose) {
@@ -573,7 +586,7 @@ async function runValidation(orchestrator, config) {
     modsToValidate: config.mods,
     strictMode: config.strictMode,
     continueOnError: config.continueOnError,
-    timeout: config.timeout
+    timeout: config.timeout,
   };
 
   let results;
@@ -593,11 +606,10 @@ async function runValidation(orchestrator, config) {
 
         const modResult = await orchestrator.validateMod(modId, {
           skipCrossReferences: !config.crossReferences,
-          includeContext: true
+          includeContext: true,
         });
 
         modResults.set(modId, modResult);
-
       } catch (error) {
         errors.push({ modId, error: error.message });
         if (config.failFast) {
@@ -646,16 +658,19 @@ function showValidationSummary(results, executionTime) {
   if (results instanceof Map) {
     // Individual mod results
     console.log(`   • Mods validated: ${results.size}`);
-    const modsWithViolations = Array.from(results.values()).filter(r =>
-      r.crossReferences?.hasViolations
+    const modsWithViolations = Array.from(results.values()).filter(
+      (r) => r.crossReferences?.hasViolations
     ).length;
     console.log(`   • Mods with violations: ${modsWithViolations}`);
   } else {
     // Ecosystem results
-    console.log(`   • Dependencies valid: ${results.dependencies?.isValid ? 'Yes' : 'No'}`);
+    console.log(
+      `   • Dependencies valid: ${results.dependencies?.isValid ? 'Yes' : 'No'}`
+    );
     if (results.crossReferences) {
-      const totalViolations = Array.from(results.crossReferences.values())
-        .reduce((sum, r) => sum + r.violations.length, 0);
+      const totalViolations = Array.from(
+        results.crossReferences.values()
+      ).reduce((sum, r) => sum + r.violations.length, 0);
       console.log(`   • Cross-reference violations: ${totalViolations}`);
     }
   }
@@ -673,15 +688,16 @@ function calculateExitCode(results, config) {
   let hasViolations = false;
 
   if (results instanceof Map) {
-    hasViolations = Array.from(results.values()).some(r =>
-      r.crossReferences?.hasViolations
+    hasViolations = Array.from(results.values()).some(
+      (r) => r.crossReferences?.hasViolations
     );
     hasErrors = results.errors && results.errors.length > 0;
   } else {
     hasErrors = !results.dependencies?.isValid || results.errors?.length > 0;
     if (results.crossReferences) {
-      hasViolations = Array.from(results.crossReferences.values())
-        .some(r => r.hasViolations);
+      hasViolations = Array.from(results.crossReferences.values()).some(
+        (r) => r.hasViolations
+      );
     }
   }
 
@@ -788,7 +804,7 @@ try {
   if (
     process.env.NODE_ENV !== 'test' &&
     typeof jest === 'undefined' &&
-    process.argv[1] && 
+    process.argv[1] &&
     process.argv[1].endsWith('validateMods.js')
   ) {
     main();

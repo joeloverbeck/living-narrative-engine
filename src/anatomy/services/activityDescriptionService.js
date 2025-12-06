@@ -208,9 +208,14 @@ class ActivityDescriptionService {
       { requiredMethods: ['collectActivityMetadata'] }
     );
 
-    validateDependency(groupingSystem, 'IActivityGroupingSystem', this.#logger, {
-      requiredMethods: ['groupActivities', 'sortByPriority'],
-    });
+    validateDependency(
+      groupingSystem,
+      'IActivityGroupingSystem',
+      this.#logger,
+      {
+        requiredMethods: ['groupActivities', 'sortByPriority'],
+      }
+    );
 
     validateDependency(nlgSystem, 'IActivityNLGSystem', this.#logger, {
       requiredMethods: ['formatActivityDescription'],
@@ -218,7 +223,9 @@ class ActivityDescriptionService {
 
     // For backward compatibility: create filtering system if not provided
     if (!filteringSystem) {
-      const conditionValidator = new ActivityConditionValidator({ logger: this.#logger });
+      const conditionValidator = new ActivityConditionValidator({
+        logger: this.#logger,
+      });
       filteringSystem = new ActivityFilteringSystem({
         logger: this.#logger,
         conditionValidator,
@@ -367,7 +374,7 @@ class ActivityDescriptionService {
         componentTypeIdsLogValue = 'inspection_failed';
       }
 
-      this.#logger.info('ActivityDescriptionService: received entity', {
+      this.#logger.debug('ActivityDescriptionService: received entity', {
         entityId,
         entityExists: true,
         componentTypeIds: componentTypeIdsLogValue,
@@ -375,7 +382,10 @@ class ActivityDescriptionService {
         componentCount,
       });
 
-      const activities = this.#metadataCollectionSystem.collectActivityMetadata(entityId, entity);
+      const activities = this.#metadataCollectionSystem.collectActivityMetadata(
+        entityId,
+        entity
+      );
 
       if (activities.length === 0) {
         this.#logger.debug(`No activities found for entity: ${entityId}`);
@@ -398,9 +408,10 @@ class ActivityDescriptionService {
       let processedActivities = conditionedActivities;
 
       if (formattingConfig.deduplicateActivities !== false) {
-        processedActivities = this.#metadataCollectionSystem.deduplicateActivitiesBySignature(
-          conditionedActivities
-        );
+        processedActivities =
+          this.#metadataCollectionSystem.deduplicateActivitiesBySignature(
+            conditionedActivities
+          );
 
         if (processedActivities.length < conditionedActivities.length) {
           this.#logger.debug(
@@ -464,8 +475,6 @@ class ActivityDescriptionService {
     return this.#filteringSystem.filterByConditions(activities, entity);
   }
 
-
-
   // Note: Deduplication methods extracted to ActivityMetadataCollectionSystem
   // Note: Priority sorting extracted to ActivityGroupingSystem (ACTDESSERREF-007)
 
@@ -504,8 +513,15 @@ class ActivityDescriptionService {
     const contextAwareActivities = enableContextAwareness
       ? limitedActivities.map((activity) => {
           try {
-            const context = this.#contextBuildingSystem.buildActivityContext(actorId, activity);
-            const contextualised = this.#contextBuildingSystem.applyContextualTone(activity, context);
+            const context = this.#contextBuildingSystem.buildActivityContext(
+              actorId,
+              activity
+            );
+            const contextualised =
+              this.#contextBuildingSystem.applyContextualTone(
+                activity,
+                context
+              );
             return contextualised ?? activity;
           } catch (error) {
             this.#logger.warn(
@@ -519,7 +535,10 @@ class ActivityDescriptionService {
 
     let groupedActivities = [];
     try {
-      const result = this.#groupingSystem.groupActivities(contextAwareActivities, cacheKey);
+      const result = this.#groupingSystem.groupActivities(
+        contextAwareActivities,
+        cacheKey
+      );
       if (Array.isArray(result)) {
         groupedActivities = result;
       } else if (result && typeof result.forEach === 'function') {
@@ -654,7 +673,7 @@ class ActivityDescriptionService {
         }
       }
 
-        descriptions.push(groupDescription);
+      descriptions.push(groupDescription);
     });
 
     if (descriptions.length === 0) {
@@ -672,7 +691,10 @@ class ActivityDescriptionService {
       ? config.maxDescriptionLength
       : DEFAULT_ACTIVITY_FORMATTING_CONFIG.maxDescriptionLength;
 
-    return this.#nlgSystem.truncateDescription(composedDescription, maxDescriptionLength);
+    return this.#nlgSystem.truncateDescription(
+      composedDescription,
+      maxDescriptionLength
+    );
   }
 
   #getActivityIntegrationConfig() {
@@ -783,9 +805,10 @@ class ActivityDescriptionService {
           return;
         }
         // If entry has the old structure {value, expiresAt}, extract the value
-        const valueToStore = entry && typeof entry === 'object' && 'value' in entry
-          ? entry.value
-          : entry;
+        const valueToStore =
+          entry && typeof entry === 'object' && 'value' in entry
+            ? entry.value
+            : entry;
 
         if (valueToStore !== undefined && valueToStore !== null) {
           this.#cacheManager.set('entityName', key, valueToStore);
@@ -803,10 +826,13 @@ class ActivityDescriptionService {
 
         // Access the internal cache structure using test-only method
         return {
-          entityName: this.#cacheManager._getInternalCacheForTesting('entityName'),
+          entityName:
+            this.#cacheManager._getInternalCacheForTesting('entityName'),
           gender: this.#cacheManager._getInternalCacheForTesting('gender'),
-          activityIndex: this.#cacheManager._getInternalCacheForTesting('activityIndex'),
-          closeness: this.#cacheManager._getInternalCacheForTesting('closeness'),
+          activityIndex:
+            this.#cacheManager._getInternalCacheForTesting('activityIndex'),
+          closeness:
+            this.#cacheManager._getInternalCacheForTesting('closeness'),
         };
       },
       getCacheValue: (...args) => this.#getCacheValue(...args),
@@ -932,8 +958,9 @@ class ActivityDescriptionService {
    * @returns {unknown|null} Cached value or null if not found/expired.
    * @private
    */
-   
-  #getCacheValue(cacheName, key) { // Reserved for future direct cache access
+
+  #getCacheValue(cacheName, key) {
+    // Reserved for future direct cache access
     if (!this.#cacheManager) {
       return null;
     }

@@ -58,6 +58,7 @@ Clothing items can cover additional body regions beyond their primary equipment 
 ```
 
 **Coverage Priority Scoring** (from `docs/developers/clothing-coverage-system.md:26-42`):
+
 - `outer`: 100 (highest visibility)
 - `base`: 200
 - `underwear`: 300
@@ -67,6 +68,7 @@ Clothing items can cover additional body regions beyond their primary equipment 
 ### Available Equipment Slots
 
 The system provides these clothing slots (from `docs/modding/clothing-items.md:48-58`):
+
 - `torso_upper` - Upper body clothing
 - `torso_lower` - Lower torso clothing
 - `legs` - Leg clothing
@@ -87,6 +89,7 @@ The system provides these clothing slots (from `docs/modding/clothing-items.md:4
 #### 1. Slot Metadata Component
 
 `data/mods/clothing/components/slot_metadata.component.json:29`:
+
 ```json
 "allowedLayers": {
   "type": "array",
@@ -101,22 +104,23 @@ The system provides these clothing slots (from `docs/modding/clothing-items.md:4
 
 `data/mods/anatomy/libraries/humanoid.slot-library.json` defines armor in **all major clothing slots**:
 
-| Slot Definition | Allowed Layers | Line |
-|----------------|----------------|------|
-| `standard_head_gear` | `["base", "outer", "armor"]` | 117 |
-| `standard_torso_upper` | `["underwear", "base", "outer", "armor"]` | 133 |
-| `standard_arm_clothing` | `["base", "outer", "armor"]` | 137 |
-| `standard_hands` | `["base", "armor"]` | 141 |
-| `standard_legs` | `["underwear", "base", "outer", "armor"]` | 145 |
-| `standard_feet` | `["base", "armor"]` | 149 |
-| `standard_torso_lower` | `["underwear", "base", "outer", "armor"]` | 166 |
-| `standard_back_accessory` | `["accessory", "armor"]` | 170 |
+| Slot Definition           | Allowed Layers                            | Line |
+| ------------------------- | ----------------------------------------- | ---- |
+| `standard_head_gear`      | `["base", "outer", "armor"]`              | 117  |
+| `standard_torso_upper`    | `["underwear", "base", "outer", "armor"]` | 133  |
+| `standard_arm_clothing`   | `["base", "outer", "armor"]`              | 137  |
+| `standard_hands`          | `["base", "armor"]`                       | 141  |
+| `standard_legs`           | `["underwear", "base", "outer", "armor"]` | 145  |
+| `standard_feet`           | `["base", "armor"]`                       | 149  |
+| `standard_torso_lower`    | `["underwear", "base", "outer", "armor"]` | 166  |
+| `standard_back_accessory` | `["accessory", "armor"]`                  | 170  |
 
 #### 3. Anatomy Blueprints
 
 All major humanoid and non-human blueprints include armor layer support:
 
 **Blueprints with Armor Layer**:
+
 - `human_male.blueprint.json` (lines 37, 65)
 - `human_female.blueprint.json` (lines 37, 73)
 - `human_futa.blueprint.json` (lines 51, 86)
@@ -137,6 +141,7 @@ The anatomy system has been **future-proofed for armor** since its creation. The
 **Only One Component Needs Update**: The `clothing:wearable` component schema
 
 **Current State**:
+
 ```json
 // data/mods/clothing/components/wearable.component.json:8-12
 "layer": {
@@ -147,6 +152,7 @@ The anatomy system has been **future-proofed for armor** since its creation. The
 ```
 
 **Required Change**:
+
 ```json
 "layer": {
   "type": "string",
@@ -157,15 +163,15 @@ The anatomy system has been **future-proofed for armor** since its creation. The
 
 ### Impact Assessment
 
-| System Component | Status | Change Required |
-|-----------------|--------|-----------------|
-| Anatomy Blueprints | ✅ Ready | None |
-| Slot Metadata Schema | ✅ Ready | None |
-| Humanoid Slot Library | ✅ Ready | None |
-| Clothing Wearable Schema | ⚠️ Needs Update | Add "armor" to enum |
-| Coverage Mapping Schema | ❓ May Need Update | Add "armor" priority tier |
-| SlotAccessResolver | ❓ May Need Update | Add armor priority constants |
-| Existing Clothing Entities | ✅ Unaffected | None |
+| System Component           | Status             | Change Required              |
+| -------------------------- | ------------------ | ---------------------------- |
+| Anatomy Blueprints         | ✅ Ready           | None                         |
+| Slot Metadata Schema       | ✅ Ready           | None                         |
+| Humanoid Slot Library      | ✅ Ready           | None                         |
+| Clothing Wearable Schema   | ⚠️ Needs Update    | Add "armor" to enum          |
+| Coverage Mapping Schema    | ❓ May Need Update | Add "armor" priority tier    |
+| SlotAccessResolver         | ❓ May Need Update | Add armor priority constants |
+| Existing Clothing Entities | ✅ Unaffected      | None                         |
 
 ---
 
@@ -174,6 +180,7 @@ The anatomy system has been **future-proofed for armor** since its creation. The
 ### Conceptual Question: Where Does Armor Fit?
 
 **User's Original Question**:
+
 > "Armor doesn't necessarily go always over the outer clothing (could wear a bulletproof vest under a jacket or something like that)"
 
 ### Answer: Armor Should Be Its Own Layer
@@ -200,6 +207,7 @@ Proposed Layer Hierarchy (innermost to outermost):
 ```
 
 **Rationale**:
+
 - Armor sits between base clothing and outer garments
 - Allows realistic scenarios: underwear → shirt → chainmail → cloak
 - Maintains flexibility: armor can be "outer" layer if no cloak is worn
@@ -219,18 +227,20 @@ Instead of a strict layer position, armor could use the **coverage priority syst
 ```
 
 **Coverage Priority Scores** (would need extension):
+
 ```javascript
 const COVERAGE_PRIORITY = {
   outer: 100,
-  armor: 150,  // NEW: Between outer and base
+  armor: 150, // NEW: Between outer and base
   base: 200,
   underwear: 300,
   accessories: 350,
-  direct: 400
+  direct: 400,
 };
 ```
 
 This approach allows armor to:
+
 - Override regular clothing coverage
 - Be visible in action descriptions when appropriate
 - Maintain the existing four-layer wearable system
@@ -247,6 +257,7 @@ This approach allows armor to:
 **File**: `data/mods/clothing/components/wearable.component.json`
 
 **Change**:
+
 ```diff
   "layer": {
     "type": "string",
@@ -261,11 +272,13 @@ This approach allows armor to:
 **File**: `data/mods/clothing/components/coverage_mapping.component.json`
 
 **Current** (line 29):
+
 ```json
 "enum": ["outer", "base", "underwear", "accessories"]
 ```
 
 **Proposed**:
+
 ```json
 "enum": ["outer", "armor", "base", "underwear", "accessories"]
 ```
@@ -275,40 +288,42 @@ This approach allows armor to:
 **File**: `src/scopeDsl/nodes/slotAccessResolver.js`
 
 **Current** (from docs):
+
 ```javascript
 const COVERAGE_PRIORITY = {
   outer: 100,
   base: 200,
   underwear: 300,
   accessories: 350,
-  direct: 400
+  direct: 400,
 };
 
 const LAYER_PRIORITY_WITHIN_COVERAGE = {
   outer: 10,
   base: 20,
   underwear: 30,
-  accessories: 40
+  accessories: 40,
 };
 ```
 
 **Proposed**:
+
 ```javascript
 const COVERAGE_PRIORITY = {
   outer: 100,
-  armor: 150,      // NEW: Armor has priority between outer and base
+  armor: 150, // NEW: Armor has priority between outer and base
   base: 200,
   underwear: 300,
   accessories: 350,
-  direct: 400
+  direct: 400,
 };
 
 const LAYER_PRIORITY_WITHIN_COVERAGE = {
   outer: 10,
-  armor: 15,       // NEW: Armor layer priority
+  armor: 15, // NEW: Armor layer priority
   base: 20,
   underwear: 30,
-  accessories: 40
+  accessories: 40,
 };
 ```
 
@@ -337,21 +352,21 @@ The `core:material` component **already supports armor materials**:
 {
   "material": {
     "enum": [
-      "iron",      // ✅ Armor material
-      "steel",     // ✅ Armor material
-      "leather",   // ✅ Light armor
-      "canvas",    // ✅ Padded armor
+      "iron", // ✅ Armor material
+      "steel", // ✅ Armor material
+      "leather", // ✅ Light armor
+      "canvas" // ✅ Padded armor
       // ... etc
     ]
   },
   "durability": {
     "type": "number",
     "minimum": 0,
-    "maximum": 100  // ✅ Perfect for armor rating
+    "maximum": 100 // ✅ Perfect for armor rating
   },
   "properties": [
-    "rigid",       // ✅ Plate armor property
-    "flexible"     // ✅ Leather/chainmail property
+    "rigid", // ✅ Plate armor property
+    "flexible" // ✅ Leather/chainmail property
   ]
 }
 ```
@@ -503,7 +518,12 @@ While not required for basic armor support, future expansion could include:
       "texture": "metallic"
     },
     "clothing:coverage_mapping": {
-      "covers": ["torso_upper", "torso_lower", "left_arm_clothing", "right_arm_clothing"],
+      "covers": [
+        "torso_upper",
+        "torso_lower",
+        "left_arm_clothing",
+        "right_arm_clothing"
+      ],
       "coveragePriority": "armor"
     },
     "items:item": {},
@@ -528,6 +548,7 @@ underwear (300) → base (200) → armor (150) → outer (100) → accessories (
 ```
 
 **Advantages**:
+
 - ✅ Aligns with existing anatomy system infrastructure
 - ✅ Clear semantic distinction from regular clothing
 - ✅ Flexible positioning (can be worn under or over other layers)
@@ -536,6 +557,7 @@ underwear (300) → base (200) → armor (150) → outer (100) → accessories (
 - ✅ Minimal code changes required
 
 **Disadvantages**:
+
 - ❌ Adds complexity to layer hierarchy
 - ❌ Requires updates to priority constants
 - ❌ Need to test interaction with all existing clothing
@@ -547,23 +569,25 @@ Keep the four-layer `wearable` system, but add "armor" as a `coveragePriority` v
 ```json
 {
   "clothing:wearable": {
-    "layer": "outer",  // or "base"
+    "layer": "outer", // or "base"
     "equipmentSlots": { "primary": "torso_upper" }
   },
   "clothing:coverage_mapping": {
     "covers": ["torso_upper"],
-    "coveragePriority": "armor"  // NEW value
+    "coveragePriority": "armor" // NEW value
   }
 }
 ```
 
 **Advantages**:
+
 - ✅ Simpler change (only coverage priority)
 - ✅ Armor can use existing base/outer layer slots
 - ✅ Less impact on layer hierarchy
 - ✅ Works with current wearable schema
 
 **Disadvantages**:
+
 - ❌ Armor must choose between "base" or "outer" layer
 - ❌ Less semantic clarity
 - ❌ May conflict with coverage resolution logic
@@ -572,6 +596,7 @@ Keep the four-layer `wearable` system, but add "armor" as a `coveragePriority` v
 ### Recommended Approach: Primary Recommendation
 
 **Use armor as a fifth layer** because:
+
 1. The anatomy system is already built for it
 2. Provides maximum flexibility for sword & sorcery scenarios
 3. Clear semantic meaning in game context
@@ -653,6 +678,7 @@ Keep the four-layer `wearable` system, but add "armor" as a `coveragePriority` v
 **Risk Level**: Low - changes are additive and don't break existing functionality.
 
 **Recommendation**: Implement armor as a **fifth clothing layer** with priority between outer and base layers. This approach:
+
 - Leverages existing anatomy system infrastructure
 - Provides maximum flexibility for sword & sorcery scenarios
 - Requires minimal code changes

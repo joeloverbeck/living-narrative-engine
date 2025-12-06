@@ -23,48 +23,48 @@ The test infrastructure (`ModTestFixture`, `IntegrationTestBed`, `systemLogicTes
 
 ### Phase 1: CRITICAL - Fail-Fast in Test Infrastructure
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-001 | Add schema validation to ModTestFixture.forAction() | CRITICAL | M |
-| SCHVALTESINT-002 | Add schema validation to ModTestFixture.forRule() | CRITICAL | S |
-| SCHVALTESINT-003 | Update systemLogicTestEnv with schema validator | HIGH | S |
-| SCHVALTESINT-004 | Add real schema option to IntegrationTestBed | HIGH | M |
+| Ticket           | Title                                               | Priority | Est. Size |
+| ---------------- | --------------------------------------------------- | -------- | --------- |
+| SCHVALTESINT-001 | Add schema validation to ModTestFixture.forAction() | CRITICAL | M         |
+| SCHVALTESINT-002 | Add schema validation to ModTestFixture.forRule()   | CRITICAL | S         |
+| SCHVALTESINT-003 | Update systemLogicTestEnv with schema validator     | HIGH     | S         |
+| SCHVALTESINT-004 | Add real schema option to IntegrationTestBed        | HIGH     | M         |
 
 ### Phase 2: HIGH - CI Validation Gate
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-005 | Add validation-gate job to CI workflow | HIGH | S |
+| Ticket           | Title                                  | Priority | Est. Size |
+| ---------------- | -------------------------------------- | -------- | --------- |
+| SCHVALTESINT-005 | Add validation-gate job to CI workflow | HIGH     | S         |
 
 ### Phase 3: MEDIUM - Template String Standardization
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-006 | Create common.schema.json with template definitions | MEDIUM | M |
-| SCHVALTESINT-007 | Migrate lockGrabbing.schema.json to use $ref | MEDIUM | S |
-| SCHVALTESINT-008 | Migrate unlockGrabbing.schema.json to use $ref | MEDIUM | S |
-| SCHVALTESINT-009 | Create schema pattern linting script | LOW | S |
+| Ticket           | Title                                               | Priority | Est. Size |
+| ---------------- | --------------------------------------------------- | -------- | --------- |
+| SCHVALTESINT-006 | Create common.schema.json with template definitions | MEDIUM   | M         |
+| SCHVALTESINT-007 | Migrate lockGrabbing.schema.json to use $ref        | MEDIUM   | S         |
+| SCHVALTESINT-008 | Migrate unlockGrabbing.schema.json to use $ref      | MEDIUM   | S         |
+| SCHVALTESINT-009 | Create schema pattern linting script                | LOW      | S         |
 
 ### Phase 4: MEDIUM - Parameter Rule Auto-Generation
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-010 | Create parameterRuleGenerator.js | MEDIUM | L |
-| SCHVALTESINT-011 | Integrate auto-generated rules into preValidationUtils | MEDIUM | M |
+| Ticket           | Title                                                  | Priority | Est. Size |
+| ---------------- | ------------------------------------------------------ | -------- | --------- |
+| SCHVALTESINT-010 | Create parameterRuleGenerator.js                       | MEDIUM   | L         |
+| SCHVALTESINT-011 | Integrate auto-generated rules into preValidationUtils | MEDIUM   | M         |
 
 ### Phase 5: LOW - Enhanced Error Messages
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-012 | Create validationErrorContext.js | LOW | M |
-| SCHVALTESINT-013 | Create suggestionUtils.js for "Did you mean?" | LOW | S |
-| SCHVALTESINT-014 | Integrate enhanced errors into ajvAnyOfErrorFormatter | LOW | M |
+| Ticket           | Title                                                 | Priority | Est. Size |
+| ---------------- | ----------------------------------------------------- | -------- | --------- |
+| SCHVALTESINT-012 | Create validationErrorContext.js                      | LOW      | M         |
+| SCHVALTESINT-013 | Create suggestionUtils.js for "Did you mean?"         | LOW      | S         |
+| SCHVALTESINT-014 | Integrate enhanced errors into ajvAnyOfErrorFormatter | LOW      | M         |
 
 ### Testing & Validation
 
-| Ticket | Title | Priority | Est. Size |
-|--------|-------|----------|-----------|
-| SCHVALTESINT-015 | Create regression test suite | HIGH | M |
+| Ticket           | Title                        | Priority | Est. Size |
+| ---------------- | ---------------------------- | -------- | --------- |
+| SCHVALTESINT-015 | Create regression test suite | HIGH     | M         |
 
 ## Dependencies
 

@@ -37,7 +37,11 @@
         {
           "activities": [
             { "verb": "touching", "targetEntityId": "target1", "priority": 50 },
-            { "verb": "caressing", "targetEntityId": "target1", "priority": 55 },
+            {
+              "verb": "caressing",
+              "targetEntityId": "target1",
+              "priority": 55
+            },
             { "verb": "kissing", "targetEntityId": "target1", "priority": 60 }
           ],
           "expectedPhrase": "kissing {target}, caressing {target}, and touching {target}"
@@ -52,7 +56,11 @@
         {
           "activities": [
             { "verb": "touching", "targetEntityId": "target1", "priority": 30 },
-            { "verb": "caressing", "targetEntityId": "target1", "priority": 70 },
+            {
+              "verb": "caressing",
+              "targetEntityId": "target1",
+              "priority": 70
+            },
             { "verb": "kissing", "targetEntityId": "target1", "priority": 50 }
           ],
           "expectedOrder": ["caressing (70)", "kissing (50)", "touching (30)"]

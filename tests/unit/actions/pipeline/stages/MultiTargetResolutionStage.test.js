@@ -122,7 +122,10 @@ describe('MultiTargetResolutionStage', () => {
           // Get resolution order from dependency resolver
           let resolutionOrder;
           try {
-            resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(targetDefinitions);
+            resolutionOrder =
+              mockDeps.targetDependencyResolver.getResolutionOrder(
+                targetDefinitions
+              );
           } catch (error) {
             // Fallback: if mock returns error or nothing, use simple order based on keys
             resolutionOrder = Object.keys(targetDefinitions);
@@ -148,7 +151,10 @@ describe('MultiTargetResolutionStage', () => {
 
                 // Determine contextFromId for dependent targets
                 let contextFromId = null;
-                if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
+                if (
+                  targetDef.contextFrom &&
+                  resolvedTargets[targetDef.contextFrom]
+                ) {
                   const contextTargets = resolvedTargets[targetDef.contextFrom];
                   if (contextTargets.length > 0) {
                     contextFromId = contextTargets[0].id;
@@ -161,7 +167,10 @@ describe('MultiTargetResolutionStage', () => {
                     // Filter out missing entities
                     if (!entity) return null;
 
-                    const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                    const displayName =
+                      mockDeps.targetDisplayNameResolver.getEntityDisplayName(
+                        id
+                      );
                     targetContexts.push({
                       type: 'entity', // Fixed: use 'entity' instead of targetKey
                       entityId: id,
@@ -182,16 +191,24 @@ describe('MultiTargetResolutionStage', () => {
 
                     return targetObj;
                   })
-                  .filter(t => t !== null); // Remove null entries from missing entities
+                  .filter((t) => t !== null); // Remove null entries from missing entities
               } else {
                 // Log scope resolution failures
-                const errorInfo = scopeResult.errors?.[0] || { error: 'Unknown scope resolution error' };
-                mockDeps.logger.error(`Scope resolution failed for target ${targetKey}:`, errorInfo);
+                const errorInfo = scopeResult.errors?.[0] || {
+                  error: 'Unknown scope resolution error',
+                };
+                mockDeps.logger.error(
+                  `Scope resolution failed for target ${targetKey}:`,
+                  errorInfo
+                );
                 resolvedTargets[targetKey] = [];
               }
             } catch (error) {
               // Log scope evaluation errors
-              mockDeps.logger.error(`Scope evaluation error for target ${targetKey}:`, error);
+              mockDeps.logger.error(
+                `Scope evaluation error for target ${targetKey}:`,
+                error
+              );
               resolvedTargets[targetKey] = [];
             }
           }
@@ -200,7 +217,8 @@ describe('MultiTargetResolutionStage', () => {
           const hasEmptyRequiredTarget = Object.entries(targetDefinitions).some(
             ([key, def]) => {
               const isOptional = def.optional === true;
-              const hasNoCandidates = !resolvedTargets[key] || resolvedTargets[key].length === 0;
+              const hasNoCandidates =
+                !resolvedTargets[key] || resolvedTargets[key].length === 0;
               return !isOptional && hasNoCandidates;
             }
           );
@@ -217,14 +235,15 @@ describe('MultiTargetResolutionStage', () => {
             );
           }
 
-          const result = mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
-            context,
-            resolvedTargets,
-            targetContexts,
-            targetDefinitions,
-            actionDef,
-            undefined
-          );
+          const result =
+            mockDeps.targetResolutionResultBuilder.buildMultiTargetResult(
+              context,
+              resolvedTargets,
+              targetContexts,
+              targetDefinitions,
+              actionDef,
+              undefined
+            );
           return result;
         } catch (err) {
           throw err;
@@ -412,12 +431,14 @@ describe('MultiTargetResolutionStage', () => {
       mockContext.candidateActions = [actionDef];
 
       setupLegacyAction('test:legacy_scope');
-      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue({
-        isLegacy: true,
-        targetDefinitions: {
-          primary: { scope: 'test:legacy_scope', placeholder: 'primary' },
-        },
-      });
+      mockDeps.legacyTargetCompatibilityLayer.convertLegacyFormat.mockReturnValue(
+        {
+          isLegacy: true,
+          targetDefinitions: {
+            primary: { scope: 'test:legacy_scope', placeholder: 'primary' },
+          },
+        }
+      );
 
       mockDeps.targetResolver.resolveTargets.mockResolvedValue({
         success: true,

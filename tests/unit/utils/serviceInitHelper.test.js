@@ -14,7 +14,10 @@ import {
   initializeServiceLogger,
   resolveExecutionLogger,
 } from '../../../src/utils/serviceInitializerUtils.js';
-import { createPrefixedLogger, initLogger } from '../../../src/utils/loggerUtils.js';
+import {
+  createPrefixedLogger,
+  initLogger,
+} from '../../../src/utils/loggerUtils.js';
 import { validateDependencies } from '../../../src/utils/dependencyUtils.js';
 
 jest.mock('../../../src/utils/dependencyUtils.js', () => ({
@@ -121,7 +124,9 @@ describe('serviceInitializerUtils helper functions', () => {
   describe('resolveExecutionLogger', () => {
     it('prefers execution context logger when available', () => {
       const execLogger = { custom: true };
-      const resolved = resolveExecutionLogger(baseLogger, { logger: execLogger });
+      const resolved = resolveExecutionLogger(baseLogger, {
+        logger: execLogger,
+      });
       expect(resolved).toBe(execLogger);
     });
 

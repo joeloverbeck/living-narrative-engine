@@ -49,7 +49,9 @@ describe('Core Prompt Text Validation', () => {
 
       // Assert required fields exist
       expect(promptTextData).toHaveProperty('coreTaskDescriptionText');
-      expect(promptTextData).toHaveProperty('characterPortrayalGuidelinesTemplate');
+      expect(promptTextData).toHaveProperty(
+        'characterPortrayalGuidelinesTemplate'
+      );
       expect(promptTextData).toHaveProperty('nc21ContentPolicyText');
       expect(promptTextData).toHaveProperty('finalLlmInstructionText');
       expect(promptTextData).toHaveProperty('actionTagRulesContent');
@@ -65,11 +67,12 @@ describe('Core Prompt Text Validation', () => {
 
       // Assert all values are strings
       expect(typeof promptTextData.coreTaskDescriptionText).toBe('string');
-      expect(typeof promptTextData.characterPortrayalGuidelinesTemplate).toBe('string');
+      expect(typeof promptTextData.characterPortrayalGuidelinesTemplate).toBe(
+        'string'
+      );
       expect(typeof promptTextData.nc21ContentPolicyText).toBe('string');
       expect(typeof promptTextData.finalLlmInstructionText).toBe('string');
       expect(typeof promptTextData.actionTagRulesContent).toBe('string');
     });
   });
-
 });

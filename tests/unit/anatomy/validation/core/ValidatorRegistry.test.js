@@ -20,7 +20,9 @@ describe('ValidatorRegistry', () => {
   describe('Constructor', () => {
     it('should initialize with valid logger', () => {
       expect(registry).toBeInstanceOf(ValidatorRegistry);
-      expect(mockLogger.info).toHaveBeenCalledWith('ValidatorRegistry initialized');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        'ValidatorRegistry initialized'
+      );
     });
 
     it('should throw error if logger is missing', () => {
@@ -49,16 +51,22 @@ describe('ValidatorRegistry', () => {
       // Assert
       expect(registry.has('test-validator')).toBe(true);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("Registered validator 'test-validator' (priority: 10)")
+        expect.stringContaining(
+          "Registered validator 'test-validator' (priority: 10)"
+        )
       );
     });
 
     it('should throw error if validator is null', () => {
-      expect(() => registry.register(null)).toThrow('Validator must be an object');
+      expect(() => registry.register(null)).toThrow(
+        'Validator must be an object'
+      );
     });
 
     it('should throw error if validator is undefined', () => {
-      expect(() => registry.register(undefined)).toThrow('Validator must be an object');
+      expect(() => registry.register(undefined)).toThrow(
+        'Validator must be an object'
+      );
     });
 
     it('should throw error if validator is not an object', () => {

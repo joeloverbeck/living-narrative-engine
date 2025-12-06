@@ -12,16 +12,19 @@
 ### Location in Codebase
 
 **Primary Module**: `/src/anatomy/anatomyCacheManager.js`
+
 - **Class**: `AnatomyCacheManager`
 - **Critical Method**: `#handleDisconnectedActorAnatomy()` (lines 440-516)
 - **Supporting Method**: `buildCache()` (lines 170-212)
 
 **Secondary Module**: `/src/anatomy/bodyGraphService.js`
+
 - **Class**: `BodyGraphService`
 - **Key Method**: `getAllParts()` (lines 141-221)
 - **Integration**: Uses `AnatomyCacheManager` internally
 
 **Related Modules**:
+
 - `/src/anatomy/workflows/anatomyGenerationWorkflow.js` - Orchestrates anatomy creation
 - `/src/anatomy/workflows/stages/eventPublicationStage.js` - Dispatches ANATOMY_GENERATED event
 - `/src/anatomy/workflows/stages/clothingInstantiationStage.js` - Attaches clothing to body parts
@@ -73,6 +76,7 @@ Map<entityId, AnatomyNode> where AnatomyNode = {
 **Entity Component System (ECS) Integration**:
 
 The anatomy system follows the ECS pattern where:
+
 - **Entities**: String IDs (actors and body parts)
 - **Components**: `anatomy:body`, `anatomy:part`, `anatomy:joint`, `anatomy:sockets`
 - **Systems**: Cache manager, graph algorithms, clothing validation
@@ -80,19 +84,21 @@ The anatomy system follows the ECS pattern where:
 **Component Schemas**:
 
 **anatomy:body** (on actor entities):
+
 ```json
 {
   "recipeId": "anatomy:human_female",
   "body": {
-    "root": "uuid-of-anatomy-root-part"  // ← CRITICAL: Source of truth
+    "root": "uuid-of-anatomy-root-part" // ← CRITICAL: Source of truth
   },
   "structure": {
-    "rootPartId": "blueprint-reference"  // Optional, for visualization
+    "rootPartId": "blueprint-reference" // Optional, for visualization
   }
 }
 ```
 
 **anatomy:joint** (on body part entities):
+
 ```json
 {
   "parentEntityId": "uuid-of-parent-part",
@@ -102,6 +108,7 @@ The anatomy system follows the ECS pattern where:
 ```
 
 **anatomy:part** (on body part entities):
+
 ```json
 {
   "subType": "arm",
@@ -138,17 +145,20 @@ The anatomy system follows the ECS pattern where:
 ### Related Components
 
 **Upstream Dependencies** (what calls this module):
+
 - `BodyGraphService` - Primary API consumer
 - `AnatomyGenerationWorkflow` - Triggers cache building
 - `ClothingInstantiationStage` - Depends on correct part resolution
 - `DirectSocketStrategy` - Queries parts for clothing attachment
 
 **Downstream Dependencies** (what this module calls):
+
 - `IEntityManager` - Reads component data
 - `ILogger` - Diagnostic logging
 - `AnatomyGraphAlgorithms` - Graph traversal operations
 
 **Critical Integration Points**:
+
 - **Concurrent Processing**: Multiple workflows generating anatomy simultaneously
 - **Query Caching**: `AnatomyQueryCache` wraps results for performance
 - **Event System**: Dispatches `ANATOMY_GENERATED` after successful generation
@@ -162,6 +172,7 @@ The anatomy system follows the ECS pattern where:
 **Symptom**: During concurrent character generation in `game.html`, all 4 characters shared the same body part instances from the first-generated character (a tortoise). This caused clothing validation to fail because human clothing looked for sockets like `left_chest`, `right_chest`, `vagina`, `penis` but found tortoise-specific sockets like `torso`, `carapace_mount`, `plastron_mount`.
 
 **Manifestation**:
+
 1. Load game with 4 characters: `registrar_copperplate` (tortoise), `threadscar_melissa` (human female), `bertram_the_muddy` (human male), `vespera_nightwhisper` (cat-girl)
 2. All characters received body part UUID `10322cab-71db-4ef0-aa64-4963d3361f1e` (tortoise torso)
 3. Human clothing items failed to attach: briefs, bra, belt, jacket (missing 4 of 7 items for melissa)
@@ -224,6 +235,7 @@ DirectSocketStrategy: Part '10322cab-71db-4ef0-aa64-4963d3361f1e' has 9 sockets:
 The `#handleDisconnectedActorAnatomy()` method was designed to handle actors with `anatomy:body` but no direct `anatomy:joint` children. This occurs when the actor entity is separate from the anatomy graph (disconnected).
 
 **Original Logic** (pseudocode of buggy behavior):
+
 ```javascript
 async #handleDisconnectedActorAnatomy(rootEntityId, entityManager, visited, parentToChildren) {
   const anatomyBody = entityManager.getComponentData(rootEntityId, 'anatomy:body');
@@ -272,16 +284,19 @@ async #handleDisconnectedActorAnatomy(rootEntityId, entityManager, visited, pare
 ### Link to Tests
 
 **Primary Regression Test**: `/tests/integration/anatomy/multiCharacterClothingGeneration.test.js`
+
 - **Test Name**: `'should handle concurrent character generation without race condition'` (lines 201-271)
 - **What It Tests**: Generates 4 characters concurrently using `Promise.all()`, validates no entity warnings
 - **Why It Matters**: This test MUST pass to prevent regression of concurrent processing bug
 
 **Secondary Validation Test**: `/tests/integration/anatomy/anatomyCacheManager.disconnectedFallback.integration.test.js`
+
 - **Test Name**: `'links disconnected actor anatomies and rebuilds caches when structure data is missing'` (lines 176-269)
 - **What It Tests**: Validates fallback logic when `structure.rootPartId` is missing, tests cache invalidation
 - **Why It Matters**: Ensures graceful degradation when anatomy data is incomplete
 
 **Symptom Tests** (these were failing before fix):
+
 - All clothing-related integration tests in `tests/integration/clothing/*.test.js`
 - Socket resolution tests in clothing system
 - Character loading in `game.html` (manual test)
@@ -437,17 +452,18 @@ async #handleDisconnectedActorAnatomy(rootEntityId, entityManager, visited, pare
 
 **Key Differences**:
 
-| Aspect | Before (Buggy) | After (Fixed) |
-|--------|---------------|---------------|
-| **Root Discovery** | Search ALL anatomy parts globally | Read `anatomyBody.body.root` field |
-| **Scope** | System-wide (all characters) | Actor-specific (single character) |
-| **Selection Logic** | First match from global search | Exact field reference |
-| **Race Condition** | Yes (concurrent searches collide) | No (each actor uses own field) |
-| **Validation** | None (assumes first match is correct) | Validates root exists and is anatomy part |
-| **Ownership** | Unverified (could be other character's root) | Guaranteed (field owned by actor) |
-| **Logging** | Generic "found root" message | Specific "from anatomy:body.body.root" message |
+| Aspect              | Before (Buggy)                               | After (Fixed)                                  |
+| ------------------- | -------------------------------------------- | ---------------------------------------------- |
+| **Root Discovery**  | Search ALL anatomy parts globally            | Read `anatomyBody.body.root` field             |
+| **Scope**           | System-wide (all characters)                 | Actor-specific (single character)              |
+| **Selection Logic** | First match from global search               | Exact field reference                          |
+| **Race Condition**  | Yes (concurrent searches collide)            | No (each actor uses own field)                 |
+| **Validation**      | None (assumes first match is correct)        | Validates root exists and is anatomy part      |
+| **Ownership**       | Unverified (could be other character's root) | Guaranteed (field owned by actor)              |
+| **Logging**         | Generic "found root" message                 | Specific "from anatomy:body.body.root" message |
 
 **Commit Reference**:
+
 - Commit: `1c07662fc` - "Fixed tortoise clothing" (2025-11-23)
 - Branch: `main`
 - Files Changed: `src/anatomy/anatomyCacheManager.js`, `src/anatomy/bodyGraphService.js`
@@ -498,7 +514,7 @@ async #handleDisconnectedActorAnatomy(rootEntityId, entityManager, visited, pare
           "description": "Entity ID of the root anatomy part (e.g., torso)"
         }
       },
-      "required": ["root"]  // ← CONTRACT: root field is required
+      "required": ["root"] // ← CONTRACT: root field is required
     },
     "structure": {
       "type": "object",
@@ -534,6 +550,7 @@ async #handleDisconnectedActorAnatomy(rootEntityId, entityManager, visited, pare
 **IEntityManager Interface** (`/src/interfaces/IEntityManager.js`):
 
 Key methods used by anatomy cache:
+
 - `getComponentData(entityId, componentId)` - Returns component data or null
 - `getEntitiesWithComponent(componentId)` - Returns array of entities with component
 - `getEntityInstance(entityId)` - Returns entity object
@@ -602,6 +619,7 @@ This comment documents the fix and its purpose for future maintainers.
 **Scenario**: Generate 4 characters one at a time
 
 **Expected Behavior**:
+
 ```javascript
 // Character 1
 await anatomyWorkflow.generate(registrarCopperplate);
@@ -626,7 +644,9 @@ await anatomyWorkflow.generate(vesperaNightwhisper);
 // ✓ anatomy:body.body.root = "vespera-torso-uuid"
 
 // Validation
-const registrarParts = bodyGraphService.getAllParts(registrarCopperplate.anatomy);
+const registrarParts = bodyGraphService.getAllParts(
+  registrarCopperplate.anatomy
+);
 const melissaParts = bodyGraphService.getAllParts(threadscaremelissa.anatomy);
 
 // ✓ registrarParts.every(id => id.includes('tortoise') || id.includes('registrar'))
@@ -635,6 +655,7 @@ const melissaParts = bodyGraphService.getAllParts(threadscaremelissa.anatomy);
 ```
 
 **Invariants Maintained**:
+
 - Each character has unique part set
 - `body.root` field correctly references actor's anatomy root
 - Cache entries are per-actor and isolated
@@ -644,6 +665,7 @@ const melissaParts = bodyGraphService.getAllParts(threadscaremelissa.anatomy);
 **Scenario**: Generate 4 characters simultaneously using `Promise.all()`
 
 **Expected Behavior**:
+
 ```javascript
 const [registrar, melissa, bertram, vespera] = await Promise.all([
   anatomyWorkflow.generate(registrarCopperplate),
@@ -666,7 +688,9 @@ const [registrar, melissa, bertram, vespera] = await Promise.all([
 // ✓ vespera.anatomy.body.root points to cat_girl torso (unique UUID)
 
 // Cache Validation:
-const registrarNode = cacheManager.get('fantasy:registrar_copperplate_instance');
+const registrarNode = cacheManager.get(
+  'fantasy:registrar_copperplate_instance'
+);
 const melissaNode = cacheManager.get('fantasy:threadscar_melissa_instance');
 
 // ✓ registrarNode.children[0] === registrar.anatomy.body.root
@@ -674,8 +698,14 @@ const melissaNode = cacheManager.get('fantasy:threadscar_melissa_instance');
 // ✓ registrarNode.children[0] !== melissaNode.children[0] (different roots!)
 
 // Part Resolution:
-const registrarParts = bodyGraphService.getAllParts(registrar.anatomy, 'fantasy:registrar_copperplate_instance');
-const melissaParts = bodyGraphService.getAllParts(melissa.anatomy, 'fantasy:threadscar_melissa_instance');
+const registrarParts = bodyGraphService.getAllParts(
+  registrar.anatomy,
+  'fantasy:registrar_copperplate_instance'
+);
+const melissaParts = bodyGraphService.getAllParts(
+  melissa.anatomy,
+  'fantasy:threadscar_melissa_instance'
+);
 
 // ✓ registrarParts.length = 17 (tortoise anatomy)
 // ✓ melissaParts.length = 17 (human anatomy)
@@ -684,6 +714,7 @@ const melissaParts = bodyGraphService.getAllParts(melissa.anatomy, 'fantasy:thre
 ```
 
 **Invariants Maintained**:
+
 - Concurrent operations don't interfere
 - Each actor reads own `anatomy:body.body.root` field
 - Cache building is isolated per actor
@@ -694,6 +725,7 @@ const melissaParts = bodyGraphService.getAllParts(melissa.anatomy, 'fantasy:thre
 **Scenario**: Build cache from anatomy graph with joints
 
 **Expected Behavior**:
+
 ```javascript
 // Given anatomy structure:
 // Torso (root, no parent)
@@ -721,6 +753,7 @@ const leftHandNode = cacheManager.get(leftHandId);
 ```
 
 **Invariants Maintained**:
+
 - Parent-child relationships match `anatomy:joint` components
 - Root part has null parent
 - All parts reachable from root via children traversal
@@ -730,6 +763,7 @@ const leftHandNode = cacheManager.get(leftHandId);
 **Scenario**: Method reads actor-specific anatomy root
 
 **Expected Behavior**:
+
 ```javascript
 // Given:
 const actorId = "fantasy:threadscar_melissa_instance";
@@ -753,6 +787,7 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 ```
 
 **Invariants Maintained**:
+
 - Single source of truth: `body.root` field
 - No global searches across actors
 - Actor-specific root resolution
@@ -764,16 +799,18 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 **Scenario**: Actor has `anatomy:body` but `body.root` is undefined/null
 
 **Input**:
+
 ```javascript
 const anatomyBody = {
-  recipeId: "anatomy:human_female",
+  recipeId: 'anatomy:human_female',
   body: {
     // root field missing!
-  }
+  },
 };
 ```
 
 **Expected Behavior**:
+
 ```javascript
 await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToChildren);
 
@@ -787,6 +824,7 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 ```
 
 **Invariants Maintained**:
+
 - No invalid connections
 - No exceptions thrown
 - Clear diagnostic logging
@@ -796,15 +834,17 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 **Scenario**: `body.root` points to entity that doesn't exist or isn't anatomy part
 
 **Input**:
+
 ```javascript
 const anatomyBody = {
   body: {
-    root: "non-existent-entity-id"  // Invalid reference
-  }
+    root: 'non-existent-entity-id', // Invalid reference
+  },
 };
 ```
 
 **Expected Behavior**:
+
 ```javascript
 await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToChildren);
 
@@ -824,6 +864,7 @@ const anatomyPart = entityManager.getComponentData(anatomyRootId, 'anatomy:part'
 ```
 
 **Invariants Maintained**:
+
 - No invalid entity references in cache
 - No dangling pointers
 - Safe failure mode
@@ -833,12 +874,14 @@ const anatomyPart = entityManager.getComponentData(anatomyRootId, 'anatomy:part'
 **Scenario**: Actor entity doesn't have `anatomy:body` component
 
 **Input**:
+
 ```javascript
 const anatomyBody = entityManager.getComponentData(actorId, 'anatomy:body');
 // anatomyBody = null (no component)
 ```
 
 **Expected Behavior**:
+
 ```javascript
 await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToChildren);
 
@@ -850,6 +893,7 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 ```
 
 **Invariants Maintained**:
+
 - Method only processes actor entities
 - No assumptions about entity type
 
@@ -858,22 +902,24 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 **Scenario**: Old blueprint format doesn't set `body.root`, only `structure.rootPartId`
 
 **Input**:
+
 ```javascript
 const anatomyBody = {
-  recipeId: "legacy:old_blueprint",
+  recipeId: 'legacy:old_blueprint',
   body: {
     // No root field (legacy format)
   },
   structure: {
-    rootPartId: "blueprint-torso-reference"  // Old format
-  }
+    rootPartId: 'blueprint-torso-reference', // Old format
+  },
 };
 ```
 
 **Expected Behavior** (Current):
+
 ```javascript
 // Current implementation:
-const anatomyRootId = anatomyBody.body?.root;  // = undefined
+const anatomyRootId = anatomyBody.body?.root; // = undefined
 
 // ✓ Warning logged: "Actor 'X' has anatomy:body but no body.root field"
 // ✓ Method returns early
@@ -893,12 +939,14 @@ const anatomyRootId = anatomyBody.body?.root;  // = undefined
 **Scenario**: Actor entity has direct `anatomy:joint` children (not disconnected)
 
 **Input**:
+
 ```javascript
 const rootNode = cacheManager.get(actorId);
 // rootNode.children.length > 0 (already has children from joints)
 ```
 
 **Expected Behavior**:
+
 ```javascript
 await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToChildren);
 
@@ -910,6 +958,7 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 ```
 
 **Invariants Maintained**:
+
 - Method only handles disconnected actors
 - Existing joints take precedence
 
@@ -920,12 +969,13 @@ await #handleDisconnectedActorAnatomy(actorId, entityManager, visited, parentToC
 **When**: `anatomyBody.body?.root` is undefined or null
 
 **Response**:
+
 ```javascript
 if (!anatomyRootId) {
   this.#logger.warn(
     `AnatomyCacheManager: Actor '${rootEntityId}' has anatomy:body but no body.root field`
   );
-  return;  // Graceful degradation
+  return; // Graceful degradation
 }
 ```
 
@@ -938,14 +988,18 @@ if (!anatomyRootId) {
 **When**: `anatomyBody.body.root` points to non-existent or non-anatomy entity
 
 **Response**:
+
 ```javascript
-const anatomyPart = entityManager.getComponentData(anatomyRootId, 'anatomy:part');
+const anatomyPart = entityManager.getComponentData(
+  anatomyRootId,
+  'anatomy:part'
+);
 
 if (!anatomyPart) {
   this.#logger.warn(
     `AnatomyCacheManager: Anatomy root '${anatomyRootId}' from actor '${rootEntityId}' is not an anatomy part`
   );
-  return;  // Graceful degradation
+  return; // Graceful degradation
 }
 ```
 
@@ -958,6 +1012,7 @@ if (!anatomyPart) {
 **When**: `body.root` points to actor itself or creates cycle
 
 **Protection**:
+
 ```javascript
 // Protected by visited set in #buildCacheRecursive (lines 291-292)
 if (visited.has(entityId)) return;
@@ -973,6 +1028,7 @@ visited.add(entityId);
 **When**: `getComponentData()` or `getEntityInstance()` throws
 
 **Response**:
+
 ```javascript
 try {
   // ... all processing
@@ -994,6 +1050,7 @@ try {
 **When**: Cache invalidated while another operation is building
 
 **Protection**:
+
 ```javascript
 // Per-root invalidation (lines 132-161) prevents global cache corruption
 invalidateCacheForRoot(rootEntityId) {
@@ -1013,19 +1070,21 @@ invalidateCacheForRoot(rootEntityId) {
 **Property**: For any two distinct actors A and B, their anatomy parts are disjoint sets.
 
 **Formal**:
+
 ```
 ∀ actors A, B where A ≠ B:
   getAllParts(A) ∩ getAllParts(B) = ∅
 ```
 
 **Validation**:
+
 ```javascript
 // Test code:
 const actorAParts = bodyGraphService.getAllParts(actorA.anatomy, actorA.id);
 const actorBParts = bodyGraphService.getAllParts(actorB.anatomy, actorB.id);
 
-const overlap = actorAParts.filter(id => actorBParts.includes(id));
-expect(overlap).toEqual([]);  // Must be empty
+const overlap = actorAParts.filter((id) => actorBParts.includes(id));
+expect(overlap).toEqual([]); // Must be empty
 ```
 
 **Enforcement**: `#handleDisconnectedActorAnatomy()` uses `anatomyBody.body.root` which is unique per actor
@@ -1035,6 +1094,7 @@ expect(overlap).toEqual([]);  // Must be empty
 **Property**: If actor has `anatomy:body.body.root`, it must reference a valid anatomy part entity.
 
 **Formal**:
+
 ```
 ∀ actors A with anatomy:body component:
   A.anatomy.body.root ∈ validAnatomyPartEntities
@@ -1042,12 +1102,16 @@ expect(overlap).toEqual([]);  // Must be empty
 ```
 
 **Validation**:
+
 ```javascript
 // Test code:
 if (actor.anatomy?.body?.root) {
-  const rootPart = entityManager.getComponentData(actor.anatomy.body.root, 'anatomy:part');
-  expect(rootPart).not.toBeNull();  // Must exist
-  expect(rootPart).toHaveProperty('subType');  // Must be anatomy part
+  const rootPart = entityManager.getComponentData(
+    actor.anatomy.body.root,
+    'anatomy:part'
+  );
+  expect(rootPart).not.toBeNull(); // Must exist
+  expect(rootPart).toHaveProperty('subType'); // Must be anatomy part
 }
 ```
 
@@ -1058,6 +1122,7 @@ if (actor.anatomy?.body?.root) {
 **Property**: Anatomy graph forms a tree (no cycles) with single root.
 
 **Formal**:
+
 ```
 ∀ parts P in anatomy graph:
   traverseParents(P) terminates at root R
@@ -1065,19 +1130,20 @@ if (actor.anatomy?.body?.root) {
 ```
 
 **Validation**:
+
 ```javascript
 // Test code:
 function hasCycle(partId, visited = new Set()) {
-  if (visited.has(partId)) return true;  // Cycle detected
+  if (visited.has(partId)) return true; // Cycle detected
   visited.add(partId);
 
   const node = cacheManager.get(partId);
-  if (!node.parentId) return false;  // Reached root
+  if (!node.parentId) return false; // Reached root
 
   return hasCycle(node.parentId, visited);
 }
 
-expect(hasCycle(anyPartId)).toBe(false);  // No cycles allowed
+expect(hasCycle(anyPartId)).toBe(false); // No cycles allowed
 ```
 
 **Enforcement**: Visited set in `#buildCacheRecursive()` (lines 291-292) prevents infinite recursion
@@ -1087,6 +1153,7 @@ expect(hasCycle(anyPartId)).toBe(false);  // No cycles allowed
 **Property**: Cached parent-child relationships must match actual `anatomy:joint` components.
 
 **Formal**:
+
 ```
 ∀ entities E with anatomy:joint:
   cacheManager.get(E).parentId = E.components['anatomy:joint'].parentEntityId
@@ -1094,15 +1161,16 @@ expect(hasCycle(anyPartId)).toBe(false);  // No cycles allowed
 ```
 
 **Validation**:
+
 ```javascript
 // Test code:
 const joint = entityManager.getComponentData(partId, 'anatomy:joint');
 const cachedNode = cacheManager.get(partId);
 
-expect(cachedNode.parentId).toBe(joint.parentEntityId);  // Parents match
+expect(cachedNode.parentId).toBe(joint.parentEntityId); // Parents match
 
 const parentNode = cacheManager.get(joint.parentEntityId);
-expect(parentNode.children).toContain(partId);  // Child listed in parent
+expect(parentNode.children).toContain(partId); // Child listed in parent
 ```
 
 **Enforcement**: `#buildParentToChildrenMap()` (lines 221-261) builds map from `anatomy:joint` components directly
@@ -1112,6 +1180,7 @@ expect(parentNode.children).toContain(partId);  // Child listed in parent
 **Property**: Cache operations on actor A cannot modify cache entries for actor B.
 
 **Formal**:
+
 ```
 ∀ actors A, B where A ≠ B:
   buildCache(A) does NOT modify cacheEntries(B)
@@ -1119,19 +1188,20 @@ expect(parentNode.children).toContain(partId);  // Child listed in parent
 ```
 
 **Validation**:
+
 ```javascript
 // Test code:
-const beforeBParts = [...cacheManager.entries()].filter(([id, node]) =>
-  id.includes('actorB') || traverseToRoot(id) === actorB.id
+const beforeBParts = [...cacheManager.entries()].filter(
+  ([id, node]) => id.includes('actorB') || traverseToRoot(id) === actorB.id
 );
 
 await cacheManager.buildCache(actorA.id, entityManager);
 
-const afterBParts = [...cacheManager.entries()].filter(([id, node]) =>
-  id.includes('actorB') || traverseToRoot(id) === actorB.id
+const afterBParts = [...cacheManager.entries()].filter(
+  ([id, node]) => id.includes('actorB') || traverseToRoot(id) === actorB.id
 );
 
-expect(afterBParts).toEqual(beforeBParts);  // B's parts unchanged
+expect(afterBParts).toEqual(beforeBParts); // B's parts unchanged
 ```
 
 **Enforcement**: `#handleDisconnectedActorAnatomy()` reads `anatomyBody.body.root` which is actor-specific field
@@ -1141,6 +1211,7 @@ expect(afterBParts).toEqual(beforeBParts);  // B's parts unchanged
 **Property**: `anatomy:body.body.root` is the sole authoritative source for anatomy root ID.
 
 **Formal**:
+
 ```
 ∀ cache building operations:
   anatomyRootId = anatomyBody.body.root
@@ -1148,6 +1219,7 @@ expect(afterBParts).toEqual(beforeBParts);  // B's parts unchanged
 ```
 
 **Validation**:
+
 ```javascript
 // Test code via code review:
 // Grep for any global anatomy part searches:
@@ -1162,6 +1234,7 @@ expect(afterBParts).toEqual(beforeBParts);  // B's parts unchanged
 #### Contract 1: buildCache() Signature
 
 **Interface**:
+
 ```javascript
 async buildCache(rootEntityId: string, entityManager: IEntityManager): Promise<void>
 ```
@@ -1169,18 +1242,21 @@ async buildCache(rootEntityId: string, entityManager: IEntityManager): Promise<v
 **Stability**: STABLE - Public API, many consumers
 
 **Guarantees**:
+
 - Accepts root entity ID (actor or anatomy root)
 - Accepts entity manager for component data access
 - Returns void (builds cache as side effect)
 - Throws on critical errors, logs warnings for degradable errors
 
 **Consumers**:
+
 - `BodyGraphService.buildAdjacencyCache()` (primary)
 - `AnatomyGenerationWorkflow` (via BodyGraphService)
 
 #### Contract 2: #handleDisconnectedActorAnatomy() Behavior
 
 **Interface** (private, but behavior is contract):
+
 ```javascript
 async #handleDisconnectedActorAnatomy(
   rootEntityId: string,
@@ -1193,6 +1269,7 @@ async #handleDisconnectedActorAnatomy(
 **Stability**: IMPLEMENTATION DETAIL - Can change internals, behavior must remain
 
 **Guarantees**:
+
 - Only processes actors with `anatomy:body` component
 - Only processes actors with no joint children (disconnected)
 - Uses `anatomy:body.body.root` as single source of truth
@@ -1207,6 +1284,7 @@ async #handleDisconnectedActorAnatomy(
 #### Contract 3: anatomy:body.body.root Field Structure
 
 **Schema**:
+
 ```json
 {
   "body": {
@@ -1218,18 +1296,21 @@ async #handleDisconnectedActorAnatomy(
 **Stability**: STABLE - External data contract
 
 **Guarantees**:
+
 - Field is required in anatomy generation
 - Field contains entity ID of anatomy root part
 - Field is set before cache building occurs
 - Field is unique per actor (no sharing)
 
 **Producers**:
+
 - `BodyBlueprintFactory.createAnatomyGraph()` - Sets field during anatomy creation
 - Anatomy recipes - Define structure, factory executes
 
 #### Contract 4: ANATOMY_GENERATED Event Dispatch
 
 **Event Signature**:
+
 ```javascript
 {
   type: 'ANATOMY_GENERATED',
@@ -1248,12 +1329,14 @@ async #handleDisconnectedActorAnatomy(
 **Stability**: STABLE - External event contract
 
 **Guarantees**:
+
 - Dispatched after successful anatomy generation
 - Contains all part IDs for validation
 - Includes socket information for clothing
 - Timestamp for ordering/debugging
 
 **Consumers**:
+
 - Clothing system (validates available sockets)
 - UI systems (updates displays)
 - Analytics (tracks generation events)
@@ -1265,6 +1348,7 @@ async #handleDisconnectedActorAnatomy(
 **Current**: `Map<string, AnatomyNode>`
 
 **Allowed Changes**:
+
 - Switch to different map implementation (e.g., object literal)
 - Add indexes for faster lookup (e.g., by part type)
 - Change node structure (add/remove fields)
@@ -1277,6 +1361,7 @@ async #handleDisconnectedActorAnatomy(
 **Current**: debug, info, warn, error levels with specific messages
 
 **Allowed Changes**:
+
 - Change log message wording
 - Add/remove log statements
 - Change log levels (debug → info, etc.)
@@ -1289,6 +1374,7 @@ async #handleDisconnectedActorAnatomy(
 **Current**: Sequential processing with O(n) complexity
 
 **Allowed Changes**:
+
 - Batch operations for multiple actors
 - Parallel cache building (with isolation)
 - Lazy loading of subtrees
@@ -1301,6 +1387,7 @@ async #handleDisconnectedActorAnatomy(
 **Current**: `AnatomyQueryCache` with LRU eviction
 
 **Allowed Changes**:
+
 - Change eviction policy (LFU, FIFO, TTL)
 - Adjust cache size limits
 - Add cache warming strategies
@@ -1313,6 +1400,7 @@ async #handleDisconnectedActorAnatomy(
 **Current**: `#buildCacheRecursive()`, `#buildParentToChildrenMap()`, etc.
 
 **Allowed Changes**:
+
 - Refactor into smaller methods
 - Change parameter order
 - Add optional parameters
@@ -1332,20 +1420,27 @@ async #handleDisconnectedActorAnatomy(
 **Test Name**: `'should handle concurrent character generation without race condition'` (lines 201-271)
 
 **What It Tests**:
+
 ```javascript
 it('should handle concurrent character generation without race condition', async () => {
   // Arrange: 4 characters with different anatomies
   const characters = [
-    { id: 'fantasy:registrar_copperplate_instance', recipe: 'anatomy:tortoise_person' },
-    { id: 'fantasy:threadscar_melissa_instance', recipe: 'anatomy:human_female' },
+    {
+      id: 'fantasy:registrar_copperplate_instance',
+      recipe: 'anatomy:tortoise_person',
+    },
+    {
+      id: 'fantasy:threadscar_melissa_instance',
+      recipe: 'anatomy:human_female',
+    },
     { id: 'fantasy:bertram_the_muddy_instance', recipe: 'anatomy:human_male' },
-    { id: 'fantasy:vespera_nightwhisper_instance', recipe: 'anatomy:cat_girl' }
+    { id: 'fantasy:vespera_nightwhisper_instance', recipe: 'anatomy:cat_girl' },
   ];
 
   // Act: Generate all concurrently
-  await Promise.all(characters.map(char =>
-    anatomyWorkflow.generate(char.id, char.recipe)
-  ));
+  await Promise.all(
+    characters.map((char) => anatomyWorkflow.generate(char.id, char.recipe))
+  );
 
   // Assert:
   // ✓ No "Entity not found" warnings in logs
@@ -1358,6 +1453,7 @@ it('should handle concurrent character generation without race condition', async
 **Why Critical**: This test directly validates the fix. If it fails, the concurrent processing bug has regressed.
 
 **Pass Criteria**:
+
 - No warnings containing "Entity not found"
 - No errors during clothing attachment
 - All 4 characters have all clothing items
@@ -1369,12 +1465,13 @@ it('should handle concurrent character generation without race condition', async
 **Test Name**: `'links disconnected actor anatomies and rebuilds caches when structure data is missing'` (lines 176-269)
 
 **What It Tests**:
+
 ```javascript
 it('links disconnected actor anatomies and rebuilds caches when structure data is missing', async () => {
   // Arrange: Actor with anatomy:body but no structure.rootPartId
   const actor = createActorWithAnatomyBody({
     body: { root: 'torso-uuid-123' },
-    structure: undefined  // Missing structure field
+    structure: undefined, // Missing structure field
   });
 
   // Act: Build cache
@@ -1390,6 +1487,7 @@ it('links disconnected actor anatomies and rebuilds caches when structure data i
 **Why Critical**: Validates fallback logic when anatomy data is incomplete.
 
 **Pass Criteria**:
+
 - Actor successfully connected to anatomy root
 - All parts reachable from root
 - Appropriate logging for missing data
@@ -1400,6 +1498,7 @@ it('links disconnected actor anatomies and rebuilds caches when structure data i
 **Test Name**: `'should maintain unique part ownership per actor'` (NEW - must be added)
 
 **What It Tests**:
+
 ```javascript
 it('should maintain unique part ownership per actor', async () => {
   // Arrange: 4 characters
@@ -1407,19 +1506,19 @@ it('should maintain unique part ownership per actor', async () => {
     createCharacter('registrar'),
     createCharacter('melissa'),
     createCharacter('bertram'),
-    createCharacter('vespera')
+    createCharacter('vespera'),
   ]);
 
   // Act: Get parts for each
-  const partSets = characters.map(char =>
+  const partSets = characters.map((char) =>
     bodyGraphService.getAllParts(char.anatomy, char.id)
   );
 
   // Assert: No overlapping UUIDs
   for (let i = 0; i < partSets.length; i++) {
     for (let j = i + 1; j < partSets.length; j++) {
-      const overlap = partSets[i].filter(id => partSets[j].includes(id));
-      expect(overlap).toEqual([]);  // Disjoint sets
+      const overlap = partSets[i].filter((id) => partSets[j].includes(id));
+      expect(overlap).toEqual([]); // Disjoint sets
     }
   }
 });
@@ -1428,6 +1527,7 @@ it('should maintain unique part ownership per actor', async () => {
 **Why Critical**: Validates Invariant 1 (unique part ownership).
 
 **Pass Criteria**:
+
 - Zero part UUID overlap between any two characters
 - Each character has expected part count (17 for humanoid)
 
@@ -1436,6 +1536,7 @@ it('should maintain unique part ownership per actor', async () => {
 **File**: `/tests/integration/anatomy/anatomyCacheManager.concurrentIsolation.test.js` (NEW - must be created)
 
 **What It Tests**:
+
 ```javascript
 it('should isolate cache operations per actor during concurrent processing', async () => {
   // Arrange: 2 characters
@@ -1457,14 +1558,15 @@ it('should isolate cache operations per actor during concurrent processing', asy
   const partsB = bodyGraphService.getAllParts(actorB.anatomy, actorB.id);
 
   // Assert: B's parts unchanged by A's invalidation
-  expect(partsB).toHaveLength(17);  // Still complete
-  expect(partsB.every(id => id.includes('cat_girl'))).toBe(true);
+  expect(partsB).toHaveLength(17); // Still complete
+  expect(partsB.every((id) => id.includes('cat_girl'))).toBe(true);
 });
 ```
 
 **Why Critical**: Validates Invariant 5 (per-actor cache isolation).
 
 **Pass Criteria**:
+
 - Actor B's cache unaffected by Actor A's invalidation
 - No corruption or missing parts in B after A's rebuild
 
@@ -1477,6 +1579,7 @@ it('should isolate cache operations per actor during concurrent processing', asy
 **Purpose**: Validate scalability beyond the 4-character baseline
 
 **Test**:
+
 ```javascript
 describe('Scalability - 10+ Concurrent Characters', () => {
   it('should handle 10 concurrent character generations without performance degradation', async () => {
@@ -1485,15 +1588,15 @@ describe('Scalability - 10+ Concurrent Characters', () => {
       ...createCharacters('human_male', 3),
       ...createCharacters('human_female', 3),
       ...createCharacters('cat_girl', 2),
-      ...createCharacters('tortoise_person', 2)
+      ...createCharacters('tortoise_person', 2),
     ];
 
     // Act: Generate all concurrently
     const startTime = performance.now();
 
-    await Promise.all(characters.map(char =>
-      anatomyWorkflow.generate(char.id, char.recipe)
-    ));
+    await Promise.all(
+      characters.map((char) => anatomyWorkflow.generate(char.id, char.recipe))
+    );
 
     const duration = performance.now() - startTime;
 
@@ -1505,14 +1608,14 @@ describe('Scalability - 10+ Concurrent Characters', () => {
 
     expect(duration).toBeLessThan(5000);
 
-    const allParts = characters.map(char =>
+    const allParts = characters.map((char) =>
       bodyGraphService.getAllParts(char.anatomy, char.id)
     );
 
     // Validate no overlap
     for (let i = 0; i < allParts.length; i++) {
       for (let j = i + 1; j < allParts.length; j++) {
-        const overlap = allParts[i].filter(id => allParts[j].includes(id));
+        const overlap = allParts[i].filter((id) => allParts[j].includes(id));
         expect(overlap).toEqual([]);
       }
     }
@@ -1521,6 +1624,7 @@ describe('Scalability - 10+ Concurrent Characters', () => {
 ```
 
 **Acceptance Criteria**:
+
 - Test passes with 10 concurrent characters
 - No warnings or errors
 - Execution time < 5 seconds
@@ -1533,6 +1637,7 @@ describe('Scalability - 10+ Concurrent Characters', () => {
 **Purpose**: Ensure graceful handling of old blueprint formats
 
 **Test**:
+
 ```javascript
 describe('Legacy Format Handling', () => {
   it('should handle legacy blueprints without body.root field', async () => {
@@ -1544,9 +1649,9 @@ describe('Legacy Format Handling', () => {
           // No root field (legacy)
         },
         structure: {
-          rootPartId: 'blueprint-reference'  // Old format
-        }
-      }
+          rootPartId: 'blueprint-reference', // Old format
+        },
+      },
     });
 
     // Act: Build cache
@@ -1564,8 +1669,11 @@ describe('Legacy Format Handling', () => {
       expect.stringContaining('has anatomy:body but no body.root field')
     );
 
-    const parts = bodyGraphService.getAllParts(legacyActor.anatomy, legacyActor.id);
-    expect(parts).toEqual([legacyActor.id]);  // Only actor, no parts
+    const parts = bodyGraphService.getAllParts(
+      legacyActor.anatomy,
+      legacyActor.id
+    );
+    expect(parts).toEqual([legacyActor.id]); // Only actor, no parts
   });
 
   it('should recommend migration for legacy format', async () => {
@@ -1576,6 +1684,7 @@ describe('Legacy Format Handling', () => {
 ```
 
 **Acceptance Criteria**:
+
 - Warning logged for missing `body.root`
 - No exceptions thrown
 - Clear guidance in logs about migration
@@ -1587,6 +1696,7 @@ describe('Legacy Format Handling', () => {
 **Purpose**: Prevent infinite loops from circular anatomy references
 
 **Test**:
+
 ```javascript
 describe('Circular Reference Protection', () => {
   it('should prevent infinite loop when body.root points to actor itself', async () => {
@@ -1594,9 +1704,9 @@ describe('Circular Reference Protection', () => {
     const circularActor = createActor('circular', {
       anatomy: {
         body: {
-          root: 'actor-id-itself'  // Points to self!
-        }
-      }
+          root: 'actor-id-itself', // Points to self!
+        },
+      },
     });
     circularActor.id = 'actor-id-itself';
 
@@ -1624,6 +1734,7 @@ describe('Circular Reference Protection', () => {
 ```
 
 **Acceptance Criteria**:
+
 - No infinite loops or stack overflows
 - Visited set protects against cycles
 - Appropriate warnings logged
@@ -1635,6 +1746,7 @@ describe('Circular Reference Protection', () => {
 **Purpose**: Validate safe concurrent invalidation and rebuilding
 
 **Test**:
+
 ```javascript
 describe('Concurrent Cache Invalidation', () => {
   it('should handle concurrent invalidation and rebuild safely', async () => {
@@ -1643,7 +1755,7 @@ describe('Concurrent Cache Invalidation', () => {
       createCharacter('actor1'),
       createCharacter('actor2'),
       createCharacter('actor3'),
-      createCharacter('actor4')
+      createCharacter('actor4'),
     ]);
 
     // Act: Concurrently invalidate and rebuild different actors
@@ -1663,7 +1775,7 @@ describe('Concurrent Cache Invalidation', () => {
       async () => {
         // Actor 3 reads while others rebuild
         bodyGraphService.getAllParts(actors[3].anatomy, actors[3].id);
-      }
+      },
     ]);
 
     // Assert:
@@ -1671,14 +1783,16 @@ describe('Concurrent Cache Invalidation', () => {
     // ✓ All actors have valid caches
     // ✓ No part sharing after rebuild
 
-    const allParts = actors.map(actor =>
+    const allParts = actors.map((actor) =>
       bodyGraphService.getAllParts(actor.anatomy, actor.id)
     );
 
     // Validate isolation
     for (let i = 0; i < allParts.length; i++) {
       for (let j = i + 1; j < allParts.length; j++) {
-        expect(allParts[i].filter(id => allParts[j].includes(id))).toEqual([]);
+        expect(allParts[i].filter((id) => allParts[j].includes(id))).toEqual(
+          []
+        );
       }
     }
   });
@@ -1686,6 +1800,7 @@ describe('Concurrent Cache Invalidation', () => {
 ```
 
 **Acceptance Criteria**:
+
 - No race conditions during concurrent operations
 - Cache consistency maintained
 - No shared parts after rebuild
@@ -1697,6 +1812,7 @@ describe('Concurrent Cache Invalidation', () => {
 **What**: Primary symptom of the original bug
 
 **Implementation**:
+
 ```javascript
 it('should not generate "Entity not found" warnings during concurrent generation', async () => {
   // Arrange: Mock logger to capture warnings
@@ -1708,12 +1824,12 @@ it('should not generate "Entity not found" warnings during concurrent generation
     anatomyWorkflow.generate('registrar'),
     anatomyWorkflow.generate('melissa'),
     anatomyWorkflow.generate('bertram'),
-    anatomyWorkflow.generate('vespera')
+    anatomyWorkflow.generate('vespera'),
   ]);
 
   // Assert: No "Entity not found" warnings
-  const entityNotFoundWarnings = warnings.filter(w =>
-    w.includes('Entity not found') || w.includes('entity not found')
+  const entityNotFoundWarnings = warnings.filter(
+    (w) => w.includes('Entity not found') || w.includes('entity not found')
   );
 
   expect(entityNotFoundWarnings).toEqual([]);
@@ -1727,6 +1843,7 @@ it('should not generate "Entity not found" warnings during concurrent generation
 **What**: Validates no shared part instances
 
 **Implementation**:
+
 ```javascript
 it('should assign unique part UUIDs to each character', async () => {
   // Act: Generate characters
@@ -1734,19 +1851,25 @@ it('should assign unique part UUIDs to each character', async () => {
   const registrar = await createCharacter('registrar_copperplate');
 
   // Get parts
-  const melissaParts = bodyGraphService.getAllParts(melissa.anatomy, melissa.id);
-  const registrarParts = bodyGraphService.getAllParts(registrar.anatomy, registrar.id);
+  const melissaParts = bodyGraphService.getAllParts(
+    melissa.anatomy,
+    melissa.id
+  );
+  const registrarParts = bodyGraphService.getAllParts(
+    registrar.anatomy,
+    registrar.id
+  );
 
   // Assert: Extract UUIDs (entities matching UUID pattern)
-  const melissaUUIDs = melissaParts.filter(id =>
+  const melissaUUIDs = melissaParts.filter((id) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
   );
-  const registrarUUIDs = registrarParts.filter(id =>
+  const registrarUUIDs = registrarParts.filter((id) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
   );
 
   // No overlap
-  expect(melissaUUIDs.filter(id => registrarUUIDs.includes(id))).toEqual([]);
+  expect(melissaUUIDs.filter((id) => registrarUUIDs.includes(id))).toEqual([]);
 });
 ```
 
@@ -1757,11 +1880,18 @@ it('should assign unique part UUIDs to each character', async () => {
 **What**: Validates clothing system works with correct anatomy
 
 **Implementation**:
+
 ```javascript
 it('should attach all clothing items to correct character sockets', async () => {
   // Arrange: Create melissa with human_female anatomy and clothing
   const melissa = await createCharacterWithClothing('threadscar_melissa', [
-    'briefs', 'bra', 'belt', 'jacket', 'pants', 'boots', 'scarf'
+    'briefs',
+    'bra',
+    'belt',
+    'jacket',
+    'pants',
+    'boots',
+    'scarf',
   ]);
 
   // Act: Get attached clothing
@@ -1771,10 +1901,10 @@ it('should attach all clothing items to correct character sockets', async () => 
   expect(clothingItems).toHaveLength(7);
 
   // Verify sockets are human sockets (not tortoise)
-  const sockets = clothingItems.map(item => item.attachedTo.socket);
-  expect(sockets).toContain('left_chest');   // bra socket
-  expect(sockets).toContain('right_chest');  // bra socket
-  expect(sockets).toContain('vagina');       // briefs socket
+  const sockets = clothingItems.map((item) => item.attachedTo.socket);
+  expect(sockets).toContain('left_chest'); // bra socket
+  expect(sockets).toContain('right_chest'); // bra socket
+  expect(sockets).toContain('vagina'); // briefs socket
 
   // Should NOT contain tortoise sockets
   expect(sockets).not.toContain('carapace_mount');
@@ -1789,6 +1919,7 @@ it('should attach all clothing items to correct character sockets', async () => 
 **What**: Full integration test with actual game mods
 
 **Implementation**:
+
 ```javascript
 it('should correctly load all 4 characters from fantasy mod scenario', async () => {
   // Arrange: Load fantasy mod world
@@ -1799,32 +1930,43 @@ it('should correctly load all 4 characters from fantasy mod scenario', async () 
     'fantasy:registrar_copperplate_instance',
     'fantasy:threadscar_melissa_instance',
     'fantasy:bertram_the_muddy_instance',
-    'fantasy:vespera_nightwhisper_instance'
+    'fantasy:vespera_nightwhisper_instance',
   ];
 
-  await Promise.all(characters.map(id =>
-    anatomyWorkflow.generate(id)
-  ));
+  await Promise.all(characters.map((id) => anatomyWorkflow.generate(id)));
 
   // Assert: Each character has correct anatomy
   const registrar = entityManager.getEntityInstance(characters[0]);
   const melissa = entityManager.getEntityInstance(characters[1]);
 
-  const registrarParts = bodyGraphService.getAllParts(registrar.anatomy, registrar.id);
-  const melissaParts = bodyGraphService.getAllParts(melissa.anatomy, melissa.id);
+  const registrarParts = bodyGraphService.getAllParts(
+    registrar.anatomy,
+    registrar.id
+  );
+  const melissaParts = bodyGraphService.getAllParts(
+    melissa.anatomy,
+    melissa.id
+  );
 
   // Registrar has tortoise anatomy
-  expect(registrarParts.some(id =>
-    entityManager.getComponentData(id, 'anatomy:part')?.subType === 'carapace'
-  )).toBe(true);
+  expect(
+    registrarParts.some(
+      (id) =>
+        entityManager.getComponentData(id, 'anatomy:part')?.subType ===
+        'carapace'
+    )
+  ).toBe(true);
 
   // Melissa has human anatomy
-  expect(melissaParts.some(id =>
-    entityManager.getComponentData(id, 'anatomy:part')?.subType === 'breast'
-  )).toBe(true);
+  expect(
+    melissaParts.some(
+      (id) =>
+        entityManager.getComponentData(id, 'anatomy:part')?.subType === 'breast'
+    )
+  ).toBe(true);
 
   // No overlap
-  expect(registrarParts.filter(id => melissaParts.includes(id))).toEqual([]);
+  expect(registrarParts.filter((id) => melissaParts.includes(id))).toEqual([]);
 });
 ```
 
@@ -1837,6 +1979,7 @@ it('should correctly load all 4 characters from fantasy mod scenario', async () 
 **Property**: For any two distinct actors, their parts are disjoint sets.
 
 **Implementation**:
+
 ```javascript
 import fc from 'fast-check';
 
@@ -1845,8 +1988,18 @@ describe('Property Tests - Anatomy Isolation', () => {
     await fc.assert(
       fc.asyncProperty(
         fc.tuple(
-          fc.constantFrom('human_male', 'human_female', 'cat_girl', 'tortoise_person'),
-          fc.constantFrom('human_male', 'human_female', 'cat_girl', 'tortoise_person')
+          fc.constantFrom(
+            'human_male',
+            'human_female',
+            'cat_girl',
+            'tortoise_person'
+          ),
+          fc.constantFrom(
+            'human_male',
+            'human_female',
+            'cat_girl',
+            'tortoise_person'
+          )
         ),
         async ([recipeA, recipeB]) => {
           // Arrange: Create two actors
@@ -1854,15 +2007,21 @@ describe('Property Tests - Anatomy Isolation', () => {
           const actorB = await createCharacter('actorB', recipeB);
 
           // Act: Get parts
-          const partsA = bodyGraphService.getAllParts(actorA.anatomy, actorA.id);
-          const partsB = bodyGraphService.getAllParts(actorB.anatomy, actorB.id);
+          const partsA = bodyGraphService.getAllParts(
+            actorA.anatomy,
+            actorA.id
+          );
+          const partsB = bodyGraphService.getAllParts(
+            actorB.anatomy,
+            actorB.id
+          );
 
           // Assert: Disjoint sets
-          const overlap = partsA.filter(id => partsB.includes(id));
+          const overlap = partsA.filter((id) => partsB.includes(id));
           return overlap.length === 0;
         }
       ),
-      { numRuns: 100 }  // Run 100 random combinations
+      { numRuns: 100 } // Run 100 random combinations
     );
   });
 });
@@ -1875,6 +2034,7 @@ describe('Property Tests - Anatomy Isolation', () => {
 **Property**: Concurrent cache builds are commutative (order doesn't matter).
 
 **Implementation**:
+
 ```javascript
 it('should produce identical caches regardless of build order', async () => {
   await fc.assert(
@@ -1883,7 +2043,7 @@ it('should produce identical caches regardless of build order', async () => {
       async (actorOrder) => {
         // Arrange: Create actors
         const actors = await Promise.all(
-          actorOrder.map(id => createCharacter(id))
+          actorOrder.map((id) => createCharacter(id))
         );
 
         // Act: Build caches in given order
@@ -1892,9 +2052,9 @@ it('should produce identical caches regardless of build order', async () => {
         }
 
         // Get final state
-        const finalState = actors.map(actor => ({
+        const finalState = actors.map((actor) => ({
           id: actor.id,
-          parts: bodyGraphService.getAllParts(actor.anatomy, actor.id)
+          parts: bodyGraphService.getAllParts(actor.anatomy, actor.id),
         }));
 
         // Clear cache
@@ -1906,9 +2066,9 @@ it('should produce identical caches regardless of build order', async () => {
         }
 
         // Get reversed state
-        const reversedState = actors.reverse().map(actor => ({
+        const reversedState = actors.reverse().map((actor) => ({
           id: actor.id,
-          parts: bodyGraphService.getAllParts(actor.anatomy, actor.id)
+          parts: bodyGraphService.getAllParts(actor.anatomy, actor.id),
         }));
 
         // Assert: Identical results
@@ -1927,11 +2087,17 @@ it('should produce identical caches regardless of build order', async () => {
 **Property**: For any actor A, getAllParts(A) returns only parts owned by A.
 
 **Implementation**:
+
 ```javascript
 it('should return only parts belonging to the specified actor', async () => {
   await fc.assert(
     fc.asyncProperty(
-      fc.constantFrom('human_male', 'human_female', 'cat_girl', 'tortoise_person'),
+      fc.constantFrom(
+        'human_male',
+        'human_female',
+        'cat_girl',
+        'tortoise_person'
+      ),
       async (recipe) => {
         // Arrange: Create actor
         const actor = await createCharacter('testActor', recipe);
@@ -1944,22 +2110,22 @@ it('should return only parts belonging to the specified actor', async () => {
 
         // Traverse up from each part, verify reaches same root
         for (const partId of parts) {
-          if (partId === actor.id) continue;  // Skip actor itself
+          if (partId === actor.id) continue; // Skip actor itself
 
           let current = partId;
           const visited = new Set();
 
           while (current && current !== rootId) {
-            if (visited.has(current)) return false;  // Cycle detected
+            if (visited.has(current)) return false; // Cycle detected
             visited.add(current);
 
             const node = cacheManager.get(current);
-            if (!node) return false;  // Missing cache entry
+            if (!node) return false; // Missing cache entry
 
             current = node.parentId;
           }
 
-          if (current !== rootId && current !== null) return false;  // Wrong root
+          if (current !== rootId && current !== null) return false; // Wrong root
         }
 
         return true;
@@ -2019,6 +2185,7 @@ it('should return only parts belonging to the specified actor', async () => {
 ## Appendix: Related Files
 
 ### Production Code
+
 - `/src/anatomy/anatomyCacheManager.js` - Fixed cache manager
 - `/src/anatomy/bodyGraphService.js` - Graph service using cache manager
 - `/src/anatomy/workflows/anatomyGenerationWorkflow.js` - Workflow orchestration
@@ -2028,6 +2195,7 @@ it('should return only parts belonging to the specified actor', async () => {
 - `/src/clothing/strategies/directSocketStrategy.js` - Socket resolution
 
 ### Test Files
+
 - `/tests/integration/anatomy/multiCharacterClothingGeneration.test.js` - Primary regression test
 - `/tests/integration/anatomy/anatomyCacheManager.disconnectedFallback.integration.test.js` - Fallback logic test
 - `/tests/integration/anatomy/anatomyCacheManager.realModules.integration.test.js` - Real module integration
@@ -2037,16 +2205,19 @@ it('should return only parts belonging to the specified actor', async () => {
 - `/tests/unit/anatomy/bodyGraphService.test.js` - Unit tests
 
 ### Schema Files
+
 - `/data/schemas/components/anatomy_body.component.json` - anatomy:body schema
 - `/data/schemas/components/anatomy_joint.component.json` - anatomy:joint schema
 - `/data/schemas/components/anatomy_part.component.json` - anatomy:part schema
 
 ### Data Files
+
 - `/data/mods/anatomy/blueprints/*.blueprint.json` - Blueprint definitions
 - `/data/mods/anatomy/recipes/*.recipe.json` - Recipe definitions
 - `/data/mods/fantasy/entities/definitions/*.character.json` - Character entities
 
 ### Documentation
+
 - `/CLAUDE.md` - Project context file
 - `/docs/anatomy/anatomy-overview.md` - Anatomy system overview
 - `/docs/architecture/entity-component-system.md` - ECS architecture
@@ -2061,9 +2232,9 @@ it('should return only parts belonging to the specified actor', async () => {
 
 ## Version History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-11-23 | Claude Code | Initial specification based on concurrent processing bug fix |
+| Version | Date       | Author      | Changes                                                      |
+| ------- | ---------- | ----------- | ------------------------------------------------------------ |
+| 1.0     | 2025-11-23 | Claude Code | Initial specification based on concurrent processing bug fix |
 
 ## Approval
 

@@ -5,9 +5,7 @@
   "description": "Roll backward through a tucked inversion to recover facing forward",
   "targets": "none",
   "required_components": {
-    "actor": [
-      "gymnastics:is_gymnast"
-    ]
+    "actor": ["gymnastics:is_gymnast"]
   },
   "forbidden_components": {
     "actor": [

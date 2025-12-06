@@ -56,7 +56,9 @@ function setEnv(key, value) {
  * @returns {string}
  */
 function createTempDir() {
-  const dir = mkdtempSync(path.join(os.tmpdir(), 'api-key-all-sources-failure-'));
+  const dir = mkdtempSync(
+    path.join(os.tmpdir(), 'api-key-all-sources-failure-')
+  );
   createdTempDirs.push(dir);
   return dir;
 }
@@ -116,7 +118,10 @@ describe('ApiKeyService integration - all sources failure', () => {
     const projectRoot = createTempDir();
     const missingFileName = 'missing-cloud.key';
 
-    const { service, logger } = buildService({ projectRoot, cacheEnabled: false });
+    const { service, logger } = buildService({
+      projectRoot,
+      cacheEnabled: false,
+    });
 
     const config = {
       apiType: 'OpenAI',

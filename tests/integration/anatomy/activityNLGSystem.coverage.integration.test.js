@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import ActivityCacheManager from '../../../src/anatomy/cache/activityCacheManager.js';
 import ActivityNLGSystem from '../../../src/anatomy/services/activityNLGSystem.js';
@@ -45,7 +52,9 @@ describe('ActivityNLGSystem integration coverage', () => {
       name: rawName,
       gender: 'female',
     });
-    await entityManager.addComponent(actor.id, ACTOR_COMPONENT_ID, { role: 'agent' });
+    await entityManager.addComponent(actor.id, ACTOR_COMPONENT_ID, {
+      role: 'agent',
+    });
 
     const sanitized = nlgSystem.sanitizeEntityName(rawName);
     expect(sanitized).toBe('Dr. Jane Doe');
@@ -77,14 +86,18 @@ describe('ActivityNLGSystem integration coverage', () => {
       name: 'Hero Prime',
       gender: 'male',
     });
-    await entityManager.addComponent(hero.id, ACTOR_COMPONENT_ID, { role: 'hero' });
+    await entityManager.addComponent(hero.id, ACTOR_COMPONENT_ID, {
+      role: 'hero',
+    });
 
     const ally = await createActor(entityManager, {
       id: 'ally-1',
       name: 'Lady Zero',
       gender: 'female',
     });
-    await entityManager.addComponent(ally.id, ACTOR_COMPONENT_ID, { role: 'companion' });
+    await entityManager.addComponent(ally.id, ACTOR_COMPONENT_ID, {
+      role: 'companion',
+    });
 
     const heroPronouns = nlgSystem.getPronounSet(
       nlgSystem.detectEntityGender(hero.id)
@@ -181,9 +194,7 @@ describe('ActivityNLGSystem integration coverage', () => {
       }
     );
 
-    expect(decomposed.fullPhrase).toBe(
-      'Alex Voyager is centering themselves'
-    );
+    expect(decomposed.fullPhrase).toBe('Alex Voyager is centering themselves');
     expect(decomposed.verbPhrase).toBe('is centering themselves');
 
     const sanitizedVerb = nlgSystem.sanitizeVerbPhrase(decomposed.verbPhrase);
@@ -220,9 +231,9 @@ describe('ActivityNLGSystem integration coverage', () => {
     expect(
       nlgSystem.injectSoftener('{actor} embraces {target}', 'tenderly')
     ).toBe('{actor} embraces tenderly {target}');
-    expect(
-      nlgSystem.injectSoftener('{actor} waits alone', 'tenderly')
-    ).toBe('{actor} waits alone');
+    expect(nlgSystem.injectSoftener('{actor} waits alone', 'tenderly')).toBe(
+      '{actor} waits alone'
+    );
 
     const truncated = nlgSystem.truncateDescription(
       'Sentence one. Sentence two is quite long indeed.',
@@ -362,7 +373,10 @@ describe('ActivityNLGSystem integration coverage', () => {
 
     const whileWithSubject = nlgSystem.buildRelatedActivityFragment(
       'while',
-      { fullPhrase: 'Captain Flux patrols the rim', verbPhrase: 'patrols the rim' },
+      {
+        fullPhrase: 'Captain Flux patrols the rim',
+        verbPhrase: 'patrols the rim',
+      },
       {
         actorName: 'Captain Flux',
         actorReference: '',
@@ -398,7 +412,10 @@ describe('ActivityNLGSystem integration coverage', () => {
 
     const defaultConjunction = nlgSystem.buildRelatedActivityFragment(
       undefined,
-      { fullPhrase: 'Captain Flux scans the horizon', verbPhrase: 'scanning the horizon' },
+      {
+        fullPhrase: 'Captain Flux scans the horizon',
+        verbPhrase: 'scanning the horizon',
+      },
       commonContext
     );
     expect(defaultConjunction).toBe('and scanning the horizon');
@@ -411,14 +428,11 @@ describe('ActivityNLGSystem integration coverage', () => {
     expect(nlgSystem.injectSoftener('{actor} greets {target}', '   ')).toBe(
       '{actor} greets {target}'
     );
+    expect(nlgSystem.injectSoftener('{actor} greets {target}', 'warmly')).toBe(
+      '{actor} greets warmly {target}'
+    );
     expect(
-      nlgSystem.injectSoftener('{actor} greets {target}', 'warmly')
-    ).toBe('{actor} greets warmly {target}');
-    expect(
-      nlgSystem.injectSoftener(
-        '{actor} greets warmly {target}',
-        'warmly'
-      )
+      nlgSystem.injectSoftener('{actor} greets warmly {target}', 'warmly')
     ).toBe('{actor} greets warmly {target}');
     expect(nlgSystem.injectSoftener(null, 'warmly')).toBeNull();
 
@@ -464,15 +478,16 @@ describe('ActivityNLGSystem integration coverage', () => {
   });
 
   it('handles error flows for name/gender resolution and exercises remaining hooks', async () => {
-    const originalGetEntityInstance = entityManager.getEntityInstance.bind(
-      entityManager
-    );
+    const originalGetEntityInstance =
+      entityManager.getEntityInstance.bind(entityManager);
     const getEntityInstanceSpy = jest
       .spyOn(entityManager, 'getEntityInstance')
       .mockImplementation((...args) => originalGetEntityInstance(...args));
 
     expect(nlgSystem.sanitizeEntityName(123)).toBe('Unknown entity');
-    expect(nlgSystem.sanitizeEntityName(' \u200B\u200C ')).toBe('Unknown entity');
+    expect(nlgSystem.sanitizeEntityName(' \u200B\u200C ')).toBe(
+      'Unknown entity'
+    );
     expect(nlgSystem.resolveEntityName('')).toBe('Unknown entity');
 
     const glitchActor = await createActor(entityManager, {
@@ -494,7 +509,9 @@ describe('ActivityNLGSystem integration coverage', () => {
     getEntityInstanceSpy.mockImplementationOnce(() => {
       throw new Error('lookup failure');
     });
-    expect(nlgSystem.resolveEntityName('problematic-id')).toBe('problematic-id');
+    expect(nlgSystem.resolveEntityName('problematic-id')).toBe(
+      'problematic-id'
+    );
 
     expect(nlgSystem.shouldUsePronounForTarget()).toBe(false);
     expect(nlgSystem.shouldUsePronounForTarget('missing-target')).toBe(false);
@@ -581,9 +598,7 @@ describe('ActivityNLGSystem integration coverage', () => {
       )
     ).toBe('and Pronoun Target studies charts');
 
-    expect(hooks.mergeAdverb('swiftly', 'carefully')).toBe(
-      'swiftly carefully'
-    );
+    expect(hooks.mergeAdverb('swiftly', 'carefully')).toBe('swiftly carefully');
     expect(
       hooks.injectSoftener('{actor} reviews {target}', 'thoughtfully')
     ).toBe('{actor} reviews thoughtfully {target}');

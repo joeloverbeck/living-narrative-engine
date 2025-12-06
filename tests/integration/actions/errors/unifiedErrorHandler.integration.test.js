@@ -346,7 +346,9 @@ describe('UnifiedErrorHandler integration', () => {
     it('createSimpleErrorResponse returns consistent payload', () => {
       const error = new Error('fatal');
 
-      expect(handler.createSimpleErrorResponse(error, 'User friendly message')).toEqual({
+      expect(
+        handler.createSimpleErrorResponse(error, 'User friendly message')
+      ).toEqual({
         success: false,
         error: 'User friendly message',
         details: 'fatal',

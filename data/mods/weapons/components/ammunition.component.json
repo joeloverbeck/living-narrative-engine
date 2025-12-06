@@ -24,12 +24,7 @@
         "description": "Whether a round is currently chambered and ready to fire"
       }
     },
-    "required": [
-      "ammoType",
-      "currentAmmo",
-      "maxCapacity",
-      "chambered"
-    ],
+    "required": ["ammoType", "currentAmmo", "maxCapacity", "chambered"],
     "additionalProperties": false
   }
 }

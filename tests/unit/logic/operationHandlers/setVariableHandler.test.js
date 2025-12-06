@@ -424,9 +424,10 @@ describe('SetVariableHandler', () => {
         'SET_VARIABLE: Value for "storedCondition" contains unrecognized JsonLogic operator "condition_ref". Treating value as a literal.'
       );
       expect(
-        mockLoggerInstance.error.mock.calls.some(([message]) =>
-          typeof message === 'string' &&
-          message.startsWith('SET_VARIABLE: Error evaluating JsonLogic value')
+        mockLoggerInstance.error.mock.calls.some(
+          ([message]) =>
+            typeof message === 'string' &&
+            message.startsWith('SET_VARIABLE: Error evaluating JsonLogic value')
         )
       ).toBe(false);
     });
@@ -519,9 +520,11 @@ describe('SetVariableHandler', () => {
         value: invalidJsonLogicRule,
       };
       const execCtx = buildCtx(mockLoggerInstance); // Pass logger
-      const mockApply = jest.spyOn(jsonLogic, 'apply').mockImplementation(() => {
-        throw new Error('jsonLogic boom');
-      });
+      const mockApply = jest
+        .spyOn(jsonLogic, 'apply')
+        .mockImplementation(() => {
+          throw new Error('jsonLogic boom');
+        });
 
       handler.execute(params, execCtx);
 

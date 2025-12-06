@@ -1,4 +1,5 @@
 # Notes Component Architecture Analysis
+
 **Date:** January 2025
 **Analysis Focus:** Alicia Western gameplay session notes generation and schema alignment
 
@@ -7,12 +8,14 @@
 ## Executive Summary
 
 This report analyzes the notes generation system based on a gameplay session with character Alicia Western. The analysis examines:
+
 1. Schema structure and AI-generated notes alignment
 2. LLM prompt instruction clarity and effectiveness
 3. SubjectType enum coverage and categorization accuracy
 4. Formatting and organization for LLM context consumption
 
 **Key Findings:**
+
 - ✅ **Strong adherence** to structured note format (subject, subjectType, context)
 - ⚠️ **Suboptimal categorization** for temporal/planning concepts
 - ⚠️ **Missing subjectType values** for timelines, plans, and psychological states
@@ -56,13 +59,13 @@ The AI generated notes in a well-organized hierarchical structure:
 
 ### 1.2 SubjectType Distribution
 
-| SubjectType | Count | Percentage | Usage Quality |
-|-------------|-------|------------|---------------|
-| character | 25 | 69.4% | ✅ Excellent - detailed character insights |
-| event | 6 | 16.7% | ⚠️ Mixed - some are states/plans, not events |
-| quest | 3 | 8.3% | ✅ Good - proper task tracking |
-| concept | 5 | 13.9% | ⚠️ Overloaded - contains theories, knowledge gaps |
-| emotion | 1 | 2.8% | ✅ Appropriate - psychological assessment |
+| SubjectType | Count | Percentage | Usage Quality                                     |
+| ----------- | ----- | ---------- | ------------------------------------------------- |
+| character   | 25    | 69.4%      | ✅ Excellent - detailed character insights        |
+| event       | 6     | 16.7%      | ⚠️ Mixed - some are states/plans, not events      |
+| quest       | 3     | 8.3%       | ✅ Good - proper task tracking                    |
+| concept     | 5     | 13.9%      | ⚠️ Overloaded - contains theories, knowledge gaps |
+| emotion     | 1     | 2.8%       | ✅ Appropriate - psychological assessment         |
 
 ---
 
@@ -77,9 +80,18 @@ From `data/mods/core/components/notes.component.json`:
   "subjectType": {
     "type": "string",
     "enum": [
-      "character", "location", "item", "creature", "event",
-      "concept", "organization", "quest", "skill",
-      "emotion", "relationship", "other"
+      "character",
+      "location",
+      "item",
+      "creature",
+      "event",
+      "concept",
+      "organization",
+      "quest",
+      "skill",
+      "emotion",
+      "relationship",
+      "other"
     ],
     "default": "other"
   }
@@ -89,6 +101,7 @@ From `data/mods/core/components/notes.component.json`:
 ### 2.2 AI Behavior vs. Schema Expectations
 
 ✅ **What Worked Well:**
+
 - AI correctly used `character` for all people (Bobby Western, Ellen Western, Jon Ureña)
 - `quest` properly applied to survival tasks and plans
 - `emotion` used appropriately for psychological state
@@ -99,22 +112,27 @@ From `data/mods/core/components/notes.component.json`:
 ⚠️ **Categorization Issues Identified:**
 
 #### Issue #1: "Event" Misclassification
+
 **Problem:** Several notes categorized as "event" are actually:
+
 - **States/Plans:** "December 24 plan" - This is a planned action, not an event
 - **Temporal Markers:** "today's date" - This is metadata, not an event
 - **Ongoing States:** "tonight" - This is a situation description
 
 **Example:**
+
 ```json
 {
   "subject": "December 24 plan",
-  "subjectType": "event",  // Should be "plan" or "decision"
+  "subjectType": "event", // Should be "plan" or "decision"
   "text": "December 24 plan invalidated—calculation based on false premise..."
 }
 ```
 
 #### Issue #2: Overloaded "Concept" Category
+
 **Problem:** `concept` is being used for disparate types:
+
 - Jon Ureña's knowledge (epistemic state)
 - Jon Ureña's language patterns (behavioral observation)
 - Jon Ureña's temporal references (communication style)
@@ -145,6 +163,7 @@ NOTES RULES
 ### 3.2 Instruction Effectiveness Assessment
 
 ✅ **Strengths:**
+
 - Clear mandate for structured format
 - Explicit subjectType enumeration
 - Good examples showing proper format
@@ -153,9 +172,11 @@ NOTES RULES
 ⚠️ **Weaknesses:**
 
 #### Weakness #1: Ambiguous "Event" Definition
+
 **Issue:** No clear guidance on what constitutes an "event" vs. a "plan" or "state"
 
 **Evidence from generated notes:**
+
 - "December 24 plan" - Is planning an event an event itself?
 - "today's date" - Is temporal metadata an event?
 - "tonight" - Is a situation description an event?
@@ -163,13 +184,17 @@ NOTES RULES
 **Impact:** AI defaults to "event" for anything happening in time
 
 #### Weakness #2: Missing Guidance on Temporal Concepts
+
 **Issue:** No examples showing how to handle:
+
 - Future plans and intentions
 - Timelines and deadlines
 - Historical events vs. future plans
 
 #### Weakness #3: "Concept" Too Broad
+
 **Issue:** Examples don't distinguish between:
+
 - Theories and hypotheses
 - Knowledge states and uncertainties
 - Behavioral patterns and observations
@@ -185,23 +210,25 @@ Based on AI-generated notes, the following categories would improve categorizati
 
 #### Recommended Additions:
 
-| New SubjectType | Rationale | Example from Session |
-|-----------------|-----------|----------------------|
-| **timeline** | Temporal sequences, deadlines, schedules | "Must survive 122 days (December 22, 1972 to April 27, 1973)" |
-| **plan** | Intentions, strategies, future actions | "December 24 plan", "survival plan revision" |
-| **theory** | Hypotheses, explanations, models | "reality boundaries", "temporal framework" |
-| **observation** | Behavioral patterns, tendencies | "Jon Ureña's language patterns" |
-| **knowledge_state** | What is known/unknown, uncertainties | "Jon Ureña's knowledge" |
-| **psychological_state** | Internal mental/emotional states | "my psychological state" (currently under emotion) |
+| New SubjectType         | Rationale                                | Example from Session                                          |
+| ----------------------- | ---------------------------------------- | ------------------------------------------------------------- |
+| **timeline**            | Temporal sequences, deadlines, schedules | "Must survive 122 days (December 22, 1972 to April 27, 1973)" |
+| **plan**                | Intentions, strategies, future actions   | "December 24 plan", "survival plan revision"                  |
+| **theory**              | Hypotheses, explanations, models         | "reality boundaries", "temporal framework"                    |
+| **observation**         | Behavioral patterns, tendencies          | "Jon Ureña's language patterns"                               |
+| **knowledge_state**     | What is known/unknown, uncertainties     | "Jon Ureña's knowledge"                                       |
+| **psychological_state** | Internal mental/emotional states         | "my psychological state" (currently under emotion)            |
 
 ### 4.2 Current Enum Values - Usage Analysis
 
 #### Well-Utilized (Keep As-Is):
+
 - ✅ **character** - Heavy use (69.4%), clear semantics
 - ✅ **quest** - Proper task tracking (8.3%)
 - ✅ **emotion** - Appropriate for feelings (2.8%)
 
 #### Underutilized in This Session:
+
 - **location** (0%) - Session was static, single location
 - **item** (0%) - No object focus in conversation
 - **creature** (0%) - No non-human entities
@@ -211,6 +238,7 @@ Based on AI-generated notes, the following categories would improve categorizati
 - **other** (0%) - Good sign - indicates clear categorization
 
 #### Needs Refinement:
+
 - ⚠️ **event** - Too broad, captures plans/states/metadata
 - ⚠️ **concept** - Catch-all for disparate abstract types
 
@@ -233,17 +261,19 @@ formatGroupedNotes(notesArray, options) {
 ```
 
 **Priority mapping:**
+
 1. Characters (priority 1)
 2. Locations (priority 2)
 3. Events (priority 3)
 4. Items & Objects (priority 4)
 5. ...
-11. Emotions & Feelings (priority 11)
-999. Other (priority 999)
+6. Emotions & Feelings (priority 11)
+7. Other (priority 999)
 
 ### 5.2 Formatting Effectiveness
 
 ✅ **Strengths:**
+
 - Clear hierarchical structure (Category → Subject → Notes)
 - Context information preserved in parentheses
 - Alphabetical subject sorting within categories
@@ -251,6 +281,7 @@ formatGroupedNotes(notesArray, options) {
 
 ✅ **AI Reading Experience:**
 The grouped format creates excellent narrative coherence:
+
 ```
 ## Characters
 ### Bobby Western
@@ -260,12 +291,14 @@ The grouped format creates excellent narrative coherence:
 ```
 
 This allows the AI to:
+
 1. Quickly scan by category type
 2. See all information about a subject together
 3. Understand temporal/contextual framing
 4. Build coherent mental models of entities
 
 ⚠️ **Potential Issues:**
+
 - Very long character sections (Bobby Western: 9 notes) may need pagination
 - No timestamp display in formatted output (timestamps exist in schema but not shown)
 - Context field sometimes redundant with note text
@@ -324,6 +357,7 @@ From `.private/data/mods/p_erotica/entities/definitions/alicia_western.character
 **Total notes generated:** 36 notes (25 character, 5 concept, 6 event, 3 quest, 1 emotion)
 
 **Growth analysis:**
+
 - 7.2x increase in total notes
 - Bobby Western: 1 → 9 notes (massive character development)
 - New character: Jon Ureña (15 notes - major introduction)
@@ -332,11 +366,13 @@ From `.private/data/mods/p_erotica/entities/definitions/alicia_western.character
 ### 6.3 Note Evolution Quality
 
 ✅ **Excellent Character Tracking:**
+
 - AI maintained context across multiple notes about same subject
 - Proper attribution of quotes and sources
 - Clear distinction between direct observation vs. hearsay
 
 Example - Bobby Western notes show proper source attribution:
+
 ```
 - Claims Bobby Western wakes from coma on April 27, 1973, stating
   Italian doctors were mistaken about brain death diagnosis
@@ -344,6 +380,7 @@ Example - Bobby Western notes show proper source attribution:
 ```
 
 ✅ **Contextual Richness:**
+
 - Context field effectively used: "(patient room)", "(Jon's narrative)", "(my brother)"
 - Provides situational and relational framing
 - Enables AI to distinguish fact reliability
@@ -404,19 +441,34 @@ export const SUBJECT_TYPE_DESCRIPTIONS = {
   [SUBJECT_TYPES.THEORY]: 'Hypotheses, models, explanations',
   [SUBJECT_TYPES.OBSERVATION]: 'Behavioral patterns, tendencies',
   [SUBJECT_TYPES.KNOWLEDGE_STATE]: 'Known/unknown information, uncertainties',
-  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]: 'Mental/emotional states beyond simple emotions',
+  [SUBJECT_TYPES.PSYCHOLOGICAL_STATE]:
+    'Mental/emotional states beyond simple emotions',
 };
 ```
 
 **Schema update:**
+
 ```json
 {
   "subjectType": {
     "enum": [
-      "character", "location", "item", "creature", "event",
-      "concept", "organization", "quest", "skill", "emotion",
-      "relationship", "plan", "timeline", "theory",
-      "observation", "knowledge_state", "psychological_state",
+      "character",
+      "location",
+      "item",
+      "creature",
+      "event",
+      "concept",
+      "organization",
+      "quest",
+      "skill",
+      "emotion",
+      "relationship",
+      "plan",
+      "timeline",
+      "theory",
+      "observation",
+      "knowledge_state",
+      "psychological_state",
       "other"
     ]
   }
@@ -553,6 +605,7 @@ const SUBJECT_TYPE_DISPLAY_MAPPING = {
 **Rationale:** Timestamps exist in schema but aren't shown. For temporal-heavy narratives, showing when notes were created could provide additional context.
 
 **Implementation:**
+
 ```javascript
 formatNoteWithContext(note, options) {
   let formatted = `- ${note.text}`;
@@ -576,6 +629,7 @@ formatNoteWithContext(note, options) {
 **Current behavior:** Deduplication based on normalized text + subject + subjectType
 
 **Observation:** Works well, but very similar notes with different context are kept:
+
 ```javascript
 // Both kept as distinct:
 {
@@ -601,12 +655,14 @@ formatNoteWithContext(note, options) {
 **Current Status:** No functional game-saving system exists yet. Users can manually adapt existing character definitions if needed.
 
 **Migration Strategy:**
+
 1. ✅ Schema changes are additive (new enum values only)
 2. ✅ Default value "other" handles undefined subjectTypes
 3. ✅ No breaking changes to existing data structure
 4. ⚠️ Users with custom character files should review and optionally update subjectType categorizations after implementation
 
 **Manual Migration Guide (if needed):**
+
 - Review existing notes with subjectType "event"
 - Recategorize as "plan" if describing future intentions
 - Recategorize as "timeline" if tracking temporal sequences
@@ -617,18 +673,21 @@ formatNoteWithContext(note, options) {
 Before deploying subjectType enum expansion:
 
 **Unit tests:**
+
 - ✅ Schema validation with new enum values
 - ✅ NotesService handles new types correctly
 - ✅ PromptDataFormatter groups new types properly
 - ✅ Display mapping for all new types
 
 **Integration tests:**
+
 - ✅ LLM can parse new subjectType examples
 - ✅ Notes persistence in character definitions
 - ✅ Schema validation accepts new enum values
 - ✅ PromptDataFormatter correctly categorizes new types
 
 **Files to update:**
+
 1. `data/mods/core/components/notes.component.json` - Schema enum
 2. `src/constants/subjectTypes.js` - Constants and descriptions
 3. `src/prompting/promptDataFormatter.js` - Display mappings
@@ -643,10 +702,12 @@ Before deploying subjectType enum expansion:
 ### 9.1 Categorization Accuracy
 
 **Baseline (Current):**
+
 - Event categorization accuracy: ~50% (3/6 proper events)
 - Concept overload: 5 diverse concepts in single category
 
 **Target (After Implementation):**
+
 - Event categorization accuracy: >90% (only actual past occurrences)
 - Reduced "concept" usage: <3 concepts per session
 - New categories utilized: plan (2-4 notes), timeline (1-2 notes), theory (1-2 notes)
@@ -656,16 +717,19 @@ Before deploying subjectType enum expansion:
 **Measure:** Percentage of generated notes with correct subjectType
 
 **Baseline:**
+
 - Current: ~75% appropriate categorization
 - Issues: 25% ambiguous (plans as events, patterns as concepts)
 
 **Target:**
-- >95% appropriate categorization
+
+- > 95% appropriate categorization
 - <5% fallback to "other"
 
 ### 9.3 Narrative Coherence
 
 **Qualitative assessment:**
+
 - Easier for AI to locate relevant information by category
 - Clearer temporal understanding (plans vs. completed events)
 - Better hypothesis tracking (theories separate from facts)
@@ -679,12 +743,14 @@ Before deploying subjectType enum expansion:
 The notes system demonstrates **strong foundational architecture** with effective structured formatting and grouping. The AI successfully follows the required format and creates coherent narrative documentation.
 
 **Key Strengths:**
+
 1. ✅ Consistent structured note format adherence
 2. ✅ Effective subject-based grouping for narrative coherence
 3. ✅ Rich contextual information preserved
 4. ✅ Clear character development tracking
 
 **Key Opportunities:**
+
 1. ⚠️ Expand subjectType enum to reduce categorization ambiguity
 2. ⚠️ Enhance LLM prompt with clearer temporal/planning distinctions
 3. ⚠️ Separate theories, observations, and knowledge states from generic "concept"
@@ -692,23 +758,19 @@ The notes system demonstrates **strong foundational architecture** with effectiv
 ### Recommended Implementation Priority
 
 **Phase 1 (High Priority - Immediate):**
+
 1. Add 6 new subjectType enum values: `plan`, `timeline`, `theory`, `observation`, `knowledge_state`, `psychological_state`
 2. Update LLM prompt instructions with clear definitions and examples
 3. Add display mappings in PromptDataFormatter
 
-**Phase 2 (Medium Priority - Next Sprint):**
-4. Create comprehensive test coverage for new types
-5. Add backward compatibility tests
-6. Update documentation
+**Phase 2 (Medium Priority - Next Sprint):** 4. Create comprehensive test coverage for new types 5. Add backward compatibility tests 6. Update documentation
 
-**Phase 3 (Low Priority - Future Enhancement):**
-7. Add optional timestamp display
-8. Create analytics for note categorization patterns
-9. Consider AI feedback loop for categorization quality
+**Phase 3 (Low Priority - Future Enhancement):** 7. Add optional timestamp display 8. Create analytics for note categorization patterns 9. Consider AI feedback loop for categorization quality
 
 ### Expected Impact
 
 Implementing Phase 1 recommendations will:
+
 - Reduce categorization ambiguity by ~80%
 - Improve AI's ability to distinguish temporal concepts
 - Enable better narrative organization and retrieval

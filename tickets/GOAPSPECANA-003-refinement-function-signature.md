@@ -9,6 +9,7 @@
 ## Problem Statement
 
 The specification implies refinement behavior (lines 71-106) but never defines the exact function signature. Missing specifications:
+
 - Input parameters not defined
 - Return type structure unclear
 - Error handling contract missing
@@ -32,28 +33,33 @@ Define complete refinement function signature with clear input/output contracts 
 ## Tasks
 
 ### 1. Define Base Function Signature
+
 - [ ] Determine synchronous vs asynchronous (likely async for world queries)
 - [ ] Define signature structure:
+
   ```typescript
   interface RefinementInput {
-    task: Task;              // Planning task to refine
-    boundParameters: Map<string, EntityId>;  // Resolved targets
-    worldState: WorldState;  // Current game state (snapshot)
-    actor: EntityId;         // Acting entity
-    context: RefinementContext;  // Additional context
+    task: Task; // Planning task to refine
+    boundParameters: Map<string, EntityId>; // Resolved targets
+    worldState: WorldState; // Current game state (snapshot)
+    actor: EntityId; // Acting entity
+    context: RefinementContext; // Additional context
   }
 
   interface RefinementOutput {
     success: boolean;
-    primitiveActions?: PrimitiveAction[];  // If success=true
-    failureReason?: string;  // If success=false
-    metadata?: RefinementMetadata;  // Debugging info
+    primitiveActions?: PrimitiveAction[]; // If success=true
+    failureReason?: string; // If success=false
+    metadata?: RefinementMetadata; // Debugging info
   }
 
-  type RefinementFunction = (input: RefinementInput) => Promise<RefinementOutput>;
+  type RefinementFunction = (
+    input: RefinementInput
+  ) => Promise<RefinementOutput>;
   ```
 
 ### 2. Specify Input Structure
+
 - [ ] Document `Task` structure (reference GOAPSPECANA-002)
 - [ ] Define `boundParameters` format (parameter name → resolved entity ID)
 - [ ] Specify `WorldState` interface:
@@ -66,11 +72,12 @@ Define complete refinement function signature with clear input/output contracts 
   - Execution history (for replanning)
 
 ### 3. Specify Output Structure
+
 - [ ] Define `PrimitiveAction` structure:
   ```typescript
   interface PrimitiveAction {
-    actionId: string;        // e.g., "items:pick_up_item"
-    targets: Map<string, EntityId>;  // Target bindings
+    actionId: string; // e.g., "items:pick_up_item"
+    targets: Map<string, EntityId>; // Target bindings
     metadata?: ActionMetadata;
   }
   ```
@@ -85,6 +92,7 @@ Define complete refinement function signature with clear input/output contracts 
   - Performance metrics
 
 ### 4. Error Handling Contract
+
 - [ ] Distinguish between:
   - Expected failures (return `success: false`)
   - Unexpected errors (throw exception)
@@ -95,6 +103,7 @@ Define complete refinement function signature with clear input/output contracts 
 - [ ] Document error propagation to planner
 
 ### 5. Integration Specification
+
 - [ ] Document how refinement is invoked:
   - By whom? (PlanExecutor? TaskManager?)
   - When? (before executing task? on-demand?)
@@ -107,9 +116,16 @@ Define complete refinement function signature with clear input/output contracts 
   - Max retry attempts
 
 ### 6. Create Example Implementations
+
 - [ ] Example 1: Simple refinement (item in inventory)
+
   ```javascript
-  async function refineConsumeNourishingItem({ task, boundParameters, worldState, actor }) {
+  async function refineConsumeNourishingItem({
+    task,
+    boundParameters,
+    worldState,
+    actor,
+  }) {
     const itemId = boundParameters.get('item');
     const actorInventory = worldState.getComponent(actor, 'core:inventory');
 
@@ -117,22 +133,36 @@ Define complete refinement function signature with clear input/output contracts 
       // Simple case: already have item
       return {
         success: true,
-        primitiveActions: [{
-          actionId: 'items:consume_item',
-          targets: new Map([['item', itemId]])
-        }]
+        primitiveActions: [
+          {
+            actionId: 'items:consume_item',
+            targets: new Map([['item', itemId]]),
+          },
+        ],
       };
     }
 
     // Complex case: need to acquire first
-    const itemLocation = worldState.getComponent(itemId, 'core:location').location;
+    const itemLocation = worldState.getComponent(
+      itemId,
+      'core:location'
+    ).location;
     return {
       success: true,
       primitiveActions: [
-        { actionId: 'world:move_to_location', targets: new Map([['location', itemLocation]]) },
-        { actionId: 'items:pick_up_item', targets: new Map([['item', itemId]]) },
-        { actionId: 'items:consume_item', targets: new Map([['item', itemId]]) }
-      ]
+        {
+          actionId: 'world:move_to_location',
+          targets: new Map([['location', itemLocation]]),
+        },
+        {
+          actionId: 'items:pick_up_item',
+          targets: new Map([['item', itemId]]),
+        },
+        {
+          actionId: 'items:consume_item',
+          targets: new Map([['item', itemId]]),
+        },
+      ],
     };
   }
   ```
@@ -141,6 +171,7 @@ Define complete refinement function signature with clear input/output contracts 
 - [ ] Example 3: Complex multi-step refinement
 
 ### 7. Document in Specification
+
 - [ ] Replace lines 71-106 with complete signature specification
 - [ ] Add refinement function contract section
 - [ ] Include example implementations
@@ -156,6 +187,7 @@ Define complete refinement function signature with clear input/output contracts 
    - Integration specification
 
 2. **Type Definitions**: `src/goap/types/refinementTypes.js`
+
    ```javascript
    /** @typedef {import('./taskTypes.js').Task} Task */
    /** @typedef {import('./worldStateTypes.js').WorldState} WorldState */

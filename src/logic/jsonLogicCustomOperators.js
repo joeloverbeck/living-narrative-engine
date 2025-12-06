@@ -175,12 +175,19 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
-    const getComponentValueOp = (entityRef, componentId, propertyPath = null) => {
+    const getComponentValueOp = (
+      entityRef,
+      componentId,
+      propertyPath = null
+    ) => {
       let entityId = null;
 
       if (hasValidEntityId(entityRef)) {
         entityId = entityRef.id;
-      } else if (typeof entityRef === 'string' || typeof entityRef === 'number') {
+      } else if (
+        typeof entityRef === 'string' ||
+        typeof entityRef === 'number'
+      ) {
         entityId = entityRef;
       }
 
@@ -502,7 +509,10 @@ export class JsonLogicCustomOperators extends BaseService {
       'has_damage_capability',
       function (entityPath, damageTypeName) {
         // 'this' is the evaluation context
-        return hasDamageCapabilityOp.evaluate([entityPath, damageTypeName], this);
+        return hasDamageCapabilityOp.evaluate(
+          [entityPath, damageTypeName],
+          this
+        );
       },
       jsonLogicEvaluationService
     );
@@ -522,7 +532,11 @@ export class JsonLogicCustomOperators extends BaseService {
 
     // VALIDATION: Ensure all registered operators are whitelisted
     const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
-    validateOperatorWhitelist(this.#registeredOperators, allowedOps, this.#logger);
+    validateOperatorWhitelist(
+      this.#registeredOperators,
+      allowedOps,
+      this.#logger
+    );
 
     this.#logger.info('Custom JSON Logic operators registered successfully', {
       count: this.#registeredOperators.size,

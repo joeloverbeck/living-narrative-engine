@@ -1,10 +1,4 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 import path from 'node:path';
@@ -32,7 +26,10 @@ function buildApp(transformer) {
   return app;
 }
 
-function createRejectingTrace(originalFileName, failureFactory = () => new Error('fileName accessor failure')) {
+function createRejectingTrace(
+  originalFileName,
+  failureFactory = () => new Error('fileName accessor failure')
+) {
   const circularTraceData = {};
   circularTraceData.self = circularTraceData;
 
@@ -123,7 +120,9 @@ describe('traceRoutes batch failure integration', () => {
     expect(failureResult.error).toContain('fileName accessor failure');
 
     createdPaths.add(successfulFilePath);
-    await expect(readFile(successfulFilePath, 'utf8')).resolves.toContain('"ok": true');
+    await expect(readFile(successfulFilePath, 'utf8')).resolves.toContain(
+      '"ok": true'
+    );
   });
 
   it('falls back to unknown error descriptors when rejection reasons lack messages', async () => {
@@ -170,7 +169,9 @@ describe('traceRoutes batch failure integration', () => {
     expect(failureResult.error).toBe('Unknown error');
 
     createdPaths.add(successfulFilePath);
-    await expect(readFile(successfulFilePath, 'utf8')).resolves.toContain('"ok": true');
+    await expect(readFile(successfulFilePath, 'utf8')).resolves.toContain(
+      '"ok": true'
+    );
   });
 
   it('responds with server errors when batch validation encounters fatal issues', async () => {
@@ -210,7 +211,9 @@ describe('traceRoutes batch failure integration', () => {
       .post('/api/traces/write-batch')
       .send({
         __injectProxy: 'all-fail',
-        traces: [{ traceData: { shouldFail: true }, fileName: failingFileName }],
+        traces: [
+          { traceData: { shouldFail: true }, fileName: failingFileName },
+        ],
       });
 
     expect(response.status).toBe(200);
@@ -220,5 +223,4 @@ describe('traceRoutes batch failure integration', () => {
 
     await expectPathMissing(expectedPath);
   });
-
 });

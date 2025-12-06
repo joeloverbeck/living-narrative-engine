@@ -200,7 +200,9 @@ describe('ProcessingExceptionHandler integration', () => {
   it('logs a critical message when no endTurn is available and no reset can occur', async () => {
     const minimalHandler = new MinimalHandler(logger, safeDispatcher);
     const minimalState = new TestState(minimalHandler);
-    const minimalExceptionHandler = new ProcessingExceptionHandler(minimalState);
+    const minimalExceptionHandler = new ProcessingExceptionHandler(
+      minimalState
+    );
 
     const turnCtx = {
       getLogger: () => logger,
@@ -210,7 +212,12 @@ describe('ProcessingExceptionHandler integration', () => {
 
     const error = new Error('no context recovery');
 
-    await minimalExceptionHandler.handle(turnCtx, error, 'actor-critical', true);
+    await minimalExceptionHandler.handle(
+      turnCtx,
+      error,
+      'actor-critical',
+      true
+    );
 
     expect(minimalState.finishCalls).toBe(1);
     expect(
@@ -220,7 +227,9 @@ describe('ProcessingExceptionHandler integration', () => {
     ).toBe(true);
     expect(
       logger.errorEntries.some((entry) =>
-        String(entry.message).includes('CRITICAL - Cannot end turn OR reset handler')
+        String(entry.message).includes(
+          'CRITICAL - Cannot end turn OR reset handler'
+        )
       )
     ).toBe(true);
     expect(validatedDispatcher.events).toHaveLength(1);

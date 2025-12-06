@@ -5,13 +5,17 @@ describe('ShortTermMemoryService storage normalisation and dispatch integration'
   it('throws informative errors for non-object memory containers', () => {
     const service = new ShortTermMemoryService();
 
-    expect(() => service.addThought('not-an-object', 'idea')).toThrow(TypeError);
+    expect(() => service.addThought('not-an-object', 'idea')).toThrow(
+      TypeError
+    );
     expect(() => service.addThought('not-an-object', 'idea')).toThrow(
       'mem must be an object conforming to core:short_term_memory schema'
     );
 
     const symbolMem = Symbol('memory');
-    expect(() => service.addThought(symbolMem, 'second idea')).toThrow(TypeError);
+    expect(() => service.addThought(symbolMem, 'second idea')).toThrow(
+      TypeError
+    );
     expect(() => service.addThought(symbolMem, 'second idea')).toThrow(
       'mem must be an object conforming to core:short_term_memory schema'
     );
@@ -40,11 +44,19 @@ describe('ShortTermMemoryService storage normalisation and dispatch integration'
       timestamp: firstTimestamp.toISOString(),
     });
 
-    const secondResult = service.addThought(mem, 'Second entry', secondTimestamp);
+    const secondResult = service.addThought(
+      mem,
+      'Second entry',
+      secondTimestamp
+    );
     expect(secondResult.wasAdded).toBe(true);
     expect(mem.thoughts).toHaveLength(2);
 
-    const thirdResult = service.addThought(mem, ' Third entry ', thirdTimestamp);
+    const thirdResult = service.addThought(
+      mem,
+      ' Third entry ',
+      thirdTimestamp
+    );
     expect(thirdResult.wasAdded).toBe(true);
     expect(mem.thoughts).toEqual([
       { text: 'Second entry', timestamp: secondTimestamp.toISOString() },
@@ -131,7 +143,11 @@ describe('ShortTermMemoryService storage normalisation and dispatch integration'
       timestamp: entry.timestamp,
     });
 
-    const duplicateResult = service.addThought(mem, '  persist me  ', new Date('2024-07-01T09:04:00.000Z'));
+    const duplicateResult = service.addThought(
+      mem,
+      '  persist me  ',
+      new Date('2024-07-01T09:04:00.000Z')
+    );
     expect(duplicateResult.wasAdded).toBe(false);
     expect(mem.thoughts).toHaveLength(1);
   });

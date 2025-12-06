@@ -193,7 +193,11 @@ describe('CriticalLogNotifier additional coverage', () => {
     jest.clearAllMocks();
 
     if (originalLocalStorageDescriptor) {
-      Object.defineProperty(window, 'localStorage', originalLocalStorageDescriptor);
+      Object.defineProperty(
+        window,
+        'localStorage',
+        originalLocalStorageDescriptor
+      );
     } else {
       delete window.localStorage;
     }
@@ -285,7 +289,10 @@ describe('CriticalLogNotifier additional coverage', () => {
     expect(stats).toContain('1 errors');
 
     expect(categoryFilter.value).toBe('all');
-    expect(Array.from(categoryFilter.options).map((opt) => opt.value)).toEqual(['all', 'network']);
+    expect(Array.from(categoryFilter.options).map((opt) => opt.value)).toEqual([
+      'all',
+      'network',
+    ]);
 
     const logEntries = panel.querySelectorAll('.lne-log-entry');
     expect(logEntries).toHaveLength(1);
@@ -294,23 +301,25 @@ describe('CriticalLogNotifier additional coverage', () => {
     expect(message.startsWith('[network]')).toBe(true);
     expect(message.endsWith('...')).toBe(true);
 
-    const timeText = logEntries[0]
-      .querySelector('.lne-log-time')
-      .textContent;
+    const timeText = logEntries[0].querySelector('.lne-log-time').textContent;
     expect(timeText).toMatch(/\d{2}:\d{2}:\d{2}/);
 
     const styleElement = document.head.querySelector('#lne-log-animations');
     expect(styleElement).not.toBeNull();
 
     keyboardActionCallback('filter-errors');
-    expect(mockLogFilterInstance.setFilter).toHaveBeenCalledWith({ level: 'error' });
+    expect(mockLogFilterInstance.setFilter).toHaveBeenCalledWith({
+      level: 'error',
+    });
     expect(panel.querySelector('.lne-level-filter').value).toBe('error');
 
     keyboardActionCallback('filter-all');
     expect(panel.querySelector('.lne-level-filter').value).toBe('all');
 
     keyboardActionCallback('focus-search');
-    expect(document.activeElement).toBe(panel.querySelector('.lne-search-input'));
+    expect(document.activeElement).toBe(
+      panel.querySelector('.lne-search-input')
+    );
 
     keyboardActionCallback('export');
     const exportMenu = panel.querySelector('.lne-export-menu');
@@ -330,7 +339,8 @@ describe('CriticalLogNotifier additional coverage', () => {
       mockEventDispatcher.dispatch.mock.calls.some(
         ([eventName, payload]) =>
           eventName === 'core:critical_logs_cleared' &&
-          payload && Object.keys(payload).length === 0
+          payload &&
+          Object.keys(payload).length === 0
       )
     ).toBe(true);
   });
@@ -361,7 +371,8 @@ describe('CriticalLogNotifier additional coverage', () => {
     jest.advanceTimersByTime(1000);
     expect(container.hidden).toBe(false);
 
-    const setLogsCallsBeforeDismiss = mockLogFilterInstance.setLogs.mock.calls.length;
+    const setLogsCallsBeforeDismiss =
+      mockLogFilterInstance.setLogs.mock.calls.length;
 
     keyboardActionCallback('dismiss');
     jest.advanceTimersByTime(300);
@@ -394,7 +405,8 @@ describe('CriticalLogNotifier additional coverage', () => {
       mockEventDispatcher.dispatch.mock.calls.some(
         ([eventName, payload]) =>
           eventName === 'core:critical_notifications_dismissed' &&
-          payload && Object.keys(payload).length === 0
+          payload &&
+          Object.keys(payload).length === 0
       )
     ).toBe(true);
 
@@ -508,9 +520,7 @@ describe('CriticalLogNotifier additional coverage', () => {
     await notifier.exportLogs('clipboard');
 
     await notifier.exportLogs('unknown');
-    expect(errorMock).toHaveBeenCalledWith(
-      'Unknown export format: unknown'
-    );
+    expect(errorMock).toHaveBeenCalledWith('Unknown export format: unknown');
 
     notifier.dispose();
     notifier = undefined;
@@ -577,9 +587,10 @@ describe('CriticalLogNotifier additional coverage', () => {
       const panel = container.querySelector('.lne-log-panel');
       const badge = container.querySelector('.lne-badge-container');
 
-      const criticalLogSubscription = mockEventDispatcher.subscribe.mock.calls.find(
-        ([eventName]) => eventName === 'CRITICAL_LOG_ADDED'
-      );
+      const criticalLogSubscription =
+        mockEventDispatcher.subscribe.mock.calls.find(
+          ([eventName]) => eventName === 'CRITICAL_LOG_ADDED'
+        );
       expect(criticalLogSubscription).toBeTruthy();
       const criticalLogHandler = criticalLogSubscription[1];
       mockEventDispatcher.dispatch.mockClear();

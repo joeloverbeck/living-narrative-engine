@@ -12,14 +12,14 @@ Create a new weapon combat action `strike_target` for blunt weapons (clubs, mace
 
 ## Files to Create
 
-| File Path | Type | Description |
-|-----------|------|-------------|
-| `data/mods/weapons/actions/strike_target.action.json` | Action | Combat action definition |
-| `data/mods/weapons/scopes/wielded_blunt_weapons.scope` | Scope | Target scope for blunt weapons |
-| `data/mods/weapons/conditions/event-is-action-strike-target.condition.json` | Condition | Event matching condition |
-| `data/mods/weapons/rules/handle_strike_target.rule.json` | Rule | Action handler with outcomes |
-| `tests/integration/mods/weapons/strike_target_action_discovery.test.js` | Test | Action discoverability tests |
-| `tests/integration/mods/weapons/strike_target_action.test.js` | Test | Rule execution tests |
+| File Path                                                                   | Type      | Description                    |
+| --------------------------------------------------------------------------- | --------- | ------------------------------ |
+| `data/mods/weapons/actions/strike_target.action.json`                       | Action    | Combat action definition       |
+| `data/mods/weapons/scopes/wielded_blunt_weapons.scope`                      | Scope     | Target scope for blunt weapons |
+| `data/mods/weapons/conditions/event-is-action-strike-target.condition.json` | Condition | Event matching condition       |
+| `data/mods/weapons/rules/handle_strike_target.rule.json`                    | Rule      | Action handler with outcomes   |
+| `tests/integration/mods/weapons/strike_target_action_discovery.test.js`     | Test      | Action discoverability tests   |
+| `tests/integration/mods/weapons/strike_target_action.test.js`               | Test      | Rule execution tests           |
 
 ---
 
@@ -87,6 +87,7 @@ Create a new weapon combat action `strike_target` for blunt weapons (clubs, mace
 ```
 
 **Notes:**
+
 - `required_components` identical to `swing_at_target.action.json`
 - `forbidden_components` identical to `swing_at_target.action.json`
 - `targets.primary.scope` uses new `weapons:wielded_blunt_weapons` scope
@@ -126,10 +127,7 @@ weapons:wielded_blunt_weapons := actor.components.positioning:wielding.wielded_i
   "id": "weapons:event-is-action-strike-target",
   "description": "Checks if the event is a strike_target action attempt",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "weapons:strike_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "weapons:strike_target"]
   }
 }
 ```
@@ -146,12 +144,12 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
 
 ### Strike-Specific Variables
 
-| Variable | Value | Rationale |
-|----------|-------|-----------|
-| `attackVerb` | `"strike"` | Verb for critical hit messages |
-| `attackVerbPast` | `"strikes"` | Past tense verb for other messages |
-| `hitDescription` | `"crushing their flesh"` | Describes blunt trauma effect |
-| `excludeDamageTypes` | `[]` (empty array) | Allows all damage types (spiked maces deal blunt+piercing) |
+| Variable             | Value                    | Rationale                                                  |
+| -------------------- | ------------------------ | ---------------------------------------------------------- |
+| `attackVerb`         | `"strike"`               | Verb for critical hit messages                             |
+| `attackVerbPast`     | `"strikes"`              | Past tense verb for other messages                         |
+| `hitDescription`     | `"crushing their flesh"` | Describes blunt trauma effect                              |
+| `excludeDamageTypes` | `[]` (empty array)       | Allows all damage types (spiked maces deal blunt+piercing) |
 
 ### Rule Structure
 
@@ -168,7 +166,10 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "secondary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "secondary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
@@ -259,7 +260,9 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
       "type": "IF",
       "comment": "Handle CRITICAL_SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeCritical" }]
       }
     },
@@ -267,7 +270,9 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
       "type": "IF",
       "comment": "Handle SUCCESS outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "SUCCESS"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeHit" }]
       }
     },
@@ -275,7 +280,9 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
       "type": "IF",
       "comment": "Handle FUMBLE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FUMBLE"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeFumble" }]
       }
     },
@@ -283,7 +290,9 @@ The rule should follow the exact structure of `handle_swing_at_target.rule.json`
       "type": "IF",
       "comment": "Handle FAILURE outcome",
       "parameters": {
-        "condition": { "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"] },
+        "condition": {
+          "==": [{ "var": "context.attackResult.outcome" }, "FAILURE"]
+        },
         "then_actions": [{ "macro": "weapons:handleMeleeMiss" }]
       }
     }
@@ -427,14 +436,16 @@ describe('strike_target action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('positioning:wielding', { wielded_item_ids: ['practice-stick'] })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['practice-stick'],
+        })
         .build();
 
       const weapon = new ModEntityBuilder('practice-stick')
         .withName('Practice Stick')
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
-          entries: [{ name: 'blunt', amount: 5 }]
+          entries: [{ name: 'blunt', amount: 5 }],
         })
         .build();
 
@@ -445,7 +456,11 @@ describe('strike_target action', () => {
         .build();
 
       fixture.reset([location, actor, weapon, target]);
-      await fixture.executeAction('test-actor', 'practice-stick', 'test-target');
+      await fixture.executeAction(
+        'test-actor',
+        'practice-stick',
+        'test-target'
+      );
 
       const turnEndedEvent = fixture.events.find(
         (event) => event.eventType === 'core:turn_ended'
@@ -471,7 +486,7 @@ describe('strike_target action', () => {
         .withName('Club')
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
-          entries: [{ name: 'blunt', amount: 8 }]
+          entries: [{ name: 'blunt', amount: 8 }],
         })
         .build();
 
@@ -503,7 +518,7 @@ describe('strike_target action', () => {
         .withName('Sword')
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
-          entries: [{ name: 'slashing', amount: 15 }]
+          entries: [{ name: 'slashing', amount: 15 }],
         })
         .build();
 
@@ -538,7 +553,7 @@ describe('strike_target action', () => {
         .withName('Club')
         .withComponent('weapons:weapon', {})
         .withComponent('damage-types:damage_capabilities', {
-          entries: [{ name: 'blunt', amount: 8 }]
+          entries: [{ name: 'blunt', amount: 8 }],
         })
         .build();
 
@@ -567,7 +582,9 @@ describe('strike_target action', () => {
         .withName('Test Actor')
         .asActor()
         .withComponent('core:position', { locationId: 'test-location' })
-        .withComponent('positioning:wielding', { wielded_item_ids: ['spiked-mace'] })
+        .withComponent('positioning:wielding', {
+          wielded_item_ids: ['spiked-mace'],
+        })
         .build();
 
       const spikedMace = new ModEntityBuilder('spiked-mace')
@@ -576,8 +593,8 @@ describe('strike_target action', () => {
         .withComponent('damage-types:damage_capabilities', {
           entries: [
             { name: 'blunt', amount: 12 },
-            { name: 'piercing', amount: 6 }
-          ]
+            { name: 'piercing', amount: 6 },
+          ],
         })
         .build();
 
@@ -602,25 +619,25 @@ describe('strike_target action', () => {
 
 ### Existing Patterns to Follow
 
-| Reference | Purpose | Location |
-|-----------|---------|----------|
-| swing_at_target.action.json | Action structure template | `data/mods/weapons/actions/` |
-| thrust_at_target.action.json | Alternative action reference | `data/mods/weapons/actions/` |
-| handle_swing_at_target.rule.json | Rule structure template | `data/mods/weapons/rules/` |
-| wielded_cutting_weapons.scope | Scope DSL pattern | `data/mods/weapons/scopes/` |
-| wielded_piercing_weapons.scope | Alternative scope reference | `data/mods/weapons/scopes/` |
-| rill_practice_stick.entity.json | Blunt weapon entity example | `data/mods/fantasy/entities/definitions/` |
+| Reference                        | Purpose                      | Location                                  |
+| -------------------------------- | ---------------------------- | ----------------------------------------- |
+| swing_at_target.action.json      | Action structure template    | `data/mods/weapons/actions/`              |
+| thrust_at_target.action.json     | Alternative action reference | `data/mods/weapons/actions/`              |
+| handle_swing_at_target.rule.json | Rule structure template      | `data/mods/weapons/rules/`                |
+| wielded_cutting_weapons.scope    | Scope DSL pattern            | `data/mods/weapons/scopes/`               |
+| wielded_piercing_weapons.scope   | Alternative scope reference  | `data/mods/weapons/scopes/`               |
+| rill_practice_stick.entity.json  | Blunt weapon entity example  | `data/mods/fantasy/entities/definitions/` |
 
 ### Testing References
 
-| Reference | Purpose | Location |
-|-----------|---------|----------|
-| mod-testing-guide.md | Primary testing documentation | `docs/testing/` |
-| swing_at_target_action_discovery.test.js | Discovery test pattern | `tests/integration/mods/weapons/` |
-| wield_threateningly_action.test.js | Rule execution test pattern | `tests/integration/mods/weapons/` |
-| ModTestFixture.js | Test fixture API | `tests/common/mods/` |
-| ModEntityBuilder.js | Entity construction | `tests/common/mods/` |
-| domainMatchers.js | Custom Jest matchers | `tests/common/mods/` |
+| Reference                                | Purpose                       | Location                          |
+| ---------------------------------------- | ----------------------------- | --------------------------------- |
+| mod-testing-guide.md                     | Primary testing documentation | `docs/testing/`                   |
+| swing_at_target_action_discovery.test.js | Discovery test pattern        | `tests/integration/mods/weapons/` |
+| wield_threateningly_action.test.js       | Rule execution test pattern   | `tests/integration/mods/weapons/` |
+| ModTestFixture.js                        | Test fixture API              | `tests/common/mods/`              |
+| ModEntityBuilder.js                      | Entity construction           | `tests/common/mods/`              |
+| domainMatchers.js                        | Custom Jest matchers          | `tests/common/mods/`              |
 
 ---
 
@@ -655,39 +672,46 @@ This specification defines a complete `strike_target` action/rule combo for blun
 ## Outcome
 
 ### Implementation Date
+
 2025-12-04
 
 ### Files Created
-| File | Type | Status |
-|------|------|--------|
-| `data/mods/weapons/actions/strike_target.action.json` | Action | Created |
-| `data/mods/weapons/scopes/wielded_blunt_weapons.scope` | Scope | Created |
+
+| File                                                                        | Type      | Status  |
+| --------------------------------------------------------------------------- | --------- | ------- |
+| `data/mods/weapons/actions/strike_target.action.json`                       | Action    | Created |
+| `data/mods/weapons/scopes/wielded_blunt_weapons.scope`                      | Scope     | Created |
 | `data/mods/weapons/conditions/event-is-action-strike-target.condition.json` | Condition | Created |
-| `data/mods/weapons/rules/handle_strike_target.rule.json` | Rule | Created |
-| `tests/integration/mods/weapons/strike_target_action_discovery.test.js` | Test | Created |
-| `tests/integration/mods/weapons/strike_target_action.test.js` | Test | Created |
+| `data/mods/weapons/rules/handle_strike_target.rule.json`                    | Rule      | Created |
+| `tests/integration/mods/weapons/strike_target_action_discovery.test.js`     | Test      | Created |
+| `tests/integration/mods/weapons/strike_target_action.test.js`               | Test      | Created |
 
 ### Spec Corrections Made (Before Implementation)
+
 1. **Condition property**: Changed from `"expression"` to `"logic"` to match actual condition schema
 2. **Rule structure**: Changed from `RESOLVE_OUTCOME` with `outcomes` block to `RESOLVE_OUTCOME` followed by separate `IF` statements per outcome, consistent with existing weapon rules
 3. **Added inventory components** to test actors with `items:item` and `items:portable` on weapons
 
 ### Implementation Issues Encountered
+
 1. **ActionValidationError**: Execution tests initially failed because test actors were missing the required `positioning:wielding` component
    - **Fix**: Added `.withComponent('positioning:wielding', { wielded_item_ids: ['weapon-id'] })` to all test actor entity builders
    - **Root cause**: The `strike_target` action's `required_components.actor` includes `positioning:wielding`, which was correctly specified in the spec but the test pattern examples omitted this component
 
 ### Test Results
+
 - **Discovery tests**: 41 tests passed
 - **Execution tests**: 4 tests passed
 - **Scope lint**: 116 scope files validated successfully (including new `wielded_blunt_weapons.scope`)
 
 ### Deviation from Original Plan
+
 - None significant. All files were created as specified.
 - Test implementations are more focused than the spec's comprehensive list, covering the essential happy paths and one multi-damage-type scenario.
 - The spec's test examples needed the `positioning:wielding` component added to work correctly.
 
 ### Verification Commands Run
+
 ```bash
 npm run scope:lint  # All 116 scope files valid
 NODE_ENV=test npx jest tests/integration/mods/weapons/strike_target_action_discovery.test.js --no-coverage --verbose  # 41 passed

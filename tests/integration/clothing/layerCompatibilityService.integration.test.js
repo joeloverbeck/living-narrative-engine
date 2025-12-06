@@ -127,7 +127,9 @@ describe('LayerCompatibilityService integration', () => {
       service.checkLayerConflicts(actorId, 'item:unknown', 'base', 'torso')
     ).rejects.toBeInstanceOf(InvalidArgumentError);
     expect(logger.errorEntries).toHaveLength(1);
-    expect(logger.errorEntries[0].message).toContain('Error checking layer conflicts');
+    expect(logger.errorEntries[0].message).toContain(
+      'Error checking layer conflicts'
+    );
   });
 
   it('detects direct, requirement, and secondary slot conflicts for outer layers', async () => {
@@ -152,9 +154,18 @@ describe('LayerCompatibilityService integration', () => {
     expect(result.hasConflicts).toBe(true);
     expect(result.conflicts).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ type: 'layer_overlap', conflictingItemId: 'item:cloak' }),
-        expect.objectContaining({ type: 'layer_requirement', requiredLayer: 'base' }),
-        expect.objectContaining({ type: 'secondary_slot_conflict', slotId: 'back' }),
+        expect.objectContaining({
+          type: 'layer_overlap',
+          conflictingItemId: 'item:cloak',
+        }),
+        expect.objectContaining({
+          type: 'layer_requirement',
+          requiredLayer: 'base',
+        }),
+        expect.objectContaining({
+          type: 'secondary_slot_conflict',
+          slotId: 'back',
+        }),
       ])
     );
     expect(result.resolutionSuggestions).toContain(
@@ -192,10 +203,7 @@ describe('LayerCompatibilityService integration', () => {
         torso: { base: 'item:shirt' },
         back: {},
       },
-      wearables: [
-        wearable,
-        buildWearable('item:shirt', 'base', 'torso'),
-      ],
+      wearables: [wearable, buildWearable('item:shirt', 'base', 'torso')],
     });
 
     const result = await service.checkLayerConflicts(
@@ -237,19 +245,18 @@ describe('LayerCompatibilityService integration', () => {
     ).resolves.toBe(false);
     expect(logger.warnEntries).toHaveLength(1);
 
-    const isValid = await service.validateLayerOrdering(
-      actorId,
-      'outer',
-      { outer: 'item:coat' }
-    );
+    const isValid = await service.validateLayerOrdering(actorId, 'outer', {
+      outer: 'item:coat',
+    });
     expect(isValid).toBe(false);
-    expect(logger.debugEntries[0].message).toContain('Missing required inner layer');
-
-    const validResult = await service.validateLayerOrdering(
-      actorId,
-      'outer',
-      { base: 'item:shirt', outer: 'item:coat' }
+    expect(logger.debugEntries[0].message).toContain(
+      'Missing required inner layer'
     );
+
+    const validResult = await service.validateLayerOrdering(actorId, 'outer', {
+      base: 'item:shirt',
+      outer: 'item:coat',
+    });
     expect(validResult).toBe(true);
   });
 
@@ -269,7 +276,9 @@ describe('LayerCompatibilityService integration', () => {
     );
 
     expect(result).toBe(false);
-    expect(logger.errorEntries[0].message).toContain('Error validating layer ordering');
+    expect(logger.errorEntries[0].message).toContain(
+      'Error validating layer ordering'
+    );
   });
 
   it('identifies dependent items that require a removed base layer', async () => {
@@ -322,7 +331,9 @@ describe('LayerCompatibilityService integration', () => {
     );
 
     expect(dependents).toEqual([]);
-    expect(logger.errorEntries[0].message).toContain('Error finding dependent items');
+    expect(logger.errorEntries[0].message).toContain(
+      'Error finding dependent items'
+    );
   });
 
   it('prioritizes suggested resolutions based on conflict types', async () => {

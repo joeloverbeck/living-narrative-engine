@@ -12,8 +12,8 @@ Create comprehensive unit tests for the `DismemberedBodyPartSpawner` service, co
 
 ## Files Touched
 
-| File | Change Type | Description |
-|------|-------------|-------------|
+| File                                                             | Change Type       | Description                    |
+| ---------------------------------------------------------------- | ----------------- | ------------------------------ |
 | `tests/unit/anatomy/services/dismemberedBodyPartSpawner.test.js` | Verified (EXISTS) | Unit tests for spawner service |
 
 ---
@@ -33,11 +33,11 @@ The following are **explicitly NOT part of this ticket**:
 
 ### Original Assumptions vs Reality
 
-| Original Assumption | Corrected Understanding |
-|---------------------|------------------------|
-| `entityFactory` dependency | **Actual**: `entityLifecycleManager` dependency |
+| Original Assumption                           | Corrected Understanding                                            |
+| --------------------------------------------- | ------------------------------------------------------------------ |
+| `entityFactory` dependency                    | **Actual**: `entityLifecycleManager` dependency                    |
 | `entityFactory.createFromDefinition()` method | **Actual**: `entityLifecycleManager.createEntityInstance()` method |
-| Test file needed to be created | **Actual**: Test file already exists with 38 tests |
+| Test file needed to be created                | **Actual**: Test file already exists with 38 tests                 |
 
 ### Corrected Test Setup Template
 
@@ -50,7 +50,7 @@ describe('DismemberedBodyPartSpawner', () => {
   let mockLogger;
   let mockEntityManager;
   let mockEventBus;
-  let mockEntityLifecycleManager;  // NOT entityFactory
+  let mockEntityLifecycleManager; // NOT entityFactory
   let mockUnsubscribe;
 
   beforeEach(() => {
@@ -62,7 +62,7 @@ describe('DismemberedBodyPartSpawner', () => {
     };
 
     mockEntityManager = {
-      getComponentData: jest.fn(),  // NOT getEntity
+      getComponentData: jest.fn(), // NOT getEntity
     };
 
     mockUnsubscribe = jest.fn();
@@ -72,7 +72,9 @@ describe('DismemberedBodyPartSpawner', () => {
     };
 
     mockEntityLifecycleManager = {
-      createEntityInstance: jest.fn().mockReturnValue({ id: 'spawned-entity-1' }),
+      createEntityInstance: jest
+        .fn()
+        .mockReturnValue({ id: 'spawned-entity-1' }),
     };
 
     service = new DismemberedBodyPartSpawner({
@@ -93,17 +95,18 @@ describe('DismemberedBodyPartSpawner', () => {
 
 ### Actual Test Coverage (38 Tests)
 
-| Metric | Requirement | Actual |
-|--------|-------------|--------|
-| Statements | - | **100%** |
-| Branches | ≥ 80% | **100%** |
-| Functions | - | **100%** |
-| Lines | ≥ 90% | **100%** |
-| Total Tests | - | **38** |
+| Metric      | Requirement | Actual   |
+| ----------- | ----------- | -------- |
+| Statements  | -           | **100%** |
+| Branches    | ≥ 80%       | **100%** |
+| Functions   | -           | **100%** |
+| Lines       | ≥ 90%       | **100%** |
+| Total Tests | -           | **38**   |
 
 ### Test Breakdown by Category
 
 #### Constructor Tests (9 tests)
+
 - ✅ should initialize with all dependencies
 - ✅ should throw if logger is missing
 - ✅ should throw if entityManager is missing
@@ -115,15 +118,18 @@ describe('DismemberedBodyPartSpawner', () => {
 - ✅ should throw if entityLifecycleManager missing createEntityInstance method
 
 #### Initialize Tests (2 tests)
+
 - ✅ should subscribe to anatomy:dismembered event
 - ✅ should log initialization message
 
 #### Destroy Tests (3 tests)
+
 - ✅ should unsubscribe from events when initialized
 - ✅ should not throw if called before initialize
 - ✅ should only unsubscribe once even if destroy called multiple times
 
 #### Successful Spawning Tests (7 tests)
+
 - ✅ should spawn body part entity with correct name
 - ✅ should spawn body part at character location
 - ✅ should add items:item component
@@ -133,6 +139,7 @@ describe('DismemberedBodyPartSpawner', () => {
 - ✅ should log successful spawning
 
 #### Name Generation Tests (5 tests)
+
 - ✅ should include orientation for left parts
 - ✅ should include orientation for right parts
 - ✅ should exclude orientation for mid parts
@@ -140,10 +147,12 @@ describe('DismemberedBodyPartSpawner', () => {
 - ✅ should handle missing part type
 
 #### Weight Handling Tests (2 tests)
+
 - ✅ should use default weight when part has no weight
 - ✅ should not log warning when weight is present
 
 #### Error Handling Tests (7 tests)
+
 - ✅ should log error and skip spawning when definitionId is missing
 - ✅ should log error and skip spawning when part data is null
 - ✅ should log warning and skip when character has no position
@@ -153,6 +162,7 @@ describe('DismemberedBodyPartSpawner', () => {
 - ✅ should use Unknown for event when getEntityName throws
 
 #### Event Payload Completeness Tests (3 tests)
+
 - ✅ should set partType to unknown when not provided
 - ✅ should set orientation to null when not provided
 - ✅ should include timestamp in event
@@ -190,11 +200,13 @@ describe('DismemberedBodyPartSpawner', () => {
 ## Outcome
 
 ### What Was Originally Planned
+
 - Create new unit test file for `DismemberedBodyPartSpawner` service
 - Cover constructor, initialize, destroy, event handling, name generation, and error handling
 - Achieve ≥80% branch coverage and ≥90% line coverage
 
 ### What Actually Happened
+
 - **No code changes required** - test file already existed with comprehensive coverage
 - Tests already exceeded all coverage requirements (100% across all metrics)
 - Ticket assumptions about dependencies were corrected:
@@ -203,6 +215,7 @@ describe('DismemberedBodyPartSpawner', () => {
   - `entityManager.getEntity()` → `entityManager.getComponentData()`
 
 ### Validation Command Output
+
 ```bash
 NODE_ENV=test npx jest tests/unit/anatomy/services/dismemberedBodyPartSpawner.test.js --coverage
 

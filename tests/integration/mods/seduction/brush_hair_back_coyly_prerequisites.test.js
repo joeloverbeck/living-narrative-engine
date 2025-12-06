@@ -37,7 +37,9 @@ describe('seduction:brush_hair_back_coyly prerequisites', () => {
     jest.clearAllMocks();
 
     // Import mocked function
-    const grabbingUtils = await import('../../../../src/utils/grabbingUtils.js');
+    const grabbingUtils = await import(
+      '../../../../src/utils/grabbingUtils.js'
+    );
     mockCountFreeGrabbingAppendages = grabbingUtils.countFreeGrabbingAppendages;
 
     mockLogger = {

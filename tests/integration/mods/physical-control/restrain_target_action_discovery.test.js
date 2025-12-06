@@ -48,9 +48,10 @@ describe('physical-control:restrain_target action discovery', () => {
           }
 
           const { entityManager } = testEnv;
-          const actorLocation =
-            entityManager.getComponentData(actorId, 'core:position')
-              ?.locationId;
+          const actorLocation = entityManager.getComponentData(
+            actorId,
+            'core:position'
+          )?.locationId;
 
           if (!actorLocation) {
             return { success: true, value: new Set() };
@@ -86,7 +87,8 @@ describe('physical-control:restrain_target action discovery', () => {
 
   afterEach(() => {
     if (
-      testFixture?.testEnv?.unifiedScopeResolver?.__restrainTargetOriginalResolve
+      testFixture?.testEnv?.unifiedScopeResolver
+        ?.__restrainTargetOriginalResolve
     ) {
       testFixture.testEnv.unifiedScopeResolver.resolveSync =
         testFixture.testEnv.unifiedScopeResolver.__restrainTargetOriginalResolve;
@@ -150,11 +152,14 @@ describe('physical-control:restrain_target action discovery', () => {
     });
 
     it('is not available when actor lacks the grappling skill', () => {
-      const { actor } = setupScenario({}, {
-        actorCustomizer: ({ actor }) => {
-          delete actor.components['skills:grappling_skill'];
-        },
-      });
+      const { actor } = setupScenario(
+        {},
+        {
+          actorCustomizer: ({ actor }) => {
+            delete actor.components['skills:grappling_skill'];
+          },
+        }
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
@@ -166,15 +171,18 @@ describe('physical-control:restrain_target action discovery', () => {
     });
 
     it('is not available when fewer than two grabbing appendages are free', () => {
-      const { actor } = setupScenario({}, {
-        actorCustomizer: ({ handEntities }) => {
-          handEntities.forEach((hand) => {
-            if (hand.components?.['anatomy:can_grab']) {
-              hand.components['anatomy:can_grab'].locked = true;
-            }
-          });
-        },
-      });
+      const { actor } = setupScenario(
+        {},
+        {
+          actorCustomizer: ({ handEntities }) => {
+            handEntities.forEach((hand) => {
+              if (hand.components?.['anatomy:can_grab']) {
+                hand.components['anatomy:can_grab'].locked = true;
+              }
+            });
+          },
+        }
+      );
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(

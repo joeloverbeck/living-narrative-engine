@@ -1,4 +1,12 @@
-import { describe, it, beforeEach, afterEach, beforeAll, afterAll, expect } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  expect,
+} from '@jest/globals';
 import { createGoapTestSetup } from '../testFixtures/goapTestSetup.js';
 import GOAPDebugger from '../../../../src/goap/debug/goapDebugger.js';
 import { createPlanningStateView } from '../../../../src/goap/planner/planningStateView.js';
@@ -130,7 +138,9 @@ describe('GOAPDebugger diagnostics integration', () => {
         ]),
       })
     );
-    expect(diagnosticsSnapshot.diagnosticsMeta.planningState.available).toBe(true);
+    expect(diagnosticsSnapshot.diagnosticsMeta.planningState.available).toBe(
+      true
+    );
     expect(diagnosticsSnapshot.diagnosticsMeta.planningState.stale).toBe(false);
 
     // Warning stays throttled even though diagnostics are still missing for task library

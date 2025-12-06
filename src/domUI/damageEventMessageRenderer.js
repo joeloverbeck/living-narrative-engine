@@ -98,15 +98,9 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
       this.#handlePerceptibleEvent.bind(this)
     );
 
-    this._subscribe(
-      'anatomy:entity_dying',
-      this.#handleEntityDying.bind(this)
-    );
+    this._subscribe('anatomy:entity_dying', this.#handleEntityDying.bind(this));
 
-    this._subscribe(
-      'anatomy:entity_died',
-      this.#handleEntityDied.bind(this)
-    );
+    this._subscribe('anatomy:entity_died', this.#handleEntityDied.bind(this));
 
     this.logger.debug(
       `${this._logPrefix} Subscribed to core:perceptible_event (damage_received) and 2 entity state events.`
@@ -133,7 +127,9 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
       return;
     }
 
-    this.logger.debug(`${this._logPrefix} Received perceptible_event (damage_received).`);
+    this.logger.debug(
+      `${this._logPrefix} Received perceptible_event (damage_received).`
+    );
 
     const message = payload.descriptionText;
     if (!message || !message.trim()) {
@@ -177,7 +173,8 @@ export class DamageEventMessageRenderer extends BoundDomRendererBase {
    */
   #handleEntityDied({ payload }) {
     this.logger.debug(`${this._logPrefix} Received entity_died event.`);
-    const message = payload?.finalMessage ||
+    const message =
+      payload?.finalMessage ||
       `${payload?.entityName || 'An entity'} falls dead from their injuries.`;
     this.#renderBubble(message, 'damage-message damage-message--death');
   }

@@ -141,12 +141,23 @@ export class PartSelectionService {
 
       // Log diagnostic entities BEFORE validation
       if (isGenericTentacle || isGenericMantle || isDragonWing) {
-        console.log(`🔍 PartSelectionService: Checking ${entityDef.id} against requirements`);
+        console.log(
+          `🔍 PartSelectionService: Checking ${entityDef.id} against requirements`
+        );
         console.log('  allowedTypes:', allowedTypes);
         console.log('  requirements:', requirements);
-        console.log('  hasAnatomyPart:', !!entityDef.components?.['anatomy:part']);
-        console.log('  subType:', entityDef.components?.['anatomy:part']?.subType);
-        console.log('  allComponents:', Object.keys(entityDef.components || {}));
+        console.log(
+          '  hasAnatomyPart:',
+          !!entityDef.components?.['anatomy:part']
+        );
+        console.log(
+          '  subType:',
+          entityDef.components?.['anatomy:part']?.subType
+        );
+        console.log(
+          '  allComponents:',
+          Object.keys(entityDef.components || {})
+        );
         console.log('  recipeSlot.tags:', recipeSlot?.tags);
       }
       if (isKrakenHead) {
@@ -184,7 +195,9 @@ export class PartSelectionService {
       ) {
         // Log SUCCESS for diagnostic entities
         if (isGenericTentacle || isGenericMantle || isDragonWing) {
-          console.log(`✅ PartSelectionService: ${entityDef.id} PASSED all validation checks`);
+          console.log(
+            `✅ PartSelectionService: ${entityDef.id} PASSED all validation checks`
+          );
         }
         if (isKrakenHead) {
           this.#logger.info(
@@ -200,7 +213,9 @@ export class PartSelectionService {
       } else {
         // Log FAILURE for diagnostic entities
         if (isGenericTentacle || isGenericMantle || isDragonWing) {
-          console.log(`❌ PartSelectionService: ${entityDef.id} FAILED validation (see detailed failure reason above)`);
+          console.log(
+            `❌ PartSelectionService: ${entityDef.id} FAILED validation (see detailed failure reason above)`
+          );
         }
         if (isKrakenHead) {
           this.#logger.info(
@@ -346,7 +361,9 @@ export class PartSelectionService {
             const missing = recipeSlot.tags.filter(
               (tag) => entityDef.components[tag] === undefined
             );
-            console.log(`❌ ${entityDef.id} FAILED - missing required tags: [${missing.join(', ')}]`);
+            console.log(
+              `❌ ${entityDef.id} FAILED - missing required tags: [${missing.join(', ')}]`
+            );
             console.log('  requiredTags:', recipeSlot.tags);
             console.log('  hasComponents:', Object.keys(entityDef.components));
             console.log('  componentDetails:', entityDef.components);
@@ -388,13 +405,21 @@ export class PartSelectionService {
       }
 
       // Check recipe slot properties (selection criteria)
-      if (recipeSlot.properties && Object.keys(recipeSlot.properties).length > 0) {
+      if (
+        recipeSlot.properties &&
+        Object.keys(recipeSlot.properties).length > 0
+      ) {
         const isDragonWing = entityDef.id === 'anatomy:dragon_wing';
         if (!this.#matchesProperties(entityDef, recipeSlot.properties)) {
           if (isDragonWing) {
-            console.log(`❌ ${entityDef.id} FAILED - properties don't match recipe slot requirements`);
+            console.log(
+              `❌ ${entityDef.id} FAILED - properties don't match recipe slot requirements`
+            );
             console.log('  recipeProperties:', recipeSlot.properties);
-            console.log('  entityComponents:', Object.keys(entityDef.components));
+            console.log(
+              '  entityComponents:',
+              Object.keys(entityDef.components)
+            );
             console.log('  componentDetails:', entityDef.components);
           }
           if (this.#logger && this.#logger.debug) {
@@ -413,7 +438,10 @@ export class PartSelectionService {
     }
 
     // Check requirements properties (selection criteria)
-    if (requirements.properties && Object.keys(requirements.properties).length > 0) {
+    if (
+      requirements.properties &&
+      Object.keys(requirements.properties).length > 0
+    ) {
       if (!this.#matchesProperties(entityDef, requirements.properties)) {
         if (this.#logger && this.#logger.debug) {
           this.#logger.debug(

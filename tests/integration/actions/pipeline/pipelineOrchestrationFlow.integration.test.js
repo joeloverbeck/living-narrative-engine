@@ -60,7 +60,12 @@ describe('Pipeline orchestration integration flow', () => {
   it('executes stages sequentially, merges context data, and chains ActionResult payloads', async () => {
     const candidateStage = new RecordingStage('candidate', () => {
       const candidateActions = [
-        { id: 'core:test', name: 'Test', command: 'test', description: 'Test action' },
+        {
+          id: 'core:test',
+          name: 'Test',
+          command: 'test',
+          description: 'Test action',
+        },
       ];
 
       const baseResult = PipelineResult.success({
@@ -69,7 +74,10 @@ describe('Pipeline orchestration integration flow', () => {
       });
 
       return baseResult.chainActionResult(() =>
-        ActionResult.success({ stage: 'candidate', processed: candidateActions.length })
+        ActionResult.success({
+          stage: 'candidate',
+          processed: candidateActions.length,
+        })
       );
     });
 
@@ -100,7 +108,10 @@ describe('Pipeline orchestration integration flow', () => {
       candidateActions: [],
     });
 
-    expect(executionOrder.map((entry) => entry.stage)).toEqual(['candidate', 'formatter']);
+    expect(executionOrder.map((entry) => entry.stage)).toEqual([
+      'candidate',
+      'formatter',
+    ]);
     expect(result.success).toBe(true);
     expect(result.actions).toHaveLength(2);
     expect(result.actions[0].command).toBe('test');
@@ -200,7 +211,9 @@ describe('Pipeline orchestration integration flow', () => {
     );
 
     const shouldNotRunStage = new RecordingStage('unexpected', () => {
-      throw new Error('This stage should not execute when continueProcessing is false');
+      throw new Error(
+        'This stage should not execute when continueProcessing is false'
+      );
     });
 
     const pipeline = new Pipeline([stopStage, shouldNotRunStage], logger);
@@ -234,7 +247,10 @@ describe('Pipeline orchestration integration flow', () => {
       candidateActions: [],
     });
 
-    expect(executionOrder.map((entry) => entry.stage)).toEqual(['passing', 'failing']);
+    expect(executionOrder.map((entry) => entry.stage)).toEqual([
+      'passing',
+      'failing',
+    ]);
     expect(result.success).toBe(false);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].stageName).toBe('failing');
@@ -417,10 +433,7 @@ describe('ActionResult behaviors within pipeline integration scenarios', () => {
     expect(() => failure.getOrThrow()).toThrow('first; second');
     expect(failure.toJSON()).toMatchObject({
       success: false,
-      errors: [
-        { message: 'first' },
-        { message: 'second' },
-      ],
+      errors: [{ message: 'first' }, { message: 'second' }],
     });
 
     const failureCallback = jest.fn();

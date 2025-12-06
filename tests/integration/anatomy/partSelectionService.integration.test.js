@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { ANATOMY_PART_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
@@ -127,7 +134,9 @@ describe('PartSelectionService Integration', () => {
     );
 
     expect(result).toBe('anatomy:preferred_arm');
-    expect(testBed.eventDispatchService.safeDispatchEvent).not.toHaveBeenCalled();
+    expect(
+      testBed.eventDispatchService.safeDispatchEvent
+    ).not.toHaveBeenCalled();
   });
 
   it('falls back to candidates when preferred entity fails requirements', async () => {
@@ -322,7 +331,9 @@ describe('PartSelectionService Integration', () => {
     ).toBe(true);
     expect(
       logMessages.some((message) =>
-        message.includes("❌ anatomy:dragon_wing FAILED - properties don't match recipe slot requirements")
+        message.includes(
+          "❌ anatomy:dragon_wing FAILED - properties don't match recipe slot requirements"
+        )
       )
     ).toBe(true);
 
@@ -368,11 +379,7 @@ describe('PartSelectionService Integration', () => {
 
     const baseRequirements = {
       partType: 'tentacle',
-      components: [
-        ANATOMY_PART_COMPONENT_ID,
-        'tags:organic',
-        'tags:elite',
-      ],
+      components: [ANATOMY_PART_COMPONENT_ID, 'tags:organic', 'tags:elite'],
     };
     const recipeSlot = { tags: ['tags:organic'] };
 
@@ -436,7 +443,10 @@ describe('PartSelectionService Integration', () => {
             'PartSelectionService: kraken_tentacle FAILED - missing required components: [tags:elite]'
           ),
           expect.objectContaining({
-            hasComponents: expect.arrayContaining(['anatomy:part', 'tags:organic']),
+            hasComponents: expect.arrayContaining([
+              'anatomy:part',
+              'tags:organic',
+            ]),
           }),
         ],
       ])
@@ -465,11 +475,7 @@ describe('PartSelectionService Integration', () => {
 
     const headRequirements = {
       partType: 'head',
-      components: [
-        ANATOMY_PART_COMPONENT_ID,
-        'tags:organic',
-        'tags:elite',
-      ],
+      components: [ANATOMY_PART_COMPONENT_ID, 'tags:organic', 'tags:elite'],
     };
 
     const headResult = await testBed.partSelectionService.selectPart(
@@ -553,13 +559,17 @@ describe('PartSelectionService Integration', () => {
       )
     ).rejects.toThrow(ValidationError);
 
-    expect(testBed.eventDispatchService.safeDispatchEvent).toHaveBeenCalledTimes(1);
+    expect(
+      testBed.eventDispatchService.safeDispatchEvent
+    ).toHaveBeenCalledTimes(1);
     const [eventId, payload] =
       testBed.eventDispatchService.safeDispatchEvent.mock.calls[0];
     expect(eventId).toBe(SYSTEM_ERROR_OCCURRED_ID);
     expect(payload).toEqual(
       expect.objectContaining({
-        message: expect.stringContaining('No entity definitions found matching anatomy requirements.'),
+        message: expect.stringContaining(
+          'No entity definitions found matching anatomy requirements.'
+        ),
         details: expect.objectContaining({
           raw: expect.any(String),
         }),
@@ -570,7 +580,9 @@ describe('PartSelectionService Integration', () => {
     expect(context.allowedTypes).toEqual(['arm']);
     expect(context.recipeRequirements.tags).toEqual(['tags:organic']);
     expect(context.recipeRequirements.notTags).toEqual(['tags:injured']);
-    expect(context.suggestion).toContain("components: [anatomy:part, tags:organic]");
+    expect(context.suggestion).toContain(
+      'components: [anatomy:part, tags:organic]'
+    );
     expect(context.suggestion).toContain('and tags: [tags:organic]');
   });
 });

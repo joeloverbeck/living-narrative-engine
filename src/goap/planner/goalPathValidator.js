@@ -2,7 +2,12 @@ import { deepClone } from '../../utils/cloneUtils.js';
 
 const ACTOR_PREFIX = 'actor.';
 const STATE_ACTOR_PREFIX = 'state.actor.';
-const SAFE_ACTOR_FIELDS = new Set(['actor', 'actor.id', 'state.actor', 'state.actor.id']);
+const SAFE_ACTOR_FIELDS = new Set([
+  'actor',
+  'actor.id',
+  'state.actor',
+  'state.actor.id',
+]);
 const LITERAL_ACTOR_ID_PATTERN = /^actor(?:(?:[_:-]\w+)|(?:\d+))[\w:_-]*$/i;
 let goalPathLintOverride = null;
 
@@ -185,7 +190,8 @@ function isInvalidStateActorPath(path) {
  * @param metadata
  */
 export function validateGoalPaths(goalState, metadata = {}) {
-  const { goalState: normalizedGoalState, rewrites } = normalizeGoalState(goalState);
+  const { goalState: normalizedGoalState, rewrites } =
+    normalizeGoalState(goalState);
 
   if (!goalState || typeof goalState !== 'object') {
     return {
@@ -273,7 +279,10 @@ export function rewriteActorPath(path) {
     return path;
   }
 
-  if (path.startsWith('state.actor.components') || path.startsWith('actor.components')) {
+  if (
+    path.startsWith('state.actor.components') ||
+    path.startsWith('actor.components')
+  ) {
     return path;
   }
 
@@ -339,7 +348,11 @@ function rewriteGoalStateVars(node, rewrites) {
           node.var = rewritten;
           rewrites.push({ original: value, normalized: rewritten });
         }
-      } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+      } else if (
+        Array.isArray(value) &&
+        value.length > 0 &&
+        typeof value[0] === 'string'
+      ) {
         const original = value[0];
         const rewritten = rewriteActorPath(original);
         if (rewritten !== original) {

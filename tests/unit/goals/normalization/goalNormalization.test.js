@@ -34,9 +34,11 @@ describe('normalizeGoalData', () => {
     const result = normalizeGoalData(data, { logger });
 
     expect(result.data.priority).toBe(42);
-    expect(result.warnings.some((warning) => warning.message.includes('Coerced string priority'))).toBe(
-      true
-    );
+    expect(
+      result.warnings.some((warning) =>
+        warning.message.includes('Coerced string priority')
+      )
+    ).toBe(true);
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -63,21 +65,28 @@ describe('normalizeGoalData', () => {
     const hook = jest.fn(({ data }) => {
       data._custom = true; // demonstrate mutation access
       return {
-        warnings: [{ message: 'custom warning', details: { reason: 'extension' } }],
+        warnings: [
+          { message: 'custom warning', details: { reason: 'extension' } },
+        ],
         mutations: [{ field: '_custom', type: 'extension' }],
       };
     });
     registerGoalNormalizationExtension(hook);
 
     const logger = { warn: jest.fn() };
-    const result = normalizeGoalData(createBaseGoal(), { allowDefaults: false, logger });
+    const result = normalizeGoalData(createBaseGoal(), {
+      allowDefaults: false,
+      logger,
+    });
 
     expect(hook).toHaveBeenCalled();
     expect(result.data._custom).toBe(true);
     expect(
       result.warnings.some((warning) => warning.message === 'custom warning')
     ).toBe(true);
-    expect(result.mutations.some((mutation) => mutation.field === '_custom')).toBe(true);
+    expect(
+      result.mutations.some((mutation) => mutation.field === '_custom')
+    ).toBe(true);
   });
 
   it('propagates extension failures when permissive mode is disabled', () => {
@@ -85,9 +94,9 @@ describe('normalizeGoalData', () => {
       throw new Error('boom');
     });
 
-    expect(() => normalizeGoalData(createBaseGoal(), { allowDefaults: false })).toThrow(
-      ModValidationError
-    );
+    expect(() =>
+      normalizeGoalData(createBaseGoal(), { allowDefaults: false })
+    ).toThrow(ModValidationError);
   });
 
   it('downgrades extension failures to warnings when permissive mode is enabled', () => {
@@ -111,13 +120,25 @@ describe('normalizeGoalData', () => {
 
   it('defaults invalid priorities when defaults are allowed', () => {
     const logger = { warn: jest.fn() };
-    const goal = { relevance: { condition_ref: 'valid' }, goalState: { condition_ref: 'state' } };
+    const goal = {
+      relevance: { condition_ref: 'valid' },
+      goalState: { condition_ref: 'state' },
+    };
 
     const result = normalizeGoalData(goal, { allowDefaults: true, logger });
 
     expect(result.data.priority).toBe(0);
-    expect(result.warnings.some((warning) => warning.message.includes('defaulted to 0'))).toBe(true);
-    expect(result.mutations.some((mutation) => mutation.type === 'defaulted' && mutation.field === 'priority')).toBe(true);
+    expect(
+      result.warnings.some((warning) =>
+        warning.message.includes('defaulted to 0')
+      )
+    ).toBe(true);
+    expect(
+      result.mutations.some(
+        (mutation) =>
+          mutation.type === 'defaulted' && mutation.field === 'priority'
+      )
+    ).toBe(true);
     expect(logger.warn).toHaveBeenCalled();
   });
 
@@ -131,13 +152,23 @@ describe('normalizeGoalData', () => {
 
     const result = normalizeGoalData(goal, { allowDefaults: false, logger });
 
-    expect(result.data.relevance).toEqual({ condition_ref: 'wrapped.relevance' });
+    expect(result.data.relevance).toEqual({
+      condition_ref: 'wrapped.relevance',
+    });
     expect(result.mutations).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ field: 'relevance', type: 'unwrapped', from: { logic: { condition_ref: 'wrapped.relevance' } } }),
+        expect.objectContaining({
+          field: 'relevance',
+          type: 'unwrapped',
+          from: { logic: { condition_ref: 'wrapped.relevance' } },
+        }),
       ])
     );
-    expect(result.warnings.some((warning) => warning.message.includes("'logic' has been normalized"))).toBe(true);
+    expect(
+      result.warnings.some((warning) =>
+        warning.message.includes("'logic' has been normalized")
+      )
+    ).toBe(true);
     expect(logger.warn).toHaveBeenCalled();
   });
 

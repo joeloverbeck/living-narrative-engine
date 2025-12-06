@@ -1,18 +1,18 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "fantasy:coop_key",
-    "components": {
-        "core:name": {
-            "text": "key on a leather thong"
-        },
-        "core:description": {
-            "text": "A small, iron key threaded onto a worn leather thong."
-        },
-        "items:item": {},
-        "items:portable": {},
-        "core:weight": {
-            "weight": 0.1
-        },
-        "core:conspicuous": {}
-    }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "fantasy:coop_key",
+  "components": {
+    "core:name": {
+      "text": "key on a leather thong"
+    },
+    "core:description": {
+      "text": "A small, iron key threaded onto a worn leather thong."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.1
+    },
+    "core:conspicuous": {}
+  }
 }

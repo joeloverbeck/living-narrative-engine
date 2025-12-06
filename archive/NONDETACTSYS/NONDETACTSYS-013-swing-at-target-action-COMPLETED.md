@@ -8,15 +8,15 @@ Create the `swing_at_target` action definition that uses the non-deterministic a
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/actions/swing_at_target.action.json` | Action definition |
+| File                                                                          | Purpose                  |
+| ----------------------------------------------------------------------------- | ------------------------ |
+| `data/mods/weapons/actions/swing_at_target.action.json`                       | Action definition        |
 | `data/mods/weapons/conditions/event-is-action-swing-at-target.condition.json` | Event matching condition |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
+| File                                  | Change                                                     |
+| ------------------------------------- | ---------------------------------------------------------- |
 | `data/mods/weapons/mod-manifest.json` | Add action, condition, fix missing scope, add dependencies |
 
 ## Implementation Details
@@ -83,27 +83,24 @@ Uses the correct JSON Logic format (matching existing pattern from `event-is-act
   "id": "weapons:event-is-action-swing-at-target",
   "description": "Checks if the event is a swing_at_target action attempt",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "weapons:swing_at_target"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "weapons:swing_at_target"]
   }
 }
 ```
 
 ### Action Properties Explanation
 
-| Property | Value | Explanation |
-|----------|-------|-------------|
-| `id` | `weapons:swing_at_target` | Namespaced action ID |
-| `template` | `swing {weapon} at {target} ({chance}%)` | Display template with chance |
-| `generateCombinations` | `true` | Creates action for each weapon+target combo |
-| `required_components.actor` | `positioning:wielding` | Actor must be wielding something |
-| `required_components.primary` | `weapons:weapon, damage-types:can_cut` | Weapon must be cutting |
-| `targets.primary.scope` | `weapons:wielded_cutting_weapons` | Cutting weapons actor is wielding |
-| `targets.secondary.scope` | `core:actors_in_location` | Other actors in same location |
-| `chanceBased.actorSkill.default` | `10` | Base skill for untrained actors |
-| `chanceBased.targetSkill.default` | `0` | Targets without defense have no bonus |
+| Property                          | Value                                    | Explanation                                 |
+| --------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| `id`                              | `weapons:swing_at_target`                | Namespaced action ID                        |
+| `template`                        | `swing {weapon} at {target} ({chance}%)` | Display template with chance                |
+| `generateCombinations`            | `true`                                   | Creates action for each weapon+target combo |
+| `required_components.actor`       | `positioning:wielding`                   | Actor must be wielding something            |
+| `required_components.primary`     | `weapons:weapon, damage-types:can_cut`   | Weapon must be cutting                      |
+| `targets.primary.scope`           | `weapons:wielded_cutting_weapons`        | Cutting weapons actor is wielding           |
+| `targets.secondary.scope`         | `core:actors_in_location`                | Other actors in same location               |
+| `chanceBased.actorSkill.default`  | `10`                                     | Base skill for untrained actors             |
+| `chanceBased.targetSkill.default` | `0`                                      | Targets without defense have no bonus       |
 
 ## Out of Scope
 
@@ -158,9 +155,9 @@ npm run test:ci
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `data/mods/weapons/actions/wield_threateningly.action.json` | Action pattern reference |
+| File                                                                              | Purpose                               |
+| --------------------------------------------------------------------------------- | ------------------------------------- |
+| `data/mods/weapons/actions/wield_threateningly.action.json`                       | Action pattern reference              |
 | `data/mods/weapons/conditions/event-is-action-wield-threateningly.condition.json` | Condition pattern (JSON Logic format) |
 
 ## Corrections Made During Implementation
@@ -177,11 +174,13 @@ The following discrepancies were found and corrected:
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned:**
+
 - Create action file with `core:other_actors_in_location` scope
 - Create condition file with `operator`/`conditions` format
 - Update mod-manifest.json with action and condition
 
 **Actual Changes:**
+
 - Created action file with correct `core:actors_in_location` scope
 - Created condition file using JSON Logic format (matching existing patterns)
 - Updated mod-manifest.json:
@@ -190,6 +189,7 @@ The following discrepancies were found and corrected:
   - Added action and condition files
 
 **New Tests Added:**
+
 - `tests/integration/mods/weapons/swing_at_target_action_discovery.test.js` (33 tests)
   - Tests action structure (6 tests)
   - Tests required components (3 tests)
@@ -199,5 +199,6 @@ The following discrepancies were found and corrected:
   - Tests condition structure (5 tests)
 
 **Test Results:**
+
 - All 33 new tests pass
 - All 160 weapons mod tests pass (14 test suites)

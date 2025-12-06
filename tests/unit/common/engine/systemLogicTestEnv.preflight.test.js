@@ -20,7 +20,9 @@ describe('createBaseRuleEnvironment preflight validation', () => {
     }
 
     expect(caughtError).toBeDefined();
-    expect(caughtError.message).toMatch(/Preflight operation handler validation failed/);
+    expect(caughtError.message).toMatch(
+      /Preflight operation handler validation failed/
+    );
     expect(caughtError.message).toMatch(/MISSING_OP/);
     expect(caughtError.message).toMatch(/test-rule/);
   });

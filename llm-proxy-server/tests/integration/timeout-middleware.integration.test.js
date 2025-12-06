@@ -164,7 +164,9 @@ describe('Timeout middleware end-to-end behaviour', () => {
     expect(response.status).toBe(200);
     expect(response.text).toBe('partial');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Cannot send timeout response - headers already sent'),
+      expect.stringContaining(
+        'Cannot send timeout response - headers already sent'
+      ),
       expect.any(Object)
     );
   });
@@ -254,7 +256,10 @@ describe('createSizeLimitConfig integration with Express', () => {
   });
 
   test('supports numeric payload limits for precise byte control', async () => {
-    const config = createSizeLimitConfig({ jsonLimit: 5120, enforceMaxLimit: false });
+    const config = createSizeLimitConfig({
+      jsonLimit: 5120,
+      enforceMaxLimit: false,
+    });
     const app = express();
     app.use(express.json(config.json));
     app.post('/numeric-limit', (_req, res) => {
@@ -306,7 +311,9 @@ describe('createSizeLimitConfig integration with Express', () => {
   });
 
   test('guards oversized payloads even when jsonLimit string is malformed', () => {
-    const config = createSizeLimitConfig({ jsonLimit: 'definitely-not-a-size' });
+    const config = createSizeLimitConfig({
+      jsonLimit: 'definitely-not-a-size',
+    });
 
     const oversizeBuffer = Buffer.alloc(SECURITY_MAX_REQUEST_SIZE_BYTES + 1);
     expect(() =>
@@ -315,6 +322,8 @@ describe('createSizeLimitConfig integration with Express', () => {
         { headersSent: false },
         oversizeBuffer
       )
-    ).toThrow(expect.objectContaining({ status: 413, code: 'LIMIT_FILE_SIZE' }));
+    ).toThrow(
+      expect.objectContaining({ status: 413, code: 'LIMIT_FILE_SIZE' })
+    );
   });
 });

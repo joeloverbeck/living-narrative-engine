@@ -449,7 +449,10 @@ describe('UnifiedScopeResolver', () => {
         mockEntityManager.getComponentData.mockReturnValue({});
         mockEntityManager.getEntityInstance.mockReturnValue({ id: 'seat-1' });
 
-        const result = resolver.resolve('positioning:available_furniture', context);
+        const result = resolver.resolve(
+          'positioning:available_furniture',
+          context
+        );
 
         expect(result.success).toBe(true);
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -484,7 +487,10 @@ describe('UnifiedScopeResolver', () => {
         });
         mockScopeEngine.resolve.mockReturnValue(null);
 
-        const result = resolver.resolve('positioning:available_furniture', context);
+        const result = resolver.resolve(
+          'positioning:available_furniture',
+          context
+        );
 
         expect(result.success).toBe(false);
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -873,9 +879,7 @@ describe('UnifiedScopeResolver', () => {
     });
 
     it('should throw a default error message when the failure has no errors', () => {
-      jest
-        .spyOn(resolver, 'resolve')
-        .mockReturnValue(ActionResult.failure([]));
+      jest.spyOn(resolver, 'resolve').mockReturnValue(ActionResult.failure([]));
 
       expect(() => resolver.resolveSync(scopeName, context)).toThrow(
         'Scope resolution failed'

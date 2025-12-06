@@ -34,7 +34,7 @@ function createMockLogger() {
 function createMockEntityManager(entityComponents = {}) {
   return {
     hasComponent: jest.fn((entityId, componentId) => {
-      return !!(entityComponents[entityId]?.[componentId]);
+      return !!entityComponents[entityId]?.[componentId];
     }),
     getComponentData: jest.fn((entityId, componentId) => {
       return entityComponents[entityId]?.[componentId] ?? null;

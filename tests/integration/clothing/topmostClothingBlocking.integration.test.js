@@ -15,86 +15,94 @@ describe('Topmost Clothing Blocking Integration', () => {
       debug: jest.fn(),
       info: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
 
     mockEntityManager = {
       getComponentData: jest.fn(),
-      hasComponent: jest.fn()
+      hasComponent: jest.fn(),
     };
 
     mockEntitiesGateway = {
-      getComponentData: jest.fn()
+      getComponentData: jest.fn(),
     };
   });
 
   describe('Belt blocking pants scenario', () => {
     beforeEach(() => {
       // Setup equipment: belt + pants
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: {
-                accessories: 'belt1'
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: {
+                  accessories: 'belt1',
+                },
+                legs: {
+                  base: 'pants1',
+                },
               },
-              legs: {
-                base: 'pants1'
-              }
-            }
-          };
+            };
+          }
+
+          if (entityId === 'belt1' && component === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'torso_lower' },
+            };
+          }
+
+          if (entityId === 'pants1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+
+          if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+
+          return null;
         }
+      );
 
-        if (entityId === 'belt1' && component === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'torso_lower' }
-          };
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, component) => {
+          return (
+            entityId === 'belt1' && component === 'clothing:blocks_removal'
+          );
         }
-
-        if (entityId === 'pants1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' }
-          };
-        }
-
-        if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first'
-              }
-            ]
-          };
-        }
-
-        return null;
-      });
-
-      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
-        return entityId === 'belt1' && component === 'clothing:blocks_removal';
-      });
+      );
 
       // Setup coverage mappings (no coverage blocking in this scenario)
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'belt1') {
-            return { covers: ['torso_lower'], coveragePriority: 'direct' };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'belt1') {
+              return { covers: ['torso_lower'], coveragePriority: 'direct' };
+            }
+            if (entityId === 'pants1') {
+              return { covers: ['legs'], coveragePriority: 'base' };
+            }
           }
-          if (entityId === 'pants1') {
-            return { covers: ['legs'], coveragePriority: 'base' };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -120,42 +128,46 @@ describe('Topmost Clothing Blocking Integration', () => {
   describe('Belt removed scenario', () => {
     beforeEach(() => {
       // Setup equipment: only pants (belt removed)
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return {
-            equipped: {
-              legs: {
-                base: 'pants1'
-              }
-            }
-          };
-        }
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return {
+              equipped: {
+                legs: {
+                  base: 'pants1',
+                },
+              },
+            };
+          }
 
-        if (entityId === 'pants1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' }
-          };
-        }
+          if (entityId === 'pants1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(false);
 
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'pants1') {
-            return { covers: ['legs'], coveragePriority: 'base' };
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'pants1') {
+              return { covers: ['legs'], coveragePriority: 'base' };
+            }
           }
+          return null;
         }
-        return null;
-      });
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -170,95 +182,106 @@ describe('Topmost Clothing Blocking Integration', () => {
   describe('Multiple blockers scenario', () => {
     beforeEach(() => {
       // Setup equipment: belt + suspenders + pants
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_lower: {
-                accessories: 'belt1'
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_lower: {
+                  accessories: 'belt1',
+                },
+                torso_upper: {
+                  accessories: 'suspenders1',
+                },
+                legs: {
+                  base: 'pants1',
+                },
               },
-              torso_upper: {
-                accessories: 'suspenders1'
-              },
-              legs: {
-                base: 'pants1'
-              }
+            };
+          }
+
+          if (entityId === 'belt1' && component === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'torso_lower' },
+            };
+          }
+
+          if (entityId === 'suspenders1' && component === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'torso_upper' },
+            };
+          }
+
+          if (entityId === 'pants1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+
+          if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+
+          if (
+            entityId === 'suspenders1' &&
+            component === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+
+          return null;
+        }
+      );
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, component) => {
+          return (
+            (entityId === 'belt1' || entityId === 'suspenders1') &&
+            component === 'clothing:blocks_removal'
+          );
+        }
+      );
+
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'belt1') {
+              return { covers: ['torso_lower'], coveragePriority: 'direct' };
             }
-          };
-        }
-
-        if (entityId === 'belt1' && component === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'torso_lower' }
-          };
-        }
-
-        if (entityId === 'suspenders1' && component === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'torso_upper' }
-          };
-        }
-
-        if (entityId === 'pants1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' }
-          };
-        }
-
-        if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first'
-              }
-            ]
-          };
-        }
-
-        if (entityId === 'suspenders1' && component === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first'
-              }
-            ]
-          };
-        }
-
-        return null;
-      });
-
-      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
-        return (entityId === 'belt1' || entityId === 'suspenders1') &&
-               component === 'clothing:blocks_removal';
-      });
-
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'belt1') {
-            return { covers: ['torso_lower'], coveragePriority: 'direct' };
+            if (entityId === 'suspenders1') {
+              return { covers: ['torso_upper'], coveragePriority: 'direct' };
+            }
+            if (entityId === 'pants1') {
+              return { covers: ['legs'], coveragePriority: 'base' };
+            }
           }
-          if (entityId === 'suspenders1') {
-            return { covers: ['torso_upper'], coveragePriority: 'direct' };
-          }
-          if (entityId === 'pants1') {
-            return { covers: ['legs'], coveragePriority: 'base' };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -274,67 +297,78 @@ describe('Topmost Clothing Blocking Integration', () => {
   describe('Armor blocking base layers scenario', () => {
     beforeEach(() => {
       // Setup equipment: cuirass (armor) + shirt
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return {
-            equipped: {
-              torso_upper: {
-                outer: 'cuirass1',
-                base: 'shirt1'
-              }
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return {
+              equipped: {
+                torso_upper: {
+                  outer: 'cuirass1',
+                  base: 'shirt1',
+                },
+              },
+            };
+          }
+
+          if (entityId === 'cuirass1' && component === 'clothing:wearable') {
+            return {
+              layer: 'outer',
+              equipmentSlots: { primary: 'torso_upper' },
+            };
+          }
+
+          if (entityId === 'shirt1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'torso_upper' },
+            };
+          }
+
+          if (
+            entityId === 'cuirass1' &&
+            component === 'clothing:blocks_removal'
+          ) {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'torso_upper',
+                  layers: ['base', 'underwear'],
+                  blockType: 'full_block',
+                },
+              ],
+            };
+          }
+
+          return null;
+        }
+      );
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, component) => {
+          return (
+            entityId === 'cuirass1' && component === 'clothing:blocks_removal'
+          );
+        }
+      );
+
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'cuirass1') {
+              return { covers: ['torso_upper'], coveragePriority: 'outer' };
             }
-          };
-        }
-
-        if (entityId === 'cuirass1' && component === 'clothing:wearable') {
-          return {
-            layer: 'outer',
-            equipmentSlots: { primary: 'torso_upper' }
-          };
-        }
-
-        if (entityId === 'shirt1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'torso_upper' }
-          };
-        }
-
-        if (entityId === 'cuirass1' && component === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'torso_upper',
-                layers: ['base', 'underwear'],
-                blockType: 'full_block'
-              }
-            ]
-          };
-        }
-
-        return null;
-      });
-
-      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
-        return entityId === 'cuirass1' && component === 'clothing:blocks_removal';
-      });
-
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'cuirass1') {
-            return { covers: ['torso_upper'], coveragePriority: 'outer' };
+            if (entityId === 'shirt1') {
+              return { covers: ['torso_upper'], coveragePriority: 'base' };
+            }
           }
-          if (entityId === 'shirt1') {
-            return { covers: ['torso_upper'], coveragePriority: 'base' };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -349,61 +383,72 @@ describe('Topmost Clothing Blocking Integration', () => {
   describe('Explicit item ID blocking scenario', () => {
     beforeEach(() => {
       // Setup equipment: artifact1 + artifact2 (artifact2 blocks artifact1)
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return {
-            equipped: {
-              hands: {
-                accessories: 'artifact1',
-                base: 'artifact2'
-              }
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return {
+              equipped: {
+                hands: {
+                  accessories: 'artifact1',
+                  base: 'artifact2',
+                },
+              },
+            };
+          }
+
+          if (entityId === 'artifact1' && component === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'hands' },
+            };
+          }
+
+          if (entityId === 'artifact2' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'hands' },
+            };
+          }
+
+          if (
+            entityId === 'artifact2' &&
+            component === 'clothing:blocks_removal'
+          ) {
+            return {
+              blocksRemovalOf: ['artifact1'],
+            };
+          }
+
+          return null;
+        }
+      );
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, component) => {
+          return (
+            entityId === 'artifact2' && component === 'clothing:blocks_removal'
+          );
+        }
+      );
+
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'artifact1') {
+              return { covers: ['hands'], coveragePriority: 'direct' };
             }
-          };
-        }
-
-        if (entityId === 'artifact1' && component === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'hands' }
-          };
-        }
-
-        if (entityId === 'artifact2' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'hands' }
-          };
-        }
-
-        if (entityId === 'artifact2' && component === 'clothing:blocks_removal') {
-          return {
-            blocksRemovalOf: ['artifact1']
-          };
-        }
-
-        return null;
-      });
-
-      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
-        return entityId === 'artifact2' && component === 'clothing:blocks_removal';
-      });
-
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'artifact1') {
-            return { covers: ['hands'], coveragePriority: 'direct' };
+            if (entityId === 'artifact2') {
+              return { covers: ['hands'], coveragePriority: 'base' };
+            }
           }
-          if (entityId === 'artifact2') {
-            return { covers: ['hands'], coveragePriority: 'base' };
-          }
+          return null;
         }
-        return null;
-      });
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -421,68 +466,76 @@ describe('Topmost Clothing Blocking Integration', () => {
       let equipmentState = {
         equipped: {
           torso_lower: {
-            accessories: 'belt1'
+            accessories: 'belt1',
           },
           legs: {
-            base: 'pants1'
-          }
-        }
+            base: 'pants1',
+          },
+        },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return equipmentState;
-        }
-
-        if (entityId === 'belt1' && component === 'clothing:wearable') {
-          return {
-            layer: 'accessories',
-            equipmentSlots: { primary: 'torso_lower' }
-          };
-        }
-
-        if (entityId === 'pants1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' }
-          };
-        }
-
-        if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
-          return {
-            blockedSlots: [
-              {
-                slot: 'legs',
-                layers: ['base'],
-                blockType: 'must_remove_first'
-              }
-            ]
-          };
-        }
-
-        return null;
-      });
-
-      mockEntityManager.hasComponent.mockImplementation((entityId, component) => {
-        return entityId === 'belt1' && component === 'clothing:blocks_removal';
-      });
-
-      mockEntitiesGateway.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:coverage_mapping') {
-          if (entityId === 'belt1') {
-            return { covers: ['torso_lower'], coveragePriority: 'direct' };
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return equipmentState;
           }
-          if (entityId === 'pants1') {
-            return { covers: ['legs'], coveragePriority: 'base' };
+
+          if (entityId === 'belt1' && component === 'clothing:wearable') {
+            return {
+              layer: 'accessories',
+              equipmentSlots: { primary: 'torso_lower' },
+            };
           }
+
+          if (entityId === 'pants1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
+
+          if (entityId === 'belt1' && component === 'clothing:blocks_removal') {
+            return {
+              blockedSlots: [
+                {
+                  slot: 'legs',
+                  layers: ['base'],
+                  blockType: 'must_remove_first',
+                },
+              ],
+            };
+          }
+
+          return null;
         }
-        return null;
-      });
+      );
+
+      mockEntityManager.hasComponent.mockImplementation(
+        (entityId, component) => {
+          return (
+            entityId === 'belt1' && component === 'clothing:blocks_removal'
+          );
+        }
+      );
+
+      mockEntitiesGateway.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:coverage_mapping') {
+            if (entityId === 'belt1') {
+              return { covers: ['torso_lower'], coveragePriority: 'direct' };
+            }
+            if (entityId === 'pants1') {
+              return { covers: ['legs'], coveragePriority: 'base' };
+            }
+          }
+          return null;
+        }
+      );
 
       service = new ClothingAccessibilityService({
         logger: mockLogger,
         entityManager: mockEntityManager,
-        entitiesGateway: mockEntitiesGateway
+        entitiesGateway: mockEntitiesGateway,
       });
     });
 
@@ -496,25 +549,27 @@ describe('Topmost Clothing Blocking Integration', () => {
       const newEquipmentState = {
         equipped: {
           legs: {
-            base: 'pants1'
-          }
-        }
+            base: 'pants1',
+          },
+        },
       };
 
-      mockEntityManager.getComponentData.mockImplementation((entityId, component) => {
-        if (component === 'clothing:equipment') {
-          return newEquipmentState;
-        }
+      mockEntityManager.getComponentData.mockImplementation(
+        (entityId, component) => {
+          if (component === 'clothing:equipment') {
+            return newEquipmentState;
+          }
 
-        if (entityId === 'pants1' && component === 'clothing:wearable') {
-          return {
-            layer: 'base',
-            equipmentSlots: { primary: 'legs' }
-          };
-        }
+          if (entityId === 'pants1' && component === 'clothing:wearable') {
+            return {
+              layer: 'base',
+              equipmentSlots: { primary: 'legs' },
+            };
+          }
 
-        return null;
-      });
+          return null;
+        }
+      );
 
       mockEntityManager.hasComponent.mockReturnValue(false);
 

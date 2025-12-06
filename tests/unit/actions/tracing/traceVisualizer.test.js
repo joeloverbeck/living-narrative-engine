@@ -220,7 +220,9 @@ describe('TraceVisualizer', () => {
     it('should format attribute prefixes for intermediate nodes', () => {
       const root = structuredTrace.startSpan('Root');
 
-      const firstChild = structuredTrace.startSpan('FirstChild', { foo: 'bar' });
+      const firstChild = structuredTrace.startSpan('FirstChild', {
+        foo: 'bar',
+      });
       structuredTrace.endSpan(firstChild);
 
       const secondChild = structuredTrace.startSpan('SecondChild');

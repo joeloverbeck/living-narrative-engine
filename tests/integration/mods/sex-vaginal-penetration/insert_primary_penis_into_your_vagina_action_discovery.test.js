@@ -67,7 +67,8 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
    */
   function isSocketCovered(entity, socketName) {
     const equipment = entity?.components?.['clothing:equipment']?.equipped;
-    const slotMetadata = entity?.components?.['clothing:slot_metadata']?.slotMappings;
+    const slotMetadata =
+      entity?.components?.['clothing:slot_metadata']?.slotMappings;
 
     if (!equipment || !slotMetadata) {
       return false;
@@ -112,7 +113,8 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     const actorFacingAway =
-      actorEntity?.components?.['positioning:facing_away']?.facing_away_from || [];
+      actorEntity?.components?.['positioning:facing_away']?.facing_away_from ||
+      [];
 
     const validPartners = partners.filter((partnerId) => {
       const partner = testFixture.entityManager.getEntityInstance(partnerId);
@@ -133,7 +135,8 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
         partner.components?.['positioning:facing_away']?.facing_away_from || [];
 
       const facingEachOther =
-        !partnerFacingAway.includes(actorId) && !actorFacingAway.includes(partnerId);
+        !partnerFacingAway.includes(actorId) &&
+        !actorFacingAway.includes(partnerId);
       const actorBehindTarget = partnerFacingAway.includes(actorId);
 
       if (!facingEachOther && !actorBehindTarget) {
@@ -141,9 +144,11 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       }
 
       const partnerKneelingBeforeActor =
-        partner.components?.['positioning:kneeling_before']?.entityId === actorId;
+        partner.components?.['positioning:kneeling_before']?.entityId ===
+        actorId;
       const actorKneelingBeforePartner =
-        actorEntity?.components?.['positioning:kneeling_before']?.entityId === partnerId;
+        actorEntity?.components?.['positioning:kneeling_before']?.entityId ===
+        partnerId;
 
       if (partnerKneelingBeforeActor || actorKneelingBeforePartner) {
         return false;
@@ -182,9 +187,13 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
     const room = new ModEntityBuilder('room1').asRoom('Test Room').build();
 
-    const actorPelvisId = includeVagina ? 'actorPelvisWithVagina1' : 'actorPelvisNoVagina1';
+    const actorPelvisId = includeVagina
+      ? 'actorPelvisWithVagina1'
+      : 'actorPelvisNoVagina1';
     const actorVaginaId = `${actorPelvisId}_vagina`;
-    const targetGroinId = includePenis ? 'targetGroinWithPenis1' : 'targetGroinNoPenis1';
+    const targetGroinId = includePenis
+      ? 'targetGroinWithPenis1'
+      : 'targetGroinNoPenis1';
     const targetPenisId = `${targetGroinId}_penis`;
 
     const actorBuilder = new ModEntityBuilder('alana')
@@ -205,7 +214,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     }
 
     if (actorBeingFucked) {
-      actorBuilder.withComponent('positioning:being_fucked_vaginally', { actorId: 'dorian' });
+      actorBuilder.withComponent('positioning:being_fucked_vaginally', {
+        actorId: 'dorian',
+      });
     }
 
     if (actorSitting) {
@@ -266,11 +277,19 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
     const targetGroinChildren = includePenis ? [targetPenisId] : [];
 
     const actorPelvis = new ModEntityBuilder(actorPelvisId)
-      .asBodyPart({ parent: null, children: actorPelvisChildren, subType: 'pelvis' })
+      .asBodyPart({
+        parent: null,
+        children: actorPelvisChildren,
+        subType: 'pelvis',
+      })
       .build();
 
     const targetGroin = new ModEntityBuilder(targetGroinId)
-      .asBodyPart({ parent: null, children: targetGroinChildren, subType: 'groin' })
+      .asBodyPart({
+        parent: null,
+        children: targetGroinChildren,
+        subType: 'groin',
+      })
       .build();
 
     const entities = [room, actor, target, actorPelvis, targetGroin];
@@ -299,7 +318,10 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
     if (actorSitting) {
       entities.push(
-        new ModEntityBuilder('stool1').withName('Stool').atLocation('room1').build()
+        new ModEntityBuilder('stool1')
+          .withName('Stool')
+          .atLocation('room1')
+          .build()
       );
     }
 
@@ -380,7 +402,8 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
         },
         {
           logic: { not: { isSocketCovered: ['actor', 'vagina'] } },
-          failure_message: 'Your vagina must be uncovered to perform this action.',
+          failure_message:
+            'Your vagina must be uncovered to perform this action.',
         },
       ]);
     });
@@ -393,11 +416,12 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       configureActionDiscovery();
 
       const actorEntity = testFixture.entityManager.getEntityInstance('alana');
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        insertPrimaryPenisAction.prerequisites,
-        insertPrimaryPenisAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          insertPrimaryPenisAction.prerequisites,
+          insertPrimaryPenisAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(true);
 
       expect(
@@ -409,7 +433,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeDefined();
@@ -422,7 +448,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeDefined();
@@ -435,7 +463,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -447,16 +477,19 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       configureActionDiscovery();
 
       const actorEntity = testFixture.entityManager.getEntityInstance('alana');
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        insertPrimaryPenisAction.prerequisites,
-        insertPrimaryPenisAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          insertPrimaryPenisAction.prerequisites,
+          insertPrimaryPenisAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(false);
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -468,16 +501,19 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
       configureActionDiscovery();
 
       const actorEntity = testFixture.entityManager.getEntityInstance('alana');
-      const prerequisitesPassed = testFixture.testEnv.prerequisiteService.evaluate(
-        insertPrimaryPenisAction.prerequisites,
-        insertPrimaryPenisAction,
-        actorEntity
-      );
+      const prerequisitesPassed =
+        testFixture.testEnv.prerequisiteService.evaluate(
+          insertPrimaryPenisAction.prerequisites,
+          insertPrimaryPenisAction,
+          actorEntity
+        );
       expect(prerequisitesPassed).toBe(false);
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -490,7 +526,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -503,7 +541,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -516,7 +556,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();
@@ -529,7 +571,9 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action d
 
       const actions = await testFixture.discoverActions('alana');
       const foundAction = actions.find(
-        (action) => action.id === 'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
+        (action) =>
+          action.id ===
+          'sex-vaginal-penetration:insert_primary_penis_into_your_vagina'
       );
 
       expect(foundAction).toBeUndefined();

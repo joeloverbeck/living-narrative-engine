@@ -55,11 +55,16 @@ describe('caressing:caress_bare_back action integration', () => {
 
     await testFixture.executeAction(scenario.actor.id, scenario.target.id);
 
-    const expectedMessage = "Lena sensually caresses the bare skin of Iris's back.";
-    ModAssertionHelpers.assertActionSuccess(testFixture.events, expectedMessage, {
-      shouldEndTurn: true,
-      shouldHavePerceptibleEvent: true,
-    });
+    const expectedMessage =
+      "Lena sensually caresses the bare skin of Iris's back.";
+    ModAssertionHelpers.assertActionSuccess(
+      testFixture.events,
+      expectedMessage,
+      {
+        shouldEndTurn: true,
+        shouldHavePerceptibleEvent: true,
+      }
+    );
 
     ModAssertionHelpers.assertPerceptibleEvent(testFixture.events, {
       descriptionText: expectedMessage,
@@ -72,7 +77,9 @@ describe('caressing:caress_bare_back action integration', () => {
 
   it('does not trigger the rule for other actions', async () => {
     const room = ModEntityScenarios.createRoom('room1', 'Test Room');
-    const actor = ModEntityScenarios.createActorTargetPair({ names: ['Nova', 'Kai'] }).actor;
+    const actor = ModEntityScenarios.createActorTargetPair({
+      names: ['Nova', 'Kai'],
+    }).actor;
     actor.components['positioning:closeness'] = { partners: [] };
 
     testFixture.reset([room, actor]);

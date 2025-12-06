@@ -28,12 +28,14 @@ The new body descriptor system is built around a centralized registry that serve
 **Registry Location**: `src/anatomy/registries/bodyDescriptorRegistry.js`
 
 **Benefits**:
+
 - **Centralized Configuration**: All descriptor metadata in one place
 - **Automatic Validation**: Built-in validation ensures consistency
 - **Type Safety**: Controlled vocabularies with enumerated values
 - **Easy Extension**: Add new descriptors by updating the registry
 
 **Current Descriptors** (6 total):
+
 - height, skinColor, build, composition, hairDensity, smell
 
 **Registry Properties**: Each descriptor has 9 properties including schema name, display configuration, valid values, and extraction/formatting functions.
@@ -47,6 +49,7 @@ npm run validate:body-descriptors
 ```
 
 **Documentation**:
+
 - [Body Descriptors Complete](../anatomy/body-descriptors-complete.md) - Complete guide including registry, adding descriptors, and validation
 
 ## Migration Strategies
@@ -417,6 +420,7 @@ npm run validate:body-descriptors
 ```
 
 Expected output after successful migration:
+
 ```
 🔍 Body Descriptor System Validation
 

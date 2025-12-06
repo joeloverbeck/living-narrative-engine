@@ -3,6 +3,7 @@
 **Reference**: [Performance Test Flakiness Analysis](../performance-test-flakiness/performance-test-flakiness-analysis.md)
 
 ## Status
+
 - Completed
 
 ## Summary
@@ -12,6 +13,7 @@ The current performance tickets call for a bounded cache to curb GOAP planner me
 ## Problem Statement
 
 `GoapPlanner` maintains an instance-level goal-path normalization cache:
+
 - `#goalPathNormalizationCache` (Map<string, object>) — **unbounded**
 
 Over repeated planning iterations with diverse actors/goals, this cache retains every normalization result and grows without limit. The other caches previously called out do not leak because they are explicitly pruned or cleared.
@@ -19,18 +21,22 @@ Over repeated planning iterations with diverse actors/goals, this cache retains 
 ## Files Expected to Touch
 
 ### New Files
+
 - `src/goap/utils/boundedCache.js` - New BoundedCache utility class
 
 ### Modified Files
+
 - `src/goap/planner/goapPlanner.js` - Use BoundedCache for `#goalPathNormalizationCache`
 
 ### Test Files
+
 - `tests/unit/goap/utils/boundedCache.test.js` - New unit tests for BoundedCache
 - `tests/performance/goap/numericPlanning.performance.test.js` - Existing memory performance tests should continue to pass (no edits expected)
 
 ## Out of Scope
 
 **DO NOT CHANGE**:
+
 - `GoapController` cache management (separate ticket: PERTESFLAANA-002)
 - Planning algorithm logic in `GoapPlanner#plan()`
 - `PlanningNode` deep cloning behavior (future optimization)
@@ -88,11 +94,13 @@ class BoundedCache {
 ### Replacement Pattern in GoapPlanner
 
 **Before:**
+
 ```javascript
 #goalPathNormalizationCache = new Map();
 ```
 
 **After:**
+
 ```javascript
 #goalPathNormalizationCache = new BoundedCache(100);
 ```
@@ -150,6 +158,7 @@ class BoundedCache {
 ## Testing Strategy
 
 ### Unit Testing
+
 ```javascript
 describe('BoundedCache', () => {
   it('should evict LRU entry when maxSize exceeded', () => {
@@ -178,11 +187,13 @@ describe('BoundedCache', () => {
 ```
 
 ### Performance Testing
+
 - Run `npm run test:performance -- tests/performance/goap/numericPlanning.performance.test.js`
 - Verify memory growth < 50MB overall; test already enforces <1MB delta
 - Ensure planning time not degraded
 
 ### Manual Verification
+
 ```bash
 # Run with GC logging
 NODE_ENV=test node --expose-gc --trace-gc node_modules/.bin/jest tests/performance/goap/numericPlanning.performance.test.js
@@ -216,6 +227,7 @@ None - this ticket is standalone and doesn't depend on other tickets.
 ## Validation Checklist
 
 Before marking complete:
+
 - [x] BoundedCache unit tests pass with 100% coverage
 - [x] GOAP performance tests show no regression
 - [x] All GOAP integration tests pass
@@ -225,6 +237,7 @@ Before marking complete:
 - [x] Code review completed
 
 ## Outcome
+
 - Implemented LRU-bounded cache for `GoapPlanner` goal-path normalization.
 - Added focused unit tests for the cache utility.
 - Adjusted performance harness to avoid jest mock call-history bloat and to run under the Node environment for accurate heap readings.

@@ -105,8 +105,10 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
-      const receivingBlowjob = actor?.components?.['positioning:receiving_blowjob'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const receivingBlowjob =
+        actor?.components?.['positioning:receiving_blowjob'];
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!receivingBlowjob || !Array.isArray(closenessPartners)) {
         return { success: true, value: new Set() };
@@ -118,7 +120,8 @@ function installActorGivingBlowjobToMeScopeOverride(fixture) {
       }
 
       const target = fixture.entityManager.getEntityInstance(givingEntityId);
-      const targetGivingBlowjob = target?.components?.['positioning:giving_blowjob'];
+      const targetGivingBlowjob =
+        target?.components?.['positioning:giving_blowjob'];
 
       // Validate bidirectional references and closeness
       const referencesMatch =
@@ -157,7 +160,8 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Action Discovery', () =>
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction('sex-penile-oral', ACTION_ID);
-    restoreScopeResolver = installActorGivingBlowjobToMeScopeOverride(testFixture);
+    restoreScopeResolver =
+      installActorGivingBlowjobToMeScopeOverride(testFixture);
   });
 
   afterEach(() => {
@@ -181,7 +185,9 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Action Discovery', () =>
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull out your cock out of {primary}'s mouth");
+    expect(discovered.template).toBe(
+      "pull out your cock out of {primary}'s mouth"
+    );
   });
 
   it('should NOT discover action when actor lacks receiving_blowjob component', async () => {
@@ -247,6 +253,8 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Action Discovery', () =>
     const discovered = actions.find((action) => action.id === ACTION_ID);
 
     expect(discovered).toBeDefined();
-    expect(discovered.template).toBe("pull out your cock out of {primary}'s mouth");
+    expect(discovered.template).toBe(
+      "pull out your cock out of {primary}'s mouth"
+    );
   });
 });

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 
-const actualTokens = jest
-  .requireActual('../../../../src/dependencyInjection/tokens.js')
-  .tokens;
+const actualTokens = jest.requireActual(
+  '../../../../src/dependencyInjection/tokens.js'
+).tokens;
 
 /**
  *
@@ -35,7 +35,9 @@ class RecordingContainer {
         const value = this._resolveOverrides.get(token);
         return typeof value === 'function' ? value() : value;
       }
-      throw new Error(`Mock Resolve Error: Token not registered: ${String(token)}`);
+      throw new Error(
+        `Mock Resolve Error: Token not registered: ${String(token)}`
+      );
     });
   }
 }
@@ -73,9 +75,13 @@ describe('registerLoaders additional coverage', () => {
       }),
     };
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 
-    await expect(registerLoaders(container)).rejects.toThrow(/reading 'debug'/i);
+    await expect(registerLoaders(container)).rejects.toThrow(
+      /reading 'debug'/i
+    );
 
     expect(consoleSpy).toHaveBeenCalledWith(
       'Loaders Registration: Starting... (ILogger not yet available)'
@@ -92,32 +98,44 @@ describe('registerLoaders additional coverage', () => {
     delete global.window;
     process.env.NODE_ENV = 'test';
 
-    jest.doMock('../../../../src/validation/modReferenceExtractor', () => ({
-      __esModule: true,
-      default: class MockModReferenceExtractor {
-        constructor(deps) {
-          this.deps = deps;
-        }
-      },
-    }), { virtual: true });
+    jest.doMock(
+      '../../../../src/validation/modReferenceExtractor',
+      () => ({
+        __esModule: true,
+        default: class MockModReferenceExtractor {
+          constructor(deps) {
+            this.deps = deps;
+          }
+        },
+      }),
+      { virtual: true }
+    );
 
-    jest.doMock('../../../../src/validation/modCrossReferenceValidator', () => ({
-      __esModule: true,
-      default: class MockModCrossReferenceValidator {
-        constructor(deps) {
-          this.deps = deps;
-        }
-      },
-    }), { virtual: true });
+    jest.doMock(
+      '../../../../src/validation/modCrossReferenceValidator',
+      () => ({
+        __esModule: true,
+        default: class MockModCrossReferenceValidator {
+          constructor(deps) {
+            this.deps = deps;
+          }
+        },
+      }),
+      { virtual: true }
+    );
 
-    jest.doMock('../../../../src/validation/modValidationOrchestrator', () => ({
-      __esModule: true,
-      default: class MockModValidationOrchestrator {
-        constructor(deps) {
-          this.deps = deps;
-        }
-      },
-    }), { virtual: true });
+    jest.doMock(
+      '../../../../src/validation/modValidationOrchestrator',
+      () => ({
+        __esModule: true,
+        default: class MockModValidationOrchestrator {
+          constructor(deps) {
+            this.deps = deps;
+          }
+        },
+      }),
+      { virtual: true }
+    );
 
     jest.doMock('../../../../src/validation/violationReporter.js', () => ({
       __esModule: true,
@@ -128,23 +146,27 @@ describe('registerLoaders additional coverage', () => {
       },
     }));
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 
     const logger = createLogger();
     const container = new RecordingContainer(logger);
 
     await registerLoaders(container);
 
-    expect(container.registrations.has(actualTokens.IModReferenceExtractor)).toBe(
-      true
-    );
+    expect(
+      container.registrations.has(actualTokens.IModReferenceExtractor)
+    ).toBe(true);
     expect(
       container.registrations.has(actualTokens.IModCrossReferenceValidator)
     ).toBe(true);
     expect(
       container.registrations.has(actualTokens.IModValidationOrchestrator)
     ).toBe(true);
-    expect(container.registrations.has(actualTokens.IViolationReporter)).toBe(true);
+    expect(container.registrations.has(actualTokens.IViolationReporter)).toBe(
+      true
+    );
 
     expect(logger.debug).toHaveBeenCalledWith(
       'Registered mod cross-reference validation services and orchestrator (server-side only)'
@@ -160,7 +182,9 @@ describe('registerLoaders additional coverage', () => {
       throw new Error('dynamic import failure');
     });
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 
     const logger = createLogger();
     const container = new RecordingContainer(logger);
@@ -187,15 +211,21 @@ describe('registerLoaders additional coverage', () => {
       },
     }));
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
-    const { default: ActiveLoadResultAggregator } = require('../../../../src/loaders/LoadResultAggregator.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      default: ActiveLoadResultAggregator,
+    } = require('../../../../src/loaders/LoadResultAggregator.js');
 
     const logger = createLogger();
     const container = new RecordingContainer(logger);
 
     await registerLoaders(container);
 
-    const registration = container.registrations.get(actualTokens.ContentLoadManager);
+    const registration = container.registrations.get(
+      actualTokens.ContentLoadManager
+    );
     expect(registration).toBeDefined();
 
     const stubValues = new Map([
@@ -236,8 +266,12 @@ describe('registerLoaders additional coverage', () => {
 
     const contentManager = registration.factoryOrValue(stubContainer);
 
-    expect(stubContainer.resolve).toHaveBeenCalledWith(actualTokens.ComponentLoader);
-    expect(contentManager.aggregator).toBeInstanceOf(ActiveLoadResultAggregator);
+    expect(stubContainer.resolve).toHaveBeenCalledWith(
+      actualTokens.ComponentLoader
+    );
+    expect(contentManager.aggregator).toBeInstanceOf(
+      ActiveLoadResultAggregator
+    );
     expect(contentManager.aggregator.getTotalCounts()).toEqual({ rules: 7 });
   });
 
@@ -246,7 +280,9 @@ describe('registerLoaders additional coverage', () => {
     delete global.window;
     process.env.NODE_ENV = 'test';
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 
     const logger = createLogger();
     const container = new RecordingContainer(logger);
@@ -311,7 +347,14 @@ describe('registerLoaders additional coverage', () => {
     jest.doMock('../../../../src/loaders/scopeLoader.js', () => ({
       __esModule: true,
       default: class MockScopeLoader {
-        constructor(configuration, pathResolver, textDataFetcher, schemaValidator, dataRegistry, logger) {
+        constructor(
+          configuration,
+          pathResolver,
+          textDataFetcher,
+          schemaValidator,
+          dataRegistry,
+          logger
+        ) {
           this.configuration = configuration;
           this.pathResolver = pathResolver;
           this.textDataFetcher = textDataFetcher;
@@ -340,8 +383,12 @@ describe('registerLoaders additional coverage', () => {
       },
     }));
 
-    const { registerLoaders } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
-    const { default: ActualModDependencyValidator } = require('../../../../src/modding/modDependencyValidator.js');
+    const {
+      registerLoaders,
+    } = require('../../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+    const {
+      default: ActualModDependencyValidator,
+    } = require('../../../../src/modding/modDependencyValidator.js');
 
     const logger = createLogger();
     const container = new RecordingContainer(logger);
@@ -354,8 +401,12 @@ describe('registerLoaders additional coverage', () => {
       )
     );
 
-    const scopeRegistration = container.registrations.get(actualTokens.ScopeLoader);
-    const promptRegistration = container.registrations.get(actualTokens.PromptTextLoader);
+    const scopeRegistration = container.registrations.get(
+      actualTokens.ScopeLoader
+    );
+    const promptRegistration = container.registrations.get(
+      actualTokens.PromptTextLoader
+    );
     const modManifestRegistration = container.registrations.get(
       actualTokens.ModManifestProcessor
     );
@@ -381,7 +432,9 @@ describe('registerLoaders additional coverage', () => {
     const scopeContainer = new RecordingContainer(logger, sharedDependencies);
     const scopeInstance = scopeRegistration.factoryOrValue(scopeContainer);
 
-    expect(scopeContainer.resolve).toHaveBeenCalledWith(actualTokens.ITextDataFetcher);
+    expect(scopeContainer.resolve).toHaveBeenCalledWith(
+      actualTokens.ITextDataFetcher
+    );
     expect(scopeInstance.textDataFetcher).toBe(
       sharedDependencies.get(actualTokens.ITextDataFetcher)
     );
@@ -401,14 +454,22 @@ describe('registerLoaders additional coverage', () => {
       throw new Error('mod validation orchestrator unavailable');
     });
 
-    const manifestContainer = new RecordingContainer(logger, manifestDependencies);
-    const manifestProcessor = modManifestRegistration.factoryOrValue(manifestContainer);
+    const manifestContainer = new RecordingContainer(
+      logger,
+      manifestDependencies
+    );
+    const manifestProcessor =
+      modManifestRegistration.factoryOrValue(manifestContainer);
 
-    expect(manifestContainer.resolve).toHaveBeenCalledWith(actualTokens.ModLoadOrderResolver);
+    expect(manifestContainer.resolve).toHaveBeenCalledWith(
+      actualTokens.ModLoadOrderResolver
+    );
     expect(manifestContainer.resolve).toHaveBeenCalledWith(
       actualTokens.IModValidationOrchestrator
     );
-    expect(manifestProcessor.deps.modDependencyValidator).toBe(ActualModDependencyValidator);
+    expect(manifestProcessor.deps.modDependencyValidator).toBe(
+      ActualModDependencyValidator
+    );
     expect(manifestProcessor.deps.modValidationOrchestrator).toBeNull();
   });
 });

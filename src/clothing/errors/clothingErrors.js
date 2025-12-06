@@ -20,8 +20,12 @@ export class ClothingError extends BaseError {
     }
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  }
 }
 
 /**
@@ -32,7 +36,7 @@ export class ClothingAccessibilityError extends BaseError {
     super(message, 'CLOTHING_ACCESSIBILITY_ERROR', {
       entityId,
       itemId,
-      ...context
+      ...context,
     });
     // Store for backward compatibility
     this.entityId = entityId;
@@ -43,8 +47,12 @@ export class ClothingAccessibilityError extends BaseError {
     }
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  }
 }
 
 /**
@@ -54,7 +62,7 @@ export class CoverageAnalysisError extends BaseError {
   constructor(message, equipmentState, context = {}) {
     super(message, 'COVERAGE_ANALYSIS_ERROR', {
       equipmentState,
-      ...context
+      ...context,
     });
     // Store for backward compatibility
     this.equipmentState = equipmentState;
@@ -64,8 +72,12 @@ export class CoverageAnalysisError extends BaseError {
     }
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  }
 }
 
 /**
@@ -76,7 +88,7 @@ export class PriorityCalculationError extends BaseError {
     super(message, 'PRIORITY_CALCULATION_ERROR', {
       layer,
       modifiers,
-      ...context
+      ...context,
     });
     // Store for backward compatibility
     this.layer = layer;
@@ -87,8 +99,12 @@ export class PriorityCalculationError extends BaseError {
     }
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  }
 }
 
 /**
@@ -99,7 +115,7 @@ export class ClothingServiceError extends BaseError {
     super(message, 'CLOTHING_SERVICE_ERROR', {
       serviceName,
       operation,
-      ...context
+      ...context,
     });
     // Store for backward compatibility
     this.serviceName = serviceName;
@@ -110,8 +126,12 @@ export class ClothingServiceError extends BaseError {
     }
   }
 
-  getSeverity() { return 'error'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'error';
+  }
+  isRecoverable() {
+    return true;
+  }
 }
 
 /**
@@ -123,7 +143,7 @@ export class ClothingValidationError extends BaseError {
       field,
       value,
       expectedType,
-      ...context
+      ...context,
     });
     // Store for backward compatibility
     this.field = field;
@@ -135,6 +155,10 @@ export class ClothingValidationError extends BaseError {
     }
   }
 
-  getSeverity() { return 'warning'; }
-  isRecoverable() { return true; }
+  getSeverity() {
+    return 'warning';
+  }
+  isRecoverable() {
+    return true;
+  }
 }

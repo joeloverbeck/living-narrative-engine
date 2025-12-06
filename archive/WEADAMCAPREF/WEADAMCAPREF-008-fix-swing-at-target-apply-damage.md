@@ -21,10 +21,10 @@
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `data/mods/weapons/rules/handle_swing_at_target.rule.json` | UPDATE | Add APPLY_DAMAGE operations to SUCCESS and CRITICAL_SUCCESS branches (using `damage_entry`) |
-| `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js` | CREATE | Integration test verifying damage is applied |
+| File                                                                                | Action | Description                                                                                 |
+| ----------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
+| `data/mods/weapons/rules/handle_swing_at_target.rule.json`                          | UPDATE | Add APPLY_DAMAGE operations to SUCCESS and CRITICAL_SUCCESS branches (using `damage_entry`) |
+| `tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js` | CREATE | Integration test verifying damage is applied                                                |
 
 ## Out of Scope
 
@@ -73,12 +73,12 @@
 
 ### Branch Behavior Summary
 
-| Branch | Damage Applied | Multiplier |
-|--------|---------------|------------|
-| SUCCESS | Yes | 1.0x |
-| CRITICAL_SUCCESS | Yes | 1.5x |
-| FAILURE | No | N/A |
-| FUMBLE | No | N/A |
+| Branch           | Damage Applied | Multiplier |
+| ---------------- | -------------- | ---------- |
+| SUCCESS          | Yes            | 1.0x       |
+| CRITICAL_SUCCESS | Yes            | 1.5x       |
+| FAILURE          | No             | N/A        |
+| FUMBLE           | No             | N/A        |
 
 ## Acceptance Criteria
 
@@ -89,6 +89,7 @@
 2. `npm run test:integration -- tests/integration/mods/weapons/swingAtTargetDamageApplication.integration.test.js`
 
 Test cases:
+
 - SUCCESS outcome applies weapon damage to target
 - CRITICAL_SUCCESS outcome applies 1.5x weapon damage to target
 - FAILURE outcome does not apply damage

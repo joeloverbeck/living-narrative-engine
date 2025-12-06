@@ -258,12 +258,7 @@ describe('grabbingUtils', () => {
       });
       setupCanGrab('part_1', false);
 
-      await lockGrabbingAppendages(
-        mockEntityManager,
-        'actor_1',
-        1,
-        'sword_1'
-      );
+      await lockGrabbingAppendages(mockEntityManager, 'actor_1', 1, 'sword_1');
 
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         'part_1',

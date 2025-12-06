@@ -193,6 +193,29 @@ export class PropertySchemaValidationRule extends ValidationRule {
             },
           });
         }
+
+        // Check for deprecated properties
+        const deprecatedWarnings = this.#validateDeprecatedProperties(
+          componentId,
+          properties,
+          component.dataSchema
+        );
+
+        if (deprecatedWarnings.length > 0) {
+          issues.push({
+            type: 'DEPRECATED_PROPERTY_USAGE',
+            severity: 'warning',
+            message: `Deprecated property usage for component '${componentId}' in slot '${slotName}'`,
+            ruleId: this.ruleId,
+            context: {
+              location: { type: 'slot', name: slotName },
+              componentId: componentId,
+              properties: properties,
+              warnings: deprecatedWarnings,
+              componentSource: this.#deriveComponentSource(componentId),
+            },
+          });
+        }
       }
     }
 
@@ -244,6 +267,29 @@ export class PropertySchemaValidationRule extends ValidationRule {
               componentId: componentId,
               properties: properties,
               schemaErrors: schemaErrors,
+              componentSource: this.#deriveComponentSource(componentId),
+            },
+          });
+        }
+
+        // Check for deprecated properties
+        const deprecatedWarnings = this.#validateDeprecatedProperties(
+          componentId,
+          properties,
+          component.dataSchema
+        );
+
+        if (deprecatedWarnings.length > 0) {
+          issues.push({
+            type: 'DEPRECATED_PROPERTY_USAGE',
+            severity: 'warning',
+            message: `Deprecated property usage for component '${componentId}' in pattern '${patternId}'`,
+            ruleId: this.ruleId,
+            context: {
+              location: { type: 'pattern', name: patternId, index },
+              componentId: componentId,
+              properties: properties,
+              warnings: deprecatedWarnings,
               componentSource: this.#deriveComponentSource(componentId),
             },
           });
@@ -319,6 +365,36 @@ export class PropertySchemaValidationRule extends ValidationRule {
   }
 
   /**
+   * Validates a property object against a component's dataSchema for deprecated properties
+   *
+   * @private
+   * @param {string} componentId - Component identifier
+   * @param {object} properties - Property values to validate
+   * @param {object} dataSchema - Component dataSchema
+   * @returns {Array<object>} Array of deprecated property warnings
+   */
+  #validateDeprecatedProperties(componentId, properties, dataSchema) {
+    const warnings = [];
+
+    if (!properties || !dataSchema || !dataSchema.properties) {
+      return warnings;
+    }
+
+    for (const key of Object.keys(properties)) {
+      const propertySchema = dataSchema.properties[key];
+      if (propertySchema && propertySchema.deprecated) {
+        warnings.push({
+          property: key,
+          message: `Property '${key}' is deprecated. ${propertySchema.description || ''}`,
+          currentValue: properties[key],
+        });
+      }
+    }
+
+    return warnings;
+  }
+
+  /**
    * Validates a property object against a component's dataSchema
    *
    * @private
@@ -336,7 +412,9 @@ export class PropertySchemaValidationRule extends ValidationRule {
 
       if (!result.isValid && result.errors) {
         for (const error of result.errors) {
-          errors.push(this.#formatPropertyError(componentId, properties, error));
+          errors.push(
+            this.#formatPropertyError(componentId, properties, error)
+          );
         }
         return errors;
       }
@@ -354,7 +432,9 @@ export class PropertySchemaValidationRule extends ValidationRule {
 
       if (!isValid && validate.errors) {
         for (const error of validate.errors) {
-          errors.push(this.#formatPropertyError(componentId, properties, error));
+          errors.push(
+            this.#formatPropertyError(componentId, properties, error)
+          );
         }
       }
     } catch (inlineError) {

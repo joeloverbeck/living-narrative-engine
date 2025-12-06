@@ -1,23 +1,21 @@
 {
-    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
-    "id": "furniture:throne",
-    "description": "A medieval throne suitable for a throne room.",
-    "components": {
-        "core:name": {
-            "text": "throne"
-        },
-        "core:description": {
-            "text": "A throne in a throne room."
-        },
-        "core:portrait": {
-            "imagePath": "portraits/throne.png",
-            "altText": "A throne in a throne room."
-        },
-        "positioning:allows_sitting": {
-            "spots": [
-                null
-            ]
-        },
-        "items:item": {}
-    }
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:throne",
+  "description": "A medieval throne suitable for a throne room.",
+  "components": {
+    "core:name": {
+      "text": "throne"
+    },
+    "core:description": {
+      "text": "A throne in a throne room."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/throne.png",
+      "altText": "A throne in a throne room."
+    },
+    "positioning:allows_sitting": {
+      "spots": [null]
+    },
+    "items:item": {}
+  }
 }

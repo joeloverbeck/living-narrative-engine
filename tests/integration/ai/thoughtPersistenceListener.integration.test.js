@@ -1,4 +1,11 @@
-import { beforeEach, afterEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  beforeEach,
+  afterEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { ThoughtPersistenceListener } from '../../../src/ai/thoughtPersistenceListener.js';
 import { EntityManagerTestBed } from '../../common/entities/entityManagerTestBed.js';
 import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../../../src/constants/componentIds.js';

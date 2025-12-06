@@ -235,18 +235,15 @@ describe('ActionDecisionWorkflow.run', () => {
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     await workflow.run();
 
-    expect(
-      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
-    ).toContain(DISPLAY_SPEECH_ID);
-    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_SPEECH_ID,
-      {
-        entityId: actor.id,
-        speechContent: 'Hello human',
-        thoughts: 'inner',
-        notes,
-      }
+    expect(safeDispatcher.dispatch.mock.calls.map((call) => call[0])).toContain(
+      DISPLAY_SPEECH_ID
     );
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_SPEECH_ID, {
+      entityId: actor.id,
+      speechContent: 'Hello human',
+      thoughts: 'inner',
+      notes,
+    });
     expect(state._recordDecision).toHaveBeenCalledWith(
       ctx,
       finalAction,
@@ -306,13 +303,13 @@ describe('ActionDecisionWorkflow.run', () => {
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     await workflow.run();
 
-    expect(
-      safeDispatcher.dispatch.mock.calls.map((call) => call[0])
-    ).toContain(DISPLAY_THOUGHT_ID);
-    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_THOUGHT_ID,
-      { entityId: actor.id, thoughts: 'Maybe wait?' }
+    expect(safeDispatcher.dispatch.mock.calls.map((call) => call[0])).toContain(
+      DISPLAY_THOUGHT_ID
     );
+    expect(safeDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_THOUGHT_ID, {
+      entityId: actor.id,
+      thoughts: 'Maybe wait?',
+    });
     expect(state._recordDecision).toHaveBeenCalledWith(
       ctx,
       finalAction,
@@ -999,7 +996,10 @@ describe('ActionDecisionWorkflow.run', () => {
     const schemaId = 'core:suggested_action#payload';
     const ajv = new Ajv({ strict: false });
     addFormats(ajv);
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
     const schemaValidator = (() => {
       const payloadSchema = {
         $id: schemaId,
@@ -1185,7 +1185,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
     ctx.setAwaitingExternalEvent.mockImplementation(() => {
       throw new Error('setPending failed');
     });
-    
+
     // Setup state to trigger _setPendingFlag via run() -> _handleLLMPendingApproval
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
@@ -1226,7 +1226,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
 
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     const runPromise = workflow.run();
-    
+
     await jest.runAllTimersAsync();
     await runPromise;
 
@@ -1262,7 +1262,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
 
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     const runPromise = workflow.run();
-    
+
     await jest.runAllTimersAsync();
     await runPromise;
     jest.useRealTimers();
@@ -1303,7 +1303,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
     // Create a scenario where raw suggested != clamped
     // And raw submitted != clamped
     const availableActions = [{ index: 1, actionId: 'act1' }];
-    
+
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: {},
@@ -1328,11 +1328,11 @@ describe('ActionDecisionWorkflow Coverage', () => {
       })
     );
   });
-  
+
   test('_awaitHumanSubmission handles immediate error when timeout disabled', async () => {
     // Ensure timeout disabled
     timeoutConfigSpy.mockReturnValue({ enabled: false });
-    
+
     ctx.getPlayerPromptService = () => ({
       prompt: jest.fn().mockRejectedValue(new Error('Immediate fail')),
     });
@@ -1356,40 +1356,40 @@ describe('ActionDecisionWorkflow Coverage', () => {
   });
 
   test('_emitSuggestedActionEvent handles null extractedData', async () => {
-     // Force extractedData to be undefined
-     const dispatch = jest.fn();
-     ctx.getSafeEventDispatcher = () => ({ dispatch });
+    // Force extractedData to be undefined
+    const dispatch = jest.fn();
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
 
-     state._decideAction.mockResolvedValue({
-       action: { actionDefinitionId: 'act1' },
-       extractedData: null, 
-       availableActions: [{ index: 1, actionId: 'act1' }],
-       suggestedIndex: 1,
-     });
- 
-     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-     await workflow.run();
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: null,
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
 
-     // Logic in _emitSuggestedActionEvent: 
-     // speech: extractedData?.speech ?? null,
-     // thoughts: extractedData?.thoughts ?? null,
-     // notes: extractedData?.notes ?? null,
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
 
-     expect(dispatch).toHaveBeenCalledWith(
-       LLM_SUGGESTED_ACTION_ID,
-       expect.objectContaining({
-         speech: null,
-         thoughts: null,
-         notes: null,
-       }),
-       expect.anything()
-     );
+    // Logic in _emitSuggestedActionEvent:
+    // speech: extractedData?.speech ?? null,
+    // thoughts: extractedData?.thoughts ?? null,
+    // notes: extractedData?.notes ?? null,
+
+    expect(dispatch).toHaveBeenCalledWith(
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({
+        speech: null,
+        thoughts: null,
+        notes: null,
+      }),
+      expect.anything()
+    );
   });
 
   test('_dispatchLLMDialogPreview catches dispatch errors', async () => {
     const dispatch = jest.fn().mockRejectedValue(new Error('dispatch failed'));
     ctx.getSafeEventDispatcher = () => ({ dispatch });
-    
+
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: { speech: 'hi' }, // Triggers speech dispatch
@@ -1414,13 +1414,13 @@ describe('ActionDecisionWorkflow Coverage', () => {
       extractedData: {},
       availableActions: [
         { index: 1, commandString: 'cmd1' }, // No desc, no actionId
-        { index: 2, actionDefinitionId: 'def2' } // No desc, no actionId, no cmd
+        { index: 2, actionDefinitionId: 'def2' }, // No desc, no actionId, no cmd
       ],
       suggestedIndex: 1,
     });
 
     ctx.getPlayerPromptService = () => ({
-        prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
     });
 
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
@@ -1444,12 +1444,12 @@ describe('ActionDecisionWorkflow Coverage', () => {
   test('_findCompositeForIndex handles fallback logic', async () => {
     // Test fallback to index-1
     const actions = [{ index: 1, actionId: 'act1' }];
-    // We need to trick _findCompositeForIndex. 
+    // We need to trick _findCompositeForIndex.
     // It looks for candidate?.index === index.
     // If we pass index 2, find returns undefined.
     // Then it tries actions[index-1] -> actions[1] -> undefined.
     // If we pass index 1, find returns match.
-    
+
     // The fallback `actions[index-1]` is array index access.
     // If we have actions = [A, B] (indices 1, 2).
     // If we request index 1: find returns A.
@@ -1458,7 +1458,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
     // actions = [ { actionId: 'A' } ] (no index prop).
     // request index 1. find undefined. actions[0] -> A.
     // This confirms the fallback relies on array position matching 1-based index.
-    
+
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: {},
@@ -1483,7 +1483,7 @@ describe('ActionDecisionWorkflow Coverage', () => {
 
   test('_awaitHumanSubmission handles error when timeout ENABLED', async () => {
     timeoutConfigSpy.mockReturnValue({ enabled: true, timeoutMs: 1000 });
-    
+
     ctx.getPlayerPromptService = () => ({
       prompt: jest.fn().mockRejectedValue(new Error('Prompt failed')),
     });
@@ -1520,332 +1520,334 @@ describe('ActionDecisionWorkflow Coverage', () => {
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
     await workflow.run();
 
-         expect(logger.debug).toHaveBeenCalledWith(
-           expect.stringContaining('LLM suggestion telemetry'),
-           expect.objectContaining({
-             correctedSuggestedIndex: null,
-             correctedSubmittedIndex: null,
-             suggestedIndex: 1,
-             finalIndex: 1,
-           })
-         );
-      });
-    
-      test('run() handles empty commandString fallback to actionDefinitionId', async () => {
-        state._decideAction.mockResolvedValue({
-          action: { actionDefinitionId: 'def1', commandString: '   ' },
-          extractedData: { n: 1 },
-        });
-        const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-        await workflow.run();
-        
-             expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
-              'def1', // Fallback
-              expect.anything()
-            );
-          });
-        
-          test('_setPendingFlag handles missing warn method on logger', async () => {
-            // Provide logger with error/debug but NO warn
-            const limitedLogger = { 
-                debug: jest.fn(), 
-                error: jest.fn() 
-                // warn missing
-            };
-            ctx.getLogger = () => limitedLogger;
-            ctx.setAwaitingExternalEvent.mockImplementation(() => {
-              throw new Error('fail');
-            });
-            
-            state._decideAction.mockResolvedValue({
-              action: { actionDefinitionId: 'act1' },
-              extractedData: {},
-              availableActions: [{ index: 1, actionId: 'act1' }],
-              suggestedIndex: 1,
-            });
-        
-            const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-            await workflow.run();
-            // Should not throw
-          });
-        
-          test('_emitSuggestedActionEvent handles undefined extractedData', async () => {
-            const dispatch = jest.fn();
-            ctx.getSafeEventDispatcher = () => ({ dispatch });
-            state._decideAction.mockResolvedValue({
-              action: { actionDefinitionId: 'act1' },
-              extractedData: undefined, 
-              availableActions: [{ index: 1, actionId: 'act1' }],
-              suggestedIndex: 1,
-            });
-        
-            const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-            await workflow.run();
-        
-            expect(dispatch).toHaveBeenCalledWith(
-              LLM_SUGGESTED_ACTION_ID,
-              expect.objectContaining({ thoughts: null, speech: null, notes: null }),
-              expect.anything()
-            );
-          });
-        
-          test('_describeActionDescriptor fallback chain full check', async () => {
-            const dispatch = jest.fn();
-            ctx.getSafeEventDispatcher = () => ({ dispatch });
-            
-            // 1. Only actionDefinitionId (last resort)
-            state._decideAction.mockResolvedValue({
-              action: { actionDefinitionId: 'def1' },
-              extractedData: {}, 
-              availableActions: [{ index: 1, actionDefinitionId: 'def1' }], // No desc, id, cmd
-              suggestedIndex: 1,
-            });
-        
-            const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-            await workflow.run();
-        
-            expect(dispatch).toHaveBeenCalledWith(
-              LLM_SUGGESTED_ACTION_ID,
-              expect.objectContaining({ suggestedActionDescriptor: 'def1' }),
-              expect.anything()
-            );
-          });
-        
-          test('previewDisplayed logic true/true', async () => {
-            // Mock _dispatchLLMDialogPreview to return speech:true, thought:true
-            // We can't easily mock the return of private method.
-            // But we can mock the dispatcher to succeed for BOTH speech and thought?
-            // _dispatchLLMDialogPreview implementation:
-            // If speechPayload exists -> dispatch speech -> return { speech: true, thought: hasThoughts }
-            // It returns early.
-            // So it never returns { speech: true, thought: true }?
-            // Wait:
-            // return { speech: true, thought: Boolean(speechPayload.thoughts) };
-            // Yes, if speechPayload has thoughts, it returns thought: true.
-            
-            const dispatch = jest.fn().mockResolvedValue(undefined);
-            ctx.getSafeEventDispatcher = () => ({ dispatch });
-            
-            state._decideAction.mockResolvedValue({
-               action: { actionDefinitionId: 'act1' },
-               extractedData: { speech: 'hi', thoughts: 'inner' },
-               availableActions: [{ index: 1, actionId: 'act1' }],
-               suggestedIndex: 1,
-            });
-            
-            const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-            await workflow.run();
-            
-            // This should set previewDisplayed to true.
-            // Verified via recordDecision call.
-            expect(state._recordDecision).toHaveBeenCalledWith(
-               expect.anything(),
-               expect.anything(),
-               expect.objectContaining({ previewDisplayed: true })
-            );
-          });
-          
-          test('prompt success with timeout disabled (explicit)', async () => {
-             // Coverage for _awaitHumanSubmission success path when timeout disabled
-             timeoutConfigSpy.mockReturnValue({ enabled: false });
-             
-             ctx.getPlayerPromptService = () => ({
-               prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
-             });
-             
-             state._decideAction.mockResolvedValue({
-               action: { actionDefinitionId: 'act1' },
-               extractedData: {},
-               availableActions: [
-                  { index: 1, actionId: 'act1' },
-                  { index: 2, actionId: 'act2' }
-               ],
-               suggestedIndex: 1,
-             });
-        
-             const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-             await workflow.run();
-             
-             expect(state._recordDecision).toHaveBeenCalledWith(
-               expect.anything(),
-               expect.anything(),
-               expect.objectContaining({ submittedIndex: 2 })
-             );
-          });
-          
-          test('run() handles null commandString', async () => {
-            state._decideAction.mockResolvedValue({
-              action: { actionDefinitionId: 'def1', commandString: null },
-              extractedData: { n: 1 },
-            });
-            const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-            await workflow.run();
-            
-            expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
-              'def1', // Fallback
-              expect.anything()
-            );
-          });
-              test('_findCompositeForIndex returns null when not found and no fallback', async () => {
-        // availableActions exists, but index not found, and index-1 not found.
-        state._decideAction.mockResolvedValue({
-          action: { actionDefinitionId: 'act1' },
-          extractedData: {},
-          availableActions: [{ index: 1, actionId: 'act1' }],
-          suggestedIndex: 5, // Out of bounds
-        });
-        
-        // _handleLLMPendingApproval clamps index 5 -> 1.
-        // So it finds index 1.
-        // We need to bypass clamp?
-        // _handleLLMPendingApproval always clamps.
-        // So _findCompositeForIndex is always called with valid index if actions exist?
-        // Wait, _findCompositeForIndex uses the index passed to it.
-        // In _handleLLMPendingApproval:
-        // const { value: clampedIndex } = this._clampIndex(rawSuggestedIndex, actions.length);
-        // descriptor = _findCompositeForIndex(clampedIndex, actions) || action;
-        
-        // So clampedIndex is always valid?
-        // _clampIndex: Math.min(Math.max(value, 1), actionsLength).
-        // If actions.length > 0, clampedIndex is between 1 and length.
-        // So actions[clampedIndex - 1] should always exist!
-        // So the fallback `|| actions[index - 1]` in `_findCompositeForIndex` always succeeds if `actions` is dense.
-        // And `actions.find` matches `candidate.index === index`.
-        // So if actions are well-formed, it always finds.
-        
-        // The only case it returns null is if `actions` is empty (handled by first check) OR `actions` is sparse/malformed such that `index-1` is empty?
-        // e.g. actions = []; (handled)
-        // actions = [undefined];
-        
-        // If I pass `availableActions: [undefined]`.
-        state._decideAction.mockResolvedValue({
-           action: { actionDefinitionId: 'act1' },
-           extractedData: {},
-           availableActions: [null], // Malformed
-           suggestedIndex: 1,
-        });
-        
-        // _clampIndex(1, 1) -> 1.
-        // _findCompositeForIndex(1, [null])
-        // find: null?.index (crash? no, ?.index). undefined === 1 -> false.
-        // actions[0] -> null.
-        // returns null.
-        // descriptor = null || action -> action.
-        // So we can test that _findCompositeForIndex returns null?
-        // Hard to verify output of private method directly.
-        // But we can infer it if descriptor becomes `action`.
-        // If we make `action` distinct from what `availableActions` would imply.
-        
-        const fallbackAction = { actionDefinitionId: 'fallback' };
-        state._decideAction.mockResolvedValue({
-           action: fallbackAction,
-           extractedData: {},
-           availableActions: [null],
-           suggestedIndex: 1,
-        });
-        
-        const dispatch = jest.fn();
-        ctx.getSafeEventDispatcher = () => ({ dispatch });
-        
-        const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-        await workflow.run();
-        
-        // descriptor should be fallbackAction
-        expect(dispatch).toHaveBeenCalledWith(
-           LLM_SUGGESTED_ACTION_ID,
-           expect.objectContaining({ suggestedActionDescriptor: 'fallback' }),
-           expect.anything()
-        );
-      });
-    
-      test('_logLLMSuggestionTelemetry handles non-integer suggestedIndex', async () => {
-        state._decideAction.mockResolvedValue({
-           action: { actionDefinitionId: 'act1' },
-           extractedData: {},
-           availableActions: [{ index: 1, actionId: 'act1' }],
-           suggestedIndex: 'garbage', // Non-integer
-        });
-        
-        // _clampIndex('garbage', 1) -> 1 (default)
-        // raw = 'garbage'. clamped = 1.
-        // correctedSuggestedIndex: 'garbage' !== 1 (true).
-        // Number.isInteger('garbage') -> false.
-        // returns null.
-        
-        ctx.getPlayerPromptService = () => ({
-          prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
-        });
-        
-        const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-        await workflow.run();
-        
-        expect(logger.debug).toHaveBeenCalledWith(
-           expect.stringContaining('LLM suggestion telemetry'),
-           expect.objectContaining({ correctedSuggestedIndex: null })
-        );
-      });
-    
-      test('Explicit warnings in _handleLLMPendingApproval', async () => {
-         // 1. suggestedAdjusted warning
-         // Covered by previous tests (index 99 -> 1)
-         
-         // 2. !actions.length warning
-         state._decideAction.mockResolvedValue({
-           action: { actionDefinitionId: 'act1' },
-           extractedData: {},
-           availableActions: [], // Empty
-           suggestedIndex: 1,
-         });
-         
-         const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-         await workflow.run();
-         
-         expect(logger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('No indexed actions available for pending approval')
-         );
-         
-         // 3. submissionAdjusted warning
-         // We need submission out of bounds.
-         state._decideAction.mockResolvedValue({
-           action: { actionDefinitionId: 'act1' },
-           extractedData: {},
-           availableActions: [{ index: 1, actionId: 'act1' }],
-           suggestedIndex: 1,
-         });
-         
-         ctx.getPlayerPromptService = () => ({
-           prompt: jest.fn().mockResolvedValue({ chosenIndex: 99 }),
-         });
-         
-         const workflow2 = new ActionDecisionWorkflow(state, ctx, actor, strategy);
-         await workflow2.run();
-         
-         expect(logger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Submitted index 99 was out of range')
-         );
-      });
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('LLM suggestion telemetry'),
+      expect.objectContaining({
+        correctedSuggestedIndex: null,
+        correctedSubmittedIndex: null,
+        suggestedIndex: 1,
+        finalIndex: 1,
+      })
+    );
+  });
 
-  test('waitActionHints filters invalid entries', async () => {
-    // Trigger autoWait with mixed hints
-    timeoutConfigSpy.mockReturnValue({ 
-        enabled: true, 
-        timeoutMs: 1, 
-        policy: 'autoWait',
-        waitActionHints: [null, '', '  ', 'valid_wait'] 
+  test('run() handles empty commandString fallback to actionDefinitionId', async () => {
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'def1', commandString: '   ' },
+      extractedData: { n: 1 },
+    });
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'def1', // Fallback
+      expect.anything()
+    );
+  });
+
+  test('_setPendingFlag handles missing warn method on logger', async () => {
+    // Provide logger with error/debug but NO warn
+    const limitedLogger = {
+      debug: jest.fn(),
+      error: jest.fn(),
+      // warn missing
+    };
+    ctx.getLogger = () => limitedLogger;
+    ctx.setAwaitingExternalEvent.mockImplementation(() => {
+      throw new Error('fail');
+    });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+    // Should not throw
+  });
+
+  test('_emitSuggestedActionEvent handles undefined extractedData', async () => {
+    const dispatch = jest.fn();
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: undefined,
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(dispatch).toHaveBeenCalledWith(
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({ thoughts: null, speech: null, notes: null }),
+      expect.anything()
+    );
+  });
+
+  test('_describeActionDescriptor fallback chain full check', async () => {
+    const dispatch = jest.fn();
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+
+    // 1. Only actionDefinitionId (last resort)
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'def1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionDefinitionId: 'def1' }], // No desc, id, cmd
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(dispatch).toHaveBeenCalledWith(
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({ suggestedActionDescriptor: 'def1' }),
+      expect.anything()
+    );
+  });
+
+  test('previewDisplayed logic true/true', async () => {
+    // Mock _dispatchLLMDialogPreview to return speech:true, thought:true
+    // We can't easily mock the return of private method.
+    // But we can mock the dispatcher to succeed for BOTH speech and thought?
+    // _dispatchLLMDialogPreview implementation:
+    // If speechPayload exists -> dispatch speech -> return { speech: true, thought: hasThoughts }
+    // It returns early.
+    // So it never returns { speech: true, thought: true }?
+    // Wait:
+    // return { speech: true, thought: Boolean(speechPayload.thoughts) };
+    // Yes, if speechPayload has thoughts, it returns thought: true.
+
+    const dispatch = jest.fn().mockResolvedValue(undefined);
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: { speech: 'hi', thoughts: 'inner' },
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // This should set previewDisplayed to true.
+    // Verified via recordDecision call.
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ previewDisplayed: true })
+    );
+  });
+
+  test('prompt success with timeout disabled (explicit)', async () => {
+    // Coverage for _awaitHumanSubmission success path when timeout disabled
+    timeoutConfigSpy.mockReturnValue({ enabled: false });
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 2 }),
     });
 
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: {},
       availableActions: [
-        { index: 1, actionId: 'valid_wait' } // Use actionId for factory mock
+        { index: 1, actionId: 'act1' },
+        { index: 2, actionId: 'act2' },
       ],
       suggestedIndex: 1,
     });
-    
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(state._recordDecision).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.objectContaining({ submittedIndex: 2 })
+    );
+  });
+
+  test('run() handles null commandString', async () => {
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'def1', commandString: null },
+      extractedData: { n: 1 },
+    });
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(ctx.requestProcessingCommandStateTransition).toHaveBeenCalledWith(
+      'def1', // Fallback
+      expect.anything()
+    );
+  });
+  test('_findCompositeForIndex returns null when not found and no fallback', async () => {
+    // availableActions exists, but index not found, and index-1 not found.
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 5, // Out of bounds
+    });
+
+    // _handleLLMPendingApproval clamps index 5 -> 1.
+    // So it finds index 1.
+    // We need to bypass clamp?
+    // _handleLLMPendingApproval always clamps.
+    // So _findCompositeForIndex is always called with valid index if actions exist?
+    // Wait, _findCompositeForIndex uses the index passed to it.
+    // In _handleLLMPendingApproval:
+    // const { value: clampedIndex } = this._clampIndex(rawSuggestedIndex, actions.length);
+    // descriptor = _findCompositeForIndex(clampedIndex, actions) || action;
+
+    // So clampedIndex is always valid?
+    // _clampIndex: Math.min(Math.max(value, 1), actionsLength).
+    // If actions.length > 0, clampedIndex is between 1 and length.
+    // So actions[clampedIndex - 1] should always exist!
+    // So the fallback `|| actions[index - 1]` in `_findCompositeForIndex` always succeeds if `actions` is dense.
+    // And `actions.find` matches `candidate.index === index`.
+    // So if actions are well-formed, it always finds.
+
+    // The only case it returns null is if `actions` is empty (handled by first check) OR `actions` is sparse/malformed such that `index-1` is empty?
+    // e.g. actions = []; (handled)
+    // actions = [undefined];
+
+    // If I pass `availableActions: [undefined]`.
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [null], // Malformed
+      suggestedIndex: 1,
+    });
+
+    // _clampIndex(1, 1) -> 1.
+    // _findCompositeForIndex(1, [null])
+    // find: null?.index (crash? no, ?.index). undefined === 1 -> false.
+    // actions[0] -> null.
+    // returns null.
+    // descriptor = null || action -> action.
+    // So we can test that _findCompositeForIndex returns null?
+    // Hard to verify output of private method directly.
+    // But we can infer it if descriptor becomes `action`.
+    // If we make `action` distinct from what `availableActions` would imply.
+
+    const fallbackAction = { actionDefinitionId: 'fallback' };
+    state._decideAction.mockResolvedValue({
+      action: fallbackAction,
+      extractedData: {},
+      availableActions: [null],
+      suggestedIndex: 1,
+    });
+
+    const dispatch = jest.fn();
+    ctx.getSafeEventDispatcher = () => ({ dispatch });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    // descriptor should be fallbackAction
+    expect(dispatch).toHaveBeenCalledWith(
+      LLM_SUGGESTED_ACTION_ID,
+      expect.objectContaining({ suggestedActionDescriptor: 'fallback' }),
+      expect.anything()
+    );
+  });
+
+  test('_logLLMSuggestionTelemetry handles non-integer suggestedIndex', async () => {
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 'garbage', // Non-integer
+    });
+
+    // _clampIndex('garbage', 1) -> 1 (default)
+    // raw = 'garbage'. clamped = 1.
+    // correctedSuggestedIndex: 'garbage' !== 1 (true).
+    // Number.isInteger('garbage') -> false.
+    // returns null.
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 1 }),
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('LLM suggestion telemetry'),
+      expect.objectContaining({ correctedSuggestedIndex: null })
+    );
+  });
+
+  test('Explicit warnings in _handleLLMPendingApproval', async () => {
+    // 1. suggestedAdjusted warning
+    // Covered by previous tests (index 99 -> 1)
+
+    // 2. !actions.length warning
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [], // Empty
+      suggestedIndex: 1,
+    });
+
+    const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow.run();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'No indexed actions available for pending approval'
+      )
+    );
+
+    // 3. submissionAdjusted warning
+    // We need submission out of bounds.
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [{ index: 1, actionId: 'act1' }],
+      suggestedIndex: 1,
+    });
+
+    ctx.getPlayerPromptService = () => ({
+      prompt: jest.fn().mockResolvedValue({ chosenIndex: 99 }),
+    });
+
+    const workflow2 = new ActionDecisionWorkflow(state, ctx, actor, strategy);
+    await workflow2.run();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Submitted index 99 was out of range')
+    );
+  });
+
+  test('waitActionHints filters invalid entries', async () => {
+    // Trigger autoWait with mixed hints
+    timeoutConfigSpy.mockReturnValue({
+      enabled: true,
+      timeoutMs: 1,
+      policy: 'autoWait',
+      waitActionHints: [null, '', '  ', 'valid_wait'],
+    });
+
+    state._decideAction.mockResolvedValue({
+      action: { actionDefinitionId: 'act1' },
+      extractedData: {},
+      availableActions: [
+        { index: 1, actionId: 'valid_wait' }, // Use actionId for factory mock
+      ],
+      suggestedIndex: 1,
+    });
+
     jest.useFakeTimers();
     ctx.getPlayerPromptService = () => ({
-       prompt: () => new Promise(() => {}),
+      prompt: () => new Promise(() => {}),
     });
 
     const workflow = new ActionDecisionWorkflow(state, ctx, actor, strategy);
@@ -1856,21 +1858,21 @@ describe('ActionDecisionWorkflow Coverage', () => {
 
     // Should have found 'valid_wait'
     expect(state._recordDecision).toHaveBeenCalledWith(
-       expect.anything(),
-       expect.objectContaining({ actionDefinitionId: 'valid_wait' }),
-       expect.anything()
+      expect.anything(),
+      expect.objectContaining({ actionDefinitionId: 'valid_wait' }),
+      expect.anything()
     );
   });
 
   test('_describeActionDescriptor handles empty descriptor object', async () => {
     const dispatch = jest.fn();
     ctx.getSafeEventDispatcher = () => ({ dispatch });
-    
+
     // Force finding an empty object as descriptor?
     // Hard. But we can use null fallback action and availableActions = [{}].
     // If availableActions has an item with index matching suggested, it uses it.
     // If that item is {}, it passes {} to _describeActionDescriptor.
-    
+
     state._decideAction.mockResolvedValue({
       action: { actionDefinitionId: 'act1' },
       extractedData: {},

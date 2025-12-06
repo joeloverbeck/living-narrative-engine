@@ -263,14 +263,9 @@ export class ModAssertionHelpers {
     const normalizedAllowed = Array.isArray(allowedEventTypes)
       ? allowedEventTypes
       : [];
-    const allowedSet = new Set([
-      ...normalizedAllowed,
-      'core:action_success',
-    ]);
+    const allowedSet = new Set([...normalizedAllowed, 'core:action_success']);
 
-    const unexpectedEvents = eventTypes.filter(
-      (type) => !allowedSet.has(type)
-    );
+    const unexpectedEvents = eventTypes.filter((type) => !allowedSet.has(type));
 
     expect(unexpectedEvents).toEqual([]);
   }

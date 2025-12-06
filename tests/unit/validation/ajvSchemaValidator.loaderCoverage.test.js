@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 
 const resetModuleState = () => {
@@ -43,14 +50,20 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
     expect(typeof capturedLoader).toBe('function');
 
     const schemasById = {
-      'schema://living-narrative-engine/relative.json': { schema: { type: 'string' } },
-      'schema://custom/prefix/types/common.json': { schema: { type: 'number' } },
+      'schema://living-narrative-engine/relative.json': {
+        schema: { type: 'string' },
+      },
+      'schema://custom/prefix/types/common.json': {
+        schema: { type: 'number' },
+      },
       'schema://absolute/known.json': { schema: { type: 'boolean' } },
     };
     mockAjvInstance.getSchema.mockImplementation((id) => schemasById[id]);
 
     mockAjvInstance.schemas = {
-      'schema://custom/prefix/types/common.json': { schema: { type: 'number' } },
+      'schema://custom/prefix/types/common.json': {
+        schema: { type: 'number' },
+      },
     };
 
     const directResult = await capturedLoader('./relative.json');
@@ -76,7 +89,9 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
       'Cannot resolve schema reference: ./missing.json'
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining("Could not resolve schema reference './missing.json'")
+      expect.stringContaining(
+        "Could not resolve schema reference './missing.json'"
+      )
     );
 
     const absoluteResult = await capturedLoader('schema://absolute/known.json');
@@ -84,7 +99,9 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
 
     await expect(
       capturedLoader('schema://absolute/missing.json')
-    ).rejects.toThrow('Cannot resolve schema reference: schema://absolute/missing.json');
+    ).rejects.toThrow(
+      'Cannot resolve schema reference: schema://absolute/missing.json'
+    );
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining(
         "Could not resolve schema reference 'schema://absolute/missing.json'"
@@ -130,7 +147,7 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
     );
 
     // Instantiate to capture the loader and preserve existing behaviour.
-     
+
     new AjvSchemaValidator({ logger });
 
     expect(typeof capturedLoader).toBe('function');
@@ -192,7 +209,7 @@ describe('AjvSchemaValidator targeted loader coverage', () => {
         'schema://living-narrative-engine/schemas/complex.json#/definitions/missing'
       )
     ).rejects.toThrow(
-      "Cannot resolve schema reference: schema://living-narrative-engine/schemas/complex.json#/definitions/missing"
+      'Cannot resolve schema reference: schema://living-narrative-engine/schemas/complex.json#/definitions/missing'
     );
 
     await expect(capturedLoader('#/unbound/path')).rejects.toThrow(

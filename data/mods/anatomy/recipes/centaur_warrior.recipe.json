@@ -11,11 +11,8 @@
   "slots": {
     "quiver_mount": {
       "partType": "equipment_mount",
-      "tags": [
-        "anatomy:part"
-      ],
-      "properties": {
-      }
+      "tags": ["anatomy:part"],
+      "properties": {}
     }
   },
   "patterns": [
@@ -25,11 +22,8 @@
       },
       "partType": "arm",
       "preferId": "anatomy:humanoid_arm_muscular",
-      "tags": [
-        "anatomy:part"
-      ],
-      "properties": {
-      }
+      "tags": ["anatomy:part"],
+      "properties": {}
     },
     {
       "matchesAll": {
@@ -37,11 +31,8 @@
         "orientation": "*_front"
       },
       "partType": "centaur_leg_front",
-      "tags": [
-        "anatomy:part"
-      ],
-      "properties": {
-      }
+      "tags": ["anatomy:part"],
+      "properties": {}
     },
     {
       "matchesAll": {
@@ -49,18 +40,13 @@
         "orientation": "*_rear"
       },
       "partType": "centaur_leg_rear",
-      "tags": [
-        "anatomy:part"
-      ],
-      "properties": {
-      }
+      "tags": ["anatomy:part"],
+      "properties": {}
     },
     {
       "matchesGroup": "appendage:upper_torso",
       "partType": "centaur_upper_torso",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:build": {
           "build": "muscular"
@@ -70,9 +56,7 @@
     {
       "matchesGroup": "appendage:head",
       "partType": "centaur_head",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:hair_style": {
           "style": "braided"
@@ -82,9 +66,7 @@
     {
       "matchesGroup": "appendage:tail",
       "partType": "horse_tail",
-      "tags": [
-        "anatomy:part"
-      ],
+      "tags": ["anatomy:part"],
       "properties": {
         "descriptors:length_category": {
           "length": "long"
@@ -95,10 +77,7 @@
   "constraints": {
     "requires": [
       {
-        "partTypes": [
-          "equipment_mount",
-          "horse_tail"
-        ]
+        "partTypes": ["equipment_mount", "horse_tail"]
       }
     ]
   }

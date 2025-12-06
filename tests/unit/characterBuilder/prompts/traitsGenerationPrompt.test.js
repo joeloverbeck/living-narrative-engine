@@ -516,9 +516,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow(
-      'TraitsGenerationPrompt: Name at index 0 must be an object'
-    );
+    }).toThrow('TraitsGenerationPrompt: Name at index 0 must be an object');
   });
 
   it('should validate name object structure', () => {
@@ -630,7 +628,15 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
       'TraitsGenerationPrompt: Strengths array must contain 2-6 items'
     );
 
-    response.strengths = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven']; // Too many
+    response.strengths = [
+      'One',
+      'Two',
+      'Three',
+      'Four',
+      'Five',
+      'Six',
+      'Seven',
+    ]; // Too many
 
     expect(() => {
       validateTraitsGenerationResponse(response);
@@ -645,9 +651,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow(
-      'TraitsGenerationPrompt: Response must contain strengths array'
-    );
+    }).toThrow('TraitsGenerationPrompt: Response must contain strengths array');
   });
 
   it('should validate weaknesses array', () => {
@@ -705,9 +709,7 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow(
-      'TraitsGenerationPrompt: Response must contain dislikes array'
-    );
+    }).toThrow('TraitsGenerationPrompt: Response must contain dislikes array');
   });
 
   it('should validate fears array', () => {
@@ -821,7 +823,9 @@ describe('TraitsGenerationPrompt - validateTraitsGenerationResponse', () => {
 
     expect(() => {
       validateTraitsGenerationResponse(response);
-    }).toThrow('TraitsGenerationPrompt: Profile must be at least 200 characters');
+    }).toThrow(
+      'TraitsGenerationPrompt: Profile must be at least 200 characters'
+    );
   });
 
   it('should accept profiles longer than 1200 characters', () => {

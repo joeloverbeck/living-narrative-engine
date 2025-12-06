@@ -9,7 +9,7 @@ import {
   CoverageAnalysisError,
   PriorityCalculationError,
   ClothingValidationError,
-  ClothingAccessibilityError
+  ClothingAccessibilityError,
 } from '../../../../src/clothing/errors/clothingErrors.js';
 
 describe('ClothingErrorHandler', () => {
@@ -24,17 +24,17 @@ describe('ClothingErrorHandler', () => {
       error: jest.fn(),
       warn: jest.fn(),
       info: jest.fn(),
-      debug: jest.fn()
+      debug: jest.fn(),
     };
 
     mockEventBus = {
-      dispatch: jest.fn()
+      dispatch: jest.fn(),
     };
 
     // Create handler without central integration for backward compatibility tests
     errorHandler = new ClothingErrorHandler({
       logger: mockLogger,
-      eventBus: mockEventBus
+      eventBus: mockEventBus,
     });
   });
 
@@ -49,7 +49,7 @@ describe('ClothingErrorHandler', () => {
 
       const recovery = await errorHandler.handleError(serviceError, {
         entityId: 'test_entity',
-        options: { mode: 'topmost' }
+        options: { mode: 'topmost' },
       });
 
       expect(recovery.recovered).toBe(true);
@@ -83,7 +83,7 @@ describe('ClothingErrorHandler', () => {
       );
 
       const recovery = await errorHandler.handleError(priorityError);
-      
+
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('default_priorities');
       expect(recovery.fallbackData.priorities).toBeDefined();
@@ -100,7 +100,7 @@ describe('ClothingErrorHandler', () => {
       );
 
       const recovery = await errorHandler.handleError(validationError);
-      
+
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('sanitized');
       expect(recovery.fallbackData.retryable).toBe(true);
@@ -115,7 +115,7 @@ describe('ClothingErrorHandler', () => {
       );
 
       const recovery = await errorHandler.handleError(accessibilityError);
-      
+
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData.mode).toBe('simple_accessibility');
       expect(recovery.fallbackData.allAccessible).toBe(true);
@@ -125,7 +125,7 @@ describe('ClothingErrorHandler', () => {
       const unknownError = new Error('Unknown error');
 
       const recovery = await errorHandler.handleError(unknownError);
-      
+
       expect(recovery.recovered).toBe(false);
       expect(recovery.fallbackData).toBe(null);
       expect(recovery.recoveryStrategy).toBe('none');
@@ -137,8 +137,16 @@ describe('ClothingErrorHandler', () => {
 
   describe('Error Metrics', () => {
     it('should track error occurrence metrics', async () => {
-      const error1 = new ClothingServiceError('Test error 1', 'Service1', 'op1');
-      const error2 = new ClothingServiceError('Test error 2', 'Service1', 'op2');
+      const error1 = new ClothingServiceError(
+        'Test error 1',
+        'Service1',
+        'op1'
+      );
+      const error2 = new ClothingServiceError(
+        'Test error 2',
+        'Service1',
+        'op2'
+      );
       const error3 = new CoverageAnalysisError('Test error 3', {});
 
       await errorHandler.handleError(error1);
@@ -146,7 +154,7 @@ describe('ClothingErrorHandler', () => {
       await errorHandler.handleError(error3);
 
       const metrics = errorHandler.getErrorMetrics();
-      
+
       expect(metrics.ClothingServiceError).toBeDefined();
       expect(metrics.ClothingServiceError.count).toBe(2);
       expect(metrics.CoverageAnalysisError).toBeDefined();
@@ -182,7 +190,7 @@ describe('ClothingErrorHandler', () => {
         expect.objectContaining({
           errorType: 'ClothingServiceError',
           errorMessage: 'Service failed',
-          handlerContext: { additionalContext: 'value' }
+          handlerContext: { additionalContext: 'value' },
         })
       );
     });
@@ -196,7 +204,7 @@ describe('ClothingErrorHandler', () => {
         'Unexpected error in clothing system',
         expect.objectContaining({
           errorType: 'Error',
-          errorMessage: 'Unexpected error'
+          errorMessage: 'Unexpected error',
         })
       );
     });
@@ -218,8 +226,8 @@ describe('ClothingErrorHandler', () => {
           errorId: result.errorId,
           errorType: 'ClothingServiceError',
           message: 'Test error',
-          timestamp: expect.any(String)
-        })
+          timestamp: expect.any(String),
+        }),
       });
     });
 
@@ -237,9 +245,9 @@ describe('ClothingErrorHandler', () => {
         type: 'CLOTHING_ERROR_OCCURRED',
         payload: expect.objectContaining({
           context: expect.objectContaining({
-            reason: 'blocked'
-          })
-        })
+            reason: 'blocked',
+          }),
+        }),
       });
     });
   });
@@ -247,7 +255,7 @@ describe('ClothingErrorHandler', () => {
   describe('Error ID Generation', () => {
     it('should generate unique error IDs', async () => {
       const error = new Error('Test');
-      
+
       const result1 = await errorHandler.handleError(error);
       const result2 = await errorHandler.handleError(error);
 
@@ -264,19 +272,19 @@ describe('ClothingErrorHandler', () => {
     beforeEach(() => {
       mockCentralErrorHandler = {
         handle: jest.fn(),
-        handleSync: jest.fn()
+        handleSync: jest.fn(),
       };
 
       mockRecoveryStrategyManager = {
         executeWithRecovery: jest.fn(),
-        registerStrategy: jest.fn()
+        registerStrategy: jest.fn(),
       };
 
       errorHandlerWithCentral = new ClothingErrorHandler({
         logger: mockLogger,
         eventBus: mockEventBus,
         centralErrorHandler: mockCentralErrorHandler,
-        recoveryStrategyManager: mockRecoveryStrategyManager
+        recoveryStrategyManager: mockRecoveryStrategyManager,
       });
     });
 
@@ -286,11 +294,13 @@ describe('ClothingErrorHandler', () => {
 
       mockCentralErrorHandler.handle.mockResolvedValue(expectedResult);
 
-      const result = await errorHandlerWithCentral.handleError(error, { test: 'context' });
+      const result = await errorHandlerWithCentral.handleError(error, {
+        test: 'context',
+      });
 
       expect(mockCentralErrorHandler.handle).toHaveBeenCalledWith(error, {
         test: 'context',
-        domain: 'clothing'
+        domain: 'clothing',
       });
       expect(result).toBe(expectedResult);
     });
@@ -302,7 +312,9 @@ describe('ClothingErrorHandler', () => {
         'op'
       );
 
-      mockCentralErrorHandler.handle.mockRejectedValue(new Error('Central failed'));
+      mockCentralErrorHandler.handle.mockRejectedValue(
+        new Error('Central failed')
+      );
 
       const result = await errorHandlerWithCentral.handleError(error);
 
@@ -319,82 +331,108 @@ describe('ClothingErrorHandler', () => {
         'ClothingServiceError',
         expect.objectContaining({
           retry: { maxRetries: 3, backoff: 'exponential' },
-          circuitBreaker: { failureThreshold: 5, resetTimeout: 60000 }
+          circuitBreaker: { failureThreshold: 5, resetTimeout: 60000 },
         })
       );
 
       expect(mockRecoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
         'CoverageAnalysisError',
         expect.objectContaining({
-          retry: { maxRetries: 2, backoff: 'linear' }
+          retry: { maxRetries: 2, backoff: 'linear' },
         })
       );
 
       expect(mockRecoveryStrategyManager.registerStrategy).toHaveBeenCalledWith(
         'ClothingValidationError',
         expect.objectContaining({
-          retry: { maxRetries: 2, backoff: 'exponential' }
+          retry: { maxRetries: 2, backoff: 'exponential' },
         })
       );
     });
 
     it('should execute registered fallback strategies using local helpers', () => {
       const strategies = Object.fromEntries(
-        mockRecoveryStrategyManager.registerStrategy.mock.calls.map(([errorType, config]) => [
-          errorType,
-          config
-        ])
+        mockRecoveryStrategyManager.registerStrategy.mock.calls.map(
+          ([errorType, config]) => [errorType, config]
+        )
       );
 
       mockLogger.warn.mockClear();
 
       const serviceFallbackResult = strategies.ClothingServiceError.fallback(
-        new ClothingServiceError('Service down', 'ClothingAccessibilityService', 'op'),
+        new ClothingServiceError(
+          'Service down',
+          'ClothingAccessibilityService',
+          'op'
+        ),
         { name: 'operation' }
       );
-      expect(serviceFallbackResult).toEqual({ mode: 'legacy', items: [], accessible: true });
+      expect(serviceFallbackResult).toEqual({
+        mode: 'legacy',
+        items: [],
+        accessible: true,
+      });
 
       const coverageFallbackResult = strategies.CoverageAnalysisError.fallback(
         new CoverageAnalysisError('Coverage failed', {}),
         { name: 'operation' }
       );
-      expect(coverageFallbackResult).toEqual({ mode: 'layer_only', blockingDisabled: true });
+      expect(coverageFallbackResult).toEqual({
+        mode: 'layer_only',
+        blockingDisabled: true,
+      });
 
-      const priorityFallbackResult = strategies.PriorityCalculationError.fallback(
-        new PriorityCalculationError('Priority failed', 'layer', 'op', {}),
-        { name: 'operation' }
-      );
+      const priorityFallbackResult =
+        strategies.PriorityCalculationError.fallback(
+          new PriorityCalculationError('Priority failed', 'layer', 'op', {}),
+          { name: 'operation' }
+        );
       expect(priorityFallbackResult).toEqual({
         mode: 'default_priorities',
         priorities: {
           outer: 1,
           base: 2,
           underwear: 3,
-          accessories: 4
-        }
+          accessories: 4,
+        },
       });
 
-      const validationFallbackResult = strategies.ClothingValidationError.fallback(
-        new ClothingValidationError('Validation failed', 'field', 'value', 'string', {}),
-        { name: 'operation' }
-      );
+      const validationFallbackResult =
+        strategies.ClothingValidationError.fallback(
+          new ClothingValidationError(
+            'Validation failed',
+            'field',
+            'value',
+            'string',
+            {}
+          ),
+          { name: 'operation' }
+        );
       expect(validationFallbackResult).toEqual({
         mode: 'sanitized',
         retryable: true,
         sanitizedField: 'field',
-        sanitizedValue: null
+        sanitizedValue: null,
       });
 
-      const accessibilityFallbackResult = strategies.ClothingAccessibilityError.fallback(
-        new ClothingAccessibilityError('Accessibility failed', 'entity', 'item', {}),
-        { name: 'operation' }
-      );
+      const accessibilityFallbackResult =
+        strategies.ClothingAccessibilityError.fallback(
+          new ClothingAccessibilityError(
+            'Accessibility failed',
+            'entity',
+            'item',
+            {}
+          ),
+          { name: 'operation' }
+        );
       expect(accessibilityFallbackResult).toEqual({
         mode: 'simple_accessibility',
-        allAccessible: true
+        allAccessible: true,
       });
 
-      expect(mockLogger.warn).toHaveBeenCalledWith('Falling back to legacy clothing logic');
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Falling back to legacy clothing logic'
+      );
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Coverage analysis failed, using layer priority only'
       );
@@ -415,11 +453,13 @@ describe('ClothingErrorHandler', () => {
 
       mockCentralErrorHandler.handleSync.mockReturnValue(expectedResult);
 
-      const result = errorHandlerWithCentral.handleErrorSync(error, { test: 'context' });
+      const result = errorHandlerWithCentral.handleErrorSync(error, {
+        test: 'context',
+      });
 
       expect(mockCentralErrorHandler.handleSync).toHaveBeenCalledWith(error, {
         test: 'context',
-        domain: 'clothing'
+        domain: 'clothing',
       });
       expect(result).toBe(expectedResult);
     });
@@ -464,7 +504,7 @@ describe('ClothingErrorHandler', () => {
         expect.objectContaining({
           originalError: 'Service failed',
           recoveryError: 'warn failure',
-          strategy: ''
+          strategy: '',
         })
       );
       expect(recovery.recovered).toBe(false);
@@ -492,7 +532,7 @@ describe('ClothingErrorHandler', () => {
         'operation'
       );
       const recovery = await errorHandler.handleError(error);
-      
+
       expect(recovery.recovered).toBe(true);
       expect(recovery.fallbackData).toBeDefined();
       expect(recovery.fallbackData.mode).toBe('legacy');

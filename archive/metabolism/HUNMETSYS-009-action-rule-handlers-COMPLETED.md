@@ -15,11 +15,13 @@ Create rule handlers that execute when eat, drink, and rest actions are attempte
 With action definitions created in HUNMETSYS-008 and the CONSUME_ITEM operation handler from HUNMETSYS-005, we now need to connect user actions to the metabolism system by creating rules that respond to action attempt events.
 
 **Key Behaviors:**
+
 - **Eat/Drink Rules:** Call CONSUME_ITEM operation to transfer fuel to buffer
 - **Rest Rule:** Reset energy to maxEnergy and reset metabolic_efficiency_multiplier to 1.0
 - **All rules:** Use `core:logSuccessAndEndTurn` macro for consistent event flow and turn management
 
 **Corrected Pattern Understanding:**
+
 - Rules use condition references (separate condition files)
 - Rules must dispatch perceptible events for NPC observation
 - Rules must set up context variables before calling macros
@@ -31,6 +33,7 @@ With action definitions created in HUNMETSYS-008 and the CONSUME_ITEM operation 
 ### New Files (6, revised from 3)
 
 **Condition Files (3):**
+
 1. **`data/mods/metabolism/conditions/event-is-action-eat.condition.json`**
    - Matches `metabolism:eat` action ID
 
@@ -41,6 +44,7 @@ With action definitions created in HUNMETSYS-008 and the CONSUME_ITEM operation 
    - Matches `metabolism:rest` action ID
 
 **Rule Files (3):**
+
 1. **`data/mods/metabolism/rules/handle_eat_food.rule.json`**
    - Triggers on `core:attempt_action` for `metabolism:eat`
    - Calls CONSUME_ITEM operation
@@ -62,6 +66,7 @@ With action definitions created in HUNMETSYS-008 and the CONSUME_ITEM operation 
    - Uses `core:logSuccessAndEndTurn` macro
 
 ### Modified Files (1)
+
 1. **`data/mods/metabolism/mod-manifest.json`**
    - Add all three conditions to `content.conditions` array
    - Add all three rules to `content.rules` array
@@ -74,6 +79,7 @@ With action definitions created in HUNMETSYS-008 and the CONSUME_ITEM operation 
 All conditions follow the same pattern:
 
 **event-is-action-eat.condition.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -86,6 +92,7 @@ All conditions follow the same pattern:
 ```
 
 **event-is-action-drink-beverage.condition.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -98,6 +105,7 @@ All conditions follow the same pattern:
 ```
 
 **event-is-action-rest.condition.json:**
+
 ```json
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
@@ -372,6 +380,7 @@ All conditions follow the same pattern:
 ```
 
 ### Rest Mechanic Notes (Revised)
+
 - Resets energy to max_energy (not fixed 50 points)
 - Resets metabolic_efficiency_multiplier to 1.0 (baseline, not boost)
 - Represents complete recovery during rest period
@@ -381,6 +390,7 @@ All conditions follow the same pattern:
 ## Out of Scope
 
 **Not Included:**
+
 - ❌ Error handling for CONSUME_ITEM failures (handled by operation dispatcher)
 - ❌ Integration tests (this ticket now includes tests)
 - ❌ Energy costs on movement/exercise actions (HUNMETSYS-016)
@@ -390,12 +400,14 @@ All conditions follow the same pattern:
 - ❌ Activity multiplier boost mechanics (saved for future enhancement)
 
 **Dependencies Not Ready:**
+
 - ❌ GOAP integration (HUNMETSYS-013)
 - ❌ UI feedback (future work)
 
 ## Acceptance Criteria
 
 **Must Have:**
+
 - ✅ All three condition files created and validate against condition schema
 - ✅ All three rule files created and validate against rule schema
 - ✅ Conditions and rules added to mod manifest (alphabetically sorted)
@@ -412,6 +424,7 @@ All conditions follow the same pattern:
 - ✅ Integration tests verify event dispatching and turn ending
 
 **Nice to Have:**
+
 - Consider: Different rest durations with varying energy amounts
 - Consider: Activity multiplier boost system with duration tracking
 
@@ -420,6 +433,7 @@ All conditions follow the same pattern:
 ### Integration Tests (3 new test suites)
 
 **tests/integration/mods/metabolism/handleEatFood.integration.test.js:**
+
 - Verify CONSUME_ITEM called with correct parameters
 - Verify perceptible_event dispatched with food_consumed type
 - Verify display_successful_action_result dispatched
@@ -428,6 +442,7 @@ All conditions follow the same pattern:
 - Verify message format: "{actorName} eats {itemName}."
 
 **tests/integration/mods/metabolism/handleDrinkBeverage.integration.test.js:**
+
 - Verify CONSUME_ITEM called with correct parameters
 - Verify perceptible_event dispatched with drink_consumed type
 - Verify display_successful_action_result dispatched
@@ -436,6 +451,7 @@ All conditions follow the same pattern:
 - Verify message format: "{actorName} drinks {itemName}."
 
 **tests/integration/mods/metabolism/handleRest.integration.test.js:**
+
 - Verify current_energy reset to max_energy
 - Verify metabolic_efficiency_multiplier reset to 1.0
 - Verify perceptible_event dispatched with rest_action type
@@ -445,12 +461,15 @@ All conditions follow the same pattern:
 - Verify message format: "{actorName} rests and recovers energy."
 
 ### Manual Validation
+
 1. **Schema Validation:**
+
    ```bash
    npm run validate
    ```
 
 2. **Mod Loading:**
+
    ```bash
    npm run start
    # Verify metabolism mod loads without errors
@@ -462,6 +481,7 @@ All conditions follow the same pattern:
    ```
 
 ### Verification Commands
+
 ```bash
 # Validate all schemas
 npm run validate
@@ -480,6 +500,7 @@ npm run test:integration -- tests/integration/mods/metabolism/
 ## Invariants
 
 **Rule Behavior:**
+
 1. Rules must only trigger for their specific action ID
 2. CONSUME_ITEM must receive correct entity references
 3. Perceptible events must always be dispatched (via macro)
@@ -487,6 +508,7 @@ npm run test:integration -- tests/integration/mods/metabolism/
 5. Context variables must be set before macro invocation
 
 **Event Flow (Corrected):**
+
 ```
 core:attempt_action
   ↓
@@ -507,6 +529,7 @@ Invoke Macro: core:logSuccessAndEndTurn
 ```
 
 **Data Integrity:**
+
 - Eat/Drink: Food item must exist before consumption
 - Rest: metabolic_store and fuel_converter must exist
 - All: Entity references must resolve correctly

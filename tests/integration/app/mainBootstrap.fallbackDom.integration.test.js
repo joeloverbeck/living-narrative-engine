@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 
 const mockStageModules = {
   ensureCriticalDOMElementsStage: jest.fn(),
@@ -38,7 +45,10 @@ describe('main.js bootstrap fallback DOM integration', () => {
     const stageError = new Error('UI bootstrap failed');
     stageError.phase = 'UI Element Validation';
     stageError.failures = [
-      { service: 'UIBootstrapper', error: new Error('missing essential nodes') },
+      {
+        service: 'UIBootstrapper',
+        error: new Error('missing essential nodes'),
+      },
       { service: 'UIBinder', error: new Error('unable to attach listeners') },
     ];
 
@@ -64,29 +74,33 @@ describe('main.js bootstrap fallback DOM integration', () => {
 
     await bootstrapApp();
 
-    expect(mockStageModules.ensureCriticalDOMElementsStage).toHaveBeenCalledTimes(1);
+    expect(
+      mockStageModules.ensureCriticalDOMElementsStage
+    ).toHaveBeenCalledTimes(1);
     expect(global.fetch).toHaveBeenCalledWith('./data/game.json');
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       'Failed to load startWorld from game.json:',
-      expect.any(Error),
+      expect.any(Error)
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Bootstrap error caught in main orchestrator'),
-      stageError,
+      stageError
     );
 
     for (const failure of stageError.failures) {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         `main.js: Failed to init ${failure.service}`,
-        failure.error,
+        failure.error
       );
     }
 
     const fallbackElement = document.getElementById('temp-startup-error');
     expect(fallbackElement).toBeInstanceOf(HTMLElement);
-    expect(fallbackElement?.textContent).toContain('Application failed to start due to a critical error');
+    expect(fallbackElement?.textContent).toContain(
+      'Application failed to start due to a critical error'
+    );
 
     // Title element no longer exists in game.html - verify it's absent
     const title = document.querySelector('h1');
@@ -126,9 +140,17 @@ describe('main.js bootstrap fallback DOM integration', () => {
       payload: domUiElements,
     });
 
-    mockStageModules.setupDIContainerStage.mockResolvedValue({ success: true, payload: container });
-    mockStageModules.resolveLoggerStage.mockResolvedValue({ success: true, payload: { logger } });
-    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({ success: true });
+    mockStageModules.setupDIContainerStage.mockResolvedValue({
+      success: true,
+      payload: container,
+    });
+    mockStageModules.resolveLoggerStage.mockResolvedValue({
+      success: true,
+      payload: { logger },
+    });
+    mockStageModules.initializeGlobalConfigStage.mockResolvedValue({
+      success: true,
+    });
     mockStageModules.initializeGameEngineStage.mockResolvedValue({
       success: false,
       error: new Error('Engine initialization failed'),
@@ -150,11 +172,15 @@ describe('main.js bootstrap fallback DOM integration', () => {
 
     expect(
       logger.error.mock.calls.some(([message]) =>
-        message.includes('main.js: Critical: GameEngine not initialized before attempting Start Game stage.')
+        message.includes(
+          'main.js: Critical: GameEngine not initialized before attempting Start Game stage.'
+        )
       )
     ).toBe(true);
 
-    expect(domUiElements.errorDiv?.textContent).toContain('Critical: GameEngine not initialized');
+    expect(domUiElements.errorDiv?.textContent).toContain(
+      'Critical: GameEngine not initialized'
+    );
 
     expect(domUiElements.inputElement).toBeInstanceOf(HTMLInputElement);
     expect(domUiElements.inputElement?.disabled).toBe(true);

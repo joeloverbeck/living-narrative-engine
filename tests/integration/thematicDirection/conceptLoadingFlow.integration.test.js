@@ -327,10 +327,10 @@ describe('Thematic Direction Concept Loading Flow - Integration', () => {
         new Error('Database error')
       );
 
-    // Act & Assert
-    await expect(controller.initialize()).rejects.toThrow(
-      /initial data loading failed: .*Database error/
-    );
+      // Act & Assert
+      await expect(controller.initialize()).rejects.toThrow(
+        /initial data loading failed: .*Database error/
+      );
 
       // Verify the error was logged appropriately
       expect(mockLogger.error).toHaveBeenCalled();

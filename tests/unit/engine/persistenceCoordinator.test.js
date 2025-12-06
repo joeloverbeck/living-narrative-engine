@@ -25,9 +25,7 @@ import {
   ENGINE_READY_UI,
   GAME_SAVED_ID,
 } from '../../../src/constants/eventIds.js';
-import {
-  GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE,
-} from '../../common/engine/unavailableMessages.js';
+import { GAME_PERSISTENCE_LOAD_RESULT_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -178,9 +176,7 @@ describe('PersistenceCoordinator', () => {
 
     expect(
       logger.debug.mock.calls.some(([message]) =>
-        message.includes(
-          `Dispatched GAME_SAVED_ID for "${DEFAULT_SAVE_NAME}"`
-        )
+        message.includes(`Dispatched GAME_SAVED_ID for "${DEFAULT_SAVE_NAME}"`)
       )
     ).toBe(true);
   });
@@ -561,14 +557,11 @@ describe('PersistenceCoordinator', () => {
     );
 
     expect(errorLogCall).toBeDefined();
-    expect(errorLogCall[0]).toContain(
-      `Reported error: ${failureMessage}`
-    );
+    expect(errorLogCall[0]).toContain(`Reported error: ${failureMessage}`);
   });
 
   it('triggerManualSave uses persistence message when error string is blank', async () => {
-    const { coordinator, dispatcher, persistenceService } =
-      createCoordinator();
+    const { coordinator, dispatcher, persistenceService } = createCoordinator();
     const blankError = '   ';
     const fallbackMessage = 'Persistence layer rejected the save request.';
     persistenceService.saveGame.mockResolvedValue({
@@ -651,9 +644,7 @@ describe('PersistenceCoordinator', () => {
     );
 
     expect(errorLogCall).toBeDefined();
-    expect(errorLogCall[0]).toContain(
-      `Reported error: ${rawErrorMessage}`
-    );
+    expect(errorLogCall[0]).toContain(`Reported error: ${rawErrorMessage}`);
   });
 
   it('triggerManualSave normalizes PersistenceError failures to readable strings', async () => {

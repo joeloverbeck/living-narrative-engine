@@ -1,4 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { ResponseSalvageService } from '../../../src/services/responseSalvageService.js';
 import { SALVAGE_DEFAULT_TTL } from '../../../src/config/constants.js';
 
@@ -41,7 +48,14 @@ describe('ResponseSalvageService', () => {
     const payload = { ...basePayload };
     const responseData = { data: 'ok' };
 
-    service.salvageResponse('req-1', 'llm-a', payload, responseData, 202, 10_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      payload,
+      responseData,
+      202,
+      10_000
+    );
 
     const byId = service.retrieveByRequestId('req-1');
     expect(byId).toEqual(
@@ -73,8 +87,22 @@ describe('ResponseSalvageService', () => {
   test('re-salvaging the same request clears the previous timer', () => {
     const clearSpy = jest.spyOn(global, 'clearTimeout');
 
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 1_000);
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: false }, 200, 1_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      1_000
+    );
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: false },
+      200,
+      1_000
+    );
 
     expect(clearSpy).toHaveBeenCalledTimes(1);
   });
@@ -88,19 +116,34 @@ describe('ResponseSalvageService', () => {
     };
     const fallbackService = new ResponseSalvageService(fallbackLogger);
 
-    fallbackService.salvageResponse('req-default', 'llm-a', basePayload, { ok: true }, 200);
+    fallbackService.salvageResponse(
+      'req-default',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200
+    );
 
     jest.setSystemTime(1_000 + SALVAGE_DEFAULT_TTL + 5);
 
     expect(fallbackService.retrieveByRequestId('req-default')).toBeNull();
     expect(fallbackLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Expired salvaged response for request req-default'),
+      expect.stringContaining(
+        'Expired salvaged response for request req-default'
+      ),
       expect.objectContaining({ requestId: 'req-default' })
     );
   });
 
   test('retrieveByRequestId expires entries past TTL', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 100);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      100
+    );
 
     jest.advanceTimersByTime(150);
 
@@ -113,7 +156,14 @@ describe('ResponseSalvageService', () => {
   });
 
   test('retrieveByRequestId purges stale entries on access', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 1_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      1_000
+    );
 
     jest.setSystemTime(3_500);
 
@@ -126,7 +176,14 @@ describe('ResponseSalvageService', () => {
   });
 
   test('retrieveBySignature removes expired entries and returns null', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 100);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      100
+    );
 
     jest.advanceTimersByTime(200);
 
@@ -135,7 +192,14 @@ describe('ResponseSalvageService', () => {
   });
 
   test('retrieveBySignature purges stale entries on access', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 1_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      1_000
+    );
 
     jest.setSystemTime(3_500);
 
@@ -148,8 +212,22 @@ describe('ResponseSalvageService', () => {
   });
 
   test('getStats returns counts of cached entries and timers', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 5_000);
-    service.salvageResponse('req-2', 'llm-b', basePayload, { ok: false }, 200, 5_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      5_000
+    );
+    service.salvageResponse(
+      'req-2',
+      'llm-b',
+      basePayload,
+      { ok: false },
+      200,
+      5_000
+    );
 
     const stats = service.getStats();
 
@@ -163,11 +241,17 @@ describe('ResponseSalvageService', () => {
   });
 
   test('getStats handles empty cache state', () => {
-    const freshService = new ResponseSalvageService(logger, { defaultTtl: 5_000 });
+    const freshService = new ResponseSalvageService(logger, {
+      defaultTtl: 5_000,
+    });
 
     const stats = freshService.getStats();
 
-    expect(stats).toEqual({ salvaged: 0, totalCacheEntries: 0, activeTimers: 0 });
+    expect(stats).toEqual({
+      salvaged: 0,
+      totalCacheEntries: 0,
+      activeTimers: 0,
+    });
   });
 
   test('getStats ignores entries without valid request identifiers', () => {
@@ -181,7 +265,14 @@ describe('ResponseSalvageService', () => {
   });
 
   test('clear removes timers and cache entries', () => {
-    service.salvageResponse('req-1', 'llm-a', basePayload, { ok: true }, 200, 5_000);
+    service.salvageResponse(
+      'req-1',
+      'llm-a',
+      basePayload,
+      { ok: true },
+      200,
+      5_000
+    );
     service.clear();
 
     expect(service.retrieveByRequestId('req-1')).toBeNull();

@@ -8,24 +8,24 @@ Create the `ChanceCalculationService` that orchestrates all combat services for 
 
 ## Files to Create
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/ChanceCalculationService.js` | Service implementation |
-| `tests/unit/combat/services/chanceCalculationService.test.js` | Unit tests |
-| `tests/integration/combat/chanceCalculationWorkflow.test.js` | Integration test |
+| File                                                          | Purpose                |
+| ------------------------------------------------------------- | ---------------------- |
+| `src/combat/services/ChanceCalculationService.js`             | Service implementation |
+| `tests/unit/combat/services/chanceCalculationService.test.js` | Unit tests             |
+| `tests/integration/combat/chanceCalculationWorkflow.test.js`  | Integration test       |
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/combat/index.js` | Export ChanceCalculationService |
-| `src/dependencyInjection/tokens/tokens-core.js` | Add ChanceCalculationService token |
-| `src/dependencyInjection/registrations/combatRegistrations.js` | Register ChanceCalculationService |
-| `src/actions/pipeline/stages/ActionFormattingStage.js` | Refactor: Replace inline `#calculateChance()` with ChanceCalculationService |
-| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Refactor: Replace inline orchestration with ChanceCalculationService |
-| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Update ResolveOutcomeHandler DI to use ChanceCalculationService |
-| `tests/unit/actions/pipeline/stages/ActionFormattingStage.test.js` | Update mocks for new service dependency |
-| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js` | Update mocks for new service dependency |
+| File                                                                     | Change                                                                      |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `src/combat/index.js`                                                    | Export ChanceCalculationService                                             |
+| `src/dependencyInjection/tokens/tokens-core.js`                          | Add ChanceCalculationService token                                          |
+| `src/dependencyInjection/registrations/combatRegistrations.js`           | Register ChanceCalculationService                                           |
+| `src/actions/pipeline/stages/ActionFormattingStage.js`                   | Refactor: Replace inline `#calculateChance()` with ChanceCalculationService |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js`                   | Refactor: Replace inline orchestration with ChanceCalculationService        |
+| `src/dependencyInjection/registrations/operationHandlerRegistrations.js` | Update ResolveOutcomeHandler DI to use ChanceCalculationService             |
+| `tests/unit/actions/pipeline/stages/ActionFormattingStage.test.js`       | Update mocks for new service dependency                                     |
+| `tests/unit/logic/operationHandlers/resolveOutcomeHandler.test.js`       | Update mocks for new service dependency                                     |
 
 ## Codebase Assessment (Updated)
 
@@ -97,15 +97,30 @@ class ChanceCalculationService {
     validateDependency(skillResolverService, 'SkillResolverService', logger, {
       requiredMethods: ['getSkillValue'],
     });
-    validateDependency(modifierCollectorService, 'ModifierCollectorService', logger, {
-      requiredMethods: ['collectModifiers'],
-    });
-    validateDependency(probabilityCalculatorService, 'ProbabilityCalculatorService', logger, {
-      requiredMethods: ['calculate'],
-    });
-    validateDependency(outcomeDeterminerService, 'OutcomeDeterminerService', logger, {
-      requiredMethods: ['determine'],
-    });
+    validateDependency(
+      modifierCollectorService,
+      'ModifierCollectorService',
+      logger,
+      {
+        requiredMethods: ['collectModifiers'],
+      }
+    );
+    validateDependency(
+      probabilityCalculatorService,
+      'ProbabilityCalculatorService',
+      logger,
+      {
+        requiredMethods: ['calculate'],
+      }
+    );
+    validateDependency(
+      outcomeDeterminerService,
+      'OutcomeDeterminerService',
+      logger,
+      {
+        requiredMethods: ['determine'],
+      }
+    );
     validateDependency(entityManager, 'IEntityManager', logger, {
       requiredMethods: ['getComponentData'],
     });
@@ -148,7 +163,11 @@ class ChanceCalculationService {
     );
 
     let targetSkillValue = 0;
-    if (chanceBased.contestType === 'opposed' && chanceBased.targetSkill && targetId) {
+    if (
+      chanceBased.contestType === 'opposed' &&
+      chanceBased.targetSkill &&
+      targetId
+    ) {
       const targetSkill = this.#skillResolverService.getSkillValue(
         targetId,
         chanceBased.targetSkill.component,
@@ -217,7 +236,11 @@ class ChanceCalculationService {
     }
 
     // Calculate chance (reuse display calculation logic)
-    const displayResult = this.calculateForDisplay({ actorId, targetId, actionDef });
+    const displayResult = this.calculateForDisplay({
+      actorId,
+      targetId,
+      actionDef,
+    });
 
     // Determine outcome
     const thresholds = chanceBased.outcomes || {
@@ -262,7 +285,9 @@ container.register(tokens.ChanceCalculationService, (c) => {
   return new ChanceCalculationService({
     skillResolverService: c.resolve(tokens.SkillResolverService),
     modifierCollectorService: c.resolve(tokens.ModifierCollectorService),
-    probabilityCalculatorService: c.resolve(tokens.ProbabilityCalculatorService),
+    probabilityCalculatorService: c.resolve(
+      tokens.ProbabilityCalculatorService
+    ),
     outcomeDeterminerService: c.resolve(tokens.OutcomeDeterminerService),
     entityManager: c.resolve(tokens.IEntityManager),
     logger: c.resolve(tokens.ILogger),
@@ -300,10 +325,10 @@ export { default as ChanceCalculationService } from './services/ChanceCalculatio
 
 ## API Summary
 
-| Method | Purpose | Used By |
-|--------|---------|---------|
-| `calculateForDisplay()` | Calculate chance for UI | ActionFormattingStage |
-| `resolveOutcome()` | Resolve outcome for rules | ResolveOutcomeHandler |
+| Method                  | Purpose                   | Used By               |
+| ----------------------- | ------------------------- | --------------------- |
+| `calculateForDisplay()` | Calculate chance for UI   | ActionFormattingStage |
+| `resolveOutcome()`      | Resolve outcome for rules | ResolveOutcomeHandler |
 
 ## Out of Scope
 
@@ -414,14 +439,14 @@ Required test cases:
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/combat/services/SkillResolverService.js` | Sub-service reference |
-| `src/combat/services/ModifierCollectorService.js` | Sub-service reference |
-| `src/combat/services/ProbabilityCalculatorService.js` | Sub-service reference |
-| `src/combat/services/OutcomeDeterminerService.js` | Sub-service reference |
-| `src/actions/pipeline/stages/ActionFormattingStage.js` | Consumer reference |
-| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Consumer reference |
+| File                                                   | Purpose               |
+| ------------------------------------------------------ | --------------------- |
+| `src/combat/services/SkillResolverService.js`          | Sub-service reference |
+| `src/combat/services/ModifierCollectorService.js`      | Sub-service reference |
+| `src/combat/services/ProbabilityCalculatorService.js`  | Sub-service reference |
+| `src/combat/services/OutcomeDeterminerService.js`      | Sub-service reference |
+| `src/actions/pipeline/stages/ActionFormattingStage.js` | Consumer reference    |
+| `src/logic/operationHandlers/resolveOutcomeHandler.js` | Consumer reference    |
 
 ## Future Enhancements
 

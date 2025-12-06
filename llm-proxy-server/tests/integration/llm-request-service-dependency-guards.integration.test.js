@@ -74,46 +74,50 @@ describe('LlmRequestService dependency guard integration', () => {
   });
 
   test('throws when logger dependency is missing', () => {
-    expect(() =>
-      new LlmRequestService(
-        /** @type {any} */ (undefined),
-        httpAgentService,
-        appConfigService,
-        RetryManager
-      )
+    expect(
+      () =>
+        new LlmRequestService(
+          /** @type {any} */ (undefined),
+          httpAgentService,
+          appConfigService,
+          RetryManager
+        )
     ).toThrow('LlmRequestService: logger is required.');
   });
 
   test('throws when HttpAgentService dependency is missing', () => {
-    expect(() =>
-      new LlmRequestService(
-        logger,
-        /** @type {any} */ (undefined),
-        appConfigService,
-        RetryManager
-      )
+    expect(
+      () =>
+        new LlmRequestService(
+          logger,
+          /** @type {any} */ (undefined),
+          appConfigService,
+          RetryManager
+        )
     ).toThrow('LlmRequestService: httpAgentService is required.');
   });
 
   test('throws when AppConfigService dependency is missing', () => {
-    expect(() =>
-      new LlmRequestService(
-        logger,
-        httpAgentService,
-        /** @type {any} */ (undefined),
-        RetryManager
-      )
+    expect(
+      () =>
+        new LlmRequestService(
+          logger,
+          httpAgentService,
+          /** @type {any} */ (undefined),
+          RetryManager
+        )
     ).toThrow('LlmRequestService: appConfigService is required.');
   });
 
   test('throws when RetryManager dependency is missing', () => {
-    expect(() =>
-      new LlmRequestService(
-        logger,
-        httpAgentService,
-        appConfigService,
-        /** @type {any} */ (undefined)
-      )
+    expect(
+      () =>
+        new LlmRequestService(
+          logger,
+          httpAgentService,
+          appConfigService,
+          /** @type {any} */ (undefined)
+        )
     ).toThrow('LlmRequestService: RetryManagerClass is required.');
   });
 

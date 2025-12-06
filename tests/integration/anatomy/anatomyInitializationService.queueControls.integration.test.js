@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -130,7 +137,8 @@ describe('AnatomyInitializationService queue control integration', () => {
   });
 
   it('processes queued entities when forced and resolves waiting promises', async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -180,10 +188,8 @@ describe('AnatomyInitializationService queue control integration', () => {
       processing: true,
     });
 
-    const waiterAfterGeneration = anatomyInitializationService.waitForEntityGeneration(
-      actor.id,
-      250
-    );
+    const waiterAfterGeneration =
+      anatomyInitializationService.waitForEntityGeneration(actor.id, 250);
 
     await anatomyInitializationService.__TEST_ONLY__processQueue({
       ensureProcessingFlag: true,
@@ -259,9 +265,8 @@ describe('AnatomyInitializationService queue control integration', () => {
     jest.useFakeTimers();
     const dateMock = createDateNowSequence([3000, 3005, 3015]);
 
-    const waitPromise = anatomyInitializationService.waitForAllGenerationsToComplete(
-      10
-    );
+    const waitPromise =
+      anatomyInitializationService.waitForAllGenerationsToComplete(10);
 
     await Promise.resolve();
     jest.advanceTimersByTime(5);
@@ -274,7 +279,8 @@ describe('AnatomyInitializationService queue control integration', () => {
   });
 
   it('falls back to raw event objects and honours default wait behaviour', async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -315,7 +321,11 @@ describe('AnatomyInitializationService queue control integration', () => {
 
     await manualService.waitForAllGenerationsToComplete();
     expect(manualService.hasPendingGenerations()).toBe(false);
-    expect(logger.calls.warn.find(([message]) => message.includes('Already initialized'))).toBeUndefined();
+    expect(
+      logger.calls.warn.find(([message]) =>
+        message.includes('Already initialized')
+      )
+    ).toBeUndefined();
 
     // Dispatch again without creating waiters to ensure rejection without
     // registered promises is gracefully ignored.

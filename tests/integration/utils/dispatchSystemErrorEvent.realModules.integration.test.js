@@ -142,13 +142,10 @@ describe('dispatchSystemErrorEvent integration', () => {
       ],
     ]);
 
-    expect(dispatchSpy).toHaveBeenCalledWith(
-      'core:system_error_occurred',
-      {
-        message: 'Renderer crash',
-        details: { scene: 'intro' },
-      }
-    );
+    expect(dispatchSpy).toHaveBeenCalledWith('core:system_error_occurred', {
+      message: 'Renderer crash',
+      details: { scene: 'intro' },
+    });
   });
 
   it('swallows dispatch failures when no logger is provided', async () => {
@@ -156,9 +153,7 @@ describe('dispatchSystemErrorEvent integration', () => {
     registerEventDefinition(env.registry, 'core:system_error_occurred');
 
     const rejection = new Error('network unreachable');
-    jest
-      .spyOn(env.dispatcher, 'dispatch')
-      .mockRejectedValueOnce(rejection);
+    jest.spyOn(env.dispatcher, 'dispatch').mockRejectedValueOnce(rejection);
 
     await dispatchSystemErrorEvent(
       env.dispatcher,

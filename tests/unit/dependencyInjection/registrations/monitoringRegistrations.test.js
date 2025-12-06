@@ -7,18 +7,21 @@ const monitoringMocks = {
   environmentMode: 'development',
 };
 
-jest.mock('../../../../src/entities/monitoring/MonitoringCoordinator.js', () => {
-  monitoringMocks.mockMonitoringCoordinatorInject = jest.fn();
-  monitoringMocks.mockMonitoringCoordinator = jest
-    .fn()
-    .mockImplementation(() => ({
-      injectErrorHandlers: monitoringMocks.mockMonitoringCoordinatorInject,
-    }));
-  return {
-    __esModule: true,
-    default: monitoringMocks.mockMonitoringCoordinator,
-  };
-});
+jest.mock(
+  '../../../../src/entities/monitoring/MonitoringCoordinator.js',
+  () => {
+    monitoringMocks.mockMonitoringCoordinatorInject = jest.fn();
+    monitoringMocks.mockMonitoringCoordinator = jest
+      .fn()
+      .mockImplementation(() => ({
+        injectErrorHandlers: monitoringMocks.mockMonitoringCoordinatorInject,
+      }));
+    return {
+      __esModule: true,
+      default: monitoringMocks.mockMonitoringCoordinator,
+    };
+  }
+);
 jest.mock('../../../../src/entities/monitoring/MemoryMonitor.js', () => {
   monitoringMocks.mockMemoryMonitor = jest.fn();
   return { __esModule: true, default: monitoringMocks.mockMemoryMonitor };
@@ -31,10 +34,16 @@ jest.mock('../../../../src/entities/monitoring/MemoryProfiler.js', () => {
   monitoringMocks.mockMemoryProfiler = jest.fn();
   return { __esModule: true, default: monitoringMocks.mockMemoryProfiler };
 });
-jest.mock('../../../../src/entities/monitoring/MemoryPressureManager.js', () => {
-  monitoringMocks.mockMemoryPressureManager = jest.fn();
-  return { __esModule: true, default: monitoringMocks.mockMemoryPressureManager };
-});
+jest.mock(
+  '../../../../src/entities/monitoring/MemoryPressureManager.js',
+  () => {
+    monitoringMocks.mockMemoryPressureManager = jest.fn();
+    return {
+      __esModule: true,
+      default: monitoringMocks.mockMemoryPressureManager,
+    };
+  }
+);
 jest.mock('../../../../src/entities/monitoring/MemoryReporter.js', () => {
   if (monitoringMocks.shouldProvideMemoryReporter === false) {
     monitoringMocks.mockMemoryReporter = undefined;
@@ -44,21 +53,33 @@ jest.mock('../../../../src/entities/monitoring/MemoryReporter.js', () => {
   monitoringMocks.mockMemoryReporter = jest.fn();
   return { __esModule: true, default: monitoringMocks.mockMemoryReporter };
 });
-jest.mock('../../../../src/entities/monitoring/strategies/LowMemoryStrategy.js', () => {
-  monitoringMocks.mockLowMemoryStrategy = jest.fn();
-  return { __esModule: true, default: monitoringMocks.mockLowMemoryStrategy };
-});
-jest.mock('../../../../src/entities/monitoring/strategies/CriticalMemoryStrategy.js', () => {
-  monitoringMocks.mockCriticalMemoryStrategy = jest.fn();
-  return { __esModule: true, default: monitoringMocks.mockCriticalMemoryStrategy };
-});
+jest.mock(
+  '../../../../src/entities/monitoring/strategies/LowMemoryStrategy.js',
+  () => {
+    monitoringMocks.mockLowMemoryStrategy = jest.fn();
+    return { __esModule: true, default: monitoringMocks.mockLowMemoryStrategy };
+  }
+);
+jest.mock(
+  '../../../../src/entities/monitoring/strategies/CriticalMemoryStrategy.js',
+  () => {
+    monitoringMocks.mockCriticalMemoryStrategy = jest.fn();
+    return {
+      __esModule: true,
+      default: monitoringMocks.mockCriticalMemoryStrategy,
+    };
+  }
+);
 jest.mock('../../../../src/errors/CentralErrorHandler.js', () => {
   monitoringMocks.mockCentralErrorHandler = jest.fn();
   return { __esModule: true, default: monitoringMocks.mockCentralErrorHandler };
 });
 jest.mock('../../../../src/errors/RecoveryStrategyManager.js', () => {
   monitoringMocks.mockRecoveryStrategyManager = jest.fn();
-  return { __esModule: true, default: monitoringMocks.mockRecoveryStrategyManager };
+  return {
+    __esModule: true,
+    default: monitoringMocks.mockRecoveryStrategyManager,
+  };
 });
 jest.mock('../../../../src/errors/ErrorReporter.js', () => {
   monitoringMocks.mockErrorReporter = jest.fn();
@@ -113,8 +134,8 @@ function createMockContainer(initialEntries = new Map()) {
     return value;
   });
 
-  container.isRegistered = jest.fn((token) =>
-    instances.has(token) || registrations.has(token)
+  container.isRegistered = jest.fn(
+    (token) => instances.has(token) || registrations.has(token)
   );
 
   container.__registrations = registrations;
@@ -252,9 +273,14 @@ describe('registerMemoryMonitoring', () => {
       'Memory Monitoring Registration: completed.'
     );
 
-    expect(monitoringMocks.mockMonitoringCoordinatorInject).toHaveBeenCalledTimes(1);
-    const [centralErrorHandlerArg, recoveryStrategyManagerArg, errorReporterArg] =
-      monitoringMocks.mockMonitoringCoordinatorInject.mock.calls[0];
+    expect(
+      monitoringMocks.mockMonitoringCoordinatorInject
+    ).toHaveBeenCalledTimes(1);
+    const [
+      centralErrorHandlerArg,
+      recoveryStrategyManagerArg,
+      errorReporterArg,
+    ] = monitoringMocks.mockMonitoringCoordinatorInject.mock.calls[0];
 
     expect(monitoringMocks.mockCentralErrorHandler.mock.instances[0]).toBe(
       centralErrorHandlerArg
@@ -342,7 +368,9 @@ describe('registerMemoryMonitoring', () => {
       return baseIsRegistered(token);
     });
 
-    monitoringMocks.mockMonitoringCoordinator.mockImplementationOnce(() => ({}));
+    monitoringMocks.mockMonitoringCoordinator.mockImplementationOnce(
+      () => ({})
+    );
 
     registerMemoryMonitoring(container);
 
@@ -351,11 +379,12 @@ describe('registerMemoryMonitoring', () => {
     expect(coordinatorArgs.memoryMonitor).toBeNull();
     expect(coordinatorArgs.memoryPressureManager).toBeNull();
 
-    expect(monitoringMocks.mockMonitoringCoordinatorInject).not.toHaveBeenCalled();
+    expect(
+      monitoringMocks.mockMonitoringCoordinatorInject
+    ).not.toHaveBeenCalled();
   });
 
   it('falls back gracefully when the logger is unavailable and injection fails', async () => {
-
     const fallbackLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -396,7 +425,9 @@ describe('registerMemoryMonitoring', () => {
     container.resolve(tokens.ICriticalMemoryStrategy);
 
     expect(fallbackLogger.debug).not.toHaveBeenCalled();
-    expect(monitoringMocks.mockMonitoringCoordinatorInject).not.toHaveBeenCalled();
+    expect(
+      monitoringMocks.mockMonitoringCoordinatorInject
+    ).not.toHaveBeenCalled();
 
     expect(
       monitoringMocks.mockLowMemoryStrategy.mock.calls[0][0].cache

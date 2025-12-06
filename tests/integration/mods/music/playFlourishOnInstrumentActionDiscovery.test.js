@@ -86,7 +86,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
     compatibleMoods.forEach((mood) => {
       it(`should discover action when actor has ${mood} mood`, () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Felix')
@@ -122,11 +125,21 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
   });
 
   describe('Discovery with incompatible moods', () => {
-    const incompatibleMoods = ['tense', 'aggressive', 'meditative', 'solemn', 'mournful', 'eerie'];
+    const incompatibleMoods = [
+      'tense',
+      'aggressive',
+      'meditative',
+      'solemn',
+      'mournful',
+      'eerie',
+    ];
 
     incompatibleMoods.forEach((mood) => {
       it(`should NOT discover action when actor has ${mood} mood`, () => {
-        const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+        const room = ModEntityScenarios.createRoom(
+          'concert_hall',
+          'Concert Hall'
+        );
 
         const musician = new ModEntityBuilder('musician1')
           .withName('Lyra')
@@ -163,7 +176,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
   describe('Discovery when actor lacks required components', () => {
     it('should NOT discover action when actor lacks is_musician component', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const actor = new ModEntityBuilder('actor1')
         .withName('Novice')
@@ -195,7 +211,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
     });
 
     it('should NOT discover action when actor lacks playing_music component', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Idle Musician')
@@ -225,7 +244,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
     });
 
     it('should NOT discover action when actor lacks performance_mood component', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Confused Musician')
@@ -257,7 +279,10 @@ describe('music:play_flourish_on_instrument - Action Discovery', () => {
 
   describe('Scope resolution edge cases', () => {
     it('should not discover action when playing_music references non-existent instrument', () => {
-      const room = ModEntityScenarios.createRoom('concert_hall', 'Concert Hall');
+      const room = ModEntityScenarios.createRoom(
+        'concert_hall',
+        'Concert Hall'
+      );
 
       const musician = new ModEntityBuilder('musician1')
         .withName('Broken Reference')

@@ -21,6 +21,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 **DECISION**: ✅ **REUSE EXISTING** - `anatomy:human_hair_short_brown_wavy`
 
 **Justification**:
+
 - **Existing part**: `human_hair_short_brown_wavy.entity.json`
 - **Match quality**: 85% - Close enough for practical purposes
 - **Matches requirements**:
@@ -30,11 +31,12 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 - **Minor discrepancies**:
   - ⚠️ Does not explicitly encode "going grey" - this can be handled through body descriptor `hairDensity` or custom description
   - ⚠️ "Wavy" vs "straight/practical" - acceptable variance, wavy hair is still practical when kept short
-- **Adaptation strategy**: 
+- **Adaptation strategy**:
   - Use recipe-level descriptor customization or profile description to mention grey transition
   - The existing part structure is flexible enough to represent Bertram's hair adequately
 
 **Alternative considered**: `anatomy:human_hair_short_gray_wavy`
+
 - Rejected because Bertram's hair is "brown going grey", not fully grey
 - Brown with grey transition is better represented by the brown variant with descriptive text
 
@@ -45,6 +47,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 **DECISION**: ❌ **CREATE NEW PART**
 
 **Justification**:
+
 - **Closest existing part**: `humanoid_head_bearded.entity.json`
 - **Why existing part is insufficient**:
   - ❌ Generic "bearded" descriptor doesn't specify "full beard, neatly trimmed"
@@ -69,6 +72,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 **DECISION**: ✅ **REUSE EXISTING** - `anatomy:human_male_torso_thick_hairy`
 
 **Justification**:
+
 - **Existing part**: `human_male_torso_thick_hairy.entity.json`
 - **Match quality**: 90% - Excellent structural match
 - **Matches requirements**:
@@ -80,11 +84,12 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 - **Minor discrepancies**:
   - ⚠️ "Hairy" descriptor may be slightly more than Bertram's "moderate" body hair, but acceptable
   - ⚠️ Slight belly from contentment can be represented through recipe `composition` descriptor ("soft")
-- **Why this works**: 
+- **Why this works**:
   - Recipe-level descriptors (`build: stocky`, `composition: soft`) combine with this part to accurately represent Bertram
   - The "thick_hairy" variant is the closest match to "working-man build, solid but not muscular"
 
 **Alternatives considered**:
+
 - `human_male_torso.entity.json` - Too generic, lacks build specificity
 - `human_male_torso_muscular.entity.json` - Wrong build (Bertram is solid, not muscular)
 
@@ -95,6 +100,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 **DECISION**: ❌ **CREATE NEW PART**
 
 **Justification**:
+
 - **Closest existing part**: `humanoid_arm_scarred.entity.json`
 - **Why existing part is insufficient**:
   - ❌ "Scarred" texture is wrong - Bertram has chemical staining, not scars
@@ -106,7 +112,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
   - Weathered skin texture from decades of outdoor/tannery work
   - Strong forearms (not bodybuilder, but working-man strength)
   - Practical working-man strength markers
-- **Cannot adapt scarred variant**: 
+- **Cannot adapt scarred variant**:
   - Scars ≠ chemical staining (completely different visual and narrative)
   - Scars imply injury/trauma; staining implies profession/craft
   - Bertram's arms are his professional signature, not battle wounds
@@ -120,6 +126,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 **DECISION**: ❌ **CREATE NEW PART** - **HIGHEST PRIORITY**
 
 **Justification**:
+
 - **Closest existing part**: `humanoid_hand_scarred.entity.json`
 - **Why existing part is completely insufficient**:
   - ❌ "Scarred" texture is fundamentally wrong - Bertram has craftsman markers, not scars
@@ -149,18 +156,18 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 
 ### Parts to REUSE (2 parts)
 
-| Required Part ID | Reuse Entity ID | Match Quality | Notes |
-|------------------|-----------------|---------------|-------|
-| `human_hair_brown_grey_short_practical` | `anatomy:human_hair_short_brown_wavy` | 85% | Grey transition handled via description |
-| `human_male_torso_working_build` | `anatomy:human_male_torso_thick_hairy` | 90% | Excellent match with recipe descriptors |
+| Required Part ID                        | Reuse Entity ID                        | Match Quality | Notes                                   |
+| --------------------------------------- | -------------------------------------- | ------------- | --------------------------------------- |
+| `human_hair_brown_grey_short_practical` | `anatomy:human_hair_short_brown_wavy`  | 85%           | Grey transition handled via description |
+| `human_male_torso_working_build`        | `anatomy:human_male_torso_thick_hairy` | 90%           | Excellent match with recipe descriptors |
 
 ### Parts to CREATE (3 parts - NEXT TICKET)
 
-| Required Part ID | Priority | Reason for Creation |
-|------------------|----------|---------------------|
-| `humanoid_hand_craftsman_stained` | **CRITICAL** | Embedded dye crescents, callus patterns, professional markers - character-defining |
-| `humanoid_arm_weathered_tannery_stained` | **HIGH** | Permanent chemical staining (defining visual feature), weathered texture, strong forearms |
-| `humanoid_face_bearded_full_trimmed` | **MEDIUM** | Full beard specificity, brown-to-grey coloring, warm features, smile-lines |
+| Required Part ID                         | Priority     | Reason for Creation                                                                       |
+| ---------------------------------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `humanoid_hand_craftsman_stained`        | **CRITICAL** | Embedded dye crescents, callus patterns, professional markers - character-defining        |
+| `humanoid_arm_weathered_tannery_stained` | **HIGH**     | Permanent chemical staining (defining visual feature), weathered texture, strong forearms |
+| `humanoid_face_bearded_full_trimmed`     | **MEDIUM**   | Full beard specificity, brown-to-grey coloring, warm features, smile-lines                |
 
 ---
 
@@ -184,6 +191,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 ### Key Component Requirements for New Parts
 
 #### For `humanoid_hand_craftsman_stained`:
+
 ```json
 {
   "anatomy:part": { "subType": "hand" },
@@ -206,10 +214,13 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 ```
 
 #### For `humanoid_arm_weathered_tannery_stained`:
+
 ```json
 {
   "anatomy:part": { "subType": "arm" },
-  "anatomy:sockets": { "sockets": [{ "id": "wrist", "allowedTypes": ["hand"] }] },
+  "anatomy:sockets": {
+    "sockets": [{ "id": "wrist", "allowedTypes": ["hand"] }]
+  },
   "descriptors:texture": { "texture": "weathered_stained" },
   "descriptors:build": { "build": "working_strong" },
   "descriptors:color_extended": { "color": "tan_brown_chemical_stained" },
@@ -220,6 +231,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 ```
 
 #### For `humanoid_face_bearded_full_trimmed`:
+
 ```json
 {
   "anatomy:part": { "subType": "head" },
@@ -243,7 +255,7 @@ The existing anatomy part library provides suitable options for Bertram's hair a
 ✅ **Craftsman's Hands**: Complete detail capture with calluses, dye crescents, functional pride  
 ✅ **Working-Man Build**: Achieved through torso reuse + recipe descriptors  
 ✅ **Professional Smell**: Recipe-level descriptor (not anatomy part concern)  
-✅ **Brown-to-Grey Hair/Beard**: Hair reused with description; face requires creation  
+✅ **Brown-to-Grey Hair/Beard**: Hair reused with description; face requires creation
 
 ### Character Essence Maintained
 

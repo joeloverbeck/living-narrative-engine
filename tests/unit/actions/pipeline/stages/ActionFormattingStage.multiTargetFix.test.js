@@ -32,10 +32,7 @@ describe('ActionFormattingStage - multi-target action fix', () => {
 
         return {
           ok: true,
-          value: actionDef.template.replace(
-            `{${placeholder}}`,
-            targetName
-          ),
+          value: actionDef.template.replace(`{${placeholder}}`, targetName),
         };
       }),
       formatMultiTarget: jest
@@ -222,7 +219,11 @@ describe('ActionFormattingStage - multi-target action fix', () => {
           {
             actionDef,
             targetContexts: [
-              { type: 'entity', entityId: 'loc1', displayName: 'Forest Clearing' },
+              {
+                type: 'entity',
+                entityId: 'loc1',
+                displayName: 'Forest Clearing',
+              },
             ],
           },
         ],

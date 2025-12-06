@@ -9,7 +9,11 @@ import { safeStringify } from './safeStringify.js';
  * @returns {metadata is Record<string, any>} True when `metadata` is a non-null object.
  */
 function isMetadataObject(metadata) {
-  return Boolean(metadata) && typeof metadata === 'object' && !Array.isArray(metadata);
+  return (
+    Boolean(metadata) &&
+    typeof metadata === 'object' &&
+    !Array.isArray(metadata)
+  );
 }
 
 /**

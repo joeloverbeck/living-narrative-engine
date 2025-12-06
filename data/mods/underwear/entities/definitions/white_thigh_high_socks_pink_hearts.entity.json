@@ -8,9 +8,7 @@
       "equipmentSlots": {
         "primary": "feet"
       },
-      "allowedLayers": [
-        "underwear"
-      ]
+      "allowedLayers": ["underwear"]
     },
     "core:material": {
       "material": "cotton"
@@ -31,9 +29,7 @@
       "texture": "smooth"
     },
     "clothing:coverage_mapping": {
-      "covers": [
-        "torso_lower"
-      ],
+      "covers": ["torso_lower"],
       "coveragePriority": "underwear"
     },
     "items:item": {},

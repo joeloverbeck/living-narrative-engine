@@ -46,7 +46,12 @@ describe('ScopeCacheStrategy expiration behaviour integration', () => {
   beforeEach(() => {
     cache = new Map();
     logger = new MemoryLogger();
-    strategy = new ScopeCacheStrategy({ cache, defaultTTL: 100, logger, maxSize: 5 });
+    strategy = new ScopeCacheStrategy({
+      cache,
+      defaultTTL: 100,
+      logger,
+      maxSize: 5,
+    });
   });
 
   it('supports default constructor dependencies when none are provided', () => {
@@ -72,18 +77,28 @@ describe('ScopeCacheStrategy expiration behaviour integration', () => {
 
     const debugMessages = logger.debugEntries.map((entry) => entry.message);
     expect(debugMessages).toEqual(
-      expect.arrayContaining(['Cache entry expired', 'Cache miss', 'Cached value'])
+      expect.arrayContaining([
+        'Cache entry expired',
+        'Cache miss',
+        'Cached value',
+      ])
     );
   });
 
   it('treats entries without timestamps as invalid when using synchronous lookups', () => {
-    cache.set(cacheKey, { value: ActionResult.success(new Set(['missingTimestamp'])) });
+    cache.set(cacheKey, {
+      value: ActionResult.success(new Set(['missingTimestamp'])),
+    });
 
     const value = strategy.getSync(cacheKey);
 
     expect(value).toBeNull();
     expect(cache.has(cacheKey)).toBe(false);
-    expect(logger.debugEntries.find((entry) => entry.message === 'Cache entry expired')).toBeDefined();
+    expect(
+      logger.debugEntries.find(
+        (entry) => entry.message === 'Cache entry expired'
+      )
+    ).toBeDefined();
   });
 
   it('falls back to default TTL when cached entry omits ttl metadata', () => {
@@ -97,7 +112,9 @@ describe('ScopeCacheStrategy expiration behaviour integration', () => {
     const value = strategy.getSync(cacheKey);
 
     expect(value).toBe(withDefaultTTL);
-    expect(logger.debugEntries.find((entry) => entry.message === 'Cache hit')).toBeDefined();
+    expect(
+      logger.debugEntries.find((entry) => entry.message === 'Cache hit')
+    ).toBeDefined();
   });
 
   it('does not emit invalidation logs when no keys match predicate', () => {

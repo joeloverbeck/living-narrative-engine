@@ -11,6 +11,7 @@
 ## Problem Statement
 
 After the successful integration of `CharacterDataXmlBuilder`, the original `CharacterDataFormatter` class is no longer used. This ticket handles:
+
 1. Removing the deprecated class file
 2. Removing associated unit tests
 3. Cleaning up any remaining references or imports
@@ -24,17 +25,18 @@ This is a cleanup ticket - all functionality has been replaced by this point.
 
 **Original Ticket Assumptions vs Reality:**
 
-| Assumption | Reality | Impact |
-|------------|---------|--------|
-| `src/prompting/CharacterDataFormatter.js` exists | ✅ CORRECT | Will be deleted |
-| `tests/unit/prompting/CharacterDataFormatter.test.js` exists | ✅ CORRECT | Will be deleted |
-| No imports in `AIPromptContentProvider.js` | ✅ CORRECT | Already uses `CharacterDataXmlBuilder` |
+| Assumption                                                                                            | Reality                                                                                                                         | Impact                                                                  |
+| ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `src/prompting/CharacterDataFormatter.js` exists                                                      | ✅ CORRECT                                                                                                                      | Will be deleted                                                         |
+| `tests/unit/prompting/CharacterDataFormatter.test.js` exists                                          | ✅ CORRECT                                                                                                                      | Will be deleted                                                         |
+| No imports in `AIPromptContentProvider.js`                                                            | ✅ CORRECT                                                                                                                      | Already uses `CharacterDataXmlBuilder`                                  |
 | `tests/integration/prompting/CharacterDataFormatter.integration.test.js` tests CharacterDataFormatter | ⚠️ PARTIALLY - Tests CharacterDataFormatter directly via import, but also tests AIPromptContentProvider with mocked XML builder | Delete - coverage maintained via unit tests for CharacterDataXmlBuilder |
-| `tests/integration/CharacterDataFormatter.integration.test.js` exists | ❌ WRONG FILE - Contains MultiTargetValidation tests (unrelated) | NO ACTION needed on this file |
-| `characterDataXmlBuilder.integration.test.js` should exist | ❌ File does not exist | Not required - coverage maintained via unit tests |
-| `tests/integration/prompting/enhancedCharacterPrompts.integration.test.js` exists | ⚠️ DISCOVERED - Imports CharacterDataFormatter directly, tests deprecated class | Delete - tests deprecated functionality |
+| `tests/integration/CharacterDataFormatter.integration.test.js` exists                                 | ❌ WRONG FILE - Contains MultiTargetValidation tests (unrelated)                                                                | NO ACTION needed on this file                                           |
+| `characterDataXmlBuilder.integration.test.js` should exist                                            | ❌ File does not exist                                                                                                          | Not required - coverage maintained via unit tests                       |
+| `tests/integration/prompting/enhancedCharacterPrompts.integration.test.js` exists                     | ⚠️ DISCOVERED - Imports CharacterDataFormatter directly, tests deprecated class                                                 | Delete - tests deprecated functionality                                 |
 
 **Key Finding:** The integration test file `tests/integration/prompting/CharacterDataFormatter.integration.test.js`:
+
 - Imports `CharacterDataFormatter` directly
 - Tests CharacterDataFormatter methods like `formatCharacterPersona()`, `formatPhysicalDescription()`, etc.
 - Uses a mock `characterDataXmlBuilder` for AIPromptContentProvider integration
@@ -44,20 +46,20 @@ This is a cleanup ticket - all functionality has been replaced by this point.
 
 ## Files to Delete
 
-| File | Reason |
-|------|--------|
-| `src/prompting/CharacterDataFormatter.js` | Replaced by CharacterDataXmlBuilder |
-| `tests/unit/prompting/CharacterDataFormatter.test.js` | Tests deprecated class |
-| `tests/integration/prompting/CharacterDataFormatter.integration.test.js` | Tests deprecated class directly |
+| File                                                                       | Reason                                                             |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `src/prompting/CharacterDataFormatter.js`                                  | Replaced by CharacterDataXmlBuilder                                |
+| `tests/unit/prompting/CharacterDataFormatter.test.js`                      | Tests deprecated class                                             |
+| `tests/integration/prompting/CharacterDataFormatter.integration.test.js`   | Tests deprecated class directly                                    |
 | `tests/integration/prompting/enhancedCharacterPrompts.integration.test.js` | Tests deprecated class directly (discovered during implementation) |
 
 ---
 
 ## Files to Verify/Clean
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/prompting/AIPromptContentProvider.js` | VERIFY | ✅ Confirmed: no import of CharacterDataFormatter |
+| File                                       | Action | Description                                               |
+| ------------------------------------------ | ------ | --------------------------------------------------------- |
+| `src/prompting/AIPromptContentProvider.js` | VERIFY | ✅ Confirmed: no import of CharacterDataFormatter         |
 | `src/prompting/characterDataXmlBuilder.js` | VERIFY | Remove `@see CharacterDataFormatter.js` comment reference |
 
 ---
@@ -65,6 +67,7 @@ This is a cleanup ticket - all functionality has been replaced by this point.
 ## Out of Scope
 
 **DO NOT modify:**
+
 - `CharacterDataXmlBuilder.js` - already complete (except removing legacy reference comment)
 - `XmlElementBuilder.js` - already complete
 - `AIPromptContentProvider.js` functionality (only verify no dead imports)
@@ -173,6 +176,7 @@ npx eslint src/prompting/ tests/unit/prompting/ tests/integration/prompting/
 If issues are discovered after deletion:
 
 1. Restore from git:
+
    ```bash
    git checkout HEAD -- src/prompting/CharacterDataFormatter.js
    git checkout HEAD -- tests/unit/prompting/CharacterDataFormatter.test.js
@@ -198,11 +202,13 @@ If issues are discovered after deletion:
 ## Outcome
 
 **Originally Planned:**
+
 - Delete 2 files: source and unit tests
 - Rename/delete integration test file
 - Verify no dead code
 
 **Actually Changed:**
+
 - Deleted 4 files: source, unit tests, and two integration test files
 - Removed `@see` comment reference in characterDataXmlBuilder.js
 - Verified no remaining references in codebase (except archived docs/reports)
@@ -210,6 +216,7 @@ If issues are discovered after deletion:
 **Tests Modified:** None (existing CharacterDataXmlBuilder tests provide coverage)
 **Tests Added:** None (coverage already comprehensive)
 **Tests Deleted:**
+
 - `src/prompting/CharacterDataFormatter.js` - deprecated class (~618 lines)
 - `tests/unit/prompting/CharacterDataFormatter.test.js` - deprecated class tests
 - `tests/integration/prompting/CharacterDataFormatter.integration.test.js` - deprecated class integration tests (~1500 lines)

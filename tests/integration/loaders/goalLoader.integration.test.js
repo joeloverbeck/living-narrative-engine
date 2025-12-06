@@ -445,7 +445,12 @@ describe('GoalLoader integration', () => {
         'goals'
       );
 
-      expect(result).toEqual({ count: 1, overrides: 0, errors: 0, failures: [] });
+      expect(result).toEqual({
+        count: 1,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      });
       const storedGoal = registry.get('goals', 'modAlpha:incomplete_goal');
       expect(storedGoal).toBeDefined();
       expect(

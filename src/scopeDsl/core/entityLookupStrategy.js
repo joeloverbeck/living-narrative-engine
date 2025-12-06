@@ -45,7 +45,11 @@ function validateEntityManager(entityManager) {
  * @param root0.logger
  * @param root0.debugConfig
  */
-function createResolverChangeEmitter({ trace = null, logger = null, debugConfig }) {
+function createResolverChangeEmitter({
+  trace = null,
+  logger = null,
+  debugConfig,
+}) {
   const debugEnabled = Boolean(debugConfig?.enabled);
   let lastResolverUsed = null;
 
@@ -136,8 +140,7 @@ export function createEntityLookupStrategy({
       }
     }
 
-    const hasGetEntity =
-      typeof currentEntityManager.getEntity === 'function';
+    const hasGetEntity = typeof currentEntityManager.getEntity === 'function';
     if (hasGetEntity) {
       const entity = currentEntityManager.getEntity(entityId);
       if (entity) {

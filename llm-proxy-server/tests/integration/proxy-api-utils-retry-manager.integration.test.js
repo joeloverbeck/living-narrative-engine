@@ -57,7 +57,10 @@ afterEach(async () => {
   jest.restoreAllMocks();
 });
 
-const defaultRequestOptions = { method: 'GET', headers: { Accept: 'application/json' } };
+const defaultRequestOptions = {
+  method: 'GET',
+  headers: { Accept: 'application/json' },
+};
 
 describe('RetryManager integration behaviour', () => {
   it('successfully returns JSON payload on first attempt', async () => {
@@ -141,9 +144,13 @@ describe('RetryManager integration behaviour', () => {
       logger
     );
 
-    await expect(retryManager.executeWithRetry()).rejects.toThrow(/status 400:/);
+    await expect(retryManager.executeWithRetry()).rejects.toThrow(
+      /status 400:/
+    );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Failed to read error response body as JSON or text')
+      expect.stringContaining(
+        'Failed to read error response body as JSON or text'
+      )
     );
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('status 400')

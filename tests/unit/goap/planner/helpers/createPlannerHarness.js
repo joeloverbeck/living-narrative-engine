@@ -28,7 +28,9 @@ export function createPlannerHarness(options = {}) {
   };
 
   const entityManager = {
-    getEntityInstance: jest.fn().mockReturnValue({ id: actorId, components: {} }),
+    getEntityInstance: jest
+      .fn()
+      .mockReturnValue({ id: actorId, components: {} }),
   };
 
   const scopeRegistry = {

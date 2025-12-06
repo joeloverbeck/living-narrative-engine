@@ -647,7 +647,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Gets the monitoring coordinator instance.
-   * 
+   *
    * @returns {MonitoringCoordinator|null} The monitoring coordinator if available
    */
   getMonitoringCoordinator() {

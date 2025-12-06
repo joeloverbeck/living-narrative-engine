@@ -140,7 +140,9 @@ describe('Mouth Engagement - Stress Tests', () => {
       const creationBatches = [];
 
       for (let i = 0; i < actorCount; i++) {
-        creationBatches.push(createTestActorWithMouth(`actor${i}`, `Actor ${i}`));
+        creationBatches.push(
+          createTestActorWithMouth(`actor${i}`, `Actor ${i}`)
+        );
       }
 
       // Process creation in batches of 20
@@ -158,21 +160,25 @@ describe('Mouth Engagement - Stress Tests', () => {
 
       // Lock all mouths using batch processing
       const lockStart = performance.now();
-      const lockOperations = actors.map((actor) => () =>
-        operationInterpreter.execute(
-          {
-            type: 'LOCK_MOUTH_ENGAGEMENT',
-            parameters: { actor_id: actor.id },
-          },
-          {
-            evaluationContext: { actor: { id: actor.id } },
-            entityManager,
-            logger,
-          }
-        )
+      const lockOperations = actors.map(
+        (actor) => () =>
+          operationInterpreter.execute(
+            {
+              type: 'LOCK_MOUTH_ENGAGEMENT',
+              parameters: { actor_id: actor.id },
+            },
+            {
+              evaluationContext: { actor: { id: actor.id } },
+              entityManager,
+              logger,
+            }
+          )
       );
 
-      await processBatch(lockOperations.map(op => op()), 50);
+      await processBatch(
+        lockOperations.map((op) => op()),
+        50
+      );
 
       const lockEnd = performance.now();
       const lockDuration = lockEnd - lockStart;
@@ -188,21 +194,25 @@ describe('Mouth Engagement - Stress Tests', () => {
 
       // Unlock all mouths using batch processing
       const unlockStart = performance.now();
-      const unlockOperations = actors.map((actor) => () =>
-        operationInterpreter.execute(
-          {
-            type: 'UNLOCK_MOUTH_ENGAGEMENT',
-            parameters: { actor_id: actor.id },
-          },
-          {
-            evaluationContext: { actor: { id: actor.id } },
-            entityManager,
-            logger,
-          }
-        )
+      const unlockOperations = actors.map(
+        (actor) => () =>
+          operationInterpreter.execute(
+            {
+              type: 'UNLOCK_MOUTH_ENGAGEMENT',
+              parameters: { actor_id: actor.id },
+            },
+            {
+              evaluationContext: { actor: { id: actor.id } },
+              entityManager,
+              logger,
+            }
+          )
       );
 
-      await processBatch(unlockOperations.map(op => op()), 50);
+      await processBatch(
+        unlockOperations.map((op) => op()),
+        50
+      );
 
       const unlockEnd = performance.now();
       const unlockDuration = unlockEnd - unlockStart;
@@ -350,7 +360,8 @@ describe('Mouth Engagement - Stress Tests', () => {
       };
 
       const duration = await measurePerformance(async () => {
-        for (let i = 0; i < 50; i++) { // Reduced from 100
+        for (let i = 0; i < 50; i++) {
+          // Reduced from 100
           await operationInterpreter.execute(
             {
               type: 'LOCK_MOUTH_ENGAGEMENT',
@@ -390,10 +401,7 @@ describe('Mouth Engagement - Stress Tests', () => {
         // Create entities in batches
         for (let i = 0; i < entitiesPerCycle; i++) {
           creationBatches.push(
-            createTestActorWithMouth(
-              `churn_${cycle}_${i}`,
-              `ChurnActor${i}`
-            )
+            createTestActorWithMouth(`churn_${cycle}_${i}`, `ChurnActor${i}`)
           );
         }
 
@@ -442,10 +450,7 @@ describe('Mouth Engagement - Stress Tests', () => {
       const creationBatches = [];
       for (let i = 0; i < actorCount; i++) {
         creationBatches.push(
-          createTestActorWithMouth(
-            `concurrent_${i}`,
-            `ConcurrentActor${i}`
-          )
+          createTestActorWithMouth(`concurrent_${i}`, `ConcurrentActor${i}`)
         );
       }
 
@@ -496,7 +501,8 @@ describe('Mouth Engagement - Stress Tests', () => {
       expect(duration).toBeLessThan(1000); // Should complete within 1 second
 
       // All actors should have valid state
-      for (const actor of actors.slice(0, 5)) { // Check subset
+      for (const actor of actors.slice(0, 5)) {
+        // Check subset
         const engagement = entityManager.getComponentData(
           actor.mouthId,
           'core:mouth_engagement'
@@ -661,7 +667,8 @@ describe('Mouth Engagement - Stress Tests', () => {
 
       // Perform stress operations
       const stressOps = [];
-      for (let i = 0; i < 200; i++) { // Reduced from 1000
+      for (let i = 0; i < 200; i++) {
+        // Reduced from 1000
         const randomActor = actors[Math.floor(Math.random() * actors.length)];
         const randomOp =
           Math.random() > 0.5

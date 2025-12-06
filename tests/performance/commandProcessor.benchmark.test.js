@@ -37,18 +37,20 @@ function filterOutliers(measurements) {
   const q1 = sorted[q1Index];
   const q3 = sorted[q3Index];
   const iqr = q3 - q1;
-  
+
   // Use a more conservative outlier threshold (2.0 instead of 1.5)
-  const lowerBound = q1 - (2.0 * iqr);
-  const upperBound = q3 + (2.0 * iqr);
-  
-  const filtered = measurements.filter(m => m >= lowerBound && m <= upperBound);
-  
+  const lowerBound = q1 - 2.0 * iqr;
+  const upperBound = q3 + 2.0 * iqr;
+
+  const filtered = measurements.filter(
+    (m) => m >= lowerBound && m <= upperBound
+  );
+
   // Ensure we keep at least 60% of the measurements
   if (filtered.length < measurements.length * 0.6) {
     return measurements; // Return original if too many outliers detected
   }
-  
+
   return filtered.length > 0 ? filtered : measurements;
 }
 
@@ -347,7 +349,8 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       // Filter outliers and use median baseline for stability
       const filteredBaseline = filterOutliers(baselineMeasurements);
       filteredBaseline.sort((a, b) => a - b);
-      const stableBaseline = filteredBaseline[Math.floor(filteredBaseline.length / 2)]; // median
+      const stableBaseline =
+        filteredBaseline[Math.floor(filteredBaseline.length / 2)]; // median
 
       // Validate baseline is reasonable (not too fast or too slow)
       expect(stableBaseline).toBeGreaterThan(0.001); // At least 0.001ms - sanity check
@@ -386,7 +389,8 @@ describe('CommandProcessor - Performance Benchmarks', () => {
       // Filter outliers and use median recovery time for stability
       const filteredRecovery = filterOutliers(recoveryMeasurements);
       filteredRecovery.sort((a, b) => a - b);
-      const stableRecovery = filteredRecovery[Math.floor(filteredRecovery.length / 2)]; // median
+      const stableRecovery =
+        filteredRecovery[Math.floor(filteredRecovery.length / 2)]; // median
 
       // Validate burst performance
       expect(p50).toBeLessThan(50); // Median should be fast

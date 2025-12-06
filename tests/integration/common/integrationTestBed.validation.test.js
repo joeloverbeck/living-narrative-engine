@@ -66,7 +66,9 @@ describe('IntegrationTestBed schema validation (SCHVALTESINT-004)', () => {
 
       // Production schemas like rule.schema.json should NOT be loaded with default behavior
       expect(
-        validator.isSchemaLoaded('schema://living-narrative-engine/rule.schema.json')
+        validator.isSchemaLoaded(
+          'schema://living-narrative-engine/rule.schema.json'
+        )
       ).toBe(false);
     });
   });
@@ -89,13 +91,19 @@ describe('IntegrationTestBed schema validation (SCHVALTESINT-004)', () => {
 
       // Production schemas should be loaded when useRealSchemas is true
       expect(
-        validator.isSchemaLoaded('schema://living-narrative-engine/rule.schema.json')
+        validator.isSchemaLoaded(
+          'schema://living-narrative-engine/rule.schema.json'
+        )
       ).toBe(true);
       expect(
-        validator.isSchemaLoaded('schema://living-narrative-engine/action.schema.json')
+        validator.isSchemaLoaded(
+          'schema://living-narrative-engine/action.schema.json'
+        )
       ).toBe(true);
       expect(
-        validator.isSchemaLoaded('schema://living-narrative-engine/component.schema.json')
+        validator.isSchemaLoaded(
+          'schema://living-narrative-engine/component.schema.json'
+        )
       ).toBe(true);
     });
 

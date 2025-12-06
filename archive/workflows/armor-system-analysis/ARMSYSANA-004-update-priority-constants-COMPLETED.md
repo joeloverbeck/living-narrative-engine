@@ -57,11 +57,11 @@ export const VALID_LAYERS = Object.freeze([
 
 ### Corrected Assumptions
 
-| Original Ticket Assumption | Actual Codebase |
-|---------------------------|-----------------|
-| Constants in `slotAccessResolver.js` | Constants in `priorityConstants.js` |
+| Original Ticket Assumption                 | Actual Codebase                                           |
+| ------------------------------------------ | --------------------------------------------------------- |
+| Constants in `slotAccessResolver.js`       | Constants in `priorityConstants.js`                       |
 | `COVERAGE_PRIORITY` has `accessories: 350` | `accessories` is only in `LAYER_PRIORITY_WITHIN_COVERAGE` |
-| 4 locations to update | 4 locations to update (constants + arrays) |
+| 4 locations to update                      | 4 locations to update (constants + arrays)                |
 
 ## Target State
 
@@ -70,7 +70,7 @@ Add armor priority constants between outer and base:
 ```javascript
 export const COVERAGE_PRIORITY = Object.freeze({
   outer: 100,
-  armor: 150,      // NEW: Armor has priority between outer and base
+  armor: 150, // NEW: Armor has priority between outer and base
   base: 200,
   underwear: 300,
   direct: 400,
@@ -78,7 +78,7 @@ export const COVERAGE_PRIORITY = Object.freeze({
 
 export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
   outer: 10,
-  armor: 15,       // NEW: Armor layer priority
+  armor: 15, // NEW: Armor layer priority
   base: 20,
   underwear: 30,
   accessories: 40,
@@ -86,7 +86,7 @@ export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
 
 export const VALID_COVERAGE_PRIORITIES = Object.freeze([
   'outer',
-  'armor',         // NEW
+  'armor', // NEW
   'base',
   'underwear',
   'direct',
@@ -94,7 +94,7 @@ export const VALID_COVERAGE_PRIORITIES = Object.freeze([
 
 export const VALID_LAYERS = Object.freeze([
   'outer',
-  'armor',         // NEW
+  'armor', // NEW
   'base',
   'underwear',
   'accessories',
@@ -116,15 +116,18 @@ With these changes, the coverage resolution order will be:
 ### Example Scenarios
 
 **Scenario 1**: Character wearing shirt (base), chainmail (armor), and cloak (outer)
+
 - Cloak is visible (priority 100)
 - Chainmail is hidden by cloak
 - Shirt is hidden by both
 
 **Scenario 2**: Character wearing shirt (base) and chainmail (armor), no cloak
+
 - Chainmail is visible (priority 150)
 - Shirt is hidden by chainmail
 
 **Scenario 3**: Character wearing chainmail (armor) under leather jacket (outer)
+
 - Leather jacket is visible (priority 100)
 - Chainmail is hidden by jacket
 
@@ -139,7 +142,7 @@ File: `src/scopeDsl/prioritySystem/priorityConstants.js`
 ```javascript
 export const COVERAGE_PRIORITY = Object.freeze({
   outer: 100,
-  armor: 150,      // ADD THIS LINE
+  armor: 150, // ADD THIS LINE
   base: 200,
   underwear: 300,
   direct: 400,
@@ -151,7 +154,7 @@ export const COVERAGE_PRIORITY = Object.freeze({
 ```javascript
 export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
   outer: 10,
-  armor: 15,       // ADD THIS LINE
+  armor: 15, // ADD THIS LINE
   base: 20,
   underwear: 30,
   accessories: 40,
@@ -163,7 +166,7 @@ export const LAYER_PRIORITY_WITHIN_COVERAGE = Object.freeze({
 ```javascript
 export const VALID_COVERAGE_PRIORITIES = Object.freeze([
   'outer',
-  'armor',         // ADD THIS LINE
+  'armor', // ADD THIS LINE
   'base',
   'underwear',
   'direct',
@@ -175,7 +178,7 @@ export const VALID_COVERAGE_PRIORITIES = Object.freeze([
 ```javascript
 export const VALID_LAYERS = Object.freeze([
   'outer',
-  'armor',         // ADD THIS LINE
+  'armor', // ADD THIS LINE
   'base',
   'underwear',
   'accessories',
@@ -205,8 +208,12 @@ describe('Armor Priority Integration', () => {
 
   it('should have armor in LAYER_PRIORITY_WITHIN_COVERAGE between outer and base', () => {
     expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBe(15);
-    expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(LAYER_PRIORITY_WITHIN_COVERAGE.armor);
-    expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBeLessThan(LAYER_PRIORITY_WITHIN_COVERAGE.base);
+    expect(LAYER_PRIORITY_WITHIN_COVERAGE.outer).toBeLessThan(
+      LAYER_PRIORITY_WITHIN_COVERAGE.armor
+    );
+    expect(LAYER_PRIORITY_WITHIN_COVERAGE.armor).toBeLessThan(
+      LAYER_PRIORITY_WITHIN_COVERAGE.base
+    );
   });
 
   it('should include armor in validation arrays', () => {
@@ -221,21 +228,25 @@ describe('Armor Priority Integration', () => {
 After implementation:
 
 1. **Run unit tests**
+
    ```bash
    npm run test:unit -- tests/unit/scopeDsl/prioritySystem/priorityConstants.test.js
    ```
 
 2. **Run related integration tests**
+
    ```bash
    npm run test:integration -- tests/integration/scopeDsl/
    ```
 
 3. **Run full test suite**
+
    ```bash
    npm run test:ci
    ```
 
 4. **Lint the modified file**
+
    ```bash
    npx eslint src/scopeDsl/prioritySystem/priorityConstants.js
    ```
@@ -276,12 +287,14 @@ After implementation:
 This is a **critical Phase 2 ticket**. Without these priority constants, armor entities will not be handled correctly by the coverage resolution system.
 
 The priority values (150 and 15) were chosen to position armor between outer and base layers:
+
 - Outer (100) > Armor (150) > Base (200)
 - This allows armor to be worn under outer garments but over regular clothing
 
 ## Reference
 
 Coverage priority scoring from actual system:
+
 - `outer`: 100 (highest visibility)
 - `armor`: 150 (NEW)
 - `base`: 200
@@ -289,6 +302,7 @@ Coverage priority scoring from actual system:
 - `direct`: 400 (fallback)
 
 Layer priority within coverage:
+
 - `outer`: 10
 - `armor`: 15 (NEW)
 - `base`: 20
@@ -306,11 +320,13 @@ These values are well-established in the codebase and should not be changed. Arm
 ### What Was Actually Changed vs Originally Planned
 
 **Originally Planned (Incorrect Assumptions)**:
+
 - Expected constants to be in `src/scopeDsl/nodes/slotAccessResolver.js`
 - Expected `COVERAGE_PRIORITY` to include `accessories: 350`
 - Expected only 2 constants to update
 
 **What Was Actually Changed**:
+
 1. **Corrected ticket assumptions** - Updated ticket to reflect actual codebase structure:
    - Constants are in `src/scopeDsl/prioritySystem/priorityConstants.js`
    - `COVERAGE_PRIORITY` has: outer(100), base(200), underwear(300), direct(400)
@@ -335,11 +351,13 @@ These values are well-established in the codebase and should not be changed. Arm
      - Armor layering hierarchy validation
 
 ### Test Results
+
 - All 41 unit tests pass in `priorityConstants.test.js`
 - All 2127 scopeDsl tests pass (unit + integration)
 - All 277 clothing integration tests pass
 - No regressions introduced
 
 ### Files Modified
+
 - `src/scopeDsl/prioritySystem/priorityConstants.js` (4 edits)
 - `tests/unit/scopeDsl/prioritySystem/priorityConstants.test.js` (6 edits + new test suite)

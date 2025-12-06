@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import AnatomyIntegrationTestBed from '../../common/anatomy/anatomyIntegrationTestBed.js';
 import { AnatomyInitializationService } from '../../../src/anatomy/anatomyInitializationService.js';
 import { ENTITY_CREATED_ID } from '../../../src/constants/eventIds.js';
@@ -120,7 +127,8 @@ describe('AnatomyInitializationService additional integration coverage', () => {
   });
 
   const createActorWithAnatomy = async () => {
-    const actor = await testBed.entityManager.createEntityInstance('core:actor');
+    const actor =
+      await testBed.entityManager.createEntityInstance('core:actor');
     await testBed.entityManager.addComponent(actor.id, 'anatomy:body', {
       recipeId: 'anatomy:human_female',
     });
@@ -223,7 +231,9 @@ describe('AnatomyInitializationService additional integration coverage', () => {
     ).toBe(true);
     expect(
       logger.calls.info.some(([message]) =>
-        message.includes(`Successfully generated anatomy for entity '${actor.id}'`)
+        message.includes(
+          `Successfully generated anatomy for entity '${actor.id}'`
+        )
       )
     ).toBe(true);
 
@@ -237,7 +247,9 @@ describe('AnatomyInitializationService additional integration coverage', () => {
     expect(notGenerated).toBe(false);
     expect(
       logger.calls.info.filter(([message]) =>
-        message.includes(`Successfully generated anatomy for entity '${actor.id}'`)
+        message.includes(
+          `Successfully generated anatomy for entity '${actor.id}'`
+        )
       ).length
     ).toBe(1);
   });
@@ -307,7 +319,12 @@ describe('AnatomyInitializationService additional integration coverage', () => {
       () =>
         new Promise((resolve) => {
           setTimeout(async () => {
-            resolve(await originalGenerate.call(testBed.anatomyGenerationService, actor.id));
+            resolve(
+              await originalGenerate.call(
+                testBed.anatomyGenerationService,
+                actor.id
+              )
+            );
           }, 60);
         })
     );

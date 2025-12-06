@@ -8,13 +8,18 @@ import { describe, it, expect, jest } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
-import { createSecurityMiddleware, createSecurityConfigValidator } from '../../src/middleware/security.js';
+import {
+  createSecurityMiddleware,
+  createSecurityConfigValidator,
+} from '../../src/middleware/security.js';
 
 const extractDirective = (headerValue, directiveName) => {
   return headerValue
     .split(';')
     .map((segment) => segment.trim())
-    .find((segment) => segment.toLowerCase().startsWith(`${directiveName.toLowerCase()} `));
+    .find((segment) =>
+      segment.toLowerCase().startsWith(`${directiveName.toLowerCase()} `)
+    );
 };
 
 describe('Security middleware relaxed CSP integration', () => {

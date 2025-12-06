@@ -234,7 +234,9 @@ describe('BodyDescriptionComposer clothing visibility (integration)', () => {
     currentEquipmentLine = 'Wearing: skirt';
 
     const hiddenDescription = await composer.composeDescription(bodyEntity);
-    expect(hiddenDescription).toBe(['Breasts: ample', 'Wearing: skirt'].join('\n'));
+    expect(hiddenDescription).toBe(
+      ['Breasts: ample', 'Wearing: skirt'].join('\n')
+    );
 
     equipmentData.equipped = {
       torso_lower: {

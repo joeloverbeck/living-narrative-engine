@@ -26,6 +26,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
 ## Tasks
 
 ### 1. Analyze Existing Goal Schema
+
 - [ ] Read `data/schemas/goal.schema.json`
 - [ ] Document current structure:
   - Required fields
@@ -39,6 +40,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
 - [ ] Understand original GOAP system design (pre-removal)
 
 ### 2. Define New GOAP Goal Requirements
+
 - [ ] Based on specification, goals need:
   - Goal identification (id, name)
   - Satisfaction condition (when is goal achieved?)
@@ -53,19 +55,18 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
     "name": "Satisfy Hunger",
     "priority": "high",
     "relevance_preconditions": {
-      "actor.state.hunger": {">=": 60}
+      "actor.state.hunger": { ">=": 60 }
     },
     "satisfaction_condition": {
-      "actor.state.hunger": {"<": 30}
+      "actor.state.hunger": { "<": 30 }
     },
-    "failure_conditions": [
-      {"actor.state.hunger": {">=": 95}}
-    ],
+    "failure_conditions": [{ "actor.state.hunger": { ">=": 95 } }],
     "timeout_turns": 20
   }
   ```
 
 ### 3. Compatibility Assessment
+
 - [ ] Compare existing schema to requirements:
   - Does it have satisfaction conditions?
   - Does it have priority?
@@ -80,6 +81,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
   - Deprecated concepts from old GOAP
 
 ### 4. Decision: Migrate or Replace
+
 - [ ] Option A: Existing schema compatible
   - Document compatibility
   - Minor additions only (if needed)
@@ -97,6 +99,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
   - Create conversion guide
 
 ### 5. Schema Updates (if needed)
+
 - [ ] If modifying existing schema:
   - Add new required fields
   - Add new optional fields
@@ -114,6 +117,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
   - `heal_self.goal.json`
 
 ### 6. Migration Path
+
 - [ ] If existing goals exist:
   - Create migration script: `scripts/migrate-goals.js`
   - Test migration on all existing goals
@@ -127,6 +131,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
   - Backward compatibility policy
 
 ### 7. Goal Selection Integration
+
 - [ ] Document how goals integrate with planning:
   - Goal selection algorithm (priority? relevance?)
   - Goal evaluation frequency (every turn? on state change?)
@@ -144,6 +149,7 @@ Analyze existing goal schema for compatibility with new GOAP system, document re
   ```
 
 ### 8. Document in Specification
+
 - [ ] Replace lines 235-236 with complete analysis:
   - Compatibility assessment
   - Changes made (if any)

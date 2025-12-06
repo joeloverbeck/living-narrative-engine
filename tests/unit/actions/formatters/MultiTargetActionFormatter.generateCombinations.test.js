@@ -266,7 +266,9 @@ describe('MultiTargetActionFormatter - generateCombinations behavior', () => {
 
       // Should fail gracefully when no secondary targets available
       expect(result.ok).toBe(false);
-      expect(result.error).toContain("Target 'secondary' could not be resolved");
+      expect(result.error).toContain(
+        "Target 'secondary' could not be resolved"
+      );
     });
   });
 

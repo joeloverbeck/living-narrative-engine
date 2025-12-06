@@ -26,15 +26,23 @@ describe('Positioning Mod - doing_complex_performance Component', () => {
       '../../../../../data/schemas/common.schema.json'
     );
     const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
-    ajv.addSchema(commonSchema, 'schema://living-narrative-engine/common.schema.json');
+    ajv.addSchema(
+      commonSchema,
+      'schema://living-narrative-engine/common.schema.json'
+    );
 
     // Load the component schema
     const componentSchemaPath = path.resolve(
       testDir,
       '../../../../../data/schemas/component.schema.json'
     );
-    const componentSchema = JSON.parse(readFileSync(componentSchemaPath, 'utf8'));
-    ajv.addSchema(componentSchema, 'schema://living-narrative-engine/component.schema.json');
+    const componentSchema = JSON.parse(
+      readFileSync(componentSchemaPath, 'utf8')
+    );
+    ajv.addSchema(
+      componentSchema,
+      'schema://living-narrative-engine/component.schema.json'
+    );
 
     // Load the doing_complex_performance component
     const componentPath = path.resolve(
@@ -45,7 +53,9 @@ describe('Positioning Mod - doing_complex_performance Component', () => {
   });
 
   it('should be a valid component schema', () => {
-    const validate = ajv.getSchema('schema://living-narrative-engine/component.schema.json');
+    const validate = ajv.getSchema(
+      'schema://living-narrative-engine/component.schema.json'
+    );
     const valid = validate(component);
     if (!valid) {
       console.error('Validation errors:', validate.errors);

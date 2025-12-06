@@ -42,6 +42,19 @@
         "type": ["string", "null"],
         "description": "Entity ID of the source part if this damage was propagated from another body part"
       },
+      "metadata": {
+        "type": "object",
+        "description": "Arbitrary contextual metadata related to how the damage was applied (e.g., weapon info, action origin)",
+        "additionalProperties": true
+      },
+      "damageTags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "uniqueItems": true,
+        "description": "Optional tags that annotate the applied damage (e.g., elemental or delivery method labels)"
+      },
       "timestamp": {
         "type": "integer",
         "description": "Unix timestamp when the damage was applied"

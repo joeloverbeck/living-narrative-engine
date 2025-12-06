@@ -60,7 +60,12 @@ export class EntityGraphBuilder {
    * @param {Object<string, object>} [componentOverrides] - Optional component data to add/override (e.g., descriptor properties from recipe slots)
    * @returns {Promise<string>} The created root entity ID
    */
-  async createRootEntity(rootDefinitionId, recipe, ownerId, componentOverrides = {}) {
+  async createRootEntity(
+    rootDefinitionId,
+    recipe,
+    ownerId,
+    componentOverrides = {}
+  ) {
     // Check if recipe has a torso override
     let actualRootDefinitionId = rootDefinitionId;
 
@@ -141,27 +146,29 @@ export class EntityGraphBuilder {
     let verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
     let retries = 0;
     const maxRetries = 5;
-    
+
     while (!verifyEntity && retries < maxRetries) {
       this.#logger.warn(
         `EntityGraphBuilder: Created entity ${rootEntity.id} not immediately available, retry ${retries + 1}/${maxRetries}`,
         { entityId: rootEntity.id, definitionId: actualRootDefinitionId }
       );
-      
+
       // Exponential backoff: 10ms, 20ms, 40ms
       const delay = 10 * Math.pow(2, retries);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
       verifyEntity = this.#entityManager.getEntityInstance(rootEntity.id);
       retries++;
     }
-    
+
     if (!verifyEntity) {
       this.#logger.error(
         `EntityGraphBuilder: Entity creation-verification failed after ${maxRetries} retries`,
         { entityId: rootEntity.id, definitionId: actualRootDefinitionId }
       );
-      throw new Error(`Entity creation-verification race condition: ${rootEntity.id}`);
+      throw new Error(
+        `Entity creation-verification race condition: ${rootEntity.id}`
+      );
     }
 
     if (ownerId) {
@@ -240,7 +247,7 @@ export class EntityGraphBuilder {
 
         // Exponential backoff: 10ms, 20ms, 40ms, 80ms, 160ms
         const delay = 10 * Math.pow(2, retries);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
 
         verifyEntity = this.#entityManager.getEntityInstance(childEntity.id);
         retries++;
@@ -251,7 +258,9 @@ export class EntityGraphBuilder {
           `EntityGraphBuilder: Child entity creation-verification failed after ${maxRetries} retries`,
           { entityId: childEntity.id, partDefinitionId, parentId }
         );
-        throw new Error(`Child entity creation-verification race condition: ${childEntity.id}`);
+        throw new Error(
+          `Child entity creation-verification race condition: ${childEntity.id}`
+        );
       }
 
       // Add ownership component if specified

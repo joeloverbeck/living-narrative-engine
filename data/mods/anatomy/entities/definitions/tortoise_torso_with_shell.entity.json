@@ -17,23 +17,17 @@
       "sockets": [
         {
           "id": "torso",
-          "allowedTypes": [
-            "torso_clothing"
-          ],
+          "allowedTypes": ["torso_clothing"],
           "nameTpl": "torso"
         },
         {
           "id": "carapace_mount",
-          "allowedTypes": [
-            "shell_carapace"
-          ],
+          "allowedTypes": ["shell_carapace"],
           "nameTpl": "upper shell mount"
         },
         {
           "id": "plastron_mount",
-          "allowedTypes": [
-            "shell_plastron"
-          ],
+          "allowedTypes": ["shell_plastron"],
           "nameTpl": "lower shell mount"
         }
       ]

@@ -152,11 +152,11 @@ describe('sex-breastplay:fondle_breasts action integration', () => {
     // This test verifies the rule handles missing entities gracefully
     // The action prerequisites would normally prevent this, but we test rule robustness
     await expect(async () => {
-    await testFixture.eventBus.dispatch('core:attempt_action', {
-      actionId: 'sex-breastplay:fondle_breasts',
-      actorId: 'alice',
-      targetId: 'nonexistent',
-    });
+      await testFixture.eventBus.dispatch('core:attempt_action', {
+        actionId: 'sex-breastplay:fondle_breasts',
+        actorId: 'alice',
+        targetId: 'nonexistent',
+      });
     }).not.toThrow();
 
     // With missing target, the rule should fail during GET_NAME operation

@@ -54,7 +54,10 @@ async function createTestServer(initializeRoutes) {
   };
 }
 
-async function createService({ nodeEnv = 'test', httpAgentEnabled = false } = {}) {
+async function createService({
+  nodeEnv = 'test',
+  httpAgentEnabled = false,
+} = {}) {
   process.env = {
     ...ORIGINAL_ENV,
     NODE_ENV: nodeEnv,
@@ -149,7 +152,9 @@ describe('LlmRequestService prototype header handling integration', () => {
       expect(captured.headers['x-provider-only']).toBe('allowed');
       expect(captured.headers['x-additional']).toBe('secondary');
       expect(captured.headers['x-prototype-header']).toBeUndefined();
-      expect(captured.headers['authorization']).toBe('Bearer integration-api-key');
+      expect(captured.headers['authorization']).toBe(
+        'Bearer integration-api-key'
+      );
       expect(captured.headers['content-type']).toBe('application/json');
 
       const sanitizedCall = logger.debug.mock.calls.find(([message]) =>
@@ -157,9 +162,9 @@ describe('LlmRequestService prototype header handling integration', () => {
       );
       expect(sanitizedCall).toBeDefined();
       const sanitizedPayload = sanitizedCall[1].payload;
-      expect(sanitizedPayload.prompt.endsWith(PAYLOAD_SANITIZATION_ELLIPSIS)).toBe(
-        true
-      );
+      expect(
+        sanitizedPayload.prompt.endsWith(PAYLOAD_SANITIZATION_ELLIPSIS)
+      ).toBe(true);
       expect(sanitizedPayload.prompt.length).toBe(
         PAYLOAD_SANITIZATION_MAX_LENGTH + PAYLOAD_SANITIZATION_ELLIPSIS.length
       );

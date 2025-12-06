@@ -2,7 +2,7 @@
  * @file Performance benchmarks for anyOf validation
  * @description Tests the performance characteristics of anyOf-based operation validation
  * to ensure no regression from oneOf → anyOf schema change and establish baseline metrics.
- * 
+ *
  * Note: This test simplifies schema validation by creating inline operation schemas
  * rather than loading the full schema dependency tree. This allows us to focus on
  * anyOf performance characteristics without complexity of full schema resolution.
@@ -19,7 +19,7 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
  */
 function createSimplifiedOperationSchema(operationCount = 59) {
   const operations = [];
-  
+
   // Add common operations
   operations.push(
     {
@@ -31,14 +31,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           properties: {
             entity_ref: { type: 'string' },
             component_id: { type: 'string' },
-            output_var: { type: 'string' }
+            output_var: { type: 'string' },
           },
           required: ['entity_ref', 'component_id', 'output_var'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     },
     {
       type: 'object',
@@ -49,14 +49,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           properties: {
             entity_ref: { type: 'string' },
             component_id: { type: 'string' },
-            updates: { type: 'object' }
+            updates: { type: 'object' },
           },
           required: ['entity_ref', 'component_id', 'updates'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     },
     {
       type: 'object',
@@ -66,14 +66,14 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           type: 'object',
           properties: {
             message: { type: 'string' },
-            level: { enum: ['debug', 'info', 'warn', 'error'] }
+            level: { enum: ['debug', 'info', 'warn', 'error'] },
           },
           required: ['message', 'level'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     },
     {
       type: 'object',
@@ -84,45 +84,45 @@ function createSimplifiedOperationSchema(operationCount = 59) {
           properties: {
             condition: { type: 'object' },
             then_actions: { type: 'array' },
-            else_actions: { type: 'array' }
+            else_actions: { type: 'array' },
           },
           required: ['condition', 'then_actions', 'else_actions'],
-          additionalProperties: false
-        }
+          additionalProperties: false,
+        },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     }
   );
-  
+
   // Add synthetic operations to reach desired count
   for (let i = operations.length; i < operationCount; i++) {
     operations.push({
       type: 'object',
       properties: {
         type: { const: `OPERATION_${i}` },
-        parameters: { type: 'object', additionalProperties: true }
+        parameters: { type: 'object', additionalProperties: true },
       },
       required: ['type', 'parameters'],
-      additionalProperties: false
+      additionalProperties: false,
     });
   }
-  
+
   return {
     $id: 'test-operation-schema',
     anyOf: [
       {
         type: 'object',
         properties: {
-          macro: { type: 'string', pattern: '^[a-z0-9_]+:[a-z0-9_]+$' }
+          macro: { type: 'string', pattern: '^[a-z0-9_]+:[a-z0-9_]+$' },
         },
         required: ['macro'],
-        additionalProperties: false
+        additionalProperties: false,
       },
       {
-        anyOf: operations
-      }
-    ]
+        anyOf: operations,
+      },
+    ],
   };
 }
 
@@ -303,9 +303,7 @@ describe('anyOf Performance - Large Schema', () => {
 
     expect(valid).toBe(true);
 
-    console.log(
-      `  ✓ Validated late anyOf branch in ${duration.toFixed(3)}ms`
-    );
+    console.log(`  ✓ Validated late anyOf branch in ${duration.toFixed(3)}ms`);
 
     // Allow generous buffer for CI jitter while still guarding against
     // regressions that would indicate real validation slowdowns. Staying well
@@ -575,7 +573,9 @@ describe('anyOf Performance - Summary', () => {
     console.log('  ├─ Performance Consistency: <20% variation ✅');
     console.log('  └─ Concurrent Load: <50ms for 100 concurrent ✅');
     console.log('\n  All performance benchmarks PASS ✅');
-    console.log('  Memory tests: See tests/memory/validation/anyOfValidation.memory.test.js');
+    console.log(
+      '  Memory tests: See tests/memory/validation/anyOfValidation.memory.test.js'
+    );
     console.log('  anyOf validation performance baseline established\n');
 
     expect(true).toBe(true);
@@ -758,9 +758,7 @@ describe('anyOf Performance - Large Schema', () => {
 
     expect(valid).toBe(true);
 
-    console.log(
-      `  ✓ Validated late anyOf branch in ${duration.toFixed(3)}ms`
-    );
+    console.log(`  ✓ Validated late anyOf branch in ${duration.toFixed(3)}ms`);
 
     // This path hits a late anyOf branch, which can fluctuate slightly in CI.
     // Keep the assertion strict enough to catch regressions but tolerant of
@@ -1022,7 +1020,9 @@ describe('anyOf Performance - Summary', () => {
     console.log('  ├─ Performance Consistency: <20% variation ✅');
     console.log('  └─ Concurrent Load: <50ms for 100 concurrent ✅');
     console.log('\n  All performance benchmarks PASS ✅');
-    console.log('  Memory tests: See tests/memory/validation/anyOfValidation.memory.test.js');
+    console.log(
+      '  Memory tests: See tests/memory/validation/anyOfValidation.memory.test.js'
+    );
     console.log('  anyOf validation performance baseline established\n');
 
     expect(true).toBe(true);

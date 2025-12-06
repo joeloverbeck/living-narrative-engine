@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { TraceAnalyzer } from '../../../../src/actions/tracing/traceAnalyzer.js';
 import { StructuredTrace } from '../../../../src/actions/tracing/structuredTrace.js';
 

@@ -46,7 +46,9 @@ describe('HandlerCompletenessValidator', () => {
     });
 
     it('should throw ConfigurationError for rule with one missing handler', () => {
-      mockRegistry.hasHandler.mockImplementation((type) => type !== 'MISSING_OP');
+      mockRegistry.hasHandler.mockImplementation(
+        (type) => type !== 'MISSING_OP'
+      );
       const rule = {
         id: 'test:rule_2',
         actions: [
@@ -260,7 +262,9 @@ describe('HandlerCompletenessValidator', () => {
     });
 
     it('should not report duplicate missing handlers', () => {
-      mockRegistry.hasHandler.mockImplementation((type) => type !== 'DUP_MISSING');
+      mockRegistry.hasHandler.mockImplementation(
+        (type) => type !== 'DUP_MISSING'
+      );
       const rule = {
         id: 'test:duplicates',
         actions: [
@@ -313,7 +317,11 @@ describe('HandlerCompletenessValidator', () => {
 
   describe('validateHandlerRegistryCompleteness', () => {
     it('should return isComplete: true when whitelist matches registry exactly', () => {
-      const knownTypes = ['ADD_COMPONENT', 'MODIFY_COMPONENT', 'REMOVE_COMPONENT'];
+      const knownTypes = [
+        'ADD_COMPONENT',
+        'MODIFY_COMPONENT',
+        'REMOVE_COMPONENT',
+      ];
       mockRegistry.getRegisteredTypes.mockReturnValue([
         'ADD_COMPONENT',
         'MODIFY_COMPONENT',
@@ -453,7 +461,9 @@ describe('HandlerCompletenessValidator', () => {
 
   describe('constructor', () => {
     it('should accept a logger dependency', () => {
-      expect(() => new HandlerCompletenessValidator({ logger: mockLogger })).not.toThrow();
+      expect(
+        () => new HandlerCompletenessValidator({ logger: mockLogger })
+      ).not.toThrow();
     });
 
     it('should use console as fallback when logger is missing', () => {

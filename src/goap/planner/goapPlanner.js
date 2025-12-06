@@ -32,7 +32,10 @@ import { GOAP_PLANNER_FAILURES } from './goapPlannerFailureReasons.js';
 import { createPlanningStateView } from './planningStateView.js';
 import { createGoalEvaluationContextAdapter } from './goalEvaluationContextAdapter.js';
 import { normalizePlanningPreconditions } from '../utils/planningPreconditionUtils.js';
-import { validateGoalPaths, shouldEnforceGoalPathLint } from './goalPathValidator.js';
+import {
+  validateGoalPaths,
+  shouldEnforceGoalPathLint,
+} from './goalPathValidator.js';
 import BoundedCache from '../utils/boundedCache.js';
 
 const GOAL_PATH_NORMALIZATION_CACHE_MAX_SIZE = 100;
@@ -137,12 +140,27 @@ class GoapPlanner {
    * @param {import('./planningEffectsSimulator.js').default} deps.planningEffectsSimulator - Effects simulator for state transformation
    * @param {import('./heuristicRegistry.js').default} deps.heuristicRegistry - Heuristic registry for A* estimates
    */
-  constructor({ logger, jsonLogicEvaluationService, gameDataRepository, entityManager, scopeRegistry, scopeEngine, spatialIndexManager, planningEffectsSimulator, heuristicRegistry }) {
+  constructor({
+    logger,
+    jsonLogicEvaluationService,
+    gameDataRepository,
+    entityManager,
+    scopeRegistry,
+    scopeEngine,
+    spatialIndexManager,
+    planningEffectsSimulator,
+    heuristicRegistry,
+  }) {
     this.#logger = ensureValidLogger(logger);
 
-    validateDependency(jsonLogicEvaluationService, 'JsonLogicEvaluationService', this.#logger, {
-      requiredMethods: ['evaluateCondition'],
-    });
+    validateDependency(
+      jsonLogicEvaluationService,
+      'JsonLogicEvaluationService',
+      this.#logger,
+      {
+        requiredMethods: ['evaluateCondition'],
+      }
+    );
     this.#jsonLogicService = jsonLogicEvaluationService;
 
     validateDependency(gameDataRepository, 'GameDataRepository', this.#logger, {
@@ -165,14 +183,24 @@ class GoapPlanner {
     });
     this.#scopeEngine = scopeEngine;
 
-    validateDependency(spatialIndexManager, 'ISpatialIndexManager', this.#logger, {
-      requiredMethods: [], // Spatial index manager just needs to exist for runtime context
-    });
+    validateDependency(
+      spatialIndexManager,
+      'ISpatialIndexManager',
+      this.#logger,
+      {
+        requiredMethods: [], // Spatial index manager just needs to exist for runtime context
+      }
+    );
     this.#spatialIndexManager = spatialIndexManager;
 
-    validateDependency(planningEffectsSimulator, 'IPlanningEffectsSimulator', this.#logger, {
-      requiredMethods: ['simulateEffects'],
-    });
+    validateDependency(
+      planningEffectsSimulator,
+      'IPlanningEffectsSimulator',
+      this.#logger,
+      {
+        requiredMethods: ['simulateEffects'],
+      }
+    );
     this.#effectsSimulator = planningEffectsSimulator;
 
     validateDependency(heuristicRegistry, 'IHeuristicRegistry', this.#logger, {
@@ -186,7 +214,8 @@ class GoapPlanner {
     this.#externalTaskLibraryDiagnostics = null;
     this.#goalPathDiagnostics = new Map();
     this.#effectFailureTelemetry = new Map();
-    this.#goalPathNormalizationCacheMaxSize = GOAL_PATH_NORMALIZATION_CACHE_MAX_SIZE;
+    this.#goalPathNormalizationCacheMaxSize =
+      GOAL_PATH_NORMALIZATION_CACHE_MAX_SIZE;
     this.#goalPathNormalizationCache = new BoundedCache(
       this.#goalPathNormalizationCacheMaxSize
     );
@@ -265,7 +294,11 @@ class GoapPlanner {
       const actorId = stateView.getActorId();
 
       const normalizationEntry = this.#getGoalNormalizationEntry(actorId, goal);
-      this.#maybeHandleCachedGoalPathViolations(actorId, goal, normalizationEntry);
+      this.#maybeHandleCachedGoalPathViolations(
+        actorId,
+        goal,
+        normalizationEntry
+      );
 
       // Build evaluation context from state
       const context = adapter.getEvaluationContext();
@@ -278,7 +311,6 @@ class GoapPlanner {
         normalizedGoalState,
         context
       );
-
 
       this.#logger.debug('Goal satisfaction check', {
         goalId: goal.id,
@@ -371,8 +403,8 @@ class GoapPlanner {
 
     if (!tasksData) {
       this.#logger.warn('No tasks available in repository');
-       diagnostics.errors.push('TASK_REGISTRY_MISSING');
-       this.#lastTaskLibraryDiagnostics = diagnostics;
+      diagnostics.errors.push('TASK_REGISTRY_MISSING');
+      this.#lastTaskLibraryDiagnostics = diagnostics;
       return [];
     }
 
@@ -406,7 +438,9 @@ class GoapPlanner {
       return [];
     }
 
-    this.#logger.debug(`Filtering ${allTasks.length} tasks for actor ${actorId}`);
+    this.#logger.debug(
+      `Filtering ${allTasks.length} tasks for actor ${actorId}`
+    );
 
     // 3. Get actor entity for structural gate evaluation
     // CRITICAL: Use getEntityInstance() not getEntity()
@@ -427,10 +461,12 @@ class GoapPlanner {
     };
 
     // 5. Filter by structural gates
-    const filteredTasks = allTasks.filter(task => {
+    const filteredTasks = allTasks.filter((task) => {
       // Tasks without structural gates are always relevant
       if (!task.structuralGates || !task.structuralGates.condition) {
-        this.#logger.debug(`Task ${task.id} has no structural gates, including`);
+        this.#logger.debug(
+          `Task ${task.id} has no structural gates, including`
+        );
         return true;
       }
 
@@ -444,20 +480,27 @@ class GoapPlanner {
         if (passed) {
           this.#logger.debug(`Task ${task.id} structural gates passed`);
         } else {
-          this.#logger.debug(`Task ${task.id} structural gates failed, excluding`);
+          this.#logger.debug(
+            `Task ${task.id} structural gates failed, excluding`
+          );
         }
 
         return passed;
-
       } catch (err) {
-        this.#logger.error(`Structural gate evaluation failed for ${task.id}`, err, {
-          condition: task.structuralGates.condition,
-        });
+        this.#logger.error(
+          `Structural gate evaluation failed for ${task.id}`,
+          err,
+          {
+            condition: task.structuralGates.condition,
+          }
+        );
         return false; // Conservative: exclude on error
       }
     });
 
-    this.#logger.info(`Task library for ${actorId}: ${filteredTasks.length} / ${allTasks.length} tasks`);
+    this.#logger.info(
+      `Task library for ${actorId}: ${filteredTasks.length} / ${allTasks.length} tasks`
+    );
 
     diagnostics.filteredTaskCount = filteredTasks.length;
     this.#lastTaskLibraryDiagnostics = diagnostics;
@@ -493,7 +536,9 @@ class GoapPlanner {
 
     // 2. Handle special scopes: 'self' and 'none' don't need parameter binding
     if (task.planningScope === 'self' || task.planningScope === 'none') {
-      this.#logger.debug(`Task ${task.id} uses special scope ${task.planningScope}, no parameter binding needed`);
+      this.#logger.debug(
+        `Task ${task.id} uses special scope ${task.planningScope}, no parameter binding needed`
+      );
       return {}; // Empty parameters for self-targeting tasks
     }
 
@@ -570,12 +615,15 @@ class GoapPlanner {
       });
 
       return boundParams;
-
     } catch (err) {
-      this.#logger.error('Scope resolution failed during parameter binding', err, {
-        taskId: task.id,
-        actorId,
-      });
+      this.#logger.error(
+        'Scope resolution failed during parameter binding',
+        err,
+        {
+          taskId: task.id,
+          actorId,
+        }
+      );
       return null;
     }
   }
@@ -617,17 +665,17 @@ class GoapPlanner {
     const applicableTasks = [];
 
     for (const task of tasks) {
-
       // Try to bind parameters
       const boundParams = this.#bindTaskParameters(task, state, actorId);
 
       // Tasks without planningScope (boundParams === null) are still applicable
       // Only exclude if binding was attempted but failed
       if (task.planningScope && !boundParams) {
-        this.#logger.debug(`Task ${task.id} excluded - parameter binding failed`);
+        this.#logger.debug(
+          `Task ${task.id} excluded - parameter binding failed`
+        );
         continue;
       }
-
 
       const planningPreconditions = normalizePlanningPreconditions(
         task,
@@ -664,14 +712,17 @@ class GoapPlanner {
               context
             );
 
-
             if (!satisfied) {
-              this.#logger.debug(`Task ${task.id} excluded - precondition not satisfied: ${precondition.description}`);
+              this.#logger.debug(
+                `Task ${task.id} excluded - precondition not satisfied: ${precondition.description}`
+              );
               preconditionsSatisfied = false;
               break;
             }
           } catch (err) {
-            this.#logger.warn(`Task ${task.id} precondition evaluation failed: ${err.message}`);
+            this.#logger.warn(
+              `Task ${task.id} precondition evaluation failed: ${err.message}`
+            );
             preconditionsSatisfied = false;
             break;
           }
@@ -694,7 +745,9 @@ class GoapPlanner {
             diagnostics.numericGuardRejects =
               (diagnostics.numericGuardRejects || 0) + 1;
           }
-          this.#logger.debug(`Task ${task.id} excluded - does not reduce distance to goal`);
+          this.#logger.debug(
+            `Task ${task.id} excluded - does not reduce distance to goal`
+          );
           continue;
         }
       }
@@ -874,7 +927,8 @@ class GoapPlanner {
         });
         this.#failForInvalidEffect(
           task.id,
-          simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during distance check',
+          simulationResult.error ||
+            'PlanningEffectsSimulator returned unsuccessfully during distance check',
           {
             phase: 'distance-check',
             actorId,
@@ -987,7 +1041,9 @@ class GoapPlanner {
     }
 
     const cloned = deepClone(diagnostics);
-    cloned.warnings = Array.isArray(cloned.warnings) ? [...cloned.warnings] : [];
+    cloned.warnings = Array.isArray(cloned.warnings)
+      ? [...cloned.warnings]
+      : [];
     if (!Array.isArray(cloned.preconditionNormalizations)) {
       cloned.preconditionNormalizations = [];
     }
@@ -1126,16 +1182,19 @@ class GoapPlanner {
     try {
       return JSON.stringify(goalState);
     } catch (error) {
-      this.#logger.warn('Failed to serialize goal state for normalization cache', {
-        error,
-      });
+      this.#logger.warn(
+        'Failed to serialize goal state for normalization cache',
+        {
+          error,
+        }
+      );
       return `__nonserializable__:${Date.now()}`;
     }
   }
 
   #getGoalNormalizationEntry(actorId, goal) {
     const cacheKey = this.#buildGoalNormalizationCacheKey(actorId, goal);
-      const sourceGoalState = goal?.goalState;
+    const sourceGoalState = goal?.goalState;
     const signature = this.#serializeGoalStateSignature(sourceGoalState);
     const cachedEntry = this.#goalPathNormalizationCache.get(cacheKey);
     if (cachedEntry && cachedEntry.signature === signature) {
@@ -1160,7 +1219,11 @@ class GoapPlanner {
   }
 
   #maybeHandleCachedGoalPathViolations(actorId, goal, entry) {
-    if (!entry || !Array.isArray(entry.violations) || entry.violations.length === 0) {
+    if (
+      !entry ||
+      !Array.isArray(entry.violations) ||
+      entry.violations.length === 0
+    ) {
       return;
     }
 
@@ -1178,7 +1241,8 @@ class GoapPlanner {
   #handleGoalPathViolations(actorId, goal, violations) {
     this.#recordGoalPathViolation(actorId, goal, violations);
 
-    const docHint = 'See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.';
+    const docHint =
+      'See docs/goap/debugging-tools.md#Planner Contract Checklist for remediation steps.';
     const goalLabel = goal?.id || goal?.name || 'unknown-goal';
     const missingPrefix = violations
       .filter((violation) => violation.reason === 'missing-components-prefix')
@@ -1225,12 +1289,15 @@ class GoapPlanner {
       throw error;
     }
 
-    this.#logger.warn('Goal JSON Logic referenced actor.* paths without actor.components.*', {
-      actorId,
-      goalId: goal?.id ?? null,
-      violations,
-      code: 'GOAP_INVALID_GOAL_PATH',
-    });
+    this.#logger.warn(
+      'Goal JSON Logic referenced actor.* paths without actor.components.*',
+      {
+        actorId,
+        goalId: goal?.id ?? null,
+        violations,
+        code: 'GOAP_INVALID_GOAL_PATH',
+      }
+    );
   }
 
   #recordEffectFailureTelemetry(actorId, payload) {
@@ -1267,7 +1334,8 @@ class GoapPlanner {
    * @private
    */
   #failForInvalidEffect(taskId, message, context = {}) {
-    const docHint = 'See docs/goap/debugging-tools.md#Planner Contract Checklist for schema details.';
+    const docHint =
+      'See docs/goap/debugging-tools.md#Planner Contract Checklist for schema details.';
     const reason = `Invalid planning effect in task "${taskId}": ${message}. ${docHint}`;
     this.#recordFailure(
       GOAP_PLANNER_FAILURES.INVALID_EFFECT_DEFINITION,
@@ -1358,13 +1426,20 @@ class GoapPlanner {
       return false;
     };
 
-    const goalNormalizationEntry = this.#getGoalNormalizationEntry(actorId, goal);
+    const goalNormalizationEntry = this.#getGoalNormalizationEntry(
+      actorId,
+      goal
+    );
     const normalizedGoalState =
       goalNormalizationEntry.normalizedGoalState ?? goal.goalState;
 
     if (goalNormalizationEntry.violations.length > 0) {
       try {
-        this.#maybeHandleCachedGoalPathViolations(actorId, goal, goalNormalizationEntry);
+        this.#maybeHandleCachedGoalPathViolations(
+          actorId,
+          goal,
+          goalNormalizationEntry
+        );
       } catch (error) {
         if (abortForInvalidGoalPath(error)) {
           return null;
@@ -1685,7 +1760,6 @@ class GoapPlanner {
         }
       }
 
-
       try {
         for (const task of applicableTasks) {
           // 7.7.1 Build effect simulation context
@@ -1721,7 +1795,8 @@ class GoapPlanner {
             });
             this.#failForInvalidEffect(
               task.id,
-              simulationResult.error || 'PlanningEffectsSimulator returned unsuccessfully during successor expansion',
+              simulationResult.error ||
+                'PlanningEffectsSimulator returned unsuccessfully during successor expansion',
               { phase: 'successor-expansion', actorId }
             );
           }
@@ -1767,7 +1842,8 @@ class GoapPlanner {
           });
 
           const reuseGuardBypassed =
-            currentDistanceResult.sanitized || successorDistanceResult.sanitized;
+            currentDistanceResult.sanitized ||
+            successorDistanceResult.sanitized;
 
           if (reuseGuardBypassed) {
             this.#logger.debug('Heuristic distance invalid, allowing reuse', {
@@ -1790,8 +1866,7 @@ class GoapPlanner {
 
           // 7.7.3 Skip if already in closed set (UNLESS task is reusable)
           if (closedSet.has(successorHash) && !isReusable) {
-            this.#logger.debug('State already visited', {
-            });
+            this.#logger.debug('State already visited', {});
             continue;
           }
 
@@ -1806,7 +1881,7 @@ class GoapPlanner {
           });
 
           // 7.7.7 Check if already in open list
-          const existingIndex = openList.findIndex(node => {
+          const existingIndex = openList.findIndex((node) => {
             const existingHash = this.#hashState(node.state);
             return existingHash === successorHash;
           });
@@ -1823,8 +1898,7 @@ class GoapPlanner {
               openList.remove(existingIndex);
               openList.push(successor);
             } else {
-              this.#logger.debug('Keeping existing better path', {
-              });
+              this.#logger.debug('Keeping existing better path', {});
             }
           } else {
             // New state - add to open list
@@ -1920,7 +1994,9 @@ class GoapPlanner {
 
     // 2. Check reuse limit
     const actionPath = currentNode.getPath();
-    const taskUsageCount = actionPath.filter((a) => a.taskId === task.id).length;
+    const taskUsageCount = actionPath.filter(
+      (a) => a.taskId === task.id
+    ).length;
     const maxReuse = task.maxReuse || 10; // Default: max 10 instances
 
     if (taskUsageCount >= maxReuse) {

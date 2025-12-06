@@ -63,7 +63,9 @@ const mockActionCategorizationServiceFn = () => ({
  * @returns {jest.Mocked<any>}
  */
 const mockCharacterDataXmlBuilderFn = () => ({
-  buildCharacterDataXml: jest.fn(() => '<character_data>Mock XML</character_data>'),
+  buildCharacterDataXml: jest.fn(
+    () => '<character_data>Mock XML</character_data>'
+  ),
 });
 
 /**

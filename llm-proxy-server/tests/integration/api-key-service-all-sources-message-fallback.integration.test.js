@@ -162,7 +162,9 @@ describe('ApiKeyService integration - combined failure message fallback', () => 
     expect(combinedReason).toContain(
       `Environment variable '${envVarName}' was not set or empty.`
     );
-    expect(combinedReason).toContain('Reason: API key file not found or not readable.');
+    expect(combinedReason).toContain(
+      'Reason: API key file not found or not readable.'
+    );
     expect(combinedReason).not.toContain('see previous logs');
   });
 

@@ -6,7 +6,14 @@
  *              validator interact correctly with Express without custom loggers.
  */
 
-import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -32,17 +39,13 @@ describe('Security middleware default behaviours - integration', () => {
     // the standalone CSP middleware is solely responsible for nonce handling.
     app.use(createSecurityMiddleware({ enableNonce: false }));
 
-    app.get(
-      '/nonce-default',
-      createCSPNonceMiddleware(),
-      (req, res) => {
-        res.json({
-          nonce: req.cspNonce,
-          headerNonce: res.get('X-CSP-Nonce'),
-          storedNonce: res.locals.cspNonce,
-        });
-      }
-    );
+    app.get('/nonce-default', createCSPNonceMiddleware(), (req, res) => {
+      res.json({
+        nonce: req.cspNonce,
+        headerNonce: res.get('X-CSP-Nonce'),
+        storedNonce: res.locals.cspNonce,
+      });
+    });
 
     app.get(
       '/nonce-custom',
@@ -56,17 +59,27 @@ describe('Security middleware default behaviours - integration', () => {
       }
     );
 
-    const defaultResponse = await request(app).get('/nonce-default').expect(200);
+    const defaultResponse = await request(app)
+      .get('/nonce-default')
+      .expect(200);
     expect(defaultResponse.body.nonce).toHaveLength(16);
-    expect(defaultResponse.body.headerNonce).toEqual(defaultResponse.body.nonce);
-    expect(defaultResponse.body.storedNonce).toEqual(defaultResponse.body.nonce);
-    expect(defaultResponse.headers['x-csp-nonce']).toEqual(defaultResponse.body.nonce);
+    expect(defaultResponse.body.headerNonce).toEqual(
+      defaultResponse.body.nonce
+    );
+    expect(defaultResponse.body.storedNonce).toEqual(
+      defaultResponse.body.nonce
+    );
+    expect(defaultResponse.headers['x-csp-nonce']).toEqual(
+      defaultResponse.body.nonce
+    );
 
     const customResponse = await request(app).get('/nonce-custom').expect(200);
     expect(customResponse.body.nonce).toHaveLength(24);
     expect(customResponse.body.headerNonce).toEqual(customResponse.body.nonce);
     expect(customResponse.body.storedNonce).toEqual(customResponse.body.nonce);
-    expect(customResponse.headers['x-csp-nonce']).toEqual(customResponse.body.nonce);
+    expect(customResponse.headers['x-csp-nonce']).toEqual(
+      customResponse.body.nonce
+    );
   });
 
   test('security config validator falls back to console logging when headers are missing', async () => {

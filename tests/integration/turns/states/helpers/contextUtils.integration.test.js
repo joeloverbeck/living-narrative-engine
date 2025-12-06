@@ -204,7 +204,9 @@ describe('contextUtils integration', () => {
     expect(resolved).toBe(handlerDispatcher);
     expect(
       contextLogger.calls.warn.some(([message]) =>
-        String(message).includes('Falling back to handler.getSafeEventDispatcher')
+        String(message).includes(
+          'Falling back to handler.getSafeEventDispatcher'
+        )
       )
     ).toBe(true);
   });
@@ -223,12 +225,16 @@ describe('contextUtils integration', () => {
     expect(resolved).toBe(handlerDispatcher);
     expect(
       contextLogger.calls.error.some(([message]) =>
-        String(message).includes('Error calling turnContext.getSafeEventDispatcher')
+        String(message).includes(
+          'Error calling turnContext.getSafeEventDispatcher'
+        )
       )
     ).toBe(true);
     expect(
       contextLogger.calls.warn.some(([message]) =>
-        String(message).includes('Falling back to handler.getSafeEventDispatcher')
+        String(message).includes(
+          'Falling back to handler.getSafeEventDispatcher'
+        )
       )
     ).toBe(true);
   });

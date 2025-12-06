@@ -222,7 +222,9 @@ describe('TurnEndingState', () => {
       // NOTE: requestIdleStateTransition has been moved to BaseTurnHandler.destroy()
       // TurnEndingState is now a terminal state that awaits destruction.
       it('should NOT request idle state transition (now handled by BaseTurnHandler.destroy)', () => {
-        expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
+        expect(
+          testTurnContext.requestIdleStateTransition
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -248,7 +250,9 @@ describe('TurnEndingState', () => {
       // NOTE: requestIdleStateTransition has been moved to BaseTurnHandler.destroy()
       it('should call handler._resetTurnStateAndResources but NOT request idle transition', () => {
         expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-        expect(testTurnContext.requestIdleStateTransition).not.toHaveBeenCalled();
+        expect(
+          testTurnContext.requestIdleStateTransition
+        ).not.toHaveBeenCalled();
       });
     });
 
@@ -314,7 +318,9 @@ describe('TurnEndingState', () => {
       // NOTE: requestIdleStateTransition is no longer called - now handled by BaseTurnHandler.destroy()
       it('should call handler._resetTurnStateAndResources but NOT request idle transition', () => {
         expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
-        expect(mismatchedContext.requestIdleStateTransition).not.toHaveBeenCalled();
+        expect(
+          mismatchedContext.requestIdleStateTransition
+        ).not.toHaveBeenCalled();
       });
     });
 

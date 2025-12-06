@@ -2,7 +2,14 @@
  * @file Integration tests for loadAndApplyLoggerConfig interacting with real logger configuration loader.
  * @jest-environment node
  */
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import { loadAndApplyLoggerConfig } from '../../../src/configuration/utils/loggerConfigUtils.js';
 import { LoggerConfigLoader } from '../../../src/configuration/loggerConfigLoader.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
@@ -117,13 +124,21 @@ describe('loadAndApplyLoggerConfig integration', () => {
   const originalFetch = globalThis.fetch;
 
   beforeAll(async () => {
-    ['debug', 'info', 'warn', 'error', 'groupCollapsed', 'groupEnd', 'table'].forEach(
-      (method) => {
-        if (typeof console[method] === 'function') {
-          consoleSpies.push(jest.spyOn(console, method).mockImplementation(() => {}));
-        }
+    [
+      'debug',
+      'info',
+      'warn',
+      'error',
+      'groupCollapsed',
+      'groupEnd',
+      'table',
+    ].forEach((method) => {
+      if (typeof console[method] === 'function') {
+        consoleSpies.push(
+          jest.spyOn(console, method).mockImplementation(() => {})
+        );
       }
-    );
+    });
   });
 
   afterAll(async () => {
@@ -168,28 +183,46 @@ describe('loadAndApplyLoggerConfig integration', () => {
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'IntegrationTest'
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toEqual(['DEBUG']);
     expect(logger.warnLogs).toHaveLength(0);
-    expect(logger.debugLogs.some((entry) => entry.message.includes('Attempting to load logger configuration'))).toBe(true);
+    expect(
+      logger.debugLogs.some((entry) =>
+        entry.message.includes('Attempting to load logger configuration')
+      )
+    ).toBe(true);
     expect(dispatchedEvents).toHaveLength(0);
   });
 
   it('warns when the resolved log level is not a string', async () => {
-    const fetchMock = mockFetch(async () => createJsonResponse({ logLevel: 42 }));
+    const fetchMock = mockFetch(async () =>
+      createJsonResponse({ logLevel: 42 })
+    );
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'IntegrationTest'
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
-      logger.warnLogs.some((entry) =>
-        entry.message.includes('logLevel') && entry.message.includes('must be a string')
+      logger.warnLogs.some(
+        (entry) =>
+          entry.message.includes('logLevel') &&
+          entry.message.includes('must be a string')
       )
     ).toBe(true);
     expect(dispatchedEvents).toHaveLength(0);
@@ -197,13 +230,21 @@ describe('loadAndApplyLoggerConfig integration', () => {
 
   it('warns and dispatches a system error when loading the file fails after retries', async () => {
     const fetchMock = mockFetch(async () =>
-      createJsonResponse({ error: 'unavailable' }, { status: 503, statusText: 'Service Unavailable' })
+      createJsonResponse(
+        { error: 'unavailable' },
+        { status: 503, statusText: 'Service Unavailable' }
+      )
     );
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'IntegrationTest'
+    );
 
     expect(fetchMock).toHaveBeenCalled();
     expect(logger.setLogLevelCalls).toHaveLength(0);
@@ -221,20 +262,28 @@ describe('loadAndApplyLoggerConfig integration', () => {
     const { container } = createProviderEnvironment(logger);
 
     const originalLoadConfig = LoggerConfigLoader.prototype.loadConfig;
-    LoggerConfigLoader.prototype.loadConfig = async function loadConfigOverride() {
-      return { logLevel: 123 };
-    };
+    LoggerConfigLoader.prototype.loadConfig =
+      async function loadConfigOverride() {
+        return { logLevel: 123 };
+      };
 
     try {
-      await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+      await loadAndApplyLoggerConfig(
+        container,
+        logger,
+        tokens,
+        'IntegrationTest'
+      );
     } finally {
       LoggerConfigLoader.prototype.loadConfig = originalLoadConfig;
     }
 
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
-      logger.warnLogs.some((entry) =>
-        entry.message.includes('logLevel') && entry.message.includes('not a string')
+      logger.warnLogs.some(
+        (entry) =>
+          entry.message.includes('logLevel') &&
+          entry.message.includes('not a string')
       )
     ).toBe(true);
   });
@@ -244,9 +293,10 @@ describe('loadAndApplyLoggerConfig integration', () => {
     const { container } = createProviderEnvironment(logger);
 
     const originalLoadConfig = LoggerConfigLoader.prototype.loadConfig;
-    LoggerConfigLoader.prototype.loadConfig = async function loadConfigFallback() {
-      return { error: true, message: 'broken config' };
-    };
+    LoggerConfigLoader.prototype.loadConfig =
+      async function loadConfigFallback() {
+        return { error: true, message: 'broken config' };
+      };
 
     try {
       await loadAndApplyLoggerConfig(container, logger, tokens);
@@ -263,18 +313,27 @@ describe('loadAndApplyLoggerConfig integration', () => {
   });
 
   it('logs diagnostic information when the configuration file has no log level', async () => {
-    const fetchMock = mockFetch(async () => createJsonResponse({ otherSetting: true }));
+    const fetchMock = mockFetch(async () =>
+      createJsonResponse({ otherSetting: true })
+    );
 
     const logger = createRecordingLogger('INFO');
     const { container, dispatchedEvents } = createProviderEnvironment(logger);
 
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'IntegrationTest'
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(logger.setLogLevelCalls).toHaveLength(0);
     expect(
       logger.debugLogs.some((entry) =>
-        entry.message.includes('Logger configuration file loaded but no specific logLevel found')
+        entry.message.includes(
+          'Logger configuration file loaded but no specific logLevel found'
+        )
       )
     ).toBe(true);
     expect(dispatchedEvents).toHaveLength(0);
@@ -284,11 +343,18 @@ describe('loadAndApplyLoggerConfig integration', () => {
     const logger = createRecordingLogger('INFO');
     const container = new AppContainer();
 
-    await loadAndApplyLoggerConfig(container, logger, tokens, 'IntegrationTest');
+    await loadAndApplyLoggerConfig(
+      container,
+      logger,
+      tokens,
+      'IntegrationTest'
+    );
 
     expect(
       logger.errorLogs.some((entry) =>
-        entry.message.includes('CRITICAL ERROR during asynchronous logger configuration loading')
+        entry.message.includes(
+          'CRITICAL ERROR during asynchronous logger configuration loading'
+        )
       )
     ).toBe(true);
   });

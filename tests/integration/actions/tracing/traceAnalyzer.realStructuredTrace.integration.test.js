@@ -168,7 +168,9 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     });
 
     const stats = analysis.operationStats;
-    const targetStats = stats.find((entry) => entry.operation === 'TargetResolution');
+    const targetStats = stats.find(
+      (entry) => entry.operation === 'TargetResolution'
+    );
     expect(targetStats).toMatchObject({
       count: 1,
       errorCount: 1,
@@ -176,7 +178,9 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     });
     expect(targetStats.errorRate).toBeCloseTo(100);
 
-    const fallbackStats = stats.find((entry) => entry.operation === 'FallbackOperation');
+    const fallbackStats = stats.find(
+      (entry) => entry.operation === 'FallbackOperation'
+    );
     expect(fallbackStats).toMatchObject({
       errorCount: 1,
       totalDuration: 15,
@@ -187,14 +191,26 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     expect(errorAnalysis.totalErrors).toBe(2);
     expect(errorAnalysis.errorsByOperation).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ operation: 'TargetResolution', errorCount: 1 }),
-        expect.objectContaining({ operation: 'FallbackOperation', errorCount: 1 }),
+        expect.objectContaining({
+          operation: 'TargetResolution',
+          errorCount: 1,
+        }),
+        expect.objectContaining({
+          operation: 'FallbackOperation',
+          errorCount: 1,
+        }),
       ])
     );
     expect(errorAnalysis.errorsByType).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ errorType: 'Error', operations: ['TargetResolution'] }),
-        expect.objectContaining({ errorType: 'TypeError', operations: ['FallbackOperation'] }),
+        expect.objectContaining({
+          errorType: 'Error',
+          operations: ['TargetResolution'],
+        }),
+        expect.objectContaining({
+          errorType: 'TypeError',
+          operations: ['FallbackOperation'],
+        }),
       ])
     );
     expect(errorAnalysis.criticalPathErrors).toHaveLength(0);
@@ -213,7 +229,10 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     expect(profile.concurrentPeriods).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          operations: expect.arrayContaining(['ActionPipeline', 'ExecutionPhase']),
+          operations: expect.arrayContaining([
+            'ActionPipeline',
+            'ExecutionPhase',
+          ]),
         }),
       ])
     );
@@ -258,7 +277,9 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     clock.current += 5;
     orphanOnly.end();
 
-    const rootlessAnalyzer = new TraceAnalyzer(new SyntheticTrace([orphanOnly]));
+    const rootlessAnalyzer = new TraceAnalyzer(
+      new SyntheticTrace([orphanOnly])
+    );
     expect(rootlessAnalyzer.getCriticalPath()).toEqual({
       operations: [],
       totalDuration: 0,
@@ -292,7 +313,9 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
       orphanChild,
       erroredChild,
     ];
-    const syntheticAnalyzer = new TraceAnalyzer(new SyntheticTrace(syntheticSpans));
+    const syntheticAnalyzer = new TraceAnalyzer(
+      new SyntheticTrace(syntheticSpans)
+    );
 
     const zeroCritical = syntheticAnalyzer.getCriticalPath();
     expect(zeroCritical.operations).toEqual(['ZeroRoot']);
@@ -376,7 +399,8 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
 
     const updatedStats = syntheticAnalyzer.getOperationStats();
     expect(
-      updatedStats.find((entry) => entry.operation === 'NestedGrandchild').totalDuration
+      updatedStats.find((entry) => entry.operation === 'NestedGrandchild')
+        .totalDuration
     ).toBeGreaterThan(0);
 
     const updatedErrors = syntheticAnalyzer.getErrorAnalysis();
@@ -386,7 +410,8 @@ describe('TraceAnalyzer & StructuredTrace integration', () => {
     expect(erroredSummary.errorCount).toBe(3);
     expect(erroredSummary.errorMessages).toContain('boom');
     expect(
-      updatedErrors.errorsByType.find((item) => item.errorType === 'Error').count
+      updatedErrors.errorsByType.find((item) => item.errorType === 'Error')
+        .count
     ).toBeGreaterThanOrEqual(2);
 
     const updatedConcurrency = syntheticAnalyzer.getConcurrencyProfile();

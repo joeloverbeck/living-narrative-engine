@@ -708,9 +708,9 @@ describe('AIPromptContentProvider', () => {
         const result = provider.getCharacterPersonaContent(dto);
 
         // Verify the builder was called with the actorPromptData
-        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
-          dto.actorPromptData
-        );
+        expect(
+          mockCharacterDataXmlBuilder.buildCharacterDataXml
+        ).toHaveBeenCalledWith(dto.actorPromptData);
         // Verify XML output is returned (from mock)
         expect(result).toContain('<character_data>');
         expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
@@ -751,9 +751,9 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(dto);
         // The builder is called with the actorPromptData; builder handles default name internally
-        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
-          dto.actorPromptData
-        );
+        expect(
+          mockCharacterDataXmlBuilder.buildCharacterDataXml
+        ).toHaveBeenCalledWith(dto.actorPromptData);
         // Verify we get XML output from the mock
         expect(result).toContain('<character_data>');
       });
@@ -792,9 +792,9 @@ describe('AIPromptContentProvider', () => {
         };
         const result = provider.getCharacterPersonaContent(dto);
         // Verify builder receives all data; builder handles optional attributes internally
-        expect(mockCharacterDataXmlBuilder.buildCharacterDataXml).toHaveBeenCalledWith(
-          dto.actorPromptData
-        );
+        expect(
+          mockCharacterDataXmlBuilder.buildCharacterDataXml
+        ).toHaveBeenCalledWith(dto.actorPromptData);
         // Verify we get XML output from the mock
         expect(result).toContain('<character_data>');
       });

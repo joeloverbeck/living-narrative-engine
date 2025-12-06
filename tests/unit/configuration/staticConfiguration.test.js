@@ -139,7 +139,9 @@ describe('StaticConfiguration Validation Test', () => {
 
     // 3. Assert
     expect(schemaId).toBeDefined();
-    expect(schemaId).toBe('schema://living-narrative-engine/lookup.schema.json');
+    expect(schemaId).toBe(
+      'schema://living-narrative-engine/lookup.schema.json'
+    );
   });
 
   describe('Operation Schema Files', () => {

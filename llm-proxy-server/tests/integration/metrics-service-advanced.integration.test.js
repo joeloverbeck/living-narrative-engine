@@ -5,13 +5,7 @@
  *              health check modules to provide near-complete coverage.
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-} from '@jest/globals';
+import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -58,13 +52,13 @@ const createTestApp = ({
       incidentType: validation.errors.length
         ? 'invalid_header'
         : validation.suspiciousPatterns.length
-        ? 'suspicious_pattern'
-        : undefined,
+          ? 'suspicious_pattern'
+          : undefined,
       severity: validation.errors.length
         ? 'high'
         : validation.suspiciousPatterns.length
-        ? 'medium'
-        : 'low',
+          ? 'medium'
+          : 'low',
     });
 
     next();
@@ -73,9 +67,10 @@ const createTestApp = ({
   const trackAdaptiveRateLimiting = (req, res, next) => {
     const clientKey = `${req.ip}:${req.get('x-api-key') || 'anonymous'}`;
     const now = Date.now();
-    const pattern =
-      suspiciousPatternsManager.get(clientKey) ||
-      ({ requests: [], suspiciousScore: 0 });
+    const pattern = suspiciousPatternsManager.get(clientKey) || {
+      requests: [],
+      suspiciousScore: 0,
+    };
 
     const recentRequests = pattern.requests.filter((ts) => now - ts < 1000);
     recentRequests.push(now);
@@ -199,7 +194,8 @@ const createTestApp = ({
       const duration = Number(process.hrtime.bigint() - start) / 1e9;
       metricsService.recordHealthCheck({
         checkType,
-        result: res.statusCode >= 200 && res.statusCode < 400 ? 'success' : 'failure',
+        result:
+          res.statusCode >= 200 && res.statusCode < 400 ? 'success' : 'failure',
         duration,
       });
     });
@@ -209,13 +205,18 @@ const createTestApp = ({
   const healthyLlmConfigService = {
     isOperational: () => true,
     getInitializationErrorDetails: () => null,
-    getLlmConfigs: () => ({ configs: { 'openai:gpt-4o': {}, 'anthropic:opus': {} } }),
+    getLlmConfigs: () => ({
+      configs: { 'openai:gpt-4o': {}, 'anthropic:opus': {} },
+    }),
     getResolvedConfigPath: () => '/etc/llm/config.yaml',
   };
 
   const failingLlmConfigService = {
     isOperational: () => false,
-    getInitializationErrorDetails: () => ({ message: 'LLM config missing', stage: 'bootstrap' }),
+    getInitializationErrorDetails: () => ({
+      message: 'LLM config missing',
+      stage: 'bootstrap',
+    }),
     getLlmConfigs: () => ({ configs: {} }),
     getResolvedConfigPath: () => '/etc/llm/config.yaml',
   };
@@ -331,7 +332,10 @@ describe('MetricsService advanced integration', () => {
       .set('x-content-type-options', 'nosniff')
       .set('x-frame-options', 'DENY')
       .set('x-xss-protection', '1; mode=block')
-      .set('strict-transport-security', 'max-age=63072000; includeSubDomains; preload')
+      .set(
+        'strict-transport-security',
+        'max-age=63072000; includeSubDomains; preload'
+      )
       .expect(200);
 
     await request(app)
@@ -424,7 +428,9 @@ describe('MetricsService advanced integration', () => {
     registry.metrics = async () => {
       throw new Error('forced metrics failure');
     };
-    await expect(metricsService.getMetrics()).rejects.toThrow('forced metrics failure');
+    await expect(metricsService.getMetrics()).rejects.toThrow(
+      'forced metrics failure'
+    );
     registry.metrics = originalMetricsFn;
 
     const originalGetMetricsAsJSON = registry.getMetricsAsJSON;

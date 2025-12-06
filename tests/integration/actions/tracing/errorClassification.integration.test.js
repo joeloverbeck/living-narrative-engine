@@ -58,9 +58,7 @@ describe('ErrorClassifier integration behavior', () => {
       { phase: 'initialization', retryCount: 4 }
     );
 
-    expect(initializationClassification.severity).toBe(
-      ERROR_SEVERITY.CRITICAL
-    );
+    expect(initializationClassification.severity).toBe(ERROR_SEVERITY.CRITICAL);
     expect(initializationClassification.recoveryPotential).toBe(
       RECOVERY_POTENTIAL.MANUAL
     );
@@ -84,9 +82,7 @@ describe('ErrorClassifier integration behavior', () => {
       { isRetry: true, retryCount: 1 }
     );
 
-    expect(retryClassification.category).toBe(
-      ERROR_CATEGORIES.AUTHORIZATION
-    );
+    expect(retryClassification.category).toBe(ERROR_CATEGORIES.AUTHORIZATION);
     expect(retryClassification.severity).toBe(ERROR_SEVERITY.HIGH);
 
     const fatalNetworkError = new Error('Fatal network outage detected');

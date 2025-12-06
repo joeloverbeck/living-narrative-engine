@@ -354,7 +354,9 @@ describe('AIPromptContentProvider Categorization Integration', () => {
         },
         actionCategorizationService: faultyService,
         characterDataXmlBuilder: {
-          buildCharacterDataXml: jest.fn(() => '<character>Mock XML</character>'),
+          buildCharacterDataXml: jest.fn(
+            () => '<character>Mock XML</character>'
+          ),
         },
         modActionMetadataProvider: {
           getMetadataForMod: jest.fn(() => null),

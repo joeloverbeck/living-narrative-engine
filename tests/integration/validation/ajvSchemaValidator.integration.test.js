@@ -51,7 +51,8 @@ describe('AjvSchemaValidator integration - schema resolution', () => {
     await validator.addSchema(baseSchema, baseSchema.$id);
 
     const aliasSchema = JSON.parse(JSON.stringify(baseSchema));
-    aliasSchema.$id = 'schema://living-narrative-engine/components/base.schema.json';
+    aliasSchema.$id =
+      'schema://living-narrative-engine/components/base.schema.json';
     await validator.addSchema(aliasSchema, aliasSchema.$id);
 
     const referencingSchema = {
@@ -181,8 +182,9 @@ describe('AjvSchemaValidator integration - schema removal and diagnostics', () =
 
     expect(ids).toEqual([]);
     expect(
-      logger.errorMessages.some(({ message }) =>
-        message === 'AjvSchemaValidator: Error getting loaded schema IDs'
+      logger.errorMessages.some(
+        ({ message }) =>
+          message === 'AjvSchemaValidator: Error getting loaded schema IDs'
       )
     ).toBe(true);
   });
@@ -398,8 +400,9 @@ describe('AjvSchemaValidator integration - generated validator coordination', ()
     validator.preGenerateValidators();
 
     expect(
-      logger.debugMessages.some(({ message }) =>
-        message === 'Pre-generation skipped: Enhanced validation not enabled'
+      logger.debugMessages.some(
+        ({ message }) =>
+          message === 'Pre-generation skipped: Enhanced validation not enabled'
       )
     ).toBe(true);
   });
@@ -451,7 +454,9 @@ describe('AjvSchemaValidator integration - generated validator coordination', ()
     ).toBe(true);
     expect(
       logger.warnMessages.some(({ message }) =>
-        message.startsWith('Failed to pre-generate validator for component://invalid')
+        message.startsWith(
+          'Failed to pre-generate validator for component://invalid'
+        )
       )
     ).toBe(true);
   });
@@ -492,12 +497,14 @@ describe('AjvSchemaValidator integration - generated validator coordination', ()
     expect(result.errors).toEqual([
       expect.objectContaining({
         keyword: 'validationError',
-        message: expect.stringContaining('Component schema must have dataSchema'),
+        message: expect.stringContaining(
+          'Component schema must have dataSchema'
+        ),
       }),
     ]);
     expect(
-      logger.errorMessages.some(({ message }) =>
-        message === `Validation failed for schema ${schemaId}`
+      logger.errorMessages.some(
+        ({ message }) => message === `Validation failed for schema ${schemaId}`
       )
     ).toBe(true);
   });

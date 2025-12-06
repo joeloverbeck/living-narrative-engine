@@ -199,7 +199,7 @@ describe('RegenerateDescriptionHandler', () => {
       );
 
       // Assert: Success logging occurred
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Successfully regenerated entity description',
         expect.objectContaining({
           entityId: actorId,
@@ -318,7 +318,7 @@ describe('RegenerateDescriptionHandler', () => {
 
       // Assert: No errors thrown
       expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Successfully regenerated entity description',
         expect.objectContaining({
           entityId: actorId,
@@ -376,7 +376,7 @@ describe('RegenerateDescriptionHandler', () => {
       );
 
       // Assert: Component still updated
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Successfully regenerated entity description',
         expect.objectContaining({
           entityId: actorId,
@@ -404,7 +404,7 @@ describe('RegenerateDescriptionHandler', () => {
         { text: null }
       );
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Successfully regenerated entity description',
         expect.objectContaining({
           entityId: actorId,
@@ -699,7 +699,7 @@ describe('RegenerateDescriptionHandler', () => {
       // Test success logging
       await handler.execute(params, ctx);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'Successfully regenerated entity description',
         expect.objectContaining({
           entityId: actorId,

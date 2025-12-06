@@ -211,7 +211,8 @@ describe('Services Monitoring Integration', () => {
 
     beforeEach(async () => {
       // Reset circuit breaker to ensure clean state for each test
-      const circuitBreaker = monitoringCoordinator.getCircuitBreaker('addComponent');
+      const circuitBreaker =
+        monitoringCoordinator.getCircuitBreaker('addComponent');
       if (circuitBreaker) {
         circuitBreaker.close();
       }

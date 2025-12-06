@@ -287,17 +287,15 @@ describe('ScopeResolverHelpers - Location Match Pattern', () => {
   });
 
   it('should apply optional filter', () => {
-    mockEntityManager.hasComponent = jest.fn(
-      (entityId, componentType) => {
-        if (
-          componentType === 'core:actor' &&
-          (entityId === 'actor1' || entityId === 'actor2')
-        ) {
-          return true;
-        }
-        return false;
+    mockEntityManager.hasComponent = jest.fn((entityId, componentType) => {
+      if (
+        componentType === 'core:actor' &&
+        (entityId === 'actor1' || entityId === 'actor2')
+      ) {
+        return true;
       }
-    );
+      return false;
+    });
 
     const resolver = ScopeResolverHelpers.createLocationMatchResolver(
       'test:actors_at_location',
@@ -376,10 +374,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
       }
     );
 
-    const result = resolver.call(
-      { entityManager: mockEntityManager },
-      {}
-    );
+    const result = resolver.call({ entityManager: mockEntityManager }, {});
 
     expect(result).toEqual({
       success: true,
@@ -398,10 +393,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
       }
     );
 
-    const result = resolver.call(
-      { entityManager: mockEntityManager },
-      {}
-    );
+    const result = resolver.call({ entityManager: mockEntityManager }, {});
 
     expect(result).toEqual({
       success: true,
@@ -419,10 +411,7 @@ describe('ScopeResolverHelpers - Component Filter Pattern', () => {
       }
     );
 
-    const result = resolver.call(
-      { entityManager: mockEntityManager },
-      {}
-    );
+    const result = resolver.call({ entityManager: mockEntityManager }, {});
 
     expect(result).toEqual({
       success: true,
@@ -458,8 +447,14 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
     // Verify resolvers were registered
     expect(mockTestEnv._registeredResolvers).toBeDefined();
     expect(mockTestEnv._registeredResolvers.size).toBeGreaterThan(0);
-    expect(mockTestEnv._registeredResolvers.has('personal-space:furniture_actor_sitting_on')).toBe(true);
-    expect(mockTestEnv._registeredResolvers.has('positioning:sitting_actors')).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has(
+        'personal-space:furniture_actor_sitting_on'
+      )
+    ).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('positioning:sitting_actors')
+    ).toBe(true);
   });
 
   it('should register inventory scopes', () => {
@@ -467,8 +462,12 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
 
     expect(mockTestEnv._registeredResolvers).toBeDefined();
     expect(mockTestEnv._registeredResolvers.size).toBeGreaterThan(0);
-    expect(mockTestEnv._registeredResolvers.has('items:actor_inventory_items')).toBe(true);
-    expect(mockTestEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('items:actor_inventory_items')
+    ).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('items:portable_items_at_location')
+    ).toBe(true);
   });
 
   it('should register anatomy scopes', () => {
@@ -476,20 +475,33 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
 
     expect(mockTestEnv._registeredResolvers).toBeDefined();
     expect(mockTestEnv._registeredResolvers.size).toBeGreaterThan(0);
-    expect(mockTestEnv._registeredResolvers.has('anatomy:actors_at_location')).toBe(true);
-    expect(mockTestEnv._registeredResolvers.has('anatomy:target_body_parts')).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('anatomy:actors_at_location')
+    ).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('anatomy:target_body_parts')
+    ).toBe(true);
   });
 
   it('should preserve original resolver and fall back to it', () => {
     const originalResolver = mockTestEnv.unifiedScopeResolver.resolveSync;
-    originalResolver.mockReturnValue({ success: true, value: new Set(['original_result']) });
+    originalResolver.mockReturnValue({
+      success: true,
+      value: new Set(['original_result']),
+    });
 
     ScopeResolverHelpers.registerPositioningScopes(mockTestEnv);
 
     // Call with an unregistered scope
-    const result = mockTestEnv.unifiedScopeResolver.resolveSync('unknown:scope', {});
+    const result = mockTestEnv.unifiedScopeResolver.resolveSync(
+      'unknown:scope',
+      {}
+    );
 
-    expect(result).toEqual({ success: true, value: new Set(['original_result']) });
+    expect(result).toEqual({
+      success: true,
+      value: new Set(['original_result']),
+    });
     // The original resolver is stored and bound for proper context, so verify it exists and is callable
     expect(mockTestEnv._originalResolveSync).toBeDefined();
     expect(typeof mockTestEnv._originalResolveSync).toBe('function');
@@ -497,7 +509,10 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
 
   it('should use registered resolver instead of original', () => {
     const originalResolver = mockTestEnv.unifiedScopeResolver.resolveSync;
-    originalResolver.mockReturnValue({ success: true, value: new Set(['original_result']) });
+    originalResolver.mockReturnValue({
+      success: true,
+      value: new Set(['original_result']),
+    });
 
     ScopeResolverHelpers.registerPositioningScopes(mockTestEnv);
 
@@ -522,8 +537,12 @@ describe('ScopeResolverHelpers - Registration Helpers', () => {
 
     // Both sets of resolvers should be available
     expect(secondResolverCount).toBeGreaterThan(firstResolverCount);
-    expect(mockTestEnv._registeredResolvers.has('positioning:sitting_actors')).toBe(true);
-    expect(mockTestEnv._registeredResolvers.has('items:portable_items_at_location')).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('positioning:sitting_actors')
+    ).toBe(true);
+    expect(
+      mockTestEnv._registeredResolvers.has('items:portable_items_at_location')
+    ).toBe(true);
   });
 });
 
@@ -551,74 +570,124 @@ describe('ScopeResolverHelpers - New Positioning Scopes (TEAOUTTHR-006)', () => 
 
   describe('High Priority Scopes', () => {
     it('should register positioning:close_actors', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has('positioning:close_actors')
+      ).toBe(true);
     });
 
     it('should register positioning:close_actors_facing_each_other', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors_facing_each_other')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:close_actors_facing_each_other'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:actors_both_sitting_close', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actors_both_sitting_close')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:actors_both_sitting_close'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:actor_biting_my_neck', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actor_biting_my_neck')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has('positioning:actor_biting_my_neck')
+      ).toBe(true);
     });
 
     it('should register positioning:actors_sitting_close', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actors_sitting_close')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has('positioning:actors_sitting_close')
+      ).toBe(true);
     });
 
     it('should register positioning:close_actors_or_entity_kneeling_before_actor', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:close_actors_or_entity_kneeling_before_actor')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:close_actors_or_entity_kneeling_before_actor'
+        )
+      ).toBe(true);
     });
   });
 
   describe('Medium Priority Scopes', () => {
     it('should register positioning:actor_im_straddling', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actor_im_straddling')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has('positioning:actor_im_straddling')
+      ).toBe(true);
     });
 
     it('should register positioning:entity_actor_is_kneeling_before', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:entity_actor_is_kneeling_before')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:entity_actor_is_kneeling_before'
+        )
+      ).toBe(true);
     });
 
     it('should register personal-space:actors_sitting_with_space_to_right', () => {
-      expect(mockTestEnv._registeredResolvers.has('personal-space:actors_sitting_with_space_to_right')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'personal-space:actors_sitting_with_space_to_right'
+        )
+      ).toBe(true);
     });
   });
 
   describe('Lower Priority Scopes', () => {
     it('should register positioning:available_furniture', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:available_furniture')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has('positioning:available_furniture')
+      ).toBe(true);
     });
 
     it('should register positioning:available_lying_furniture', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:available_lying_furniture')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:available_lying_furniture'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:furniture_im_lying_on', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:furniture_im_lying_on')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:furniture_im_lying_on'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:furniture_im_sitting_on', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:furniture_im_sitting_on')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:furniture_im_sitting_on'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:surface_im_bending_over', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:surface_im_bending_over')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:surface_im_bending_over'
+        )
+      ).toBe(true);
     });
 
     it('should register positioning:actors_im_facing_away_from', () => {
-      expect(mockTestEnv._registeredResolvers.has('positioning:actors_im_facing_away_from')).toBe(true);
+      expect(
+        mockTestEnv._registeredResolvers.has(
+          'positioning:actors_im_facing_away_from'
+        )
+      ).toBe(true);
     });
   });
 
   it('should have 20+ total positioning scopes registered', () => {
-    const positioningScopes = Array.from(mockTestEnv._registeredResolvers.keys()).filter(
-      (key) => key.startsWith('positioning:')
-    );
+    const positioningScopes = Array.from(
+      mockTestEnv._registeredResolvers.keys()
+    ).filter((key) => key.startsWith('positioning:'));
     expect(positioningScopes.length).toBeGreaterThanOrEqual(20);
   });
 });

@@ -289,8 +289,12 @@ describe('AIPromptPipeline integration', () => {
 
     // Check task_definition with processing hint
     expect(prompt).toContain('<task_definition>');
-    expect(prompt).toContain('<!-- *** CRITICAL: Your core task - all output stems from this -->');
-    expect(prompt).toContain('Core Task: Resolve the anomaly without escalating conflict.');
+    expect(prompt).toContain(
+      '<!-- *** CRITICAL: Your core task - all output stems from this -->'
+    );
+    expect(prompt).toContain(
+      'Core Task: Resolve the anomaly without escalating conflict.'
+    );
     expect(prompt).toContain('</task_definition>');
     expect(prompt).toContain('YOU ARE Commander Nyra.');
     expect(prompt).toContain(

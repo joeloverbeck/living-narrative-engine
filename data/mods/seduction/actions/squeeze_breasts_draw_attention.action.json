@@ -6,19 +6,13 @@
   "targets": "none",
   "required_components": {},
   "forbidden_components": {
-    "actor": [
-      "positioning:hugging",
-      "positioning:restraining"
-    ]
+    "actor": ["positioning:hugging", "positioning:restraining"]
   },
   "template": "squeeze your breasts to draw attention",
   "prerequisites": [
     {
       "logic": {
-        "hasPartOfType": [
-          "actor",
-          "breast"
-        ]
+        "hasPartOfType": ["actor", "breast"]
       },
       "failure_message": "You need breasts to perform this action."
     },
@@ -27,18 +21,12 @@
         "or": [
           {
             "not": {
-              "isSocketCovered": [
-                "actor",
-                "left_chest"
-              ]
+              "isSocketCovered": ["actor", "left_chest"]
             }
           },
           {
             "not": {
-              "isSocketCovered": [
-                "actor",
-                "right_chest"
-              ]
+              "isSocketCovered": ["actor", "right_chest"]
             }
           }
         ]
@@ -47,9 +35,7 @@
     },
     {
       "logic": {
-        "hasOtherActorsAtLocation": [
-          "actor"
-        ]
+        "hasOtherActorsAtLocation": ["actor"]
       },
       "failure_message": "There is nobody here to draw attention from."
     }

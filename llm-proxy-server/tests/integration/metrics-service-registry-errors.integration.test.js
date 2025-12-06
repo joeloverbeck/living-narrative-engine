@@ -1,4 +1,11 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -28,7 +35,10 @@ describe('MetricsService registry failure integration coverage', () => {
   });
 
   it('surfaces registry export failures while keeping middleware operational', async () => {
-    const service = new MetricsService({ logger, collectDefaultMetrics: false });
+    const service = new MetricsService({
+      logger,
+      collectDefaultMetrics: false,
+    });
 
     const app = express();
     app.use(express.json());
@@ -61,7 +71,9 @@ describe('MetricsService registry failure integration coverage', () => {
         throw new Error('registry-metrics-broken');
       });
 
-    await expect(service.getMetrics()).rejects.toThrow('registry-metrics-broken');
+    await expect(service.getMetrics()).rejects.toThrow(
+      'registry-metrics-broken'
+    );
     expect(logger.error).toHaveBeenCalledWith(
       'Error getting metrics',
       expect.any(Error)

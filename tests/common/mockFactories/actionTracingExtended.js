@@ -336,10 +336,7 @@ export async function startTestLlmProxyServer(options = {}) {
       return handler(request);
     }
 
-    if (
-      request.method !== 'POST' ||
-      request.pathname !== '/api/traces/write'
-    ) {
+    if (request.method !== 'POST' || request.pathname !== '/api/traces/write') {
       return new Response('Not Found', { status: 404 });
     }
 
@@ -423,10 +420,7 @@ export async function startFlakyTestServer(options = {}) {
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 200 });
     }
-    if (
-      request.method !== 'POST' ||
-      request.pathname !== '/api/traces/write'
-    ) {
+    if (request.method !== 'POST' || request.pathname !== '/api/traces/write') {
       return new Response('Not Found', { status: 404 });
     }
 

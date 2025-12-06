@@ -4,13 +4,7 @@
  * when covered by trousers in the topmost_torso_lower_clothing_no_accessories scope
  */
 
-import {
-  describe,
-  it,
-  beforeEach,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
@@ -45,13 +39,13 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
 
     entityManager = new SimpleEntityManager([]);
     jsonLogicEval = new JsonLogicEvaluationService({ entityManager, logger });
-    
+
     // Parse and register the scope
     const parsedScopes = parseScopeDefinitions(
       targetTopMostTorsoLowerNoAccessoriesScopeContent,
       'test-scope-file.scope'
     );
-    
+
     scopeRegistry = new ScopeRegistry();
     // parseScopeDefinitions returns a Map, so convert to object for initialize()
     const scopeDefinitions = {};
@@ -59,7 +53,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       scopeDefinitions[name] = scopeData;
     });
     scopeRegistry.initialize(scopeDefinitions);
-    
+
     scopeEngine = new ScopeEngine({ scopeRegistry });
   });
 
@@ -76,7 +70,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
             base: 'asudem:trousers',
             underwear: 'asudem:boxer_brief',
           },
-        }
+        },
       });
 
       // Create trousers entity with coverage mapping
@@ -86,10 +80,14 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
         slot: 'torso_lower',
         layer: 'base',
       });
-      entityManager.addComponent('asudem:trousers', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'base',
-      });
+      entityManager.addComponent(
+        'asudem:trousers',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'base',
+        }
+      );
 
       // Create boxer brief entity with coverage mapping
       const boxerBrief = entityManager.createEntity('asudem:boxer_brief');
@@ -98,10 +96,14 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
         slot: 'torso_lower',
         layer: 'underwear',
       });
-      entityManager.addComponent('asudem:boxer_brief', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'asudem:boxer_brief',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Create player entity
       const player = entityManager.createEntity('player');
@@ -120,17 +122,22 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
       console.log('Target entity:', runtimeCtx.target);
-      console.log('Equipment:', entityManager.getComponent('layla_agirre', 'clothing:equipment'));
+      console.log(
+        'Equipment:',
+        entityManager.getComponent('layla_agirre', 'clothing:equipment')
+      );
       console.log('Scope AST:', JSON.stringify(scopeAst, null, 2));
-      
+
       const result = scopeEngine.resolve(
         scopeAst,
         player, // actorEntity
         runtimeCtx
       );
-      
+
       console.log('Result:', Array.from(result));
 
       // Should only contain trousers, not boxer brief
@@ -150,7 +157,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
           torso_lower: {
             underwear: 'asudem:boxer_brief',
           },
-        }
+        },
       });
 
       // Create boxer brief entity
@@ -160,10 +167,14 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
         slot: 'torso_lower',
         layer: 'underwear',
       });
-      entityManager.addComponent('asudem:boxer_brief', 'clothing:coverage_mapping', {
-        covers: ['torso_lower'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'asudem:boxer_brief',
+        'clothing:coverage_mapping',
+        {
+          covers: ['torso_lower'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       // Create player entity
       const player = entityManager.createEntity('player');
@@ -182,8 +193,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
-      
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
+
       const result = scopeEngine.resolve(
         scopeAst,
         player, // actorEntity
@@ -216,7 +229,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
           groin: {
             underwear: 'underwear',
           },
-        }
+        },
       });
 
       // Create clothing items with various coverage patterns
@@ -281,10 +294,14 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
         slot: 'legs',
         layer: 'underwear',
       });
-      entityManager.addComponent('long_underwear', 'clothing:coverage_mapping', {
-        covers: ['legs'],
-        coveragePriority: 'underwear',
-      });
+      entityManager.addComponent(
+        'long_underwear',
+        'clothing:coverage_mapping',
+        {
+          covers: ['legs'],
+          coveragePriority: 'underwear',
+        }
+      );
 
       const underwear = entityManager.createEntity('underwear');
       entityManager.addComponent('underwear', 'clothing:item', {
@@ -314,8 +331,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
-      
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
+
       const result = scopeEngine.resolve(
         scopeAst,
         player, // actorEntity
@@ -328,7 +347,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       expect(result).toContain('jacket');
       expect(result).not.toContain('shirt'); // Blocked by jacket (same slot, higher priority)
       expect(result).not.toContain('undershirt'); // Blocked by jacket (same slot, higher priority)
-      
+
       // Items in other slots are not returned since scope is torso_lower specific
       expect(result).not.toContain('coat_tails'); // Different slot (legs)
       expect(result).not.toContain('pants'); // Different slot (legs)
@@ -348,7 +367,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
             outer: 'jacket_no_mapping',
             base: 'shirt_no_mapping',
           },
-        }
+        },
       });
 
       // Create items without coverage mapping (will use fallback)
@@ -385,8 +404,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
-      
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
+
       const result = scopeEngine.resolve(
         scopeAst,
         player, // actorEntity
@@ -408,9 +429,17 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
 
       // Create a large equipped component with many items
       const equipped = {};
-      const slots = ['head', 'torso_lower', 'arms', 'hands', 'legs', 'feet', 'groin'];
+      const slots = [
+        'head',
+        'torso_lower',
+        'arms',
+        'hands',
+        'legs',
+        'feet',
+        'groin',
+      ];
       const layers = ['outer', 'base', 'underwear'];
-      
+
       // Create 21 items (7 slots * 3 layers)
       slots.forEach((slot) => {
         equipped[slot] = {};
@@ -442,7 +471,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
 
       // Measure performance
       const startTime = Date.now();
-      
+
       const runtimeCtx = {
         entityManager,
         jsonLogicEval,
@@ -453,8 +482,10 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       };
 
       // Get the AST from scope registry
-      const scopeAst = scopeRegistry.getScopeAst('clothing:target_topmost_torso_lower_clothing_no_accessories');
-      
+      const scopeAst = scopeRegistry.getScopeAst(
+        'clothing:target_topmost_torso_lower_clothing_no_accessories'
+      );
+
       const result = scopeEngine.resolve(
         scopeAst,
         player, // actorEntity
@@ -472,7 +503,7 @@ describe('Layla Agirre Coverage Blocking Integration Test', () => {
       expect(result).toContain('torso_lower_outer_item');
       expect(result).not.toContain('torso_lower_base_item');
       expect(result).not.toContain('torso_lower_underwear_item');
-      
+
       // Other slots should not be returned since scope is torso_lower specific
       ['head', 'arms', 'hands', 'legs', 'feet', 'groin'].forEach((slot) => {
         expect(result).not.toContain(`${slot}_outer_item`);

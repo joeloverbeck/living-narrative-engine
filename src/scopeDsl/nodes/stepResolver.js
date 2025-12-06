@@ -121,13 +121,24 @@ export default function createStepResolver({
     try {
       if (field === 'components') {
         // DIAGNOSTIC: Log when building components object
-        const componentsObj = getOrBuildComponents(entityId, null, entitiesGateway, trace);
-        logDiagnosticDebug(logger, '[DIAGNOSTIC] StepResolver - Building components for entity:', {
+        const componentsObj = getOrBuildComponents(
           entityId,
-          field: 'components',
-          componentKeys: componentsObj ? Object.keys(componentsObj) : null,
-          hasCloseness: componentsObj ? ('positioning:closeness' in componentsObj) : false,
-        });
+          null,
+          entitiesGateway,
+          trace
+        );
+        logDiagnosticDebug(
+          logger,
+          '[DIAGNOSTIC] StepResolver - Building components for entity:',
+          {
+            entityId,
+            field: 'components',
+            componentKeys: componentsObj ? Object.keys(componentsObj) : null,
+            hasCloseness: componentsObj
+              ? 'positioning:closeness' in componentsObj
+              : false,
+          }
+        );
         return componentsObj;
       }
 
@@ -161,17 +172,21 @@ export default function createStepResolver({
 
     // DIAGNOSTIC: Log field access from objects, especially for namespaced IDs
     if (field.includes(':') || field === 'partners') {
-      logDiagnosticDebug(logger, '[DIAGNOSTIC] StepResolver - Accessing field from object:', {
-        field,
-        objectKeys: obj ? Object.keys(obj) : null,
-        hasField: obj ? (field in obj) : false,
-        valueType: value ? typeof value : 'undefined',
-        valuePreview: Array.isArray(value)
-          ? `Array(${value.length})`
-          : value && typeof value === 'object'
-            ? 'Object'
-            : value,
-      });
+      logDiagnosticDebug(
+        logger,
+        '[DIAGNOSTIC] StepResolver - Accessing field from object:',
+        {
+          field,
+          objectKeys: obj ? Object.keys(obj) : null,
+          hasField: obj ? field in obj : false,
+          valueType: value ? typeof value : 'undefined',
+          valuePreview: Array.isArray(value)
+            ? `Array(${value.length})`
+            : value && typeof value === 'object'
+              ? 'Object'
+              : value,
+        }
+      );
     }
 
     return value;

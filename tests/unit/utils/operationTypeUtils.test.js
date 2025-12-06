@@ -14,7 +14,11 @@ describe('getNormalizedOperationType', () => {
   });
 
   it('returns the trimmed operation type when provided a valid string', () => {
-    const result = getNormalizedOperationType('  resolve-target  ', mockLogger, label);
+    const result = getNormalizedOperationType(
+      '  resolve-target  ',
+      mockLogger,
+      label
+    );
 
     expect(result).toBe('resolve-target');
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -41,7 +45,11 @@ describe('getNormalizedOperationType', () => {
   });
 
   it('returns the original string when it is already normalized', () => {
-    const result = getNormalizedOperationType('action-dispatch', mockLogger, label);
+    const result = getNormalizedOperationType(
+      'action-dispatch',
+      mockLogger,
+      label
+    );
 
     expect(result).toBe('action-dispatch');
     expect(mockLogger.error).not.toHaveBeenCalled();

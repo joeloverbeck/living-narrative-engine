@@ -16,11 +16,13 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 ## Files to Touch
 
 ### New Files (3)
+
 - `data/schemas/operations/consumeItem.schema.json`
 - `src/logic/operationHandlers/consumeItemHandler.js`
 - `tests/unit/logic/operationHandlers/consumeItemHandler.test.js`
 
 ### Modified Files (4)
+
 - `data/schemas/operation.schema.json` (add $ref to consumeItem schema)
 - `src/dependencyInjection/tokens/tokens-core.js` (add ConsumeItemHandler token)
 - `src/dependencyInjection/registrations/operationHandlerRegistrations.js` (add handler factory)
@@ -42,6 +44,7 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 **File:** `data/schemas/operations/consumeItem.schema.json`
 
 **Parameters:**
+
 - `consumer_ref`: Entity consuming the item (required)
 - `item_ref`: Item to consume (required)
 
@@ -59,6 +62,7 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 **Class:** `ConsumeItemHandler extends BaseOperationHandler`
 
 **Key Responsibilities:**
+
 1. Resolve both consumer and item entity references
 2. Validate both entities have required components
 3. Validate fuel tag compatibility
@@ -69,11 +73,13 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 8. Dispatch `metabolism:item_consumed` event
 
 **Dependencies (via DI):**
+
 - `#entityManager` (IEntityManager)
 - `#logger` (ILogger)
 - `#safeEventDispatcher` (ISafeEventDispatcher)
 
 **Event Dispatched:**
+
 ```json
 {
   "type": "metabolism:item_consumed",
@@ -92,12 +98,14 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 **CORRECTED ASSUMPTION:** The codebase uses `InvalidArgumentError` (not custom error classes) and `safeDispatchError` for validation failures, following the pattern in `validateInventoryCapacityHandler.js` and `drinkFromHandler.js`.
 
 **Error handling pattern:**
+
 - Use `safeDispatchError` for validation failures
 - Throw `InvalidArgumentError` only for critical failures
 - Return gracefully for validation errors (don't throw)
 - Dispatch events only on success
 
 **Validation failures to handle:**
+
 - Missing fuel_converter on consumer → safeDispatchError + return
 - Missing fuel_source on item → safeDispatchError + return
 - Incompatible fuel tags → safeDispatchError + return
@@ -105,6 +113,7 @@ Implement the CONSUME_ITEM operation handler that transfers fuel source to fuel 
 - Invalid entity references → safeDispatchError + return
 
 **Error Messages (via safeDispatchError):**
+
 ```javascript
 // Incompatible fuel tags
 safeDispatchError(
@@ -126,12 +135,13 @@ safeDispatchError(
 ### Fuel Tag Matching Logic
 
 ```javascript
-const hasMatchingTag = fuelSource.fuel_tags.some(tag =>
+const hasMatchingTag = fuelSource.fuel_tags.some((tag) =>
   converter.accepted_fuel_tags.includes(tag)
 );
 ```
 
 **Examples:**
+
 - ✅ Item: ["organic", "meat"], Converter: ["organic"] → Match
 - ✅ Item: ["blood"], Converter: ["blood", "organic"] → Match
 - ❌ Item: ["electricity"], Converter: ["organic"] → No match
@@ -139,12 +149,14 @@ const hasMatchingTag = fuelSource.fuel_tags.some(tag =>
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [ ] Operation schema validates against base-operation.schema.json
 - [ ] Schema added to operation.schema.json anyOf array
 - [ ] Type constant is "CONSUME_ITEM"
 - [ ] Both entity references properly typed
 
 ### Handler Implementation
+
 - [ ] Handler extends BaseOperationHandler
 - [ ] All dependencies validated via validateDependency
 - [ ] Execute method is async
@@ -156,12 +168,14 @@ const hasMatchingTag = fuelSource.fuel_tags.some(tag =>
 - [ ] Clear error messages for all failure cases
 
 ### Dependency Injection
+
 - [ ] Token added to tokens-core.js as 'ConsumeItemHandler'
 - [ ] Factory registered in operationHandlerRegistrations.js
 - [ ] Operation mapped in interpreterRegistrations.js
 - [ ] Type added to KNOWN_OPERATION_TYPES in preValidationUtils.js
 
 ### Unit Test Coverage (>90%)
+
 - [ ] Test: successfully consumes compatible food
 - [ ] Test: adds bulk to buffer_storage
 - [ ] Test: removes item entity from game
@@ -176,99 +190,114 @@ const hasMatchingTag = fuelSource.fuel_tags.some(tag =>
 ## Test Examples
 
 ### Successful Consumption
+
 ```javascript
 it('should consume food and add to buffer', async () => {
   const consumerId = 'actor_1';
   const itemId = 'bread_1';
-  
+
   testBed.entityManager.addComponent(consumerId, 'metabolism:fuel_converter', {
     capacity: 100,
     buffer_storage: 30,
     conversion_rate: 5,
     efficiency: 0.8,
     accepted_fuel_tags: ['organic'],
-    activity_multiplier: 1.0
+    activity_multiplier: 1.0,
   });
-  
+
   testBed.entityManager.addComponent(itemId, 'metabolism:fuel_source', {
     energy_density: 200,
     bulk: 30,
     fuel_tags: ['organic', 'cooked'],
     digestion_speed: 'medium',
-    spoilage_rate: 0
+    spoilage_rate: 0,
   });
 
-  await handler.execute({
-    consumer_ref: consumerId,
-    item_ref: itemId
-  }, testBed.context);
+  await handler.execute(
+    {
+      consumer_ref: consumerId,
+      item_ref: itemId,
+    },
+    testBed.context
+  );
 
-  const converter = testBed.entityManager.getComponent(consumerId, 'metabolism:fuel_converter');
+  const converter = testBed.entityManager.getComponent(
+    consumerId,
+    'metabolism:fuel_converter'
+  );
   expect(converter.buffer_storage).toBe(60); // 30 + 30
   expect(testBed.entityManager.hasEntity(itemId)).toBe(false); // Item removed
 });
 ```
 
 ### Incompatible Fuel Tags
+
 ```javascript
 it('should reject incompatible fuel types', async () => {
   const consumerId = 'vampire_1';
   const itemId = 'bread_1';
-  
+
   testBed.entityManager.addComponent(consumerId, 'metabolism:fuel_converter', {
     capacity: 100,
     buffer_storage: 0,
     conversion_rate: 20,
     efficiency: 0.95,
     accepted_fuel_tags: ['blood'], // Vampire only accepts blood
-    activity_multiplier: 1.0
+    activity_multiplier: 1.0,
   });
-  
+
   testBed.entityManager.addComponent(itemId, 'metabolism:fuel_source', {
     energy_density: 200,
     bulk: 30,
     fuel_tags: ['organic', 'cooked'], // Regular food
     digestion_speed: 'medium',
-    spoilage_rate: 0
+    spoilage_rate: 0,
   });
 
   await expect(
-    handler.execute({
-      consumer_ref: consumerId,
-      item_ref: itemId
-    }, testBed.context)
+    handler.execute(
+      {
+        consumer_ref: consumerId,
+        item_ref: itemId,
+      },
+      testBed.context
+    )
   ).rejects.toThrow('incompatible fuel type');
 });
 ```
 
 ### Buffer Capacity Exceeded
+
 ```javascript
 it('should reject consumption when buffer is full', async () => {
   const consumerId = 'actor_1';
   const itemId = 'steak_1';
-  
+
   testBed.entityManager.addComponent(consumerId, 'metabolism:fuel_converter', {
     capacity: 100,
     buffer_storage: 90, // Almost full
     conversion_rate: 5,
     efficiency: 0.8,
     accepted_fuel_tags: ['organic'],
-    activity_multiplier: 1.0
+    activity_multiplier: 1.0,
   });
-  
+
   testBed.entityManager.addComponent(itemId, 'metabolism:fuel_source', {
     energy_density: 300,
     bulk: 50, // Too large for remaining space
     fuel_tags: ['organic', 'meat'],
     digestion_speed: 'slow',
-    spoilage_rate: 0
+    spoilage_rate: 0,
   });
 
   await expect(
-    handler.execute({
-      consumer_ref: consumerId,
-      item_ref: itemId
-    }, testBed.context)
+    handler.execute(
+      {
+        consumer_ref: consumerId,
+        item_ref: itemId,
+      },
+      testBed.context
+    )
   ).rejects.toThrow(/stomach is too full|insufficient capacity/i);
 });
 ```
@@ -276,12 +305,14 @@ it('should reject consumption when buffer is full', async () => {
 ## Invariants
 
 ### Must Remain True
+
 - Buffer storage can never exceed capacity after consumption
 - Item entity must be removed if consumption succeeds
 - Item entity must remain if consumption fails (transaction safety)
 - At least one fuel tag must match for consumption to succeed
 
 ### System Invariants
+
 - EntityManager component modifications are atomic
 - Item removal is atomic with buffer update
 - Event dispatched only on successful consumption
@@ -314,16 +345,17 @@ it('should reject consumption when buffer is full', async () => {
 
 ### Original Assumptions vs. Actual Codebase
 
-| Assumption | Reality | Impact |
-|------------|---------|--------|
-| Custom error classes (`InvalidFuelTypeError`, `InsufficientCapacityError`) | Use `InvalidArgumentError` + `safeDispatchError` pattern | Changed error handling approach |
-| Throw errors for validation failures | Return gracefully with `safeDispatchError` | No exceptions thrown for validation |
-| `removeEntity` method exists | Need to verify correct EntityManager method | May need different method |
-| Direct error throwing | Event-based error reporting via dispatcher | More graceful error handling |
+| Assumption                                                                 | Reality                                                  | Impact                              |
+| -------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------- |
+| Custom error classes (`InvalidFuelTypeError`, `InsufficientCapacityError`) | Use `InvalidArgumentError` + `safeDispatchError` pattern | Changed error handling approach     |
+| Throw errors for validation failures                                       | Return gracefully with `safeDispatchError`               | No exceptions thrown for validation |
+| `removeEntity` method exists                                               | Need to verify correct EntityManager method              | May need different method           |
+| Direct error throwing                                                      | Event-based error reporting via dispatcher               | More graceful error handling        |
 
 ### Updated Scope
 
 **No changes to core functionality**, only implementation pattern adjustments:
+
 - Use `safeDispatchError` instead of throwing custom errors
 - Follow validation pattern from `validateInventoryCapacityHandler.js`
 - Use `batchAddComponentsOptimized` for component updates if available
@@ -336,6 +368,7 @@ it('should reject consumption when buffer is full', async () => {
 ### What Was Actually Implemented
 
 **✅ All acceptance criteria met:**
+
 - Created operation schema with complete validation
 - Implemented handler following existing patterns
 - Registered all DI dependencies correctly
@@ -343,11 +376,13 @@ it('should reject consumption when buffer is full', async () => {
 - All tests passing, linting clean, type checking successful
 
 **Files Created (3):**
+
 1. `data/schemas/operations/consumeItem.schema.json` - Operation schema validation
 2. `src/logic/operationHandlers/consumeItemHandler.js` - Core handler implementation (248 lines)
 3. `tests/unit/logic/operationHandlers/consumeItemHandler.test.js` - Comprehensive test suite (670+ lines, 18 tests)
 
 **Files Modified (5):**
+
 1. `data/schemas/operation.schema.json` - Added $ref to consumeItem schema
 2. `src/dependencyInjection/tokens/tokens-core.js` - Added ConsumeItemHandler token
 3. `src/dependencyInjection/registrations/operationHandlerRegistrations.js` - Added handler factory
@@ -357,6 +392,7 @@ it('should reject consumption when buffer is full', async () => {
 ### Implementation Highlights
 
 **Key Design Decisions:**
+
 - Used `safeDispatchError` for all validation failures (no exceptions thrown)
 - Followed `validateInventoryCapacityHandler.js` and `drinkFromHandler.js` patterns exactly
 - Implemented fuel tag matching with `.some()` for flexible compatibility
@@ -365,6 +401,7 @@ it('should reject consumption when buffer is full', async () => {
 - Event-driven error reporting via `core:system_error_occurred`
 
 **Test Coverage:**
+
 - **Constructor Tests (4):** Dependency validation enforcement
 - **Success Tests (3):** Happy path scenarios including boundary conditions
 - **Validation Tests (7):** All validation failure modes covered
@@ -378,6 +415,7 @@ it('should reject consumption when buffer is full', async () => {
 **No Functional Deviations** - Core functionality exactly as specified.
 
 **Pattern Adjustments (Corrected in ticket before implementation):**
+
 - Error handling uses `safeDispatchError` + graceful returns (not custom exceptions)
 - Entity removal uses `removeEntityInstance` (verified from EntityManager API)
 - Component updates use `batchAddComponentsOptimized` for atomicity

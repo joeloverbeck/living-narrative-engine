@@ -55,9 +55,12 @@ describe('GOAP Heuristics - Performance Requirements', () => {
       logger: mockLogger,
     });
 
-    jsonLogicEvaluator.addOperation('has_component', function (entityPath, componentId) {
-      return hasComponentOp.evaluate([entityPath, componentId], this);
-    });
+    jsonLogicEvaluator.addOperation(
+      'has_component',
+      function (entityPath, componentId) {
+        return hasComponentOp.evaluate([entityPath, componentId], this);
+      }
+    );
 
     const numericConstraintEvaluator = new NumericConstraintEvaluator({
       jsonLogicEvaluator,

@@ -3,7 +3,14 @@
  * @description Tests the has_component operator in realistic scenarios including scope resolution
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { JsonLogicCustomOperators } from '../../../src/logic/jsonLogicCustomOperators.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -91,7 +98,10 @@ describe('has_component Operator - Integration', () => {
       const result = jsonLogicEvaluationService.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(entityManager.hasComponent).toHaveBeenCalledWith(entityId, 'core:actor');
+      expect(entityManager.hasComponent).toHaveBeenCalledWith(
+        entityId,
+        'core:actor'
+      );
     });
 
     it('should evaluate has_component with entity that does not have the component', () => {
@@ -110,7 +120,10 @@ describe('has_component Operator - Integration', () => {
       const result = jsonLogicEvaluationService.evaluate(rule, context);
 
       expect(result).toBe(false);
-      expect(entityManager.hasComponent).toHaveBeenCalledWith(entityId, 'core:position');
+      expect(entityManager.hasComponent).toHaveBeenCalledWith(
+        entityId,
+        'core:position'
+      );
     });
   });
 

@@ -8,7 +8,7 @@ describe('ShortTermMemoryService', () => {
 
       expect(() => service.addThought(null, 'hello')).toThrow(TypeError);
       expect(() => service.addThought(undefined, 'hello')).toThrow(
-        'mem must be an object conforming to core:short_term_memory schema',
+        'mem must be an object conforming to core:short_term_memory schema'
       );
     });
 
@@ -33,7 +33,10 @@ describe('ShortTermMemoryService', () => {
       const mem = {
         thoughts: [
           { text: 'First thought', timestamp: '2024-01-01T00:00:00.000Z' },
-          { text: '   Duplicate Entry  ', timestamp: '2024-01-02T00:00:00.000Z' },
+          {
+            text: '   Duplicate Entry  ',
+            timestamp: '2024-01-02T00:00:00.000Z',
+          },
           { text: 12345, timestamp: '2024-01-03T00:00:00.000Z' },
         ],
         maxEntries: 5,
@@ -114,19 +117,33 @@ describe('ShortTermMemoryService', () => {
         maxEntries: 0,
       };
 
-      const result = service.addThought(mem, 'keep-4', new Date('2024-01-04T00:00:00.000Z'));
+      const result = service.addThought(
+        mem,
+        'keep-4',
+        new Date('2024-01-04T00:00:00.000Z')
+      );
 
       expect(result.wasAdded).toBe(true);
-      expect(mem.thoughts.map((entry) => entry.text)).toEqual(['keep-2', 'keep-3', 'keep-4']);
+      expect(mem.thoughts.map((entry) => entry.text)).toEqual([
+        'keep-2',
+        'keep-3',
+        'keep-4',
+      ]);
     });
   });
 
   describe('emitThoughtAdded', () => {
     it('dispatches ThoughtAdded events when a dispatcher is provided', () => {
       const dispatch = jest.fn();
-      const service = new ShortTermMemoryService({ eventDispatcher: { dispatch } });
+      const service = new ShortTermMemoryService({
+        eventDispatcher: { dispatch },
+      });
 
-      service.emitThoughtAdded('entity-42', 'hello world', '2024-02-01T12:00:00.000Z');
+      service.emitThoughtAdded(
+        'entity-42',
+        'hello world',
+        '2024-02-01T12:00:00.000Z'
+      );
 
       expect(dispatch).toHaveBeenCalledTimes(1);
       expect(dispatch).toHaveBeenCalledWith('ThoughtAdded', {
@@ -140,13 +157,21 @@ describe('ShortTermMemoryService', () => {
       const service = new ShortTermMemoryService();
 
       expect(() =>
-        service.emitThoughtAdded('entity-42', 'text', '2024-02-01T12:00:00.000Z'),
+        service.emitThoughtAdded(
+          'entity-42',
+          'text',
+          '2024-02-01T12:00:00.000Z'
+        )
       ).not.toThrow();
 
       service.eventDispatcher = { dispatch: 'not-a-function' };
 
       expect(() =>
-        service.emitThoughtAdded('entity-42', 'text', '2024-02-01T12:00:00.000Z'),
+        service.emitThoughtAdded(
+          'entity-42',
+          'text',
+          '2024-02-01T12:00:00.000Z'
+        )
       ).not.toThrow();
     });
   });

@@ -16,7 +16,7 @@ import { ValidationError } from '../../../errors/validationError.js';
  */
 export function validatePatternMutualExclusivity(pattern, patternIndex) {
   const matchers = ['matches', 'matchesGroup', 'matchesPattern', 'matchesAll'];
-  const presentMatchers = matchers.filter(m => pattern[m] !== undefined);
+  const presentMatchers = matchers.filter((m) => pattern[m] !== undefined);
 
   if (presentMatchers.length === 0) {
     throw new ValidationError(
@@ -26,7 +26,7 @@ export function validatePatternMutualExclusivity(pattern, patternIndex) {
 
   if (presentMatchers.length > 1) {
     throw new ValidationError(
-      `Pattern ${patternIndex + 1} has multiple matchers: found ${presentMatchers.map(m => `'${m}'`).join(' and ')}. Only one is allowed per pattern.`
+      `Pattern ${patternIndex + 1} has multiple matchers: found ${presentMatchers.map((m) => `'${m}'`).join(' and ')}. Only one is allowed per pattern.`
     );
   }
 }

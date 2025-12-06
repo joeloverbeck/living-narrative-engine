@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import * as macroUtils from '../../../src/utils/macroUtils.js';
 import RuleLoader from '../../../src/loaders/ruleLoader.js';
 
@@ -76,7 +83,10 @@ describe('RuleLoader additional coverage', () => {
       expect.any(Object),
       'custom.rule.json'
     );
-    expect(result).toEqual({ qualifiedId: 'core:customRule', didOverride: false });
+    expect(result).toEqual({
+      qualifiedId: 'core:customRule',
+      didOverride: false,
+    });
   });
 
   it('throws when macro expansion validation reports incomplete expansion', async () => {
@@ -84,9 +94,7 @@ describe('RuleLoader additional coverage', () => {
     jest
       .spyOn(macroUtils, 'expandMacros')
       .mockImplementation(() => expandedActions);
-    jest
-      .spyOn(macroUtils, 'validateMacroExpansion')
-      .mockReturnValue(false);
+    jest.spyOn(macroUtils, 'validateMacroExpansion').mockReturnValue(false);
 
     const data = {
       rule_id: 'test',

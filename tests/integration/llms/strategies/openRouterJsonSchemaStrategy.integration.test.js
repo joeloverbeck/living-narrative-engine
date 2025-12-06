@@ -111,7 +111,7 @@ describe('Integration: OpenRouterJsonSchemaStrategy', () => {
     expect(call.options.headers['Content-Type']).toBe('application/json');
     expect(call.options.headers.Authorization).toBe('Bearer server-test-key');
     expect(call.options.headers['HTTP-Referer']).toBe(
-      BASE_CONFIG.providerSpecificHeaders['HTTP-Referer'],
+      BASE_CONFIG.providerSpecificHeaders['HTTP-Referer']
     );
 
     const parsedBody = JSON.parse(call.options.body);
@@ -160,8 +160,10 @@ describe('Integration: OpenRouterJsonSchemaStrategy', () => {
 
     expect(jsonString).toBe(JSON.stringify(structuredContent));
     expect(strategyLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Extracted JSON object from message.content and stringified it.'),
-      expect.objectContaining({ llmId: BASE_CONFIG.configId }),
+      expect.stringContaining(
+        'Extracted JSON object from message.content and stringified it.'
+      ),
+      expect.objectContaining({ llmId: BASE_CONFIG.configId })
     );
   });
 
@@ -202,12 +204,16 @@ describe('Integration: OpenRouterJsonSchemaStrategy', () => {
 
     expect(result).toBe('{"action":"wave","speech":"Hello there."}');
     expect(strategyLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('message.content was an empty string. Will check tool_calls fallback.'),
-      expect.objectContaining({ llmId: BASE_CONFIG.configId }),
+      expect.stringContaining(
+        'message.content was an empty string. Will check tool_calls fallback.'
+      ),
+      expect.objectContaining({ llmId: BASE_CONFIG.configId })
     );
     expect(strategyLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('message.content not usable, attempting tool_calls fallback.'),
-      expect.objectContaining({ llmId: BASE_CONFIG.configId }),
+      expect.stringContaining(
+        'message.content not usable, attempting tool_calls fallback.'
+      ),
+      expect.objectContaining({ llmId: BASE_CONFIG.configId })
     );
   });
 
@@ -242,12 +248,12 @@ describe('Integration: OpenRouterJsonSchemaStrategy', () => {
         llmConfig: configWithEmptySchema,
         apiKey: null,
         environmentContext,
-      }),
+      })
     ).rejects.toBeInstanceOf(LLMStrategyError);
 
     expect(strategyLogger.warn).toHaveBeenCalledWith(
       expect.stringContaining('jsonSchema'),
-      expect.objectContaining({ llmId: BASE_CONFIG.configId }),
+      expect.objectContaining({ llmId: BASE_CONFIG.configId })
     );
 
     expect(httpClient.calls).toHaveLength(1);

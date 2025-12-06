@@ -127,7 +127,9 @@ describe('TraitsDisplayEnhancer integration', () => {
       'secrets',
     ]);
 
-    const namesCategory = result.categories.find((category) => category.id === 'names');
+    const namesCategory = result.categories.find(
+      (category) => category.id === 'names'
+    );
     expect(namesCategory.items).toEqual([
       {
         primary: 'Eira Solace',
@@ -164,7 +166,9 @@ describe('TraitsDisplayEnhancer integration', () => {
 
     expect(result.metadata).toBeUndefined();
 
-    const namesCategory = result.categories.find((category) => category.id === 'names');
+    const namesCategory = result.categories.find(
+      (category) => category.id === 'names'
+    );
     expect(namesCategory.items).toBe(traitsData.names);
 
     const personalityCategory = result.categories.find(
@@ -191,7 +195,9 @@ describe('TraitsDisplayEnhancer integration', () => {
     expect(exportText).toContain('Concept: Haunted Navigator');
     expect(exportText).toContain('Thematic Direction: Coastal Vigil');
     expect(exportText).toContain('NAMES');
-    expect(exportText).toContain('• Eira Solace: Balances warmth with mystery.');
+    expect(exportText).toContain(
+      '• Eira Solace: Balances warmth with mystery.'
+    );
     expect(exportText).toContain('PHYSICAL DESCRIPTION');
     expect(exportText).toContain('PERSONALITY');
     expect(exportText).toContain('LIKES');
@@ -234,14 +240,20 @@ describe('TraitsDisplayEnhancer integration', () => {
 
     const enhancer = createEnhancer();
 
-    const filename = enhancer.generateExportFilename(createComprehensiveTraitsData(), {
-      direction: 'The Dawn & Twilight Saga! 2024',
-    });
+    const filename = enhancer.generateExportFilename(
+      createComprehensiveTraitsData(),
+      {
+        direction: 'The Dawn & Twilight Saga! 2024',
+      }
+    );
 
     const now = new Date();
     const expectedTimestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(
       now.getDate()
-    ).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(
+    ).padStart(
+      2,
+      '0'
+    )}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(
       now.getSeconds()
     ).padStart(2, '0')}`;
     const expectedFilename = `traits_the-dawn-twilight-saga-2024_${expectedTimestamp}.txt`;

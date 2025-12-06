@@ -211,7 +211,10 @@ export class HasFreeGrabbingAppendagesOperator {
    * @returns {boolean} True if the entity has at least requiredCount free grabbing appendages
    */
   #evaluateInternal(entityId, requiredCount) {
-    const freeCount = countFreeGrabbingAppendages(this.#entityManager, entityId);
+    const freeCount = countFreeGrabbingAppendages(
+      this.#entityManager,
+      entityId
+    );
 
     const result = freeCount >= requiredCount;
 

@@ -242,9 +242,7 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     const result = await testBed.stage.execute({
       actor,
-      candidateActions: [
-        { id: 'demo:wave', scope: 'world:friends' },
-      ],
+      candidateActions: [{ id: 'demo:wave', scope: 'world:friends' }],
       actionContext: { currentLocation: 'lounge' },
       trace,
     });
@@ -263,12 +261,18 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     expect(trace.steps).toEqual([
       expect.objectContaining({
-        message: expect.stringContaining('Resolving targets for 1 candidate actions'),
+        message: expect.stringContaining(
+          'Resolving targets for 1 candidate actions'
+        ),
       }),
     ]);
-    expect(trace.infos.some((record) =>
-      record.message.includes("Scope 'world:friends' resolved to 2 target(s).")
-    )).toBe(true);
+    expect(
+      trace.infos.some((record) =>
+        record.message.includes(
+          "Scope 'world:friends' resolved to 2 target(s)."
+        )
+      )
+    ).toBe(true);
     expect(trace.spans).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -289,7 +293,9 @@ describe('TargetResolutionStage integration with real target resolution service'
     ).toBe(true);
     expect(
       testBed.logger.debugLogs.some((log) =>
-        log.message.includes('Target resolution complete: 1 actions have valid targets')
+        log.message.includes(
+          'Target resolution complete: 1 actions have valid targets'
+        )
       )
     ).toBe(true);
   });
@@ -300,9 +306,7 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     const result = await testBed.stage.execute({
       actor,
-      candidateActions: [
-        { id: 'core:wait', scope: 'none' },
-      ],
+      candidateActions: [{ id: 'core:wait', scope: 'none' }],
       actionContext: { currentLocation: 'lounge' },
       trace,
     });
@@ -312,9 +316,13 @@ describe('TargetResolutionStage integration with real target resolution service'
     expect(entry.targetContexts).toHaveLength(1);
     expect(entry.targetContexts[0].type).toBe('none');
     expect(entry.targetContexts[0].entityId).toBeNull();
-    expect(trace.infos.some((record) =>
-      record.message.includes("Action 'core:wait' has 'none' scope - no target resolution needed")
-    )).toBe(true);
+    expect(
+      trace.infos.some((record) =>
+        record.message.includes(
+          "Action 'core:wait' has 'none' scope - no target resolution needed"
+        )
+      )
+    ).toBe(true);
   });
 
   it('builds enhanced error context when scope definition is missing', async () => {
@@ -323,9 +331,7 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     const result = await testBed.stage.execute({
       actor,
-      candidateActions: [
-        { id: 'demo:unknown', scope: 'world:missing' },
-      ],
+      candidateActions: [{ id: 'demo:unknown', scope: 'world:missing' }],
       actionContext: { currentLocation: 'lounge' },
       trace,
     });
@@ -350,9 +356,7 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     const result = await testBed.stage.execute({
       actor,
-      candidateActions: [
-        { id: 'demo:unstable', scope: 'world:unstable' },
-      ],
+      candidateActions: [{ id: 'demo:unstable', scope: 'world:unstable' }],
       actionContext: { currentLocation: 'lounge' },
       trace,
     });
@@ -372,9 +376,7 @@ describe('TargetResolutionStage integration with real target resolution service'
 
     const result = await testBed.stage.execute({
       actor,
-      candidateActions: [
-        { id: 'demo:none', scope: 'world:empty' },
-      ],
+      candidateActions: [{ id: 'demo:none', scope: 'world:empty' }],
       actionContext: { currentLocation: 'lounge' },
       trace,
     });
@@ -404,7 +406,9 @@ describe('TargetResolutionStage integration with real target resolution service'
     expect(result.errors).toHaveLength(0);
     expect(
       testBed.logger.warnLogs.some((log) =>
-        log.message.includes('TargetResolutionStage received invalid candidateActions')
+        log.message.includes(
+          'TargetResolutionStage received invalid candidateActions'
+        )
       )
     ).toBe(true);
   });
@@ -425,8 +429,9 @@ describe('TargetResolutionStage integration with real target resolution service'
     });
 
     expect(
-      testBed.logger.warnLogs.some((log) =>
-        log.message === 'Skipping null action definition in candidateActions'
+      testBed.logger.warnLogs.some(
+        (log) =>
+          log.message === 'Skipping null action definition in candidateActions'
       )
     ).toBe(true);
     expect(result.data.actionsWithTargets).toHaveLength(1);

@@ -97,7 +97,8 @@ describe('items:apply_lipstick action definition', () => {
       testFixture.reset([room, actor, lipstick]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions('actor1');
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor1');
       const lipstickActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
@@ -125,9 +126,8 @@ describe('items:apply_lipstick action definition', () => {
       testFixture.reset([room, actor, lipstick]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor_no_inventory'
-      );
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor_no_inventory');
       const hasLipstickAction = availableActions.some(
         (action) => action.id === ACTION_ID
       );
@@ -157,9 +157,8 @@ describe('items:apply_lipstick action definition', () => {
       testFixture.reset([room, actor, plainBalm]);
       configureActionDiscovery();
 
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'actor_no_lipstick'
-      );
+      const availableActions =
+        testFixture.testEnv.getAvailableActions('actor_no_lipstick');
       const hasLipstickAction = availableActions.some(
         (action) => action.id === ACTION_ID
       );

@@ -29,7 +29,7 @@ function setupAnatomyComponents() {
     .asActor()
     .build();
 
-  // Create target entity with body reference and anatomy  
+  // Create target entity with body reference and anatomy
   const target = new ModEntityBuilder('bob')
     .withName('Bob')
     .atLocation('room1')
@@ -37,10 +37,10 @@ function setupAnatomyComponents() {
     .withBody('torso1')
     .asActor()
     .build();
-  
+
   // Add facing_away component manually
   target.components['positioning:facing_away'] = {
-    facing_away_from: ['alice']
+    facing_away_from: ['alice'],
   };
 
   // Create anatomy entities for actor
@@ -68,8 +68,8 @@ function setupAnatomyComponents() {
       subType: 'torso',
       sockets: {
         left_ass: { coveredBy: null, attachedPart: 'leftAss1' },
-        right_ass: { coveredBy: null, attachedPart: 'rightAss1' }
-      }
+        right_ass: { coveredBy: null, attachedPart: 'rightAss1' },
+      },
     })
     .build();
 
@@ -83,7 +83,7 @@ function setupAnatomyComponents() {
 
   const rightAss = new ModEntityBuilder('rightAss1')
     .asBodyPart({
-      parent: 'torso1', 
+      parent: 'torso1',
       children: [],
       subType: 'ass_cheek',
     })
@@ -106,7 +106,10 @@ describe('sex-dry-intimacy:rub_penis_between_ass_cheeks action integration', () 
 
   beforeEach(async () => {
     // Create test fixture with auto-loaded files
-    testFixture = await ModTestFixture.forAction('sex-dry-intimacy', 'sex-dry-intimacy:rub_penis_between_ass_cheeks');
+    testFixture = await ModTestFixture.forAction(
+      'sex-dry-intimacy',
+      'sex-dry-intimacy:rub_penis_between_ass_cheeks'
+    );
 
     // Setup anatomy entities
     const entities = setupAnatomyComponents();

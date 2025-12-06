@@ -1,5 +1,7 @@
 import { describe, it, expect } from '@jest/globals';
-import NotesService, { normalizeNoteText } from '../../../src/ai/notesService.js';
+import NotesService, {
+  normalizeNoteText,
+} from '../../../src/ai/notesService.js';
 
 describe('normalizeNoteText edge cases', () => {
   it('returns an empty string when given a non-object value', () => {
@@ -18,9 +20,9 @@ describe('normalizeNoteText edge cases', () => {
   });
 
   it('falls back to an empty string when the text field is absent', () => {
-    expect(
-      normalizeNoteText({ subject: '', subjectType: 'character' })
-    ).toBe('');
+    expect(normalizeNoteText({ subject: '', subjectType: 'character' })).toBe(
+      ''
+    );
   });
 });
 
@@ -56,7 +58,13 @@ describe('NotesService branch coverage', () => {
 
     const result = service.addNotes(component, [
       { text: '   ', subject: 'Topic' },
-      { text: 'Valid Note', subject: 'Topic', subjectType: 'concept', timestamp: 'CUSTOM', context: 'ctx' },
+      {
+        text: 'Valid Note',
+        subject: 'Topic',
+        subjectType: 'concept',
+        timestamp: 'CUSTOM',
+        context: 'ctx',
+      },
       { text: 'valid note!!! ', subject: 'topic', subjectType: 'concept' },
       'ignore-me',
     ]);

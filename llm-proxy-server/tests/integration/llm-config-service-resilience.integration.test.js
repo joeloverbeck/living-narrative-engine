@@ -43,7 +43,9 @@ describe('LlmConfigService resilience integration coverage', () => {
   let fsReader;
 
   beforeAll(async () => {
-    tempDir = await mkdtemp(path.join(tmpdir(), 'llm-config-service-resilience-'));
+    tempDir = await mkdtemp(
+      path.join(tmpdir(), 'llm-config-service-resilience-')
+    );
   });
 
   afterAll(async () => {

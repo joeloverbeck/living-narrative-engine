@@ -88,7 +88,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
 
           let resolutionOrder;
           try {
-            resolutionOrder = mockDeps.targetDependencyResolver.getResolutionOrder(targetDefinitions);
+            resolutionOrder =
+              mockDeps.targetDependencyResolver.getResolutionOrder(
+                targetDefinitions
+              );
           } catch (error) {
             resolutionOrder = Object.keys(targetDefinitions);
           }
@@ -110,7 +113,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
                 const entityIds = Array.from(scopeResult.value);
 
                 let contextFromId = null;
-                if (targetDef.contextFrom && resolvedTargets[targetDef.contextFrom]) {
+                if (
+                  targetDef.contextFrom &&
+                  resolvedTargets[targetDef.contextFrom]
+                ) {
                   const contextTargets = resolvedTargets[targetDef.contextFrom];
                   if (contextTargets.length > 0) {
                     contextFromId = contextTargets[0].id;
@@ -122,7 +128,10 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
                     const entity = mockDeps.entityManager.getEntityInstance(id);
                     if (!entity) return null;
 
-                    const displayName = mockDeps.targetDisplayNameResolver.getEntityDisplayName(id);
+                    const displayName =
+                      mockDeps.targetDisplayNameResolver.getEntityDisplayName(
+                        id
+                      );
                     targetContexts.push({
                       type: 'entity',
                       entityId: id,
@@ -136,14 +145,22 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
                     }
                     return targetObj;
                   })
-                  .filter(t => t !== null);
+                  .filter((t) => t !== null);
               } else {
-                const errorInfo = scopeResult.errors?.[0] || { error: 'Unknown scope resolution error' };
-                mockDeps.logger.error(`Scope resolution failed for target ${targetKey}:`, errorInfo);
+                const errorInfo = scopeResult.errors?.[0] || {
+                  error: 'Unknown scope resolution error',
+                };
+                mockDeps.logger.error(
+                  `Scope resolution failed for target ${targetKey}:`,
+                  errorInfo
+                );
                 resolvedTargets[targetKey] = [];
               }
             } catch (error) {
-              mockDeps.logger.error(`Scope evaluation error for target ${targetKey}:`, error);
+              mockDeps.logger.error(
+                `Scope evaluation error for target ${targetKey}:`,
+                error
+              );
               resolvedTargets[targetKey] = [];
             }
           }
@@ -151,7 +168,8 @@ describe('MultiTargetResolutionStage - Mixed Actions Behavior', () => {
           const hasEmptyRequiredTarget = Object.entries(targetDefinitions).some(
             ([key, def]) => {
               const isOptional = def.optional === true;
-              const hasNoCandidates = !resolvedTargets[key] || resolvedTargets[key].length === 0;
+              const hasNoCandidates =
+                !resolvedTargets[key] || resolvedTargets[key].length === 0;
               return !isOptional && hasNoCandidates;
             }
           );

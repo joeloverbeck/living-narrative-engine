@@ -1445,8 +1445,14 @@ class ActionAwareStructuredTrace extends StructuredTrace {
     if (timestamps.length < 2) return 0;
 
     // Use reduce to avoid stack overflow with large arrays
-    const maxTimestamp = timestamps.reduce((max, ts) => Math.max(max, ts), -Infinity);
-    const minTimestamp = timestamps.reduce((min, ts) => Math.min(min, ts), Infinity);
+    const maxTimestamp = timestamps.reduce(
+      (max, ts) => Math.max(max, ts),
+      -Infinity
+    );
+    const minTimestamp = timestamps.reduce(
+      (min, ts) => Math.min(min, ts),
+      Infinity
+    );
     return maxTimestamp - minTimestamp;
   }
 }

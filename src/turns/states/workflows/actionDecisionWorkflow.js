@@ -195,7 +195,10 @@ export class ActionDecisionWorkflow {
   }
 
   async _emitSuggestedActionEvent(clampedIndex, descriptor, extractedData) {
-    const dispatcher = getSafeEventDispatcher(this._turnContext, this._state._handler);
+    const dispatcher = getSafeEventDispatcher(
+      this._turnContext,
+      this._state._handler
+    );
     if (!dispatcher) return;
 
     const payload = {
@@ -222,7 +225,10 @@ export class ActionDecisionWorkflow {
   }
 
   async _dispatchLLMDialogPreview(decisionMeta) {
-    const dispatcher = getSafeEventDispatcher(this._turnContext, this._state._handler);
+    const dispatcher = getSafeEventDispatcher(
+      this._turnContext,
+      this._state._handler
+    );
     const logger = this._turnContext.getLogger();
     if (!dispatcher) {
       return { speech: false, thought: false };
@@ -274,7 +280,9 @@ export class ActionDecisionWorkflow {
   _findCompositeForIndex(index, actions) {
     if (!Array.isArray(actions) || actions.length === 0) return null;
     return (
-      actions.find((candidate) => candidate?.index === index) || actions[index - 1] || null
+      actions.find((candidate) => candidate?.index === index) ||
+      actions[index - 1] ||
+      null
     );
   }
 
@@ -317,7 +325,7 @@ export class ActionDecisionWorkflow {
       finalIndex,
       override,
       resolvedByTimeout: resolvedByTimeout === true,
-      timeoutPolicy: resolvedByTimeout ? timeoutPolicy ?? null : null,
+      timeoutPolicy: resolvedByTimeout ? (timeoutPolicy ?? null) : null,
       correctedSuggestedIndex,
       correctedSubmittedIndex,
     });
@@ -376,7 +384,10 @@ export class ActionDecisionWorkflow {
 
     logger.warn(
       `${baseMsg}; policy=autoAccept -> index ${fallbackIndex ?? 'none found'}.`,
-      { suggestedDescriptor: this._describeActionDescriptor(suggestedDescriptor) }
+      {
+        suggestedDescriptor:
+          this._describeActionDescriptor(suggestedDescriptor),
+      }
     );
     this._cancelPrompt();
     return {
@@ -434,9 +445,8 @@ export class ActionDecisionWorkflow {
               ? {
                   suggestedAction: {
                     index: fallbackIndex,
-                    descriptor: this._describeActionDescriptor(
-                      suggestedDescriptor
-                    ),
+                    descriptor:
+                      this._describeActionDescriptor(suggestedDescriptor),
                   },
                 }
               : {}),
@@ -500,10 +510,8 @@ export class ActionDecisionWorkflow {
     const baseMeta = extractedData || {};
     const timeoutSettings = this._getTimeoutSettings();
     const rawSuggestedIndex = suggestedIndex ?? baseMeta.chosenIndex ?? null;
-    const { value: clampedIndex, adjusted: suggestedAdjusted } = this._clampIndex(
-      rawSuggestedIndex,
-      actions.length
-    );
+    const { value: clampedIndex, adjusted: suggestedAdjusted } =
+      this._clampIndex(rawSuggestedIndex, actions.length);
 
     if (suggestedAdjusted) {
       logger.warn(
@@ -520,7 +528,8 @@ export class ActionDecisionWorkflow {
     this._setPendingFlag(true);
 
     try {
-      const descriptor = this._findCompositeForIndex(clampedIndex, actions) || action;
+      const descriptor =
+        this._findCompositeForIndex(clampedIndex, actions) || action;
       await this._emitSuggestedActionEvent(clampedIndex, descriptor, baseMeta);
 
       const previewResult = await this._dispatchLLMDialogPreview(baseMeta);
@@ -532,10 +541,8 @@ export class ActionDecisionWorkflow {
         timeoutSettings
       );
       const rawSubmittedIndex = submission?.chosenIndex ?? null;
-      const { value: submittedIndex, adjusted: submissionAdjusted } = this._clampIndex(
-        rawSubmittedIndex,
-        actions.length
-      );
+      const { value: submittedIndex, adjusted: submissionAdjusted } =
+        this._clampIndex(rawSubmittedIndex, actions.length);
 
       const finalIndex = submittedIndex ?? clampedIndex;
 

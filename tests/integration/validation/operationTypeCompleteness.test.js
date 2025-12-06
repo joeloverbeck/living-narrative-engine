@@ -80,7 +80,9 @@ function loadKnownOperationTypes() {
   );
 
   if (!match) {
-    throw new Error('Could not find KNOWN_OPERATION_TYPES in preValidationUtils.js');
+    throw new Error(
+      'Could not find KNOWN_OPERATION_TYPES in preValidationUtils.js'
+    );
   }
 
   // Parse array entries - match quoted strings
@@ -99,7 +101,10 @@ function loadKnownOperationTypes() {
 describe('Operation Type Completeness', () => {
   it('should have all operation schemas registered in KNOWN_OPERATION_TYPES', () => {
     // Get all operation schema files
-    const schemasDir = path.join(currentDirPath, '../../../data/schemas/operations');
+    const schemasDir = path.join(
+      currentDirPath,
+      '../../../data/schemas/operations'
+    );
     const schemaFiles = fs
       .readdirSync(schemasDir)
       .filter((file) => file.endsWith('.schema.json'));

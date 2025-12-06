@@ -2,18 +2,11 @@
  * @file Integration test for the entity PerformanceMonitor working with real monitoring infrastructure.
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import MonitoringCoordinator from '../../../../src/entities/monitoring/MonitoringCoordinator.js';
 import { EntityRepositoryAdapter } from '../../../../src/entities/services/entityRepositoryAdapter.js';
 import { EntityNotFoundError } from '../../../../src/errors/entityNotFoundError.js';
 
- 
 describe('Entity performance monitoring integration', () => {
   let performanceSpy;
   let dateSpy;
@@ -42,7 +35,10 @@ describe('Entity performance monitoring integration', () => {
   });
 
   it('should collect repository and workflow metrics through the monitoring coordinator', async () => {
-    const coordinator = new MonitoringCoordinator({ logger: console, enabled: true });
+    const coordinator = new MonitoringCoordinator({
+      logger: console,
+      enabled: true,
+    });
     const repository = new EntityRepositoryAdapter({
       logger: console,
       monitoringCoordinator: coordinator,
@@ -77,7 +73,11 @@ describe('Entity performance monitoring integration', () => {
         async () => {
           throw new Error('boom');
         },
-        { context: 'integration-run', useCircuitBreaker: false, useErrorHandler: false }
+        {
+          context: 'integration-run',
+          useCircuitBreaker: false,
+          useErrorHandler: false,
+        }
       )
     ).rejects.toThrow('boom');
 
@@ -95,13 +95,19 @@ describe('Entity performance monitoring integration', () => {
 
     const recentOps = monitor.getRecentOperations(3);
     expect(recentOps.length).toBeGreaterThan(0);
-    expect(recentOps[0].timestamp).toBeGreaterThan(recentOps[recentOps.length - 1].timestamp);
+    expect(recentOps[0].timestamp).toBeGreaterThan(
+      recentOps[recentOps.length - 1].timestamp
+    );
 
     const addOperations = monitor.getOperationsByType('repository.add');
-    expect(addOperations.some((op) => op.context.startsWith('entity:'))).toBe(true);
+    expect(addOperations.some((op) => op.context.startsWith('entity:'))).toBe(
+      true
+    );
 
     const slowOps = monitor.getSlowOperations();
-    expect(slowOps.some((op) => op.operation === 'failing-operation')).toBe(true);
+    expect(slowOps.some((op) => op.operation === 'failing-operation')).toBe(
+      true
+    );
 
     const report = monitor.getPerformanceReport();
     expect(report).toContain('Performance Monitor Report');
@@ -113,7 +119,9 @@ describe('Entity performance monitoring integration', () => {
     expect(manualDuration).toBeGreaterThan(0);
 
     monitor.setEnabled(false);
-    expect(monitor.getPerformanceReport()).toBe('Performance monitoring is disabled');
+    expect(monitor.getPerformanceReport()).toBe(
+      'Performance monitoring is disabled'
+    );
     const disabledMetrics = monitor.getMetrics();
     expect(disabledMetrics.totalOperations).toBe(0);
     expect(monitor.getRecentOperations()).toEqual([]);

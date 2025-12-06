@@ -101,9 +101,9 @@ describe('EntityValidationFactory', () => {
           throw unexpectedError;
         });
 
-      expect(() => factory.validateCreateIds('core:test', 'instance-1')).toThrow(
-        unexpectedError
-      );
+      expect(() =>
+        factory.validateCreateIds('core:test', 'instance-1')
+      ).toThrow(unexpectedError);
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
@@ -115,9 +115,9 @@ describe('EntityValidationFactory', () => {
         throw unexpectedError;
       });
 
-      expect(() => factory.validateCreateIds('core:test', 'instance-1')).toThrow(
-        unexpectedError
-      );
+      expect(() =>
+        factory.validateCreateIds('core:test', 'instance-1')
+      ).toThrow(unexpectedError);
       expect(spy).toHaveBeenCalledTimes(2);
     });
   });

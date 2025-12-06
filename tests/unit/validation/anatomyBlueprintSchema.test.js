@@ -9,7 +9,8 @@ import createTestAjv from '../../common/validation/createTestAjv.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import blueprintSchema from '../../../data/schemas/anatomy.blueprint.schema.json';
 
-const SCHEMA_ID = 'schema://living-narrative-engine/anatomy.blueprint.schema.json';
+const SCHEMA_ID =
+  'schema://living-narrative-engine/anatomy.blueprint.schema.json';
 
 describe('Anatomy Blueprint Schema - Valid V1 Blueprints', () => {
   let testBed;

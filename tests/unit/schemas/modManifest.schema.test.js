@@ -122,8 +122,10 @@ describe('JSON-Schema – Mod Manifest', () => {
         id: 'positioning_mod',
         version: '1.0.0',
         name: 'Positioning Mod',
-        actionPurpose: 'Actions for character positioning and movement in physical space.',
-        actionConsiderWhen: 'When characters need to move, sit, stand, or change positions.',
+        actionPurpose:
+          'Actions for character positioning and movement in physical space.',
+        actionConsiderWhen:
+          'When characters need to move, sit, stand, or change positions.',
       };
       const ok = validate(manifestWithActionMetadata);
       if (!ok) {
@@ -255,7 +257,8 @@ describe('JSON-Schema – Mod Manifest', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           instancePath: '/content/refinement-methods/0',
-          message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.refinement\\.json$"',
+          message:
+            'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.refinement\\.json$"',
         })
       );
     });
@@ -272,7 +275,8 @@ describe('JSON-Schema – Mod Manifest', () => {
       expect(validate.errors).toContainEqual(
         expect.objectContaining({
           instancePath: '/content/portraits/0',
-          message: 'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.(png|jpg|jpeg|gif|webp|svg|bmp)$"',
+          message:
+            'must match pattern "^(?!/)(?!.*\\.\\.)[^\\s]+\\.(png|jpg|jpeg|gif|webp|svg|bmp)$"',
         })
       );
     });

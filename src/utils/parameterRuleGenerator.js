@@ -55,7 +55,9 @@ const TEMPLATE_DEFINITIONS = new Set([
  * @returns {Promise<{[key: string]: ParameterRule}>} Map of operation type to parameter rules
  * @throws {Error} If directory cannot be read or schemas are malformed
  */
-export async function generateParameterRules(operationsDir = DEFAULT_OPERATIONS_DIR) {
+export async function generateParameterRules(
+  operationsDir = DEFAULT_OPERATIONS_DIR
+) {
   const files = await readdir(operationsDir);
   const schemaFiles = files.filter((f) => f.endsWith('.schema.json'));
 
@@ -126,7 +128,9 @@ export function extractRuleFromSchema(schema) {
   }
 
   // Extract required and optional fields
-  const required = Array.isArray(parametersDef.required) ? [...parametersDef.required] : [];
+  const required = Array.isArray(parametersDef.required)
+    ? [...parametersDef.required]
+    : [];
   const allProperties = Object.keys(parametersDef.properties || {});
   const optional = allProperties.filter((p) => !required.includes(p));
 
@@ -194,10 +198,7 @@ function isTemplateCapable(def) {
         return true;
       }
       // Check for string type with template pattern
-      if (
-        branch.type === 'string' &&
-        branch.pattern?.includes('\\{')
-      ) {
+      if (branch.type === 'string' && branch.pattern?.includes('\\{')) {
         return true;
       }
     }

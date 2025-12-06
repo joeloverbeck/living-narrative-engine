@@ -223,7 +223,9 @@ describe('Health Check Middleware', () => {
 
     it('should provide default initialization error details when unavailable', async () => {
       mockLlmConfigService.isOperational.mockReturnValue(false);
-      mockLlmConfigService.getInitializationErrorDetails.mockReturnValue(undefined);
+      mockLlmConfigService.getInitializationErrorDetails.mockReturnValue(
+        undefined
+      );
 
       const readinessCheck = createReadinessCheck({
         logger: mockLogger,

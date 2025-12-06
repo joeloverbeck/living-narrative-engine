@@ -10,14 +10,12 @@ import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionCom
  * @param overrides
  */
 function createComposer(overrides = {}) {
-  const logger =
-    overrides.logger ||
-    {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+  const logger = overrides.logger || {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
 
   const composer = new BodyDescriptionComposer({
     bodyPartDescriptionBuilder: {

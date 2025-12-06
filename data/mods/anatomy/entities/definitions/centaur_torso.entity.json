@@ -18,59 +18,37 @@
         {
           "id": "leg_left_front",
           "orientation": "left_front",
-          "allowedTypes": [
-            "centaur_leg_front",
-            "horse_leg",
-            "leg"
-          ],
+          "allowedTypes": ["centaur_leg_front", "horse_leg", "leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_right_front",
           "orientation": "right_front",
-          "allowedTypes": [
-            "centaur_leg_front",
-            "horse_leg",
-            "leg"
-          ],
+          "allowedTypes": ["centaur_leg_front", "horse_leg", "leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_left_rear",
           "orientation": "left_rear",
-          "allowedTypes": [
-            "centaur_leg_rear",
-            "horse_leg",
-            "leg"
-          ],
+          "allowedTypes": ["centaur_leg_rear", "horse_leg", "leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "leg_right_rear",
           "orientation": "right_rear",
-          "allowedTypes": [
-            "centaur_leg_rear",
-            "horse_leg",
-            "leg"
-          ],
+          "allowedTypes": ["centaur_leg_rear", "horse_leg", "leg"],
           "nameTpl": "{{orientation}} leg"
         },
         {
           "id": "arm_left",
           "orientation": "left",
-          "allowedTypes": [
-            "arm",
-            "humanoid_arm"
-          ],
+          "allowedTypes": ["arm", "humanoid_arm"],
           "nameTpl": "{{orientation}} arm"
         },
         {
           "id": "arm_right",
           "orientation": "right",
-          "allowedTypes": [
-            "arm",
-            "humanoid_arm"
-          ],
+          "allowedTypes": ["arm", "humanoid_arm"],
           "nameTpl": "{{orientation}} arm"
         },
         {
@@ -95,18 +73,12 @@
         },
         {
           "id": "tail",
-          "allowedTypes": [
-            "horse_tail",
-            "equine_tail",
-            "tail"
-          ],
+          "allowedTypes": ["horse_tail", "equine_tail", "tail"],
           "nameTpl": "tail"
         },
         {
           "id": "back_upper",
-          "allowedTypes": [
-            "equipment_mount"
-          ],
+          "allowedTypes": ["equipment_mount"],
           "nameTpl": "quiver mount"
         }
       ]

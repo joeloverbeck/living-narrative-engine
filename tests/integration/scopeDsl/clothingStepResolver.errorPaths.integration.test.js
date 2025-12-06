@@ -146,7 +146,11 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('resolves clothing access objects with real entity data', () => {
-    const node = { type: 'Step', field: 'topmost_clothing', parent: { type: 'Source' } };
+    const node = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: { type: 'Source' },
+    };
     const ctx = createContext([richActorId, 42, null]);
 
     const result = resolver.resolve(node, ctx);
@@ -164,7 +168,11 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('returns fallback access object when equipment is missing', () => {
-    const node = { type: 'Step', field: 'outer_clothing', parent: { type: 'Source' } };
+    const node = {
+      type: 'Step',
+      field: 'outer_clothing',
+      parent: { type: 'Source' },
+    };
     const ctx = createContext([emptyActorId]);
 
     const result = resolver.resolve(node, ctx);
@@ -183,7 +191,11 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('routes invalid entity IDs and clothing fields through ScopeDslErrorHandler', () => {
-    const validNode = { type: 'Step', field: 'topmost_clothing', parent: { type: 'Source' } };
+    const validNode = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: { type: 'Source' },
+    };
     const invalidFieldNode = {
       type: 'Step',
       field: 'non_existent_clothing_layer',
@@ -194,9 +206,9 @@ describe('clothingStepResolver integration error coverage', () => {
       `[${ErrorCodes.INVALID_ENTITY_ID}]`
     );
 
-    expect(() => resolver.resolve(invalidFieldNode, createContext([richActorId]))).toThrow(
-      `[${ErrorCodes.INVALID_ENTITY_ID}]`
-    );
+    expect(() =>
+      resolver.resolve(invalidFieldNode, createContext([richActorId]))
+    ).toThrow(`[${ErrorCodes.INVALID_ENTITY_ID}]`);
 
     const bufferedCodes = errorHandler
       .getErrorBuffer()
@@ -208,11 +220,15 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('handles component gateway failures and parent resolution errors', () => {
-    const node = { type: 'Step', field: 'topmost_clothing', parent: { type: 'Source' } };
+    const node = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: { type: 'Source' },
+    };
 
-    expect(() => resolver.resolve(node, createContext([failingActorId]))).toThrow(
-      `[${ErrorCodes.COMPONENT_RESOLUTION_FAILED}]`
-    );
+    expect(() =>
+      resolver.resolve(node, createContext([failingActorId]))
+    ).toThrow(`[${ErrorCodes.COMPONENT_RESOLUTION_FAILED}]`);
 
     const failingContext = {
       dispatcher: {
@@ -228,7 +244,11 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('detects invalid node structures and missing dispatcher context', () => {
-    const validNode = { type: 'Step', field: 'topmost_clothing', parent: { type: 'Source' } };
+    const validNode = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: { type: 'Source' },
+    };
 
     expect(() => resolver.resolve(null, createContext([richActorId]))).toThrow(
       `[${ErrorCodes.INVALID_NODE_STRUCTURE}]`
@@ -249,11 +269,15 @@ describe('clothingStepResolver integration error coverage', () => {
   });
 
   it('silently returns when no error handler is provided', () => {
-    const baseNode = { type: 'Step', field: 'topmost_clothing', parent: { type: 'Source' } };
+    const baseNode = {
+      type: 'Step',
+      field: 'topmost_clothing',
+      parent: { type: 'Source' },
+    };
 
-    expect(resolverWithoutHandler.resolve(baseNode, createContext(['']))).toEqual(
-      new Set()
-    );
+    expect(
+      resolverWithoutHandler.resolve(baseNode, createContext(['']))
+    ).toEqual(new Set());
 
     const invalidFieldNode = {
       type: 'Step',
@@ -261,7 +285,10 @@ describe('clothingStepResolver integration error coverage', () => {
       parent: { type: 'Source' },
     };
     expect(
-      resolverWithoutHandler.resolve(invalidFieldNode, createContext([richActorId]))
+      resolverWithoutHandler.resolve(
+        invalidFieldNode,
+        createContext([richActorId])
+      )
     ).toEqual(new Set());
 
     expect(
@@ -272,9 +299,9 @@ describe('clothingStepResolver integration error coverage', () => {
       resolverWithoutHandler.resolve(null, createContext([richActorId]))
     ).toEqual(new Set());
 
-    expect(resolverWithoutHandler.resolve(baseNode, { dispatcher: null })).toEqual(
-      new Set()
-    );
+    expect(
+      resolverWithoutHandler.resolve(baseNode, { dispatcher: null })
+    ).toEqual(new Set());
 
     const failingContext = {
       dispatcher: {

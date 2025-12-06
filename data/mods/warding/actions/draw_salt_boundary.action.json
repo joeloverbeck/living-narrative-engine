@@ -6,9 +6,7 @@
   "template": "draw salt boundary around {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "skills:warding_skill"
-    ]
+    "actor": ["skills:warding_skill"]
   },
   "forbidden_components": {
     "actor": [
@@ -20,9 +18,7 @@
       "positioning:restraining",
       "positioning:fallen"
     ],
-    "primary": [
-      "warding:warded_by_salt"
-    ]
+    "primary": ["warding:warded_by_salt"]
   },
   "targets": {
     "primary": {
@@ -53,7 +49,11 @@
       {
         "condition": {
           "logic": {
-            "!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",
@@ -65,7 +65,11 @@
       {
         "condition": {
           "logic": {
-            "!!": [{ "var": "entity.primary.components.positioning:being_restrained" }]
+            "!!": [
+              {
+                "var": "entity.primary.components.positioning:being_restrained"
+              }
+            ]
           }
         },
         "type": "flat",

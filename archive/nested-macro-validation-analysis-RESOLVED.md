@@ -15,17 +15,20 @@ Four macro files in the weapons mod were failing validation with 930+ cascading 
 ## Affected Files
 
 ### Macro Files (Symptoms)
+
 - `data/mods/weapons/macros/handleMeleeCritical.macro.json`
 - `data/mods/weapons/macros/handleMeleeHit.macro.json`
 - `data/mods/weapons/macros/handleMeleeFumble.macro.json`
 - `data/mods/weapons/macros/handleMeleeMiss.macro.json`
 
 ### Schema Files (Root Cause)
+
 - `data/schemas/operations/forEach.schema.json` (PRIMARY - contained circular ref)
 - `data/schemas/operation.schema.json` (referenced by macro.schema.json)
 - `data/schemas/nested-operation.schema.json` (solution pattern - already existed)
 
 ### Validation Code (Enhanced)
+
 - `src/utils/preValidationUtils.js` (added macro pre-validation)
 - `src/utils/schemaValidationUtils.js` (added cascade detection)
 
@@ -52,11 +55,13 @@ macro.schema.json
 ### Evidence Trail
 
 **forEach.schema.json (BEFORE - Line 35)**:
+
 ```json
 "$ref": "../operation.schema.json#/$defs/Action"  // WRONG - creates circular ref
 ```
 
 **if.schema.json (CORRECT PATTERN - Lines 32, 39)**:
+
 ```json
 "$ref": "../nested-operation.schema.json#/$defs/NestedAction"  // CORRECT
 ```
@@ -116,6 +121,7 @@ export function performPreValidation(data, schemaId, filePath = 'unknown') {
 ```
 
 **Benefits**:
+
 - Catches structural issues BEFORE AJV validation
 - Provides clear, actionable error messages
 - Prevents 930+ error cascades from even starting
@@ -134,15 +140,21 @@ if (errors.length > 100) {
   if (anyOfErrors.length > 50) {
     logger.warn(
       `Possible circular schema reference detected - ${errors.length} errors ` +
-      `with ${anyOfErrors.length} anyOf failures. ` +
-      `Check nested actions/operations for circular $refs in schema '${schemaId}'.`,
-      { schemaId, filePath, totalErrors: errors.length, anyOfErrors: anyOfErrors.length }
+        `with ${anyOfErrors.length} anyOf failures. ` +
+        `Check nested actions/operations for circular $refs in schema '${schemaId}'.`,
+      {
+        schemaId,
+        filePath,
+        totalErrors: errors.length,
+        anyOfErrors: anyOfErrors.length,
+      }
     );
   }
 }
 ```
 
 **Benefits**:
+
 - Warns developers when they might have a circular reference
 - Provides specific guidance on where to look
 - Helps prevent future issues from being as confusing
@@ -164,6 +176,7 @@ All tests pass after implementation:
 ### Key Test Coverage
 
 The `macroSchemaNestedMacroRefs.test.js` tests specifically verify:
+
 - Macros with only operations (existing behavior) ✓
 - Macros with nested macro references (THE FIX) ✓
 - Mixed operations and macro references ✓
@@ -171,6 +184,7 @@ The `macroSchemaNestedMacroRefs.test.js` tests specifically verify:
 - Error count limited (no cascades) ✓
 
 The `macroSchemaNestedMacroRefsProduction.test.js` tests verify:
+
 - Core macros without nested refs work ✓
 - **weapons:handleMeleeCritical** validates ✓
 - **weapons:handleMeleeFumble** validates ✓
@@ -180,24 +194,28 @@ The `macroSchemaNestedMacroRefsProduction.test.js` tests verify:
 ## Future Recommendations
 
 ### 1. Schema Pattern Documentation
+
 Document the `nested-operation.schema.json` pattern in `docs/modding/` to prevent future developers from making the same mistake.
 
 ### 2. Schema Reference Linting
+
 Consider adding a schema linting step that detects potential circular references before runtime.
 
 ### 3. Pre-Validation Extension
+
 The `validateAllOperations()` function could be extended to validate more operation types, catching issues even earlier.
 
 ### 4. Error Message Improvement
+
 The AJV error formatter could be enhanced to detect the "cascade signature" (100+ errors, many anyOf) and suggest checking for circular references in the error message itself.
 
 ## Files Modified
 
-| File | Lines Changed | Purpose |
-|------|--------------|---------|
-| `data/schemas/operations/forEach.schema.json` | 1 | Fixed circular $ref |
-| `src/utils/preValidationUtils.js` | ~70 | Added validateMacroStructure() |
-| `src/utils/schemaValidationUtils.js` | ~15 | Added cascade detection |
+| File                                          | Lines Changed | Purpose                        |
+| --------------------------------------------- | ------------- | ------------------------------ |
+| `data/schemas/operations/forEach.schema.json` | 1             | Fixed circular $ref            |
+| `src/utils/preValidationUtils.js`             | ~70           | Added validateMacroStructure() |
+| `src/utils/schemaValidationUtils.js`          | ~15           | Added cascade detection        |
 
 ## Validation Commands
 
@@ -219,6 +237,7 @@ npx eslint src/utils/preValidationUtils.js src/utils/schemaValidationUtils.js
 The nested macro validation failure was caused by a simple but impactful circular schema reference in `forEach.schema.json`. The fix followed an established pattern already used in `if.schema.json`. Additional robustness improvements ensure similar issues will be caught early with clear error messages in the future.
 
 The three-tier approach provides:
+
 1. **Immediate fix** - Macros now validate correctly
 2. **Fail-fast validation** - Clear errors before AJV cascade
 3. **Better debugging** - Cascade detection warns about potential circular refs

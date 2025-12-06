@@ -5,7 +5,14 @@
  * hunger state improves as energy increases.
  */
 
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 import { createRuleTestEnvironment } from '../../../common/engine/systemLogicTestEnv.js';
 import { TURN_STARTED_ID } from '../../../../src/constants/eventIds.js';
 
@@ -79,7 +86,7 @@ describe('complete hunger cycle integration', () => {
       efficiency = 1.0,
       hungerState = 'neutral',
       energyPercentage = 50,
-      turnsInState = 0
+      turnsInState = 0,
     } = config;
 
     return {
@@ -93,22 +100,22 @@ describe('complete hunger cycle integration', () => {
           max_energy: maxEnergy,
           base_burn_rate: baseBurnRate,
           buffer_storage: bufferStorage,
-          buffer_capacity: bufferCapacity
+          buffer_capacity: bufferCapacity,
         },
         'metabolism:fuel_converter': {
           capacity: bufferCapacity,
           conversion_rate: conversionRate,
           efficiency: efficiency,
           accepted_fuel_tags: ['food', 'drink'],
-          metabolic_efficiency_multiplier: 1.0
+          metabolic_efficiency_multiplier: 1.0,
         },
         'metabolism:hunger_state': {
           state: hungerState,
           energyPercentage,
           turnsInState,
-          starvationDamage: 0
-        }
-      }
+          starvationDamage: 0,
+        },
+      },
     };
   };
 
@@ -120,7 +127,7 @@ describe('complete hunger cycle integration', () => {
   const dispatchTurnStarted = async (entityId) => {
     await testEnv.eventBus.dispatch(TURN_STARTED_ID, {
       entityId,
-      entityType: 'ai'
+      entityType: 'ai',
     });
     // Wait for async rule processing
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -139,12 +146,12 @@ describe('complete hunger cycle integration', () => {
 
     const newBufferStorage = [
       ...(metabolicStore.buffer_storage || []),
-      { bulk: foodBulk, energy_content: energyContent }
+      { bulk: foodBulk, energy_content: energyContent },
     ];
 
     testEnv.entityManager.addComponent(entityId, 'metabolism:metabolic_store', {
       ...metabolicStore,
-      buffer_storage: newBufferStorage
+      buffer_storage: newBufferStorage,
     });
   };
 
@@ -155,7 +162,7 @@ describe('complete hunger cycle integration', () => {
       rules: [
         turn1EnergyBurnRule,
         turn2DigestionRule,
-        turn3UpdateHungerStateRule
+        turn3UpdateHungerStateRule,
       ],
     });
   });
@@ -170,7 +177,7 @@ describe('complete hunger cycle integration', () => {
     it('completes full hunger recovery cycle over multiple turns', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       // Start hungry with low energy
       const actor = createMetabolismActor('test:actor1', 'HungryActor', {
@@ -178,7 +185,7 @@ describe('complete hunger cycle integration', () => {
         maxEnergy: 100,
         baseBurnRate: 2, // Low burn rate so digestion outpaces it
         hungerState: 'hungry',
-        energyPercentage: 20
+        energyPercentage: 20,
       });
 
       testEnv.reset([room, actor]);
@@ -198,7 +205,8 @@ describe('complete hunger cycle integration', () => {
       // Check final state
       entity = testEnv.entityManager.getEntityInstance('test:actor1');
       const finalState = entity.components['metabolism:hunger_state'].state;
-      const finalEnergy = entity.components['metabolism:metabolic_store'].current_energy;
+      const finalEnergy =
+        entity.components['metabolism:metabolic_store'].current_energy;
 
       // After eating 80 energy worth of food and burning 2 * 5 = 10 energy
       // Net energy gain should be positive, resulting in improved state
@@ -211,7 +219,7 @@ describe('complete hunger cycle integration', () => {
     it('transitions through expected states during recovery', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       // Start starving
       const actor = createMetabolismActor('test:actor1', 'StarvingActor', {
@@ -220,7 +228,7 @@ describe('complete hunger cycle integration', () => {
         baseBurnRate: 0, // No burn to simplify testing
         conversionRate: 20, // Fast digestion
         hungerState: 'starving',
-        energyPercentage: 5
+        energyPercentage: 5,
       });
 
       testEnv.reset([room, actor]);
@@ -249,7 +257,9 @@ describe('complete hunger cycle integration', () => {
 
       // Final state should be improved
       const finalState = stateHistory[stateHistory.length - 1];
-      expect(['hungry', 'neutral', 'satiated', 'gluttonous']).toContain(finalState);
+      expect(['hungry', 'neutral', 'satiated', 'gluttonous']).toContain(
+        finalState
+      );
     });
   });
 
@@ -257,7 +267,7 @@ describe('complete hunger cycle integration', () => {
     it('steadily increases energy as buffer is digested', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'DigestingActor', {
         currentEnergy: 30,
@@ -265,7 +275,7 @@ describe('complete hunger cycle integration', () => {
         baseBurnRate: 0, // No burn to isolate digestion effect
         bufferStorage: [{ bulk: 10, energy_content: 50 }], // Pre-loaded buffer
         conversionRate: 2, // Digest 2 bulk per turn
-        efficiency: 1.0
+        efficiency: 1.0,
       });
 
       testEnv.reset([room, actor]);
@@ -275,7 +285,9 @@ describe('complete hunger cycle integration', () => {
       // Record energy over multiple turns
       for (let i = 0; i < 6; i++) {
         const entity = testEnv.entityManager.getEntityInstance('test:actor1');
-        energyHistory.push(entity.components['metabolism:metabolic_store'].current_energy);
+        energyHistory.push(
+          entity.components['metabolism:metabolic_store'].current_energy
+        );
         await dispatchTurnStarted('test:actor1');
       }
 
@@ -285,13 +297,15 @@ describe('complete hunger cycle integration', () => {
       }
 
       // Final energy should be higher than initial
-      expect(energyHistory[energyHistory.length - 1]).toBeGreaterThan(energyHistory[0]);
+      expect(energyHistory[energyHistory.length - 1]).toBeGreaterThan(
+        energyHistory[0]
+      );
     });
 
     it('caps energy at max_energy during digestion', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'OverfedActor', {
         currentEnergy: 90,
@@ -299,7 +313,7 @@ describe('complete hunger cycle integration', () => {
         baseBurnRate: 0,
         bufferStorage: [{ bulk: 5, energy_content: 50 }], // Lots of energy to digest
         conversionRate: 10, // Fast digestion
-        efficiency: 1.0
+        efficiency: 1.0,
       });
 
       testEnv.reset([room, actor]);
@@ -309,7 +323,8 @@ describe('complete hunger cycle integration', () => {
       await dispatchTurnStarted('test:actor1');
 
       const entity = testEnv.entityManager.getEntityInstance('test:actor1');
-      const finalEnergy = entity.components['metabolism:metabolic_store'].current_energy;
+      const finalEnergy =
+        entity.components['metabolism:metabolic_store'].current_energy;
 
       // Energy should be capped at max
       expect(finalEnergy).toBeLessThanOrEqual(100);
@@ -320,7 +335,7 @@ describe('complete hunger cycle integration', () => {
     it('improves hunger state as energy percentage rises', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       // Start at hungry threshold (25%)
       const actor = createMetabolismActor('test:actor1', 'RecoveringActor', {
@@ -329,7 +344,7 @@ describe('complete hunger cycle integration', () => {
         baseBurnRate: 0,
         conversionRate: 20,
         hungerState: 'hungry',
-        energyPercentage: 25
+        energyPercentage: 25,
       });
 
       testEnv.reset([room, actor]);
@@ -347,13 +362,15 @@ describe('complete hunger cycle integration', () => {
       expect(hungerState.energyPercentage).toBeGreaterThan(25);
 
       // State should have improved (at least to neutral)
-      expect(['neutral', 'satiated', 'gluttonous']).toContain(hungerState.state);
+      expect(['neutral', 'satiated', 'gluttonous']).toContain(
+        hungerState.state
+      );
     });
 
     it('reaches satiated state when energy exceeds 75%', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'WellFedActor', {
         currentEnergy: 70,
@@ -361,7 +378,7 @@ describe('complete hunger cycle integration', () => {
         baseBurnRate: 0,
         conversionRate: 20,
         hungerState: 'neutral',
-        energyPercentage: 70
+        energyPercentage: 70,
       });
 
       testEnv.reset([room, actor]);
@@ -385,13 +402,13 @@ describe('complete hunger cycle integration', () => {
     it('handles empty buffer digestion gracefully', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'EmptyBufferActor', {
         currentEnergy: 50,
         maxEnergy: 100,
         baseBurnRate: 5,
-        bufferStorage: [] // No food to digest
+        bufferStorage: [], // No food to digest
       });
 
       testEnv.reset([room, actor]);
@@ -401,14 +418,15 @@ describe('complete hunger cycle integration', () => {
 
       // Energy should only decrease due to burn, not increase from digestion
       const entity = testEnv.entityManager.getEntityInstance('test:actor1');
-      const finalEnergy = entity.components['metabolism:metabolic_store'].current_energy;
+      const finalEnergy =
+        entity.components['metabolism:metabolic_store'].current_energy;
       expect(finalEnergy).toBe(45); // 50 - 5 burn rate
     });
 
     it('handles multiple food items in buffer', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
       const actor = createMetabolismActor('test:actor1', 'FullBufferActor', {
         currentEnergy: 30,
@@ -417,10 +435,10 @@ describe('complete hunger cycle integration', () => {
         bufferStorage: [
           { bulk: 2, energy_content: 20 },
           { bulk: 3, energy_content: 30 },
-          { bulk: 1, energy_content: 10 }
+          { bulk: 1, energy_content: 10 },
         ],
         conversionRate: 3, // Digest 3 bulk per turn
-        efficiency: 1.0
+        efficiency: 1.0,
       });
 
       testEnv.reset([room, actor]);
@@ -436,7 +454,8 @@ describe('complete hunger cycle integration', () => {
 
       // Buffer should have reduced
       const totalBulk = metabolicStore.buffer_storage.reduce(
-        (sum, item) => sum + item.bulk, 0
+        (sum, item) => sum + item.bulk,
+        0
       );
       expect(totalBulk).toBeLessThan(6); // Started with 2+3+1=6 bulk
     });
@@ -444,16 +463,20 @@ describe('complete hunger cycle integration', () => {
     it('handles zero efficiency digestion', async () => {
       const room = {
         id: 'test:room1',
-        components: { 'core:location': {} }
+        components: { 'core:location': {} },
       };
-      const actor = createMetabolismActor('test:actor1', 'IneffectiveDigester', {
-        currentEnergy: 30,
-        maxEnergy: 100,
-        baseBurnRate: 0,
-        bufferStorage: [{ bulk: 5, energy_content: 50 }],
-        conversionRate: 5,
-        efficiency: 0 // No energy gained from digestion
-      });
+      const actor = createMetabolismActor(
+        'test:actor1',
+        'IneffectiveDigester',
+        {
+          currentEnergy: 30,
+          maxEnergy: 100,
+          baseBurnRate: 0,
+          bufferStorage: [{ bulk: 5, energy_content: 50 }],
+          conversionRate: 5,
+          efficiency: 0, // No energy gained from digestion
+        }
+      );
 
       testEnv.reset([room, actor]);
 
@@ -468,7 +491,8 @@ describe('complete hunger cycle integration', () => {
 
       // Buffer should still have been consumed
       const totalBulk = metabolicStore.buffer_storage.reduce(
-        (sum, item) => sum + item.bulk, 0
+        (sum, item) => sum + item.bulk,
+        0
       );
       expect(totalBulk).toBeLessThan(5);
     });

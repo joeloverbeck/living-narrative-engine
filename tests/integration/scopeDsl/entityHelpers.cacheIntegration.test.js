@@ -24,9 +24,7 @@ import {
 } from '../../../src/constants/eventIds.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import { LogLevel } from '../../../src/logging/consoleLogger.js';
-import {
-  createMinimalTestContainer,
-} from '../../common/scopeDsl/minimalTestContainer.js';
+import { createMinimalTestContainer } from '../../common/scopeDsl/minimalTestContainer.js';
 
 /**
  * @file Integration tests for entityHelpers.js exercising cache invalidation
@@ -90,9 +88,21 @@ describe('entityHelpers integration coverage', () => {
       },
     });
 
-    services.dataRegistry.store('entityDefinitions', 'test:actor', actorDefinition);
-    services.dataRegistry.store('entityDefinitions', 'test:item', itemDefinition);
-    services.dataRegistry.store('entityDefinitions', 'test:location', locationDefinition);
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:actor',
+      actorDefinition
+    );
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:item',
+      itemDefinition
+    );
+    services.dataRegistry.store(
+      'entityDefinitions',
+      'test:location',
+      locationDefinition
+    );
   });
 
   afterAll(async () => {
@@ -253,9 +263,11 @@ describe('entityHelpers integration coverage', () => {
       expect(Array.isArray(handlers)).toBe(true);
       expect(handlers.length).toBeGreaterThan(0);
       expect(typeof handlers[0]).toBe('function');
-      expect([COMPONENTS_BATCH_ADDED_ID, COMPONENT_ADDED_ID, COMPONENT_REMOVED_ID]).toContain(
-        eventId
-      );
+      expect([
+        COMPONENTS_BATCH_ADDED_ID,
+        COMPONENT_ADDED_ID,
+        COMPONENT_REMOVED_ID,
+      ]).toContain(eventId);
     }
   });
 
@@ -374,7 +386,11 @@ describe('entityHelpers integration coverage', () => {
     const rebuilt = getOrBuildComponents(item.id, null, gateway);
     expect(rebuilt['inventory:stack'].quantity).toBe(4);
 
-    const minimalResult = getOrBuildComponents('unknown', { id: 'ghost' }, gateway);
+    const minimalResult = getOrBuildComponents(
+      'unknown',
+      { id: 'ghost' },
+      gateway
+    );
     expect(minimalResult).toEqual({});
   });
 

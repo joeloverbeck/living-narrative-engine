@@ -7,6 +7,7 @@ This specification documents the implementation of the `weapons:unwield_item` ac
 ## Problem Statement
 
 Currently, the `wield_threateningly` action:
+
 1. Adds items to the `positioning:wielding` component
 2. **Does NOT lock grabbing appendages** via `LOCK_GRABBING`
 
@@ -24,10 +25,7 @@ This creates an inconsistency where wielded items don't properly occupy the acto
   "description": "Stop wielding an item, freeing up your hands",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory",
-      "positioning:wielding"
-    ]
+    "actor": ["items:inventory", "positioning:wielding"]
   },
   "targets": {
     "primary": {
@@ -47,6 +45,7 @@ This creates an inconsistency where wielded items don't properly occupy the acto
 ```
 
 **Key differences from `wield_threateningly`:**
+
 - `required_components.actor` includes `positioning:wielding` (must be currently wielding)
 - No `prerequisites` (no need to check for free appendage - we're releasing one)
 - Uses new scope `weapons:wielded_items` (items currently being wielded)
@@ -219,6 +218,7 @@ This scope returns all entity IDs in the actor's `wielded_item_ids` array, makin
 ```
 
 **Key operations:**
+
 1. `QUERY_COMPONENT` for `anatomy:requires_grabbing` with default `{ "handsRequired": 1 }`
 2. `UNLOCK_GRABBING` with `item_id` to release only appendages holding this specific item
 3. `MODIFY_ARRAY_FIELD` with `mode: "remove_by_value"` to remove from `wielded_item_ids`
@@ -311,11 +311,13 @@ These should be inserted **before** the `QUERY_COMPONENT` for `existingWielding`
 ### Operation Schemas
 
 **LOCK_GRABBING:** `data/schemas/operations/lockGrabbing.schema.json`
+
 - `actor_id`: string (required)
 - `count`: integer >= 1 (required)
 - `item_id`: string (optional) - associates appendages with held item
 
 **UNLOCK_GRABBING:** `data/schemas/operations/unlockGrabbing.schema.json`
+
 - `actor_id`: string (required)
 - `count`: integer >= 1 (required)
 - `item_id`: string (optional) - only unlock appendages holding this specific item

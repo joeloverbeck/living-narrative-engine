@@ -10,12 +10,12 @@ Create a new JSON Logic operator `has_damage_capability` that checks if an entit
 
 ## Files to Touch
 
-| File | Action | Description |
-|------|--------|-------------|
-| `src/logic/operators/hasDamageCapabilityOperator.js` | CREATE | New operator class |
-| `src/logic/jsonLogicCustomOperators.js` | UPDATE | Register operator |
-| `src/logic/jsonLogicEvaluationService.js` | UPDATE | Add to operator whitelist |
-| `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | Unit tests |
+| File                                                             | Action | Description               |
+| ---------------------------------------------------------------- | ------ | ------------------------- |
+| `src/logic/operators/hasDamageCapabilityOperator.js`             | CREATE | New operator class        |
+| `src/logic/jsonLogicCustomOperators.js`                          | UPDATE | Register operator         |
+| `src/logic/jsonLogicEvaluationService.js`                        | UPDATE | Add to operator whitelist |
+| `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | Unit tests                |
 
 ## Out of Scope
 
@@ -60,7 +60,7 @@ class HasDamageCapabilityOperator extends BaseOperator {
 
     if (!capabilities?.entries) return false;
 
-    return capabilities.entries.some(entry => entry.name === damageTypeName);
+    return capabilities.entries.some((entry) => entry.name === damageTypeName);
   }
 }
 
@@ -70,6 +70,7 @@ export default HasDamageCapabilityOperator;
 ### Registration
 
 Add to `src/logic/jsonLogicCustomOperators.js`:
+
 1. Import the operator class
 2. Create instance with dependencies
 3. Register in the `registerOperators` method
@@ -88,6 +89,7 @@ Add to `src/logic/jsonLogicCustomOperators.js`:
 1. `npm run test:unit -- tests/unit/logic/operators/hasDamageCapabilityOperator.test.js`
 
 Test cases:
+
 - Entity has matching damage type → returns `true`
 - Entity has different damage type only → returns `false`
 - Entity has no `damage_capabilities` component → returns `false`
@@ -137,12 +139,12 @@ Test cases:
 
 ### Files Modified/Created
 
-| File | Action | Lines |
-|------|--------|-------|
-| `src/logic/operators/hasDamageCapabilityOperator.js` | CREATE | 239 |
-| `src/logic/jsonLogicCustomOperators.js` | UPDATE | +12 |
-| `src/logic/jsonLogicEvaluationService.js` | UPDATE | +2 |
-| `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | 307 |
+| File                                                             | Action | Lines |
+| ---------------------------------------------------------------- | ------ | ----- |
+| `src/logic/operators/hasDamageCapabilityOperator.js`             | CREATE | 239   |
+| `src/logic/jsonLogicCustomOperators.js`                          | UPDATE | +12   |
+| `src/logic/jsonLogicEvaluationService.js`                        | UPDATE | +2    |
+| `tests/unit/logic/operators/hasDamageCapabilityOperator.test.js` | CREATE | 307   |
 
 ### Validation
 

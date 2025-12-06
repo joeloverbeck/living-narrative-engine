@@ -17,7 +17,8 @@ import handleMeleeCritical from '../../../../data/mods/weapons/macros/handleMele
  */
 const findOutcomeBranch = (outcome) =>
   swingAtTargetRule.actions.find(
-    (op) => op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
+    (op) =>
+      op.type === 'IF' && op.parameters?.condition?.['==']?.[1] === outcome
   );
 
 /**
@@ -139,7 +140,9 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
       );
 
       // FOR_EACH still iterates all entries, exclusion happens at APPLY_DAMAGE level
-      expect(forEachOp.parameters.collection).toBe('context.weaponDamage.entries');
+      expect(forEachOp.parameters.collection).toBe(
+        'context.weaponDamage.entries'
+      );
       expect(forEachOp.parameters.item_variable).toBe('dmgEntry');
     });
 
@@ -147,7 +150,9 @@ describe('APPLY_DAMAGE exclude_damage_types integration', () => {
       const applyDamage = getApplyDamageFromMacro(handleMeleeHit);
 
       expect(applyDamage.parameters.entity_ref).toBe('secondary');
-      expect(applyDamage.parameters.damage_entry).toEqual({ var: 'context.dmgEntry' });
+      expect(applyDamage.parameters.damage_entry).toEqual({
+        var: 'context.dmgEntry',
+      });
     });
   });
 

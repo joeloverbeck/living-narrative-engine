@@ -12,31 +12,33 @@ Dependencies: anatomy mod (v1.0.0+)
 
 ### Phase 1: Foundation (Weeks 1-2)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-000 | Overview & Planning | 1 | High | ✅ Created |
-| HUNMETSYS-001 | Component Schemas - Fuel Converter & Source | 2 new | High | ✅ Created |
-| HUNMETSYS-002 | Component Schemas - Metabolic Store & Hunger State | 2 new | High | ✅ Created |
-| HUNMETSYS-003 | Operation Handler - BURN_ENERGY | 4 new, 4 mod | High | ✅ Created |
-| HUNMETSYS-004 | Operation Handler - DIGEST_FOOD | 3 new, 4 mod | High | ✅ Created |
-| HUNMETSYS-005 | Operation Handler - CONSUME_ITEM | 3 new, 4 mod | High | ✅ Created |
+| Ticket        | Title                                              | Files        | Priority | Status     |
+| ------------- | -------------------------------------------------- | ------------ | -------- | ---------- |
+| HUNMETSYS-000 | Overview & Planning                                | 1            | High     | ✅ Created |
+| HUNMETSYS-001 | Component Schemas - Fuel Converter & Source        | 2 new        | High     | ✅ Created |
+| HUNMETSYS-002 | Component Schemas - Metabolic Store & Hunger State | 2 new        | High     | ✅ Created |
+| HUNMETSYS-003 | Operation Handler - BURN_ENERGY                    | 4 new, 4 mod | High     | ✅ Created |
+| HUNMETSYS-004 | Operation Handler - DIGEST_FOOD                    | 3 new, 4 mod | High     | ✅ Created |
+| HUNMETSYS-005 | Operation Handler - CONSUME_ITEM                   | 3 new, 4 mod | High     | ✅ Created |
 
 **Phase 1 Deliverables:**
+
 - 4 component schemas
 - 3 operation handlers with full test coverage
 - Complete DI integration
 
 ### Phase 2: Mod Structure (Weeks 2-3)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-006 | Mod Structure Setup | 2 new, 1 mod, 7 dirs | High | ✅ Created |
-| HUNMETSYS-007 | Turn-Based Processing Rules | 3 new, 1 mod | High | ✅ Created |
-| HUNMETSYS-008 | Action Definitions - Eat, Drink, Rest | 3 new, 1 mod | High | 🔲 To Create |
-| HUNMETSYS-009 | Action Rule Handlers | 3 new, 1 mod | High | 🔲 To Create |
-| HUNMETSYS-010 | Sample Food Entities | 3 new, 1 mod | Medium | 🔲 To Create |
+| Ticket        | Title                                 | Files                | Priority | Status       |
+| ------------- | ------------------------------------- | -------------------- | -------- | ------------ |
+| HUNMETSYS-006 | Mod Structure Setup                   | 2 new, 1 mod, 7 dirs | High     | ✅ Created   |
+| HUNMETSYS-007 | Turn-Based Processing Rules           | 3 new, 1 mod         | High     | ✅ Created   |
+| HUNMETSYS-008 | Action Definitions - Eat, Drink, Rest | 3 new, 1 mod         | High     | 🔲 To Create |
+| HUNMETSYS-009 | Action Rule Handlers                  | 3 new, 1 mod         | High     | 🔲 To Create |
+| HUNMETSYS-010 | Sample Food Entities                  | 3 new, 1 mod         | Medium   | 🔲 To Create |
 
 **Phase 2 Deliverables:**
+
 - Complete mod structure with manifest
 - Turn-based energy burn and digestion
 - 3 actions (eat, drink, rest) with handlers
@@ -44,13 +46,14 @@ Dependencies: anatomy mod (v1.0.0+)
 
 ### Phase 3: GOAP Integration (Weeks 3-4)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-011 | JSON Logic Operators - Hunger Detection | 2 new, 1 mod | High | 🔲 To Create |
-| HUNMETSYS-012 | JSON Logic Operators - Energy Prediction | 2 new, 1 mod | High | 🔲 To Create |
-| HUNMETSYS-013 | GOAP Goals & Conditions | 5 new, 1 mod | High | 🔲 To Create |
+| Ticket        | Title                                    | Files        | Priority | Status       |
+| ------------- | ---------------------------------------- | ------------ | -------- | ------------ |
+| HUNMETSYS-011 | JSON Logic Operators - Hunger Detection  | 2 new, 1 mod | High     | 🔲 To Create |
+| HUNMETSYS-012 | JSON Logic Operators - Energy Prediction | 2 new, 1 mod | High     | 🔲 To Create |
+| HUNMETSYS-013 | GOAP Goals & Conditions                  | 5 new, 1 mod | High     | 🔲 To Create |
 
 **Phase 3 Deliverables:**
+
 - 3 custom JSON Logic operators (is_hungry, predicted_energy, can_consume)
 - GOAP hunger satisfaction goal
 - 4 conditions for action prerequisites
@@ -58,12 +61,13 @@ Dependencies: anatomy mod (v1.0.0+)
 
 ### Phase 4: Visual Integration (Weeks 4-5)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-014 | Operation Handler - UPDATE_HUNGER_STATE | 3 new, 4 mod | High | 🔲 To Create |
-| HUNMETSYS-015 | Operation Handler - UPDATE_BODY_COMPOSITION | 3 new, 4 mod | Medium | 🔲 To Create |
+| Ticket        | Title                                       | Files        | Priority | Status       |
+| ------------- | ------------------------------------------- | ------------ | -------- | ------------ |
+| HUNMETSYS-014 | Operation Handler - UPDATE_HUNGER_STATE     | 3 new, 4 mod | High     | 🔲 To Create |
+| HUNMETSYS-015 | Operation Handler - UPDATE_BODY_COMPOSITION | 3 new, 4 mod | Medium   | 🔲 To Create |
 
 **Phase 4 Deliverables:**
+
 - UPDATE_HUNGER_STATE operation with threshold calculation
 - UPDATE_BODY_COMPOSITION operation with anatomy integration
 - Event dispatching for state changes
@@ -71,12 +75,13 @@ Dependencies: anatomy mod (v1.0.0+)
 
 ### Phase 5: Action Energy Costs (Weeks 5-6)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-016 | Energy Costs for Movement & Exercise | 6+ mod | Medium | 🔲 To Create |
-| HUNMETSYS-017 | Integration Tests & Performance Validation | 5+ new | High | 🔲 To Create |
+| Ticket        | Title                                      | Files  | Priority | Status       |
+| ------------- | ------------------------------------------ | ------ | -------- | ------------ |
+| HUNMETSYS-016 | Energy Costs for Movement & Exercise       | 6+ mod | Medium   | 🔲 To Create |
+| HUNMETSYS-017 | Integration Tests & Performance Validation | 5+ new | High     | 🔲 To Create |
 
 **Phase 5 Deliverables:**
+
 - Energy costs integrated into movement actions (1.2x)
 - Energy costs integrated into exercise actions (3.0x)
 - Energy costs integrated into combat actions (2.5x)
@@ -85,13 +90,14 @@ Dependencies: anatomy mod (v1.0.0+)
 
 ### Phase 6: Polish & Documentation (Week 6)
 
-| Ticket | Title | Files | Priority | Status |
-|--------|-------|-------|----------|--------|
-| HUNMETSYS-018 | Edge Cases & Error Handling | 0-5 mod | Medium | 🔲 To Create |
-| HUNMETSYS-019 | Complete Test Coverage | 10+ new | High | 🔲 To Create |
-| HUNMETSYS-020 | Documentation & Examples | 3+ new | Medium | 🔲 To Create |
+| Ticket        | Title                       | Files   | Priority | Status       |
+| ------------- | --------------------------- | ------- | -------- | ------------ |
+| HUNMETSYS-018 | Edge Cases & Error Handling | 0-5 mod | Medium   | 🔲 To Create |
+| HUNMETSYS-019 | Complete Test Coverage      | 10+ new | High     | 🔲 To Create |
+| HUNMETSYS-020 | Documentation & Examples    | 3+ new  | Medium   | 🔲 To Create |
 
 **Phase 6 Deliverables:**
+
 - All edge cases handled (negative energy, overeating, invalid fuel, etc.)
 - Test coverage >80% branches, 90% functions/lines
 - Complete modding documentation
@@ -126,6 +132,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 ## File Impact Summary
 
 ### New Files Created (~50-60 files)
+
 - Component schemas: 4
 - Operation schemas: 5
 - Operation handlers: 5
@@ -142,6 +149,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 - Documentation: 3+
 
 ### Modified Files (~10-15 files)
+
 - data/schemas/operation.schema.json (5x - add operation refs)
 - data/mods/metabolism/mod-manifest.json (multiple updates)
 - data/game.json (add metabolism mod)
@@ -155,6 +163,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 ## Success Metrics
 
 ### Code Quality
+
 - ✅ All schemas validate
 - ✅ Test coverage >80% branches, 90% functions/lines
 - ✅ All handlers follow DI patterns
@@ -162,6 +171,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 - ✅ Linting passes
 
 ### Functionality
+
 - ✅ Turn-based processing works reliably
 - ✅ AI makes intelligent eating decisions
 - ✅ Body composition updates realistically
@@ -169,6 +179,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 - ✅ All edge cases handled gracefully
 
 ### Integration
+
 - ✅ Compatible with anatomy mod
 - ✅ Compatible with movement mod
 - ✅ Compatible with exercise mod
@@ -178,16 +189,19 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 ## Risk Areas
 
 ### High Risk
+
 - Turn processing performance with many entities
 - GOAP planner integration and preventing overeating
 - Atomicity of multi-component operations
 
 ### Medium Risk
+
 - Body composition update timing and thresholds
 - Fuel tag compatibility validation
 - Event dispatching overhead
 
 ### Low Risk
+
 - Schema validation
 - Component data structure
 - Error message clarity
@@ -195,24 +209,28 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 ## Testing Strategy
 
 ### Unit Tests (Per Handler)
+
 - Expected use cases
 - Edge cases (boundary conditions)
 - Error scenarios
 - Event dispatching
 
 ### Integration Tests
+
 - Complete hunger cycle (eat → digest → burn → state update)
 - Multi-entity turn processing
 - GOAP planning with hunger
 - Action execution with energy costs
 
 ### E2E Tests
+
 - Full gameplay scenarios
 - Different entity types (human, vampire, robot)
 - Extended starvation scenarios
 - Performance under load
 
 ### Performance Tests
+
 - 100 entities per turn (<100ms target)
 - Linear scaling verification
 - Memory usage monitoring
@@ -221,6 +239,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 ## Documentation Requirements
 
 ### For Modders
+
 - How to create custom food items
 - How to create custom fuel converters (new entity types)
 - How to add energy costs to actions
@@ -228,6 +247,7 @@ HUNMETSYS-018, 019, 020 (Polish & Docs)
 - Threshold configuration
 
 ### For Developers
+
 - Architecture overview
 - Operation handler patterns
 - Event flow diagrams

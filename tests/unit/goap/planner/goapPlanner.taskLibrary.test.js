@@ -27,7 +27,9 @@ describe('GoapPlanner - Task Library Construction', () => {
       'evaluateCondition',
     ]);
     mockRepository = testBed.createMock('repository', ['get']);
-    mockEntityManager = testBed.createMock('entityManager', ['getEntityInstance']);
+    mockEntityManager = testBed.createMock('entityManager', [
+      'getEntityInstance',
+    ]);
     mockScopeRegistry = testBed.createMock('scopeRegistry', ['getScopeAst']);
     mockScopeEngine = testBed.createMock('scopeEngine', ['resolve']);
     mockSpatialIndexManager = testBed.createMock('spatialIndexManager', []);
@@ -39,14 +41,16 @@ describe('GoapPlanner - Task Library Construction', () => {
     ]);
 
     // Default mock implementations
-    mockRepository.get.mockImplementation(key => {
+    mockRepository.get.mockImplementation((key) => {
       if (key === 'tasks') {
         return {
           core: {
             'core:consume_item': {
               id: 'core:consume_item',
               structuralGates: {
-                condition: { has_component: ['actor', 'core:digestive_system'] },
+                condition: {
+                  has_component: ['actor', 'core:digestive_system'],
+                },
               },
             },
             'core:move': {
@@ -99,9 +103,9 @@ describe('GoapPlanner - Task Library Construction', () => {
       const tasks = planner.testGetTaskLibrary('actor-123');
 
       expect(tasks).toHaveLength(3);
-      expect(tasks.map(t => t.id)).toContain('core:consume_item');
-      expect(tasks.map(t => t.id)).toContain('core:move');
-      expect(tasks.map(t => t.id)).toContain('core:play_music');
+      expect(tasks.map((t) => t.id)).toContain('core:consume_item');
+      expect(tasks.map((t) => t.id)).toContain('core:move');
+      expect(tasks.map((t) => t.id)).toContain('core:play_music');
     });
 
     it('should exclude tasks when actor fails gates', () => {
@@ -164,9 +168,9 @@ describe('GoapPlanner - Task Library Construction', () => {
       const tasks = planner.testGetTaskLibrary('actor-123');
 
       expect(tasks).toHaveLength(3);
-      expect(tasks.map(t => t.id)).toContain('core:task1');
-      expect(tasks.map(t => t.id)).toContain('core:task2');
-      expect(tasks.map(t => t.id)).toContain('music:task1');
+      expect(tasks.map((t) => t.id)).toContain('core:task1');
+      expect(tasks.map((t) => t.id)).toContain('core:task2');
+      expect(tasks.map((t) => t.id)).toContain('music:task1');
     });
 
     it('should handle empty tasks data gracefully', () => {
@@ -236,9 +240,9 @@ describe('GoapPlanner - Task Library Construction', () => {
       // Verify field value condition was evaluated
       const calls = mockJsonLogicService.evaluateCondition.mock.calls;
       const playMusicCall = calls.find(
-        call =>
+        (call) =>
           call[0].and &&
-          call[0].and.some(cond => cond['>'] && cond['>'][0].var)
+          call[0].and.some((cond) => cond['>'] && cond['>'][0].var)
       );
       expect(playMusicCall).toBeDefined();
     });
@@ -291,9 +295,9 @@ describe('GoapPlanner - Task Library Construction', () => {
 
       expect(mockLogger.error).toHaveBeenCalled();
       const errorCalls = mockLogger.error.mock.calls;
-      expect(errorCalls.some(call => call[0].includes('evaluation failed'))).toBe(
-        true
-      );
+      expect(
+        errorCalls.some((call) => call[0].includes('evaluation failed'))
+      ).toBe(true);
     });
   });
 
@@ -389,7 +393,7 @@ describe('GoapPlanner - Task Library Construction', () => {
       const tasks = planner.testGetTaskLibrary('actor-123');
 
       expect(tasks).toHaveLength(2);
-      expect(tasks.map(t => t.id)).toEqual(['core:task1', 'music:task1']);
+      expect(tasks.map((t) => t.id)).toEqual(['core:task1', 'music:task1']);
     });
 
     it('should handle mixed tasks with and without gates', () => {

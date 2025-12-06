@@ -38,7 +38,11 @@ const createDispatcher = () => ({
 });
 
 const createBaseParams = () => ({
-  actionDefinition: { id: 'action-1', template: 'template', name: 'Test Action' },
+  actionDefinition: {
+    id: 'action-1',
+    template: 'template',
+    name: 'Test Action',
+  },
   targetContext: { type: 'defaultType', id: 'target-1' },
   entityManager: createEntityManager(),
   options: {
@@ -56,7 +60,8 @@ describe('formatActionCommand', () => {
   });
 
   it('throws when logger is missing', () => {
-    const { actionDefinition, targetContext, entityManager } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager } =
+      createBaseParams();
     expect(() =>
       formatActionCommand(actionDefinition, targetContext, entityManager, {
         safeEventDispatcher: createDispatcher(),
@@ -65,7 +70,8 @@ describe('formatActionCommand', () => {
   });
 
   it('throws when options argument is omitted and logger defaults to missing', () => {
-    const { actionDefinition, targetContext, entityManager } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager } =
+      createBaseParams();
 
     expect(() =>
       formatActionCommand(actionDefinition, targetContext, entityManager)
@@ -78,7 +84,12 @@ describe('formatActionCommand', () => {
     const expectedResult = { ok: false, error: 'validation failed' };
     mockDispatchValidationError.mockReturnValue(expectedResult);
 
-    const result = formatActionCommand(invalidAction, targetContext, entityManager, options);
+    const result = formatActionCommand(
+      invalidAction,
+      targetContext,
+      entityManager,
+      options
+    );
 
     expect(mockDispatchValidationError).toHaveBeenCalledWith(
       options.safeEventDispatcher,
@@ -94,7 +105,12 @@ describe('formatActionCommand', () => {
     const expectedResult = { ok: false, error: 'missing target' };
     mockDispatchValidationError.mockReturnValue(expectedResult);
 
-    const result = formatActionCommand(actionDefinition, null, entityManager, options);
+    const result = formatActionCommand(
+      actionDefinition,
+      null,
+      entityManager,
+      options
+    );
 
     expect(mockDispatchValidationError).toHaveBeenCalledWith(
       options.safeEventDispatcher,
@@ -111,7 +127,12 @@ describe('formatActionCommand', () => {
     const expectedResult = { ok: false, error: 'bad entity manager' };
     mockDispatchValidationError.mockReturnValue(expectedResult);
 
-    const result = formatActionCommand(actionDefinition, targetContext, badEntityManager, options);
+    const result = formatActionCommand(
+      actionDefinition,
+      targetContext,
+      badEntityManager,
+      options
+    );
 
     expect(mockDispatchValidationError).toHaveBeenCalledWith(
       options.safeEventDispatcher,
@@ -123,7 +144,8 @@ describe('formatActionCommand', () => {
   });
 
   it('dispatches validation error when displayNameFn dependency is invalid', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const expectedResult = { ok: false, error: 'bad display function' };
     mockDispatchValidationError.mockReturnValue(expectedResult);
 
@@ -145,25 +167,38 @@ describe('formatActionCommand', () => {
   });
 
   it('throws when safeEventDispatcher dependency is invalid', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     options.safeEventDispatcher = {};
 
     expect(() =>
-      formatActionCommand(actionDefinition, targetContext, entityManager, options)
+      formatActionCommand(
+        actionDefinition,
+        targetContext,
+        entityManager,
+        options
+      )
     ).toThrow(InvalidArgumentError);
   });
 
   it('throws when safeEventDispatcher dependency is missing', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     options.safeEventDispatcher = undefined;
 
     expect(() =>
-      formatActionCommand(actionDefinition, targetContext, entityManager, options)
+      formatActionCommand(
+        actionDefinition,
+        targetContext,
+        entityManager,
+        options
+      )
     ).toThrow('Missing required dependency: safeEventDispatcher.');
   });
 
   it('continues when dependency validation throws an unrelated error', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const spy = jest.spyOn(dependencyUtils, 'validateDependencies');
     spy.mockImplementation(() => {
       throw new Error('some other dependency failure');
@@ -185,7 +220,8 @@ describe('formatActionCommand', () => {
   });
 
   it('returns template unmodified and logs warning when formatter is missing', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const customLogger = createMockLogger();
     options.logger = customLogger;
     const customDispatcher = createDispatcher();
@@ -205,15 +241,22 @@ describe('formatActionCommand', () => {
   });
 
   it('uses default formatter map when no overrides are provided', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
-    const result = formatActionCommand(actionDefinition, targetContext, entityManager, options);
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
+    const result = formatActionCommand(
+      actionDefinition,
+      targetContext,
+      entityManager,
+      options
+    );
 
     expect(targetFormatterMap.defaultType).toHaveBeenCalled();
     expect(result).toEqual({ ok: true, value: defaultFormatterResult });
   });
 
   it('returns formatter result when formatter provides error object', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const formatterResult = { ok: false, error: 'formatter error' };
 
     const result = formatActionCommand(
@@ -228,7 +271,8 @@ describe('formatActionCommand', () => {
   });
 
   it('normalizes string formatter results and returns formatted command', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const formatter = jest.fn(() => 'formatted-command');
 
     const result = formatActionCommand(
@@ -239,18 +283,23 @@ describe('formatActionCommand', () => {
       { formatterMap: { defaultType: formatter } }
     );
 
-    expect(formatter).toHaveBeenCalledWith('template', targetContext, expect.objectContaining({
-      actionId: actionDefinition.id,
-      entityManager,
-      displayNameFn: expect.any(Function),
-      logger: options.logger,
-      debug: options.debug,
-    }));
+    expect(formatter).toHaveBeenCalledWith(
+      'template',
+      targetContext,
+      expect.objectContaining({
+        actionId: actionDefinition.id,
+        entityManager,
+        displayNameFn: expect.any(Function),
+        logger: options.logger,
+        debug: options.debug,
+      })
+    );
     expect(result).toEqual({ ok: true, value: 'formatted-command' });
   });
 
   it('dispatches safe error and returns standardized result when formatter throws', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const error = new Error('boom');
     const formatter = jest.fn(() => {
       throw error;
@@ -300,9 +349,14 @@ describe('formatActionCommand', () => {
   });
 
   it('uses default display name function when none is provided', () => {
-    const { actionDefinition, targetContext, entityManager, options } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager, options } =
+      createBaseParams();
     const formatter = jest.fn((command, context, formatterOptions) => {
-      formatterOptions.displayNameFn({ id: 'entity-2' }, 'fallback', options.logger);
+      formatterOptions.displayNameFn(
+        { id: 'entity-2' },
+        'fallback',
+        options.logger
+      );
       return 'with-display';
     });
 
@@ -314,7 +368,11 @@ describe('formatActionCommand', () => {
       { formatterMap: { defaultType: formatter } }
     );
 
-    expect(getEntityDisplayName).toHaveBeenCalledWith({ id: 'entity-2' }, 'fallback', options.logger);
+    expect(getEntityDisplayName).toHaveBeenCalledWith(
+      { id: 'entity-2' },
+      'fallback',
+      options.logger
+    );
   });
 });
 
@@ -348,7 +406,8 @@ describe('ActionCommandFormatter', () => {
 
   it('requires logger even when invoked without explicit options', () => {
     const instance = new ActionCommandFormatter();
-    const { actionDefinition, targetContext, entityManager } = createBaseParams();
+    const { actionDefinition, targetContext, entityManager } =
+      createBaseParams();
 
     expect(() =>
       instance.format(actionDefinition, targetContext, entityManager)
@@ -357,7 +416,13 @@ describe('ActionCommandFormatter', () => {
 
   it('returns error for unsupported multi-target formatting', () => {
     const instance = new ActionCommandFormatter();
-    const result = instance.formatMultiTarget({}, {}, createEntityManager(), {}, {});
+    const result = instance.formatMultiTarget(
+      {},
+      {},
+      createEntityManager(),
+      {},
+      {}
+    );
 
     expect(result).toEqual({
       ok: false,

@@ -66,7 +66,9 @@ export function createGoapEventPayload(eventType, payload = {}, context = {}) {
  */
 export function emitGoapEvent(dispatcher, eventType, payload, context) {
   if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
-    throw new Error('emitGoapEvent requires a dispatcher with a dispatch method.');
+    throw new Error(
+      'emitGoapEvent requires a dispatcher with a dispatch method.'
+    );
   }
 
   const normalizedPayload = createGoapEventPayload(eventType, payload, context);

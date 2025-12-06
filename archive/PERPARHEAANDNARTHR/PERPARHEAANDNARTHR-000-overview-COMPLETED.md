@@ -58,20 +58,20 @@ All 12 tickets in this epic have been completed successfully. The per-part healt
 
 ## Ticket List
 
-| Ticket | Title | Dependencies | Status |
-|--------|-------|--------------|--------|
-| 001 | Part Health Component Schema | None | ✅ Completed |
-| 002 | Health Thresholds Lookup File | None | ✅ Completed |
-| 003 | MODIFY_PART_HEALTH Schema | None | ✅ Completed |
-| 004 | MODIFY_PART_HEALTH Handler | 001, 003 | ✅ Completed |
-| 005 | MODIFY_PART_HEALTH DI Registration | 003, 004 | ✅ Completed |
-| 006 | UPDATE_PART_HEALTH_STATE Schema | None | ✅ Completed |
-| 007 | UPDATE_PART_HEALTH_STATE Handler | 001, 002, 006 | ✅ Completed |
-| 008 | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007 | ✅ Completed |
-| 009 | Part Health Changed Event | None | ✅ Completed |
-| 010 | Part State Changed Event | None | ✅ Completed |
-| 011 | Mod Manifest Update | 001, 002, 009, 010 | ✅ Completed |
-| 012 | Integration Tests | All others | ✅ Completed |
+| Ticket | Title                                    | Dependencies       | Status       |
+| ------ | ---------------------------------------- | ------------------ | ------------ |
+| 001    | Part Health Component Schema             | None               | ✅ Completed |
+| 002    | Health Thresholds Lookup File            | None               | ✅ Completed |
+| 003    | MODIFY_PART_HEALTH Schema                | None               | ✅ Completed |
+| 004    | MODIFY_PART_HEALTH Handler               | 001, 003           | ✅ Completed |
+| 005    | MODIFY_PART_HEALTH DI Registration       | 003, 004           | ✅ Completed |
+| 006    | UPDATE_PART_HEALTH_STATE Schema          | None               | ✅ Completed |
+| 007    | UPDATE_PART_HEALTH_STATE Handler         | 001, 002, 006      | ✅ Completed |
+| 008    | UPDATE_PART_HEALTH_STATE DI Registration | 006, 007           | ✅ Completed |
+| 009    | Part Health Changed Event                | None               | ✅ Completed |
+| 010    | Part State Changed Event                 | None               | ✅ Completed |
+| 011    | Mod Manifest Update                      | 001, 002, 009, 010 | ✅ Completed |
+| 012    | Integration Tests                        | All others         | ✅ Completed |
 
 ---
 
@@ -98,6 +98,7 @@ All ──────────────────→ [012] Integration 
 ## Implementation Order (Completed)
 
 **Phase 1: Data Definitions** ✅
+
 1. PERPARHEAANDNARTHR-001 (Component)
 2. PERPARHEAANDNARTHR-002 (Lookup)
 3. PERPARHEAANDNARTHR-003 (MODIFY schema)
@@ -105,17 +106,11 @@ All ──────────────────→ [012] Integration 
 5. PERPARHEAANDNARTHR-009 (Health Changed Event)
 6. PERPARHEAANDNARTHR-010 (State Changed Event)
 
-**Phase 2: MODIFY_PART_HEALTH Operation** ✅
-7. PERPARHEAANDNARTHR-004 (Handler)
-8. PERPARHEAANDNARTHR-005 (DI Registration)
+**Phase 2: MODIFY_PART_HEALTH Operation** ✅ 7. PERPARHEAANDNARTHR-004 (Handler) 8. PERPARHEAANDNARTHR-005 (DI Registration)
 
-**Phase 3: UPDATE_PART_HEALTH_STATE Operation** ✅
-9. PERPARHEAANDNARTHR-007 (Handler)
-10. PERPARHEAANDNARTHR-008 (DI Registration)
+**Phase 3: UPDATE_PART_HEALTH_STATE Operation** ✅ 9. PERPARHEAANDNARTHR-007 (Handler) 10. PERPARHEAANDNARTHR-008 (DI Registration)
 
-**Phase 4: Finalization** ✅
-11. PERPARHEAANDNARTHR-011 (Mod Manifest)
-12. PERPARHEAANDNARTHR-012 (Integration Tests)
+**Phase 4: Finalization** ✅ 11. PERPARHEAANDNARTHR-011 (Mod Manifest) 12. PERPARHEAANDNARTHR-012 (Integration Tests)
 
 ---
 
@@ -134,10 +129,10 @@ All ──────────────────→ [012] Integration 
 
 ## Reference Files
 
-| File | Purpose |
-|------|---------|
-| `src/logic/operationHandlers/updateHungerStateHandler.js` | Pattern for state update handler |
-| `data/mods/metabolism/components/hunger_state.component.json` | Pattern for component schema |
-| `data/mods/metabolism/lookups/hunger_thresholds.json` | Pattern for threshold lookup |
-| `data/mods/anatomy/events/limb_detached.event.json` | Pattern for anatomy events |
-| `src/utils/preValidationUtils.js` | Operation type whitelist |
+| File                                                          | Purpose                          |
+| ------------------------------------------------------------- | -------------------------------- |
+| `src/logic/operationHandlers/updateHungerStateHandler.js`     | Pattern for state update handler |
+| `data/mods/metabolism/components/hunger_state.component.json` | Pattern for component schema     |
+| `data/mods/metabolism/lookups/hunger_thresholds.json`         | Pattern for threshold lookup     |
+| `data/mods/anatomy/events/limb_detached.event.json`           | Pattern for anatomy events       |
+| `src/utils/preValidationUtils.js`                             | Operation type whitelist         |

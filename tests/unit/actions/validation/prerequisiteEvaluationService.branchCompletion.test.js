@@ -1,10 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { resolveReferences } from '../../../../src/actions/validation/conditionReferenceResolver.js';
 
-jest.mock('../../../../src/actions/validation/conditionReferenceResolver.js', () => ({
-  resolveReferences: jest.fn(),
-}));
+jest.mock(
+  '../../../../src/actions/validation/conditionReferenceResolver.js',
+  () => ({
+    resolveReferences: jest.fn(),
+  })
+);
 
 describe('PrerequisiteEvaluationService additional branch coverage', () => {
   let logger;
@@ -91,8 +101,12 @@ describe('PrerequisiteEvaluationService additional branch coverage', () => {
 
     expect(result).toBe(false);
     const debugMessages = logger.debug.mock.calls.map(([message]) => message);
-    expect(debugMessages.some((msg) => msg?.includes('Reason: not allowed'))).toBe(true);
-    expect(debugMessages.some((msg) => msg?.includes('has 1 components available'))).toBe(true);
+    expect(
+      debugMessages.some((msg) => msg?.includes('Reason: not allowed'))
+    ).toBe(true);
+    expect(
+      debugMessages.some((msg) => msg?.includes('has 1 components available'))
+    ).toBe(true);
   });
 
   it('logs error when actor context is missing components property entirely', () => {
@@ -113,7 +127,9 @@ describe('PrerequisiteEvaluationService additional branch coverage', () => {
 
     expect(result).toBe(true);
     expect(logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Actor context is missing components property entirely'),
+      expect.stringContaining(
+        'Actor context is missing components property entirely'
+      )
     );
   });
 
@@ -137,8 +153,10 @@ describe('PrerequisiteEvaluationService additional branch coverage', () => {
 
     expect(result).toBe(false);
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Could not serialize components for validation logging'),
-      expect.any(Error),
+      expect.stringContaining(
+        'Could not serialize components for validation logging'
+      ),
+      expect.any(Error)
     );
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('Failed to build evaluation context'),

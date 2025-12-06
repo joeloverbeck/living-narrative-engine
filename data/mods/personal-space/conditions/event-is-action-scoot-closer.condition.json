@@ -3,9 +3,6 @@
   "id": "personal-space:event-is-action-scoot-closer",
   "description": "Condition that checks if the event is the scoot_closer action",
   "logic": {
-    "==": [
-      { "var": "event.payload.actionId" },
-      "personal-space:scoot_closer"
-    ]
+    "==": [{ "var": "event.payload.actionId" }, "personal-space:scoot_closer"]
   }
 }

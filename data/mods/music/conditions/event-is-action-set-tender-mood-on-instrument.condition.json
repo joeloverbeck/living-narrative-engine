@@ -4,7 +4,7 @@
   "description": "Tender mood action triggered",
   "logic": {
     "==": [
-      {"var": "event.payload.actionId"},
+      { "var": "event.payload.actionId" },
       "music:set_tender_mood_on_instrument"
     ]
   }

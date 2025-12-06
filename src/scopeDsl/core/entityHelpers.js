@@ -162,7 +162,10 @@ function warnSyntheticLookupFallback(entityId, runtimeContext) {
       entityId,
       source: 'createEvaluationContext',
     });
-  } else if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+  } else if (
+    typeof console !== 'undefined' &&
+    typeof console.warn === 'function'
+  ) {
     console.warn(message);
   }
 }
@@ -211,7 +214,10 @@ export function getOrBuildComponents(entityId, entity, gateway, _trace) {
   if (!instance) return null;
 
   const hasComponentTypeIds = 'componentTypeIds' in instance;
-  const hasComponents = instance.components && typeof instance.components === 'object' && !Array.isArray(instance.components);
+  const hasComponents =
+    instance.components &&
+    typeof instance.components === 'object' &&
+    !Array.isArray(instance.components);
 
   // FAST PATH: If entity has components object (from getEntity()), return it directly
   // This is the preferred path for entities that come from getEntity() which returns { id, components }
@@ -220,15 +226,15 @@ export function getOrBuildComponents(entityId, entity, gateway, _trace) {
   }
 
   // VALIDATION: If entity has componentTypeIds, it must be an array
-    if (hasComponentTypeIds) {
-      const componentTypeIdsValue = instance.componentTypeIds;
-      if (!Array.isArray(componentTypeIdsValue)) {
-        return {}; // Malformed: componentTypeIds exists but is not an array
-      }
-
-      // Build components from componentTypeIds
-      return buildComponents(entityId, instance, gateway);
+  if (hasComponentTypeIds) {
+    const componentTypeIdsValue = instance.componentTypeIds;
+    if (!Array.isArray(componentTypeIdsValue)) {
+      return {}; // Malformed: componentTypeIds exists but is not an array
     }
+
+    // Build components from componentTypeIds
+    return buildComponents(entityId, instance, gateway);
+  }
 
   // Entity has neither components nor componentTypeIds - malformed
   return {};

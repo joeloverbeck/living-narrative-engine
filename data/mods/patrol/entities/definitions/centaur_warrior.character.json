@@ -1,27 +1,27 @@
 {
-    "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "patrol:centaur_warrior",
-    "components": {
-        "core:name": {
-            "text": "centaur warrior"
-        },
-        "core:portrait": {
-            "imagePath": "portraits/centaur_warrior.png",
-            "altText": "Centaur warrior."
-        },
-        "core:actor": {},
-        "core:player_type": {
-            "type": "human"
-        },
-        "core:perception_log": {
-            "maxEntries": 50,
-            "logEntries": []
-        },
-        "anatomy:body": {
-            "recipeId": "anatomy:centaur_warrior"
-        },
-        "core:gender": {
-            "value": "male"
-        }
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "patrol:centaur_warrior",
+  "components": {
+    "core:name": {
+      "text": "centaur warrior"
+    },
+    "core:portrait": {
+      "imagePath": "portraits/centaur_warrior.png",
+      "altText": "Centaur warrior."
+    },
+    "core:actor": {},
+    "core:player_type": {
+      "type": "human"
+    },
+    "core:perception_log": {
+      "maxEntries": 50,
+      "logEntries": []
+    },
+    "anatomy:body": {
+      "recipeId": "anatomy:centaur_warrior"
+    },
+    "core:gender": {
+      "value": "male"
     }
+  }
 }

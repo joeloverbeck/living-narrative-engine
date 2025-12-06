@@ -1,8 +1,6 @@
 import { describe, it, beforeEach, expect } from '@jest/globals';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
-import {
-  InvalidDispatcherError,
-} from '../../../src/utils/safeDispatchErrorUtils.js';
+import { InvalidDispatcherError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 /**
@@ -73,7 +71,14 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
 
   it('allows valid indices without dispatching errors', async () => {
     await expect(
-      assertValidActionIndex(2, 5, 'TestProvider', 'actor:1', dispatcher, logger)
+      assertValidActionIndex(
+        2,
+        5,
+        'TestProvider',
+        'actor:1',
+        dispatcher,
+        logger
+      )
     ).resolves.not.toThrow();
 
     expect(dispatcher.events).toHaveLength(0);
@@ -117,7 +122,9 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         logger,
         debugData
       )
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
 
     expect(dispatcher.events).toHaveLength(1);
     const event = dispatcher.events[0];
@@ -143,7 +150,9 @@ describe('assertValidActionIndex integration with safeDispatchError', () => {
         dispatcher,
         logger
       )
-    ).rejects.toThrow('Player chose an index that does not exist for this turn.');
+    ).rejects.toThrow(
+      'Player chose an index that does not exist for this turn.'
+    );
 
     expect(dispatcher.events).toHaveLength(1);
     const event = dispatcher.events[0];

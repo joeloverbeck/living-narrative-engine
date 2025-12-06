@@ -967,8 +967,7 @@ export class SpeechPatternsGenerator {
       }
       return false;
     });
-    const contextsScore =
-      (patternsWithContexts.length / patterns.length) * 0.1;
+    const contextsScore = (patternsWithContexts.length / patterns.length) * 0.1;
     score += contextsScore;
 
     return Math.min(Math.max(score, 0), 1);

@@ -45,7 +45,9 @@ function buildPullPenisOutScenario(options = {}) {
 
   if (includeFuckingAnally) {
     actorBuilder.withComponent('positioning:fucking_anally', {
-      being_fucked_entity_id: mismatchedReferences ? 'someone_else' : PRIMARY_ID,
+      being_fucked_entity_id: mismatchedReferences
+        ? 'someone_else'
+        : PRIMARY_ID,
       initiated: true,
     });
   }
@@ -78,7 +80,6 @@ function buildPullPenisOutScenario(options = {}) {
   };
 }
 
-
 /**
  * Installs a scope resolver override for actor_being_fucked_anally_by_me that matches the scope logic.
  * This uses raw closeness.partners with anal penetration component validation.
@@ -99,7 +100,8 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
 
       const actor = fixture.entityManager.getEntityInstance(actorId);
       const fuckingAnally = actor?.components?.['positioning:fucking_anally'];
-      const closenessPartners = actor?.components?.['positioning:closeness']?.partners;
+      const closenessPartners =
+        actor?.components?.['positioning:closeness']?.partners;
 
       if (!fuckingAnally || !Array.isArray(closenessPartners)) {
         return { success: true, value: new Set() };
@@ -111,12 +113,14 @@ function installActorBeingFuckedAnallyByMeScopeOverride(fixture) {
       }
 
       // Check if receiving entity exists and has matching being_fucked_anally component
-      const receivingEntity = fixture.entityManager.getEntityInstance(beingFuckedEntityId);
+      const receivingEntity =
+        fixture.entityManager.getEntityInstance(beingFuckedEntityId);
       if (!receivingEntity) {
         return { success: true, value: new Set() };
       }
 
-      const beingFuckedAnally = receivingEntity.components?.['positioning:being_fucked_anally'];
+      const beingFuckedAnally =
+        receivingEntity.components?.['positioning:being_fucked_anally'];
       if (!beingFuckedAnally) {
         return { success: true, value: new Set() };
       }
@@ -154,8 +158,12 @@ describe('sex-anal-penetration:pull_penis_out action discovery', () => {
   let restoreScopeResolver;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('sex-anal-penetration', ACTION_ID);
-    restoreScopeResolver = installActorBeingFuckedAnallyByMeScopeOverride(testFixture);
+    testFixture = await ModTestFixture.forAction(
+      'sex-anal-penetration',
+      ACTION_ID
+    );
+    restoreScopeResolver =
+      installActorBeingFuckedAnallyByMeScopeOverride(testFixture);
   });
 
   afterEach(() => {

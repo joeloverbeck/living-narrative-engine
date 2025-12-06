@@ -304,7 +304,9 @@ describe('ProcessingCommandState - Race Condition Scenarios', () => {
     const operations = [
       (async () => {
         state.startProcessing();
-        await state._processCommandInternal(turnContext, actor, turnAction).catch(() => {});
+        await state
+          ._processCommandInternal(turnContext, actor, turnAction)
+          .catch(() => {});
       })(),
       (async () => {
         await new Promise((resolve) => setTimeout(resolve, 5));
@@ -350,7 +352,9 @@ describe('ProcessingCommandState - Race Condition Scenarios', () => {
     await processingPromise.catch(() => {});
 
     // Assert: Should not have debug message if processing completed before destroy
-    const hasDestroyDebug = logger.hasDebug('Destroyed during active processing');
+    const hasDestroyDebug = logger.hasDebug(
+      'Destroyed during active processing'
+    );
     // Timing-dependent - may or may not have debug message, but should be stable
     expect(state.isProcessing).toBe(false);
   });
@@ -386,7 +390,9 @@ describe('ProcessingCommandState - Race Condition Scenarios', () => {
 
     // Assert: May have both debug messages or just one depending on timing
     const hasFlagDebug = logger.hasDebug('processing flag became false');
-    const hasDestroyDebug = logger.hasDebug('Destroyed during active processing');
+    const hasDestroyDebug = logger.hasDebug(
+      'Destroyed during active processing'
+    );
 
     // At least one debug message should appear
     expect(hasFlagDebug || hasDestroyDebug).toBe(true);

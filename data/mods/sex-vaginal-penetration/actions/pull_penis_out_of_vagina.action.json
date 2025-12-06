@@ -11,10 +11,7 @@
     }
   },
   "required_components": {
-    "actor": [
-      "positioning:closeness",
-      "positioning:fucking_vaginally"
-    ]
+    "actor": ["positioning:closeness", "positioning:fucking_vaginally"]
   },
   "template": "pull your penis out of {primary}'s vagina",
   "prerequisites": [

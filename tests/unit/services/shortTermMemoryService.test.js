@@ -176,12 +176,12 @@ describe('ShortTermMemoryService edge cases', () => {
 
     expect(callWithNull).toThrow(TypeError);
     expect(callWithNull).toThrow(
-      'mem must be an object conforming to core:short_term_memory schema',
+      'mem must be an object conforming to core:short_term_memory schema'
     );
 
     expect(callWithUndefined).toThrow(TypeError);
     expect(callWithUndefined).toThrow(
-      'mem must be an object conforming to core:short_term_memory schema',
+      'mem must be an object conforming to core:short_term_memory schema'
     );
   });
 
@@ -249,12 +249,12 @@ describe('ShortTermMemoryService edge cases', () => {
     withoutDispatcher.emitThoughtAdded(
       'actor:123',
       'note',
-      '2025-06-03T10:00Z',
+      '2025-06-03T10:00Z'
     );
     invalidDispatcher.emitThoughtAdded(
       'actor:123',
       'note',
-      '2025-06-03T10:00Z',
+      '2025-06-03T10:00Z'
     );
 
     expect(withDispatcher.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -264,7 +264,7 @@ describe('ShortTermMemoryService edge cases', () => {
         entityId: 'actor:123',
         text: 'note',
         timestamp: '2025-06-03T10:00Z',
-      },
+      }
     );
   });
 });

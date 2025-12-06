@@ -286,7 +286,8 @@ describe('RecipeConstraintEvaluator', () => {
                 components: ['anatomy:flight_membrane'],
                 validation: {
                   minItems: 2,
-                  errorMessage: 'Dragons require both wings and tail for flight',
+                  errorMessage:
+                    'Dragons require both wings and tail for flight',
                 },
               },
             ],
@@ -324,7 +325,8 @@ describe('RecipeConstraintEvaluator', () => {
                 components: ['anatomy:flight_membrane'],
                 validation: {
                   minItems: 2,
-                  errorMessage: 'Dragons require both wings and tail for flight',
+                  errorMessage:
+                    'Dragons require both wings and tail for flight',
                 },
               },
             ],
@@ -863,7 +865,8 @@ describe('RecipeConstraintEvaluator', () => {
                 partTypes: ['head'],
                 components: ['anatomy:brain'],
                 validation: {
-                  errorMessage: 'Dragons require both wings and tail for flight stability',
+                  errorMessage:
+                    'Dragons require both wings and tail for flight stability',
                 },
               },
             ],
@@ -931,7 +934,8 @@ describe('RecipeConstraintEvaluator', () => {
                 partTypes: ['head'],
                 components: ['anatomy:brain'],
                 validation: {
-                  explanation: 'Flight mechanics require wing-tail coordination for balance',
+                  explanation:
+                    'Flight mechanics require wing-tail coordination for balance',
                 },
               },
             ],
@@ -965,7 +969,8 @@ describe('RecipeConstraintEvaluator', () => {
               {
                 components: ['anatomy:wings', 'anatomy:arms'],
                 validation: {
-                  explanation: 'Choose either aquatic (gills) or terrestrial (lungs)',
+                  explanation:
+                    'Choose either aquatic (gills) or terrestrial (lungs)',
                 },
               },
             ],
@@ -1033,8 +1038,10 @@ describe('RecipeConstraintEvaluator', () => {
                 components: [],
                 validation: {
                   minItems: 2,
-                  errorMessage: 'Co-presence constraint requires at least 2 part types',
-                  explanation: 'Dragons need both wings and tail for flight balance',
+                  errorMessage:
+                    'Co-presence constraint requires at least 2 part types',
+                  explanation:
+                    'Dragons need both wings and tail for flight balance',
                 },
               },
             ],
@@ -1044,7 +1051,8 @@ describe('RecipeConstraintEvaluator', () => {
                 validation: {
                   mutuallyExclusive: true,
                   errorMessage: 'Cannot have both gills and lungs',
-                  explanation: 'Choose either aquatic (gills) or terrestrial (lungs)',
+                  explanation:
+                    'Choose either aquatic (gills) or terrestrial (lungs)',
                 },
               },
             ],

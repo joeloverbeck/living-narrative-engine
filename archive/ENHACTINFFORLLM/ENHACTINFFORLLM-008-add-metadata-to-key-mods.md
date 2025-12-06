@@ -5,13 +5,16 @@
 **Completed Date**: 2025-11-25
 
 ## Summary
+
 Add the actionPurpose and actionConsiderWhen properties to the mod manifests of 5 key mods to demonstrate the feature and provide immediate value.
 
 ## Prerequisites
+
 - ENHACTINFFORLLM-001 must be completed (schema changes)
 - All other tickets (002-007) should be completed for full testing
 
 ## Files to Touch
+
 - `data/mods/positioning/mod-manifest.json`
 - `data/mods/items/mod-manifest.json`
 - `data/mods/affection/mod-manifest.json`
@@ -19,6 +22,7 @@ Add the actionPurpose and actionConsiderWhen properties to the mod manifests of 
 - `data/mods/violence/mod-manifest.json`
 
 ## Out of Scope
+
 - DO NOT modify any JavaScript/TypeScript code
 - DO NOT modify schema files
 - DO NOT modify test files
@@ -65,6 +69,7 @@ Add after the `description` field:
 ### 5. violence/mod-manifest.json
 
 **Note**: This manifest requires additional fixes:
+
 - Fix `$schema` to use `schema://living-narrative-engine/mod-manifest.schema.json`
 - Add missing `description`, `author`, and `gameVersion` fields
 
@@ -81,6 +86,7 @@ Add after the `name` field (since `description` will be added):
 ## Content Guidelines (from spec)
 
 ### actionPurpose Guidelines
+
 1. Be concise: One sentence, 10-25 words maximum
 2. Focus on narrative impact: What do these actions accomplish in the story?
 3. Use active verbs: "Express", "Enable", "Provide", "Perform"
@@ -88,6 +94,7 @@ Add after the `name` field (since `description` will be added):
 5. Describe the category: Summarize the whole mod's action set
 
 ### actionConsiderWhen Guidelines
+
 1. Be contextual: Describe situations, emotions, or narrative beats
 2. Use conditional language: "When...", "If...", "During..."
 3. Focus on character motivation: What would drive a character to use these?
@@ -97,12 +104,14 @@ Add after the `name` field (since `description` will be added):
 ## Acceptance Criteria
 
 ### Tests That Must Pass
+
 - `npm run validate` passes (all manifests valid)
 - `npm run validate:strict` passes
 - `npm run test:unit` passes (no regression)
 - `npm run test:integration` passes (manifests load correctly)
 
 ### Invariants That Must Remain True
+
 1. All modified manifests remain valid JSON
 2. All modified manifests validate against updated schema
 3. `actionPurpose` is 10-200 characters (schema constraint)
@@ -111,13 +120,16 @@ Add after the `name` field (since `description` will be added):
 6. Game loads and runs correctly with modified manifests
 
 ## Verification Steps
+
 1. Run `npm run validate` to ensure all manifests are valid
 2. Run `npm run start` and verify game loads without errors
 3. Run `npm run test:integration -- --testPathPattern="modManifest"` to verify manifest loading
 4. Manually inspect JSON files for proper formatting and placement
 
 ## Future Work (NOT in scope for this ticket)
+
 The following 24 mods should receive metadata in future tickets:
+
 - ballet, caressing, clothing, companionship, distress, exercise, gymnastics
 - hand-holding, hugging, kissing, metabolism, movement, music, physical-control
 - seduction, sex-anal-penetration, sex-breastplay, sex-dry-intimacy
@@ -131,6 +143,7 @@ The following 24 mods should receive metadata in future tickets:
 ### What Was Actually Changed
 
 **Files Modified:**
+
 1. `data/mods/positioning/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
 2. `data/mods/items/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
 3. `data/mods/affection/mod-manifest.json` - Added `actionPurpose` and `actionConsiderWhen`
@@ -147,13 +160,13 @@ The following 24 mods should receive metadata in future tickets:
 
 ### Tests Verified
 
-| Test | Result |
-|------|--------|
-| `npm run validate` | ✅ Passes (manifests valid) |
-| `npm run validate:strict` | ✅ Passes |
-| `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` | ✅ 13 tests pass |
-| `tests/unit/prompting/modActionMetadataProvider.test.js` | ✅ 14 tests pass |
-| `tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js` | ✅ 11 tests pass |
-| `tests/integration/loaders/modsLoader.integration.test.js` | ✅ 7 tests pass |
+| Test                                                                           | Result                      |
+| ------------------------------------------------------------------------------ | --------------------------- |
+| `npm run validate`                                                             | ✅ Passes (manifests valid) |
+| `npm run validate:strict`                                                      | ✅ Passes                   |
+| `tests/integration/prompting/actionFormattingWithMetadata.integration.test.js` | ✅ 13 tests pass            |
+| `tests/unit/prompting/modActionMetadataProvider.test.js`                       | ✅ 14 tests pass            |
+| `tests/unit/prompting/AIPromptContentProvider.actionMetadata.test.js`          | ✅ 11 tests pass            |
+| `tests/integration/loaders/modsLoader.integration.test.js`                     | ✅ 7 tests pass             |
 
 **Note**: Pre-existing cross-reference violations (7) in the `core` mod remain. These are unrelated to this ticket and concern missing `items` dependency declarations.

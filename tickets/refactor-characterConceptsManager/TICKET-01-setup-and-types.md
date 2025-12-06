@@ -10,6 +10,7 @@
 ## Goal
 
 Create the foundational infrastructure for the refactoring:
+
 - Directory structure
 - Type definitions
 - Error classes
@@ -26,6 +27,7 @@ mkdir -p src/domUI/characterConceptsManager/{core,ui,features,utils,types,errors
 ```
 
 Expected directories:
+
 ```
 src/domUI/characterConceptsManager/
 ├── core/       # Core business logic (CRUD, events, session)
@@ -128,9 +130,8 @@ src/domUI/characterConceptsManager/
  * @property {() => string|null} getCurrentState - Get current UI state
  */
 
-export {
-  // Re-export for IDE autocomplete
-};
+export // Re-export for IDE autocomplete
+ {};
 ```
 
 ### Task 1.3: Create Error Classes

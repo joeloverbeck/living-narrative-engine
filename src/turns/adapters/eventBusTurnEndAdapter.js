@@ -73,8 +73,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
     // Treat non-boolean values as an error so we do not misreport failed turns
     // as successes.
     if (typeof success !== 'boolean') {
-      const errMsg =
-        `EventBusTurnEndAdapter: 'success' parameter must be a boolean for entity ${entityId}. Received: ${success}`;
+      const errMsg = `EventBusTurnEndAdapter: 'success' parameter must be a boolean for entity ${entityId}. Received: ${success}`;
 
       this.#log.error(errMsg);
 

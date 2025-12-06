@@ -54,11 +54,14 @@ const rightPartDefinition = new EntityDefinition(RIGHT_PART_DEFINITION_ID, {
   },
 });
 
-const componentlessDefinition = new EntityDefinition(COMPONENTLESS_DEFINITION_ID, {
-  components: {
-    'core:name': { text: 'Componentless Node' },
-  },
-});
+const componentlessDefinition = new EntityDefinition(
+  COMPONENTLESS_DEFINITION_ID,
+  {
+    components: {
+      'core:name': { text: 'Componentless Node' },
+    },
+  }
+);
 
 describe('SocketManager standalone integration', () => {
   /** @type {EntityManagerTestBed} */

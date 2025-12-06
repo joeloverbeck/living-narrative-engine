@@ -73,7 +73,9 @@ function createLogger() {
  *   actions: ReturnType<typeof TestDataFactory.createBasicActions>
  * }}
  */
-function createUnifiedErrorHandlerHarness({ useFaultyEntityManager = false } = {}) {
+function createUnifiedErrorHandlerHarness({
+  useFaultyEntityManager = false,
+} = {}) {
   const logger = createLogger();
   const entityManager = useFaultyEntityManager
     ? new FaultyEntityManager([
@@ -152,11 +154,9 @@ describe('UnifiedErrorHandler dependency resilience integration', () => {
   });
 
   it('builds fallback error contexts when entity snapshot capture fails', () => {
-    const {
-      handler,
-      logger,
-      actions,
-    } = createUnifiedErrorHandlerHarness({ useFaultyEntityManager: true });
+    const { handler, logger, actions } = createUnifiedErrorHandlerHarness({
+      useFaultyEntityManager: true,
+    });
 
     logger.error.mockClear();
     logger.warn.mockClear();

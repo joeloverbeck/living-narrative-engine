@@ -483,7 +483,10 @@ export class HumanReadableFormatter {
       // Format as table
       // Use reduce to avoid stack overflow with large arrays
       const keyLengths = content.map(([key]) => key.length);
-      const maxKeyLength = keyLengths.reduce((max, len) => Math.max(max, len), 0);
+      const maxKeyLength = keyLengths.reduce(
+        (max, len) => Math.max(max, len),
+        0
+      );
 
       for (const [key, value] of content) {
         const paddedKey = key.padEnd(maxKeyLength);

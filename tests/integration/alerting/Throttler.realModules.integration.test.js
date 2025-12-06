@@ -204,7 +204,8 @@ describe('Throttler integration with real dispatch infrastructure', () => {
 
     expect(summaries).toEqual([
       {
-        message: "Warning: 'An event' occurred 1 more times in the last 10 seconds.",
+        message:
+          "Warning: 'An event' occurred 1 more times in the last 10 seconds.",
         details: { code: 42 },
       },
     ]);

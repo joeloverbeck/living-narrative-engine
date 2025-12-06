@@ -138,7 +138,9 @@ describe('partsMapBuildingStage', () => {
             logger: mockLogger,
           }
         )
-      ).rejects.toThrow(/first-entity.*second-entity|second-entity.*first-entity/);
+      ).rejects.toThrow(
+        /first-entity.*second-entity|second-entity.*first-entity/
+      );
     });
 
     it('should log error before throwing on duplicate', async () => {

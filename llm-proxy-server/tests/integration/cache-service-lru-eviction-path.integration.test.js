@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 
 /**
  * @file cache-service-lru-eviction-path.integration.test.js
@@ -26,7 +33,10 @@ describe('CacheService LRU eviction branch integration', () => {
 
     chalkBackup = globalThis.chalk;
     const identity = (value) => String(value);
-    const styledIdentity = Object.assign(identity, { italic: identity, bold: identity });
+    const styledIdentity = Object.assign(identity, {
+      italic: identity,
+      bold: identity,
+    });
 
     globalThis.chalk = {
       blue: identity,
@@ -37,10 +47,22 @@ describe('CacheService LRU eviction branch integration', () => {
       gray: styledIdentity,
     };
 
-    consoleSpies.set('info', jest.spyOn(console, 'info').mockImplementation(() => {}));
-    consoleSpies.set('warn', jest.spyOn(console, 'warn').mockImplementation(() => {}));
-    consoleSpies.set('error', jest.spyOn(console, 'error').mockImplementation(() => {}));
-    consoleSpies.set('debug', jest.spyOn(console, 'debug').mockImplementation(() => {}));
+    consoleSpies.set(
+      'info',
+      jest.spyOn(console, 'info').mockImplementation(() => {})
+    );
+    consoleSpies.set(
+      'warn',
+      jest.spyOn(console, 'warn').mockImplementation(() => {})
+    );
+    consoleSpies.set(
+      'error',
+      jest.spyOn(console, 'error').mockImplementation(() => {})
+    );
+    consoleSpies.set(
+      'debug',
+      jest.spyOn(console, 'debug').mockImplementation(() => {})
+    );
   });
 
   afterEach(() => {
@@ -60,10 +82,11 @@ describe('CacheService LRU eviction branch integration', () => {
   });
 
   it('evicts the least recently used entry when max size is exceeded', async () => {
-    const [{ createConsoleLogger }, { default: CacheService }] = await Promise.all([
-      import('../../src/consoleLogger.js'),
-      import('../../src/services/cacheService.js'),
-    ]);
+    const [{ createConsoleLogger }, { default: CacheService }] =
+      await Promise.all([
+        import('../../src/consoleLogger.js'),
+        import('../../src/services/cacheService.js'),
+      ]);
 
     const logger = createConsoleLogger();
     const cache = new CacheService(logger, {
@@ -82,11 +105,14 @@ describe('CacheService LRU eviction branch integration', () => {
     expect(cache.get('alpha')).toBeUndefined();
     expect(cache.get('beta')).toEqual({ payload: 'second' });
 
-    const debugOutput = consoleSpies.get('debug').mock.calls
-      .map(([line]) => line)
+    const debugOutput = consoleSpies
+      .get('debug')
+      .mock.calls.map(([line]) => line)
       .join('\n');
 
-    expect(debugOutput).toContain("CacheService: Evicted LRU entry with key 'alpha'");
+    expect(debugOutput).toContain(
+      "CacheService: Evicted LRU entry with key 'alpha'"
+    );
 
     const stats = cache.getStats();
     expect(stats.evictions).toBeGreaterThanOrEqual(1);

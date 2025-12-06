@@ -240,4 +240,3 @@ async function createDimensionalScenario(fixture) {
 
   return { perimeterId, dimensionId, blockerId };
 }
-

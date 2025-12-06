@@ -62,7 +62,10 @@ class FakeContainer {
  * @param instance
  */
 function registerInstance(container, token, instance) {
-  container.register(token, instance, { lifecycle: 'singleton', isInstance: true });
+  container.register(token, instance, {
+    lifecycle: 'singleton',
+    isInstance: true,
+  });
 }
 
 /**
@@ -71,7 +74,10 @@ function registerInstance(container, token, instance) {
  * @param root0.withValidation
  * @param root0.failValidationImport
  */
-async function importModuleWithMocks({ withValidation = false, failValidationImport = false } = {}) {
+async function importModuleWithMocks({
+  withValidation = false,
+  failValidationImport = false,
+} = {}) {
   const consoleLoggerInstance = { log: jest.fn() };
   const ConsoleLoggerMock = jest.fn(() => consoleLoggerInstance);
   const loggerStrategyInstance = {
@@ -95,10 +101,13 @@ async function importModuleWithMocks({ withValidation = false, failValidationImp
     default: LoggerStrategyMock,
   }));
 
-  jest.doMock('../../../src/dependencyInjection/baseContainerConfig.js', () => ({
-    __esModule: true,
-    configureBaseContainer: configureBaseContainerMock,
-  }));
+  jest.doMock(
+    '../../../src/dependencyInjection/baseContainerConfig.js',
+    () => ({
+      __esModule: true,
+      configureBaseContainer: configureBaseContainerMock,
+    })
+  );
 
   jest.doMock('../../../src/configuration/utils/loggerConfigUtils.js', () => ({
     __esModule: true,
@@ -113,16 +122,24 @@ async function importModuleWithMocks({ withValidation = false, failValidationImp
         throw new Error('import failure');
       });
     } else {
-      const ModDependencyValidator = jest.fn(function ModDependencyValidator() {});
-      const ModReferenceExtractor = jest.fn(function ModReferenceExtractor(config) {
-        this.config = config;
-      });
-      const ModCrossReferenceValidator = jest.fn(function ModCrossReferenceValidator(config) {
-        this.config = config;
-      });
-      const ModValidationOrchestrator = jest.fn(function ModValidationOrchestrator(config) {
-        this.config = config;
-      });
+      const ModDependencyValidator = jest.fn(
+        function ModDependencyValidator() {}
+      );
+      const ModReferenceExtractor = jest.fn(
+        function ModReferenceExtractor(config) {
+          this.config = config;
+        }
+      );
+      const ModCrossReferenceValidator = jest.fn(
+        function ModCrossReferenceValidator(config) {
+          this.config = config;
+        }
+      );
+      const ModValidationOrchestrator = jest.fn(
+        function ModValidationOrchestrator(config) {
+          this.config = config;
+        }
+      );
       const ViolationReporter = jest.fn(function ViolationReporter(config) {
         this.config = config;
       });
@@ -131,14 +148,20 @@ async function importModuleWithMocks({ withValidation = false, failValidationImp
         __esModule: true,
         default: ModReferenceExtractor,
       }));
-      jest.doMock('../../../cli/validation/modCrossReferenceValidator.js', () => ({
-        __esModule: true,
-        default: ModCrossReferenceValidator,
-      }));
-      jest.doMock('../../../cli/validation/modValidationOrchestrator.js', () => ({
-        __esModule: true,
-        default: ModValidationOrchestrator,
-      }));
+      jest.doMock(
+        '../../../cli/validation/modCrossReferenceValidator.js',
+        () => ({
+          __esModule: true,
+          default: ModCrossReferenceValidator,
+        })
+      );
+      jest.doMock(
+        '../../../cli/validation/modValidationOrchestrator.js',
+        () => ({
+          __esModule: true,
+          default: ModValidationOrchestrator,
+        })
+      );
       jest.doMock('../../../src/validation/violationReporter.js', () => ({
         __esModule: true,
         default: ViolationReporter,
@@ -158,8 +181,12 @@ async function importModuleWithMocks({ withValidation = false, failValidationImp
     }
   }
 
-  const module = await import('../../../src/dependencyInjection/minimalContainerConfig.js');
-  const tokensModule = await import('../../../src/dependencyInjection/tokens.js');
+  const module = await import(
+    '../../../src/dependencyInjection/minimalContainerConfig.js'
+  );
+  const tokensModule = await import(
+    '../../../src/dependencyInjection/tokens.js'
+  );
 
   return {
     configureMinimalContainer: module.configureMinimalContainer,
@@ -193,10 +220,13 @@ describe('configureMinimalContainer', () => {
     process.env.NODE_ENV = 'production';
     delete process.env.DEBUG_LOG_MODE;
 
-    const { configureMinimalContainer, tokens, mocks } = await importModuleWithMocks();
+    const { configureMinimalContainer, tokens, mocks } =
+      await importModuleWithMocks();
     const container = new FakeContainer();
 
-    await configureMinimalContainer(container, { includeCharacterBuilder: true });
+    await configureMinimalContainer(container, {
+      includeCharacterBuilder: true,
+    });
 
     expect(mocks.LoggerStrategyMock).toHaveBeenCalledWith({
       mode: undefined,
@@ -223,7 +253,9 @@ describe('configureMinimalContainer', () => {
     );
 
     expect(mocks.loggerStrategyInstance.debug).toHaveBeenCalledWith(
-      expect.stringContaining('[MinimalContainerConfig] Initial logger registered')
+      expect.stringContaining(
+        '[MinimalContainerConfig] Initial logger registered'
+      )
     );
     expect(mocks.loggerStrategyInstance.debug).toHaveBeenCalledWith(
       '[MinimalContainerConfig] All core bundles registered.'
@@ -242,7 +274,9 @@ describe('configureMinimalContainer', () => {
 
     const container = new FakeContainer();
 
-    await configureMinimalContainer(container, { includeValidationServices: true });
+    await configureMinimalContainer(container, {
+      includeValidationServices: true,
+    });
 
     expect(mocks.LoggerStrategyMock).toHaveBeenCalledWith({
       mode: 'console',
@@ -257,19 +291,25 @@ describe('configureMinimalContainer', () => {
 
     // Register stub dependencies required by validation factories
     registerInstance(container, tokens.ISchemaValidator, { id: 'schema' });
-    registerInstance(container, tokens.ModLoadOrderResolver, { id: 'resolver' });
+    registerInstance(container, tokens.ModLoadOrderResolver, {
+      id: 'resolver',
+    });
     registerInstance(container, tokens.ModManifestLoader, { id: 'manifest' });
     registerInstance(container, tokens.IPathResolver, { id: 'path' });
     registerInstance(container, tokens.IConfiguration, { id: 'config' });
 
     const referenceExtractor = container.resolve(tokens.IModReferenceExtractor);
-    expect(referenceExtractor).toBeInstanceOf(validationMocks.ModReferenceExtractor);
+    expect(referenceExtractor).toBeInstanceOf(
+      validationMocks.ModReferenceExtractor
+    );
     expect(validationMocks.ModReferenceExtractor).toHaveBeenCalledWith({
       logger: mocks.loggerStrategyInstance,
       ajvValidator: { id: 'schema' },
     });
 
-    const crossReferenceValidator = container.resolve(tokens.IModCrossReferenceValidator);
+    const crossReferenceValidator = container.resolve(
+      tokens.IModCrossReferenceValidator
+    );
     expect(crossReferenceValidator).toBeInstanceOf(
       validationMocks.ModCrossReferenceValidator
     );
@@ -280,7 +320,9 @@ describe('configureMinimalContainer', () => {
     });
 
     const orchestrator = container.resolve(tokens.IModValidationOrchestrator);
-    expect(orchestrator).toBeInstanceOf(validationMocks.ModValidationOrchestrator);
+    expect(orchestrator).toBeInstanceOf(
+      validationMocks.ModValidationOrchestrator
+    );
     expect(validationMocks.ModValidationOrchestrator).toHaveBeenCalledWith({
       logger: mocks.loggerStrategyInstance,
       modDependencyValidator: validationMocks.ModDependencyValidator,

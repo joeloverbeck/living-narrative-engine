@@ -1,10 +1,4 @@
-import {
-  afterAll,
-  beforeAll,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import express from 'express';
 import request from 'supertest';
 
@@ -21,12 +15,8 @@ const buildEdgeCaseApp = () => {
   app.use(express.json({ limit: '1mb' }));
 
   app.post('/api/ipv6/edge-cases', (req, res) => {
-    const {
-      hostCandidate,
-      extractionTarget,
-      normalizationTarget,
-      addresses,
-    } = req.body;
+    const { hostCandidate, extractionTarget, normalizationTarget, addresses } =
+      req.body;
 
     const hostIsIPv6 = isIPv6Hostname(hostCandidate);
     const extractedAddress = extractIPv6FromHostname(extractionTarget);

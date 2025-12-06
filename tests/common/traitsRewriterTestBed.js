@@ -10,10 +10,7 @@
 import { jest } from '@jest/globals';
 import { BaseTestBed } from './baseTestBed.js';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  cleanupTestElements,
-  createTestContainer,
-} from './domTestUtils.js';
+import { cleanupTestElements, createTestContainer } from './domTestUtils.js';
 
 /**
  * Test bed for traits rewriter integration testing
@@ -174,13 +171,15 @@ export class TraitsRewriterTestBed extends BaseTestBed {
         }
         await this.initialize();
       }),
-      resetInitializationState: jest.fn().mockImplementation(function (callback) {
-        this.isInitialized = false;
-        this.isInitializing = false;
-        if (typeof callback === 'function') {
-          callback();
-        }
-      }),
+      resetInitializationState: jest
+        .fn()
+        .mockImplementation(function (callback) {
+          this.isInitialized = false;
+          this.isInitializing = false;
+          if (typeof callback === 'function') {
+            callback();
+          }
+        }),
     };
 
     // Create element cache for mockDOMElementManager
@@ -223,7 +222,9 @@ export class TraitsRewriterTestBed extends BaseTestBed {
         return elementCache;
       }),
       normalizeElementConfig: jest.fn((config) =>
-        typeof config === 'string' ? { selector: config, required: true } : config
+        typeof config === 'string'
+          ? { selector: config, required: true }
+          : config
       ),
       validateElement: jest.fn(),
       setElementEnabled: jest.fn(),
@@ -291,7 +292,9 @@ export class TraitsRewriterTestBed extends BaseTestBed {
       })),
       handleServiceError: jest.fn((error, operation, userMessage) => {
         // Rethrow the error with operation context for testing
-        const contextualError = new Error(`${operation} failed: ${error.message}`);
+        const contextualError = new Error(
+          `${operation} failed: ${error.message}`
+        );
         throw contextualError;
       }),
       logError: jest.fn(),
@@ -474,7 +477,9 @@ export class TraitsRewriterTestBed extends BaseTestBed {
     timeoutError.code = 'TIMEOUT';
     this.mockLLMService.mockRejectedValue(timeoutError);
     this.mockTraitsRewriterService.rewrite.mockRejectedValue(timeoutError);
-    this.mockCharacterBuilderService.rewriteTraits.mockRejectedValue(timeoutError);
+    this.mockCharacterBuilderService.rewriteTraits.mockRejectedValue(
+      timeoutError
+    );
   }
 
   /**

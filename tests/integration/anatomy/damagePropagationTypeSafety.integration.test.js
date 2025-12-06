@@ -5,7 +5,14 @@
  * @see src/anatomy/services/damagePropagationService.js
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import { createMockLogger } from '../../common/mockFactories/loggerMocks.js';
 
@@ -81,7 +88,8 @@ describe('DamagePropagationService - Entity vs String ID Type Safety', () => {
       expect(results[0].damageApplied).toBe(50); // 100 * 0.5
 
       // Verify getComponentData was called with string IDs, not Entity objects
-      const getComponentDataCalls = mockEntityManager.getComponentData.mock.calls;
+      const getComponentDataCalls =
+        mockEntityManager.getComponentData.mock.calls;
       for (const call of getComponentDataCalls) {
         expect(typeof call[0]).toBe('string');
       }
@@ -189,7 +197,8 @@ describe('DamagePropagationService - Entity vs String ID Type Safety', () => {
       expect(results[0].childPartId).toBe('valid-child');
 
       // Should not have attempted to call getComponentData with invalid IDs
-      const getComponentDataCalls = mockEntityManager.getComponentData.mock.calls;
+      const getComponentDataCalls =
+        mockEntityManager.getComponentData.mock.calls;
       const entityIdArgs = getComponentDataCalls.map((call) => call[0]);
       expect(entityIdArgs).not.toContain(null);
       expect(entityIdArgs).not.toContain(undefined);
@@ -199,9 +208,7 @@ describe('DamagePropagationService - Entity vs String ID Type Safety', () => {
     it('should not generate validation errors that could trigger recursion', () => {
       // This test ensures the fix prevents the validation error chain
       // that was causing EventBus recursion warnings
-      const entityObjects = [
-        { id: 'child-part-1', components: new Map() },
-      ];
+      const entityObjects = [{ id: 'child-part-1', components: new Map() }];
 
       let validationErrorLogged = false;
       const trackingLogger = {

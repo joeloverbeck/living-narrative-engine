@@ -3,7 +3,14 @@
  * @description Unit tests for PerceptibleEventSenderController
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import PerceptibleEventSenderController from '../../../src/domUI/perceptibleEventSenderController.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';
@@ -37,7 +44,10 @@ describe('PerceptibleEventSenderController', () => {
         <div id="perceptible-event-status"></div>
       </div>
     `;
-    dom = new JSDOM(html, { runScripts: 'dangerously', pretendToBeVisual: true });
+    dom = new JSDOM(html, {
+      runScripts: 'dangerously',
+      pretendToBeVisual: true,
+    });
     mockDocument = dom.window.document;
 
     // Mock dependencies
@@ -119,24 +129,34 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should attach event listeners on initialize()', () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       const addEventListenerSpy = jest.spyOn(messageInput, 'addEventListener');
 
       controller.initialize();
 
-      expect(addEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function));
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'input',
+        expect.any(Function)
+      );
       addEventListenerSpy.mockRestore();
     });
 
     it('should subscribe to ENGINE_READY_UI event on initialize()', () => {
       controller.initialize();
-      expect(mockEventBus.subscribe).toHaveBeenCalledWith(ENGINE_READY_UI, expect.any(Function));
+      expect(mockEventBus.subscribe).toHaveBeenCalledWith(
+        ENGINE_READY_UI,
+        expect.any(Function)
+      );
     });
 
     it('should load locations when ENGINE_READY_UI event fires', () => {
       controller.initialize();
       triggerGameReady();
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(EXITS_COMPONENT_ID);
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        EXITS_COMPONENT_ID
+      );
     });
   });
 
@@ -150,7 +170,9 @@ describe('PerceptibleEventSenderController', () => {
       const mockLocations = [
         {
           id: 'location:tavern',
-          getComponent: jest.fn().mockReturnValue({ name: 'The Prancing Pony' }),
+          getComponent: jest
+            .fn()
+            .mockReturnValue({ name: 'The Prancing Pony' }),
         },
         {
           id: 'location:market',
@@ -163,7 +185,9 @@ describe('PerceptibleEventSenderController', () => {
       // Re-trigger game ready to reload with new mock data
       triggerGameReady();
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       expect(locationSelect.options.length).toBe(3); // Including default option
       expect(locationSelect.options[1].value).toBe('location:tavern');
       expect(locationSelect.options[1].textContent).toBe('The Prancing Pony');
@@ -175,7 +199,9 @@ describe('PerceptibleEventSenderController', () => {
       // Re-trigger game ready to reload with empty data
       triggerGameReady();
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       expect(locationSelect.options.length).toBe(1); // Only default option
     });
 
@@ -200,7 +226,9 @@ describe('PerceptibleEventSenderController', () => {
       const mockLocations = [
         {
           id: 'location:tavern',
-          getComponent: jest.fn().mockReturnValue({ name: 'The Prancing Pony' }),
+          getComponent: jest
+            .fn()
+            .mockReturnValue({ name: 'The Prancing Pony' }),
         },
         {
           id: 'location:market',
@@ -233,21 +261,31 @@ describe('PerceptibleEventSenderController', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          return mockActors;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            return mockActors;
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Verify the handler was called and queried for actors
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith('core:actor');
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        'core:actor'
+      );
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.options.length).toBe(1);
       expect(actorSelect.options[0].value).toBe('actor:frodo');
     });
@@ -280,18 +318,26 @@ describe('PerceptibleEventSenderController', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          return mockActors;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            return mockActors;
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.options.length).toBe(1);
       expect(actorSelect.options[0].value).toBe('actor:frodo');
     });
@@ -299,11 +345,15 @@ describe('PerceptibleEventSenderController', () => {
     it('should handle location with no actors', () => {
       mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:empty';
       locationSelect.dispatchEvent(new dom.window.Event('change'));
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.options.length).toBe(0);
     });
 
@@ -324,38 +374,54 @@ describe('PerceptibleEventSenderController', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          return mockActors;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            return mockActors;
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.options.length).toBe(1);
 
       // Now select empty value (line 151)
       locationSelect.value = '';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       expect(actorSelect.innerHTML).toBe('');
     });
 
     it('should handle errors when loading actors for location', () => {
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          throw new Error('Failed to fetch actors');
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            throw new Error('Failed to fetch actors');
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Lines 279-280: Error handling
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -363,7 +429,9 @@ describe('PerceptibleEventSenderController', () => {
         expect.any(Error)
       );
 
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       expect(actorSelect.innerHTML).toBe('');
     });
   });
@@ -374,53 +442,79 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should show actor selector for specific mode', () => {
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const actorContainer = mockDocument.getElementById('actor-filter-container');
+      const actorContainer = mockDocument.getElementById(
+        'actor-filter-container'
+      );
       expect(actorContainer.style.display).toBe('block');
     });
 
     it('should show actor selector for exclude mode', () => {
       const excludeRadio = mockDocument.querySelector('input[value="exclude"]');
       excludeRadio.checked = true;
-      excludeRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      excludeRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const actorContainer = mockDocument.getElementById('actor-filter-container');
+      const actorContainer = mockDocument.getElementById(
+        'actor-filter-container'
+      );
       expect(actorContainer.style.display).toBe('block');
     });
 
     it('should hide actor selector for all mode', () => {
       // First set to specific
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Then switch back to all
       const allRadio = mockDocument.querySelector('input[value="all"]');
       allRadio.checked = true;
       allRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 
-      const actorContainer = mockDocument.getElementById('actor-filter-container');
+      const actorContainer = mockDocument.getElementById(
+        'actor-filter-container'
+      );
       expect(actorContainer.style.display).toBe('none');
     });
 
     it('should return default "all" when no radio button is checked (line 317)', () => {
       // Uncheck all radio buttons to test the default fallback
-      const widget = mockDocument.getElementById('perceptible-event-sender-widget');
-      const filterModeRadios = widget.querySelectorAll('input[name="filter-mode"]');
+      const widget = mockDocument.getElementById(
+        'perceptible-event-sender-widget'
+      );
+      const filterModeRadios = widget.querySelectorAll(
+        'input[name="filter-mode"]'
+      );
       filterModeRadios.forEach((radio) => {
         radio.checked = false;
       });
 
       // Trigger validation which internally calls getSelectedFilterMode
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
       // The form should still validate (fallback to 'all' mode)
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(true); // Still disabled due to no location
     });
   });
@@ -431,7 +525,9 @@ describe('PerceptibleEventSenderController', () => {
       const mockLocations = [
         {
           id: 'location:tavern',
-          getComponent: jest.fn().mockReturnValue({ name: 'The Prancing Pony' }),
+          getComponent: jest
+            .fn()
+            .mockReturnValue({ name: 'The Prancing Pony' }),
         },
       ];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(mockLocations);
@@ -441,60 +537,102 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should disable send button when message empty', () => {
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(true);
     });
 
     it('should disable send button when no location selected', () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(true);
     });
 
     it('should enable send button when form valid', () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(false);
     });
 
     it('should disable send button when specific mode but no actors selected', () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(true);
     });
 
     it('should send event via Ctrl+Enter keyboard shortcut (lines 182-183)', async () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Send button should be enabled
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
       expect(sendButton.disabled).toBe(false);
 
       // Press Ctrl+Enter
@@ -511,13 +649,21 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should not send event via Enter without Ctrl', async () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Press Enter without Ctrl
       const keyEvent = new dom.window.KeyboardEvent('keydown', {
@@ -533,7 +679,9 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should not send event via Ctrl+Enter when button is disabled', async () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = ''; // Empty message to keep button disabled
 
       // Press Ctrl+Enter
@@ -556,7 +704,9 @@ describe('PerceptibleEventSenderController', () => {
       const mockLocations = [
         {
           id: 'location:tavern',
-          getComponent: jest.fn().mockReturnValue({ name: 'The Prancing Pony' }),
+          getComponent: jest
+            .fn()
+            .mockReturnValue({ name: 'The Prancing Pony' }),
         },
       ];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(mockLocations);
@@ -565,18 +715,30 @@ describe('PerceptibleEventSenderController', () => {
       triggerGameReady(); // Load locations before operation execution tests
 
       // Setup valid form
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'A loud crash echoes from nearby';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
     });
 
     it('should execute DISPATCH_PERCEPTIBLE_EVENT operation', async () => {
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -600,8 +762,12 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should include log_entry: true in operation parameters', async () => {
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -610,8 +776,12 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should construct correct operation for all mode', async () => {
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -634,20 +804,32 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should clear form after successful operation execution', async () => {
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
 
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       expect(messageInput.value).toBe('');
     });
 
     it('should handle operation execution errors', async () => {
-      mockOperationInterpreter.execute.mockRejectedValue(new Error('Operation failed'));
+      mockOperationInterpreter.execute.mockRejectedValue(
+        new Error('Operation failed')
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -658,9 +840,13 @@ describe('PerceptibleEventSenderController', () => {
 
     it('should construct payload with recipientIds for specific mode (line 373)', async () => {
       // Switch to specific mode
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
-      specificRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      specificRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Mock actors for selection
       const mockActors = [
@@ -678,24 +864,38 @@ describe('PerceptibleEventSenderController', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          return mockActors;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            return mockActors;
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Select an actor
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       actorSelect.options[0].selected = true;
-      actorSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      actorSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -715,7 +915,9 @@ describe('PerceptibleEventSenderController', () => {
       // Switch to exclude mode
       const excludeRadio = mockDocument.querySelector('input[value="exclude"]');
       excludeRadio.checked = true;
-      excludeRadio.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      excludeRadio.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Mock actors for selection
       const mockActors = [
@@ -733,24 +935,38 @@ describe('PerceptibleEventSenderController', () => {
         },
       ];
 
-      mockEntityManager.getEntitiesWithComponent.mockImplementation((componentType) => {
-        if (componentType === 'core:actor') {
-          return mockActors;
+      mockEntityManager.getEntitiesWithComponent.mockImplementation(
+        (componentType) => {
+          if (componentType === 'core:actor') {
+            return mockActors;
+          }
+          return [];
         }
-        return [];
-      });
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
       // Select an actor to exclude
-      const actorSelect = mockDocument.getElementById('perceptible-event-actors');
+      const actorSelect = mockDocument.getElementById(
+        'perceptible-event-actors'
+      );
       actorSelect.options[0].selected = true;
-      actorSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      actorSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -771,12 +987,20 @@ describe('PerceptibleEventSenderController', () => {
     it('should remove event listeners on cleanup', () => {
       controller.initialize();
 
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
-      const removeEventListenerSpy = jest.spyOn(messageInput, 'removeEventListener');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
+      const removeEventListenerSpy = jest.spyOn(
+        messageInput,
+        'removeEventListener'
+      );
 
       controller.cleanup();
 
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('input', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'input',
+        expect.any(Function)
+      );
       removeEventListenerSpy.mockRestore();
     });
 
@@ -784,7 +1008,10 @@ describe('PerceptibleEventSenderController', () => {
       controller.initialize();
       controller.cleanup();
 
-      expect(mockEventBus.unsubscribe).toHaveBeenCalledWith(ENGINE_READY_UI, expect.any(Function));
+      expect(mockEventBus.unsubscribe).toHaveBeenCalledWith(
+        ENGINE_READY_UI,
+        expect.any(Function)
+      );
     });
 
     it('should clear cached state', () => {
@@ -815,7 +1042,10 @@ describe('PerceptibleEventSenderController', () => {
   describe('Additional Edge Cases', () => {
     it('should throw and log error if initialization fails', () => {
       const badDom = new JSDOM('<div></div>');
-      const badDocContext = new DocumentContext(badDom.window.document, badDom.window);
+      const badDocContext = new DocumentContext(
+        badDom.window.document,
+        badDom.window
+      );
 
       const badController = new PerceptibleEventSenderController({
         eventBus: mockEventBus,
@@ -853,7 +1083,9 @@ describe('PerceptibleEventSenderController', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         '[PerceptibleEventSender] Manual refresh requested - reloading locations'
       );
-      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(EXITS_COMPONENT_ID);
+      expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+        EXITS_COMPONENT_ID
+      );
     });
 
     it('should log success when subscription succeeds', () => {
@@ -889,7 +1121,9 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should clear previous timeout when showing new status (lines 440-441)', () => {
-      const statusArea = mockDocument.getElementById('perceptible-event-status');
+      const statusArea = mockDocument.getElementById(
+        'perceptible-event-status'
+      );
 
       // Show first status
       statusArea.textContent = 'First message';
@@ -908,7 +1142,9 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should auto-clear status message after 5 seconds (lines 450-452)', async () => {
-      const statusArea = mockDocument.getElementById('perceptible-event-status');
+      const statusArea = mockDocument.getElementById(
+        'perceptible-event-status'
+      );
 
       // Trigger an error to show status
       mockEntityManager.getEntitiesWithComponent.mockImplementation(() => {
@@ -930,7 +1166,9 @@ describe('PerceptibleEventSenderController', () => {
     });
 
     it('should handle multiple rapid status updates correctly', () => {
-      const statusArea = mockDocument.getElementById('perceptible-event-status');
+      const statusArea = mockDocument.getElementById(
+        'perceptible-event-status'
+      );
 
       // Show first status
       mockEntityManager.getEntitiesWithComponent.mockImplementation(() => {
@@ -969,7 +1207,9 @@ describe('PerceptibleEventSenderController', () => {
       const mockLocations = [
         {
           id: 'location:tavern',
-          getComponent: jest.fn().mockReturnValue({ name: 'The Prancing Pony' }),
+          getComponent: jest
+            .fn()
+            .mockReturnValue({ name: 'The Prancing Pony' }),
         },
       ];
       mockEntityManager.getEntitiesWithComponent.mockReturnValue(mockLocations);
@@ -980,7 +1220,9 @@ describe('PerceptibleEventSenderController', () => {
 
     it('should reset filter mode radios to "all" when clearing form (lines 469-470)', async () => {
       // Setup form with specific mode
-      const specificRadio = mockDocument.querySelector('input[value="specific"]');
+      const specificRadio = mockDocument.querySelector(
+        'input[value="specific"]'
+      );
       specificRadio.checked = true;
 
       const allRadio = mockDocument.querySelector('input[value="all"]');
@@ -990,16 +1232,28 @@ describe('PerceptibleEventSenderController', () => {
       expect(allRadio.checked).toBe(false);
 
       // Fill and submit form
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
-      sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
+      sendButton.dispatchEvent(
+        new dom.window.Event('click', { bubbles: true })
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler
 
@@ -1010,24 +1264,38 @@ describe('PerceptibleEventSenderController', () => {
 
     it('should handle missing filter mode radios gracefully in clearForm', async () => {
       // Remove radio buttons from DOM to test edge case
-      const widget = mockDocument.getElementById('perceptible-event-sender-widget');
+      const widget = mockDocument.getElementById(
+        'perceptible-event-sender-widget'
+      );
       const radios = widget.querySelectorAll('input[name="filter-mode"]');
       radios.forEach((radio) => radio.remove());
 
       // Fill and submit form
-      const messageInput = mockDocument.getElementById('perceptible-event-message');
+      const messageInput = mockDocument.getElementById(
+        'perceptible-event-message'
+      );
       messageInput.value = 'Test message';
-      messageInput.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+      messageInput.dispatchEvent(
+        new dom.window.Event('input', { bubbles: true })
+      );
 
-      const locationSelect = mockDocument.getElementById('perceptible-event-location');
+      const locationSelect = mockDocument.getElementById(
+        'perceptible-event-location'
+      );
       locationSelect.value = 'location:tavern';
-      locationSelect.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+      locationSelect.dispatchEvent(
+        new dom.window.Event('change', { bubbles: true })
+      );
 
-      const sendButton = mockDocument.getElementById('send-perceptible-event-button');
+      const sendButton = mockDocument.getElementById(
+        'send-perceptible-event-button'
+      );
 
       // Should not throw error
       expect(() => {
-        sendButton.dispatchEvent(new dom.window.Event('click', { bubbles: true }));
+        sendButton.dispatchEvent(
+          new dom.window.Event('click', { bubbles: true })
+        );
       }).not.toThrow();
 
       await new Promise((resolve) => setTimeout(resolve, 0)); // Wait for async handler

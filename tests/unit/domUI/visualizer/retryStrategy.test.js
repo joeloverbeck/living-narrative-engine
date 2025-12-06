@@ -1146,7 +1146,9 @@ describe('RetryStrategy', () => {
       retryStrategy._updateCircuitBreaker(operationId);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('moved back to OPEN state after HALF_OPEN failure')
+        expect.stringContaining(
+          'moved back to OPEN state after HALF_OPEN failure'
+        )
       );
     });
 

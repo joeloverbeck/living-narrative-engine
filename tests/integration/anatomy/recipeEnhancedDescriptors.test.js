@@ -15,8 +15,14 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
 
   beforeEach(() => {
     // Load the anatomy recipe schema
-    const schemaPath = join(process.cwd(), 'data/schemas/anatomy.recipe.schema.json');
-    const commonSchemaPath = join(process.cwd(), 'data/schemas/common.schema.json');
+    const schemaPath = join(
+      process.cwd(),
+      'data/schemas/anatomy.recipe.schema.json'
+    );
+    const commonSchemaPath = join(
+      process.cwd(),
+      'data/schemas/common.schema.json'
+    );
 
     recipeSchema = JSON.parse(readFileSync(schemaPath, 'utf8'));
     const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
@@ -72,7 +78,17 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
     });
 
     it('should accept all new composition values', () => {
-      const newValues = ['atrophied', 'emaciated', 'skeletal', 'malnourished', 'dehydrated', 'wasted', 'desiccated', 'bloated', 'rotting'];
+      const newValues = [
+        'atrophied',
+        'emaciated',
+        'skeletal',
+        'malnourished',
+        'dehydrated',
+        'wasted',
+        'desiccated',
+        'bloated',
+        'rotting',
+      ];
 
       for (const value of newValues) {
         const recipe = {
@@ -87,7 +103,10 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
         const valid = validateRecipe(recipe);
         expect(valid).toBe(true);
         if (!valid) {
-          console.error(`Failed for composition: ${value}`, validateRecipe.errors);
+          console.error(
+            `Failed for composition: ${value}`,
+            validateRecipe.errors
+          );
         }
       }
     });
@@ -121,7 +140,17 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
     });
 
     it('should accept all new build values', () => {
-      const newValues = ['frail', 'gaunt', 'skeletal', 'atrophied', 'cadaverous', 'massive', 'willowy', 'barrel-chested', 'lanky'];
+      const newValues = [
+        'frail',
+        'gaunt',
+        'skeletal',
+        'atrophied',
+        'cadaverous',
+        'massive',
+        'willowy',
+        'barrel-chested',
+        'lanky',
+      ];
 
       for (const value of newValues) {
         const recipe = {
@@ -312,7 +341,15 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
 
   describe('Backward compatibility', () => {
     it('should still accept all original composition values', () => {
-      const originalValues = ['underweight', 'lean', 'average', 'soft', 'chubby', 'overweight', 'obese'];
+      const originalValues = [
+        'underweight',
+        'lean',
+        'average',
+        'soft',
+        'chubby',
+        'overweight',
+        'obese',
+      ];
 
       for (const value of originalValues) {
         const recipe = {
@@ -329,7 +366,19 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
     });
 
     it('should still accept all original build values', () => {
-      const originalValues = ['skinny', 'slim', 'lissom', 'toned', 'athletic', 'shapely', 'hourglass', 'thick', 'muscular', 'hulking', 'stocky'];
+      const originalValues = [
+        'skinny',
+        'slim',
+        'lissom',
+        'toned',
+        'athletic',
+        'shapely',
+        'hourglass',
+        'thick',
+        'muscular',
+        'hulking',
+        'stocky',
+      ];
 
       for (const value of originalValues) {
         const recipe = {
@@ -346,7 +395,15 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
     });
 
     it('should still accept all original height values', () => {
-      const originalValues = ['gigantic', 'very-tall', 'tall', 'average', 'short', 'petite', 'tiny'];
+      const originalValues = [
+        'gigantic',
+        'very-tall',
+        'tall',
+        'average',
+        'short',
+        'petite',
+        'tiny',
+      ];
 
       for (const value of originalValues) {
         const recipe = {

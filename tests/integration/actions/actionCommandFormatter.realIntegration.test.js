@@ -101,18 +101,21 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
     const context = ActionTargetContext.forEntity('npc-1');
     context.placeholder = 'target';
 
-    const result = formatter.format(
-      baseAction,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher, debug: true }
-    );
+    const result = formatter.format(baseAction, context, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+      debug: true,
+    });
 
     expect(result).toEqual({ ok: true, value: 'wave at Friendly NPC' });
-    expect(logger.debugLogs[0].message).toContain('Formatting command for action');
-    expect(logger.debugLogs.some((log) => log.message.includes('Final formatted command'))).toBe(
-      true
+    expect(logger.debugLogs[0].message).toContain(
+      'Formatting command for action'
     );
+    expect(
+      logger.debugLogs.some((log) =>
+        log.message.includes('Final formatted command')
+      )
+    ).toBe(true);
     expect(dispatcher.events).toHaveLength(0);
   });
 
@@ -133,12 +136,11 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
     entityManager.addEntity(new TestEntity('npc-3'));
     const context = ActionTargetContext.forEntity('npc-3');
 
-    const result = formatter.format(
-      baseAction,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher, debug: true }
-    );
+    const result = formatter.format(baseAction, context, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+      debug: true,
+    });
 
     expect(result).toEqual({ ok: true, value: 'wave at npc-3' });
     expect(
@@ -151,12 +153,10 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
   it('warns when the entity cannot be resolved and uses the raw template', () => {
     const context = ActionTargetContext.forEntity('missing-entity');
 
-    const result = formatter.format(
-      baseAction,
-      context,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher }
-    );
+    const result = formatter.format(baseAction, context, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     expect(result).toEqual({ ok: true, value: 'wave at missing-entity' });
     expect(
@@ -169,12 +169,10 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
   it('returns the template unchanged for unknown target types and logs a warning', () => {
     const unknownContext = { type: 'mystery' };
 
-    const result = formatter.format(
-      baseAction,
-      unknownContext,
-      entityManager,
-      { logger, safeEventDispatcher: dispatcher }
-    );
+    const result = formatter.format(baseAction, unknownContext, entityManager, {
+      logger,
+      safeEventDispatcher: dispatcher,
+    });
 
     expect(result).toEqual({ ok: true, value: 'wave at {target}' });
     expect(
@@ -186,10 +184,15 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
 
   it('dispatches a validation error when the action template is missing', () => {
     const brokenAction = { id: 'broken', name: 'Broken Action' };
-    const result = formatter.format(brokenAction, ActionTargetContext.noTarget(), entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatter.format(
+      brokenAction,
+      ActionTargetContext.noTarget(),
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      }
+    );
 
     expect(result.ok).toBe(false);
     expect(result.error).toBe(
@@ -209,7 +212,9 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
     });
 
     expect(result.ok).toBe(false);
-    expect(result.error).toBe('formatActionCommand: Invalid or missing targetContext.');
+    expect(result.error).toBe(
+      'formatActionCommand: Invalid or missing targetContext.'
+    );
     expect(dispatcher.events).toHaveLength(1);
     expect(dispatcher.lastEvent.payload.message).toBe(
       'formatActionCommand: Invalid or missing targetContext.'
@@ -219,13 +224,20 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
   it('dispatches a validation error when the entity manager is invalid', () => {
     const badEntityManager = { getEntityInstance: 'not-a-function' };
 
-    const result = formatter.format(baseAction, ActionTargetContext.noTarget(), badEntityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatter.format(
+      baseAction,
+      ActionTargetContext.noTarget(),
+      badEntityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      }
+    );
 
     expect(result.ok).toBe(false);
-    expect(result.error).toBe('formatActionCommand: Invalid or missing entityManager.');
+    expect(result.error).toBe(
+      'formatActionCommand: Invalid or missing entityManager.'
+    );
     expect(dispatcher.lastEvent.payload.message).toBe(
       'formatActionCommand: Invalid or missing entityManager.'
     );
@@ -311,7 +323,9 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
     expect(dispatcher.lastEvent.payload.message).toBe(
       'formatActionCommand: Error during placeholder substitution for action core:wave:'
     );
-    expect(dispatcher.lastEvent.payload.details.error).toBe('formatter exploded');
+    expect(dispatcher.lastEvent.payload.details.error).toBe(
+      'formatter exploded'
+    );
   });
 
   it('accepts formatter outputs that are plain strings and normalizes them', () => {
@@ -334,16 +348,23 @@ describe('ActionCommandFormatter integration with real formatter map', () => {
   it('logs warnings for templates with placeholders when target type is none', () => {
     const action = { ...baseAction, template: 'wait here {target}' };
 
-    const result = formatter.format(action, ActionTargetContext.noTarget(), entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-      debug: true,
-    });
+    const result = formatter.format(
+      action,
+      ActionTargetContext.noTarget(),
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+        debug: true,
+      }
+    );
 
     expect(result).toEqual({ ok: true, value: 'wait here {target}' });
     expect(
-      logger.warnLogs.some((entry) =>
-        entry.message.includes('target_domain') && entry.message.includes('wait here {target}')
+      logger.warnLogs.some(
+        (entry) =>
+          entry.message.includes('target_domain') &&
+          entry.message.includes('wait here {target}')
       )
     ).toBe(true);
   });

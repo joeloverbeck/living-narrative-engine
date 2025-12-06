@@ -14,10 +14,12 @@ Create component schemas for `metabolism:fuel_converter` and `metabolism:fuel_so
 ## Files to Touch
 
 ### New Files (2)
+
 - `data/mods/metabolism/components/fuel_converter.component.json`
 - `data/mods/metabolism/components/fuel_source.component.json`
 
 ### Modified Files (0)
+
 None - first components of new mod
 
 ## Out of Scope
@@ -36,6 +38,7 @@ None - first components of new mod
 **Purpose:** Represents digestive organ (stomach, fuel tank, etc.) that converts consumed items into usable energy over time.
 
 **Key Properties:**
+
 - `capacity`: Maximum buffer storage (0-100 scale default)
 - `buffer_storage`: Current content waiting to be digested
 - `conversion_rate`: Points converted per turn
@@ -44,6 +47,7 @@ None - first components of new mod
 - `activity_multiplier`: Current activity's effect on conversion rate
 
 **Schema Requirements:**
+
 - Extend from `schema://living-narrative-engine/component.schema.json`
 - Set id as `metabolism:fuel_converter`
 - Include validation rules for:
@@ -57,6 +61,7 @@ None - first components of new mod
 **Purpose:** Defines consumable items with energy and volume properties.
 
 **Key Properties:**
+
 - `energy_density`: Total calories/energy provided
 - `bulk`: Volume occupied in converter buffer (0-100)
 - `fuel_tags`: Array indicating compatible converters
@@ -64,6 +69,7 @@ None - first components of new mod
 - `spoilage_rate`: Turns until spoilage (0 = never)
 
 **Schema Requirements:**
+
 - Extend from `schema://living-narrative-engine/component.schema.json`
 - Set id as `metabolism:fuel_source`
 - Include validation rules for:
@@ -75,12 +81,14 @@ None - first components of new mod
 ## Acceptance Criteria
 
 ### Schema Validation
+
 - [x] Both component schemas validate against `component.schema.json`
 - [x] All required properties are properly defined
 - [x] All validation rules are correctly specified
 - [x] Default values are provided for optional properties
 
 ### Data Integrity
+
 - [x] Fuel converter's buffer overflow constraint is documented in schema (enforced by operation handlers at runtime)
 - [x] Efficiency must be between 0.0 and 1.0 (schema-enforced)
 - [x] All numeric values must be non-negative (schema-enforced)
@@ -88,6 +96,7 @@ None - first components of new mod
 - [x] At least one fuel tag must be specified for fuel sources (schema-enforced)
 
 ### Validation Commands
+
 ```bash
 # Run after creating schemas
 npm run validate           # Basic validation
@@ -97,12 +106,14 @@ npm run validate:strict    # Strict validation
 ## Invariants
 
 ### Must Remain True
+
 - Component schemas must be valid JSON
 - Component IDs must follow format `metabolism:component_name`
 - All properties must have clear descriptions
 - No breaking changes to schema structure after initial commit
 
 ### System Invariants
+
 - Existing component schemas must continue to validate
 - No changes to core component schema structure
 - Component registry must successfully load these schemas
@@ -112,6 +123,7 @@ npm run validate:strict    # Strict validation
 **Note:** Unit tests will be created in HUNMETSYS-003 after operation handlers exist. This ticket focuses solely on schema definition and validation.
 
 Validation testing should cover:
+
 - Valid component data validates successfully
 - Invalid data (negative values, missing required fields) is rejected
 - Boundary conditions (efficiency = 1.0, bulk = 100) validate correctly
@@ -119,6 +131,7 @@ Validation testing should cover:
 ## Example Component Data
 
 ### Human Stomach (Fuel Converter)
+
 ```json
 {
   "metabolism:fuel_converter": {
@@ -133,6 +146,7 @@ Validation testing should cover:
 ```
 
 ### Bread (Fuel Source)
+
 ```json
 {
   "metabolism:fuel_source": {

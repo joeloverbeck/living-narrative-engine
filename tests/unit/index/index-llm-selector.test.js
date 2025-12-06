@@ -1,11 +1,18 @@
-import { jest, describe, it, beforeEach, afterEach, expect } from '@jest/globals';
+import {
+  jest,
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+} from '@jest/globals';
 
 const bootstrapMock = jest.fn();
-const mockCharacterBuilderBootstrapConstructor = jest.fn().mockImplementation(
-  function MockCharacterBuilderBootstrap() {
+const mockCharacterBuilderBootstrapConstructor = jest
+  .fn()
+  .mockImplementation(function MockCharacterBuilderBootstrap() {
     this.bootstrap = (...args) => bootstrapMock(...args);
-  }
-);
+  });
 
 const tokensMock = {
   LLMAdapter: 'LLMAdapter',
@@ -428,9 +435,11 @@ describe('index-llm-selector bootstrap flow', () => {
     const container = {
       resolve: resolveMock,
       register: registerMock,
-      isRegistered: jest.fn().mockImplementation((token) =>
-        token === tokensMock.DocumentContext ? true : true
-      ),
+      isRegistered: jest
+        .fn()
+        .mockImplementation((token) =>
+          token === tokensMock.DocumentContext ? true : true
+        ),
     };
 
     bootstrapMock.mockImplementation(async (options) => {

@@ -42,7 +42,12 @@ export const BURNING_STOPPED_EVENT = 'anatomy:burning_stopped';
 export const POISONED_STOPPED_EVENT = 'anatomy:poisoned_stopped';
 
 // Export component IDs for use by tick systems
-export { BLEEDING_COMPONENT_ID, BURNING_COMPONENT_ID, POISONED_COMPONENT_ID, DISMEMBERED_COMPONENT_ID };
+export {
+  BLEEDING_COMPONENT_ID,
+  BURNING_COMPONENT_ID,
+  POISONED_COMPONENT_ID,
+  DISMEMBERED_COMPONENT_ID,
+};
 
 // Severity to tick damage mapping per spec
 const BLEED_SEVERITY_MAP = {
@@ -90,7 +95,8 @@ class DamageTypeEffectsService extends BaseService {
 
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-    this.#rngProvider = typeof rngProvider === 'function' ? rngProvider : Math.random;
+    this.#rngProvider =
+      typeof rngProvider === 'function' ? rngProvider : Math.random;
   }
 
   /**
@@ -110,14 +116,15 @@ class DamageTypeEffectsService extends BaseService {
    * @param {object} [params.damageEntry.bleed] - Bleed effect configuration
    * @param {object} [params.damageEntry.fracture] - Fracture effect configuration
    * @param {object} [params.damageEntry.burn] - Burn effect configuration
-  * @param {object} [params.damageEntry.poison] - Poison effect configuration
-  * @param {object} [params.damageEntry.dismember] - Dismember effect configuration
-  * @param {number} params.maxHealth - Part's max health
-  * @param {number} params.currentHealth - Part's health AFTER damage was applied
-  * @param {object} [params.damageSession] - Optional damage accumulation session
-  * @param {() => number} [params.rng] - Optional RNG override for deterministic runs
-  * @returns {Promise<void>}
-  */
+   * @param {object} [params.damageEntry.poison] - Poison effect configuration
+   * @param {object} [params.damageEntry.dismember] - Dismember effect configuration
+   * @param {number} params.maxHealth - Part's max health
+   * @param {number} params.currentHealth - Part's health AFTER damage was applied
+   * @param {object} [params.damageSession] - Optional damage accumulation session
+   * @param {object} [params.executionContext] - Execution context for tracing
+   * @param {() => number} [params.rng] - Optional RNG override for deterministic runs
+   * @returns {Promise<void>}
+   */
   async applyEffectsForDamage({
     entityId,
     entityName,
@@ -129,14 +136,31 @@ class DamageTypeEffectsService extends BaseService {
     maxHealth,
     currentHealth,
     damageSession,
+    executionContext,
     rng,
   }) {
+    const addTrace = (phase, message, data = {}) => {
+      if (executionContext?.trace) {
+        executionContext.trace.push({
+          timestamp: Date.now(),
+          phase,
+          message,
+          data,
+          context: { entityId, partId, service: 'DamageTypeEffectsService' },
+        });
+      }
+    };
+
     // Validate damageEntry is provided
     if (!damageEntry) {
-      this.#logger.warn('DamageTypeEffectsService: No damage entry provided, skipping effects.', {
-        entityId,
-        partId,
-      });
+      this.#logger.warn(
+        'DamageTypeEffectsService: No damage entry provided, skipping effects.',
+        {
+          entityId,
+          partId,
+        }
+      );
+      addTrace('warn', 'No damage entry provided');
       return;
     }
 
@@ -145,7 +169,7 @@ class DamageTypeEffectsService extends BaseService {
     const rngToUse = typeof rng === 'function' ? rng : this.#rngProvider;
 
     // 1. Dismemberment check (before all other effects)
-    await this.#checkAndApplyDismemberment({
+    const dismembered = await this.#checkAndApplyDismemberment({
       entityId,
       entityName,
       entityPronoun,
@@ -158,6 +182,9 @@ class DamageTypeEffectsService extends BaseService {
       damageSession,
       rng: rngToUse,
     });
+    if (dismembered) {
+      addTrace('effect_dismember', 'Dismemberment applied');
+    }
     // Note: We continue execution so that secondary effects (especially bleed) are applied.
     // A dismembered part should definitely bleed!
 
@@ -172,22 +199,51 @@ class DamageTypeEffectsService extends BaseService {
       damageSession,
       rng: rngToUse,
     });
+    // Note: Fracture logic doesn't return status, but we could infer from session or checks.
+    // For now, we assume if enabled it runs. Tracing internal to private methods would be better but invasive.
 
     // Skip ongoing effects if part is destroyed
     if (partDestroyed) {
+      addTrace(
+        'info',
+        'Part destroyed, skipping ongoing effects (bleed/burn/poison)'
+      );
       return;
     }
 
     // 3. Bleed attach
-    await this.#applyBleedEffect({ entityId, partId, damageEntry, damageSession });
+    if (damageEntry.bleed?.enabled) {
+      await this.#applyBleedEffect({
+        entityId,
+        partId,
+        damageEntry,
+        damageSession,
+      });
+      addTrace('effect_bleed', 'Bleed effect applied');
+    }
 
     // 4. Burn attach
-    await this.#applyBurnEffect({ entityId, partId, damageEntry, damageSession });
+    if (damageEntry.burn?.enabled) {
+      await this.#applyBurnEffect({
+        entityId,
+        partId,
+        damageEntry,
+        damageSession,
+      });
+      addTrace('effect_burn', 'Burn effect applied');
+    }
 
     // 5. Poison attach
-    await this.#applyPoisonEffect({ entityId, partId, damageEntry, damageSession });
+    if (damageEntry.poison?.enabled) {
+      await this.#applyPoisonEffect({
+        entityId,
+        partId,
+        damageEntry,
+        damageSession,
+      });
+      addTrace('effect_poison', 'Poison effect applied');
+    }
   }
-
   /**
    * Checks and applies dismemberment if threshold is exceeded.
    *
@@ -389,7 +445,8 @@ class DamageTypeEffectsService extends BaseService {
 
     const severity = bleedConfig.severity ?? 'minor';
     const baseDuration = bleedConfig.baseDurationTurns ?? 2;
-    const severityData = BLEED_SEVERITY_MAP[severity] ?? BLEED_SEVERITY_MAP.minor;
+    const severityData =
+      BLEED_SEVERITY_MAP[severity] ?? BLEED_SEVERITY_MAP.minor;
 
     // Add or refresh bleeding component
     await this.#entityManager.addComponent(partId, BLEEDING_COMPONENT_ID, {
@@ -450,7 +507,10 @@ class DamageTypeEffectsService extends BaseService {
     const canStack = burnConfig.canStack ?? false;
 
     // Check for existing burn component
-    const existingBurn = this.#entityManager.hasComponent(partId, BURNING_COMPONENT_ID)
+    const existingBurn = this.#entityManager.hasComponent(
+      partId,
+      BURNING_COMPONENT_ID
+    )
       ? this.#entityManager.getComponentData(partId, BURNING_COMPONENT_ID)
       : null;
 
@@ -460,7 +520,8 @@ class DamageTypeEffectsService extends BaseService {
     if (existingBurn && canStack) {
       // Stack: increase damage and stack count
       newTickDamage = existingBurn.tickDamage + dps;
-      newStackedCount = (existingBurn.stackedCount ?? DEFAULT_BURN_STACK_COUNT) + 1;
+      newStackedCount =
+        (existingBurn.stackedCount ?? DEFAULT_BURN_STACK_COUNT) + 1;
     } else if (existingBurn && !canStack) {
       // No stack: just refresh duration, keep existing damage
       newTickDamage = existingBurn.tickDamage;

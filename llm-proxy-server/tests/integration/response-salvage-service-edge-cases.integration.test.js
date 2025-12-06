@@ -53,7 +53,10 @@ describe('ResponseSalvageService edge case integration coverage', () => {
       expect.objectContaining({ statusCode: 207 })
     );
 
-    const signatureLookup = salvageService.retrieveBySignature(llmId, basePayload);
+    const signatureLookup = salvageService.retrieveBySignature(
+      llmId,
+      basePayload
+    );
     expect(signatureLookup).toEqual(
       expect.objectContaining({
         fromCache: true,
@@ -63,7 +66,11 @@ describe('ResponseSalvageService edge case integration coverage', () => {
     );
 
     const stats = salvageService.getStats();
-    expect(stats).toEqual({ salvaged: 0, totalCacheEntries: 2, activeTimers: 1 });
+    expect(stats).toEqual({
+      salvaged: 0,
+      totalCacheEntries: 2,
+      activeTimers: 1,
+    });
 
     jest.advanceTimersByTime(150);
 

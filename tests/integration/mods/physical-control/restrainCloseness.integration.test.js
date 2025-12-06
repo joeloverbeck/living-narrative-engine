@@ -9,18 +9,20 @@ import restrainCondition from '../../../../data/mods/physical-control/conditions
 
 const ACTION_ID = 'physical-control:restrain_target';
 
-const forceOutcome = (outcome = 'SUCCESS') => (params, ctx) => {
-  ctx.evaluationContext.context[params.result_variable] = {
-    outcome,
-    roll: 1,
-    threshold: 100,
-    margin: -99,
-    isCritical: outcome === 'CRITICAL_SUCCESS',
-    actorSkill: 10,
-    targetSkill: 0,
-    breakdown: {},
+const forceOutcome =
+  (outcome = 'SUCCESS') =>
+  (params, ctx) => {
+    ctx.evaluationContext.context[params.result_variable] = {
+      outcome,
+      roll: 1,
+      threshold: 100,
+      margin: -99,
+      isCritical: outcome === 'CRITICAL_SUCCESS',
+      actorSkill: 10,
+      targetSkill: 0,
+      breakdown: {},
+    };
   };
-};
 
 describe('physical-control:restrain_target closeness handling', () => {
   let testFixture;

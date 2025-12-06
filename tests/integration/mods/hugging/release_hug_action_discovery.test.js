@@ -58,8 +58,8 @@ describe('hugging:release_hug action discovery', () => {
         }
 
         const actorFacingAway =
-          actorEntity.components?.['positioning:facing_away']?.facing_away_from ||
-          [];
+          actorEntity.components?.['positioning:facing_away']
+            ?.facing_away_from || [];
 
         return closeness.reduce((acc, partnerId) => {
           const partner = entityManager.getEntityInstance(partnerId);
@@ -68,7 +68,8 @@ describe('hugging:release_hug action discovery', () => {
           }
 
           const partnerFacingAway =
-            partner.components?.['positioning:facing_away']?.facing_away_from || [];
+            partner.components?.['positioning:facing_away']?.facing_away_from ||
+            [];
           const facingEachOther =
             !actorFacingAway.includes(partnerId) &&
             !partnerFacingAway.includes(actorId);

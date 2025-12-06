@@ -233,7 +233,10 @@ describe('advancedArrayModify', () => {
       );
 
       expect(modified).toBe(true);
-      expect(nextArray).toEqual([[1, 2], [1, 2, 3]]);
+      expect(nextArray).toEqual([
+        [1, 2],
+        [1, 2, 3],
+      ]);
     });
 
     it('treats arrays with mismatched elements as distinct', () => {
@@ -247,7 +250,10 @@ describe('advancedArrayModify', () => {
       );
 
       expect(modified).toBe(true);
-      expect(nextArray).toEqual([[1, 2], [1, 3]]);
+      expect(nextArray).toEqual([
+        [1, 2],
+        [1, 3],
+      ]);
     });
 
     it('removes dates using timestamp comparison', () => {

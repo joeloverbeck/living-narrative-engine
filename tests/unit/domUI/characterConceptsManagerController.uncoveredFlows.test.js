@@ -70,7 +70,9 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
     clearBtn.click();
 
     expect(controller._testExports.searchFilter).toBe('');
-    expect(displaySpy).toHaveBeenCalledWith(controller._testExports.conceptsData);
+    expect(displaySpy).toHaveBeenCalledWith(
+      controller._testExports.conceptsData
+    );
     expect(showStateSpy).toHaveBeenCalledWith('empty');
 
     currentStateSpy.mockRestore();
@@ -80,9 +82,7 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
     const showStateSpy = jest
       .spyOn(controller, '_showState')
       .mockImplementation(() => {});
-    jest
-      .spyOn(controller, 'currentState', 'get')
-      .mockReturnValue(null);
+    jest.spyOn(controller, 'currentState', 'get').mockReturnValue(null);
 
     controller._testExports.searchFilter = '';
 
@@ -103,9 +103,12 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
 
     controller._viewConceptDetails({ id: 'concept-77' });
 
-    expect(controller.logger.info).toHaveBeenCalledWith('Viewing concept details', {
-      id: 'concept-77',
-    });
+    expect(controller.logger.info).toHaveBeenCalledWith(
+      'Viewing concept details',
+      {
+        id: 'concept-77',
+      }
+    );
     expect(showEditSpy).toHaveBeenCalledWith('concept-77');
   });
 
@@ -132,7 +135,9 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
     await controller._showEditModal(conceptId);
     jest.runAllTimers();
 
-    expect(animateSpy).toHaveBeenCalledWith(controller._getElement('conceptModal'));
+    expect(animateSpy).toHaveBeenCalledWith(
+      controller._getElement('conceptModal')
+    );
     expect(validationSpy).toHaveBeenCalled();
     expect(textArea.addEventListener).toHaveBeenCalledWith(
       'input',
@@ -144,10 +149,13 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
       textArea.value.length,
       textArea.value.length
     );
-    expect(controller.eventBus.dispatch).toHaveBeenCalledWith('core:ui_modal_opened', {
-      modalType: 'edit-concept',
-      conceptId,
-    });
+    expect(controller.eventBus.dispatch).toHaveBeenCalledWith(
+      'core:ui_modal_opened',
+      {
+        modalType: 'edit-concept',
+        conceptId,
+      }
+    );
   });
 
   it('handles edit modal errors when concept data is missing', async () => {
@@ -170,7 +178,9 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
   it('logs errors when concept saving fails', async () => {
     jest.spyOn(controller, '_validateConceptForm').mockReturnValue(true);
     jest.spyOn(controller, '_setFormEnabled').mockImplementation(() => {});
-    jest.spyOn(controller, '_setSaveButtonLoading').mockImplementation(() => {});
+    jest
+      .spyOn(controller, '_setSaveButtonLoading')
+      .mockImplementation(() => {});
     controller._testExports.editingConceptId = 'concept-5';
     controller._getElement('conceptText').value = 'Updated concept idea';
 
@@ -226,7 +236,10 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
 
     controller._setupKeyboardShortcuts();
 
-    expect(addListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    expect(addListenerSpy).toHaveBeenCalledWith(
+      'keydown',
+      expect.any(Function)
+    );
     const handler = addListenerSpy.mock.calls[0][1];
     const event = testBase.createKeyboardEvent('f', { ctrlKey: true });
     handler(event);
@@ -236,4 +249,3 @@ describe('CharacterConceptsManagerController uncovered flows', () => {
     addListenerSpy.mockRestore();
   });
 });
-

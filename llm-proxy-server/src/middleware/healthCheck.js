@@ -355,7 +355,9 @@ function checkProcessHealth() {
     );
 
     const heapStats =
-      typeof v8.getHeapStatistics === 'function' ? v8.getHeapStatistics() : null;
+      typeof v8.getHeapStatistics === 'function'
+        ? v8.getHeapStatistics()
+        : null;
     const heapSizeLimitMB = heapStats
       ? Math.round(heapStats.heap_size_limit / 1024 / 1024)
       : null;

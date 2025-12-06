@@ -293,7 +293,8 @@
 }
 
 /* Show contrast warnings in development */
-body[data-dev-mode='true'] .action-button-custom-visual.contrast-warning::after {
+body[data-dev-mode='true']
+  .action-button-custom-visual.contrast-warning::after {
   display: block;
 }
 

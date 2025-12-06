@@ -177,7 +177,10 @@ class PickRandomEntityHandler extends BaseOperationHandler {
     // For objects, assume JSON Logic and evaluate
     if (typeof value === 'object' && value !== null) {
       // Use JSON Logic evaluation if available in context
-      if (context.jsonLogic && typeof context.jsonLogic.evaluate === 'function') {
+      if (
+        context.jsonLogic &&
+        typeof context.jsonLogic.evaluate === 'function'
+      ) {
         return context.jsonLogic.evaluate(value, context.evaluationContext);
       }
     }

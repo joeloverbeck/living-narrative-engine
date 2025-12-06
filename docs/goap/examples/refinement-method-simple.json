@@ -9,10 +9,7 @@
     "condition": {
       "and": [
         {
-          "has_component": [
-            { "var": "target" },
-            "items:nourishing"
-          ]
+          "has_component": [{ "var": "target" }, "items:nourishing"]
         }
       ]
     }

@@ -8,8 +8,7 @@ import LookupLoader from '../../../src/loaders/lookupLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
 
-const LOOKUP_SCHEMA_ID =
-  'schema://living-narrative-engine/lookup.schema.json';
+const LOOKUP_SCHEMA_ID = 'schema://living-narrative-engine/lookup.schema.json';
 
 /**
  * @class TestConfiguration
@@ -192,7 +191,8 @@ describe('LookupLoader integration', () => {
         {
           $schema: LOOKUP_SCHEMA_ID,
           id: 'music:mood_descriptors',
-          description: 'Maps musical mood names to descriptive adjectives and nouns',
+          description:
+            'Maps musical mood names to descriptive adjectives and nouns',
           dataSchema: {
             type: 'object',
             properties: {
@@ -249,8 +249,12 @@ describe('LookupLoader integration', () => {
       }),
     });
 
-    const { loader, registry, logger, schemaValidator: validator } =
-      createLookupLoader(fileMap, { schemaValidator });
+    const {
+      loader,
+      registry,
+      logger,
+      schemaValidator: validator,
+    } = createLookupLoader(fileMap, { schemaValidator });
 
     const manifest = {
       content: {
@@ -297,10 +301,7 @@ describe('LookupLoader integration', () => {
       },
     });
 
-    const storedDifficulty = registry.get(
-      'lookups',
-      'music:difficulty_levels'
-    );
+    const storedDifficulty = registry.get('lookups', 'music:difficulty_levels');
     expect(storedDifficulty).toMatchObject({
       id: 'difficulty_levels',
       _modId: 'music',

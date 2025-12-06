@@ -57,7 +57,9 @@ function createHungerActor() {
  * @returns {Array<[unknown, { code?: string }]>} Logged warning calls.
  */
 function collectGoalPathWarnings(logger) {
-  return logger.warn.mock.calls.filter(([, payload]) => payload?.code === 'GOAP_INVALID_GOAL_PATH');
+  return logger.warn.mock.calls.filter(
+    ([, payload]) => payload?.code === 'GOAP_INVALID_GOAL_PATH'
+  );
 }
 
 describe('GOAP dual-format goal path integration', () => {
@@ -161,9 +163,13 @@ describe('GOAP dual-format goal path integration', () => {
       actorId: actor.id,
       totalViolations: expect.any(Number),
     });
-    expect(diagnostics.entries[0].violations[0].path).toBe('state.actor.core_needs.hunger');
+    expect(diagnostics.entries[0].violations[0].path).toBe(
+      'state.actor.core_needs.hunger'
+    );
 
-    const effectTelemetry = setup.controller.getEffectFailureTelemetry(actor.id);
+    const effectTelemetry = setup.controller.getEffectFailureTelemetry(
+      actor.id
+    );
     expect(effectTelemetry).toBeNull();
   });
 });

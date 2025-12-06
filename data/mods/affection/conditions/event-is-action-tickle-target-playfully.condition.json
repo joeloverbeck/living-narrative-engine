@@ -3,6 +3,9 @@
   "id": "affection:event-is-action-tickle-target-playfully",
   "description": "Checks if the triggering event is for the 'affection:tickle_target_playfully' action.",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "affection:tickle_target_playfully"]
+    "==": [
+      { "var": "event.payload.actionId" },
+      "affection:tickle_target_playfully"
+    ]
   }
 }

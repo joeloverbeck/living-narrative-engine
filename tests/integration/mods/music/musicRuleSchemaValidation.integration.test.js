@@ -44,7 +44,9 @@ describe('Music Mod Rule Schema Validation', () => {
     try {
       await schemaLoader.loadAndCompileAllSchemas();
     } catch (error) {
-      throw new Error(`Schema loading failed: ${error.message}\n${error.stack}`);
+      throw new Error(
+        `Schema loading failed: ${error.message}\n${error.stack}`
+      );
     }
 
     // Verify the rule schema was loaded successfully
@@ -76,11 +78,7 @@ describe('Music Mod Rule Schema Validation', () => {
     musicRuleFiles.forEach((fileName) => {
       it(`should validate ${fileName} with QUERY_LOOKUP operations`, () => {
         // Arrange
-        const filePath = join(
-          process.cwd(),
-          'data/mods/music/rules',
-          fileName
-        );
+        const filePath = join(process.cwd(), 'data/mods/music/rules', fileName);
         const ruleContent = JSON.parse(readFileSync(filePath, 'utf-8'));
 
         // Act

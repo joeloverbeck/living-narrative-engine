@@ -798,8 +798,12 @@ describe('Metrics Middleware', () => {
     });
 
     it('should default to console logger when no logger is provided', () => {
-      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       let timeCounter = 0;
       global.process.hrtime.bigint = jest.fn(() =>
@@ -1003,8 +1007,12 @@ describe('Metrics Middleware', () => {
     });
 
     it('should default to console logger for LLM middleware when not provided', () => {
-      const debugSpy = jest.spyOn(console, 'debug').mockImplementation(() => {});
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const debugSpy = jest
+        .spyOn(console, 'debug')
+        .mockImplementation(() => {});
+      const errorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       let timeCounter = 0;
       global.process.hrtime.bigint = jest.fn(() =>

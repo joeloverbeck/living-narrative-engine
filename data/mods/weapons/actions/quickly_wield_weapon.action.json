@@ -5,9 +5,7 @@
   "description": "Quickly grab a weapon from the ground and wield it",
   "generateCombinations": true,
   "required_components": {
-    "actor": [
-      "items:inventory"
-    ]
+    "actor": ["items:inventory"]
   },
   "forbidden_components": {
     "actor": [

@@ -154,7 +154,7 @@ describe('HealthStateRegistry', () => {
       expect(isDeterioration('unknown', 'healthy')).toBe(false);
     });
   });
-  
+
   describe('getAllStateIds', () => {
     it('should return all state IDs', () => {
       const ids = getAllStateIds();
@@ -162,5 +162,5 @@ describe('HealthStateRegistry', () => {
       expect(ids).toContain('healthy');
       expect(ids).toContain('destroyed');
     });
-  })
+  });
 });

@@ -1,4 +1,11 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import LogExporter from '../../../src/logging/logExporter.js';
 import CriticalLogNotifier from '../../../src/logging/criticalLogNotifier.js';
 import DocumentContext from '../../../src/domUI/documentContext.js';

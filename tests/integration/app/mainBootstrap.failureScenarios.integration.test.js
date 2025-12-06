@@ -1,36 +1,48 @@
-import { describe, it, beforeEach, afterEach, expect, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  beforeEach,
+  afterEach,
+  expect,
+  jest,
+} from '@jest/globals';
 
 const mockConfigureContainer = jest.fn();
 const mockTokens = { ILogger: Symbol('ILogger') };
 
 const helperInvocations = [];
-const mockDisplayFatalStartupError = jest.fn((uiRefs, details, logger, helpers) => {
-  if (!helpers) {
-    helperInvocations.push({ executed: false });
-    return;
+const mockDisplayFatalStartupError = jest.fn(
+  (uiRefs, details, logger, helpers) => {
+    if (!helpers) {
+      helperInvocations.push({ executed: false });
+      return;
+    }
+
+    const anchor = document.createElement('div');
+    anchor.id = `anchor-${helperInvocations.length}`;
+    document.body.appendChild(anchor);
+
+    const element = helpers.createElement('section');
+    helpers.setTextContent(
+      element,
+      details.consoleMessage || details.userMessage
+    );
+    helpers.setStyle(element, 'color', 'crimson');
+    helpers.insertAfter(anchor, element);
+    helpers.alert(`alert:${details.phase}`);
+
+    helperInvocations.push({
+      executed: true,
+      insertedSibling: anchor.nextElementSibling,
+      text: element.textContent,
+      color: element.style.color,
+      tagName: element.tagName,
+      uiRefs,
+      logger,
+      details,
+    });
   }
-
-  const anchor = document.createElement('div');
-  anchor.id = `anchor-${helperInvocations.length}`;
-  document.body.appendChild(anchor);
-
-  const element = helpers.createElement('section');
-  helpers.setTextContent(element, details.consoleMessage || details.userMessage);
-  helpers.setStyle(element, 'color', 'crimson');
-  helpers.insertAfter(anchor, element);
-  helpers.alert(`alert:${details.phase}`);
-
-  helperInvocations.push({
-    executed: true,
-    insertedSibling: anchor.nextElementSibling,
-    text: element.textContent,
-    color: element.style.color,
-    tagName: element.tagName,
-    uiRefs,
-    logger,
-    details,
-  });
-});
+);
 
 const uiBootstrapperInstances = [];
 const mockUIBootstrapper = jest.fn().mockImplementation(() => {
@@ -168,9 +180,13 @@ const configureSuccessfulStages = () => {
       showLoadGameUI: jest.fn().mockResolvedValue(undefined),
     },
   });
-  mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({ success: true });
+  mockStages.initializeAuxiliaryServicesStage.mockResolvedValue({
+    success: true,
+  });
   mockStages.setupMenuButtonListenersStage.mockResolvedValue({ success: true });
-  mockStages.setupGlobalEventListenersStage.mockResolvedValue({ success: true });
+  mockStages.setupGlobalEventListenersStage.mockResolvedValue({
+    success: true,
+  });
   mockStages.startGameStage.mockResolvedValue({ success: true });
 
   return { uiElements, container, logger };
@@ -224,7 +240,11 @@ describe('main.js integration failure coverage', () => {
 
     await beginGame();
 
-    expect(mockStages.startGameStage).toHaveBeenCalledWith(engine, 'default', logger);
+    expect(mockStages.startGameStage).toHaveBeenCalledWith(
+      engine,
+      'default',
+      logger
+    );
     expect(engine.showLoadGameUI).not.toHaveBeenCalled();
   });
 
@@ -279,64 +299,77 @@ describe('main.js integration failure coverage', () => {
     },
   ];
 
-  describe.each(failureScenarios)('$name', ({ stage, phase, hasLogger, buildError }) => {
-    it('reports the stage failure with helper utilities', async () => {
-      const { logger, uiElements } = configureSuccessfulStages();
-      const engine = { showLoadGameUI: jest.fn().mockResolvedValue(undefined) };
-      mockStages.initializeGameEngineStage.mockResolvedValue({
-        success: true,
-        payload: engine,
-      });
+  describe.each(failureScenarios)(
+    '$name',
+    ({ stage, phase, hasLogger, buildError }) => {
+      it('reports the stage failure with helper utilities', async () => {
+        const { logger, uiElements } = configureSuccessfulStages();
+        const engine = {
+          showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+        };
+        mockStages.initializeGameEngineStage.mockResolvedValue({
+          success: true,
+          payload: engine,
+        });
 
-      const stageError = buildError();
-      mockStages[stage].mockResolvedValueOnce({ success: false, error: stageError });
+        const stageError = buildError();
+        mockStages[stage].mockResolvedValueOnce({
+          success: false,
+          error: stageError,
+        });
 
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ startWorld: 'ember' }),
-      });
+        global.fetch.mockResolvedValue({
+          ok: true,
+          json: async () => ({ startWorld: 'ember' }),
+        });
 
-      const { bootstrapApp } = await importMainModule();
+        const { bootstrapApp } = await importMainModule();
 
-      await bootstrapApp();
+        await bootstrapApp();
 
-      expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
-      expect(helperInvocations).toHaveLength(1);
+        expect(mockDisplayFatalStartupError).toHaveBeenCalledTimes(1);
+        expect(helperInvocations).toHaveLength(1);
 
-      const helperResult = helperInvocations[0];
-      expect(helperResult.executed).toBe(true);
-      expect(helperResult.insertedSibling).toBeInstanceOf(HTMLElement);
-      expect(helperResult.text).toContain('Critical error');
-      expect(helperResult.color).toBe('crimson');
-      expect(helperResult.tagName).toBe('SECTION');
+        const helperResult = helperInvocations[0];
+        expect(helperResult.executed).toBe(true);
+        expect(helperResult.insertedSibling).toBeInstanceOf(HTMLElement);
+        expect(helperResult.text).toContain('Critical error');
+        expect(helperResult.color).toBe('crimson');
+        expect(helperResult.tagName).toBe('SECTION');
 
-      const [uiRefs, details, loggerArg] = mockDisplayFatalStartupError.mock.calls[0];
-      expect(details.phase).toContain(stageError.phase || phase);
-      expect(uiRefs).toBe(uiElements);
+        const [uiRefs, details, loggerArg] =
+          mockDisplayFatalStartupError.mock.calls[0];
+        expect(details.phase).toContain(stageError.phase || phase);
+        expect(uiRefs).toBe(uiElements);
 
-      if (hasLogger) {
-        expect(loggerArg).toBe(logger);
-        expect(logger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Bootstrap error caught in main orchestrator'),
-          stageError,
-        );
-      } else {
-        expect(loggerArg).toBeNull();
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Bootstrap error caught in main orchestrator'),
-          stageError,
-        );
-      }
-
-      if (Array.isArray(stageError.failures)) {
-        for (const failure of stageError.failures) {
-          const logSpy = hasLogger ? logger.error : consoleErrorSpy;
-          expect(logSpy).toHaveBeenCalledWith(
-            `main.js: Failed to init ${failure.service}`,
-            failure.error,
+        if (hasLogger) {
+          expect(loggerArg).toBe(logger);
+          expect(logger.error).toHaveBeenCalledWith(
+            expect.stringContaining(
+              'Bootstrap error caught in main orchestrator'
+            ),
+            stageError
+          );
+        } else {
+          expect(loggerArg).toBeNull();
+          expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining(
+              'Bootstrap error caught in main orchestrator'
+            ),
+            stageError
           );
         }
-      }
-    });
-  });
+
+        if (Array.isArray(stageError.failures)) {
+          for (const failure of stageError.failures) {
+            const logSpy = hasLogger ? logger.error : consoleErrorSpy;
+            expect(logSpy).toHaveBeenCalledWith(
+              `main.js: Failed to init ${failure.service}`,
+              failure.error
+            );
+          }
+        }
+      });
+    }
+  );
 });

@@ -4,11 +4,13 @@
 **Completed**: 2025-11-23
 
 ## Objective
+
 Create the tail entity with reptilian characteristics.
 
 ## Implementation Summary
 
 ### Files Created
+
 1. **`data/mods/anatomy/entities/definitions/tortoise_tail.entity.json`**
    - Schema-compliant entity definition
    - 6 components: anatomy:part, core:name, texture, length_category, shape_general, color_extended
@@ -21,6 +23,7 @@ Create the tail entity with reptilian characteristics.
    - Verifies reptilian characteristics consistency
 
 ### Components Used
+
 - **anatomy:part**: `subType: "tortoise_tail"`
 - **core:name**: `text: "tail"`
 - **descriptors:texture**: `texture: "scaled"` (reptilian)
@@ -29,12 +32,14 @@ Create the tail entity with reptilian characteristics.
 - **descriptors:color_extended**: `color: "olive-green"` (consistent with tortoise arm)
 
 ### Test Results
+
 - ✅ All 28 tests passed
 - ✅ Schema validation passed
 - ✅ Full anatomy test suite passed (223 suites, 1780 tests)
 - ✅ No regressions introduced
 
 ### Key Validations
+
 1. Entity ID follows `anatomy:tortoise_tail` convention
 2. subType matches structure template `allowedTypes` for tail appendage
 3. All descriptor values valid per component schemas
@@ -58,6 +63,7 @@ The implementation matched the ticket specification exactly with one enhancement
   - Terminal appendage invariants
 
 The test suite goes beyond basic validation to ensure:
+
 1. Compatibility with `structure_tortoise_biped.structure-template.json`
 2. Consistency with other tortoise entities (arm, leg) in texture and color
 3. Proper use of `length_category` component (not generic length)

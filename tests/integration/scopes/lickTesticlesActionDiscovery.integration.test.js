@@ -28,7 +28,8 @@ import {
   createMockUnifiedScopeResolver,
 } from '../../common/mocks/mockUnifiedScopeResolver.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
-import {createMockActionErrorContextBuilder,
+import {
+  createMockActionErrorContextBuilder,
   createMockTargetRequiredComponentsValidator,
 } from '../../common/mockFactories/actions.js';
 import { createMockTargetContextBuilder } from '../../common/mocks/mockTargetContextBuilder.js';
@@ -117,9 +118,10 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
     scopeRegistry.clear();
 
     scopeRegistry.initialize({
-      'sex-core:actor_kneeling_before_target_with_testicle': scopeDefinitions.get(
-        'sex-core:actor_kneeling_before_target_with_testicle'
-      ),
+      'sex-core:actor_kneeling_before_target_with_testicle':
+        scopeDefinitions.get(
+          'sex-core:actor_kneeling_before_target_with_testicle'
+        ),
     });
 
     scopeEngine = new ScopeEngine();
@@ -166,7 +168,6 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
       ? createMockMultiTargetResolutionStage()
       : createEmptyMockMultiTargetResolutionStage();
 
-    
     // Create mock TargetComponentValidator
     const mockTargetComponentValidator = {
       validateTargetComponents: jest.fn().mockReturnValue({ valid: true }),
@@ -176,7 +177,7 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
     // Create mock TargetRequiredComponentsValidator
     const mockTargetRequiredComponentsValidator =
       createMockTargetRequiredComponentsValidator();
-const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
+    const actionPipelineOrchestrator = new ActionPipelineOrchestrator({
       actionIndex: {
         getCandidateActions: jest
           .fn()

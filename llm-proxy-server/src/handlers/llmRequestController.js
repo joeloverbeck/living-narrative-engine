@@ -71,7 +71,13 @@ export class LlmRequestController {
    * @param {LlmRequestService} llmRequestService - Service for forwarding requests to LLMs.
    * @param {ResponseSalvageService} [salvageService] - Optional service for salvaging failed responses.
    */
-  constructor(logger, llmConfigService, apiKeyService, llmRequestService, salvageService = null) {
+  constructor(
+    logger,
+    llmConfigService,
+    apiKeyService,
+    llmRequestService,
+    salvageService = null
+  ) {
     if (!logger) throw new Error('LlmRequestController: logger is required.');
     if (!llmConfigService)
       throw new Error('LlmRequestController: llmConfigService is required.');
@@ -347,7 +353,9 @@ export class LlmRequestController {
               requestId,
               llmId,
               statusCode: result.statusCode,
-              responseCommitted: res.isResponseCommitted ? res.isResponseCommitted() : false,
+              responseCommitted: res.isResponseCommitted
+                ? res.isResponseCommitted()
+                : false,
               headersSent: res.headersSent,
             }
           );
