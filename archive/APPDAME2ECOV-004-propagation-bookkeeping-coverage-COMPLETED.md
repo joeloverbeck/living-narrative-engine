@@ -1,15 +1,17 @@
 # APPDAME2ECOV-004: Propagation Bookkeeping E2E Coverage
 
+Status: Completed
+
 ## Summary
 
-Add e2e test coverage for damage propagation bookkeeping: `propagatedFrom` metadata, `anatomy:internal_damage_propagated` event payloads, and propagated entries appearing in composed narrative with grouped sentences.
+Add e2e test coverage for damage propagation bookkeeping: `propagatedFrom` metadata on propagated damage, `anatomy:internal_damage_propagated` event payloads, and propagated entries appearing in composed narrative with grouped sentences.
 
 ## Background
 
-Per `specs/apply-damage-e2e-coverage-spec.md`, the existing e2e suites do not assert:
+Per `specs/apply-damage-e2e-coverage-spec.md`, the existing e2e suites do not assert propagation bookkeeping even though the runtime already records it:
 
-- `propagatedFrom` metadata is attached to propagated damage entries
-- `anatomy:internal_damage_propagated` event payload structure and contents
+- `propagatedFrom` metadata is attached to propagated damage entries (per-hop parent ID, not original root)
+- `anatomy:internal_damage_propagated` payload fields are `ownerEntityId`, `sourcePartId`, `targetPartId`, `damageAmount`, `damageTypeId`, and `timestamp`
 - Propagated damage entries appear in the composed narrative
 - Narrative groups primary and propagated damage into coherent sentences
 
@@ -43,31 +45,23 @@ Per `specs/apply-damage-e2e-coverage-spec.md`, the existing e2e suites do not as
 
 1. **propagatedFrom metadata present**
    - Test: `should attach propagatedFrom metadata to propagated damage entries`
-   - Verifies: Propagated entries contain `propagatedFrom` with source part reference
+   - Verifies: Propagated `anatomy:damage_applied` entries include `propagatedFrom` with the immediate parent part ID
 
-2. **propagatedFrom contains source part**
-   - Test: `should include source part ID in propagatedFrom metadata`
-   - Verifies: `propagatedFrom.partId` matches the originating part
+2. **Propagation event payload structure**
+   - Test: `should dispatch anatomy:internal_damage_propagated with expected payload fields`
+   - Verifies: Payload contains `ownerEntityId`, `sourcePartId`, `targetPartId`, `damageAmount`, `damageTypeId`, and numeric `timestamp`
 
-3. **Internal damage propagated event dispatched**
-   - Test: `should dispatch anatomy:internal_damage_propagated event`
-   - Verifies: Event bus receives the propagation event
-
-4. **Propagation event payload structure**
-   - Test: `should include source, target, and damage info in propagation event payload`
-   - Verifies: Payload contains `sourcePart`, `targetPart`, `damageAmount`, `damageType`
-
-5. **Propagated entries in narrative**
+3. **Propagated entries in narrative**
    - Test: `should include propagated damage in composed narrative`
-   - Verifies: Narrative text mentions both primary and propagated damage targets
+   - Verifies: Narrative text mentions both primary and propagated damage targets (via `core:perceptible_event` description)
 
-6. **Narrative grouping of propagated damage**
-   - Test: `should group primary and propagated damage into coherent narrative sentences`
-   - Verifies: Narrative flows naturally (e.g., "struck the chest, damage spreading to the heart")
+4. **Narrative grouping of propagated damage**
+   - Test: `should group multiple propagated hits of the same damage type into one sentence`
+   - Verifies: Propagated parts share a single propagation sentence (e.g., "their heart and artery suffer slashing damage")
 
-7. **Multi-level propagation tracking**
-   - Test: `should track propagatedFrom through recursive propagation chain`
-   - Verifies: Grandchild propagation still references original source
+5. **Recursive propagation parentage**
+   - Test: `should preserve propagatedFrom linkage per hop in a recursive chain`
+   - Verifies: Each propagated entry references its direct parent (torso → heart, heart → artery)
 
 ### Invariants That Must Remain True
 
@@ -83,9 +77,15 @@ Per `specs/apply-damage-e2e-coverage-spec.md`, the existing e2e suites do not as
 - Build entities with multi-level part hierarchy (torso → heart → vessels)
 - Configure propagation rules via `anatomy:damage_propagation` component
 - Spy on event bus to capture `anatomy:internal_damage_propagated` events
-- Access `executionContext.damageSession` to verify `propagatedFrom` tracking
+- Validate `propagatedFrom` via queued `anatomy:damage_applied` events (per-hop parent IDs)
 - Compare captured events with narrative output for consistency
 - Use existing socket/propagation setup from `damagePropagationFlow.e2e.test.js` as reference
+
+## Outcome
+
+- Added `tests/e2e/actions/propagationBookkeeping.e2e.test.js` covering propagatedFrom metadata, propagation event payload fields, narrative inclusion, grouping, and recursive parentage.
+- No production code changes were required; coverage aligns with the existing runtime behavior.
+- Ran the targeted suite with `--runInBand` to avoid the known jest worker crash when parallelizing.
 
 ## Testing Command
 
