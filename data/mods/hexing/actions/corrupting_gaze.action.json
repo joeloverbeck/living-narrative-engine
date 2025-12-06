@@ -6,7 +6,7 @@
   "template": "cast a corrupting gaze at {target} ({chance}% chance)",
   "generateCombinations": true,
   "required_components": {
-    "actor": ["hexing:is_hexer"]
+    "actor": ["hexing:is_hexer", "warding:corrupted"]
   },
   "forbidden_components": {
     "actor": [

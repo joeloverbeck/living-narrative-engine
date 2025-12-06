@@ -16,7 +16,7 @@
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.actorName} lunges forward with their beak but completely misses, losing balance and falling to the ground!",
+        "description_text": "{context.actorName} lunges forward with their beak to attack {context.targetName} but completely misses, losing balance and falling to the ground!",
         "perception_type": "action_target_general",
         "actor_id": "{event.payload.actorId}"
       }
@@ -25,7 +25,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} lunges forward with their beak but completely misses, losing balance and falling to the ground!"
+        "value": "{context.actorName} lunges forward with their beak to attack {context.targetName} but completely misses, losing balance and falling to the ground!"
       }
     },
     {

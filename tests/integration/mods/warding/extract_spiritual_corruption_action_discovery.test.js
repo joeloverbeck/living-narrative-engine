@@ -331,7 +331,7 @@ describe('warding:extract_spiritual_corruption action discovery', () => {
       expect(unrestrained?.value).toBe(-10);
       expect(restrained?.value).toBe(10);
       expect(warded?.value).toBe(5);
-      expect(downed?.value).toBe(5);
+      expect(downed?.value).toBe(-5);
 
       [unrestrained, restrained, warded, downed].forEach((modifier) => {
         expect(modifier?.targetRole).toBe('primary');

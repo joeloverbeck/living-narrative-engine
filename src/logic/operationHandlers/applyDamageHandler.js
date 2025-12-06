@@ -24,54 +24,31 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { filterEligibleHitTargets } from '../../anatomy/utils/hitProbabilityWeightUtils.js';
-import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
-import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
+import DamageResolutionService from '../services/damageResolutionService.js';
 
-const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
 const BODY_COMPONENT_ID = 'anatomy:body';
-const NAME_COMPONENT_ID = 'core:name';
-const GENDER_COMPONENT_ID = 'core:gender';
-const DAMAGE_PROPAGATION_COMPONENT_ID = 'anatomy:damage_propagation';
-
-const DAMAGE_APPLIED_EVENT = 'anatomy:damage_applied';
-
-/**
- * Maps gender values to pronouns for message formatting.
- * @type {Readonly<Record<string, string>>}
- */
-const PRONOUN_MAP = Object.freeze({
-  male: 'he',
-  female: 'she',
-  neutral: 'they',
-  unknown: 'they',
-});
-
-/**
- * Maps gender values to possessive pronouns for narrative formatting.
- * @type {Readonly<Record<string, string>>}
- */
-const PRONOUN_POSSESSIVE_MAP = Object.freeze({
-  male: 'his',
-  female: 'her',
-  neutral: 'their',
-  unknown: 'their',
-});
-const PART_HEALTH_CHANGED_EVENT = 'anatomy:part_health_changed';
-const PART_DESTROYED_EVENT = 'anatomy:part_destroyed';
 
 class ApplyDamageHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default} */ #entityManager;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
   /** @type {import('../jsonLogicEvaluationService.js').default} */ #jsonLogicService;
   /** @type {import('../../anatomy/bodyGraphService.js').default} */ #bodyGraphService;
-  /** @type {import('../../anatomy/services/damageTypeEffectsService.js').default} */ #damageTypeEffectsService;
-  /** @type {import('../../anatomy/services/damagePropagationService.js').default} */ #damagePropagationService;
-  /** @type {import('../../anatomy/services/deathCheckService.js').default} */ #deathCheckService;
-  /** @type {import('../../anatomy/services/damageAccumulator.js').default} */ #damageAccumulator;
-  /** @type {import('../../anatomy/services/damageNarrativeComposer.js').default} */ #damageNarrativeComposer;
+  /** @type {DamageResolutionService} */ #damageResolutionService;
 
-  constructor({ logger, entityManager, safeEventDispatcher, jsonLogicService, bodyGraphService, damageTypeEffectsService, damagePropagationService, deathCheckService, damageAccumulator, damageNarrativeComposer }) {
+  constructor({
+    logger,
+    entityManager,
+    safeEventDispatcher,
+    jsonLogicService,
+    bodyGraphService,
+    damageTypeEffectsService,
+    damagePropagationService,
+    deathCheckService,
+    damageAccumulator,
+    damageNarrativeComposer,
+    damageResolutionService,
+  }) {
     super('ApplyDamageHandler', {
       logger: { value: logger },
       entityManager: {
@@ -115,131 +92,21 @@ class ApplyDamageHandler extends BaseOperationHandler {
     this.#dispatcher = safeEventDispatcher;
     this.#jsonLogicService = jsonLogicService;
     this.#bodyGraphService = bodyGraphService;
-    this.#damageTypeEffectsService = damageTypeEffectsService;
-    this.#damagePropagationService = damagePropagationService;
-    this.#deathCheckService = deathCheckService;
-    this.#damageAccumulator = damageAccumulator;
-    this.#damageNarrativeComposer = damageNarrativeComposer;
-  }
+    this.#damageResolutionService =
+      damageResolutionService ||
+      new DamageResolutionService({
+        logger,
+        entityManager,
+        safeEventDispatcher,
+        damageTypeEffectsService,
+        damagePropagationService,
+        deathCheckService,
+        damageAccumulator,
+        damageNarrativeComposer,
+      });
 
-  /**
-   * Resolves entity name from the core:name component.
-   * @param {string} entityId - Entity ID to resolve name for
-   * @returns {string} Entity name or 'Unknown' if not found
-   * @private
-   */
-  #getEntityName(entityId) {
-    try {
-      const nameData = this.#entityManager.getComponentData(entityId, NAME_COMPONENT_ID);
-      return nameData?.text || 'Unknown';
-    } catch {
-      return 'Unknown';
-    }
-  }
-
-  /**
-   * Resolves entity pronoun from the core:gender component.
-   * @param {string} entityId - Entity ID to resolve pronoun for
-   * @returns {string} Subject pronoun ('he', 'she', 'they')
-   * @private
-   */
-  #getEntityPronoun(entityId) {
-    try {
-      const genderData = this.#entityManager.getComponentData(entityId, GENDER_COMPONENT_ID);
-      const gender = genderData?.value || 'neutral';
-      return PRONOUN_MAP[gender] || PRONOUN_MAP.neutral;
-    } catch {
-      return PRONOUN_MAP.neutral;
-    }
-  }
-
-  /**
-   * Resolves entity possessive pronoun from the core:gender component.
-   * @param {string} entityId - Entity ID to resolve possessive for
-   * @returns {string} Possessive pronoun ('his', 'her', 'their')
-   * @private
-   */
-  #getEntityPossessive(entityId) {
-    try {
-      const genderData = this.#entityManager.getComponentData(entityId, GENDER_COMPONENT_ID);
-      const gender = genderData?.value || 'neutral';
-      return PRONOUN_POSSESSIVE_MAP[gender] || PRONOUN_POSSESSIVE_MAP.neutral;
-    } catch {
-      return PRONOUN_POSSESSIVE_MAP.neutral;
-    }
-  }
-
-  /**
-   * Resolves the entity's location from the core:position component.
-   * @param {string} entityId - Entity ID to resolve location for
-   * @returns {string|null} Location ID or null if not found
-   * @private
-   */
-  #getEntityLocation(entityId) {
-    try {
-      const locationData = this.#entityManager.getComponentData(entityId, POSITION_COMPONENT_ID);
-      return locationData?.locationId || null;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * Extracts actor ID from execution context.
-   * Supports both nested structure (actor.id) and legacy top-level (actorId).
-   *
-   * @param {object} executionContext - Execution context
-   * @returns {string|null} Actor ID or null
-   * @private
-   */
-  #extractActorId(executionContext) {
-    return executionContext?.actor?.id || executionContext?.actorId || null;
-  }
-
-  /**
-   * Resolves location for perceptible event dispatch with fallback chain.
-   * Tries target entity first, then falls back to actor's location.
-   *
-   * @param {string} targetEntityId - Target entity to find location for
-   * @param {string|null} actorId - Actor entity ID as fallback
-   * @param {object} log - Logger instance
-   * @returns {string|null} Location ID or null if not resolvable
-   * @private
-   */
-  #resolveLocationForEvent(targetEntityId, actorId, log) {
-    // Primary: Target entity's location
-    let locationId = this.#getEntityLocation(targetEntityId);
-    if (locationId) return locationId;
-
-    // Fallback: Actor's location (they should be co-located for damage)
-    if (actorId) {
-      locationId = this.#getEntityLocation(actorId);
-      if (locationId) {
-        log.warn(
-          `APPLY_DAMAGE: Target entity ${targetEntityId} has no location, using actor's location`
-        );
-        return locationId;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolves part information from the anatomy:part component.
-   * @param {string} partId - Part entity ID to resolve
-   * @returns {{partType: string, orientation: string|null}} Part type and orientation
-   * @private
-   */
-  #getPartInfo(partId) {
-    try {
-      const partData = this.#entityManager.getComponentData(partId, PART_COMPONENT_ID);
-      return {
-        partType: partData?.subType || 'body part',
-        orientation: partData?.orientation || null,
-      };
-    } catch {
-      return { partType: 'body part', orientation: null };
+    if (!this.#damageResolutionService?.resolve) {
+      throw new Error('ApplyDamageHandler requires a DamageResolutionService with a resolve method');
     }
   }
 
@@ -313,7 +180,17 @@ class ApplyDamageHandler extends BaseOperationHandler {
     return type === 'number' ? NaN : null;
   }
 
-  #selectRandomPart(entityId, logger) {
+  #getRng(executionContext) {
+    if (executionContext && typeof executionContext.rng === 'function') {
+      return executionContext.rng;
+    }
+    if (executionContext && typeof executionContext.rngProvider === 'function') {
+      return executionContext.rngProvider;
+    }
+    return Math.random;
+  }
+
+  #selectRandomPart(entityId, logger, rng = Math.random) {
     if (!this.#entityManager.hasComponent(entityId, BODY_COMPONENT_ID)) {
       logger.warn(`APPLY_DAMAGE: Entity ${entityId} has no anatomy:body component.`);
       return null;
@@ -338,7 +215,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
       const totalWeight = candidateParts.reduce((sum, part) => sum + part.weight, 0);
       if (totalWeight <= 0) return candidateParts[0].id;
 
-      let randomValue = Math.random() * totalWeight;
+      let randomValue = rng() * totalWeight;
       for (const part of candidateParts) {
         randomValue -= part.weight;
         if (randomValue <= 0) return part.id;
@@ -350,55 +227,13 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
   }
 
-  /**
-   * Propagates damage to child parts using the DamagePropagationService.
-   *
-   * @param {object} params - Propagation parameters
-   * @param {string} params.entityId - Owner entity ID
-   * @param {string} params.parentPartId - Parent part that received damage
-   * @param {number} params.damageAmount - Amount of damage to propagate
-   * @param {string} params.damageType - Type of damage
-   * @param {object} params.propagationRules - Rules for propagation
-   * @param {object} params.executionContext - Execution context
-   * @private
-   */
-  async #propagateDamage({
-    entityId,
-    parentPartId,
-    damageAmount,
-    damageType,
-    propagationRules,
-    executionContext,
-  }) {
-    // Use the DamagePropagationService to calculate which child parts receive damage
-    const propagationResults = this.#damagePropagationService.propagateDamage(
-      parentPartId,
-      damageAmount,
-      damageType,
-      entityId,
-      propagationRules
-    );
-
-    // Apply damage to each child part
-    for (const result of propagationResults) {
-      await this.execute(
-        {
-          entity_ref: entityId,
-          part_ref: result.childPartId,
-          // Construct minimal damage_entry for propagated damage
-          damage_entry: {
-            name: result.damageTypeId,
-            amount: result.damageApplied,
-          },
-          propagatedFrom: parentPartId,
-        },
-        executionContext
-      );
-    }
-  }
-
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
+    const rng = this.#getRng(executionContext);
+
+    if (executionContext && typeof executionContext === 'object' && !executionContext.rng) {
+      executionContext.rng = rng;
+    }
 
     if (!assertParamsObject(params, this.#dispatcher, 'APPLY_DAMAGE')) return;
 
@@ -416,26 +251,8 @@ class ApplyDamageHandler extends BaseOperationHandler {
     // 1. Resolve Entity (supports placeholder names like "secondary", "primary", etc.)
     const entityId = this.#resolveEntityRef(entity_ref, executionContext, log);
 
-    // Session lifecycle: Create session at top-level, reuse for recursive calls
     const isTopLevel = !propagatedFrom;
     const hitLocationCache = executionContext?.hitLocationCache || null;
-    let session;
-    if (isTopLevel) {
-      session = this.#damageAccumulator.createSession(entityId);
-      if (!session) {
-        const errorMsg = 'APPLY_DAMAGE: Failed to create damage session';
-        safeDispatchError(this.#dispatcher, errorMsg, { entityId }, log);
-        return;
-      }
-      executionContext.damageSession = session;
-    } else {
-      session = executionContext.damageSession;
-      if (!session) {
-        log.warn(
-          `APPLY_DAMAGE: Propagated damage call missing session in executionContext for entity ${entityId}`
-        );
-      }
-    }
     if (!entityId) {
       safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Invalid entity_ref', { entity_ref }, log);
       return;
@@ -454,7 +271,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     if (!partId) {
       // Auto-resolve if missing or failed to resolve
-      partId = this.#selectRandomPart(entityId, log);
+      partId = this.#selectRandomPart(entityId, log, rng);
       if (!partId) {
          safeDispatchError(this.#dispatcher, 'APPLY_DAMAGE: Could not resolve target part', { entityId }, log);
          return;
@@ -560,283 +377,17 @@ class ApplyDamageHandler extends BaseOperationHandler {
       amount: resolvedDamageEntry.amount * resolvedMultiplier,
     };
 
-    // Extract values from damage entry for use in this handler
-    const damageAmount = finalDamageEntry.amount;
-    const damageType = resolvedDamageEntry.name;
-
-    // 4. Record damage to session (replaces immediate dispatch for narrative composition)
-    // Resolve entity and part metadata for message rendering
-    const entityName = this.#getEntityName(entityId);
-    const entityPronoun = this.#getEntityPronoun(entityId);
-    const entityPossessive = this.#getEntityPossessive(entityId);
-    const { partType, orientation } = this.#getPartInfo(partId);
-
-    // Create damage entry for accumulation
-    const damageEntryForSession = {
+    await this.#damageResolutionService.resolve({
       entityId,
-      entityName,
-      entityPronoun,
-      entityPossessive,
       partId,
-      partType,
-      orientation,
-      amount: damageAmount,
-      damageType,
+      finalDamageEntry,
       propagatedFrom,
-      effectsTriggered: [],
-    };
-
-    // Record damage to session for composed narrative
-    if (session) {
-      this.#damageAccumulator.recordDamage(session, damageEntryForSession);
-    }
-
-    // Queue event for backwards compatibility (dispatched after composed event)
-    const damageAppliedPayload = {
-      entityId,
-      entityName,
-      entityPronoun,
-      partId,
-      partType,
-      orientation,
-      amount: damageAmount,
-      damageType,
-      propagatedFrom,
-      timestamp: Date.now()
-    };
-
-    if (session) {
-      this.#damageAccumulator.queueEvent(session, DAMAGE_APPLIED_EVENT, damageAppliedPayload);
-    } else {
-      // Fallback: dispatch immediately if no session (shouldn't happen normally)
-      this.#dispatcher.dispatch(DAMAGE_APPLIED_EVENT, damageAppliedPayload);
-    }
-
-    const partComponent = this.#entityManager.hasComponent(partId, PART_COMPONENT_ID)
-      ? this.#entityManager.getComponentData(partId, PART_COMPONENT_ID)
-      : null;
-
-    // Read propagation rules - try standalone component first, fallback to part component property
-    // The rules array contains objects with childSocketId, baseProbability, damageFraction, damageTypeModifiers
-    const propagationComponent = this.#entityManager.hasComponent(partId, DAMAGE_PROPAGATION_COMPONENT_ID)
-      ? this.#entityManager.getComponentData(partId, DAMAGE_PROPAGATION_COMPONENT_ID)
-      : null;
-    const propagationRules = propagationComponent?.rules ?? partComponent?.damage_propagation;
-
-    // 5. Update Health
-    if (!this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)) {
-      // It's possible we hit a part without health (e.g. hair?), though likely all parts have health.
-      // If no health component, still propagate damage if rules exist.
-      log.debug(`APPLY_DAMAGE: Part ${partId} has no health component. Skipping health update.`);
-      await this.#propagateDamage({
-        entityId,
-        parentPartId: partId,
-        damageAmount,
-        damageType,
-        propagationRules,
-        executionContext,
-      });
-      return;
-    }
-
-    try {
-      const healthComponent = this.#entityManager.getComponentData(partId, PART_HEALTH_COMPONENT_ID);
-      const { currentHealth, maxHealth, state: previousState } = healthComponent;
-      const previousHealth = currentHealth;
-      const previousTurnsInState = healthComponent.turnsInState || 0;
-
-      // Calc new health
-      const newHealth = Math.max(0, currentHealth - damageAmount);
-
-      // Calc new state
-      const healthPercentage = (newHealth / maxHealth) * 100;
-      const newState = calculateStateFromPercentage(healthPercentage);
-      const turnsInState = newState === previousState ? previousTurnsInState + 1 : 0;
-
-      // Update component
-      await this.#entityManager.addComponent(partId, PART_HEALTH_COMPONENT_ID, {
-        currentHealth: newHealth,
-        maxHealth,
-        state: newState,
-        turnsInState
-      });
-
-      // Dispatch health changed
-      // Getting extra info for the event
-      let partType = 'unknown';
-      let ownerEntityId = null;
-      if (partComponent) {
-         partType = partComponent.subType || 'unknown';
-         ownerEntityId = partComponent.ownerEntityId;
-      }
-
-      this.#dispatcher.dispatch(PART_HEALTH_CHANGED_EVENT, {
-        partEntityId: partId,
-        ownerEntityId,
-        partType,
-        previousHealth,
-        newHealth,
-        maxHealth,
-        healthPercentage,
-        previousState,
-        newState,
-        delta: -damageAmount,
-        timestamp: Date.now()
-      });
-
-      // Dispatch destroyed if needed
-      if (newHealth <= 0 && previousHealth > 0) { // Ensure we only fire on the transition to 0
-         this.#dispatcher.dispatch(PART_DESTROYED_EVENT, {
-           entityId: ownerEntityId || entityId, // Prefer owner (whole body) but fallback to entityId (if targeting part directly as entity?)
-           partId,
-           timestamp: Date.now()
-         });
-         log.info(`APPLY_DAMAGE: Part ${partId} destroyed.`);
-      }
-
-      log.debug(`APPLY_DAMAGE: Applied ${damageAmount} ${damageType} to ${partId}. Health: ${currentHealth} -> ${newHealth}. State: ${newState}.`);
-
-      // Apply damage type effects (bleed, burn, fracture, dismemberment, poison)
-      // Pass session to allow effects to be recorded for composed narrative
-      await this.#damageTypeEffectsService.applyEffectsForDamage({
-        entityId: ownerEntityId || entityId,
-        entityName,
-        entityPronoun,
-        partId,
-        partType,
-        orientation,
-        damageEntry: finalDamageEntry,
-        maxHealth,
-        currentHealth: newHealth,
-        damageSession: session,
-      });
-
-    } catch (error) {
-      log.error('APPLY_DAMAGE operation failed', error, { partId });
-      safeDispatchError(this.#dispatcher, `APPLY_DAMAGE: Operation failed - ${error.message}`, { partId, error: error.message }, log);
-      return;
-    }
-
-    await this.#propagateDamage({
-      entityId,
-      parentPartId: partId,
-      damageAmount,
-      damageType,
-      propagationRules,
       executionContext,
+      isTopLevel,
+      applyDamage: this.execute.bind(this),
+      log,
+      rng,
     });
-
-    // Check death conditions ONLY after top-level damage (not propagated damage)
-    // This ensures death is checked once after all propagation completes
-    if (isTopLevel) {
-      const deathCheckOwnerEntityId = partComponent?.ownerEntityId || entityId;
-
-      // Step 1: EVALUATE death conditions (no events dispatched yet)
-      // This allows injury narratives to be dispatched BEFORE death events
-      let deathEvaluation;
-      try {
-        deathEvaluation = this.#deathCheckService.evaluateDeathConditions(
-          deathCheckOwnerEntityId,
-          this.#extractActorId(executionContext)
-        );
-      } catch (deathCheckError) {
-        log.warn(`APPLY_DAMAGE: evaluateDeathConditions failed for ${deathCheckOwnerEntityId}: ${deathCheckError.message}`);
-        // Default to no death if check fails
-        deathEvaluation = { isDead: false, isDying: false, shouldFinalize: false, finalizationParams: null, deathInfo: null };
-      }
-
-      // Log evaluation result for debugging
-      if (deathEvaluation.shouldFinalize) {
-        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} will die from damage.`);
-      } else if (deathEvaluation.isDying) {
-        log.info(`APPLY_DAMAGE: Entity ${deathCheckOwnerEntityId} is now dying.`);
-      }
-
-      // Step 2: Finalize session and dispatch injury narrative FIRST
-      if (session) {
-        let entries, pendingEvents;
-        try {
-          const finalized = this.#damageAccumulator.finalize(session);
-          entries = finalized.entries;
-          pendingEvents = finalized.pendingEvents;
-        } catch (finalizeError) {
-          log.error('APPLY_DAMAGE: FAIL-FAST - Session finalization threw an error', finalizeError);
-          throw finalizeError;
-        }
-
-        // Compose narrative from accumulated entries
-        if (entries.length > 0) {
-          let composedNarrative;
-          try {
-            composedNarrative = this.#damageNarrativeComposer.compose(entries);
-          } catch (composeError) {
-            log.error('APPLY_DAMAGE: FAIL-FAST - Narrative composition threw an error', composeError);
-            throw composeError;
-          }
-
-          // Calculate total damage from all entries
-          const totalDamage = entries.reduce((sum, e) => sum + (e.amount || 0), 0);
-
-          // Dispatch composed perceptible event for NPC perception
-          if (composedNarrative) {
-            const actorId = this.#extractActorId(executionContext);
-            const locationId = this.#resolveLocationForEvent(
-              deathCheckOwnerEntityId,
-              actorId,
-              log
-            );
-
-            if (locationId) {
-              this.#dispatcher.dispatch('core:perceptible_event', {
-                eventName: 'core:perceptible_event',
-                locationId,
-                descriptionText: composedNarrative,
-                timestamp: new Date().toISOString(),
-                perceptionType: 'damage_received',
-                actorId: actorId || entityId,
-                targetId: deathCheckOwnerEntityId,
-                involvedEntities: [deathCheckOwnerEntityId],
-                contextualData: { totalDamage },
-              });
-
-              log.debug(`APPLY_DAMAGE: Dispatched composed narrative: "${composedNarrative}"`);
-            } else {
-              // FAIL-FAST: Log error and dispatch error event instead of silent skip
-              const errorMsg = `APPLY_DAMAGE: Cannot dispatch perceptible event - no location found for target ${deathCheckOwnerEntityId} or actor ${actorId}`;
-              log.error(errorMsg);
-              safeDispatchError(
-                this.#dispatcher,
-                errorMsg,
-                {
-                  targetEntityId: deathCheckOwnerEntityId,
-                  actorId,
-                  composedNarrative,
-                  totalDamage,
-                },
-                log
-              );
-            }
-          } else {
-            log.warn(
-              `APPLY_DAMAGE: Composer returned empty narrative for ${entries.length} entries`
-            );
-          }
-        }
-
-        // Dispatch queued individual events for backwards compatibility
-        for (const { eventType, payload } of pendingEvents) {
-          this.#dispatcher.dispatch(eventType, payload);
-        }
-
-        // Clean up session from execution context
-        delete executionContext.damageSession;
-      }
-
-      // Step 3: NOW finalize death (dispatch death events AFTER injury narrative)
-      if (deathEvaluation.shouldFinalize) {
-        this.#deathCheckService.finalizeDeathFromEvaluation(deathEvaluation);
-      }
-    }
   }
 }
 

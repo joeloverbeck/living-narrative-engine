@@ -110,13 +110,14 @@ class DamageTypeEffectsService extends BaseService {
    * @param {object} [params.damageEntry.bleed] - Bleed effect configuration
    * @param {object} [params.damageEntry.fracture] - Fracture effect configuration
    * @param {object} [params.damageEntry.burn] - Burn effect configuration
-   * @param {object} [params.damageEntry.poison] - Poison effect configuration
-   * @param {object} [params.damageEntry.dismember] - Dismember effect configuration
-   * @param {number} params.maxHealth - Part's max health
-   * @param {number} params.currentHealth - Part's health AFTER damage was applied
-   * @param {object} [params.damageSession] - Optional damage accumulation session
-   * @returns {Promise<void>}
-   */
+  * @param {object} [params.damageEntry.poison] - Poison effect configuration
+  * @param {object} [params.damageEntry.dismember] - Dismember effect configuration
+  * @param {number} params.maxHealth - Part's max health
+  * @param {number} params.currentHealth - Part's health AFTER damage was applied
+  * @param {object} [params.damageSession] - Optional damage accumulation session
+  * @param {() => number} [params.rng] - Optional RNG override for deterministic runs
+  * @returns {Promise<void>}
+  */
   async applyEffectsForDamage({
     entityId,
     entityName,
@@ -128,6 +129,7 @@ class DamageTypeEffectsService extends BaseService {
     maxHealth,
     currentHealth,
     damageSession,
+    rng,
   }) {
     // Validate damageEntry is provided
     if (!damageEntry) {
@@ -140,6 +142,7 @@ class DamageTypeEffectsService extends BaseService {
 
     const amount = damageEntry.amount ?? 0;
     const partDestroyed = currentHealth <= 0;
+    const rngToUse = typeof rng === 'function' ? rng : this.#rngProvider;
 
     // 1. Dismemberment check (before all other effects)
     await this.#checkAndApplyDismemberment({
@@ -153,6 +156,7 @@ class DamageTypeEffectsService extends BaseService {
       maxHealth,
       damageEntry,
       damageSession,
+      rng: rngToUse,
     });
     // Note: We continue execution so that secondary effects (especially bleed) are applied.
     // A dismembered part should definitely bleed!
@@ -166,6 +170,7 @@ class DamageTypeEffectsService extends BaseService {
       currentHealth,
       damageEntry,
       damageSession,
+      rng: rngToUse,
     });
 
     // Skip ongoing effects if part is destroyed
@@ -295,7 +300,16 @@ class DamageTypeEffectsService extends BaseService {
    * @returns {Promise<void>}
    * @private
    */
-  async #checkAndApplyFracture({ entityId, partId, amount, maxHealth, currentHealth, damageEntry, damageSession }) {
+  async #checkAndApplyFracture({
+    entityId,
+    partId,
+    amount,
+    maxHealth,
+    currentHealth,
+    damageEntry,
+    damageSession,
+    rng,
+  }) {
     const fractureConfig = damageEntry.fracture;
     if (!fractureConfig?.enabled) {
       return;
@@ -316,7 +330,8 @@ class DamageTypeEffectsService extends BaseService {
 
     // Roll for stun
     const stunChance = fractureConfig.stunChance ?? 0;
-    const stunApplied = stunChance > 0 && this.#rngProvider() < stunChance;
+    const rngProvider = typeof rng === 'function' ? rng : this.#rngProvider;
+    const stunApplied = stunChance > 0 && rngProvider() < stunChance;
 
     if (stunApplied) {
       await this.#entityManager.addComponent(entityId, STUNNED_COMPONENT_ID, {

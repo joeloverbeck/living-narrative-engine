@@ -81,6 +81,7 @@ export const coreTokens = freeze({
   DamageNarrativeComposer: 'DamageNarrativeComposer',
   DamageTypeEffectsService: 'DamageTypeEffectsService',
   DamagePropagationService: 'DamagePropagationService',
+  DamageResolutionService: 'DamageResolutionService',
   DeathCheckService: 'DeathCheckService',
   DismemberedBodyPartSpawner: 'DismemberedBodyPartSpawner',
   BleedingTickSystem: 'BleedingTickSystem',

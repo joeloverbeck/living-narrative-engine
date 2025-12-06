@@ -284,6 +284,7 @@ beforeAll(async () => {
         { property: 'deathCheckService', token: tokens.DeathCheckService },
         { property: 'damageAccumulator', token: tokens.DamageAccumulator },
         { property: 'damageNarrativeComposer', token: tokens.DamageNarrativeComposer },
+        { property: 'damageResolutionService', token: tokens.DamageResolutionService },
       ],
     },
     {

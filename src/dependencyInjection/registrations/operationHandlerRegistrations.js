@@ -229,6 +229,7 @@ export function registerOperationHandlers(registrar) {
           deathCheckService: c.resolve(tokens.DeathCheckService),
           damageAccumulator: c.resolve(tokens.DamageAccumulator),
           damageNarrativeComposer: c.resolve(tokens.DamageNarrativeComposer),
+          damageResolutionService: c.resolve(tokens.DamageResolutionService),
         }),
     ],
     [
