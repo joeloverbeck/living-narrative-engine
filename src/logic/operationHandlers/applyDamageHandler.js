@@ -180,7 +180,115 @@ class ApplyDamageHandler extends BaseOperationHandler {
     return type === 'number' ? NaN : null;
   }
 
-  #getRng(executionContext) {
+  #resolveMetadata(metadata, executionContext, logger) {
+    if (metadata === undefined || metadata === null) return {};
+
+    if (typeof metadata === 'object' && metadata !== null && !metadata.var && !metadata.if) {
+      return metadata;
+    }
+
+    if (typeof metadata === 'object' && metadata !== null) {
+      try {
+        const resolved = this.#jsonLogicService.evaluate(metadata, executionContext);
+        if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) {
+          return resolved;
+        }
+      } catch (err) {
+        logger.warn('APPLY_DAMAGE: Failed to evaluate metadata', { error: err.message });
+      }
+    }
+
+    logger.warn('APPLY_DAMAGE: Ignoring metadata - expected object', { metadata });
+    return {};
+  }
+
+  #resolveDamageTags(damageTags, executionContext, logger) {
+    if (damageTags === undefined || damageTags === null) return [];
+
+    let resolved = damageTags;
+    if (!Array.isArray(damageTags) && typeof damageTags === 'object' && damageTags !== null) {
+      try {
+        resolved = this.#jsonLogicService.evaluate(damageTags, executionContext);
+      } catch (err) {
+        logger.warn('APPLY_DAMAGE: Failed to evaluate damage_tags', { error: err.message });
+        resolved = [];
+      }
+    }
+
+    if (!Array.isArray(resolved)) {
+      logger.warn('APPLY_DAMAGE: damage_tags must resolve to an array of strings', { damage_tags: damageTags });
+      return [];
+    }
+
+    const filtered = resolved.filter((tag) => typeof tag === 'string');
+    return Array.from(new Set(filtered));
+  }
+
+  #resolveHitStrategy(hitStrategy, executionContext, logger) {
+    if (!hitStrategy) {
+      return { reuseCachedHit: true, hintPartId: null };
+    }
+
+    let resolved = hitStrategy;
+    if (typeof hitStrategy === 'object' && hitStrategy !== null && (hitStrategy.var || hitStrategy.if)) {
+      try {
+        resolved = this.#jsonLogicService.evaluate(hitStrategy, executionContext);
+      } catch (err) {
+        logger.warn('APPLY_DAMAGE: Failed to evaluate hit_strategy', { error: err.message });
+        return { reuseCachedHit: true, hintPartId: null };
+      }
+    }
+
+    const reuseCachedHit =
+      typeof resolved?.reuse_cached === 'boolean' ? resolved.reuse_cached : true;
+    const hintPartId =
+      resolved && Object.prototype.hasOwnProperty.call(resolved, 'hint_part')
+        ? this.#resolveRef(resolved.hint_part, executionContext, logger)
+        : null;
+
+    return { reuseCachedHit, hintPartId };
+  }
+
+  #resolveNamedRng(rngRef, executionContext, logger) {
+    if (!rngRef) return null;
+
+    let resolvedRef = rngRef;
+    if (typeof rngRef === 'object' && rngRef !== null) {
+      try {
+        resolvedRef = this.#jsonLogicService.evaluate(rngRef, executionContext);
+      } catch (err) {
+        logger.warn('APPLY_DAMAGE: Failed to evaluate rng_ref', { error: err.message });
+        return null;
+      }
+    }
+
+    if (typeof resolvedRef !== 'string' || !resolvedRef.trim()) {
+      logger.warn('APPLY_DAMAGE: rng_ref must resolve to a string', { rng_ref: rngRef });
+      return null;
+    }
+
+    const registries = [
+      executionContext?.rngRegistry,
+      executionContext?.rngRefs,
+      executionContext?.rngMap,
+      executionContext?.rngs,
+    ];
+    const provider = registries.find(
+      (registry) => registry && typeof registry[resolvedRef] === 'function'
+    );
+
+    if (provider) return provider[resolvedRef];
+
+    logger.warn('APPLY_DAMAGE: rng_ref provided but no matching RNG found on executionContext', {
+      rng_ref: resolvedRef,
+    });
+    return null;
+  }
+
+  #getRng(executionContext, rngOverride = null) {
+    if (typeof rngOverride === 'function') {
+      return rngOverride;
+    }
     if (executionContext && typeof executionContext.rng === 'function') {
       return executionContext.rng;
     }
@@ -229,12 +337,6 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
   async execute(params, executionContext) {
     const log = this.getLogger(executionContext);
-    const rng = this.#getRng(executionContext);
-
-    if (executionContext && typeof executionContext === 'object' && !executionContext.rng) {
-      executionContext.rng = rng;
-    }
-
     if (!assertParamsObject(params, this.#dispatcher, 'APPLY_DAMAGE')) return;
 
     const {
@@ -245,8 +347,19 @@ class ApplyDamageHandler extends BaseOperationHandler {
       damage_type,
       damage_multiplier,
       exclude_damage_types,
+      metadata,
+      damage_tags,
+      hit_strategy,
+      rng_ref,
       propagatedFrom = null,
     } = params;
+
+    const rngOverride = this.#resolveNamedRng(rng_ref, executionContext, log);
+    const rng = this.#getRng(executionContext, rngOverride);
+
+    if (executionContext && typeof executionContext === 'object' && !executionContext.rng) {
+      executionContext.rng = rng;
+    }
 
     // 1. Resolve Entity (supports placeholder names like "secondary", "primary", etc.)
     const entityId = this.#resolveEntityRef(entity_ref, executionContext, log);
@@ -260,12 +373,18 @@ class ApplyDamageHandler extends BaseOperationHandler {
 
     // 2. Resolve Part
     let partId = null;
+    const { reuseCachedHit, hintPartId } = this.#resolveHitStrategy(hit_strategy, executionContext, log);
+
     if (part_ref) {
       partId = this.#resolveRef(part_ref, executionContext, log);
     }
 
+    if (!partId && hintPartId) {
+      partId = hintPartId;
+    }
+
     // Reuse the same resolved hit location for multiple damage entries in the same action
-    if (!partId && isTopLevel && hitLocationCache?.[entityId]) {
+    if (!partId && isTopLevel && reuseCachedHit && hitLocationCache?.[entityId]) {
       partId = hitLocationCache[entityId];
     }
 
@@ -279,7 +398,7 @@ class ApplyDamageHandler extends BaseOperationHandler {
     }
 
     // Cache the chosen hit location so subsequent APPLY_DAMAGE calls for the same entity reuse it
-    if (isTopLevel) {
+    if (isTopLevel && reuseCachedHit) {
       executionContext.hitLocationCache = executionContext.hitLocationCache || {};
       executionContext.hitLocationCache[entityId] = partId;
     }
@@ -371,10 +490,15 @@ class ApplyDamageHandler extends BaseOperationHandler {
       return;
     }
 
+    const resolvedMetadata = this.#resolveMetadata(metadata, executionContext, log);
+    const resolvedDamageTags = this.#resolveDamageTags(damage_tags, executionContext, log);
+
     // Apply multiplier to amount while preserving other fields
     const finalDamageEntry = {
       ...resolvedDamageEntry,
       amount: resolvedDamageEntry.amount * resolvedMultiplier,
+      metadata: resolvedMetadata,
+      damageTags: resolvedDamageTags,
     };
 
     await this.#damageResolutionService.resolve({

@@ -96,6 +96,11 @@ class DamageResolutionService {
 
     const damageAmount = finalDamageEntry.amount;
     const damageType = finalDamageEntry.name;
+    const damageTags = Array.isArray(finalDamageEntry?.damageTags) ? finalDamageEntry.damageTags : [];
+    const metadata =
+      finalDamageEntry?.metadata && typeof finalDamageEntry.metadata === 'object' && !Array.isArray(finalDamageEntry.metadata)
+        ? finalDamageEntry.metadata
+        : {};
 
     // Session lifecycle: Create session at top-level, reuse for propagation
     let session;
@@ -144,6 +149,8 @@ class DamageResolutionService {
       amount: damageAmount,
       damageType,
       propagatedFrom,
+      metadata,
+      damageTags,
       effectsTriggered: [],
     };
 
@@ -274,6 +281,8 @@ class DamageResolutionService {
       amount: appliedDamageAmount,
       damageType,
       propagatedFrom,
+      metadata,
+      damageTags,
       timestamp: Date.now(),
     };
 

@@ -35,7 +35,7 @@
         },
         "damage_entry": {
           "description": "Full damage entry object from weapon's damage_capabilities component. Preferred over legacy amount/damage_type parameters.",
-          "oneOf": [
+          "anyOf": [
             { "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json" },
             { "type": "object" }
           ]
@@ -67,6 +67,54 @@
         },
         "damage_type": {
           "description": "DEPRECATED: Use damage_entry instead. Type of damage (e.g., 'blunt', 'piercing', 'slashing'). Required only when not using damage_entry.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ]
+        },
+        "metadata": {
+          "description": "Optional metadata describing the source of the damage (weapon id, action id, rule id). Ignored by the interpreter when absent.",
+          "type": "object",
+          "default": {},
+          "additionalProperties": true
+        },
+        "damage_tags": {
+          "description": "Optional tags for downstream effects/resistances (e.g., ['fire', 'ranged']).",
+          "oneOf": [
+            {
+              "type": "array",
+              "items": { "type": "string" },
+              "uniqueItems": true,
+              "default": []
+            },
+            { "type": "object" }
+          ]
+        },
+        "hit_strategy": {
+          "description": "Controls hit selection behavior when part_ref is not provided.",
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "reuse_cached": {
+                  "type": "boolean",
+                  "description": "Reuse cached hit location from the same action (default: true)."
+                },
+                "hint_part": {
+                  "description": "Optional hint for the target part to prefer before random selection. Can be a string or JSON Logic.",
+                  "oneOf": [
+                    { "type": "string" },
+                    { "type": "object" }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            { "type": "object" }
+          ]
+        },
+        "rng_ref": {
+          "description": "Optional reference to a named RNG provider in the execution context.",
           "oneOf": [
             { "type": "string" },
             { "type": "object" }
