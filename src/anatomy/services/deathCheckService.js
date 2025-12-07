@@ -16,9 +16,7 @@ const POSITION_COMPONENT_ID = 'core:position';
 // --- Threshold Constants ---
 const CRITICAL_HEALTH_THRESHOLD = 10; // Below 10% triggers dying state
 const DEFAULT_DYING_TURNS = 3;
-
-// --- Vital Organ Types That Cause Immediate Death ---
-const IMMEDIATE_DEATH_ORGANS = ['brain', 'heart', 'spine'];
+const DEFAULT_KILL_ON_DESTROY = true;
 
 /**
  * @typedef {object} DeathCheckResult
@@ -443,12 +441,22 @@ class DeathCheckService extends BaseService {
       VITAL_ORGAN_COMPONENT_ID
     );
 
-    if (
-      vitalOrganData &&
-      IMMEDIATE_DEATH_ORGANS.includes(vitalOrganData.organType)
-    ) {
+    if (!vitalOrganData) {
+      return null;
+    }
+
+    // Data-driven: only organs with killOnDestroy enabled trigger immediate death
+    const killOnDestroy =
+      vitalOrganData.killOnDestroy === false
+        ? false
+        : vitalOrganData.killOnDestroy === true
+          ? true
+          : DEFAULT_KILL_ON_DESTROY;
+
+    if (killOnDestroy) {
+      const organType = vitalOrganData.organType || 'unknown';
       return {
-        organType: vitalOrganData.organType,
+        organType,
         partEntityId,
       };
     }

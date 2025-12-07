@@ -80,6 +80,7 @@ import AnatomySocketIndex from '../../anatomy/services/anatomySocketIndex.js';
 import { AnatomyCacheCoordinator } from '../../anatomy/cache/anatomyCacheCoordinator.js';
 import DamageAccumulator from '../../anatomy/services/damageAccumulator.js';
 import DamageNarrativeComposer from '../../anatomy/services/damageNarrativeComposer.js';
+import StatusEffectRegistry from '../../anatomy/services/statusEffectRegistry.js';
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
 import DamageResolutionService from '../../logic/services/damageResolutionService.js';
@@ -857,13 +858,26 @@ export function registerWorldAndEntity(container) {
     )}.`
   );
 
+  // Register StatusEffectRegistry
+  registrar.singletonFactory(tokens.StatusEffectRegistry, (c) => {
+    return new StatusEffectRegistry({
+      logger: c.resolve(tokens.ILogger),
+      dataRegistry: c.resolve(tokens.IDataRegistry),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.StatusEffectRegistry
+    )}.`
+  );
+
   // Register DamageTypeEffectsService
   registrar.singletonFactory(tokens.DamageTypeEffectsService, (c) => {
     return new DamageTypeEffectsService({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      statusEffectRegistry: c.resolve(tokens.StatusEffectRegistry),
     });
   });
   logger.debug(

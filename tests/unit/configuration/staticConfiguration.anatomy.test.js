@@ -68,6 +68,10 @@ describe('StaticConfiguration - Anatomy System', () => {
       expect(config.getContentTypeSchemaId('anatomyStructureTemplates')).toBe(
         'schema://living-narrative-engine/anatomy.structure-template.schema.json'
       );
+
+      expect(config.getContentTypeSchemaId('statusEffects')).toBe(
+        'schema://living-narrative-engine/status-effect.registry.schema.json'
+      );
     });
 
     it('should not affect existing content type schema IDs', () => {
@@ -108,6 +112,7 @@ describe('StaticConfiguration - Anatomy System', () => {
           key: 'anatomyStructureTemplates',
           file: 'anatomy.structure-template.schema.json',
         },
+        { key: 'statusEffects', file: 'status-effect.registry.schema.json' },
       ];
 
       anatomyTypes.forEach(({ key, file }) => {

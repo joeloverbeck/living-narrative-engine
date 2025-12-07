@@ -794,6 +794,173 @@ describe('DamageTypeEffectsService', () => {
           'anatomy:poisoned_started',
         ]);
       });
+
+      it('should honor registry-defined apply order when provided', async () => {
+        mockDispatcher.dispatch.mockClear();
+        const statusEffectRegistry = {
+          getAll: jest.fn().mockReturnValue([
+            {
+              id: 'dismembered',
+              effectType: 'dismember',
+              componentId: 'anatomy:dismembered',
+              startedEventId: 'anatomy:dismembered',
+              defaults: { thresholdFraction: 0.8 },
+            },
+            {
+              id: 'fractured',
+              effectType: 'fracture',
+              componentId: 'anatomy:fractured',
+              startedEventId: 'anatomy:fractured',
+              defaults: { thresholdFraction: 0.5 },
+            },
+            {
+              id: 'poisoned',
+              effectType: 'poison',
+              componentId: 'anatomy:poisoned',
+              startedEventId: 'anatomy:poisoned_started',
+              defaults: { durationTurns: 3, tickDamage: 1, scope: 'part' },
+            },
+            {
+              id: 'burning',
+              effectType: 'burn',
+              componentId: 'anatomy:burning',
+              startedEventId: 'anatomy:burning_started',
+              defaults: {
+                durationTurns: 2,
+                tickDamage: 1,
+                stacking: { canStack: false, defaultStacks: 1 },
+              },
+            },
+            {
+              id: 'bleeding',
+              effectType: 'bleed',
+              componentId: 'anatomy:bleeding',
+              startedEventId: 'anatomy:bleeding_started',
+              defaults: {
+                baseDurationTurns: 2,
+                severity: { minor: { tickDamage: 1 } },
+              },
+            },
+          ]),
+          getApplyOrder: jest
+            .fn()
+            .mockReturnValue(['poisoned', 'burning', 'bleeding']),
+        };
+
+        const orderedService = new DamageTypeEffectsService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          safeEventDispatcher: mockDispatcher,
+          statusEffectRegistry,
+          rngProvider: mockRngProvider,
+        });
+
+        const callOrder = [];
+        mockDispatcher.dispatch.mockImplementation((event) => {
+          callOrder.push(event);
+        });
+
+        await orderedService.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'mixed',
+            amount: 30,
+            bleed: { enabled: true },
+            burn: { enabled: true },
+            poison: { enabled: true },
+          },
+        });
+
+        expect(callOrder).toEqual([
+          'anatomy:poisoned_started',
+          'anatomy:burning_started',
+          'anatomy:bleeding_started',
+        ]);
+      });
+    });
+
+    it('should use registry defaults for component IDs and durations', async () => {
+      mockEntityManager.addComponent.mockClear();
+      mockDispatcher.dispatch.mockClear();
+
+      const statusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          {
+            id: 'dismembered',
+            effectType: 'dismember',
+            componentId: 'anatomy:dismembered',
+            startedEventId: 'anatomy:dismembered',
+            defaults: { thresholdFraction: 0.8 },
+          },
+          {
+            id: 'fractured',
+            effectType: 'fracture',
+            componentId: 'anatomy:fractured',
+            startedEventId: 'anatomy:fractured',
+            defaults: { thresholdFraction: 0.5 },
+          },
+          {
+            id: 'bleeding',
+            effectType: 'bleed',
+            componentId: 'anatomy:bleeding',
+            startedEventId: 'anatomy:bleeding_started',
+            defaults: { baseDurationTurns: 2, severity: { minor: { tickDamage: 1 } } },
+          },
+          {
+            id: 'burning',
+            effectType: 'burn',
+            componentId: 'custom:burning',
+            startedEventId: 'custom:burning_started',
+            defaults: {
+              tickDamage: 7,
+              durationTurns: 5,
+              stacking: { canStack: false, defaultStacks: 2 },
+            },
+          },
+          {
+            id: 'poisoned',
+            effectType: 'poison',
+            componentId: 'anatomy:poisoned',
+            startedEventId: 'anatomy:poisoned_started',
+            defaults: { durationTurns: 3, tickDamage: 1, scope: 'part' },
+          },
+        ]),
+        getApplyOrder: jest.fn().mockReturnValue(['burning']),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        statusEffectRegistry,
+        rngProvider: mockRngProvider,
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        ...baseParams,
+        damageEntry: {
+          name: 'fire',
+          amount: 30,
+          burn: { enabled: true },
+        },
+      });
+
+      expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+        'part:arm',
+        'custom:burning',
+        expect.objectContaining({
+          remainingTurns: 5,
+          tickDamage: 7,
+          stackedCount: 2,
+        })
+      );
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'custom:burning_started',
+        expect.objectContaining({
+          entityId: 'entity:player',
+          partId: 'part:arm',
+        })
+      );
     });
 
     describe('edge cases', () => {

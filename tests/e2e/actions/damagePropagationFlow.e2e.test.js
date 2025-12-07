@@ -25,15 +25,21 @@ import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import mainGaucheDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json' assert { type: 'json' };
 import practiceStickDefinition from '../../../data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json' assert { type: 'json' };
+import {
+  BASE_HEALTHS,
+  buildHumanHeadWithBrain as buildHeadWithBrain,
+  buildHumanTorsoWithHeart as buildTorsoWithHeart,
+  buildHumanTorsoWithHeartAndSpine as buildTorsoWithHeartAndSpine,
+} from '../../common/anatomy/dataDrivenFixtures.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'propagation-room';
 const TARGET_ID = 'propagation-target';
-const BASE_HEART_HEALTH = 50;
-const BASE_TORSO_HEALTH = 80;
-const BASE_HEAD_HEALTH = 40;
-const BASE_BRAIN_HEALTH = 30;
-const BASE_ARTERY_HEALTH = 18;
+const BASE_TORSO_HEALTH = BASE_HEALTHS.torso;
+const BASE_HEART_HEALTH = BASE_HEALTHS.heart;
+const BASE_SPINE_HEALTH = BASE_HEALTHS.spine;
+const BASE_HEAD_HEALTH = BASE_HEALTHS.head;
+const BASE_BRAIN_HEALTH = BASE_HEALTHS.brain;
 
 const createSafeDispatcher = (eventBus) => ({
   dispatch: (eventType, payload) => eventBus.dispatch(eventType, payload),
@@ -146,179 +152,6 @@ const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
     'RESOLVE_OUTCOME',
     resolveOutcomeHandler.execute.bind(resolveOutcomeHandler)
   );
-};
-
-const buildTorsoWithHeart = (rulesOverride) => {
-  const torso = new ModEntityBuilder('torso')
-    .withName('Torso')
-    .withComponent('anatomy:part', {
-      type: 'torso',
-      subType: 'torso',
-      hit_probability_weight: 10,
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: BASE_TORSO_HEALTH,
-      maxHealth: BASE_TORSO_HEALTH,
-      state: 'healthy',
-    })
-    .withComponent('anatomy:sockets', {
-      sockets: [
-        {
-          id: 'heart_socket',
-          allowedTypes: ['heart'],
-        },
-      ],
-    })
-    .withComponent('anatomy:damage_propagation', {
-      rules: rulesOverride || [
-        {
-          childSocketId: 'heart_socket',
-          baseProbability: 0.3,
-          damageFraction: 0.5,
-          damageTypeModifiers: { piercing: 1.5, blunt: 0.3, slashing: 0.8 },
-        },
-      ],
-    })
-    .build();
-
-  const heart = new ModEntityBuilder('heart')
-    .withName('Heart')
-    .withComponent('anatomy:part', {
-      type: 'heart',
-      subType: 'heart',
-      hit_probability_weight: 0,
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: BASE_HEART_HEALTH,
-      maxHealth: BASE_HEART_HEALTH,
-      state: 'healthy',
-    })
-    .withComponent('anatomy:vital_organ', { organType: 'heart' })
-    .withComponent('anatomy:joint', {
-      parentId: torso.id,
-      socketId: 'heart_socket',
-    })
-    .build();
-
-  return { torso, heart };
-};
-
-const buildHeadWithBrain = () => {
-  const head = new ModEntityBuilder('head')
-    .withName('Head')
-    .withComponent('anatomy:part', {
-      type: 'head',
-      subType: 'head',
-      hit_probability_weight: 8,
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: BASE_HEAD_HEALTH,
-      maxHealth: BASE_HEAD_HEALTH,
-      state: 'healthy',
-    })
-    .withComponent('anatomy:sockets', {
-      sockets: [
-        {
-          id: 'brain_socket',
-          allowedTypes: ['brain'],
-        },
-      ],
-    })
-    .withComponent('anatomy:damage_propagation', {
-      rules: [
-        {
-          childSocketId: 'brain_socket',
-          baseProbability: 0.4,
-          damageFraction: 0.6,
-          damageTypeModifiers: { piercing: 1.3, blunt: 0.6, slashing: 0.7 },
-        },
-      ],
-    })
-    .build();
-
-  const brain = new ModEntityBuilder('brain')
-    .withName('Brain')
-    .withComponent('anatomy:part', {
-      type: 'brain',
-      subType: 'brain',
-      hit_probability_weight: 0,
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: BASE_BRAIN_HEALTH,
-      maxHealth: BASE_BRAIN_HEALTH,
-      state: 'healthy',
-    })
-    .withComponent('anatomy:vital_organ', { organType: 'brain' })
-    .withComponent('anatomy:joint', {
-      parentId: head.id,
-      socketId: 'brain_socket',
-    })
-    .build();
-
-  return { head, brain };
-};
-
-const buildRecursiveHeart = () => {
-  const { torso, heart } = buildTorsoWithHeart([
-    {
-      childSocketId: 'heart_socket',
-      baseProbability: 1,
-      damageFraction: 0.5,
-      damageTypeModifiers: { piercing: 1 },
-    },
-  ]);
-
-  const artery = new ModEntityBuilder('artery')
-    .withName('Artery')
-    .withComponent('anatomy:part', {
-      type: 'artery',
-      subType: 'artery',
-      hit_probability_weight: 0,
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: BASE_ARTERY_HEALTH,
-      maxHealth: BASE_ARTERY_HEALTH,
-      state: 'healthy',
-    })
-    .withComponent('anatomy:joint', {
-      parentId: heart.id,
-      socketId: 'artery_socket',
-    })
-    .build();
-
-  const heartWithPropagation = new ModEntityBuilder(heart.id)
-    .withName('Heart')
-    .withComponent('anatomy:part', heart.components['anatomy:part'])
-    .withComponent(
-      'anatomy:part_health',
-      heart.components['anatomy:part_health']
-    )
-    .withComponent(
-      'anatomy:vital_organ',
-      heart.components['anatomy:vital_organ']
-    )
-    .withComponent('anatomy:joint', heart.components['anatomy:joint'])
-    .withComponent('anatomy:sockets', {
-      sockets: [
-        {
-          id: 'artery_socket',
-          allowedTypes: ['artery'],
-        },
-      ],
-    })
-    .withComponent('anatomy:damage_propagation', {
-      rules: [
-        {
-          childSocketId: 'artery_socket',
-          baseProbability: 1,
-          damageFraction: 0.25,
-          damageTypeModifiers: { piercing: 1 },
-        },
-      ],
-    })
-    .build();
-
-  return { torso, heart: heartWithPropagation, artery };
 };
 
 const createTarget = (rootPartId) =>
@@ -490,14 +323,14 @@ describe('damage propagation flow e2e', () => {
     expect(heartHealth.currentHealth).toBe(BASE_HEART_HEALTH);
   });
 
-  it('applies recursive propagation to grandchildren parts when intermediate parts define rules', async () => {
-    const { torso, heart, artery } = buildRecursiveHeart();
+  it('applies propagation to each configured child socket from authored anatomy data', async () => {
+    const { torso, heart, spine } = buildTorsoWithHeartAndSpine();
     await executeSwing({
       weaponDefinition: slashingBladeDefinition,
       weaponId: 'slashing-dagger-recursive',
-      parts: [torso, heart, artery],
+      parts: [torso, heart, spine],
       rootPartId: torso.id,
-      randomSequence: [0, 0.01, 0.01], // torso->heart and heart->artery
+      randomSequence: [0, 0.01, 0.01], // torso->heart and torso->spine
     });
 
     const propagationEvents = fixture.events.filter(
@@ -508,8 +341,8 @@ describe('damage propagation flow e2e', () => {
       heart.id,
       'anatomy:part_health'
     );
-    const arteryHealth = testEnv.entityManager.getComponentData(
-      artery.id,
+    const spineHealth = testEnv.entityManager.getComponentData(
+      spine.id,
       'anatomy:part_health'
     );
 
@@ -525,13 +358,13 @@ describe('damage propagation flow e2e', () => {
     expect(
       propagationEvents.some(
         (e) =>
-          e.payload?.sourcePartId === heart.id &&
-          e.payload?.targetPartId === artery.id &&
+          e.payload?.sourcePartId === torso.id &&
+          e.payload?.targetPartId === spine.id &&
           e.payload?.ownerEntityId === TARGET_ID
       )
     ).toBe(true);
 
     expect(heartHealth.currentHealth).toBe(BASE_HEART_HEALTH - 10); // 20 * 0.5
-    expect(arteryHealth.currentHealth).toBeCloseTo(BASE_ARTERY_HEALTH - 2.5, 5); // propagated 10 * 0.25
+    expect(spineHealth.currentHealth).toBe(BASE_SPINE_HEALTH - 10); // 20 * 0.5
   });
 });

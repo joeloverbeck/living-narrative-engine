@@ -42,6 +42,12 @@ export const meta = {
     phase: 'definitions',
     registryKey: 'lookups',
   },
+  statusEffects: {
+    contentKey: 'statusEffects',
+    diskFolder: 'status-effects',
+    phase: 'definitions',
+    registryKey: 'statusEffects',
+  },
   actions: {
     contentKey: 'actions',
     diskFolder: 'actions',

@@ -89,16 +89,6 @@ function createMockDispatcher() {
   return { dispatch: jest.fn() };
 }
 
-/**
- * Creates a mock data registry for property testing
- *
- * @param {object} damageType - The damage type definition to return
- * @returns {object} Mock data registry
- */
-function createMockDataRegistry(damageType) {
-  return { get: jest.fn().mockReturnValue(damageType) };
-}
-
 describe('Damage Types - Property Tests', () => {
   describe('Bleed Severity Map Invariants', () => {
     it('should have positive tickDamage for all severities', () => {
@@ -216,15 +206,14 @@ describe('Damage Types - Property Tests', () => {
             });
 
             const damageType = {
-              id: 'fire',
+              name: 'fire',
+              amount: 10,
               burn: { enabled: true, dps, durationTurns, canStack: true },
             };
 
-            const dataRegistry = createMockDataRegistry(damageType);
             const service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
@@ -235,8 +224,7 @@ describe('Damage Types - Property Tests', () => {
               await service.applyEffectsForDamage({
                 entityId: ids.entity,
                 partId: ids.part,
-                amount: 10,
-                damageType: 'fire',
+                damageEntry: damageType,
                 maxHealth: 100,
                 currentHealth: 100,
               });
@@ -281,15 +269,14 @@ describe('Damage Types - Property Tests', () => {
             });
 
             const damageType = {
-              id: 'fire',
+              name: 'fire',
+              amount: 10,
               burn: { enabled: true, dps, durationTurns, canStack: false },
             };
 
-            const dataRegistry = createMockDataRegistry(damageType);
             const service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
@@ -298,8 +285,7 @@ describe('Damage Types - Property Tests', () => {
               await service.applyEffectsForDamage({
                 entityId: ids.entity,
                 partId: ids.part,
-                amount: 10,
-                damageType: 'fire',
+                damageEntry: damageType,
                 maxHealth: 100,
                 currentHealth: 100,
               });
@@ -335,7 +321,8 @@ describe('Damage Types - Property Tests', () => {
 
             // First application
             let damageType = {
-              id: 'fire',
+              name: 'fire',
+              amount: 10,
               burn: {
                 enabled: true,
                 dps: 2,
@@ -344,27 +331,25 @@ describe('Damage Types - Property Tests', () => {
               },
             };
 
-            let dataRegistry = createMockDataRegistry(damageType);
             let service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
 
-            await service.applyEffectsForDamage({
-              entityId: ids.entity,
-              partId: ids.part,
-              amount: 10,
-              damageType: 'fire',
-              maxHealth: 100,
-              currentHealth: 100,
-            });
+              await service.applyEffectsForDamage({
+                entityId: ids.entity,
+                partId: ids.part,
+                damageEntry: damageType,
+                maxHealth: 100,
+                currentHealth: 100,
+              });
 
             // Second application with different duration
             damageType = {
-              id: 'fire',
+              name: 'fire',
+              amount: 10,
               burn: {
                 enabled: true,
                 dps: 2,
@@ -373,23 +358,20 @@ describe('Damage Types - Property Tests', () => {
               },
             };
 
-            dataRegistry = createMockDataRegistry(damageType);
             service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
 
-            await service.applyEffectsForDamage({
-              entityId: ids.entity,
-              partId: ids.part,
-              amount: 10,
-              damageType: 'fire',
-              maxHealth: 100,
-              currentHealth: 100,
-            });
+              await service.applyEffectsForDamage({
+                entityId: ids.entity,
+                partId: ids.part,
+                damageEntry: damageType,
+                maxHealth: 100,
+                currentHealth: 100,
+              });
 
             const burning = entityManager._getComponent(
               ids.part,
@@ -431,15 +413,14 @@ describe('Damage Types - Property Tests', () => {
             });
 
             const damageType = {
-              id: 'slashing',
+              name: 'slashing',
+              amount: 20,
               bleed: { enabled: true, severity, baseDurationTurns },
             };
 
-            const dataRegistry = createMockDataRegistry(damageType);
             const service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
@@ -447,8 +428,7 @@ describe('Damage Types - Property Tests', () => {
             await service.applyEffectsForDamage({
               entityId: ids.entity,
               partId: ids.part,
-              amount: 20,
-              damageType: 'slashing',
+              damageEntry: damageType,
               maxHealth: 100,
               currentHealth: 80,
             });
@@ -519,11 +499,9 @@ describe('Damage Types - Property Tests', () => {
               subType: 'torso',
             });
 
-            const dataRegistry = createMockDataRegistry(minimalDamageType);
             const service = new DamageTypeEffectsService({
               logger,
               entityManager,
-              dataRegistry,
               safeEventDispatcher: dispatcher,
               rngProvider: () => 0.5,
             });
@@ -533,8 +511,10 @@ describe('Damage Types - Property Tests', () => {
               service.applyEffectsForDamage({
                 entityId: ids.entity,
                 partId: ids.part,
-                amount: 10,
-                damageType: minimalDamageType.id,
+                damageEntry: {
+                  name: minimalDamageType.id,
+                  amount: 10,
+                },
                 maxHealth: 100,
                 currentHealth: 90,
               })

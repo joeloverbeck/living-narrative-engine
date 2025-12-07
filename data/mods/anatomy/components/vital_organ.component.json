@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/component.schema.json",
   "id": "anatomy:vital_organ",
-  "description": "Marks a body part as vital for survival. Destruction triggers immediate death.",
+  "description": "Marks a body part as vital for survival. Destruction can trigger immediate death.",
   "dataSchema": {
     "type": "object",
     "properties": {
@@ -9,6 +9,11 @@
         "type": "string",
         "enum": ["brain", "heart", "spine"],
         "description": "Category of vital organ for narrative purposes"
+      },
+      "killOnDestroy": {
+        "type": "boolean",
+        "description": "Whether destroying this organ causes immediate death",
+        "default": true
       },
       "deathMessage": {
         "type": "string",
