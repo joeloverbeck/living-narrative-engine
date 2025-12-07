@@ -341,8 +341,7 @@ describe('DeathCheckService', () => {
         );
       });
 
-      it('should not trigger death for non-immediate-death vital organs', () => {
-        // Setup a vital organ type that is NOT in the immediate death list
+      it('should not trigger death when killOnDestroy is false', () => {
         mockEntityManager.hasComponent.mockImplementation(
           (entityId, componentId) => {
             if (componentId === 'anatomy:dead') return false;
@@ -362,7 +361,7 @@ describe('DeathCheckService', () => {
               entityId === 'destroyed-part-1' &&
               componentId === 'anatomy:vital_organ'
             ) {
-              return { organType: 'kidney' }; // Not in immediate death list
+              return { organType: 'heart', killOnDestroy: false };
             }
             return null;
           }
@@ -382,6 +381,53 @@ describe('DeathCheckService', () => {
         const result = service.checkDeathConditions('entity-1');
 
         expect(result.isDead).toBe(false);
+      });
+
+      it('should allow new vital organ types to trigger death when killOnDestroy is true', () => {
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentId) => {
+            if (componentId === 'anatomy:dead') return false;
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return true;
+            }
+            return false;
+          }
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentId) => {
+            if (
+              entityId === 'destroyed-part-1' &&
+              componentId === 'anatomy:vital_organ'
+            ) {
+              return { organType: 'kidney', killOnDestroy: true };
+            }
+            if (entityId === 'entity-1' && componentId === 'core:name') {
+              return { text: 'Test Entity' };
+            }
+            return null;
+          }
+        );
+
+        mockInjuryAggregationService.aggregateInjuries.mockReturnValue({
+          entityId: 'entity-1',
+          entityName: 'Test Entity',
+          overallHealthPercentage: 50,
+          destroyedParts: [
+            { partEntityId: 'destroyed-part-1', state: 'destroyed' },
+          ],
+          isDying: false,
+          isDead: false,
+        });
+
+        const result = service.checkDeathConditions('entity-1', 'killer-1');
+
+        expect(result.isDead).toBe(true);
+        expect(result.deathInfo.vitalOrganDestroyed).toBe('kidney');
+        expect(result.deathInfo.killedBy).toBe('killer-1');
       });
     });
 

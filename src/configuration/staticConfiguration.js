@@ -145,6 +145,7 @@ class StaticConfiguration {
       'component.schema.json',
       'condition.schema.json',
       'damage-type.schema.json',
+      'status-effect.registry.schema.json',
       'damage-capability-entry.schema.json',
       'entity-definition.schema.json', // CORRECTED
       'entity-instance.schema.json', // CORRECTED
@@ -205,6 +206,8 @@ class StaticConfiguration {
       world: 'schema://living-narrative-engine/world.schema.json',
       'prompt-text': 'schema://living-narrative-engine/prompt-text.schema.json',
       lookups: 'schema://living-narrative-engine/lookup.schema.json',
+      statusEffects:
+        'schema://living-narrative-engine/status-effect.registry.schema.json',
       anatomyRecipes:
         'schema://living-narrative-engine/anatomy.recipe.schema.json',
       anatomyBlueprints:

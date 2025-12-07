@@ -22,9 +22,24 @@ import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.j
 import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
+import vitalOrganComponentDef from '../../../data/mods/anatomy/components/vital_organ.component.json' assert { type: 'json' };
+import {
+  BASE_HEALTHS,
+  VITAL_ORGAN_TYPES,
+  buildHumanVitalsGraph,
+} from '../../common/anatomy/dataDrivenFixtures.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'death-room';
+const VITAL_ORGAN_KILL_DEFAULT =
+  vitalOrganComponentDef?.dataSchema?.properties?.killOnDestroy?.default ??
+  true;
+const LETHAL_ORGAN_TYPES = VITAL_ORGAN_TYPES;
+const BASE_TORSO_HEALTH = BASE_HEALTHS.torso;
+const BASE_HEAD_HEALTH = BASE_HEALTHS.head;
+const BASE_HEART_HEALTH = BASE_HEALTHS.heart;
+const BASE_BRAIN_HEALTH = BASE_HEALTHS.brain;
+const BASE_SPINE_HEALTH = BASE_HEALTHS.spine;
 
 const createSafeDispatcher = (eventBus) => ({
   dispatch: (eventType, payload) => eventBus.dispatch(eventType, payload),
@@ -32,69 +47,33 @@ const createSafeDispatcher = (eventBus) => ({
 
 const buildActorWithVitals = ({
   actorId = 'victim',
-  torsoHealth = 100,
-  heartHealth = 40,
-  brainHealth = 40,
-  spineHealth = 40,
+  torsoHealth = BASE_TORSO_HEALTH,
+  headHealth = BASE_HEAD_HEALTH,
+  heartHealth = BASE_HEART_HEALTH,
+  brainHealth = BASE_BRAIN_HEALTH,
+  spineHealth = BASE_SPINE_HEALTH,
+  killOnDestroyOverrides = {},
 } = {}) => {
-  const torso = new ModEntityBuilder(`${actorId}-torso`)
-    .withName('Torso')
-    .withComponent('anatomy:part', { subType: 'torso', orientation: 'mid' })
-    .withComponent('anatomy:part_health', {
-      currentHealth: torsoHealth,
-      maxHealth: 100,
-      state: 'healthy',
-      turnsInState: 0,
-    })
-    .build();
+  const resolveKillFlag = (organKey) =>
+    Object.prototype.hasOwnProperty.call(killOnDestroyOverrides, organKey)
+      ? killOnDestroyOverrides[organKey]
+      : VITAL_ORGAN_KILL_DEFAULT;
 
-  const heart = new ModEntityBuilder(`${actorId}-heart`)
-    .withName('Heart')
-    .withComponent('anatomy:part', { subType: 'heart', orientation: 'mid' })
-    .withComponent('anatomy:joint', {
-      parentId: torso.id,
-      socketId: 'heart_socket',
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: heartHealth,
-      maxHealth: heartHealth,
-      state: 'healthy',
-      turnsInState: 0,
-    })
-    .withComponent('anatomy:vital_organ', { organType: 'heart' })
-    .build();
-
-  const brain = new ModEntityBuilder(`${actorId}-brain`)
-    .withName('Brain')
-    .withComponent('anatomy:part', { subType: 'brain', orientation: 'mid' })
-    .withComponent('anatomy:joint', {
-      parentId: torso.id,
-      socketId: 'brain_socket',
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: brainHealth,
-      maxHealth: brainHealth,
-      state: 'healthy',
-      turnsInState: 0,
-    })
-    .withComponent('anatomy:vital_organ', { organType: 'brain' })
-    .build();
-
-  const spine = new ModEntityBuilder(`${actorId}-spine`)
-    .withName('Spine')
-    .withComponent('anatomy:part', { subType: 'spine', orientation: 'mid' })
-    .withComponent('anatomy:joint', {
-      parentId: torso.id,
-      socketId: 'spine_socket',
-    })
-    .withComponent('anatomy:part_health', {
-      currentHealth: spineHealth,
-      maxHealth: spineHealth,
-      state: 'healthy',
-      turnsInState: 0,
-    })
-    .withComponent('anatomy:vital_organ', { organType: 'spine' })
-    .build();
+  const parts = buildHumanVitalsGraph({
+    actorId,
+    healthOverrides: {
+      torso: torsoHealth,
+      head: headHealth,
+      heart: heartHealth,
+      brain: brainHealth,
+      spine: spineHealth,
+    },
+    killOnDestroyOverrides: {
+      heart: resolveKillFlag('heart'),
+      brain: resolveKillFlag('brain'),
+      spine: resolveKillFlag('spine'),
+    },
+  });
 
   const actor = new ModEntityBuilder(actorId)
     .withName('Test Subject')
@@ -102,12 +81,13 @@ const buildActorWithVitals = ({
     .withComponent('core:position', { locationId: ROOM_ID })
     .withComponent('anatomy:body', {
       body: {
-        root: torso.id,
+        root: parts.torso.id,
         parts: {
-          torso: torso.id,
-          heart: heart.id,
-          brain: brain.id,
-          spine: spine.id,
+          torso: parts.torso.id,
+          head: parts.head.id,
+          heart: parts.heart.id,
+          brain: parts.brain.id,
+          spine: parts.spine.id,
         },
       },
     })
@@ -124,7 +104,7 @@ const buildActorWithVitals = ({
     .withComponent('core:position', { locationId: ROOM_ID })
     .build();
 
-  return { actor, parts: { torso, heart, brain, spine }, room, attacker };
+  return { actor, parts, room, attacker };
 };
 
 describe('death mechanics e2e (critical)', () => {
@@ -176,45 +156,46 @@ describe('death mechanics e2e (critical)', () => {
   };
 
   const pushToDyingThreshold = async ({ actor, parts, attacker }) => {
-    await applyDamage({
-      entityId: actor.id,
-      partId: parts.torso.id,
-      amount: 95,
-      actorId: attacker.id,
-      damageType: 'blunt',
-    });
-    await applyDamage({
-      entityId: actor.id,
-      partId: parts.heart.id,
-      amount: 37,
-      actorId: attacker.id,
-      damageType: 'piercing',
-    });
-    await applyDamage({
-      entityId: actor.id,
-      partId: parts.brain.id,
-      amount: 37,
-      actorId: attacker.id,
-      damageType: 'crushing',
-    });
-    await applyDamage({
-      entityId: actor.id,
-      partId: parts.spine.id,
-      amount: 37,
-      actorId: attacker.id,
-      damageType: 'slashing',
-    });
+    const lowerHealthTo = async (partId, remaining, damageType = 'blunt') => {
+      const health = testEnv.entityManager.getComponentData(
+        partId,
+        'anatomy:part_health'
+      );
+      const damageAmount = Math.max(
+        (health?.currentHealth || 0) - remaining,
+        0
+      );
+      if (damageAmount > 0) {
+        await applyDamage({
+          entityId: actor.id,
+          partId,
+          amount: damageAmount,
+          actorId: attacker.id,
+          damageType,
+        });
+      }
+    };
+
+    await lowerHealthTo(parts.torso.id, 1, 'blunt');
+    await lowerHealthTo(parts.heart.id, 1, 'piercing');
+    await lowerHealthTo(parts.brain.id, 1, 'crushing');
+    await lowerHealthTo(parts.spine.id, 1, 'slashing');
+
+    // Avoid brain propagation when softening the head for overall health checks
+    Math.random.mockReturnValueOnce(0.99);
+    await lowerHealthTo(parts.head.id, 1, 'blunt');
   };
 
   const prepareActor = async (options = {}) => {
-    const { actor, parts, room, attacker } = buildActorWithVitals(options);
-    fixture.reset([
-      actor,
-      parts.torso,
-      parts.heart,
-      parts.brain,
-      parts.spine,
-      room,
+  const { actor, parts, room, attacker } = buildActorWithVitals(options);
+  fixture.reset([
+    actor,
+    parts.torso,
+    parts.head,
+    parts.heart,
+    parts.brain,
+    parts.spine,
+    room,
       attacker,
     ]);
     fixture.clearEvents();
@@ -278,6 +259,7 @@ describe('death mechanics e2e (critical)', () => {
   };
 
   it('triggers immediate death when the heart is destroyed', async () => {
+    expect(LETHAL_ORGAN_TYPES.has('heart')).toBe(true);
     const { actor, parts, attacker } = await prepareActor({ heartHealth: 25 });
 
     await applyDamage({
@@ -312,7 +294,34 @@ describe('death mechanics e2e (critical)', () => {
     expect(dyingComponent).toBeNull();
   });
 
+  it('does not trigger immediate death when killOnDestroy is disabled for a vital organ', async () => {
+    const { actor, parts, attacker } = await prepareActor({
+      heartHealth: 25,
+      killOnDestroyOverrides: { heart: false },
+    });
+
+    await applyDamage({
+      entityId: actor.id,
+      partId: parts.heart.id,
+      amount: 30,
+      actorId: attacker.id,
+    });
+
+    const deathEvent = fixture.events.find(
+      (e) => e.eventType === 'anatomy:entity_died'
+    );
+
+    expect(deathEvent).toBeUndefined();
+    expect(
+      testEnv.entityManager.getComponentData(actor.id, 'anatomy:dead')
+    ).toBeNull();
+    expect(
+      testEnv.entityManager.getComponentData(actor.id, 'anatomy:dying')
+    ).toBeNull();
+  });
+
   it('triggers immediate death when the brain is destroyed', async () => {
+    expect(LETHAL_ORGAN_TYPES.has('brain')).toBe(true);
     const { actor, parts, attacker } = await prepareActor({ brainHealth: 20 });
 
     await applyDamage({
@@ -384,6 +393,7 @@ describe('death mechanics e2e (critical)', () => {
   });
 
   it('includes full payload details on entity_died events', async () => {
+    expect(LETHAL_ORGAN_TYPES.has('spine')).toBe(true);
     const { actor, parts, attacker } = await prepareActor({ spineHealth: 10 });
 
     await applyDamage({

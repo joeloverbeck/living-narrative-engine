@@ -27,6 +27,10 @@ import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import rapierDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_rapier.entity.json' assert { type: 'json' };
 import mainGaucheDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json' assert { type: 'json' };
+import {
+  BURNING_COMPONENT_ID,
+  POISONED_COMPONENT_ID,
+} from '../../../src/anatomy/services/damageTypeEffectsService.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'burn-poison-room';
@@ -52,6 +56,20 @@ const cloneWith = (definition, damageEntries) => {
   };
   return cloned;
 };
+
+const burnDefaults = {
+  durationTurns: 2,
+  tickDamage: 1,
+  defaultStacks: 1,
+};
+
+const poisonDefaults = {
+  durationTurns: 3,
+  tickDamage: 1,
+};
+
+const getDamageEntry = (definition, index = 0) =>
+  definition.components?.['damage-types:damage_capabilities']?.entries?.[index];
 
 const burnBladeDefinition = cloneWith(rapierDefinition, [
   {
@@ -270,12 +288,17 @@ describe('burn/poison extended e2e', () => {
 
     const poisonComponent = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:poisoned'
+      POISONED_COMPONENT_ID
     );
+    const poisonEntry = getDamageEntry(partScopePoisonDefinition);
+    const expectedDuration =
+      poisonEntry?.poison?.durationTurns ?? poisonDefaults.durationTurns;
+    const expectedTick =
+      poisonEntry?.poison?.tick ?? poisonDefaults.tickDamage;
     expect(poisonComponent).toEqual(
       expect.objectContaining({
-        remainingTurns: 3,
-        tickDamage: 2,
+        remainingTurns: expectedDuration,
+        tickDamage: expectedTick,
       })
     );
 
@@ -289,18 +312,18 @@ describe('burn/poison extended e2e', () => {
       testEnv.entityManager
     );
     testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
-      componentId === 'anatomy:poisoned'
+      componentId === POISONED_COMPONENT_ID
         ? [part.id]
         : originalGetter(componentId);
 
-    await poisonSystem.processTick();
-    await poisonSystem.processTick();
-    await poisonSystem.processTick();
+    for (let i = 0; i < expectedDuration; i += 1) {
+      await poisonSystem.processTick();
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const remainingComponent = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:poisoned'
+      POISONED_COMPONENT_ID
     );
     const health = testEnv.entityManager.getComponentData(
       part.id,
@@ -390,25 +413,31 @@ describe('burn/poison extended e2e', () => {
 
     const burnA = testEnv.entityManager.getComponentData(
       partA.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
     const burnB = testEnv.entityManager.getComponentData(
       partB.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
+    const burnEntry = getDamageEntry(burnBladeDefinition);
+    const burnDuration =
+      burnEntry?.burn?.durationTurns ?? burnDefaults.durationTurns;
+    const burnDps = burnEntry?.burn?.dps ?? burnDefaults.tickDamage;
+    const expectedStackCount = burnDefaults.defaultStacks + 1;
+    const expectedTickDamage = burnDps * 2;
 
     expect(burnA).toEqual(
       expect.objectContaining({
-        stackedCount: 2,
-        tickDamage: 4,
-        remainingTurns: 3,
+        stackedCount: expectedStackCount,
+        tickDamage: expectedTickDamage,
+        remainingTurns: burnDuration,
       })
     );
     expect(burnB).toEqual(
       expect.objectContaining({
-        stackedCount: 2,
-        tickDamage: 4,
-        remainingTurns: 3,
+        stackedCount: expectedStackCount,
+        tickDamage: expectedTickDamage,
+        remainingTurns: burnDuration,
       })
     );
 
@@ -422,7 +451,7 @@ describe('burn/poison extended e2e', () => {
       testEnv.entityManager
     );
     testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
-      componentId === 'anatomy:burning'
+      componentId === BURNING_COMPONENT_ID
         ? [partA.id, partB.id]
         : originalGetter(componentId);
 
@@ -431,15 +460,15 @@ describe('burn/poison extended e2e', () => {
 
     const burnAAfterTick = testEnv.entityManager.getComponentData(
       partA.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
     const burnBAfterTick = testEnv.entityManager.getComponentData(
       partB.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
 
-    expect(burnAAfterTick?.remainingTurns).toBe(2);
-    expect(burnBAfterTick?.remainingTurns).toBe(2);
+    expect(burnAAfterTick?.remainingTurns).toBe(burnDuration - 1);
+    expect(burnBAfterTick?.remainingTurns).toBe(burnDuration - 1);
 
     burningSystem.destroy();
   });

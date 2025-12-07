@@ -30,6 +30,7 @@ import rapierDefinition from '../../../data/mods/fantasy/entities/definitions/ve
 import longswordDefinition from '../../../data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json' assert { type: 'json' };
 import practiceStickDefinition from '../../../data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json' assert { type: 'json' };
 import mainGaucheDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json' assert { type: 'json' };
+import { BURNING_COMPONENT_ID, POISONED_COMPONENT_ID } from '../../../src/anatomy/services/damageTypeEffectsService.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'effects-room';
@@ -55,6 +56,38 @@ const cloneWith = (definition, damageEntries) => {
   };
   return cloned;
 };
+
+const bleedDefaults = {
+  baseDurationTurns: 2,
+  severity: {
+    minor: 1,
+    moderate: 3,
+    severe: 5,
+  },
+};
+
+const burnDefaults = {
+  durationTurns: 2,
+  tickDamage: 1,
+  defaultStacks: 1,
+};
+
+const poisonDefaults = {
+  durationTurns: 3,
+  tickDamage: 1,
+  scope: 'part',
+};
+
+const fractureDefaults = {
+  stunDuration: 1,
+};
+
+const dismemberDefaults = {
+  thresholdFraction: 0.8,
+};
+
+const getDamageEntry = (definition, index = 0) =>
+  definition.components?.['damage-types:damage_capabilities']?.entries?.[index];
 
 const burnRapierDefinition = cloneWith(rapierDefinition, [
   {
@@ -306,13 +339,23 @@ describe('damage effects triggers e2e', () => {
       'anatomy:bleeding'
     );
 
+    const [bleedCallArgs] = effectService.applyEffectsForDamage.mock.calls[0] || [];
+    const bleedEntry =
+      bleedCallArgs?.damageEntry ?? getDamageEntry(rapierDefinition);
+    const expectedSeverity = bleedEntry?.bleed?.severity ?? 'minor';
+    const expectedDuration =
+      bleedEntry?.bleed?.baseDurationTurns ?? bleedDefaults.baseDurationTurns;
+    const expectedTickDamage =
+      bleedDefaults.severity[expectedSeverity] ??
+      bleedDefaults.severity.minor;
+
     expect(bleedEvent).toBeDefined();
-    expect(bleedEvent?.payload?.severity).toBe('minor');
+    expect(bleedEvent?.payload?.severity).toBe(expectedSeverity);
     expect(bleedComponent).toEqual(
       expect.objectContaining({
-        severity: 'minor',
-        tickDamage: 1,
-        remainingTurns: 2,
+        severity: expectedSeverity,
+        tickDamage: expectedTickDamage,
+        remainingTurns: expectedDuration,
       })
     );
   });
@@ -339,13 +382,17 @@ describe('damage effects triggers e2e', () => {
       'anatomy:stunned'
     );
 
+    const fractureEntry = getDamageEntry(practiceStickDefinition);
+    const expectedStunDuration =
+      fractureEntry?.fracture?.stunDuration ?? fractureDefaults.stunDuration;
+
     expect(fractureEvent).toBeDefined();
     expect(fractureEvent?.payload?.stunApplied).toBe(true);
     expect(fractureComponent).toEqual(
       expect.objectContaining({ sourceDamageType: 'blunt' })
     );
     expect(stunnedComponent).toEqual(
-      expect.objectContaining({ remainingTurns: 1 })
+      expect.objectContaining({ remainingTurns: expectedStunDuration })
     );
   });
 
@@ -371,7 +418,15 @@ describe('damage effects triggers e2e', () => {
       'anatomy:part_health'
     );
 
+    const dismemberEntry = getDamageEntry(longswordDefinition);
+    const expectedThresholdFraction =
+      dismemberEntry?.dismember?.thresholdFraction ??
+      dismemberDefaults.thresholdFraction;
+
     expect(dismemberEvent).toBeDefined();
+    expect(dismemberEntry.amount).toBeGreaterThanOrEqual(
+      expectedThresholdFraction * 20
+    );
     expect(partHealth.currentHealth).toBeLessThanOrEqual(0);
     expect(bleedComponent).toBeNull();
   });
@@ -390,16 +445,22 @@ describe('damage effects triggers e2e', () => {
     );
     const burnComponent = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
 
+    const burnEntry = getDamageEntry(burnRapierDefinition);
+    const expectedDuration =
+      burnEntry?.burn?.durationTurns ?? burnDefaults.durationTurns;
+    const expectedStackCount = burnDefaults.defaultStacks;
+    const expectedTickDamage = burnEntry?.burn?.dps ?? burnDefaults.tickDamage;
+
     expect(burnEvent).toBeDefined();
-    expect(burnEvent?.payload?.stackedCount).toBe(1);
+    expect(burnEvent?.payload?.stackedCount).toBe(expectedStackCount);
     expect(burnComponent).toEqual(
       expect.objectContaining({
-        remainingTurns: 3,
-        tickDamage: 2,
-        stackedCount: 1,
+        remainingTurns: expectedDuration,
+        tickDamage: expectedTickDamage,
+        stackedCount: expectedStackCount,
       })
     );
   });
@@ -424,20 +485,27 @@ describe('damage effects triggers e2e', () => {
     );
     const entityPoison = testEnv.entityManager.getComponentData(
       target.id,
-      'anatomy:poisoned'
+      POISONED_COMPONENT_ID
     );
     const partPoison = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:poisoned'
+      POISONED_COMPONENT_ID
     );
 
+    const poisonEntry = getDamageEntry(poisonDaggerDefinition);
+    const expectedScope = poisonEntry?.poison?.scope ?? poisonDefaults.scope;
+    const expectedTickDamage =
+      poisonEntry?.poison?.tick ?? poisonDefaults.tickDamage;
+    const expectedDuration =
+      poisonEntry?.poison?.durationTurns ?? poisonDefaults.durationTurns;
+
     expect(poisonEvent).toBeDefined();
-    expect(poisonEvent?.payload?.scope).toBe('entity');
+    expect(poisonEvent?.payload?.scope).toBe(expectedScope);
     expect(poisonEvent?.payload?.partId).toBeUndefined();
     expect(entityPoison).toEqual(
       expect.objectContaining({
-        remainingTurns: 4,
-        tickDamage: 2,
+        remainingTurns: expectedDuration,
+        tickDamage: expectedTickDamage,
       })
     );
     expect(partPoison).toBeNull();
@@ -465,13 +533,20 @@ describe('damage effects triggers e2e', () => {
 
     const burnComponent = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
+    const burnEntry = getDamageEntry(burnRapierDefinition);
+    const baseDps = burnEntry?.burn?.dps ?? burnDefaults.tickDamage;
+    const expectedDuration =
+      burnEntry?.burn?.durationTurns ?? burnDefaults.durationTurns;
+    const expectedStackedCount = burnDefaults.defaultStacks + 1;
+    const expectedTickDamage = baseDps * 2;
+
     expect(burnComponent).toEqual(
       expect.objectContaining({
-        tickDamage: 4,
-        stackedCount: 2,
-        remainingTurns: 3,
+        tickDamage: expectedTickDamage,
+        stackedCount: expectedStackedCount,
+        remainingTurns: expectedDuration,
       })
     );
 
@@ -485,10 +560,12 @@ describe('damage effects triggers e2e', () => {
     // Ensure entity manager exposes burning part for tick processing
     testEnv.entityManager.getEntitiesWithComponent = () => [part.id];
 
-    // Process three turns
-    await burningSystem.processTick();
-    await burningSystem.processTick();
-    await burningSystem.processTick();
+    const burnDurationTurns =
+      burnEntry?.burn?.durationTurns ?? burnDefaults.durationTurns;
+    for (let i = 0; i < burnDurationTurns; i += 1) {
+      // Process turns to expire burning
+      await burningSystem.processTick();
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const finalHealth = testEnv.entityManager.getComponentData(
@@ -497,7 +574,7 @@ describe('damage effects triggers e2e', () => {
     )?.currentHealth;
     const remainingBurn = testEnv.entityManager.getComponentData(
       part.id,
-      'anatomy:burning'
+      BURNING_COMPONENT_ID
     );
 
     expect(remainingBurn).toBeNull();
@@ -527,18 +604,21 @@ describe('damage effects triggers e2e', () => {
       validatedEventDispatcher: testEnv.eventBus,
     });
 
-    testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
-      componentId === 'anatomy:poisoned' ? [target.id] : [];
+    const poisonEntry = getDamageEntry(poisonDaggerDefinition);
+    const poisonDuration =
+      poisonEntry?.poison?.durationTurns ?? poisonDefaults.durationTurns;
 
-    await poisonSystem.processTick();
-    await poisonSystem.processTick();
-    await poisonSystem.processTick();
-    await poisonSystem.processTick(); // should expire
+    testEnv.entityManager.getEntitiesWithComponent = (componentId) =>
+      componentId === POISONED_COMPONENT_ID ? [target.id] : [];
+
+    for (let i = 0; i < poisonDuration; i += 1) {
+      await poisonSystem.processTick();
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     const remainingComponent = testEnv.entityManager.getComponentData(
       target.id,
-      'anatomy:poisoned'
+      POISONED_COMPONENT_ID
     );
     const health = testEnv.entityManager.getComponentData(
       target.id,

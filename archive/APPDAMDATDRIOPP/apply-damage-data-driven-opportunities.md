@@ -1,0 +1,14 @@
+# APPLY_DAMAGE Data-Driven Gaps
+
+- Immediate-death organs are hardcoded. `src/anatomy/services/deathCheckService.js:21` declares `IMMEDIATE_DEATH_ORGANS = ['brain','heart','spine']` and filters `anatomy:vital_organ` parts against that fixed list in `#checkPartForVitalOrgan` (`src/anatomy/services/deathCheckService.js:438`). Any new vital organ types in `data/mods/anatomy/components/vital_organ.component.json` or mod content (e.g., lungs, kidneys) are ignored unless code is edited. This should be driven by component data (e.g., a flag on `vital_organ` for kill-on-destroy) or a registry sourced from mods.
+- Status-effect semantics are baked into services instead of data. `src/anatomy/services/damageTypeEffectsService.js` hardcodes:
+  - Component/event IDs per effect (`anatomy:bleeding`, `:burning`, `:poisoned`, `:fractured`, `:stunned`, `:dismembered`) and dispatch payload shapes.
+  - Severity table and defaults (e.g., `BLEED_SEVERITY_MAP`, `DEFAULT_STUN_DURATION`, `DEFAULT_BURN_STACK_COUNT`, fracture threshold fallback 0.5, dismember threshold 0.8) rather than reading effect definitions from data. These behaviors are not configurable via `data/schemas/damage-type.schema.json`.
+  - Effect ordering (dismember → fracture → bleed → burn → poison) and stacking logic in code, making it difficult to add or reorder effects without edits.
+  Migrating these to data (per-damage-type definitions or a status-effect registry) would let mods extend/override durations, thresholds, stacking rules, and component/event wiring.
+- E2E suites codify organ/effect assumptions instead of consuming data:
+  - `tests/e2e/actions/damagePropagationFlow.e2e.test.js` constructs torso/heart/brain/artery fixtures with explicit sockets and propagation rules, asserting heart/brain are the only vital children; no lookup of authored anatomies or `vital_organ` metadata.
+  - `tests/e2e/actions/deathMechanics.e2e.test.js` assumes brain/heart/spine are the only immediate-death organs, mirroring the hardcoded constant rather than reading `anatomy:vital_organ` definitions.
+  - `tests/e2e/actions/damageEffectsTriggers.e2e.test.js` and `tests/e2e/actions/burnPoisonExtended.e2e.test.js` assert fixed bleed/fracture/burn/poison component payloads and tick behaviors that come from hardcoded defaults, not data-driven effect specs.
+  These tests will block data-driven changes unless refactored to read registry/schema-driven expectations.
+- Schema alignment gap. `data/schemas/damage-type.schema.json` documents bleed/fracture/burn/poison/dismember shapes, but the runtime never loads damage-type definitions; it only inspects per-weapon `damage_entry` objects and applies built-in logic. Moving effect behaviors into data (e.g., per damage-type config or status-effect templates) would align the schema with execution and avoid duplicating defaults in code.

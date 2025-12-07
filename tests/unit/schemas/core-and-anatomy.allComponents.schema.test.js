@@ -136,7 +136,7 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
     'anatomy:dismembered': { sourceDamageType: 'slashing' },
     'anatomy:poisoned': { remainingTurns: 3, tickDamage: 5 },
     'anatomy:stunned': { remainingTurns: 2 },
-    'anatomy:vital_organ': { organType: 'heart' },
+    'anatomy:vital_organ': { organType: 'heart', killOnDestroy: true },
     'anatomy:dying': {
       turnsRemaining: 3,
       causeOfDying: 'overall_health_critical',
@@ -427,6 +427,20 @@ describe('JSON-Schema – core/anatomy component data contracts', () => {
       const payload = { organType: 'brain', deathMessage: 'Brain death.' };
       const ok = validators['anatomy:vital_organ'](payload);
       expect(ok).toBe(true);
+    });
+  });
+
+  describe('anatomy:vital_organ - killOnDestroy flag', () => {
+    test('✓ valid when killOnDestroy is explicitly false', () => {
+      const payload = { organType: 'heart', killOnDestroy: false };
+      const ok = validators['anatomy:vital_organ'](payload);
+      if (!ok) console.error(validators['anatomy:vital_organ'].errors);
+      expect(ok).toBe(true);
+    });
+
+    test('✗ invalid when killOnDestroy is not boolean', () => {
+      const payload = { organType: 'brain', killOnDestroy: 'yes' };
+      expect(validators['anatomy:vital_organ'](payload)).toBe(false);
     });
   });
 

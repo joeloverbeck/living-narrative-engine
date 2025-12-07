@@ -51,6 +51,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.conditionLoader - Condition loader.
  * @param {BaseManifestItemLoaderInterface} deps.macroLoader - Macro loader.
  * @param {BaseManifestItemLoaderInterface} deps.lookupLoader - Lookup loader.
+ * @param {BaseManifestItemLoaderInterface} deps.statusEffectRegistryLoader - Status-effect registry loader.
  * @param {BaseManifestItemLoaderInterface} deps.actionLoader - Action loader.
  * @param {BaseManifestItemLoaderInterface} deps.ruleLoader - Rule loader.
  * @param {BaseManifestItemLoaderInterface} deps.goalLoader - Goal loader.
@@ -73,6 +74,7 @@ export function createDefaultContentLoadersConfig({
   conditionLoader,
   macroLoader,
   lookupLoader,
+  statusEffectRegistryLoader,
   actionLoader,
   ruleLoader,
   goalLoader,
@@ -94,6 +96,7 @@ export function createDefaultContentLoadersConfig({
     conditions: conditionLoader,
     macros: macroLoader,
     lookups: lookupLoader,
+    statusEffects: statusEffectRegistryLoader,
     actions: actionLoader,
     rules: ruleLoader,
     scopes: scopeLoader,

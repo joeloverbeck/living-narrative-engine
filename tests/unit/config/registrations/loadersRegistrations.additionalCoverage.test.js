@@ -234,6 +234,7 @@ describe('registerLoaders additional coverage', () => {
       [actualTokens.ConditionLoader, { id: 'condition' }],
       [actualTokens.MacroLoader, { id: 'macro' }],
       [actualTokens.LookupLoader, { id: 'lookup' }],
+      [actualTokens.StatusEffectRegistryLoader, { id: 'statusEffectRegistry' }],
       [actualTokens.ActionLoader, { id: 'action' }],
       [actualTokens.RuleLoader, { id: 'rule' }],
       [actualTokens.GoalLoader, { id: 'goal' }],

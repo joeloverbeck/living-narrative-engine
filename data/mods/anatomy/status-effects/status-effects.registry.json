@@ -1,0 +1,75 @@
+{
+  "$schema": "schema://living-narrative-engine/status-effect.registry.schema.json",
+  "id": "anatomy:status_effects",
+  "description": "Canonical status-effect defaults for the anatomy module.",
+  "applyOrder": ["dismembered", "fractured", "bleeding", "burning", "poisoned"],
+  "effects": [
+    {
+      "id": "bleeding",
+      "effectType": "bleed",
+      "componentId": "anatomy:bleeding",
+      "startedEventId": "anatomy:bleeding_started",
+      "stoppedEventId": "anatomy:bleeding_stopped",
+      "priority": 2,
+      "defaults": {
+        "baseDurationTurns": 2,
+        "severity": {
+          "minor": { "tickDamage": 1 },
+          "moderate": { "tickDamage": 3 },
+          "severe": { "tickDamage": 5 }
+        }
+      }
+    },
+    {
+      "id": "burning",
+      "effectType": "burn",
+      "componentId": "anatomy:burning",
+      "startedEventId": "anatomy:burning_started",
+      "stoppedEventId": "anatomy:burning_stopped",
+      "priority": 3,
+      "defaults": {
+        "tickDamage": 1,
+        "durationTurns": 2,
+        "stacking": { "canStack": false, "defaultStacks": 1 }
+      }
+    },
+    {
+      "id": "poisoned",
+      "effectType": "poison",
+      "componentId": "anatomy:poisoned",
+      "startedEventId": "anatomy:poisoned_started",
+      "stoppedEventId": "anatomy:poisoned_stopped",
+      "priority": 4,
+      "defaults": {
+        "tickDamage": 1,
+        "durationTurns": 3,
+        "scope": "part"
+      }
+    },
+    {
+      "id": "fractured",
+      "effectType": "fracture",
+      "componentId": "anatomy:fractured",
+      "startedEventId": "anatomy:fractured",
+      "priority": 1,
+      "defaults": {
+        "thresholdFraction": 0.5,
+        "stun": {
+          "componentId": "anatomy:stunned",
+          "durationTurns": 1,
+          "chance": 0
+        }
+      }
+    },
+    {
+      "id": "dismembered",
+      "effectType": "dismember",
+      "componentId": "anatomy:dismembered",
+      "startedEventId": "anatomy:dismembered",
+      "priority": 0,
+      "defaults": {
+        "thresholdFraction": 0.8
+      }
+    }
+  ]
+}

@@ -79,6 +79,7 @@ import GameConfigLoader from '../../loaders/gameConfigLoader.js';
 import GoalLoader from '../../loaders/goalLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
 import LookupLoader from '../../loaders/lookupLoader.js';
+import StatusEffectRegistryLoader from '../../loaders/statusEffectRegistryLoader.js';
 import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ModsLoader from '../../loaders/modsLoader.js';
 import ModsLoadSession from '../../loaders/ModsLoadSession.js';
@@ -297,6 +298,7 @@ export async function registerLoaders(container) {
   registerLoader(tokens.EventLoader, EventLoader);
   registerLoader(tokens.MacroLoader, MacroLoader);
   registerLoader(tokens.LookupLoader, LookupLoader);
+  registerLoader(tokens.StatusEffectRegistryLoader, StatusEffectRegistryLoader);
   // EntityDefinitionLoader needs a custom registration to include SafeEventDispatcher
   registrar.singletonFactory(
     tokens.EntityLoader,
@@ -410,6 +412,9 @@ export async function registerLoaders(container) {
           conditionLoader: c.resolve(tokens.ConditionLoader),
           macroLoader: c.resolve(tokens.MacroLoader),
           lookupLoader: c.resolve(tokens.LookupLoader),
+          statusEffectRegistryLoader: c.resolve(
+            tokens.StatusEffectRegistryLoader
+          ),
           actionLoader: c.resolve(tokens.ActionLoader),
           ruleLoader: c.resolve(tokens.RuleLoader),
           goalLoader: c.resolve(tokens.GoalLoader),

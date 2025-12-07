@@ -12,6 +12,7 @@ describe('defaultLoaderConfig', () => {
       conditions: stubLoader,
       macros: stubLoader,
       lookups: stubLoader,
+      statusEffects: stubLoader,
       actions: stubLoader,
       rules: stubLoader,
       goals: stubLoader,
@@ -78,6 +79,7 @@ describe('defaultLoaderConfig', () => {
       conditionLoader: stubLoader,
       macroLoader: stubLoader,
       lookupLoader: stubLoader,
+      statusEffectRegistryLoader: stubLoader,
       actionLoader: stubLoader,
       ruleLoader: stubLoader,
       goalLoader: stubLoader,
@@ -127,6 +129,10 @@ describe('defaultLoaderConfig', () => {
         expect.objectContaining({
           loader: stubLoader,
           registryKey: 'anatomyStructureTemplates',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'statusEffects',
         }),
       ])
     );

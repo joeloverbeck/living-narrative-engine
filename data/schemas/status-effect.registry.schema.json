@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/status-effect.registry.schema.json",
+  "title": "Status Effect Registry",
+  "description": "Defines a registry of status effects and their default behaviors for data-driven configuration.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_:-]+$",
+      "description": "Unique identifier for the registry entry."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the registry."
+    },
+    "applyOrder": {
+      "type": "array",
+      "description": "Ordered list of effect IDs describing application priority.",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/statusEffect" }
+    }
+  },
+  "required": ["id", "effects"],
+  "additionalProperties": false,
+  "definitions": {
+    "severityConfig": {
+      "type": "object",
+      "properties": {
+        "tickDamage": { "type": "number", "minimum": 0 }
+      },
+      "required": ["tickDamage"],
+      "additionalProperties": false
+    },
+    "stackingConfig": {
+      "type": "object",
+      "properties": {
+        "canStack": { "type": "boolean", "default": false },
+        "defaultStacks": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "required": ["canStack", "defaultStacks"],
+      "additionalProperties": false
+    },
+    "stunConfig": {
+      "type": "object",
+      "properties": {
+        "componentId": { "type": "string", "minLength": 1 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "chance": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["componentId", "durationTurns", "chance"],
+      "additionalProperties": false
+    },
+    "bleedDefaults": {
+      "type": "object",
+      "properties": {
+        "baseDurationTurns": { "type": "integer", "minimum": 1 },
+        "severity": {
+          "type": "object",
+          "properties": {
+            "minor": { "$ref": "#/definitions/severityConfig" },
+            "moderate": { "$ref": "#/definitions/severityConfig" },
+            "severe": { "$ref": "#/definitions/severityConfig" }
+          },
+          "required": ["minor", "moderate", "severe"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["baseDurationTurns", "severity"],
+      "additionalProperties": false
+    },
+    "burnDefaults": {
+      "type": "object",
+      "properties": {
+        "tickDamage": { "type": "number", "minimum": 0 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "stacking": { "$ref": "#/definitions/stackingConfig" }
+      },
+      "required": ["tickDamage", "durationTurns", "stacking"],
+      "additionalProperties": false
+    },
+    "poisonDefaults": {
+      "type": "object",
+      "properties": {
+        "tickDamage": { "type": "number", "minimum": 0 },
+        "durationTurns": { "type": "integer", "minimum": 1 },
+        "scope": { "type": "string", "enum": ["part", "entity"] }
+      },
+      "required": ["tickDamage", "durationTurns", "scope"],
+      "additionalProperties": false
+    },
+    "fractureDefaults": {
+      "type": "object",
+      "properties": {
+        "thresholdFraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "stun": { "$ref": "#/definitions/stunConfig" }
+      },
+      "required": ["thresholdFraction"],
+      "additionalProperties": false
+    },
+    "dismemberDefaults": {
+      "type": "object",
+      "properties": {
+        "thresholdFraction": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["thresholdFraction"],
+      "additionalProperties": false
+    },
+    "statusEffect": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-zA-Z0-9_:-]+$" },
+        "effectType": {
+          "type": "string",
+          "enum": ["bleed", "burn", "poison", "fracture", "dismember"]
+        },
+        "componentId": { "type": "string", "minLength": 1 },
+        "startedEventId": { "type": "string", "minLength": 1 },
+        "stoppedEventId": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer", "minimum": 0 },
+        "defaults": { "type": "object" }
+      },
+      "required": ["id", "effectType", "componentId", "defaults"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "effectType": { "const": "bleed" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/bleedDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "burn" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/burnDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "poison" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/poisonDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "fracture" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/fractureDefaults" } },
+            "required": ["defaults"]
+          }
+        },
+        {
+          "if": { "properties": { "effectType": { "const": "dismember" } } },
+          "then": {
+            "properties": { "defaults": { "$ref": "#/definitions/dismemberDefaults" } },
+            "required": ["defaults"]
+          }
+        }
+      ]
+    }
+  }
+}

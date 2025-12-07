@@ -127,6 +127,9 @@
         "lookups": {
           "$ref": "#/definitions/contentFileList"
         },
+        "statusEffects": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "parts": {
           "$ref": "#/definitions/contentFileList"
         },
