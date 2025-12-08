@@ -20,6 +20,11 @@ import handleMeleeCriticalMacro from '../../../data/mods/weapons/macros/handleMe
 import handleMeleeHitMacro from '../../../data/mods/weapons/macros/handleMeleeHit.macro.json';
 import handleMeleeFumbleMacro from '../../../data/mods/weapons/macros/handleMeleeFumble.macro.json';
 import handleMeleeMissMacro from '../../../data/mods/weapons/macros/handleMeleeMiss.macro.json';
+// Ranged macros for throw action
+import handleThrowCriticalMacro from '../../../data/mods/ranged/macros/handleThrowCritical.macro.json';
+import handleThrowHitMacro from '../../../data/mods/ranged/macros/handleThrowHit.macro.json';
+import handleThrowFumbleMacro from '../../../data/mods/ranged/macros/handleThrowFumble.macro.json';
+import handleThrowMissMacro from '../../../data/mods/ranged/macros/handleThrowMiss.macro.json';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { promises as fs } from 'fs';
 import { resolve } from 'path';
@@ -1062,6 +1067,11 @@ class BaseModTestFixture {
       'weapons:handleMeleeHit': handleMeleeHitMacro,
       'weapons:handleMeleeFumble': handleMeleeFumbleMacro,
       'weapons:handleMeleeMiss': handleMeleeMissMacro,
+      // Ranged throw macros
+      'ranged:handleThrowCritical': handleThrowCriticalMacro,
+      'ranged:handleThrowHit': handleThrowHitMacro,
+      'ranged:handleThrowFumble': handleThrowFumbleMacro,
+      'ranged:handleThrowMiss': handleThrowMissMacro,
     };
 
     // Load action definitions for the mod to enable action discovery

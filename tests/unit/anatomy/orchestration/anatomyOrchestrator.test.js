@@ -139,10 +139,10 @@ describe('AnatomyOrchestrator', () => {
         ANATOMY_BODY_COMPONENT_ID,
         expect.objectContaining({
           recipeId,
-          body: {
+          body: expect.objectContaining({
             root: rootId,
             parts: { left_arm: 'part-1', right_arm: 'part-2' },
-          },
+          }),
         })
       );
       expect(mockGraphBuildingWorkflow.buildCache).toHaveBeenCalledWith(rootId);

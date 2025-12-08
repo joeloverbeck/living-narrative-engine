@@ -2,6 +2,8 @@ import { BaseValidator } from './BaseValidator.js';
 import { validateDependency } from '../../../utils/dependencyUtils.js';
 import { createValidatorLogger } from '../utils/validatorLoggingUtils.js';
 
+const VALIDATION_CHECK = 'descriptor_coverage';
+
 /**
  * @file DescriptorCoverageValidator - suggests descriptors for recipe slots.
  */
@@ -89,6 +91,7 @@ export class DescriptorCoverageValidator extends BaseValidator {
       if (suggestions.length > 0) {
         for (const suggestion of suggestions) {
           builder.addSuggestion(suggestion.type, suggestion.message, {
+            check: VALIDATION_CHECK,
             location: suggestion.location,
             reason: suggestion.reason,
             suggestion: suggestion.suggestion,
@@ -96,7 +99,9 @@ export class DescriptorCoverageValidator extends BaseValidator {
           });
         }
       } else {
-        builder.addPassed('All slots have descriptor components');
+        builder.addPassed('All slots have descriptor components', {
+          check: VALIDATION_CHECK,
+        });
       }
     } catch (error) {
       this.#logValidatorError(error);

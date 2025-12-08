@@ -15,7 +15,6 @@ import {
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -31,6 +30,7 @@ import {
   BURNING_COMPONENT_ID,
   POISONED_COMPONENT_ID,
 } from '../../../src/anatomy/services/damageTypeEffectsService.js';
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'burn-poison-room';
@@ -151,9 +151,8 @@ const installRealHandlers = ({
     eventDispatcher: safeDispatcher,
   });
 
-  const damageTypeEffectsService = new DamageTypeEffectsService({
-    entityManager,
-    logger,
+  const { damageTypeEffectsService } = createDamageTypeEffectsService({
+    testEnv,
     safeEventDispatcher: safeDispatcher,
     rngProvider,
   });

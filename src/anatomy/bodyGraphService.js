@@ -262,10 +262,121 @@ export class BodyGraphService {
     return { found: false };
   }
 
+  hasWoundedPart(bodyComponent, actorEntityId = null) {
+    const allParts = this.getAllParts(bodyComponent, actorEntityId);
+
+    for (const partId of allParts) {
+      const health = this.#entityManager.getComponentData(
+        partId,
+        'anatomy:part_health'
+      );
+
+      if (!health || typeof health !== 'object') {
+        continue;
+      }
+
+      const { currentHealth, maxHealth, state } = health;
+      const hasNumericHealth =
+        typeof currentHealth === 'number' && typeof maxHealth === 'number';
+
+      const woundedByNumbers =
+        hasNumericHealth && currentHealth < maxHealth && maxHealth > 0;
+      const woundedByState =
+        typeof state === 'string' && state.toLowerCase() !== 'healthy';
+
+      if (woundedByNumbers || woundedByState) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  hasPartWithStatusEffect(
+    bodyComponent,
+    componentId,
+    propertyPath = null,
+    predicate = null,
+    actorEntityId = null
+  ) {
+    const allParts = this.getAllParts(bodyComponent, actorEntityId);
+
+    for (const partId of allParts) {
+      const componentData = this.#entityManager.getComponentData(
+        partId,
+        componentId
+      );
+
+      if (
+        componentData === null ||
+        componentData === undefined ||
+        (typeof componentData === 'object' &&
+          Object.keys(componentData).length === 0)
+      ) {
+        continue;
+      }
+
+      if (!propertyPath) {
+        return true;
+      }
+
+      const value = this.#getNestedProperty(componentData, propertyPath);
+      if (value === undefined) {
+        continue;
+      }
+
+      if (this.#matchesPredicate(value, predicate)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   #getNestedProperty(obj, path) {
     return path.split('.').reduce((current, key) => {
       return current && current[key] !== undefined ? current[key] : undefined;
     }, obj);
+  }
+
+  #matchesPredicate(value, predicate) {
+    if (predicate === null || predicate === undefined) {
+      return value !== null;
+    }
+
+    if (predicate && typeof predicate === 'object') {
+      const op =
+        predicate.op || predicate.operator || predicate.comparator || '===';
+      return this.#compareValues(value, predicate.value, op);
+    }
+
+    return this.#compareValues(value, predicate, '===');
+  }
+
+  #compareValues(value, expected, op) {
+    switch (op) {
+      case '===':
+      case '==':
+        return value === expected;
+      case '!==':
+      case '!=':
+        return value !== expected;
+      case '>':
+        return value > expected;
+      case '>=':
+        return value >= expected;
+      case '<':
+        return value < expected;
+      case '<=':
+        return value <= expected;
+      case 'includes':
+        return (
+          (Array.isArray(value) || typeof value === 'string') &&
+          value.includes(expected)
+        );
+      default:
+        return false;
+    }
   }
 
   /**

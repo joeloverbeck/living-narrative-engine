@@ -96,6 +96,7 @@
       "aimed_items_in_inventory.scope",
       "close_actors_with_inventory.scope",
       "container_contents.scope",
+      "disinfectant_liquids_in_inventory.scope",
       "examinable_items.scope",
       "items_at_actor_location.scope",
       "items_at_location.scope",
@@ -120,6 +121,7 @@
     ],
     "entities": {
       "definitions": [
+        "antiseptic_bottle.entity.json",
         "brass_key.entity.json",
         "coffee_cup.entity.json",
         "gold_bar.entity.json",

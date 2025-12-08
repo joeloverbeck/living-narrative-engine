@@ -86,6 +86,7 @@
         "12_kiln_lane.location.json",
         "12_kiln_lane_yard.location.json",
         "aldous.character.json",
+        "aldous_kitchen.location.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -97,7 +98,9 @@
         "fitted_waistcoat.entity.json",
         "formal_sleeve_cuffs.entity.json",
         "interior_of_chicken_coop.location.json",
+        "jar_of_vinegar.entity.json",
         "kink_necked_black_pullet.character.json",
+        "kitchen_cabinet.entity.json",
         "large_speckled_hen.character.json",
         "mudbrook_municipal_aid_registry.location.json",
         "mudbrook_on_the_bend.location.json",
@@ -126,6 +129,7 @@
         "12_kiln_lane.location.json",
         "12_kiln_lane_yard.location.json",
         "aldous.character.json",
+        "aldous_kitchen.location.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -135,7 +139,9 @@
         "coop_key.entity.json",
         "copper_backed_rooster.character.json",
         "interior_of_chicken_coop.location.json",
+        "jar_of_vinegar.entity.json",
         "kink_necked_black_pullet.character.json",
+        "kitchen_cabinet.entity.json",
         "large_speckled_hen.character.json",
         "mudbrook_municipal_aid_registry.location.json",
         "mudbrook_on_the_bend.location.json",
@@ -185,6 +191,7 @@
       "12_kiln_lane.png",
       "12_kiln_lane_old.png",
       "aldous.png",
+      "aldous_kitchen.png",
       "back_of_tannery.png",
       "bertram.png",
       "bertram_old.png",
@@ -208,6 +215,8 @@
       "white_faced_buff_hen.png",
       "yard_and_coop.png"
     ],
-    "worlds": ["vespera.world.json"]
+    "worlds": [
+      "vespera.world.json"
+    ]
   }
 }

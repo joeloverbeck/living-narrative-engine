@@ -29,6 +29,8 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
       findPartsByType: jest.fn(),
       getAllParts: jest.fn(),
       buildAdjacencyCache: jest.fn(),
+      hasWoundedPart: jest.fn(),
+      hasPartWithStatusEffect: jest.fn(),
     };
 
     mockEntityManager = {
@@ -168,6 +170,8 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
         'hasPartWithComponentValue',
         'hasPartOfType',
         'hasPartOfTypeWithComponentValue',
+        'hasWoundedPart',
+        'hasPartWithStatusEffect',
         'hasClothingInSlot',
         'hasClothingInSlotLayer',
         'isSocketCovered',

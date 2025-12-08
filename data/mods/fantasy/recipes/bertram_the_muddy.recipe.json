@@ -38,32 +38,50 @@
   },
   "patterns": [
     {
-      "matches": ["left_arm", "right_arm"],
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
       "partType": "arm",
       "preferId": "anatomy:humanoid_arm_weathered_tannery_stained"
     },
     {
-      "matches": ["left_hand", "right_hand"],
+      "matches": [
+        "left_hand",
+        "right_hand"
+      ],
       "partType": "hand",
       "preferId": "anatomy:humanoid_hand_craftsman_stained"
     },
     {
-      "matches": ["left_ear", "right_ear"],
+      "matches": [
+        "left_ear",
+        "right_ear"
+      ],
       "partType": "ear",
       "preferId": "anatomy:humanoid_ear"
     },
     {
-      "matches": ["left_leg", "right_leg"],
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
       "partType": "leg",
       "preferId": "anatomy:human_leg"
     },
     {
-      "matches": ["left_foot", "right_foot"],
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
       "partType": "foot",
       "preferId": "anatomy:human_foot"
     },
     {
-      "matches": ["left_eye", "right_eye"],
+      "matches": [
+        "left_eye",
+        "right_eye"
+      ],
       "partType": "eye",
       "properties": {
         "descriptors:color_basic": {
@@ -72,11 +90,20 @@
       }
     },
     {
-      "matches": ["left_testicle", "right_testicle"],
+      "matches": [
+        "left_testicle",
+        "right_testicle"
+      ],
       "partType": "testicle",
       "preferId": "anatomy:human_testicle"
     }
   ],
+  "initialDamage": {
+    "head": {
+      "amount": 20,
+      "name": "piercing"
+    }
+  },
   "clothingEntities": [
     {
       "entityId": "underwear:graphite_wool_briefs",

@@ -40,6 +40,7 @@ const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 const FOLDER_TO_KEY_MAP = {
   'anatomy-formatting': 'anatomyFormatting',
   'damage-types': 'damageTypes',
+  'status-effects': 'statusEffects',
 };
 
 // Reverse mapping: manifest keys to folder names

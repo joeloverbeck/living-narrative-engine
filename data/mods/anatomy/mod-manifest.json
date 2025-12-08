@@ -327,8 +327,7 @@
       "actor-has-two-free-grabbing-appendages.condition.json"
     ],
     "lookups": [],
-    "statusEffects": [],
-    "status-effects": [
+    "statusEffects": [
       "status-effects.registry.json"
     ]
   }

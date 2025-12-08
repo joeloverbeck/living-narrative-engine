@@ -9,6 +9,7 @@
  * @param {object} context.graphResult - Graph generation result with entities
  * @param {string} context.ownerId - Owner entity ID
  * @param {string} context.recipeId - Recipe ID
+ * @param {Map<string, string>|object} [context.slotToPartMappings] - Slot-to-part mappings from graph generation
  * @param {object} dependencies - Required services
  * @param {import('../../../interfaces/IEntityManager.js').IEntityManager} dependencies.entityManager - Entity manager
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} dependencies.dataRegistry - Data registry
@@ -16,7 +17,7 @@
  * @returns {Promise<{partsMap: Map<string, string>}>} Parts map
  */
 export async function executePartsMapBuilding(context, dependencies) {
-  const { graphResult, ownerId, recipeId } = context;
+  const { graphResult, ownerId, recipeId, slotToPartMappings } = context;
   const { entityManager, dataRegistry, logger } = dependencies;
 
   logger.debug(
@@ -32,6 +33,7 @@ export async function executePartsMapBuilding(context, dependencies) {
     recipeId,
     graphResult,
     partsMap,
+    slotToPartMappings,
     entityManager,
     dataRegistry,
     logger
@@ -109,6 +111,7 @@ function buildPartsMap(partEntityIds, entityManager, logger) {
  * @param {string} recipeId - The recipe ID
  * @param {object} graphResult - The graph generation result
  * @param {Map<string, string>} partsMap - Pre-built parts map
+ * @param {Map<string, string>|object} [slotToPartMappings] - Slot-to-part mappings from graph generation
  * @param {import('../../../interfaces/IEntityManager.js').IEntityManager} entityManager - Entity manager
  * @param {import('../../../interfaces/coreServices.js').IDataRegistry} dataRegistry - Data registry
  * @param {import('../../../interfaces/coreServices.js').ILogger} logger - Logger
@@ -119,6 +122,7 @@ async function updateAnatomyBodyComponent(
   recipeId,
   graphResult,
   partsMap,
+  slotToPartMappings,
   entityManager,
   dataRegistry,
   logger
@@ -144,6 +148,9 @@ async function updateAnatomyBodyComponent(
     parts: partsObject,
   };
 
+  const slotToPartMappingsObject = mapSlotToPartMappings(slotToPartMappings);
+  bodyObject.slotToPartMappings = slotToPartMappingsObject;
+
   // Apply recipe bodyDescriptors if present
   if (recipe?.bodyDescriptors) {
     bodyObject.descriptors = { ...recipe.bodyDescriptors };
@@ -162,5 +169,31 @@ async function updateAnatomyBodyComponent(
 
   logger.debug(
     `PartsMapBuildingStage: Updated entity '${entityId}' with body structure (root: '${graphResult.rootId}', ${Object.keys(partsObject).length} parts)`
+  );
+}
+
+/**
+ * Normalizes slot-to-part mappings into a plain object keyed by slot id.
+ * Filters out null/undefined slot keys used for the root mapping.
+ *
+ * @private
+ * @param {Map<string, string>|object} slotToPartMappings
+ * @returns {object}
+ */
+function mapSlotToPartMappings(slotToPartMappings) {
+  if (!slotToPartMappings) {
+    return {};
+  }
+
+  const entries =
+    slotToPartMappings instanceof Map
+      ? Array.from(slotToPartMappings.entries())
+      : Object.entries(slotToPartMappings);
+
+  return Object.fromEntries(
+    entries.filter(
+      ([slotKey]) =>
+        slotKey !== null && slotKey !== undefined && slotKey !== 'null'
+    )
   );
 }

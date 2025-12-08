@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "fantasy:aldous_kitchen",
+    "components": {
+        "core:name": {
+            "text": "Aldous' kitchen"
+        },
+        "core:description": {
+            "text": "A small kitchen sits in dim, warm light, its surfaces worn smooth by years of use. Rough plaster walls and heavy timber beams frame the space, and a deep-set window with thick muntins lets in a pale, dusty glow. The floor is made of large stone tiles, uneven and time-darkened. White salt has been worked into the cracks, tracing thin, deliberate lines between the stones—some straight, some wandering where the floor has shifted. On the left, a plain wooden table stands close to the wall. Two clay jugs rest on its top, broad-bellied and utilitarian. Beside the table is a rectangular wash basin, heavy and stone-like, with a simple metal tap mounted above it. The basin is set into a sturdy support, positioned directly under the window for light. On the right, a tall wooden cabinet dominates the room. Its doors and drawers are plain, with round knobs and no ornament. An open shelf section displays several glass bottles—stoppered, uniform, and clearly stored with intention."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/aldous_kitchen.png",
+            "altText": "Aldous' kitchen"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the front of Aldous' home",
+                "target": "fantasy:12_kiln_lane_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

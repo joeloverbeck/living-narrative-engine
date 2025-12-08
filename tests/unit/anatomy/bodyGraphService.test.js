@@ -469,11 +469,123 @@ describe('BodyGraphService', () => {
       expect(
         service.hasPartWithComponentValue(
           { body: { root: 'root' } },
-          'component',
-          'stats.hp',
-          5
+        'component',
+        'stats.hp',
+        5
+      )
+    ).toEqual({ found: false });
+    });
+
+    it('detects wounded parts by numeric health', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          currentHealth: 50,
+          maxHealth: 100,
+          state: 'healthy',
+        })
+        .mockReturnValueOnce({
+          currentHealth: 40,
+          maxHealth: 40,
+          state: 'healthy',
+        });
+
+      expect(service.hasWoundedPart({ body: { root: 'root' } }, 'actor')).toBe(
+        true
+      );
+    });
+
+    it('detects wounded parts by state when numbers look healthy', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        currentHealth: 100,
+        maxHealth: 100,
+        state: 'wounded',
+      });
+
+      expect(service.hasWoundedPart({ body: { root: 'root' } })).toBe(true);
+    });
+
+    it('returns false when all parts are healthy or missing health', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({
+          currentHealth: 100,
+          maxHealth: 100,
+          state: 'healthy',
+        })
+        .mockReturnValueOnce(null);
+
+      expect(service.hasWoundedPart({ body: { root: 'root' } })).toBe(false);
+    });
+
+    it('checks for status effect presence when property path is omitted', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ severity: 'minor' });
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:bleeding'
         )
-      ).toEqual({ found: false });
+      ).toBe(true);
+    });
+
+    it('matches status effect by predicate and property path', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1', 'part-2']);
+
+      mockEntityManager.getComponentData
+        .mockReturnValueOnce({ severity: 'minor' })
+        .mockReturnValueOnce({ severity: 'severe' });
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:bleeding',
+          'severity',
+          { op: '===', value: 'severe' }
+        )
+      ).toBe(true);
+    });
+
+    it('falls back to truthy predicate when no predicate is provided', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ remainingTurns: 2 });
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:bleeding',
+          'remainingTurns'
+        )
+      ).toBe(true);
+    });
+
+    it('supports comparison predicates for numeric fields', () => {
+      const service = createService();
+      jest.spyOn(service, 'getAllParts').mockReturnValue(['part-1']);
+
+      mockEntityManager.getComponentData.mockReturnValue({ remainingTurns: 1 });
+
+      expect(
+        service.hasPartWithStatusEffect(
+          { body: { root: 'root' } },
+          'anatomy:bleeding',
+          'remainingTurns',
+          { op: '>=', value: 2 }
+        )
+      ).toBe(false);
     });
   });
 

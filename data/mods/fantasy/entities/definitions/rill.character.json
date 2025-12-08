@@ -309,9 +309,15 @@
           "subjectType": "state"
         },
         {
-          "text": "We're at 12 Kiln Lane. Aldous' chickens are infected with an entity from buried ceramic—not just 'possessed.' He's got a vessel and an extraction procedure. This is containment work, not killing. Vespera agreed to his terms. When Aldous opened the coop, Melissa went in first. I stayed back like I'm supposed to—watched the briefing, hovered near Melissa. This is what 'watch the whole picture' actually looks like.",
-          "subject": "12 Kiln Lane job (in progress)",
+          "text": "12 Kiln Lane extraction's done. Went in when the chickens attacked—tried to restrain them, failed more times than I want to count. They broke free every time, unnatural strength. Took heart-targeted pecks to the chest. Aldous completed all extractions successfully. I participated in real work.",
+          "subject": "12 Kiln Lane extraction",
           "subjectType": "event"
+        },
+        {
+          "text": "My chest is torn up where those beaks found the soft spots. It needs cleaning and stitching and whatever bitter-smelling salve keeps it from going bad—I'm not stupid. But I'm not getting sent home like a scolded kid with a bruise and a lesson. Treat me here, then don't sideline me. I want a real next step with Melissa that I earned: I stayed in it, I bled for it, and I didn't fold.",
+          "subject": "Post-extraction wounds and refusal to be sidelined",
+          "subjectType": "state",
+          "context": "After the 12 Kiln Lane chicken extraction, once the corruption was removed"
         }
       ]
     },

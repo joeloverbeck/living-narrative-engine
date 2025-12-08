@@ -16,7 +16,6 @@ import {
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -30,7 +29,11 @@ import rapierDefinition from '../../../data/mods/fantasy/entities/definitions/ve
 import longswordDefinition from '../../../data/mods/fantasy/entities/definitions/threadscar_melissa_longsword.entity.json' assert { type: 'json' };
 import practiceStickDefinition from '../../../data/mods/fantasy/entities/definitions/rill_practice_stick.entity.json' assert { type: 'json' };
 import mainGaucheDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_main_gauche.entity.json' assert { type: 'json' };
-import { BURNING_COMPONENT_ID, POISONED_COMPONENT_ID } from '../../../src/anatomy/services/damageTypeEffectsService.js';
+import {
+  BURNING_COMPONENT_ID,
+  POISONED_COMPONENT_ID,
+} from '../../../src/anatomy/services/damageTypeEffectsService.js';
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'effects-room';
@@ -85,6 +88,8 @@ const fractureDefaults = {
 const dismemberDefaults = {
   thresholdFraction: 0.8,
 };
+
+let registrySnapshot;
 
 const getDamageEntry = (definition, index = 0) =>
   definition.components?.['damage-types:damage_capabilities']?.entries?.[index];
@@ -170,6 +175,7 @@ const installRealHandlers = ({
   safeDispatcher,
   forcedOutcome = 'SUCCESS',
   rngProvider = () => 0.5,
+  registryMutator,
 }) => {
   const { entityManager, logger, jsonLogic, operationRegistry, eventBus } =
     testEnv;
@@ -180,12 +186,14 @@ const installRealHandlers = ({
     eventDispatcher: safeDispatcher,
   });
 
-  const damageTypeEffectsService = new DamageTypeEffectsService({
-    entityManager,
-    logger,
-    safeEventDispatcher: safeDispatcher,
-    rngProvider,
-  });
+  const { damageTypeEffectsService, registrySnapshot: snapshot } =
+    createDamageTypeEffectsService({
+      testEnv,
+      safeEventDispatcher: safeDispatcher,
+      rngProvider,
+      registryMutator,
+    });
+  registrySnapshot = snapshot;
   jest.spyOn(damageTypeEffectsService, 'applyEffectsForDamage');
 
   const damagePropagationService = new DamagePropagationService({
@@ -278,19 +286,21 @@ describe('damage effects triggers e2e', () => {
     if (fixture) {
       fixture.cleanup();
     }
+    registrySnapshot = null;
   });
 
-  const executeSwing = async ({
-    weaponDefinition,
+const executeSwing = async ({
+  weaponDefinition,
+  weaponId,
+  partHealth,
+  partMaxHealth,
+  rngProvider,
+  registryMutator,
+}) => {
+  const weaponBuilder = buildWeaponFromDefinition(weaponId, weaponDefinition);
+  const { attacker, target, part, weapon, room } = createCombatants({
+    weaponBuilder,
     weaponId,
-    partHealth,
-    partMaxHealth,
-    rngProvider,
-  }) => {
-    const weaponBuilder = buildWeaponFromDefinition(weaponId, weaponDefinition);
-    const { attacker, target, part, weapon, room } = createCombatants({
-      weaponBuilder,
-      weaponId,
       partHealth,
       partMaxHealth,
     });
@@ -303,6 +313,7 @@ describe('damage effects triggers e2e', () => {
       safeDispatcher,
       forcedOutcome: 'SUCCESS',
       rngProvider,
+      registryMutator,
     });
     effectService = handlers.damageTypeEffectsService;
 
@@ -438,6 +449,12 @@ describe('damage effects triggers e2e', () => {
       partHealth: 40,
       partMaxHealth: 40,
       rngProvider: () => 0.33,
+      registryMutator: (data) => {
+        const burn = data.effects.find((effect) => effect.effectType === 'burn');
+        if (burn?.defaults?.stacking) {
+          burn.defaults.stacking.defaultStacks = 2;
+        }
+      },
     });
 
     const burnEvent = fixture.events.find(
@@ -451,7 +468,9 @@ describe('damage effects triggers e2e', () => {
     const burnEntry = getDamageEntry(burnRapierDefinition);
     const expectedDuration =
       burnEntry?.burn?.durationTurns ?? burnDefaults.durationTurns;
-    const expectedStackCount = burnDefaults.defaultStacks;
+    const expectedStackCount =
+      registrySnapshot?.effects?.find((effect) => effect.effectType === 'burn')
+        ?.defaults?.stacking?.defaultStacks ?? burnDefaults.defaultStacks;
     const expectedTickDamage = burnEntry?.burn?.dps ?? burnDefaults.tickDamage;
 
     expect(burnEvent).toBeDefined();
@@ -463,6 +482,11 @@ describe('damage effects triggers e2e', () => {
         stackedCount: expectedStackCount,
       })
     );
+    const warnMessages = (testEnv.logger.warn.mock.calls || [])
+      .flat()
+      .map((value) => String(value))
+      .join('\n');
+    expect(warnMessages).not.toMatch(/status-effect registry/i);
   });
 
   it('applies poison to the entity scope when configured, leaving part clean', async () => {

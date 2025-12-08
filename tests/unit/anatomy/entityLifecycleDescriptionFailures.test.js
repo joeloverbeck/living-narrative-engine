@@ -266,10 +266,11 @@ describe('Entity Lifecycle During Description Failures', () => {
         'anatomy:body',
         expect.objectContaining({
           recipeId,
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: { 'part-1': 'entity-1' },
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
 
@@ -319,10 +320,11 @@ describe('Entity Lifecycle During Description Failures', () => {
         'anatomy:body',
         expect.objectContaining({
           recipeId,
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: { 'part-1': 'entity-1' },
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
     });

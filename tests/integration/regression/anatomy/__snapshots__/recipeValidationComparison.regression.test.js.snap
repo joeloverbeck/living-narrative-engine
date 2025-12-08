@@ -57,6 +57,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 0 generated slot(s) from patterns have matching entity definitions",
     },
     {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
+    },
+    {
       "check": "preferred_part_sockets",
       "message": "No preferred parts with child socket requirements to validate",
     },
@@ -77,6 +81,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "recipePath": "tests/common/anatomy/fixtures/validation/broken_patterns.recipe.json",
   "suggestions": [
     {
+      "check": "descriptor_coverage",
       "impact": "Part will be excluded from anatomy description",
       "location": {
         "name": "left_arm",
@@ -88,6 +93,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "type": "MISSING_DESCRIPTORS",
     },
     {
+      "check": "descriptor_coverage",
       "impact": "Part will be excluded from anatomy description",
       "location": {
         "name": "phantom_socket",
@@ -99,6 +105,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "type": "MISSING_DESCRIPTORS",
     },
     {
+      "check": "descriptor_coverage",
       "impact": "Part will be excluded from anatomy description",
       "location": {
         "name": "spinnerets",
@@ -455,9 +462,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "metadata": undefined,
   "passed": [
     {
-      "message": "All slots have descriptor components",
-    },
-    {
       "blueprint": {
         "id": "giant_spider",
         "root": "anatomy:spider_cephalothorax",
@@ -475,8 +479,16 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 9 component references exist",
     },
     {
+      "check": "descriptor_coverage",
+      "message": "All slots have descriptor components",
+    },
+    {
       "check": "generated_slot_part_availability",
       "message": "All 11 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
     },
     {
       "check": "part_availability",
@@ -528,9 +540,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "metadata": undefined,
   "passed": [
     {
-      "message": "All slots have descriptor components",
-    },
-    {
       "blueprint": {
         "id": "human_male",
         "root": "anatomy:human_male_torso",
@@ -547,8 +556,16 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 component references exist",
     },
     {
+      "check": "descriptor_coverage",
+      "message": "All slots have descriptor components",
+    },
+    {
       "check": "generated_slot_part_availability",
       "message": "All 4 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
     },
     {
       "check": "part_availability",
@@ -620,6 +637,10 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 4 generated slot(s) from patterns have matching entity definitions",
     },
     {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
+    },
+    {
       "check": "part_availability",
       "message": "All slots and patterns have matching entity definitions",
     },
@@ -648,6 +669,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "recipePath": "tests/common/anatomy/fixtures/validation/unused_human_clone.recipe.json",
   "suggestions": [
     {
+      "check": "descriptor_coverage",
       "impact": "Part will be excluded from anatomy description",
       "location": {
         "name": "head",
@@ -659,6 +681,7 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "type": "MISSING_DESCRIPTORS",
     },
     {
+      "check": "descriptor_coverage",
       "impact": "Part will be excluded from anatomy description",
       "location": {
         "name": "torso",
@@ -725,9 +748,6 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
   "metadata": undefined,
   "passed": [
     {
-      "message": "All slots have descriptor components",
-    },
-    {
       "blueprint": {
         "id": "human_male",
         "root": "anatomy:human_male_torso",
@@ -744,8 +764,16 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
       "message": "All 1 component references exist",
     },
     {
+      "check": "descriptor_coverage",
+      "message": "All slots have descriptor components",
+    },
+    {
       "check": "generated_slot_part_availability",
       "message": "All 4 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
     },
     {
       "check": "part_availability",

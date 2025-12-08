@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
+import InjuryNarrativeFormatterService from '../../../src/anatomy/services/injuryNarrativeFormatterService.js';
 
 describe('BodyDescriptionComposer - Health Line', () => {
   const logger = {
@@ -13,6 +14,7 @@ describe('BodyDescriptionComposer - Health Line', () => {
     injurySummary,
     healthNarrative = 'Perfect health.',
     equipmentText = 'Wearing: Cloak.',
+    injuryNarrativeFormatterService,
   } = {}) {
     const bodyGraphService = { getAllParts: jest.fn().mockReturnValue([]) };
     const entityFinder = {
@@ -35,9 +37,9 @@ describe('BodyDescriptionComposer - Health Line', () => {
         .mockReturnValue(injurySummary ?? { injuredParts: [] }),
     };
 
-    const injuryNarrativeFormatterService = {
-      formatThirdPersonVisible: jest.fn().mockReturnValue(healthNarrative),
-    };
+    const formatter =
+      injuryNarrativeFormatterService ||
+      ({ formatThirdPersonVisible: jest.fn().mockReturnValue(healthNarrative) });
 
     const equipmentDescriptionService = {
       generateEquipmentDescription: jest.fn().mockResolvedValue(equipmentText),
@@ -56,7 +58,7 @@ describe('BodyDescriptionComposer - Health Line', () => {
       equipmentDescriptionService,
       activityDescriptionService: null,
       injuryAggregationService,
-      injuryNarrativeFormatterService,
+      injuryNarrativeFormatterService: formatter,
       logger,
     });
   }
@@ -106,5 +108,36 @@ describe('BodyDescriptionComposer - Health Line', () => {
 
     expect(description).toContain('Health: Perfect health.');
     expect(description.trim().endsWith('Inventory: Coin.')).toBe(true);
+  });
+
+  it('renders cosmetic health when negligible damage exists but no injuries are visible', async () => {
+    const formatter = new InjuryNarrativeFormatterService({ logger });
+    const composer = createComposer({
+      injurySummary: {
+        injuredParts: [],
+        destroyedParts: [],
+        dismemberedParts: [],
+        bleedingParts: [],
+        burningParts: [],
+        poisonedParts: [],
+        fracturedParts: [],
+        cosmeticDamageParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'healthy',
+            isVitalOrgan: false,
+          },
+        ],
+      },
+      equipmentText: '',
+      injuryNarrativeFormatterService: formatter,
+    });
+
+    const bodyEntity = createBodyEntity();
+    const description = await composer.composeDescription(bodyEntity);
+
+    expect(description).toContain('Health: Cosmetic scuffs.');
   });
 });

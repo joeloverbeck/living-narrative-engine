@@ -79,6 +79,7 @@ describe('DescriptorCoverageValidator', () => {
       expect(dataRegistry.getAll).toHaveBeenCalledTimes(1);
       expect(result.suggestions).toHaveLength(0);
       expect(result.passed).toContainEqual({
+        check: 'descriptor_coverage',
         message: 'All slots have descriptor components',
       });
     });
@@ -102,6 +103,7 @@ describe('DescriptorCoverageValidator', () => {
 
       expect(result.suggestions).toHaveLength(1);
       expect(result.suggestions[0]).toEqual({
+        check: 'descriptor_coverage',
         type: 'MISSING_DESCRIPTORS',
         location: { type: 'slot', name: 'arm' },
         message: "Slot 'arm' may not appear in descriptions",
@@ -184,7 +186,10 @@ describe('DescriptorCoverageValidator', () => {
 
       expect(result.suggestions).toHaveLength(0);
       expect(result.passed).toEqual([
-        { message: 'All slots have descriptor components' },
+        {
+          check: 'descriptor_coverage',
+          message: 'All slots have descriptor components',
+        },
       ]);
     });
 

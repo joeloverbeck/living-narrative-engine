@@ -61,6 +61,10 @@ describe('AnatomyGenerationWorkflow', () => {
       const graphResult = {
         rootId,
         entities: [rootId, ...partIds],
+        slotToPartMappings: new Map([
+          ['slot-left-arm', 'arm-1'],
+          ['slot-right-arm', 'arm-2'],
+        ]),
       };
       mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue(
         graphResult
@@ -101,12 +105,22 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(result.partsMap.get('left_arm')).toBe('arm-1');
       expect(result.partsMap.get('right_arm')).toBe('arm-2');
       expect(result.slotEntityMappings).toBeInstanceOf(Map);
+      expect(result.slotToPartMappings).toBeInstanceOf(Map);
+      expect(result.slotToPartMappings.get('slot-left-arm')).toBe('arm-1');
 
       expect(mockBodyBlueprintFactory.createAnatomyGraph).toHaveBeenCalledWith(
         blueprintId,
         recipeId,
         { ownerId }
       );
+
+      const anatomyAddCall = mockEntityManager.addComponent.mock.calls.find(
+        ([, componentId]) => componentId === 'anatomy:body'
+      );
+      expect(anatomyAddCall[2].body.slotToPartMappings).toEqual({
+        'slot-left-arm': 'arm-1',
+        'slot-right-arm': 'arm-2',
+      });
     });
 
     it('should handle parts without names', async () => {
@@ -1426,16 +1440,17 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         ownerId,
         'anatomy:body',
-        {
+        expect.objectContaining({
           recipeId,
-          body: {
+          body: expect.objectContaining({
             root: rootId,
             parts: {
               left_arm: 'arm-1',
               right_arm: 'arm-2',
             },
-          },
-        }
+            slotToPartMappings: {},
+          }),
+        })
       );
 
       expect(result.rootId).toBe(rootId);
@@ -1457,18 +1472,19 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
         ownerId,
         'anatomy:body',
-        {
+        expect.objectContaining({
           someExistingField: 'preserved',
           oldRecipeId: 'old-recipe',
           recipeId,
-          body: {
+          body: expect.objectContaining({
             root: rootId,
             parts: {
               left_arm: 'arm-1',
               right_arm: 'arm-2',
             },
-          },
-        }
+            slotToPartMappings: {},
+          }),
+        })
       );
 
       expect(result.rootId).toBe(rootId);

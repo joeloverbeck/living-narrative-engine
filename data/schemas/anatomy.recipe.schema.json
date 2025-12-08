@@ -126,6 +126,13 @@
       },
       "additionalProperties": false
     },
+    "initialDamage": {
+      "type": "object",
+      "description": "Optional per-slot seeded damage applied after anatomy generation but before description",
+      "additionalProperties": {
+        "$ref": "#/definitions/initialDamageEntry"
+      }
+    },
     "clothingEntities": {
       "type": "array",
       "description": "Clothing entities to instantiate and equip during anatomy generation",
@@ -263,6 +270,70 @@
   "required": ["recipeId", "blueprintId", "slots"],
   "additionalProperties": false,
   "definitions": {
+    "initialDamageEntry": {
+      "description": "Seeded damage configuration for a single slot",
+      "oneOf": [
+        { "$ref": "#/definitions/damageEntriesWrapper" },
+        { "$ref": "#/definitions/damageShorthandEntry" }
+      ]
+    },
+    "damageEntriesWrapper": {
+      "type": "object",
+      "description": "Explicit damage entries applied to the slot",
+      "properties": {
+        "damage_entries": {
+          "type": "array",
+          "description": "List of damage capability entries to apply to this slot",
+          "items": {
+            "$ref": "#/definitions/positiveDamageCapabilityEntry"
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["damage_entries"],
+      "additionalProperties": false
+    },
+    "positiveDamageCapabilityEntry": {
+      "allOf": [
+        {
+          "$ref": "schema://living-narrative-engine/damage-capability-entry.schema.json"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Damage amount must be greater than zero for seeded wounds"
+            }
+          }
+        }
+      ]
+    },
+    "damageShorthandEntry": {
+      "type": "object",
+      "description": "Shorthand seeded damage using legacy damage type naming",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Damage amount must be greater than zero for seeded wounds"
+        },
+        "name": {
+          "type": "string",
+          "description": "Damage type name (preferred field)"
+        },
+        "damage_type": {
+          "type": "string",
+          "description": "Legacy damage type field name"
+        }
+      },
+      "oneOf": [
+        { "required": ["amount", "name"] },
+        { "required": ["amount", "damage_type"] }
+      ],
+      "additionalProperties": false
+    },
     "slotDefinition": {
       "type": "object",
       "description": "Configuration for a single anatomy slot",

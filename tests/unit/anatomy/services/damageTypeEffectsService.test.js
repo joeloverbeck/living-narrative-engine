@@ -963,6 +963,49 @@ describe('DamageTypeEffectsService', () => {
       );
     });
 
+    describe('registry signaling', () => {
+      it('warns and falls back when registry is empty', async () => {
+        const emptyRegistry = {
+          getAll: jest.fn().mockReturnValue([]),
+          getApplyOrder: jest.fn().mockReturnValue([]),
+        };
+        mockLogger.warn.mockClear();
+        mockDispatcher.dispatch.mockClear();
+        mockEntityManager.addComponent.mockClear();
+
+        const serviceWithEmptyRegistry = new DamageTypeEffectsService({
+          logger: mockLogger,
+          entityManager: mockEntityManager,
+          safeEventDispatcher: mockDispatcher,
+          statusEffectRegistry: emptyRegistry,
+          rngProvider: mockRngProvider,
+        });
+
+        await serviceWithEmptyRegistry.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            bleed: { enabled: true },
+          },
+        });
+
+        expect(mockLogger.warn).toHaveBeenCalledTimes(5);
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'DamageTypeEffectsService: Missing status-effect registry entry for dismember'
+          )
+        );
+        expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+          'anatomy:bleeding_started',
+          expect.objectContaining({
+            entityId: 'entity:player',
+            partId: 'part:arm',
+          })
+        );
+      });
+    });
+
     describe('edge cases', () => {
       it('should handle damageEntry with no effects configured', async () => {
         await service.applyEffectsForDamage({

@@ -11,6 +11,7 @@
  * @param {object} context.graphResult - Graph generation result
  * @param {Map<string, string>} context.partsMap - Parts map
  * @param {Map<string, string>} context.slotEntityMappings - Slot entity mappings
+ * @param {Map<string, string>|object} [context.slotToPartMappings] - Slot-to-part mappings
  * @param {object} dependencies - Required services
  * @param {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dependencies.eventBus] - Event bus
  * @param {import('../../services/anatomySocketIndex.js').default} [dependencies.socketIndex] - Socket index
@@ -19,8 +20,14 @@
  * @returns {Promise<void>}
  */
 export async function executeEventPublication(context, dependencies) {
-  const { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings } =
-    context;
+  const {
+    ownerId,
+    blueprintId,
+    graphResult,
+    partsMap,
+    slotEntityMappings,
+    slotToPartMappings,
+  } = context;
   const { eventBus, socketIndex, dataRegistry, logger } = dependencies;
 
   // Only execute if eventBus and socketIndex are available
@@ -52,6 +59,7 @@ export async function executeEventPublication(context, dependencies) {
         slotEntityMappings instanceof Map
           ? Object.fromEntries(slotEntityMappings)
           : slotEntityMappings,
+      slotToPartMappings: normalizeSlotToPartMappings(slotToPartMappings),
     });
 
     logger.debug(
@@ -64,4 +72,22 @@ export async function executeEventPublication(context, dependencies) {
       error
     );
   }
+}
+
+function normalizeSlotToPartMappings(slotToPartMappings) {
+  if (!slotToPartMappings) {
+    return {};
+  }
+
+  const entries =
+    slotToPartMappings instanceof Map
+      ? Array.from(slotToPartMappings.entries())
+      : Object.entries(slotToPartMappings);
+
+  return Object.fromEntries(
+    entries.filter(
+      ([slotKey]) =>
+        slotKey !== null && slotKey !== undefined && slotKey !== 'null'
+    )
+  );
 }

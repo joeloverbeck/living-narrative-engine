@@ -92,6 +92,12 @@
       "preferId": "anatomy:human_eye_brown"
     }
   ],
+  "initialDamage": {
+    "torso": {
+      "amount": 20,
+      "name": "piercing"
+    }
+  },
   "clothingEntities": [
     {
       "entityId": "underwear:linen_chest_wrap",

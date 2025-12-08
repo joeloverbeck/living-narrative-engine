@@ -175,23 +175,18 @@
           "subjectType": "entity"
         },
         {
-          "text": "Seventeen chickens total. Twelve free-roaming in the yard—healthy, still good at early entity detection since they get agitated before I sense anything. Five locked in the coop: infected with the entity that transferred from the buried shard. The speckled hen is the primary vector. The other four are secondary hosts, tethered to her. Vespera's doing restraint during extraction. I have the vessel. The coop is open now. Melissa's inside. This has to work.",
-          "subject": "My chickens (especially the possessed hen)",
+          "text": "I extracted the entity successfully from all five infected chickens. The containment vessel worked—multiple applications, birds thrashing and breaking free repeatedly, but every extraction held. The speckled hen, buff hen, copper-backed rooster, kink-necked black pullet, slate-blue bantam—all clean now. Regular chickens. The entity vectors are contained in the vessel. My flock is whole again. Seventeen birds total, all free-roaming now that the threat is neutralized.",
+          "subject": "My chickens (extraction successful, flock clean)",
           "subjectType": "entity"
         },
         {
-          "text": "In the last few days the speckled hen's eyes have changed. Concentric rings in the irises, like growth rings in wood. She keeps trying to catch my gaze when I get close—deliberate, intent. So far it doesn't seem to do anything except make my skin crawl, which is not reassuring. Things that are \"only\" ominous tend to become practical eventually.",
-          "subject": "The speckled hen's eyes (concentric rings, intent gaze)",
+          "text": "The burnt-clay smell was strongest during the extraction itself—hot mineral wrongness coating every breath in that coop, same as the night Mara died. Now that the entity's contained, I don't know if the smell will fade or linger. I need to check the coop tomorrow when my head's clearer. If it persists despite successful extraction, that means something I haven't accounted for.",
+          "subject": "Burnt-clay smell (during and after extraction)",
           "subjectType": "state"
         },
         {
-          "text": "Ever since this started, there's been a faint burnt-clay smell in and around the coop. Not smoke. Not ash. Burnt clay—hot mineral wrongness. It's the same smell as the kiln the night Mara died, and it pulls grief and shame up like a hook under the ribs. I can't decide whether the smell is a symptom, a tether, or a warning. I only know it means the past isn't staying buried where I put it.",
-          "subject": "Burnt-clay smell from the coop",
-          "subjectType": "state"
-        },
-        {
-          "text": "The coop is in the yard behind my home. Eight by eight feet, wooden, one door. I keep it locked with an external padlock. The key stays on a leather thong around my neck. Inside the door, near the latch, there are scratch-marks—fresh. The speckled hen has been trying to reach the lock from the wrong side. There are little splinters showing through gaps in the boards where she's worried at it hard enough to bite the wood. Even if someone takes my request for help, I won't open the coop's door just because they arrived. I can bring people to the yard, show them the setup, explain the rules. But the coop stays shut until I am standing there with the vessel, the lines properly drawn, the restraint plan agreed to, and everyone understands that containment is a procedure, not a vibe. Opening early is how you turn a problem into a spreading mechanism.",
-          "subject": "Coop (locked) layout and damage",
+          "text": "The coop is in the yard behind my home. Eight by eight feet, wooden, one door with an external padlock. The key stays on a leather thong around my neck—or it did during the infection. Inside the door, near the latch, there were scratch-marks from when the speckled hen tried to reach the lock from inside. Little splinters through gaps where she'd worried at the wood. The extraction's done now. The marks remain as evidence.",
+          "subject": "Coop layout and possession damage",
           "subjectType": "entity"
         },
         {
@@ -210,9 +205,9 @@
           "subjectType": "entity"
         },
         {
-          "text": "The posting at the Municipal Aid Registry worked. Vespera took the contract—an exotic out-of-towner, a cat-folk, with mismatched eyes (one ice-blue, one amber), silver earring hoops. She arrived with Bertram's group, which also included Melissa and a teenage girl named Rill. When I explained the real situation—not 'mother-in-law possession' but actual entity anchored in biological hosts, threat of spread—Vespera agreed to my terms immediately: restraint without shortcuts, no improvised killing, procedure over speed, key stays with me. I briefed her on extraction procedure. She asked good questions about hand placement, timing, host-network structure. Professional and focused. The coop's unlocked now. Extraction is beginning.",
-          "subject": "The chicken contract posting",
-          "subjectType": "plan"
+          "text": "The Registry posting brought Vespera—cat-folk contractor with mismatched eyes, professional questions, immediate agreement to my terms. The extraction succeeded. She did the restraint work as promised, kept following procedure despite chickens breaking free repeatedly, despite getting injured herself. I owe her one silver for the contract. I need to pay her before she leaves.",
+          "subject": "Vespera's contract (completed, payment owed)",
+          "subjectType": "entity"
         },
         {
           "text": "I think of Bertram as 'the Muddy' sometimes—that's what people call him and it's descriptive. He smells like the tannery, in his skin, under his nails, in his clothes. But it's honest work producing useful things, and I respect that. We're both craftsmen who take pride in precision. He also posts those reciprocal services notices for handjobs at the Registry, which some people find scandalous. I find it admirably straightforward. He knows what he wants and asks for it clearly. I wish I could be that honest about anything.",
@@ -440,11 +435,6 @@
           "subjectType": "state"
         },
         {
-          "text": "The extraction is the only alternative to killing the infected birds. I have the containment vessel, but the process will provoke violence from the corrupted hens. I need muscle to restrain them safely. And I will not give permission to kill the speckled hen unless extraction has been exhausted first. The key stays with me.",
-          "subject": "Extraction plan constraints (needs muscle; no killing without exhausting extraction)",
-          "subjectType": "plan"
-        },
-        {
           "text": "Eight years ago I bought a grimoire fragment from a traveling merchant.",
           "subject": "Grimoire purchase",
           "subjectType": "event"
@@ -525,19 +515,50 @@
           "subjectType": "state"
         },
         {
-          "text": "The coop is quarantine. It is not a barn you \"pop into\" to have a look. It is a closed vessel with lungs inside it. Until I'm ready to perform extraction—meaning the containment vessel is present, the ward geometry is proven to be stable, and I have agreed-upon restraint from someone who can hold a flailing bird without turning it into an execution—the door stays locked. No \"just a quick peek.\" No \"let me grab one.\" No one touches the latch without my say. If anyone takes my request at the Municipal Aid Registry and comes to help, my first job isn't ushering them in. It's getting them to understand that this is an infection problem wearing feathers: vectors, transfer, anchor points, escalation. If they laugh, if they make folk jokes, if they talk about knives like they're doing me a favor, then they can stand in my yard and enjoy the weather. The threat remains contained until the people are contained too—contained in the rules.",
-          "subject": "Coop access protocol (quarantine and extraction discipline)",
-          "subjectType": "plan"
-        },
-        {
-          "text": "Vespera. The one who took the chicken contract. Cat-folk. One ice-blue eye, one amber, silver hoops in her ears, prowls when she moves. When I explained extraction procedure, she didn't question the entity's existence or dismiss my warnings. Instead she asked precise technical questions: where do her hands go on the bird, what's the timing, are the secondary hosts linked or separately infected. She agreed to follow my lead, to prioritize restraint over killing, to respect that this is procedure not improvisation. Her hands will be on the speckled hen when I position the vessel and engage the anchor geometry. She's the most critical person in this extraction besides me. I hope her competence holds when the thrashing starts.",
-          "subject": "Vespera (contractor, cat-folk woman)",
+          "text": "Vespera. Cat-folk contractor, mismatched eyes (ice-blue and amber), silver hoops. She performed exactly as agreed: restrained birds during extractions, held through violent thrashing, followed procedure over shortcuts. Professional competence under pressure. Got injured—rooster pecked her—kept working anyway. The extraction succeeded partly because she did her job right. I owe her one silver. I should hire her again if complex extractions come up.",
+          "subject": "Vespera (cat-folk contractor, reliable)",
           "subjectType": "entity"
         },
         {
-          "text": "I unlocked the coop and opened it. The burnt-clay smell punched out stronger—same hot mineral wrongness as the night Mara died, pulling grief up like a hooked rib. Melissa walked in immediately, no hesitation. No more time to perfect the vessel or recalculate geometry. Vespera knows the procedure: restrain the hen within a handspan of the vessel, hold through violent thrashing, don't break the salt line. The anchor geometry creates a spiritual gradient that pulls the entity from biological host into ceramic matrix. That's the theory I've built over eight years—testing, failing, documenting, trying to make her death mean something. Now I find out if it actually works, or if I'm just getting more people hurt with better technical precision.",
-          "subject": "Coop opened, extraction beginning",
+          "text": "The extraction worked. Eight years of theory—testing, failing, documenting—and the anchor geometry actually pulled entities from biological hosts into ceramic matrix. Multiple successful extractions despite chaos, despite birds breaking free repeatedly, despite me dropping the vessel once and scrambling to retrieve it. The theory was sound. Mara's death produced real, functional knowledge. I can extract entities from living hosts without killing them. This changes what's possible.",
+          "subject": "Extraction theory validated (successful containment)",
+          "subjectType": "knowledge"
+        },
+        {
+          "text": "Bertram helped during the extraction. He restrained the buff hen for the first successful extraction—held her firm when she thrashed, didn't adjust his grip despite the violence. Got injured in the process: slate-blue bantam pecked him in the head, drew blood, and he hit himself with his own pipe trying to defend. Kept helping anyway.",
+          "subject": "Bertram helped with extraction (injured but reliable)",
+          "subjectType": "entity"
+        },
+        {
+          "text": "Rill—teenage girl who came with Bertram's group. Got injured badly during the extraction: copper-backed rooster pecked her chest twice, same spot over her heart, blood soaking through her tunic. She kept trying to help with restraint attempts despite the wounds. Don't know much about her yet, but she didn't flee when it got violent.",
+          "subject": "Rill (teenager with the group, injured during extraction)",
+          "subjectType": "entity"
+        },
+        {
+          "text": "The slate-blue bantam pecked my left arm during the extraction. Drew blood. Minor wound, but it happened—physical cost of this work. I need to clean it properly and check for infection tomorrow. Can't assume supernatural injuries heal cleanly even when the entity's contained.",
+          "subject": "Bantam injury to my left arm",
+          "subjectType": "state"
+        },
+        {
+          "text": "The copper-backed rooster pecked me directly in the chest during the extraction. The quilted jerkin held—no penetration, just dull impact. My preparation worked. Sometimes the protections I build actually protect instead of just making me feel controlled. This is evidence I should trust my defensive measures more.",
+          "subject": "Jerkin protection (worked during extraction)",
+          "subjectType": "knowledge"
+        },
+        {
+          "text": "The extraction was chaotic. Birds broke free from restraint repeatedly—had to grab them multiple times, reposition, start again. I dropped the containment vessel once during the rooster extraction and had to scramble to recover it before geometry failed. Battle of attrition lasting... I don't know how long. Felt endless. But we held procedure, didn't resort to killing, and won. Extraction under combat conditions is possible. Barely.",
+          "subject": "Extraction chaos (procedure held despite difficulty)",
           "subjectType": "event"
+        },
+        {
+          "text": "The silver I owe Vespera is Cresswick-stamped. Her crest, crisp as a maker's mark—impossible to pretend it came from anywhere else. She pays extremely well, and that doesn't make it clean; it just makes it easier to do more harm with fewer coins. I feel ashamed handing anyone that money, like I'm passing the contamination along with the pay. But I also know what it buys: salt, materials, time, the ability to take a job for someone who can't afford me. Funding the good with the bad. That's the story I tell myself so I can put her crest into Vespera's hand and still look her in the eyes.",
+          "subject": "Cresswick-stamped silver (paying Vespera)",
+          "subjectType": "state"
+        },
+        {
+          "text": "Now that the poultry exorcism is done and everyone's pretending the pecking didn't happen—mmh—pay me like it was a contract, not a charity jar you rattle for the poor wandering bard. I want coin, cleanly given, no pity perfume on it. And I need to scrape my pride back into place after being spectacularly useless in there. But also: Aldous said the thing in the birds came from buried ceramic. Buried in his yard. What kind of story ends with infected clay under your own dirt? Who put it there, why, and what did it want so close to his kiln? That's a sharp image with teeth. I'm going to sink mine in.",
+          "subject": "Get paid cleanly; salvage pride; investigate the buried ceramic that birthed the chicken-entity",
+          "subjectType": "state",
+          "context": "Post-12 Kiln Lane, Mudbrook"
         }
       ]
     },

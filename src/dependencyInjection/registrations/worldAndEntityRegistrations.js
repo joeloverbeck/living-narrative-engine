@@ -84,6 +84,7 @@ import StatusEffectRegistry from '../../anatomy/services/statusEffectRegistry.js
 import DamageTypeEffectsService from '../../anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../anatomy/services/damagePropagationService.js';
 import DamageResolutionService from '../../logic/services/damageResolutionService.js';
+import SeededDamageApplier from '../../logic/services/SeededDamageApplier.js';
 import BleedingTickSystem from '../../anatomy/services/bleedingTickSystem.js';
 import BurningTickSystem from '../../anatomy/services/burningTickSystem.js';
 import PoisonTickSystem from '../../anatomy/services/poisonTickSystem.js';
@@ -708,10 +709,13 @@ export function registerWorldAndEntity(container) {
   );
 
   registrar.singletonFactory(tokens.AnatomyGenerationService, (c) => {
+    const damageResolutionService = c.resolve(tokens.DamageResolutionService);
+    const loggerInstance = c.resolve(tokens.ILogger);
+
     return new AnatomyGenerationService({
       entityManager: c.resolve(tokens.IEntityManager),
       dataRegistry: c.resolve(tokens.IDataRegistry),
-      logger: c.resolve(tokens.ILogger),
+      logger: loggerInstance,
       bodyBlueprintFactory: c.resolve(tokens.BodyBlueprintFactory),
       anatomyDescriptionService: c.resolve(tokens.AnatomyDescriptionService),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
@@ -720,6 +724,11 @@ export function registerWorldAndEntity(container) {
       ),
       eventBus: c.resolve(tokens.ISafeEventDispatcher),
       socketIndex: c.resolve(tokens.IAnatomySocketIndex),
+      damageResolutionService,
+      seededDamageApplier: new SeededDamageApplier({
+        damageResolutionService,
+        logger: loggerInstance,
+      }),
     });
   });
   logger.debug(

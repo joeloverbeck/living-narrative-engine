@@ -63,6 +63,18 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       cleanupEntities: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockEntityManager = {
+      getComponentData: jest.fn((entityId, componentId) => {
+        if (componentId === 'anatomy:part') {
+          return { definitionId: 'test:torso', partType: 'torso' };
+        }
+        if (componentId === 'anatomy:sockets') {
+          return { sockets: [] };
+        }
+        return null;
+      }),
+    };
+
     mockConstraintEvaluator = {
       evaluateConstraints: jest
         .fn()
@@ -204,10 +216,12 @@ describe('BodyBlueprintFactory (Refactored)', () => {
         options
       );
 
-      expect(result).toEqual({
-        rootId: 'root123',
-        entities: ['root123', 'child123'],
-      });
+      expect(result.rootId).toBe('root123');
+      expect(result.entities).toEqual(['root123', 'child123']);
+      expect(result.slotToPartMappings).toBeInstanceOf(Map);
+      expect(result.slotToPartMappings.get(null)).toBe('root123');
+      expect(result.slotToPartMappings.get('torso')).toBe('root123');
+      expect(result.slotToPartMappings.get('head')).toBe('child123');
 
       expect(mockRecipeProcessor.loadRecipe).toHaveBeenCalledWith(recipeId);
       expect(mockRecipeProcessor.processRecipe).toHaveBeenCalled();
@@ -290,6 +304,7 @@ describe('BodyBlueprintFactory (Refactored)', () => {
       );
 
       expect(result.entities).toEqual(['root123']); // Only root, no child
+      expect(result.slotToPartMappings.get('torso')).toBe('root123');
     });
 
     it('should generate and set part name when template provided', async () => {

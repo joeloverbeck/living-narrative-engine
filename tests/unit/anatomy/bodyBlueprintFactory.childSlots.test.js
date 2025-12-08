@@ -257,6 +257,10 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
     // Verify result includes all entities
     expect(result.rootId).toBe('torso-1');
     expect(result.entities).toEqual(['torso-1', 'head-1', 'arm-1', 'arm-2']);
+    expect(result.slotToPartMappings).toBeInstanceOf(Map);
+    expect(result.slotToPartMappings.get('head_slot')).toBe('head-1');
+    expect(result.slotToPartMappings.get('left_arm_slot')).toBe('arm-1');
+    expect(result.slotToPartMappings.get('right_arm_slot')).toBe('arm-2');
   });
 
   test('should process parent-child slot relationships', async () => {
@@ -416,6 +420,9 @@ describe('BodyBlueprintFactory - Child Slots Support', () => {
       // Verify result includes all entities
       expect(result.rootId).toBe('torso-1');
       expect(result.entities).toEqual(['torso-1', 'head-1', 'eye-1']);
+      expect(result.slotToPartMappings).toBeInstanceOf(Map);
+      expect(result.slotToPartMappings.get('head_slot')).toBe('head-1');
+      expect(result.slotToPartMappings.get('left_eye_slot')).toBe('eye-1');
     } finally {
       // Restore original methods
       AnatomyGraphContext.prototype.mapSlotToEntity = originalMapSlotToEntity;

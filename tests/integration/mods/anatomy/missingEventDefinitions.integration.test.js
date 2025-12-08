@@ -263,6 +263,7 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
         propagatedFrom: null,
         metadata: {},
         damageTags: [],
+        severity: 'negligible',
         timestamp: 1765042590344,
       };
 
@@ -341,6 +342,28 @@ describe('Anatomy Event Definitions - damage_applied, bleeding_started, part_des
 
       const result = schemaValidator.validate(payloadSchemaId, invalidPayload);
       expect(result.isValid).toBe(false);
+    });
+
+    it('should reject damage_applied payload with invalid severity bucket', async () => {
+      const payloadSchemaId = `${damageAppliedEvent.id}#payload`;
+
+      await schemaValidator.addSchema(
+        damageAppliedEvent.payloadSchema,
+        payloadSchemaId
+      );
+
+      const invalidPayload = {
+        entityId: 'entity-123',
+        partId: 'part-456',
+        amount: 10,
+        damageType: 'slashing',
+        severity: 'catastrophic',
+        timestamp: Date.now(),
+      };
+
+      const result = schemaValidator.validate(payloadSchemaId, invalidPayload);
+      expect(result.isValid).toBe(false);
+      expect(result.errors).toBeDefined();
     });
   });
 

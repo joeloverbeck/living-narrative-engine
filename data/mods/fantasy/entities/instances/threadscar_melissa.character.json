@@ -4,7 +4,7 @@
   "definitionId": "fantasy:threadscar_melissa",
   "componentOverrides": {
     "core:position": {
-      "locationId": "fantasy:interior_of_chicken_coop_instance"
+      "locationId": "fantasy:aldous_kitchen_instance"
     },
     "items:inventory": {
       "items": ["fantasy:threadscar_melissa_longsword_instance"],

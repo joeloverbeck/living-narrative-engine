@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "fantasy:jar_of_vinegar",
+  "components": {
+    "core:name": {
+      "text": "jar of vinegar"
+    },
+    "core:description": {
+      "text": "A stout glass jar with a wax-sealed lid, half-filled with clear vinegar. The tangy scent stings the nose and promises to bite harder on an open wound."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.5
+    },
+    "items:liquid_container": {
+      "currentVolumeMilliliters": 180,
+      "maxCapacityMilliliters": 250,
+      "servingSizeMilliliters": 15,
+      "isRefillable": true,
+      "flavorText": "The vinegar burns cleanly and harshly, cutting through grime and lingering smells.",
+      "tags": [
+        "disinfectant"
+      ]
+    }
+  }
+}

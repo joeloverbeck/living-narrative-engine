@@ -118,6 +118,7 @@ class DamageAccumulator extends BaseService {
     const normalizedEntry = {
       ...entry,
       effectsTriggered: entry.effectsTriggered || [],
+      severity: entry.severity ?? 'standard',
     };
 
     session.entries.push(normalizedEntry);

@@ -179,6 +179,27 @@ describe('BodyDescriptionComposer health line integration', () => {
     ]);
   });
 
+  it('shows cosmetic health when only negligible surface damage exists', async () => {
+    const { composer, bodyEntity } = createComposer([
+      {
+        id: 'torso',
+        subType: 'torso',
+        state: 'healthy',
+        currentHealth: 99,
+        maxHealth: 100,
+      },
+    ]);
+
+    const description = await composer.composeDescription(bodyEntity);
+    const lines = description.split('\n').filter(Boolean);
+
+    expect(lines).toEqual([
+      'Wearing: Cloak.',
+      'Health: Cosmetic scuffs.',
+      'Inventory: Coin.',
+    ]);
+  });
+
   it('inserts visible injury details between equipment and inventory', async () => {
     const { composer, bodyEntity } = createComposer([
       {

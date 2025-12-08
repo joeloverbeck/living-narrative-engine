@@ -14,6 +14,7 @@ import { AnatomyGenerationWorkflow } from './workflows/anatomyGenerationWorkflow
 import { DescriptionGenerationWorkflow } from './workflows/descriptionGenerationWorkflow.js';
 import { GraphBuildingWorkflow } from './workflows/graphBuildingWorkflow.js';
 import { AnatomyErrorHandler } from './orchestration/anatomyErrorHandler.js';
+import SeededDamageApplier from '../logic/services/SeededDamageApplier.js';
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -50,6 +51,8 @@ export class AnatomyGenerationService {
    * @param {ClothingInstantiationService} [deps.clothingInstantiationService] - Service for instantiating clothing (optional).
    * @param {object} [deps.eventBus] - Event bus for anatomy events (optional).
    * @param {object} [deps.socketIndex] - Anatomy socket index service (optional).
+   * @param {import('../logic/services/damageResolutionService.js').default} [deps.damageResolutionService] - Shared damage resolution pipeline (optional; used for seeded damage).
+   * @param {SeededDamageApplier} [deps.seededDamageApplier] - Optional seeded damage applier instance.
    */
   constructor({
     entityManager,
@@ -61,6 +64,8 @@ export class AnatomyGenerationService {
     clothingInstantiationService,
     eventBus,
     socketIndex,
+    damageResolutionService,
+    seededDamageApplier,
   }) {
     if (!entityManager)
       throw new InvalidArgumentError('entityManager is required');
@@ -78,6 +83,15 @@ export class AnatomyGenerationService {
     this.#logger = logger;
 
     // Create workflows
+    const resolvedSeededDamageApplier =
+      seededDamageApplier ||
+      (damageResolutionService
+        ? new SeededDamageApplier({
+            damageResolutionService,
+            logger,
+          })
+        : undefined);
+
     const generationWorkflow = new AnatomyGenerationWorkflow({
       entityManager,
       dataRegistry,
@@ -86,6 +100,7 @@ export class AnatomyGenerationService {
       clothingInstantiationService,
       eventBus,
       socketIndex,
+      seededDamageApplier: resolvedSeededDamageApplier,
     });
 
     const descriptionWorkflow = new DescriptionGenerationWorkflow({

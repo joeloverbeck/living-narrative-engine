@@ -2,7 +2,10 @@
  * @jest-environment node
  */
 
+import fs from 'fs';
+import path from 'path';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import DamageResolutionService from '../../../../src/logic/services/damageResolutionService.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
@@ -22,6 +25,7 @@ describe('DamageResolutionService', () => {
   /** @type {jest.Mocked<any>} */ let damagePropagationService;
   /** @type {jest.Mocked<any>} */ let deathCheckService;
   /** @type {jest.Mocked<any>} */ let callTracker;
+  /** @type {jest.Mocked<any>} */ let logger;
 
   const baseSession = {
     entries: [],
@@ -35,6 +39,7 @@ describe('DamageResolutionService', () => {
       error: jest.fn(),
       debug: jest.fn(),
     };
+    logger = log;
 
     entityManager = {
       getComponentData: jest.fn(),
@@ -168,6 +173,28 @@ describe('DamageResolutionService', () => {
     expect(executionContext.damageSession).toBeUndefined();
   });
 
+  it('includes severity in DAMAGE_DEBUG logs', async () => {
+    await service.resolve({
+      entityId: 'entity-1',
+      partId: 'part-1',
+      finalDamageEntry: { name: 'blunt', amount: 1 },
+      propagatedFrom: null,
+      executionContext,
+      isTopLevel: true,
+    });
+
+    const damageDebugLogs = logger.info.mock.calls
+      .map(([message]) => message)
+      .filter(
+        (message) =>
+          typeof message === 'string' &&
+          message.includes('[DAMAGE_DEBUG]') &&
+          message.includes('Severity=')
+      );
+
+    expect(damageDebugLogs.length).toBeGreaterThan(0);
+  });
+
   it('dispatches narrative/queued events before finalizing death', async () => {
     damagePropagationService.propagateDamage.mockReturnValue([]);
     deathCheckService.evaluateDeathConditions.mockReturnValue({
@@ -221,6 +248,72 @@ describe('DamageResolutionService', () => {
     expect(finalizeDeathIndex).toBeGreaterThan(damageAppliedIndex);
     expect(callTracker).toContain('finalize');
     expect(callTracker).toContain('compose');
+  });
+
+  it('suppresses perceptible narrative dispatch when requested', async () => {
+    executionContext = { suppressPerceptibleEvents: true };
+
+    await service.resolve({
+      entityId: 'entity-1',
+      partId: 'part-1',
+      finalDamageEntry: { name: 'piercing', amount: 4 },
+      propagatedFrom: null,
+      executionContext,
+      isTopLevel: true,
+      applyDamage: jest.fn(),
+    });
+
+    const dispatchedEvents = dispatcher.dispatch.mock.calls.map(
+      ([eventType]) => eventType
+    );
+
+    expect(damageNarrativeComposer.compose).not.toHaveBeenCalled();
+    expect(dispatchedEvents).toContain('anatomy:part_health_changed');
+    expect(dispatchedEvents).not.toContain('core:perceptible_event');
+    expect(damageAccumulator.finalize).toHaveBeenCalled();
+    expect(executionContext.damageSession).toBeUndefined();
+  });
+
+  it('emits anatomy:damage_applied payloads that conform to the event schema', async () => {
+    const damageAppliedDefinition = JSON.parse(
+      fs.readFileSync(
+        path.resolve('data/mods/anatomy/events/damage_applied.event.json'),
+        'utf8'
+      )
+    );
+
+    const schemaValidator = new AjvSchemaValidator({ logger });
+    const payloadSchemaId = `${damageAppliedDefinition.id}#payload`;
+    await schemaValidator.addSchema(
+      damageAppliedDefinition.payloadSchema,
+      payloadSchemaId
+    );
+
+    await service.resolve({
+      entityId: 'entity-1',
+      partId: 'part-1',
+      finalDamageEntry: { name: 'slashing', amount: 5 },
+      propagatedFrom: null,
+      executionContext,
+      isTopLevel: true,
+      applyDamage: jest.fn(),
+    });
+
+    const queuedPayloads = damageAccumulator.queueEvent.mock.calls
+      .filter(([eventSession, eventType]) => {
+        return eventSession && eventType === 'anatomy:damage_applied';
+      })
+      .map(([, , payload]) => payload);
+
+    expect(queuedPayloads.length).toBeGreaterThan(0);
+
+    const validationResult = schemaValidator.validate(
+      payloadSchemaId,
+      queuedPayloads[0]
+    );
+
+    expect(validationResult.isValid).toBe(true);
+    expect(validationResult.errors).toBeNull();
   });
 
   it('cleans up top-level damage session when effect application throws', async () => {

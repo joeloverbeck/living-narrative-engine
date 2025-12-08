@@ -15,8 +15,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 ## Current Status
 
 **Total Schemes**: 48 defined color combinations
-**In Use**: 34 schemes actively implemented across mods
-**Available**: 14 schemes ready for future mods
+**In Use**: 35 schemes actively implemented across mods
+**Available**: 13 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -30,6 +30,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Core                    | Classic Blue-Grey   | 1.1     | `#455a64`        | Active |
 | Deference               | Ceremonial Midnight | 14.1    | `#1f2d3d`        | Active |
 | Distress                | Obsidian Frost      | 11.7    | `#0b132b`        | Active |
+| First-Aid               | Forest Green        | 4.1     | `#1b5e20`        | Active |
 | Exercise                | Orange Flame        | 2.3     | `#e65100`        | Active |
 | Gymnastics              | Journey Cobalt      | 9.1     | `#1a237e`        | Active |
 | Hugging                 | Warm Embrace        | 3.4     | `#7d2a50`        | Active |
@@ -72,7 +73,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### Nature/Environment
 
-- **Forest Green** (4.1) - Nature magic, outdoor actions
+- _none available — Forest Green (4.1) assigned to First-Aid_
 
 ### Warning/Alert
 
@@ -280,7 +281,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ### 4. Nature/Environment Colors
 
-#### 4.1 Forest Green 🟢 AVAILABLE
+#### 4.1 Forest Green ✅ IN USE: First-Aid
 
 ```json
 {
@@ -293,8 +294,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 - **Normal Contrast**: 12.07:1 🌟 AAA
 - **Hover Contrast**: 5.37:1 ✅ AA
-- **Use Cases**: Nature magic, outdoor actions, environmental
-- **Theme**: Growth, natural, organic
+- **Use Cases**: Nature magic, outdoor actions, environmental, healing/first aid, triage
+- **Theme**: Growth, natural, organic; reassuring clinical green suited to care contexts
 
 #### 4.2 Earth Brown ✅ IN USE: Clothing
 
