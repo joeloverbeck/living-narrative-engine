@@ -1,0 +1,4 @@
+// Returns wearable items the actor is carrying, without filtering by slot/layer occupancy
+clothing:inventory_wearables := actor.components.items:inventory.items[][{
+  "!!": { "var": "entity.components.clothing:wearable" }
+}]

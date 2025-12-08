@@ -19,16 +19,22 @@
     }
   ],
   "content": {
-    "actions": ["disinfect_wounded_part.action.json"],
+    "actions": [
+      "disinfect_my_wounded_part.action.json",
+      "disinfect_wounded_part.action.json"
+    ],
     "conditions": [
+      "event-is-action-disinfect-my-wounded-part.condition.json",
       "event-is-action-disinfect-wounded-part.condition.json"
     ],
     "rules": [
+      "handle_disinfect_my_wounded_part.rule.json",
       "handle_disinfect_wounded_part.rule.json"
     ],
     "scopes": [
       "bleeding_actor_body_parts.scope",
-      "wounded_actor_body_parts.scope"
+      "wounded_actor_body_parts.scope",
+      "wounded_target_body_parts.scope"
     ],
     "components": [
       "disinfected.component.json"

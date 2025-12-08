@@ -138,10 +138,9 @@ export class IsSocketCoveredOperator extends BaseEquipmentOperator {
 
       const isCovered = potentialSlots.some((slotName) => {
         // Check if slot has items that actually provide coverage (exclude accessories)
-        const hasCoveringItems = this.hasItemsInSlotExcludingAccessories(
-          equipmentData,
-          slotName
-        );
+        const hasCoveringItems =
+          this.hasItemsInSlotExcludingAccessories(equipmentData, slotName) ||
+          this.#hasCoverageMappingCoveringSlot(entityId, equipmentData, slotName);
 
         // Track slot check details
         const slotData = equipmentData.equipped?.[slotName];
@@ -394,5 +393,51 @@ export class IsSocketCoveredOperator extends BaseEquipmentOperator {
       // Clear entire cache
       this.#socketToSlotCache.clear();
     }
+  }
+
+  /**
+   * Checks if any equipped item with a coverage_mapping covers the target slot.
+   * Handles items equipped in other slots that extend coverage to this slot.
+   *
+   * @private
+   * @param {string} entityId - Entity ID (for cache scoping)
+   * @param {object} equipmentData - Equipment component data
+   * @param {string} slotName - Slot to check coverage for
+   * @returns {boolean} True if any non-accessory layer item covers the slot via coverage_mapping
+   */
+  #hasCoverageMappingCoveringSlot(entityId, equipmentData, slotName) {
+    if (!equipmentData?.equipped || typeof equipmentData.equipped !== 'object') {
+      return false;
+    }
+
+    let covered = false;
+
+    for (const slot of Object.values(equipmentData.equipped)) {
+      if (!slot || typeof slot !== 'object') continue;
+      for (const [layer, items] of Object.entries(slot)) {
+        if (layer === 'accessories') continue;
+
+        const itemIds = Array.isArray(items) ? items : items ? [items] : [];
+        for (const itemId of itemIds) {
+          if (!itemId || typeof itemId !== 'string') continue;
+          const mapping = this.entityManager.getComponentData(
+            itemId,
+            'clothing:coverage_mapping'
+          );
+          if (
+            mapping &&
+            Array.isArray(mapping.covers) &&
+            mapping.covers.includes(slotName)
+          ) {
+            covered = true;
+            break;
+          }
+        }
+        if (covered) break;
+      }
+      if (covered) break;
+    }
+
+    return covered;
   }
 }

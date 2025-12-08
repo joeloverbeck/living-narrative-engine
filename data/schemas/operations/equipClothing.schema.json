@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/equipClothing.schema.json",
+  "title": "EQUIP_CLOTHING Operation",
+  "allOf": [
+    {
+      "$ref": "../base-operation.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "EQUIP_CLOTHING"
+        },
+        "parameters": {
+          "$ref": "#/$defs/Parameters"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Parameters for the EQUIP_CLOTHING operation, which equips a wearable item onto an actor",
+      "properties": {
+        "entity_ref": {
+          "$ref": "../common.schema.json#/definitions/entityReference",
+          "description": "Required. The entity to equip clothing onto."
+        },
+        "clothing_item_id": {
+          "type": "string",
+          "description": "Required. The ID of the clothing item to equip. Can be a placeholder like '{event.payload.targetId}'."
+        },
+        "destination": {
+          "type": "string",
+          "enum": ["inventory", "ground"],
+          "description": "Optional. Where to place any displaced/conflicting clothing. Default: 'inventory'."
+        },
+        "remove_from_inventory": {
+          "type": "boolean",
+          "description": "Optional. Whether to remove the equipped item from the actor's inventory. Default: true."
+        },
+        "result_variable": {
+          "type": "string",
+          "description": "Optional. Context variable name to store whether the equip succeeded (boolean)."
+        }
+      },
+      "required": ["entity_ref", "clothing_item_id"],
+      "additionalProperties": false
+    }
+  }
+}

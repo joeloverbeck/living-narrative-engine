@@ -1,0 +1,52 @@
+// Returns the target actor's body part entity IDs that are wounded (health below max).
+//
+// BEHAVIOR: Iterates target.body_parts via BodyGraphService#getAllParts and keeps
+// parts with an anatomy:part_health component whose currentHealth is lower than
+// maxHealth while excluding vital organs.
+//
+// Example filter logic (JSON Logic):
+// {
+//   "and": [
+//     {"var": "entity.components.anatomy:part_health"},
+//     {"<": [
+//       {"var": "entity.components.anatomy:part_health.currentHealth"},
+//       {"var": "entity.components.anatomy:part_health.maxHealth"}
+//     ]},
+//     {"!": {"var": "entity.components.anatomy:vital_organ"}},
+//     {"or": [
+//       {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
+//       {"and": [
+//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
+//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
+//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
+//       ]}
+//     ]},
+//     {"or": [
+//       {"!": {"var": "entity.components.anatomy:joint.socketId"}},
+//       {"not": {"isSocketCovered": ["target", {"var": "entity.components.anatomy:joint.socketId"}]}}
+//     ]}
+//   ]
+// }
+//
+// Usage: Primary scope for first-aid targeting another actor (e.g., finding damaged limbs to bandage or disinfect).
+// Reference: specs/wounded-body-part-scoping.md
+first-aid:wounded_target_body_parts := target.body_parts[][{"and":[
+  {"var":"entity.components.anatomy:part_health"},
+  {"<":[
+    {"var":"entity.components.anatomy:part_health.currentHealth"},
+    {"var":"entity.components.anatomy:part_health.maxHealth"}
+  ]},
+  {"!": {"var": "entity.components.anatomy:vital_organ"}},
+  {"or": [
+    {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
+    {"and": [
+      {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
+      {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
+      {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
+    ]}
+  ]},
+  {"or": [
+    {"!": {"var": "entity.components.anatomy:joint.socketId"}},
+    {"not": {"isSocketCovered": ["target", {"var": "entity.components.anatomy:joint.socketId"}]}}
+  ]}
+]}]

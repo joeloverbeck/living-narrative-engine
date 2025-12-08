@@ -39,6 +39,7 @@
       "instances": []
     },
     "actions": [
+      "put_on_clothing.action.json",
       "remove_clothing.action.json",
       "remove_others_clothing.action.json"
     ],
@@ -49,14 +50,17 @@
       "clothing_unequipped.event.json"
     ],
     "rules": [
+      "handle_put_on_clothing.rule.json",
       "handle_remove_clothing.rule.json",
       "handle_remove_others_clothing.rule.json"
     ],
     "conditions": [
+      "event-is-action-put-on-clothing.condition.json",
       "event-is-action-remove-clothing.condition.json",
       "event-is-action-remove-others-clothing.condition.json"
     ],
     "scopes": [
+      "inventory_wearables.scope",
       "target_topmost_clothing.scope",
       "target_topmost_torso_lower_clothing.scope",
       "target_topmost_torso_lower_clothing_no_accessories.scope",

@@ -25,7 +25,7 @@ import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 const woundedScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../../data/mods/first-aid/scopes/wounded_actor_body_parts.scope'
+    '../../../../data/mods/first-aid/scopes/wounded_target_body_parts.scope'
   ),
   'utf8'
 );
@@ -80,7 +80,7 @@ describe('First-Aid body part scopes', () => {
 
     const woundedDefinitions = parseScopeDefinitions(
       woundedScopeContent,
-      'wounded_actor_body_parts.scope'
+      'wounded_target_body_parts.scope'
     );
     const bleedingDefinitions = parseScopeDefinitions(
       bleedingScopeContent,
@@ -90,8 +90,8 @@ describe('First-Aid body part scopes', () => {
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
     scopeRegistry.initialize({
-      'first-aid:wounded_actor_body_parts': woundedDefinitions.get(
-        'first-aid:wounded_actor_body_parts'
+      'first-aid:wounded_target_body_parts': woundedDefinitions.get(
+        'first-aid:wounded_target_body_parts'
       ),
       'first-aid:bleeding_actor_body_parts': bleedingDefinitions.get(
         'first-aid:bleeding_actor_body_parts'
@@ -166,7 +166,7 @@ describe('First-Aid body part scopes', () => {
     return bodyComponent;
   }
 
-  it('returns only wounded parts for first-aid:wounded_actor_body_parts', () => {
+  it('returns only wounded parts for first-aid:wounded_target_body_parts', () => {
     const actorId = 'test:patient';
     const woundedPartId = 'test:patient:left_arm';
     const healthyPartId = 'test:patient:right_arm';
@@ -202,7 +202,7 @@ describe('First-Aid body part scopes', () => {
     };
 
     const result = scopeEngine.resolve(
-      scopeRegistry.getScopeAst('first-aid:wounded_actor_body_parts'),
+      scopeRegistry.getScopeAst('first-aid:wounded_target_body_parts'),
       actorEntity,
       runtimeCtx
     );
@@ -215,7 +215,7 @@ describe('First-Aid body part scopes', () => {
     );
   });
 
-  it('excludes vital organs from first-aid:wounded_actor_body_parts', () => {
+  it('excludes vital organs from first-aid:wounded_target_body_parts', () => {
     const actorId = 'test:patient-vital';
     const vitalPartId = 'test:patient:heart';
     const woundedPartId = 'test:patient:left_arm';
@@ -255,7 +255,7 @@ describe('First-Aid body part scopes', () => {
     };
 
     const result = scopeEngine.resolve(
-      scopeRegistry.getScopeAst('first-aid:wounded_actor_body_parts'),
+      scopeRegistry.getScopeAst('first-aid:wounded_target_body_parts'),
       actorEntity,
       runtimeCtx
     );

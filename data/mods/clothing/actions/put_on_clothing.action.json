@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "clothing:put_on_clothing",
+  "name": "Put On Clothing",
+  "description": "Put on a wearable item from your inventory.",
+  "targets": {
+    "primary": {
+      "scope": "clothing:inventory_wearables",
+      "placeholder": "clothing",
+      "description": "The clothing item to put on"
+    }
+  },
+  "required_components": {
+    "actor": ["clothing:equipment"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained",
+      "positioning:restraining"
+    ]
+  },
+  "template": "put on {clothing}",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
+      },
+      "failure_message": "You need both hands free to put on clothing."
+    }
+  ],
+  "visual": {
+    "backgroundColor": "#6d4c41",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#795548",
+    "hoverTextColor": "#efebe9"
+  }
+}

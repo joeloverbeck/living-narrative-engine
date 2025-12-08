@@ -60,6 +60,11 @@ export function createTestBed() {
         hasBatchSupport: jest.fn().mockReturnValue(hasBatchSupport),
         batchCreateEntities: jest.fn(),
         createEntityInstance: jest.fn(),
+        // Core entity operations frequently validated by handlers
+        getComponentData: jest.fn(),
+        addComponent: jest.fn(),
+        hasComponent: jest.fn().mockReturnValue(true),
+        enableBatchOperations: jest.fn().mockReturnValue(enableBatchOperations),
       };
     },
 

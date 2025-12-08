@@ -259,6 +259,7 @@ export const coreTokens = freeze({
   AutoMoveClosenessPartnersHandler: 'AutoMoveClosenessPartnersHandler',
   MergeClosenessCircleHandler: 'MergeClosenessCircleHandler',
   HasBodyPartWithComponentValueHandler: 'HasBodyPartWithComponentValueHandler',
+  EquipClothingHandler: 'EquipClothingHandler',
   UnequipClothingHandler: 'UnequipClothingHandler',
   UnlockGrabbingHandler: 'UnlockGrabbingHandler',
   UnlockMovementHandler: 'UnlockMovementHandler',
