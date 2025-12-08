@@ -6,9 +6,13 @@ import { HasPartOfTypeOperator } from './operators/hasPartOfTypeOperator.js';
 import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTypeWithComponentValueOperator.js';
 import { HasPartWithStatusEffectOperator } from './operators/hasPartWithStatusEffectOperator.js';
 import { HasWoundedPartOperator } from './operators/hasWoundedPartOperator.js';
+import { IsBodyPartWoundedOperator } from './operators/isBodyPartWoundedOperator.js';
 import { HasClothingInSlotOperator } from './operators/hasClothingInSlotOperator.js';
 import { HasClothingInSlotLayerOperator } from './operators/hasClothingInSlotLayerOperator.js';
+import { IsSlotExposedOperator } from './operators/isSlotExposedOperator.js';
 import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
+import { SocketExposureOperator } from './operators/socketExposureOperator.js';
+import { IsBodyPartAccessibleOperator } from './operators/isBodyPartAccessibleOperator.js';
 import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRightOperator.js';
 import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
@@ -120,6 +124,12 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const isBodyPartWoundedOp = new IsBodyPartWoundedOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
+      logger: this.#logger,
+    });
+
     const hasPartWithStatusEffectOp = new HasPartWithStatusEffectOperator({
       entityManager: this.#entityManager,
       bodyGraphService: this.#bodyGraphService,
@@ -149,9 +159,28 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const isSlotExposedOp = new IsSlotExposedOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     this.isSocketCoveredOp = new IsSocketCoveredOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
+    });
+
+    this.socketExposureOp = new SocketExposureOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+      isSocketCoveredOperator: this.isSocketCoveredOp,
+    });
+
+    const isBodyPartAccessibleOp = new IsBodyPartAccessibleOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
+      logger: this.#logger,
+      isSlotExposedOperator: isSlotExposedOp,
+      socketExposureOperator: this.socketExposureOp,
     });
 
     const hasSittingSpaceToRightOp = new HasSittingSpaceToRightOperator({
@@ -344,6 +373,19 @@ export class JsonLogicCustomOperators extends BaseService {
       jsonLogicEvaluationService
     );
 
+    // Register isSlotExposed operator
+    this.#registerOperator(
+      'isSlotExposed',
+      function (entityPath, slotName, options) {
+        // 'this' is the evaluation context
+        return isSlotExposedOp.evaluate(
+          [entityPath, slotName, options],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
     // Register isSocketCovered operator
     const self = this;
     this.#registerOperator(
@@ -351,6 +393,40 @@ export class JsonLogicCustomOperators extends BaseService {
       function (entityPath, socketId) {
         // 'this' is the evaluation context
         return self.isSocketCoveredOp.evaluate([entityPath, socketId], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    this.#registerOperator(
+      'socketExposure',
+      function (
+        entityPath,
+        sockets,
+        mode = 'any',
+        invert = false,
+        treatMissingAsExposed = true
+      ) {
+        return self.socketExposureOp.evaluate(
+          [
+            entityPath,
+            sockets,
+            mode,
+            invert,
+            treatMissingAsExposed,
+          ],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
+    this.#registerOperator(
+      'isBodyPartAccessible',
+      function (entityPath, partEntityRef, options) {
+        return isBodyPartAccessibleOp.evaluate(
+          [entityPath, partEntityRef, options],
+          this
+        );
       },
       jsonLogicEvaluationService
     );
@@ -541,6 +617,17 @@ export class JsonLogicCustomOperators extends BaseService {
       jsonLogicEvaluationService
     );
 
+    this.#registerOperator(
+      'isBodyPartWounded',
+      function (entityPath, partEntityRef, options) {
+        return isBodyPartWoundedOp.evaluate(
+          [entityPath, partEntityRef, options],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
     // Register hasPartWithStatusEffect operator
     this.#registerOperator(
       'hasPartWithStatusEffect',
@@ -596,8 +683,10 @@ export class JsonLogicCustomOperators extends BaseService {
   clearCaches() {
     this.#logger.debug('Clearing custom operator caches');
 
-    // Clear IsSocketCoveredOperator cache if it exists
-    if (this.isSocketCoveredOp) {
+    // socketExposureOp delegates to isSocketCoveredOp, so prefer it to avoid double clearing
+    if (this.socketExposureOp) {
+      this.socketExposureOp.clearCache();
+    } else if (this.isSocketCoveredOp) {
       this.isSocketCoveredOp.clearCache();
     }
   }

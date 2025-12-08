@@ -94,6 +94,7 @@ describe('Custom Operator Registration - Runtime Validation', () => {
       { hasPartOfType: ['dummy', 'type'] },
       { hasClothingInSlot: ['dummy', 'slot'] },
       { hasClothingInSlotLayer: ['dummy', 'slot', 'layer'] },
+      { isSlotExposed: ['dummy', 'slot'] },
       {
         hasPartOfTypeWithComponentValue: [
           'dummy',

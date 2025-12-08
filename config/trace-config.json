@@ -2,7 +2,7 @@
   "$schema": "../data/schemas/trace-config.schema.json",
   "traceAnalysisEnabled": false,
   "actionTracing": {
-    "enabled": true,
+    "enabled": false,
     "tracedActions": ["first-aid:disinfect_wounded_part"],
     "outputDirectory": "./traces/first-aid",
     "verbosity": "verbose",

@@ -109,11 +109,15 @@ class JsonLogicEvaluationService extends BaseService {
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       'hasWoundedPart',
+      'isBodyPartWounded',
       'hasPartWithStatusEffect',
+      'isBodyPartAccessible',
       // Clothing/equipment operators
       'hasClothingInSlot',
       'hasClothingInSlotLayer',
+      'isSlotExposed',
       'isSocketCovered',
+      'socketExposure',
       'isRemovalBlocked',
       // Location/actor operators
       'hasOtherActorsAtLocation',

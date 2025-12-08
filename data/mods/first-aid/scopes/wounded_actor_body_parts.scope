@@ -31,22 +31,6 @@
 // Usage: Primary scope for self-first-aid targeting (e.g., disinfecting your own wounds).
 // Reference: specs/wounded-body-part-scoping.md
 first-aid:wounded_actor_body_parts := actor.body_parts[][{"and":[
-  {"var":"entity.components.anatomy:part_health"},
-  {"<":[
-    {"var":"entity.components.anatomy:part_health.currentHealth"},
-    {"var":"entity.components.anatomy:part_health.maxHealth"}
-  ]},
-  {"!": {"var": "entity.components.anatomy:vital_organ"}},
-  {"or": [
-    {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
-    {"and": [
-      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
-      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
-      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
-    ]}
-  ]},
-  {"or": [
-    {"!": {"var": "entity.components.anatomy:joint.socketId"}},
-    {"not": {"isSocketCovered": ["actor", {"var": "entity.components.anatomy:joint.socketId"}]}}
-  ]}
+  {"isBodyPartWounded": ["actor", {"var": "entity"}, true]},
+  {"isBodyPartAccessible": ["actor", {"var": "entity"}]}
 ]}]
