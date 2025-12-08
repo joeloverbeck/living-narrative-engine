@@ -648,6 +648,9 @@ class ActionAwareStructuredTrace extends StructuredTrace {
       evaluationTimeMs: evaluationData.evaluationTimeMs || 0,
       cacheHit: evaluationData.cacheHit || false,
       error: evaluationData.error,
+      // Optional richer context to debug scope inputs/outputs
+      resolvedIds: evaluationData.resolvedIds || [],
+      contextDetails: evaluationData.contextDetails || null,
       timestamp: Date.now(),
     };
 

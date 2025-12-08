@@ -65,8 +65,11 @@ class TargetContextBuilder {
       const actor = this.#buildEntityContext(actorId);
       const location = this.#buildEntityContext(locationId);
       const game = this.#buildGameContext();
+      // Provide the actor as the default target so scopes that expect `target`
+      // have sensible data even when no contextFrom dependency is present.
+      const target = actor;
 
-      return { actor, location, game };
+      return { actor, target, location, game };
     } catch (error) {
       this.#logger.error(
         `Failed to build base context: ${error.message}`,
