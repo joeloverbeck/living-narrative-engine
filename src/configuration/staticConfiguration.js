@@ -29,6 +29,7 @@ const OPERATION_SCHEMA_FILES = [
   'drinkFrom.schema.json',
   'dropItemAtLocation.schema.json',
   'endTurn.schema.json',
+  'equipClothing.schema.json',
   'establishBidirectionalCloseness.schema.json',
   'establishFollowRelation.schema.json',
   'establishLyingCloseness.schema.json',

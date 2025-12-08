@@ -4,12 +4,12 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
-import disinfectRule from '../../../../data/mods/first-aid/rules/handle_disinfect_wounded_part.rule.json' assert { type: 'json' };
-import disinfectCondition from '../../../../data/mods/first-aid/conditions/event-is-action-disinfect-wounded-part.condition.json' assert { type: 'json' };
+import disinfectRule from '../../../../data/mods/first-aid/rules/handle_disinfect_my_wounded_part.rule.json' assert { type: 'json' };
+import disinfectCondition from '../../../../data/mods/first-aid/conditions/event-is-action-disinfect-my-wounded-part.condition.json' assert { type: 'json' };
 
-const ACTION_ID = 'first-aid:disinfect_wounded_part';
+const ACTION_ID = 'first-aid:disinfect_my_wounded_part';
 const ROOM_ID = 'room1';
-const WOUNDED_PART_ID = 'patient-torso';
+const WOUNDED_PART_ID = 'actor-torso';
 const DISINFECTANT_ID = 'items:antiseptic_bottle';
 
 const buildLiquidContainer = (overrides = {}) => ({
@@ -22,7 +22,7 @@ const buildLiquidContainer = (overrides = {}) => ({
   ...overrides,
 });
 
-describe('first-aid:handle_disinfect_wounded_part rule', () => {
+describe('first-aid:handle_disinfect_my_wounded_part rule', () => {
   let fixture;
 
   const loadScenario = () => {
@@ -45,12 +45,6 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
         items: [DISINFECTANT_ID],
         capacity: { maxWeight: 50, maxItems: 10 },
       })
-      .build();
-
-    const patient = new ModEntityBuilder('target1')
-      .withName('Patient')
-      .asActor()
-      .atLocation(ROOM_ID)
       .withBody(WOUNDED_PART_ID)
       .build();
 
@@ -64,12 +58,11 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
       .atLocation(ROOM_ID)
       .build();
 
-    fixture.reset([room, medic, patient, torso, disinfectant]);
+    fixture.reset([room, medic, torso, disinfectant]);
     fixture.clearEvents();
 
     return {
       medicId: medic.id,
-      patientId: patient.id,
       torsoId: torso.id,
       disinfectantId: disinfectant.id,
     };
@@ -89,29 +82,27 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
   });
 
   it('applies disinfected status to the wounded part and logs the action', async () => {
-    const { medicId, patientId, torsoId, disinfectantId } = loadScenario();
+    const { medicId, torsoId, disinfectantId } = loadScenario();
 
-    await fixture.executeAction(medicId, patientId, {
+    await fixture.executeAction(medicId, medicId, {
       additionalPayload: {
-        primaryId: patientId,
-        secondaryId: torsoId,
-        tertiaryId: disinfectantId,
+        primaryId: torsoId,
+        secondaryId: disinfectantId,
         targets: {
-          primary: patientId,
-          secondary: torsoId,
-          tertiary: disinfectantId,
+          primary: torsoId,
+          secondary: disinfectantId,
         },
       },
     });
 
     const message =
-      "Medic disinfects Patient's wounded torso with Antiseptic Bottle.";
+      'Medic disinfects their wounded torso with Antiseptic Bottle.';
     fixture.assertActionSuccess(message);
     fixture.assertPerceptibleEvent({
       descriptionText: message,
       locationId: ROOM_ID,
       actorId: medicId,
-      targetId: patientId,
+      targetId: medicId,
       perceptionType: 'action_target_general',
     });
 
@@ -124,9 +115,6 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
       fixture.entityManager.hasComponent(medicId, 'first-aid:disinfected')
     ).toBe(false);
     expect(
-      fixture.entityManager.hasComponent(patientId, 'first-aid:disinfected')
-    ).toBe(false);
-    expect(
       fixture.entityManager.hasComponent(
         disinfectantId,
         'first-aid:disinfected'
@@ -135,26 +123,26 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
   });
 
   it('ignores unrelated actions', async () => {
-    const { medicId, patientId } = loadScenario();
+    const { medicId } = loadScenario();
 
     await fixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
       actorId: medicId,
       actionId: 'core:wait',
-      targetId: patientId,
+      targetId: medicId,
       originalInput: 'wait',
     });
 
     fixture.assertOnlyExpectedEvents(['core:attempt_action']);
   });
 
-  it('requests description regeneration for the patient and wounded part', () => {
+  it('requests description regeneration for the actor and wounded part', () => {
     const regenOps = disinfectRule.actions.filter(
       (action) => action.type === 'REGENERATE_DESCRIPTION'
     );
 
     expect(regenOps).toHaveLength(2);
     const entityRefs = regenOps.map((action) => action.parameters.entity_ref);
-    expect(entityRefs).toEqual(expect.arrayContaining(['primary', 'secondary']));
+    expect(entityRefs).toEqual(expect.arrayContaining(['actor', 'primary']));
   });
 });

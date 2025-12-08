@@ -68,6 +68,9 @@ import RemoveSittingClosenessHandler from '../../../src/logic/operationHandlers/
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
 import UpdateHungerStateHandler from '../../../src/logic/operationHandlers/updateHungerStateHandler.js';
+import EquipClothingHandler from '../../../src/logic/operationHandlers/equipClothingHandler.js';
+import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
+import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 
 const ITEM_OPERATION_TYPES = new Set([
   'TRANSFER_ITEM',
@@ -393,7 +396,12 @@ export class ModTestHandlerFactory {
 
     // Validate entityManager has required methods
     validateDependency(entityManager, 'entityManager', logger, {
-      requiredMethods: ['getEntityInstance', 'getComponentData'],
+      requiredMethods: [
+        'getEntityInstance',
+        'getComponentData',
+        'addComponent',
+        'hasComponent',
+      ],
     });
 
     // Validate eventBus has required methods
@@ -429,6 +437,15 @@ export class ModTestHandlerFactory {
         return Promise.resolve(true);
       }),
     };
+    const equipmentOrchestrator = new EquipmentOrchestrator({
+      entityManager,
+      logger,
+      eventDispatcher: safeDispatcher,
+      layerCompatibilityService: new LayerCompatibilityService({
+        entityManager,
+        logger,
+      }),
+    });
 
     const handlers = {
       QUERY_COMPONENT: new QueryComponentHandler({
@@ -467,6 +484,12 @@ export class ModTestHandlerFactory {
       PREPARE_ACTION_CONTEXT: new PrepareActionContextHandler({
         entityManager,
         logger,
+      }),
+      EQUIP_CLOTHING: new EquipClothingHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        equipmentOrchestrator,
       }),
       FOR_EACH: new ForEachHandler({
         operationInterpreter: () => ({ execute: jest.fn() }),

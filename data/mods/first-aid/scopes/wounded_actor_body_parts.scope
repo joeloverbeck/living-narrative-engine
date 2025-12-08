@@ -1,8 +1,8 @@
-// Returns the actor's body part entity IDs that are wounded (health below max).
+// Returns the acting actor's body part entity IDs that are wounded (health below max).
 //
 // BEHAVIOR: Iterates actor.body_parts via BodyGraphService#getAllParts and keeps
 // parts with an anatomy:part_health component whose currentHealth is lower than
-// maxHealth.
+// maxHealth while excluding vital organs.
 //
 // Example filter logic (JSON Logic):
 // {
@@ -11,17 +11,42 @@
 //     {"<": [
 //       {"var": "entity.components.anatomy:part_health.currentHealth"},
 //       {"var": "entity.components.anatomy:part_health.maxHealth"}
+//     ]},
+//     {"!": {"var": "entity.components.anatomy:vital_organ"}},
+//     {"or": [
+//       {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
+//       {"and": [
+//         {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
+//         {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
+//         {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
+//       ]}
+//     ]},
+//     {"or": [
+//       {"!": {"var": "entity.components.anatomy:joint.socketId"}},
+//       {"not": {"isSocketCovered": ["actor", {"var": "entity.components.anatomy:joint.socketId"}]}}
 //     ]}
 //   ]
 // }
 //
-// Usage: Primary scope for first-aid targeting (e.g., finding damaged limbs to bandage).
+// Usage: Primary scope for self-first-aid targeting (e.g., disinfecting your own wounds).
 // Reference: specs/wounded-body-part-scoping.md
-first-aid:wounded_actor_body_parts := target.body_parts[][{"and":[
+first-aid:wounded_actor_body_parts := actor.body_parts[][{"and":[
   {"var":"entity.components.anatomy:part_health"},
   {"<":[
     {"var":"entity.components.anatomy:part_health.currentHealth"},
     {"var":"entity.components.anatomy:part_health.maxHealth"}
   ]},
-  {"!": {"var": "entity.components.anatomy:vital_organ"}}
+  {"!": {"var": "entity.components.anatomy:vital_organ"}},
+  {"or": [
+    {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
+    {"and": [
+      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
+      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
+      {"!": {"hasClothingInSlotLayer": ["actor", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
+    ]}
+  ]},
+  {"or": [
+    {"!": {"var": "entity.components.anatomy:joint.socketId"}},
+    {"not": {"isSocketCovered": ["actor", {"var": "entity.components.anatomy:joint.socketId"}]}}
+  ]}
 ]}]

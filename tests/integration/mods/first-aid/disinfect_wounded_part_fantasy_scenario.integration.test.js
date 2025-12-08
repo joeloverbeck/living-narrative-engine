@@ -32,9 +32,9 @@ const scopePaths = {
     process.cwd(),
     'data/mods/core/scopes/actors_in_location.scope'
   ),
-  'first-aid:wounded_actor_body_parts': resolve(
+  'first-aid:wounded_target_body_parts': resolve(
     process.cwd(),
-    'data/mods/first-aid/scopes/wounded_actor_body_parts.scope'
+    'data/mods/first-aid/scopes/wounded_target_body_parts.scope'
   ),
   'items:disinfectant_liquids_in_inventory': resolve(
     process.cwd(),
@@ -77,8 +77,8 @@ function createProductionScopeResolver(testEnv) {
   const scopeRegistry = new ScopeRegistry();
   scopeRegistry.initialize({
     'core:actors_in_location': loadScopeDefinition('core:actors_in_location'),
-    'first-aid:wounded_actor_body_parts': loadScopeDefinition(
-      'first-aid:wounded_actor_body_parts'
+    'first-aid:wounded_target_body_parts': loadScopeDefinition(
+      'first-aid:wounded_target_body_parts'
     ),
     'items:disinfectant_liquids_in_inventory': loadScopeDefinition(
       'items:disinfectant_liquids_in_inventory'
@@ -133,7 +133,7 @@ function createProductionScopeResolver(testEnv) {
     if (scopeName === 'core:actors_in_location') {
       return locationMatchResolver(context);
     }
-    if (scopeName === 'first-aid:wounded_actor_body_parts') {
+    if (scopeName === 'first-aid:wounded_target_body_parts') {
       const targetId =
         context?.target?.id || context?.primary?.id || context?.actor?.id;
       if (!targetId) {
@@ -316,7 +316,7 @@ describe('fantasy: Aldous kitchen disinfect scenario (production scopes)', () =>
     expect(Array.from(nearby.value)).toContain(PATIENT_ID);
 
     const wounded = fixture.testEnv.unifiedScopeResolver.resolveSync(
-      'first-aid:wounded_actor_body_parts',
+      'first-aid:wounded_target_body_parts',
       {
         ...baseContext,
         target: { id: PATIENT_ID, components: patient.getAllComponents() },

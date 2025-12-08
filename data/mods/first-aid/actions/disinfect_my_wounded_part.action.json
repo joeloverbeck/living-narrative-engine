@@ -1,9 +1,9 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "first-aid:disinfect_wounded_part",
-  "name": "Disinfect Wounded Part",
-  "description": "Disinfect a wounded body part using a tagged disinfectant liquid.",
-  "template": "disinfect {target}'s {woundedBodyPart} with {disinfectant}",
+  "id": "first-aid:disinfect_my_wounded_part",
+  "name": "Disinfect My Wounded Part",
+  "description": "Disinfect one of your wounded body parts using a tagged disinfectant liquid.",
+  "template": "disinfect my {woundedBodyPart} with {disinfectant}",
   "generateCombinations": true,
   "required_components": {
     "actor": ["skills:medicine_skill", "items:inventory"]
@@ -18,21 +18,15 @@
       "positioning:restraining",
       "positioning:fallen"
     ],
-    "secondary": ["first-aid:disinfected"]
+    "primary": ["first-aid:disinfected"]
   },
   "targets": {
     "primary": {
-      "scope": "core:actors_in_location",
-      "placeholder": "target",
-      "description": "Actor whose wound you are treating"
+      "scope": "first-aid:wounded_actor_body_parts",
+      "placeholder": "woundedBodyPart",
+      "description": "Your wounded body part to disinfect"
     },
     "secondary": {
-      "scope": "first-aid:wounded_target_body_parts",
-      "placeholder": "woundedBodyPart",
-      "description": "Wounded body part to disinfect",
-      "contextFrom": "primary"
-    },
-    "tertiary": {
       "scope": "items:disinfectant_liquids_in_inventory",
       "placeholder": "disinfectant",
       "description": "Disinfectant liquid container to use"

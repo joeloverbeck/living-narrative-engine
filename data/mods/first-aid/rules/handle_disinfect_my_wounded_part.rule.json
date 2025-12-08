@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
-  "rule_id": "handle_disinfect_wounded_part",
-  "comment": "Applies disinfected status to the targeted wound, logs the action, refreshes descriptions, and ends the turn.",
+  "rule_id": "handle_disinfect_my_wounded_part",
+  "comment": "Applies disinfected status to the actor's selected wound, logs the action, refreshes descriptions, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "first-aid:event-is-action-disinfect-wounded-part"
+    "condition_ref": "first-aid:event-is-action-disinfect-my-wounded-part"
   },
   "actions": [
     {
@@ -18,20 +18,13 @@
       "type": "GET_NAME",
       "parameters": {
         "entity_ref": "primary",
-        "result_variable": "targetName"
-      }
-    },
-    {
-      "type": "GET_NAME",
-      "parameters": {
-        "entity_ref": "secondary",
         "result_variable": "partName"
       }
     },
     {
       "type": "GET_NAME",
       "parameters": {
-        "entity_ref": "tertiary",
+        "entity_ref": "secondary",
         "result_variable": "disinfectantName"
       }
     },
@@ -46,27 +39,27 @@
     {
       "type": "ADD_COMPONENT",
       "parameters": {
-        "entity_ref": "secondary",
+        "entity_ref": "primary",
         "component_type": "first-aid:disinfected",
         "value": {
           "appliedById": "{event.payload.actorId}",
-          "sourceItemId": "{event.payload.tertiaryId}"
+          "sourceItemId": "{event.payload.secondaryId}"
         }
       }
+    },
+    {
+      "type": "REGENERATE_DESCRIPTION",
+      "parameters": { "entity_ref": "actor" }
     },
     {
       "type": "REGENERATE_DESCRIPTION",
       "parameters": { "entity_ref": "primary" }
     },
     {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "secondary" }
-    },
-    {
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "logMessage",
-        "value": "{context.actorName} disinfects {context.targetName}'s wounded {context.partName} with {context.disinfectantName}."
+        "value": "{context.actorName} disinfects their wounded {context.partName} with {context.disinfectantName}."
       }
     },
     {
@@ -87,7 +80,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "targetId",
-        "value": "{event.payload.primaryId}"
+        "value": "{event.payload.actorId}"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }

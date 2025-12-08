@@ -120,6 +120,10 @@ const handlerModuleDefinitions = [
     'HasBodyPartWithComponentValueHandler',
     `${handlerBasePath}/hasBodyPartWithComponentValueHandler.js`,
   ],
+  [
+    'EquipClothingHandler',
+    `${handlerBasePath}/equipClothingHandler.js`,
+  ],
   ['UnequipClothingHandler', `${handlerBasePath}/unequipClothingHandler.js`],
   ['LockGrabbingHandler', `${handlerBasePath}/lockGrabbingHandler.js`],
   ['LockMovementHandler', `${handlerBasePath}/lockMovementHandler.js`],
@@ -776,6 +780,19 @@ beforeAll(async () => {
         { property: 'entityManager', token: IEntityManager },
         { property: 'bodyGraphService', token: BodyGraphServiceToken },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.EquipClothingHandler,
+      handlerName: 'EquipClothingHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
+        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'equipmentOrchestrator',
+          token: EquipmentOrchestratorToken,
+        },
       ],
     },
     {

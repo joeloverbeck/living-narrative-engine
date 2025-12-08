@@ -202,6 +202,7 @@ export function registerInterpreters(container) {
       'HAS_BODY_PART_WITH_COMPONENT_VALUE',
       bind(tokens.HasBodyPartWithComponentValueHandler)
     );
+    registry.register('EQUIP_CLOTHING', bind(tokens.EquipClothingHandler));
     registry.register('UNEQUIP_CLOTHING', bind(tokens.UnequipClothingHandler));
     registry.register('LOCK_GRABBING', bind(tokens.LockGrabbingHandler));
     registry.register('LOCK_MOVEMENT', bind(tokens.LockMovementHandler));

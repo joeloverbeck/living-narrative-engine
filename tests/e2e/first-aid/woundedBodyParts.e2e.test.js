@@ -34,7 +34,7 @@ const ROOM_ID = 'triage-room';
 const woundedScopeContent = fs.readFileSync(
   path.resolve(
     __dirname,
-    '../../../data/mods/first-aid/scopes/wounded_actor_body_parts.scope'
+    '../../../data/mods/first-aid/scopes/wounded_target_body_parts.scope'
   ),
   'utf8'
 );
@@ -95,7 +95,7 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
 
     const woundedDefinitions = parseScopeDefinitions(
       woundedScopeContent,
-      'wounded_actor_body_parts.scope'
+      'wounded_target_body_parts.scope'
     );
     const bleedingDefinitions = parseScopeDefinitions(
       bleedingScopeContent,
@@ -105,8 +105,8 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
     scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
     scopeRegistry.initialize({
-      'first-aid:wounded_actor_body_parts': woundedDefinitions.get(
-        'first-aid:wounded_actor_body_parts'
+      'first-aid:wounded_target_body_parts': woundedDefinitions.get(
+        'first-aid:wounded_target_body_parts'
       ),
       'first-aid:bleeding_actor_body_parts': bleedingDefinitions.get(
         'first-aid:bleeding_actor_body_parts'
@@ -320,7 +320,7 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
     const getAllPartsSpy = jest.spyOn(bodyGraphService, 'getAllParts');
 
     const woundedResult = scopeEngine.resolve(
-      scopeRegistry.getScopeAst('first-aid:wounded_actor_body_parts'),
+      scopeRegistry.getScopeAst('first-aid:wounded_target_body_parts'),
       actorEntity,
       runtimeCtx
     );
