@@ -269,10 +269,11 @@ describe('AnatomyGenerationService', () => {
         ANATOMY_BODY_COMPONENT_ID,
         expect.objectContaining({
           recipeId: 'test-recipe',
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: {},
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
       // Verify adjacency cache is built before descriptions
@@ -335,13 +336,14 @@ describe('AnatomyGenerationService', () => {
         'entity-1',
         ANATOMY_BODY_COMPONENT_ID,
         expect.objectContaining({
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: {
               left_arm: 'arm-1',
               right_arm: 'arm-2',
             },
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
     });
@@ -511,10 +513,11 @@ describe('AnatomyGenerationService', () => {
         'entity-1',
         ANATOMY_BODY_COMPONENT_ID,
         expect.objectContaining({
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: {}, // No parts added due to null name data
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
     });
@@ -565,10 +568,11 @@ describe('AnatomyGenerationService', () => {
         'entity-1',
         ANATOMY_BODY_COMPONENT_ID,
         expect.objectContaining({
-          body: {
+          body: expect.objectContaining({
             root: 'root-1',
             parts: {}, // No parts added due to empty name
-          },
+            slotToPartMappings: {},
+          }),
         })
       );
     });

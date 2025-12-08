@@ -68,6 +68,12 @@
       "preferId": "anatomy:human_eye_hazel_hooded"
     }
   ],
+  "initialDamage": {
+    "left_arm": {
+      "amount": 10,
+      "name": "piercing"
+    }
+  },
   "clothingEntities": [
     {
       "entityId": "underwear:linen_drawers",

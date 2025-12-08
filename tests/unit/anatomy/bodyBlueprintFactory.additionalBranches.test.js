@@ -9,7 +9,17 @@ describe('BodyBlueprintFactory uncovered branches', () => {
 
   beforeEach(() => {
     deps = {
-      entityManager: {},
+      entityManager: {
+        getComponentData: jest.fn((entityId, componentId) => {
+          if (componentId === 'anatomy:part') {
+            return { definitionId: 'core:torso', partType: 'torso' };
+          }
+          if (componentId === 'anatomy:sockets') {
+            return { sockets: [] };
+          }
+          return null;
+        }),
+      },
       dataRegistry: { get: jest.fn() },
       logger: {
         debug: jest.fn(),

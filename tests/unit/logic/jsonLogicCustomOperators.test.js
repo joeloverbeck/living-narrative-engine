@@ -16,6 +16,8 @@ import { HasComponentOperator } from '../../../src/logic/operators/hasComponentO
 import { IsHungryOperator } from '../../../src/logic/operators/isHungryOperator.js';
 import { PredictedEnergyOperator } from '../../../src/logic/operators/predictedEnergyOperator.js';
 import { CanConsumeOperator } from '../../../src/logic/operators/canConsumeOperator.js';
+import { HasWoundedPartOperator } from '../../../src/logic/operators/hasWoundedPartOperator.js';
+import { HasPartWithStatusEffectOperator } from '../../../src/logic/operators/hasPartWithStatusEffectOperator.js';
 
 describe('JsonLogicCustomOperators', () => {
   let customOperators;
@@ -39,6 +41,8 @@ describe('JsonLogicCustomOperators', () => {
       findPartsByType: jest.fn(),
       getAllParts: jest.fn(),
       buildAdjacencyCache: jest.fn(),
+      hasWoundedPart: jest.fn(),
+      hasPartWithStatusEffect: jest.fn(),
     };
 
     mockEntityManager = {
@@ -154,6 +158,28 @@ describe('JsonLogicCustomOperators', () => {
         operatorClass: HasComponentOperator,
         invocationArgs: ['entity.path', 'component:name'],
         expectedParams: ['entity.path', 'component:name'],
+      },
+      {
+        operatorName: 'hasWoundedPart',
+        operatorClass: HasWoundedPartOperator,
+        invocationArgs: ['actor.path', {}],
+        expectedParams: ['actor.path', {}],
+      },
+      {
+        operatorName: 'hasPartWithStatusEffect',
+        operatorClass: HasPartWithStatusEffectOperator,
+        invocationArgs: [
+          'actor.path',
+          'anatomy:bleeding',
+          'severity',
+          { op: '===', value: 'moderate' },
+        ],
+        expectedParams: [
+          'actor.path',
+          'anatomy:bleeding',
+          'severity',
+          { op: '===', value: 'moderate' },
+        ],
       },
       {
         operatorName: 'is_hungry',

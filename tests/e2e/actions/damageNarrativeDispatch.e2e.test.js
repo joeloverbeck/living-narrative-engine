@@ -15,7 +15,6 @@ import {
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -24,6 +23,7 @@ import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrati
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import rapierDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_rapier.entity.json' assert { type: 'json' };
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'narrative-room';
@@ -61,6 +61,14 @@ const bleedRapierDefinition = cloneWith(rapierDefinition, [
       severity: 'minor',
       chance: 1.0, // Force bleed
     },
+  },
+]);
+
+const negligibleRapierDefinition = cloneWith(rapierDefinition, [
+  {
+    name: 'slashing',
+    amount: 0.5,
+    penetration: 0,
   },
 ]);
 
@@ -138,9 +146,8 @@ const installRealHandlers = ({
     eventDispatcher: safeDispatcher,
   });
 
-  const damageTypeEffectsService = new DamageTypeEffectsService({
-    entityManager,
-    logger,
+  const { damageTypeEffectsService } = createDamageTypeEffectsService({
+    testEnv,
     safeEventDispatcher: safeDispatcher,
     rngProvider,
   });
@@ -307,6 +314,27 @@ describe('Damage Narrative Dispatch E2E', () => {
     });
     expect(typeof perceptibleEvent[1].descriptionText).toBe('string');
     expect(perceptibleEvent[1].descriptionText.length).toBeGreaterThan(0);
+    expect(perceptibleEvent[1].descriptionText.toLowerCase()).not.toContain(
+      'negligible'
+    );
+  });
+
+  it('renders negligible severity wording for very small hits', async () => {
+    const { dispatchSpy } = await executeSwing({
+      weaponDefinition: negligibleRapierDefinition,
+      weaponId: 'negl-rapier',
+    });
+
+    const perceptibleEvent = dispatchSpy.mock.calls.find(
+      (call) =>
+        call[0] === 'core:perceptible_event' &&
+        call[1].perceptionType === 'damage_received'
+    );
+
+    expect(perceptibleEvent).toBeDefined();
+    expect(perceptibleEvent[1].descriptionText.toLowerCase()).toContain(
+      'negligible'
+    );
   });
 
   it('should include totalDamage in perceptible event payload', async () => {

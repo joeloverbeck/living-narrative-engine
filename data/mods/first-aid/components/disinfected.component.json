@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "first-aid:disinfected",
+  "description": "Marks a body part that has been disinfected and by whom.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "appliedById": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Entity ID of the actor who applied the disinfectant."
+      },
+      "sourceItemId": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Entity ID of the item used to disinfect."
+      }
+    },
+    "required": ["appliedById", "sourceItemId"],
+    "additionalProperties": false
+  }
+}

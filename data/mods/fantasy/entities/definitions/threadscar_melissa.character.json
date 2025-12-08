@@ -350,7 +350,7 @@
           "subjectType": "entity"
         },
         {
-          "text": "Rill. Seventeen. Family runs waystation, north road. Six months watching me train. Asked for foundation training—function, not romance. I said observe first: see real stakes, then decide. She's at the chicken job now, following close, absorbing Aldous' procedure briefing. Quiet intensity. First lesson in progress. Chain of responsibility active if she doesn't panic when this turns real.",
+          "text": "Rill. Seventeen. Family runs waystation, north road. Six months watching me train. Asked for foundation training—function, not romance. First real stakes: chicken extraction job. Took two chest wounds to same spot, didn't panic, maintained focus throughout. Quiet intensity held under pressure. She didn't freeze. Critical data point. Still testing, but she passed the first filter. Chain of responsibility stays active.",
           "subject": "Rill, the unasked-for apprentice",
           "subjectType": "entity"
         },
@@ -360,34 +360,19 @@
           "subjectType": "knowledge"
         },
         {
-          "text": "Pulled a ridiculous notice off Copperplate's board, a mere twenty minutes ago. Five copper. Lunch. Fake-threaten some shopkeeper's stall, let him swing at air, fall down on cue, make him look brave. Theatre-combat. No stakes. Seasonal stupidity. I was about to track down which merchant wrote it—idiot didn't even sign his own contract—when Bertram the Muddy barreled up the street like he found a sale on entrails. Said a cat-folk bard, swords on her hips and confidence in her mouth, just took a job to kill \"possessed chickens\" out on the north road. Newcomer. No local sense. Bertram wanted me as backup, called it 'assistance,' means 'keep her alive if the birds bite back.' Fine. That's a better distraction than pretending to be a villain for pocket change.",
-          "subject": "Switching from staged shopkeeper threat to possessed-chickens job with the cat-folk bard",
-          "subjectType": "event"
-        },
-        {
           "text": "Pastoral weird is usually outside my scope. I do bandits, caravans, sieges. Rural nonsense is what people laugh about over ale—until it stops being funny. I've cleared a few that started stupid and turned real. Farmer swore his plow was haunted. It was rust-sprites eating the iron fittings from the inside. Another time, a \"cursed grain silo\" was phase-moths breeding in stored wheat and sliding in and out of sight like it owned the place. Point is: if something's behaving wrong, there's a reason. Might be supernatural. Might be mundane wearing a mask. Treat it like a threat either way: verify, isolate, then solve the actual problem.",
           "subject": "Pastoral weird contracts",
           "subjectType": "knowledge"
         },
         {
-          "text": "Vespera Nightwhisper. Cat-folk bard, mid-twenties, heterochromatic eyes, dual weapons, instrument case. Lead on Aldous' chicken contract; I'm backup. On-site, asked procedural questions: hand positioning, timing, entity network structure. Good questions—execution-focused, not performance. Accepted restraint terms without argument. Unknowns: whether she's fought real stakes, whether confidence is earned or performed. Coop's open. About to see.",
+          "text": "Vespera Nightwhisper. Cat-folk bard, mid-twenties, heterochromatic eyes, dual weapons, instrument case. Took possessed-chickens job; I backed her up. Asked good procedural questions beforehand—execution-focused, not performance. Under real stakes: competent. Took injuries, kept moving, restrained targets when needed. Confidence appears earned, not just performed. She'll take more ridiculous contracts. Probably survive them. Useful to know she exists.",
           "subject": "Vespera Nightwhisper",
           "subjectType": "entity"
         },
         {
-          "text": "Aldous' chicken job: Active, on-site. Five infected birds in coop (entity from buried ceramic, biologically anchored), twelve quarantined outside. Primary vector: large speckled hen. Extraction procedure briefed—Vespera restrains, Aldous uses geometry-etched vessel to pull entity into ceramic via spiritual gradient. Expect violent resistance. Don't break salt boundary. Coop opened. Entering to back Vespera's restraint work.",
-          "subject": "Aldous' possessed-chickens contract (Active job)",
-          "subjectType": "plan"
-        },
-        {
-          "text": "Aldous. Potter, 12 Kiln Lane. Slim, pale, clay-dusted, hazel eyes, scarred hands. Procedural. Precise. Specialist in ceramic magic—geometric containment, entity anchoring, extraction methodology. Built containment vessel for this job. Controls access: coop key around neck, misrepresented Registry request to avoid advertising ward breach. Bertram mentioned kiln explosion changed him—Aldous didn't explain. Assessment: competent in his domain, not delusional, reliable for this work.",
+          "text": "Aldous. Potter, 12 Kiln Lane. Slim, pale, clay-dusted, hazel eyes, scarred hands. Procedural. Precise. Specialist in ceramic magic—geometric containment, entity anchoring, extraction methodology. Ran possessed-chickens extraction: built vessels, directed restraints, performed extractions under pressure. One vessel jumped from his hands mid-extraction—scrambled to recover it, didn't panic. Took injuries, stayed methodical. Competence proven in field. Reliable for pastoral weird contracts.",
           "subject": "Aldous (client and ceramic magic specialist)",
           "subjectType": "entity"
-        },
-        {
-          "text": "Bertram at chicken job. Introduced us as \"posse of killers\"—worried Aldous (extraction, not culling). Questioned Aldous' post-kiln-explosion sanity, skeptical about entities in pottery. Asked me if it feels off; I said yes. Civilian, noncombatant, liability if escalates. Aldous trusts him enough to explain anyway. I'll evacuate him if it goes violent.",
-          "subject": "Bertram observing the chicken job (risk controls)",
-          "subjectType": "event"
         },
         {
           "text": "Teaching method: experiential. Rill's observing chicken job as first lesson—watching procedure briefing, restraint requirements, how competent people handle constraints. Quiet intensity. Absorbing. No hand-holding. Show the work, let her process. Real test: does she panic or focus when the hen starts thrashing.",
@@ -398,6 +383,11 @@
           "text": "Geometric containment for biologically-anchored entities: Aldous demonstrated ceramic vessel method. Cobalt oxide glaze, salt-fired stoneware, geometry-etched rim creates spiritual gradient—pressure differential pulls entity from host into ceramic matrix. Position vessel near host's head, expect violent resistance, seal immediately. Primary vector extracts first; secondary hosts stabilize once anchor severs. Requires precision, intact salt boundaries. Transferable knowledge for pastoral weird.",
           "subject": "Geometric containment (entity extraction)",
           "subjectType": "knowledge"
+        },
+        {
+          "text": "Chicken job's done. Now it's triage. Aldous is cut up, but Bertram took a head wound and Rill took a chest hit—those can kill you hours later if you get stupid or sentimental about it. First treatment before infection sets in: clean water, disinfectant if Aldous has it, pressure, bandage, keep them warm, keep them talking. I've patched my own holes in worse places than this. Same rules every time: stop the bleeding, stop the dirt, watch breathing and shock, then decide who needs a real healer.",
+          "subject": "Post-job triage and infection prevention",
+          "subjectType": "plan"
         }
       ]
     },
@@ -415,6 +405,9 @@
     },
     "skills:resolve_skill": {
       "value": 78
+    },
+    "skills:medicine_skill": {
+      "value": 57
     }
   }
 }

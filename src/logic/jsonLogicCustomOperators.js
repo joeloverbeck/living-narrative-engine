@@ -4,6 +4,8 @@ import { BaseService } from '../utils/serviceBase.js';
 import { HasPartWithComponentValueOperator } from './operators/hasPartWithComponentValueOperator.js';
 import { HasPartOfTypeOperator } from './operators/hasPartOfTypeOperator.js';
 import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTypeWithComponentValueOperator.js';
+import { HasPartWithStatusEffectOperator } from './operators/hasPartWithStatusEffectOperator.js';
+import { HasWoundedPartOperator } from './operators/hasWoundedPartOperator.js';
 import { HasClothingInSlotOperator } from './operators/hasClothingInSlotOperator.js';
 import { HasClothingInSlotLayerOperator } from './operators/hasClothingInSlotLayerOperator.js';
 import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
@@ -107,6 +109,18 @@ export class JsonLogicCustomOperators extends BaseService {
 
     // Create operator instances
     const hasPartWithComponentValueOp = new HasPartWithComponentValueOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
+      logger: this.#logger,
+    });
+
+    const hasWoundedPartOp = new HasWoundedPartOperator({
+      entityManager: this.#entityManager,
+      bodyGraphService: this.#bodyGraphService,
+      logger: this.#logger,
+    });
+
+    const hasPartWithStatusEffectOp = new HasPartWithStatusEffectOperator({
       entityManager: this.#entityManager,
       bodyGraphService: this.#bodyGraphService,
       logger: this.#logger,
@@ -511,6 +525,29 @@ export class JsonLogicCustomOperators extends BaseService {
         // 'this' is the evaluation context
         return hasDamageCapabilityOp.evaluate(
           [entityPath, damageTypeName],
+          this
+        );
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register hasWoundedPart operator
+    this.#registerOperator(
+      'hasWoundedPart',
+      function (entityPath, options) {
+        // 'this' is the evaluation context
+        return hasWoundedPartOp.evaluate([entityPath, options], this);
+      },
+      jsonLogicEvaluationService
+    );
+
+    // Register hasPartWithStatusEffect operator
+    this.#registerOperator(
+      'hasPartWithStatusEffect',
+      function (entityPath, componentId, propertyPath, predicate) {
+        // 'this' is the evaluation context
+        return hasPartWithStatusEffectOp.evaluate(
+          [entityPath, componentId, propertyPath, predicate],
           this
         );
       },

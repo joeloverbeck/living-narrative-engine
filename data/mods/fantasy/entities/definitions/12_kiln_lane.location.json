@@ -22,6 +22,11 @@
         "direction": "to the yard of Aldous' home",
         "target": "fantasy:12_kiln_lane_yard_instance",
         "blocker": null
+      },
+      {
+        "direction": "into Aldous' home",
+        "target": "fantasy:aldous_kitchen_instance",
+        "blocker": null
       }
     ]
   }

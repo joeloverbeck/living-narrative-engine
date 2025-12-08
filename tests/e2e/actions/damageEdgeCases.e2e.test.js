@@ -13,7 +13,6 @@ import {
 } from '@jest/globals';
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -21,6 +20,7 @@ import DamageAccumulator from '../../../src/anatomy/services/damageAccumulator.j
 import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrativeComposer.js';
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ROOM_ID = 'damage-edge-room';
 
@@ -97,9 +97,8 @@ describe('APPLY_DAMAGE edge cases', () => {
         eventDispatcher: safeDispatcher,
       });
 
-      const damageTypeEffectsService = new DamageTypeEffectsService({
-        entityManager,
-        logger,
+      const { damageTypeEffectsService } = createDamageTypeEffectsService({
+        testEnv,
         safeEventDispatcher: safeDispatcher,
         rngProvider: () => 0.5,
       });

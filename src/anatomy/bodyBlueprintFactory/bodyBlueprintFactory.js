@@ -204,6 +204,35 @@ export class BodyBlueprintFactory {
       );
       context.setRootId(rootId);
 
+      // Map special-case slot alias for torso to ensure slot-to-part mappings include the root
+      const rootPartData = this.#entityManager.getComponentData(
+        rootId,
+        'anatomy:part'
+      );
+      const actualRootDefinitionId =
+        rootPartData?.definitionId || blueprint.root;
+      const rootDefinition = this.#dataRegistry.get(
+        'entityDefinitions',
+        actualRootDefinitionId
+      );
+      const rootSubType =
+        rootPartData?.subType ||
+        rootPartData?.partType ||
+        rootPartData?.type;
+
+      if (rootSubType === 'torso' && !context.getEntityForSlot('torso')) {
+        try {
+          context.mapSlotToEntity('torso', rootId);
+          this.#logger.debug(
+            `BodyBlueprintFactory: Added torso slot alias pointing to root entity '${rootId}'`
+          );
+        } catch (error) {
+          this.#logger.warn(
+            `BodyBlueprintFactory: Failed to add torso slot alias for root '${rootId}': ${error.message}`
+          );
+        }
+      }
+
       // Phase 5: Add generated sockets to root entity (V2 blueprints)
       if (
         blueprint._generatedSockets &&
@@ -331,6 +360,7 @@ export class BodyBlueprintFactory {
       return {
         rootId,
         entities: context.getCreatedEntities(),
+        slotToPartMappings: context.getSlotToEntityMappings(),
       };
     } catch (err) {
       this.#logger.error(

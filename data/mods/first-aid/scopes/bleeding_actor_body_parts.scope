@@ -1,0 +1,30 @@
+// Returns the actor's body part entity IDs that are both wounded and bleeding.
+//
+// BEHAVIOR: Iterates actor.body_parts via BodyGraphService#getAllParts and keeps
+// parts that: (1) have anatomy:part_health with currentHealth < maxHealth and
+// (2) have an anatomy:bleeding component present.
+//
+// Example filter logic (JSON Logic):
+// {
+//   "and": [
+//     {"var": "entity.components.anatomy:part_health"},
+//     {"<": [
+//       {"var": "entity.components.anatomy:part_health.currentHealth"},
+//       {"var": "entity.components.anatomy:part_health.maxHealth"}
+//     ]},
+//     {"!!": [
+//       {"var": "entity.components.anatomy:bleeding"}
+//     ]}
+//   ]
+// }
+//
+// Usage: Secondary scope for triage actions that need actively bleeding wounds.
+// Reference: specs/wounded-body-part-scoping.md
+first-aid:bleeding_actor_body_parts := actor.body_parts[][{"and":[
+  {"var":"entity.components.anatomy:part_health"},
+  {"<":[
+    {"var":"entity.components.anatomy:part_health.currentHealth"},
+    {"var":"entity.components.anatomy:part_health.maxHealth"}
+  ]},
+  {"!!":[{"var":"entity.components.anatomy:bleeding"}]}
+]}]

@@ -193,20 +193,24 @@ export class AnatomyOrchestrator extends BaseService {
         ? Object.fromEntries(graphResult.partsMap)
         : graphResult.partsMap;
 
-    // Preserve any existing body descriptors from the workflow
-    const existingBodyDescriptors = existingData.body?.descriptors;
+    const existingBody = existingData.body || {};
+
+    const updatedBody = {
+      ...existingBody,
+      root: graphResult.rootId,
+      parts: partsObject,
+    };
+
+    const slotToPartMappingsObject = mapSlotToPartMappings(
+      graphResult.slotToPartMappings ?? existingBody.slotToPartMappings
+    );
+
+    updatedBody.slotToPartMappings = slotToPartMappingsObject;
 
     const updatedData = {
       ...existingData,
       recipeId, // Ensure recipe ID is preserved
-      body: {
-        root: graphResult.rootId,
-        parts: partsObject,
-        // Preserve descriptors if they exist (added by the workflow)
-        ...(existingBodyDescriptors && {
-          descriptors: existingBodyDescriptors,
-        }),
-      },
+      body: updatedBody,
     };
 
     await this.#entityManager.addComponent(
@@ -264,4 +268,22 @@ export class AnatomyOrchestrator extends BaseService {
       reason: 'Ready for generation',
     };
   }
+}
+
+function mapSlotToPartMappings(slotToPartMappings) {
+  if (!slotToPartMappings) {
+    return {};
+  }
+
+  const entries =
+    slotToPartMappings instanceof Map
+      ? Array.from(slotToPartMappings.entries())
+      : Object.entries(slotToPartMappings);
+
+  return Object.fromEntries(
+    entries.filter(
+      ([slotKey]) =>
+        slotKey !== null && slotKey !== undefined && slotKey !== 'null'
+    )
+  );
 }

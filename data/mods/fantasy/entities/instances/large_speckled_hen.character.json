@@ -4,7 +4,7 @@
   "definitionId": "fantasy:large_speckled_hen",
   "componentOverrides": {
     "core:position": {
-      "locationId": "fantasy:interior_of_chicken_coop_instance"
+      "locationId": "fantasy:12_kiln_lane_yard_instance"
     }
   }
 }

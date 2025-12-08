@@ -15,7 +15,6 @@ import {
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -31,6 +30,7 @@ import {
   buildHumanTorsoWithHeart as buildTorsoWithHeart,
   buildHumanTorsoWithHeartAndSpine as buildTorsoWithHeartAndSpine,
 } from '../../common/anatomy/dataDrivenFixtures.js';
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'propagation-room';
@@ -71,6 +71,11 @@ const bluntStickDefinition = cloneWithDamageEntries(practiceStickDefinition, [
   { name: 'blunt', amount: 12, penetration: 0.1 },
 ]);
 
+const negligibleTapDefinition = cloneWithDamageEntries(
+  practiceStickDefinition,
+  [{ name: 'blunt', amount: 0.5, penetration: 0 }]
+);
+
 const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
   const { entityManager, logger, jsonLogic, operationRegistry } = testEnv;
 
@@ -80,9 +85,8 @@ const installRealHandlers = ({ testEnv, safeDispatcher, forcedOutcome }) => {
     eventDispatcher: safeDispatcher,
   });
 
-  const damageTypeEffectsService = new DamageTypeEffectsService({
-    entityManager,
-    logger,
+  const { damageTypeEffectsService } = createDamageTypeEffectsService({
+    testEnv,
     safeEventDispatcher: safeDispatcher,
     rngProvider: () => 0.5,
   });
@@ -272,6 +276,36 @@ describe('damage propagation flow e2e', () => {
     expect(propagationEvent).toBeDefined();
     expect(propagationEvent?.payload?.damageAmount).toBeCloseTo(10); // 20 * 0.5
     expect(heartHealth.currentHealth).toBe(BASE_HEART_HEALTH - 10);
+  });
+
+  it('propagates negligible hits and tags severity on parent and child', async () => {
+    const { torso, heart } = buildTorsoWithHeart();
+    await executeSwing({
+      weaponDefinition: negligibleTapDefinition,
+      weaponId: 'negligible-tap',
+      parts: [torso, heart],
+      rootPartId: torso.id,
+      randomSequence: [0, 0.01],
+    });
+
+    const damageEvents = fixture.events.filter(
+      (e) => e.eventType === 'anatomy:damage_applied'
+    );
+    const torsoDamage = damageEvents.find(
+      (event) => event.payload?.partId === torso.id
+    );
+    const heartDamage = damageEvents.find(
+      (event) => event.payload?.partId === heart.id
+    );
+    const propagationEvent = fixture.events.find(
+      (e) =>
+        e.eventType === 'anatomy:internal_damage_propagated' &&
+        e.payload?.targetPartId === heart.id
+    );
+
+    expect(propagationEvent).toBeDefined();
+    expect(torsoDamage?.payload?.severity).toBe('negligible');
+    expect(heartDamage?.payload?.severity).toBe('negligible');
   });
 
   it('propagates head damage to the brain when probability threshold is met', async () => {

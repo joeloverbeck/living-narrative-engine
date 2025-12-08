@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "fantasy:kitchen_cabinet_instance",
+  "definitionId": "fantasy:kitchen_cabinet",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "fantasy:aldous_kitchen_instance"
+    }
+  }
+}

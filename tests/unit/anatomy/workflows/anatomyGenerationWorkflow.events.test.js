@@ -328,6 +328,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
       mockBodyBlueprintFactory.createAnatomyGraph.mockResolvedValue({
         rootId: 'root-entity',
         entities: ['part-entity-1'],
+        slotToPartMappings: new Map([['slot1', 'part-entity-1']]),
       });
 
       mockSocketIndex.getEntitySockets.mockResolvedValue(mockSockets);
@@ -349,6 +350,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
         expect.objectContaining({
           partsMap: expect.any(Object),
           slotEntityMappings: expect.any(Object),
+          slotToPartMappings: expect.any(Object),
         })
       );
 
@@ -356,6 +358,7 @@ describe('AnatomyGenerationWorkflow - Events', () => {
       const dispatchCall = mockEventBus.dispatch.mock.calls[0];
       const payload = dispatchCall[1];
       expect(payload.partsMap).toHaveProperty('head');
+      expect(payload.slotToPartMappings).toEqual({ slot1: 'part-entity-1' });
     });
   });
 });

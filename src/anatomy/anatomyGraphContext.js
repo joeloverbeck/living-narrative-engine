@@ -166,6 +166,15 @@ export class AnatomyGraphContext {
   }
 
   /**
+   * Gets a copy of the slot-to-entity mapping
+   *
+   * @returns {Map<string, string>} Map of slot keys to entity IDs
+   */
+  getSlotToEntityMappings() {
+    return new Map(this.#slotToEntity);
+  }
+
+  /**
    * Gets the random number generator
    *
    * @returns {Function} RNG function

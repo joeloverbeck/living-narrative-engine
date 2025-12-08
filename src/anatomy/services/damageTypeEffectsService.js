@@ -15,6 +15,7 @@
  */
 
 import { BaseService } from '../../utils/serviceBase.js';
+import { classifyDamageSeverity } from '../constants/damageSeverity.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -363,6 +364,9 @@ class DamageTypeEffectsService extends BaseService {
     const amount = damageEntry.amount ?? 0;
     const partDestroyed = currentHealth <= 0;
     const rngToUse = typeof rng === 'function' ? rng : this.#rngProvider;
+    const severity =
+      damageEntry.severity ??
+      classifyDamageSeverity(amount, maxHealth);
 
     const effectDefinitions = {
       dismember: this.#resolveEffectDefinition('dismember'),
@@ -489,6 +493,8 @@ class DamageTypeEffectsService extends BaseService {
         await handler();
       }
     }
+
+    return { severity };
   }
   /**
    * Checks and applies dismemberment if threshold is exceeded.

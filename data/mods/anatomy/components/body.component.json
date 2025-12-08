@@ -25,6 +25,13 @@
               "type": "string"
             }
           },
+          "slotToPartMappings": {
+            "type": "object",
+            "description": "Map of blueprint slot ids to generated part entity ids",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
           "descriptors": {
             "type": "object",
             "description": "Body-level descriptors that apply to the whole body",

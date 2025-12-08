@@ -38,6 +38,11 @@
         "type": "string",
         "description": "Type of damage being applied (e.g., 'slashing', 'bludgeoning', 'piercing')"
       },
+      "severity": {
+        "type": "string",
+        "enum": ["none", "negligible", "standard"],
+        "description": "Severity bucket derived from the applied damage amount and the part's max health when available"
+      },
       "propagatedFrom": {
         "type": ["string", "null"],
         "description": "Entity ID of the source part if this damage was propagated from another body part"

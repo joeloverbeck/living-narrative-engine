@@ -11,6 +11,7 @@ import { executeSlotEntityCreation } from './stages/slotEntityCreationStage.js';
 import { executeSocketIndexBuilding } from './stages/socketIndexBuildingStage.js';
 import { executeClothingInstantiation } from './stages/clothingInstantiationStage.js';
 import { executeEventPublication } from './stages/eventPublicationStage.js';
+import { executeSeededDamageApplication } from './stages/seededDamageApplicationStage.js';
 
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
@@ -39,6 +40,8 @@ export class AnatomyGenerationWorkflow extends BaseService {
   #eventBus;
   /** @type {AnatomySocketIndex} */
   #socketIndex;
+  /** @type {import('../../logic/services/SeededDamageApplier.js').default | undefined} */
+  #seededDamageApplier;
 
   /**
    * @param {object} deps
@@ -58,6 +61,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
     clothingInstantiationService,
     eventBus,
     socketIndex,
+    seededDamageApplier,
   }) {
     super();
     this.#logger = this._init('AnatomyGenerationWorkflow', logger, {
@@ -80,6 +84,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
     this.#clothingInstantiationService = clothingInstantiationService;
     this.#eventBus = eventBus;
     this.#socketIndex = socketIndex;
+    this.#seededDamageApplier = seededDamageApplier;
   }
 
   /**
@@ -111,9 +116,18 @@ export class AnatomyGenerationWorkflow extends BaseService {
       `AnatomyGenerationWorkflow: Generated ${graphResult.entities.length} anatomy parts for entity '${ownerId}'`
     );
 
+    const slotToPartMappings =
+      graphResult.slotToPartMappings instanceof Map
+        ? graphResult.slotToPartMappings
+        : new Map(Object.entries(graphResult.slotToPartMappings || {}));
+    slotToPartMappings.delete(null);
+    slotToPartMappings.delete(undefined);
+    slotToPartMappings.delete('null');
+    graphResult.slotToPartMappings = slotToPartMappings;
+
     // Step 2: Build parts map and update anatomy:body component
     const { partsMap } = await executePartsMapBuilding(
-      { graphResult, ownerId, recipeId },
+      { graphResult, ownerId, recipeId, slotToPartMappings },
       this.#getDependencies()
     );
 
@@ -136,9 +150,22 @@ export class AnatomyGenerationWorkflow extends BaseService {
       this.#getDependencies()
     );
 
+    // Step 4.5: Apply seeded damage defined on the recipe (if any)
+    await executeSeededDamageApplication(
+      { recipeId, ownerId, slotToPartMappings },
+      this.#getDependencies()
+    );
+
     // Step 5: Publish anatomy:anatomy_generated event (optional - for subscribers)
     await executeEventPublication(
-      { ownerId, blueprintId, graphResult, partsMap, slotEntityMappings },
+      {
+        ownerId,
+        blueprintId,
+        graphResult,
+        partsMap,
+        slotEntityMappings,
+        slotToPartMappings,
+      },
       this.#getDependencies()
     );
 
@@ -148,6 +175,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
       entities: graphResult.entities,
       partsMap,
       slotEntityMappings,
+      slotToPartMappings,
     };
 
     // Include clothing result if present
@@ -173,6 +201,7 @@ export class AnatomyGenerationWorkflow extends BaseService {
       eventBus: this.#eventBus,
       socketIndex: this.#socketIndex,
       logger: this.#logger,
+      seededDamageApplier: this.#seededDamageApplier,
     };
   }
 

@@ -23,13 +23,19 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
       process.cwd(),
       'data/schemas/common.schema.json'
     );
+    const damageSchemaPath = join(
+      process.cwd(),
+      'data/schemas/damage-capability-entry.schema.json'
+    );
 
     recipeSchema = JSON.parse(readFileSync(schemaPath, 'utf8'));
     const commonSchema = JSON.parse(readFileSync(commonSchemaPath, 'utf8'));
+    const damageSchema = JSON.parse(readFileSync(damageSchemaPath, 'utf8'));
 
     // Setup AJV with schemas
     ajv = new Ajv({ strict: false, allErrors: true });
     ajv.addSchema(commonSchema);
+    ajv.addSchema(damageSchema);
     validateRecipe = ajv.compile(recipeSchema);
   });
 

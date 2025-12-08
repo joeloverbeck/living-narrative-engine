@@ -15,7 +15,6 @@ import {
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -24,6 +23,7 @@ import DamageNarrativeComposer from '../../../src/anatomy/services/damageNarrati
 import { ModTestFixture } from '../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../common/mods/ModEntityBuilder.js';
 import rapierDefinition from '../../../data/mods/fantasy/entities/definitions/vespera_rapier.entity.json' assert { type: 'json' };
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'session-queue-room';
@@ -151,6 +151,7 @@ const installRealHandlers = ({
   safeDispatcher,
   forcedOutcome = 'SUCCESS',
   rngProvider = () => 0.0,
+  registryMutator,
 }) => {
   const { entityManager, logger, jsonLogic, operationRegistry } = testEnv;
 
@@ -160,11 +161,11 @@ const installRealHandlers = ({
     eventDispatcher: safeDispatcher,
   });
 
-  const damageTypeEffectsService = new DamageTypeEffectsService({
-    entityManager,
-    logger,
+  const { damageTypeEffectsService } = createDamageTypeEffectsService({
+    testEnv,
     safeEventDispatcher: safeDispatcher,
     rngProvider,
+    registryMutator,
   });
 
   const damagePropagationService = new DamagePropagationService({

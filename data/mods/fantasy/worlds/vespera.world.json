@@ -23,6 +23,9 @@
       "instanceId": "fantasy:12_kiln_lane_yard_instance"
     },
     {
+      "instanceId": "fantasy:aldous_kitchen_instance"
+    },
+    {
       "instanceId": "fantasy:interior_of_chicken_coop_instance"
     },
     {
@@ -45,6 +48,12 @@
     },
     {
       "instanceId": "fantasy:smoking_pipe_instance"
+    },
+    {
+      "instanceId": "fantasy:jar_of_vinegar_instance"
+    },
+    {
+      "instanceId": "fantasy:kitchen_cabinet_instance"
     },
     {
       "instanceId": "fantasy:chicken_coop_door_instance"

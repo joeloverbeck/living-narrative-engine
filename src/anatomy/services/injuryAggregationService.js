@@ -12,6 +12,7 @@ import {
   DISMEMBERED_COMPONENT_ID,
 } from './damageTypeEffectsService.js';
 import { HEALTH_STATE_REGISTRY } from '../../anatomy/registries/healthStateRegistry.js';
+import { classifyDamageSeverity } from '../constants/damageSeverity.js';
 
 // --- Component ID Constants ---
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
@@ -43,6 +44,9 @@ const PRONOUN_MAP = {
  * @property {number} healthPercentage - 0-100
  * @property {number} currentHealth - Current health points
  * @property {number} maxHealth - Maximum health points
+ * @property {number} damageFromMax - Cumulative damage from max health
+ * @property {'none'|'negligible'|'standard'} damageSeverity - Severity bucket for the cumulative damage
+ * @property {boolean} isDamaged - True when damageFromMax > 0
  * @property {boolean} isBleeding - Has anatomy:bleeding component
  * @property {string|null} bleedingSeverity - minor, moderate, severe, or null
  * @property {boolean} isBurning - Has anatomy:burning component
@@ -71,6 +75,8 @@ const PRONOUN_MAP = {
  * @property {string|null} dyingCause - If dying, what caused it
  * @property {boolean} isDead - Has anatomy:dead component
  * @property {string|null} causeOfDeath - If dead, what killed them
+ * @property {InjuredPartInfo[]} surfaceDamageParts - Parts that are damaged but remain in healthy state
+ * @property {InjuredPartInfo[]} cosmeticDamageParts - Parts with nonzero damage that remain in healthy state and classify as negligible
  */
 
 /**
@@ -132,6 +138,16 @@ class InjuryAggregationService extends BaseService {
     // Get all body parts and build part info array
     const allPartInfos = this.#buildAllPartInfos(entityId);
 
+    const surfaceDamageParts = allPartInfos.filter(
+      (part) =>
+        part.isDamaged &&
+        part.state === HEALTH_STATE_REGISTRY.healthy.id
+    );
+
+    const cosmeticDamageParts = surfaceDamageParts.filter(
+      (part) => part.damageSeverity === 'negligible'
+    );
+
     // Filter parts into categories
     const injuredParts = allPartInfos.filter(
       (part) => part.state !== HEALTH_STATE_REGISTRY.healthy.id
@@ -160,6 +176,8 @@ class InjuryAggregationService extends BaseService {
       fracturedParts,
       dismemberedParts,
       destroyedParts,
+      surfaceDamageParts,
+      cosmeticDamageParts,
       overallHealthPercentage,
       isDying: dyingData.isDying,
       dyingTurnsRemaining: dyingData.turnsRemaining,
@@ -335,6 +353,15 @@ class InjuryAggregationService extends BaseService {
     // Get status effect states
     const bleedingData = this.#getBleedingData(partEntityId);
 
+    const damageFromMax = Math.max(
+      0,
+      (healthData.maxHealth ?? 0) - (healthData.currentHealth ?? 0)
+    );
+    const damageSeverity = classifyDamageSeverity(
+      damageFromMax,
+      healthData.maxHealth
+    );
+
     return {
       partEntityId,
       partType: partData.subType,
@@ -346,6 +373,9 @@ class InjuryAggregationService extends BaseService {
       ),
       currentHealth: healthData.currentHealth,
       maxHealth: healthData.maxHealth,
+      damageFromMax,
+      damageSeverity,
+      isDamaged: damageFromMax > 0,
       healthCalculationWeight: partData.healthCalculationWeight,
       vitalOrganCap: vitalOrganData
         ? {

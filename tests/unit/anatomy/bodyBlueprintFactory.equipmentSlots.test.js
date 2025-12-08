@@ -16,6 +16,7 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
   let mockEntityGraphBuilder;
   let mockConstraintEvaluator;
   let mockValidator;
+  let mockEntityManager;
 
   beforeEach(() => {
     mockDataRegistry = {
@@ -61,6 +62,18 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
       cleanupEntities: jest.fn().mockResolvedValue(undefined),
     };
 
+    mockEntityManager = {
+      getComponentData: jest.fn((entityId, componentId) => {
+        if (componentId === 'anatomy:part') {
+          return { definitionId: 'core:torso', partType: 'torso' };
+        }
+        if (componentId === 'anatomy:sockets') {
+          return { sockets: [] };
+        }
+        return null;
+      }),
+    };
+
     mockConstraintEvaluator = {
       evaluateConstraints: jest
         .fn()
@@ -82,7 +95,7 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     };
 
     factory = new BodyBlueprintFactory({
-      entityManager: undefined,
+      entityManager: mockEntityManager,
       dataRegistry: mockDataRegistry,
       logger: mockLogger,
       eventDispatcher: mockEventDispatcher,
@@ -141,10 +154,11 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
     expect(mockEntityGraphBuilder.createAndAttachPart).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      rootId: 'root-entity',
-      entities: ['root-entity'],
-    });
+    expect(result.rootId).toBe('root-entity');
+    expect(result.entities).toEqual(['root-entity']);
+    expect(result.slotToPartMappings).toBeInstanceOf(Map);
+    expect(result.slotToPartMappings.get(null)).toBe('root-entity');
+    expect(result.slotToPartMappings.get('torso')).toBe('root-entity');
   });
 
   it('treats slots with equipment-focused requirements as equipment', async () => {
@@ -173,9 +187,10 @@ describe('BodyBlueprintFactory equipment slot handling', () => {
     expect(mockRecipeProcessor.mergeSlotRequirements).not.toHaveBeenCalled();
     expect(mockPartSelectionService.selectPart).not.toHaveBeenCalled();
     expect(mockEntityGraphBuilder.createAndAttachPart).not.toHaveBeenCalled();
-    expect(result).toEqual({
-      rootId: 'root-entity',
-      entities: ['root-entity'],
-    });
+    expect(result.rootId).toBe('root-entity');
+    expect(result.entities).toEqual(['root-entity']);
+    expect(result.slotToPartMappings).toBeInstanceOf(Map);
+    expect(result.slotToPartMappings.get(null)).toBe('root-entity');
+    expect(result.slotToPartMappings.get('torso')).toBe('root-entity');
   });
 });

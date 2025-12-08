@@ -229,4 +229,46 @@ describe('Items - Data Components', () => {
       expect(result.isValid).toBe(false);
     });
   });
+
+  describe('items:liquid_container', () => {
+    const createLiquidContainerData = (overrides = {}) => ({
+      currentVolumeMilliliters: 250,
+      maxCapacityMilliliters: 500,
+      servingSizeMilliliters: 50,
+      isRefillable: true,
+      flavorText: 'A refreshing drink.',
+      ...overrides,
+    });
+
+    it('should validate valid liquid container data without tags', () => {
+      const data = createLiquidContainerData();
+      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept tags array of non-empty strings', () => {
+      const data = createLiquidContainerData({ tags: ['disinfectant', 'antiseptic'] });
+      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should accept an empty tags array', () => {
+      const data = createLiquidContainerData({ tags: [] });
+      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      expect(result.isValid).toBe(true);
+    });
+
+    it('should reject tags with non-string entries', () => {
+      const data = createLiquidContainerData({ tags: ['disinfectant', 42] });
+      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      expect(result.isValid).toBe(false);
+    });
+
+    it('should still require existing fields', () => {
+      const data = createLiquidContainerData();
+      delete data.servingSizeMilliliters;
+      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      expect(result.isValid).toBe(false);
+    });
+  });
 });

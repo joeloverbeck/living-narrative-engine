@@ -28,6 +28,15 @@
         "type": "string",
         "minLength": 1,
         "description": "Descriptive text displayed to actors when consuming from this container."
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uniqueItems": true,
+        "description": "Optional tags describing liquid contents for scoping/filters (e.g., \"disinfectant\")."
       }
     },
     "required": [

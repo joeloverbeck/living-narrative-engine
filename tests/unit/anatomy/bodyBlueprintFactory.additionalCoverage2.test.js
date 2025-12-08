@@ -1113,10 +1113,13 @@ describe('BodyBlueprintFactory additional coverage', () => {
       { ownerId: 'entity:owner' }
     );
 
-    expect(result).toEqual({
-      rootId: 'entity:root',
-      entities: ['entity:root', 'entity:left_arm'],
-    });
+    expect(result.rootId).toBe('entity:root');
+    expect(result.entities).toEqual(['entity:root', 'entity:left_arm']);
+    expect(result.slotToPartMappings).toBeInstanceOf(Map);
+    expect(Array.from(result.slotToPartMappings.entries())).toEqual([
+      [null, 'entity:root'],
+      ['left_arm', 'entity:left_arm'],
+    ]);
 
     expect(deps.entityGraphBuilder.addSocketsToEntity).toHaveBeenCalledWith(
       'entity:root',

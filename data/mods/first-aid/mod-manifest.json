@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "first-aid",
+  "version": "0.1.0",
+  "name": "First-Aid",
+  "description": "Foundational scaffolding for wounded body-part scopes and future first-aid content.",
+  "actionPurpose": "Provide medical triage scaffolding for identifying and treating wounded or bleeding body parts.",
+  "actionConsiderWhen": "Use when actors need medical triage or treatment for damaged body parts and bleeding states.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": ["disinfect_wounded_part.action.json"],
+    "conditions": [
+      "event-is-action-disinfect-wounded-part.condition.json"
+    ],
+    "rules": [
+      "handle_disinfect_wounded_part.rule.json"
+    ],
+    "scopes": [
+      "bleeding_actor_body_parts.scope",
+      "wounded_actor_body_parts.scope"
+    ],
+    "components": [
+      "disinfected.component.json"
+    ],
+    "events": [],
+    "lookups": [],
+    "statusEffects": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    }
+  }
+}

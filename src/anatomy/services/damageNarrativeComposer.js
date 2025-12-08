@@ -100,7 +100,11 @@ class DamageNarrativeComposer extends BaseService {
    */
   #composePrimarySegment(entry) {
     const partName = this.#formatPartName(entry.partType, entry.orientation);
-    let segment = `${entry.entityName}'s ${partName} suffers ${entry.damageType} damage`;
+    const damageDescriptor = this.#formatDamageDescriptor(
+      entry.damageType,
+      entry.severity
+    );
+    let segment = `${entry.entityName}'s ${partName} suffers ${damageDescriptor}`;
 
     const effectDescriptions = this.#getEffectDescriptions(
       entry.effectsTriggered
@@ -183,7 +187,10 @@ class DamageNarrativeComposer extends BaseService {
     const verb = entries.length === 1 ? 'suffers' : 'suffer';
     const partList = this.#formatPartList(partNames);
 
-    let sentence = `As a result, ${primary.entityPossessive} ${partList} ${verb} ${damageType} damage`;
+    const severity = this.#resolveGroupSeverity(entries);
+    const damageDescriptor = this.#formatDamageDescriptor(damageType, severity);
+
+    let sentence = `As a result, ${primary.entityPossessive} ${partList} ${verb} ${damageDescriptor}`;
 
     // Add effects if any
     const effectDescriptions = this.#getEffectDescriptions([...allEffects]);
@@ -259,6 +266,40 @@ class DamageNarrativeComposer extends BaseService {
     return effects
       .map((effect) => THIRD_PERSON_EFFECT_MAP[effect])
       .filter(Boolean);
+  }
+
+  /**
+   * Formats a damage descriptor with severity qualifier when applicable.
+   *
+   * @param {string} damageType - The damage type (e.g., 'piercing')
+   * @param {string} [severity='standard'] - Severity classification
+   * @returns {string} Descriptor including the trailing "damage" noun
+   * @private
+   */
+  #formatDamageDescriptor(damageType, severity = 'standard') {
+    const normalizedDamageType = damageType || 'damage';
+    const needsQualifier = severity === 'negligible';
+    const qualifier = needsQualifier ? 'negligible ' : '';
+
+    return `${qualifier}${normalizedDamageType} damage`;
+  }
+
+  /**
+   * Resolves the severity for a propagation group. Only marks the group as
+   * negligible if all entries are negligible to avoid mislabeling mixed cases.
+   *
+   * @param {DamageEntry[]} entries - Entries in the group
+   * @returns {string} Severity for formatting
+   * @private
+   */
+  #resolveGroupSeverity(entries) {
+    if (!entries || entries.length === 0) {
+      return 'standard';
+    }
+
+    return entries.every((entry) => entry.severity === 'negligible')
+      ? 'negligible'
+      : 'standard';
   }
 }
 

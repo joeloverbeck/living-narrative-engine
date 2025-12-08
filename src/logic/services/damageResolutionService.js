@@ -1,4 +1,5 @@
 import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
+import { classifyDamageSeverity } from '../../anatomy/constants/damageSeverity.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 
@@ -106,6 +107,11 @@ class DamageResolutionService {
       }
     };
 
+    const narrativeSuppressed = Boolean(
+      executionContext?.suppressPerceptibleEvents ||
+        executionContext?.origin === 'seeded_damage'
+    );
+
     addTrace('init', 'Damage resolution started', {
       finalDamageEntry,
       propagatedFrom,
@@ -123,6 +129,7 @@ class DamageResolutionService {
 
     const damageAmount = finalDamageEntry.amount;
     const damageType = finalDamageEntry.name;
+    const initialSeverity = classifyDamageSeverity(damageAmount, null);
     const damageTags = Array.isArray(finalDamageEntry?.damageTags)
       ? finalDamageEntry.damageTags
       : [];
@@ -134,7 +141,7 @@ class DamageResolutionService {
         : {};
 
     logger?.info(
-      `[DAMAGE_DEBUG] Resolve start: Entity=${entityId}, Part=${partId}, Amount=${damageAmount}, Type=${damageType}, PropagatedFrom=${propagatedFrom}`
+      `[DAMAGE_DEBUG] Resolve start: Entity=${entityId}, Part=${partId}, Amount=${damageAmount}, Type=${damageType}, PropagatedFrom=${propagatedFrom}, Severity=${initialSeverity}`
     );
 
     // Session lifecycle: Create session at top-level, reuse for propagation
@@ -207,6 +214,7 @@ class DamageResolutionService {
       );
 
       let appliedDamageAmount = damageAmount;
+      let severity = 'standard';
 
       // Read propagation rules - try standalone component first, fallback to part component property
       const propagationComponent = this.#entityManager.hasComponent(
@@ -225,10 +233,12 @@ class DamageResolutionService {
         logger?.debug(
           `APPLY_DAMAGE: Part ${partId} has no health component. Skipping health update.`
         );
+        severity = classifyDamageSeverity(appliedDamageAmount, null);
         if (session) {
           this.#damageAccumulator.recordDamage(session, {
             ...damageEntryForSession,
             amount: appliedDamageAmount,
+            severity,
           });
         }
         addTrace('skip_no_health', 'Part has no health component');
@@ -251,8 +261,13 @@ class DamageResolutionService {
             Math.min(previousHealth, damageAmount)
           );
 
+          const severityForAppliedDamage = classifyDamageSeverity(
+            appliedDamage,
+            maxHealth
+          );
+
           logger?.info(
-            `[DAMAGE_DEBUG] Health Check: Part=${partId}, CurHealth=${previousHealth}, MaxHealth=${maxHealth}, DamageIn=${damageAmount}, Applied=${appliedDamage}`
+            `[DAMAGE_DEBUG] Health Check: Part=${partId}, CurHealth=${previousHealth}, MaxHealth=${maxHealth}, DamageIn=${damageAmount}, Applied=${appliedDamage}, Severity=${severityForAppliedDamage}`
           );
 
           if (appliedDamage <= 0) {
@@ -268,6 +283,7 @@ class DamageResolutionService {
           }
 
           appliedDamageAmount = appliedDamage;
+          severity = severityForAppliedDamage;
 
           const newHealth = Math.max(0, currentHealth - appliedDamage);
           const healthPercentage = (newHealth / maxHealth) * 100;
@@ -326,7 +342,7 @@ class DamageResolutionService {
           }
 
           logger?.info(
-            `[DAMAGE_DEBUG] Updated: Part=${partId}, OldHealth=${previousHealth}, NewHealth=${newHealth}, Delta=${-appliedDamage}`
+            `[DAMAGE_DEBUG] Updated: Part=${partId}, OldHealth=${previousHealth}, NewHealth=${newHealth}, Delta=${-appliedDamage}, Severity=${severity}`
           );
 
           logger?.debug(
@@ -337,6 +353,7 @@ class DamageResolutionService {
             this.#damageAccumulator.recordDamage(session, {
               ...damageEntryForSession,
               amount: appliedDamageAmount,
+              severity,
             });
           }
 
@@ -347,7 +364,7 @@ class DamageResolutionService {
             partId,
             partType,
             orientation,
-            damageEntry: { ...finalDamageEntry, amount: appliedDamage },
+            damageEntry: { ...finalDamageEntry, amount: appliedDamage, severity },
             maxHealth,
             currentHealth: newHealth,
             damageSession: session,
@@ -380,6 +397,7 @@ class DamageResolutionService {
         propagatedFrom,
         metadata,
         damageTags,
+        severity,
         timestamp: Date.now(),
       };
 
@@ -398,7 +416,7 @@ class DamageResolutionService {
           propagationRules,
         });
         logger?.info(
-          `[DAMAGE_DEBUG] Propagating from ${partId}. BaseAmount=${appliedDamageAmount}`
+          `[DAMAGE_DEBUG] Propagating from ${partId}. BaseAmount=${appliedDamageAmount}, Severity=${severity}`
         );
         await this.#propagateDamage({
           entityId,
@@ -477,7 +495,7 @@ class DamageResolutionService {
             throw finalizeError;
           }
 
-          if (entries.length > 0) {
+          if (entries.length > 0 && !narrativeSuppressed) {
             let composedNarrative;
             try {
               composedNarrative =
@@ -549,6 +567,11 @@ class DamageResolutionService {
               );
               addTrace('warn', 'Empty narrative composed');
             }
+          } else if (entries.length > 0 && narrativeSuppressed) {
+            logger?.debug(
+              'APPLY_DAMAGE: Narrative dispatch suppressed by execution context'
+            );
+            addTrace('narrative_suppressed', 'Narrative dispatch suppressed');
           }
 
           for (const { eventType, payload } of pendingEvents) {
@@ -651,6 +674,26 @@ class DamageResolutionService {
     return null;
   }
 
+  #classifyDamageSeverityForPart(partId, damageAmount) {
+    if (damageAmount <= 0 || Number.isNaN(damageAmount)) {
+      return classifyDamageSeverity(damageAmount, null);
+    }
+
+    try {
+      if (this.#entityManager.hasComponent(partId, PART_HEALTH_COMPONENT_ID)) {
+        const health = this.#entityManager.getComponentData(
+          partId,
+          PART_HEALTH_COMPONENT_ID
+        );
+        return classifyDamageSeverity(damageAmount, health?.maxHealth);
+      }
+    } catch {
+      // Ignore errors and fall back to default classification
+    }
+
+    return classifyDamageSeverity(damageAmount, null);
+  }
+
   async #propagateDamage({
     entityId,
     parentPartId,
@@ -672,8 +715,12 @@ class DamageResolutionService {
     );
 
     for (const result of propagationResults) {
+      const childSeverity = this.#classifyDamageSeverityForPart(
+        result.childPartId,
+        result.damageApplied
+      );
       logger?.info(
-        `[DAMAGE_DEBUG] Propagation Result: Child=${result.childPartId}, DmgType=${result.damageTypeId}, Amount=${result.damageApplied}`
+        `[DAMAGE_DEBUG] Propagation Result: Child=${result.childPartId}, DmgType=${result.damageTypeId}, Amount=${result.damageApplied}, Severity=${childSeverity}`
       );
       await applyDamage(
         {

@@ -10,6 +10,7 @@ import { describe, beforeAll, test, expect } from '@jest/globals';
 // Schemas to be loaded
 import anatomyRecipeSchema from '../../../data/schemas/anatomy.recipe.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
+import damageCapabilityEntrySchema from '../../../data/schemas/damage-capability-entry.schema.json';
 
 describe('JSON-Schema – Anatomy Recipe Definition', () => {
   /** @type {import('ajv').ValidateFunction} */
@@ -23,6 +24,10 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     ajv.addSchema(
       commonSchema,
       'schema://living-narrative-engine/common.schema.json'
+    );
+    ajv.addSchema(
+      damageCapabilityEntrySchema,
+      'schema://living-narrative-engine/damage-capability-entry.schema.json'
     );
 
     // Compile the main schema we want to test
@@ -1375,6 +1380,139 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         console.error('Validation errors:', validate.errors);
       }
       expect(ok).toBe(true);
+    });
+  });
+
+  describe('initialDamage seeded wounds', () => {
+    test('should validate initialDamage with explicit damage_entries', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            damage_entries: [
+              {
+                name: 'blunt',
+                amount: 5,
+              },
+            ],
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate initialDamage shorthand with name field', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            amount: 3.5,
+            name: 'piercing',
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should validate initialDamage shorthand with damage_type field', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            amount: 7,
+            damage_type: 'slashing',
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      if (!ok) {
+        console.error('Validation errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('should reject non-positive amounts in damage_entries', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            damage_entries: [
+              {
+                name: 'blunt',
+                amount: 0,
+              },
+            ],
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      expect(ok).toBe(false);
+    });
+
+    test('should reject shorthand without name or damage_type', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            amount: 4,
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      expect(ok).toBe(false);
+    });
+
+    test('should reject additional properties in shorthand entry', () => {
+      const recipe = {
+        recipeId: 'anatomy:seeded_damage_recipe',
+        blueprintId: 'anatomy:humanoid',
+        slots: {
+          head: { partType: 'head' },
+        },
+        initialDamage: {
+          head: {
+            amount: 4,
+            name: 'blunt',
+            unexpected: true,
+          },
+        },
+      };
+
+      const ok = validate(recipe);
+      expect(ok).toBe(false);
     });
   });
 

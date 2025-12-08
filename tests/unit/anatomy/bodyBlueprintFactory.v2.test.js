@@ -487,10 +487,13 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         'anatomy:griffin_standard'
       );
 
-      expect(result).toEqual({
-        rootId: 'griffin-root',
-        entities: ['griffin-root', 'child-entity-1'],
-      });
+      expect(result.rootId).toBe('griffin-root');
+      expect(result.entities).toEqual(['griffin-root', 'child-entity-1']);
+      expect(result.slotToPartMappings).toBeInstanceOf(Map);
+      expect(Array.from(result.slotToPartMappings.entries())).toEqual([
+        [null, 'griffin-root'],
+        ['wing_left', 'child-entity-1'],
+      ]);
 
       // Verify blueprintProcessorService was called
       expect(

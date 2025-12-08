@@ -33,6 +33,8 @@ describe('JSON Logic Operator Registration', () => {
       findPartsByType: jest.fn(() => []),
       getAllParts: jest.fn(() => []),
       buildAdjacencyCache: jest.fn(),
+      hasWoundedPart: jest.fn(),
+      hasPartWithStatusEffect: jest.fn(),
     };
 
     gameDataRepository = {
@@ -141,6 +143,8 @@ describe('JSON Logic Operator Registration', () => {
         'hasFreeGrabbingAppendages',
         'canActorGrabItem',
         'isItemBeingGrabbed',
+        'hasWoundedPart',
+        'hasPartWithStatusEffect',
       ];
 
       for (const op of expectedOperators) {

@@ -1903,6 +1903,25 @@ describe('InjuryNarrativeFormatterService', () => {
 
       expect(result).toBe('Perfect health.');
     });
+
+    it('should surface bruising when parts are damaged but remain healthy', () => {
+      const summary = createBaseSummary({
+        surfaceDamageParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'healthy',
+            isVitalOrgan: false,
+            damageSeverity: 'standard',
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toBe('Torso is bruised.');
+    });
   });
 
   describe('formatDamageEvent', () => {

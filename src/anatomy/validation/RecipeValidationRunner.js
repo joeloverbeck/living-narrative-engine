@@ -21,6 +21,7 @@ import { DescriptorCoverageValidator } from './validators/DescriptorCoverageVali
 import { LoadFailureValidator } from './validators/LoadFailureValidator.js';
 import { RecipeUsageValidator } from './validators/RecipeUsageValidator.js';
 import { SlotKeyUniquenessValidator } from './validators/SlotKeyUniquenessValidator.js';
+import { InitialDamageSlotValidator } from './validators/InitialDamageSlotValidator.js';
 
 /**
  * @description Primary entry point for recipe validation. Builds the validator
@@ -272,6 +273,13 @@ export class RecipeValidationRunner {
           dataRegistry,
           entityMatcherService,
           anatomyBlueprintRepository,
+        }),
+      validators.initialDamageSlots ??
+        new InitialDamageSlotValidator({
+          logger: this.#logger,
+          anatomyBlueprintRepository,
+          dataRegistry,
+          slotGenerator,
         }),
       validators.patternMatching ??
         new PatternMatchingValidator({

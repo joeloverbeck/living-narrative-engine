@@ -14,7 +14,6 @@ import {
 
 import ApplyDamageHandler from '../../../src/logic/operationHandlers/applyDamageHandler.js';
 import { BodyGraphService } from '../../../src/anatomy/bodyGraphService.js';
-import DamageTypeEffectsService from '../../../src/anatomy/services/damageTypeEffectsService.js';
 import DamagePropagationService from '../../../src/anatomy/services/damagePropagationService.js';
 import InjuryAggregationService from '../../../src/anatomy/services/injuryAggregationService.js';
 import DeathCheckService from '../../../src/anatomy/services/deathCheckService.js';
@@ -28,6 +27,7 @@ import {
   VITAL_ORGAN_TYPES,
   buildHumanVitalsGraph,
 } from '../../common/anatomy/dataDrivenFixtures.js';
+import { createDamageTypeEffectsService } from './helpers/damageTypeEffectsServiceFactory.js';
 
 const ACTION_ID = 'weapons:swing_at_target';
 const ROOM_ID = 'death-room';
@@ -187,15 +187,15 @@ describe('death mechanics e2e (critical)', () => {
   };
 
   const prepareActor = async (options = {}) => {
-  const { actor, parts, room, attacker } = buildActorWithVitals(options);
-  fixture.reset([
-    actor,
-    parts.torso,
-    parts.head,
-    parts.heart,
-    parts.brain,
-    parts.spine,
-    room,
+    const { actor, parts, room, attacker } = buildActorWithVitals(options);
+    fixture.reset([
+      actor,
+      parts.torso,
+      parts.head,
+      parts.heart,
+      parts.brain,
+      parts.spine,
+      room,
       attacker,
     ]);
     fixture.clearEvents();
@@ -206,9 +206,8 @@ describe('death mechanics e2e (critical)', () => {
       eventDispatcher: safeDispatcher,
     });
 
-    const damageTypeEffectsService = new DamageTypeEffectsService({
-      entityManager: testEnv.entityManager,
-      logger: testEnv.logger,
+    const { damageTypeEffectsService } = createDamageTypeEffectsService({
+      testEnv,
       safeEventDispatcher: safeDispatcher,
       rngProvider: () => 0.25,
     });

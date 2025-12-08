@@ -171,6 +171,19 @@ class InjuryNarrativeFormatterService extends BaseService {
       return 'Perfect health.';
     }
 
+    const cosmeticDamageParts = summary.cosmeticDamageParts || [];
+    const visibleCosmeticParts = cosmeticDamageParts.filter(
+      (part) => !part.isVitalOrgan
+    );
+    const surfaceDamageParts = summary.surfaceDamageParts || [];
+    const cosmeticIds = new Set(
+      visibleCosmeticParts.map((part) => part.partEntityId)
+    );
+    const visibleSurfaceDamageParts = surfaceDamageParts.filter(
+      (part) =>
+        !part.isVitalOrgan && !cosmeticIds.has(part.partEntityId || '')
+    );
+
     const hasVisibleData =
       (summary.injuredParts && summary.injuredParts.length > 0) ||
       (summary.destroyedParts && summary.destroyedParts.length > 0) ||
@@ -178,7 +191,9 @@ class InjuryNarrativeFormatterService extends BaseService {
       (summary.bleedingParts && summary.bleedingParts.length > 0) ||
       (summary.burningParts && summary.burningParts.length > 0) ||
       (summary.poisonedParts && summary.poisonedParts.length > 0) ||
-      (summary.fracturedParts && summary.fracturedParts.length > 0);
+      (summary.fracturedParts && summary.fracturedParts.length > 0) ||
+      visibleSurfaceDamageParts.length > 0 ||
+      visibleCosmeticParts.length > 0;
 
     if (!hasVisibleData) {
       return 'Perfect health.';
@@ -222,6 +237,21 @@ class InjuryNarrativeFormatterService extends BaseService {
     );
     if (effectDescriptions) {
       visibleNarrative.push(effectDescriptions);
+    }
+
+    const surfaceDamageNarrative = this.#formatSurfaceDamageThirdPerson(
+      visibleSurfaceDamageParts
+    );
+    if (surfaceDamageNarrative) {
+      visibleNarrative.push(surfaceDamageNarrative);
+    }
+
+    if (visibleNarrative.length === 0 && visibleCosmeticParts.length > 0) {
+      return 'Cosmetic scuffs.';
+    }
+
+    if (visibleNarrative.length === 0 && surfaceDamageNarrative) {
+      return surfaceDamageNarrative;
     }
 
     return visibleNarrative.join(' ') || 'Perfect health.';
@@ -596,6 +626,28 @@ class InjuryNarrativeFormatterService extends BaseService {
     const verb = dismemberedParts.length === 1 ? 'is' : 'are';
 
     return `${this.#capitalizeFirst(formattedList)} ${verb} missing.`;
+  }
+
+  /**
+   * Formats visible surface-level damage when parts are damaged but still in healthy state.
+   *
+   * @param {InjurySummaryDTO['surfaceDamageParts']} surfaceDamageParts
+   * @returns {string}
+   * @private
+   */
+  #formatSurfaceDamageThirdPerson(surfaceDamageParts) {
+    if (!surfaceDamageParts || surfaceDamageParts.length === 0) {
+      return '';
+    }
+
+    const partNames = surfaceDamageParts.map((part) =>
+      this.#formatPartName(part.partType, part.orientation)
+    );
+
+    const formattedList = this.#formatList(partNames);
+    const verb = surfaceDamageParts.length === 1 ? 'is bruised' : 'are bruised';
+
+    return `${this.#capitalizeFirst(formattedList)} ${verb}.`;
   }
 
   /**

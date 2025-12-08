@@ -262,6 +262,42 @@ describe('ModManifestLoader core behavior', () => {
       );
     });
 
+    it('logs schema failures for unknown content keys', () => {
+      const { loader, dependencies } = instantiateLoader();
+      const fetchJobs = [{ modId: 'alpha', path: '/alpha.json' }];
+      const settled = [
+        {
+          status: 'fulfilled',
+          value: { id: 'alpha', content: { 'status-effects': [] } },
+        },
+      ];
+      const validator = jest.fn(() => ({
+        isValid: false,
+        errors: [
+          {
+            instancePath: '/content',
+            params: { additionalProperty: 'status-effects' },
+            message: 'must NOT have additional properties',
+          },
+        ],
+      }));
+
+      expect(() =>
+        loader._validateAndCheckIds(fetchJobs, settled, validator)
+      ).toThrow(
+        "ModManifestLoader.loadRequestedManifests: manifest for 'alpha' failed schema validation. See log for Ajv error details."
+      );
+      expect(dependencies.logger.error).toHaveBeenCalledWith(
+        'MOD_MANIFEST_SCHEMA_INVALID',
+        expect.stringContaining(
+          "manifest for 'alpha' failed schema validation."
+        ),
+        expect.objectContaining({
+          details: expect.stringContaining('status-effects'),
+        })
+      );
+    });
+
     it('throws when manifest is missing id', () => {
       const { loader, dependencies } = instantiateLoader();
       const fetchJobs = [{ modId: 'alpha', path: '/alpha.json' }];
