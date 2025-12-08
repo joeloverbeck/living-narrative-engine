@@ -1250,6 +1250,7 @@ export function createBaseRuleEnvironment({
       operationRegistry,
       operationInterpreter,
       systemLogicInterpreter: interpreter,
+      bodyGraphService: mockBodyGraphService,
       actionIndex,
       handlers,
       unifiedScopeResolver: simpleScopeResolver,
@@ -1285,6 +1286,8 @@ export function createBaseRuleEnvironment({
     systemLogicInterpreter: init.systemLogicInterpreter,
     // Alias for backward compatibility with tests
     systemLogicOrchestrator: init.systemLogicInterpreter,
+    // Expose mock body graph service so custom scope resolvers can use it
+    bodyGraphService: init.bodyGraphService,
     entityManager: init.entityManager,
     actionIndex: init.actionIndex,
     handlers: init.handlers,
@@ -1583,6 +1586,12 @@ export function createRuleTestEnvironment(options) {
         actorEntity: actorContext, // Add actorEntity for ScopeEngine compatibility
         targets: {},
       };
+
+      const actorPosition = actorComponents['core:position'];
+      if (actorPosition?.locationId) {
+        context.location = { id: actorPosition.locationId };
+        context.actorLocation = actorPosition.locationId;
+      }
 
       for (const [resolvedKey, resolvedValue] of Object.entries(
         resolvedTargets

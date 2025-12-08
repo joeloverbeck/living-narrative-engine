@@ -305,6 +305,12 @@ export default class TargetResolutionCoordinator {
               resultCount: resolvedSecondaryTargets.length,
               evaluationTimeMs,
               cacheHit: false,
+              resolvedIds: resolvedSecondaryTargets.map(
+                (resolved) => resolved.id
+              ),
+              contextDetails: {
+                primaryTargetIds: primaryTargets.map((target) => target.id),
+              },
             }
           );
         }
@@ -383,6 +389,11 @@ export default class TargetResolutionCoordinator {
               evaluationTimeMs:
                 detailedResolutionResults[targetKey].evaluationTimeMs,
               cacheHit: false,
+              resolvedIds: candidates,
+              contextDetails: {
+                actorId: actor.id,
+                resolvedTargetKeys: Object.keys(resolvedTargets),
+              },
             }
           );
         }

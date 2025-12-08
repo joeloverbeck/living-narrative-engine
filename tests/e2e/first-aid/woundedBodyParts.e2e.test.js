@@ -308,6 +308,7 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
       location: { id: ROOM_ID },
       logger,
       jsonLogicEval,
+      target: actorEntity,
       container: {
         resolve: (token) => {
           if (token === 'BodyGraphService') return bodyGraphService;

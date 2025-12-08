@@ -136,17 +136,42 @@ export default function createArrayIterationResolver({
 
     if (!bodyGraphService) {
       if (trace && trace.addStep) {
-        trace.addStep('No body graph service available, returning empty array');
-      }
-      if (errorHandler) {
-        errorHandler.handleError(
-          'Body graph service not available',
-          { context: 'processBodyPartAccess', entityId },
-          'ArrayIterationResolver',
-          ErrorCodes.SERVICE_NOT_FOUND
+        trace.addStep(
+          'No body graph service available, falling back to body.parts traversal'
         );
       }
-      return [];
+
+      const rootId = bodyComponent?.body?.root;
+      if (!rootId) {
+        return [];
+      }
+
+      const collected = [];
+      const queue = [rootId];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (typeof current === 'string') {
+          collected.push(current);
+        }
+        let children = [];
+        const partsMap = bodyComponent?.body?.parts;
+        if (partsMap && partsMap[current]?.children) {
+          children = partsMap[current].children;
+        } else if (entitiesGateway) {
+          const partComp = entitiesGateway.getComponentData(
+            current,
+            'anatomy:part'
+          );
+          if (partComp?.children) {
+            children = partComp.children;
+          }
+        }
+        if (Array.isArray(children)) {
+          queue.push(...children);
+        }
+      }
+
+      return collected;
     }
 
     if (!bodyComponent?.body?.root) {

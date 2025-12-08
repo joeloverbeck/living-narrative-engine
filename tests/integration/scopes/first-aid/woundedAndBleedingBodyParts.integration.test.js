@@ -118,7 +118,10 @@ describe('First-Aid body part scopes', () => {
     return entityManager.getEntityInstance(actorId);
   }
 
-  function createBodyPart(partId, { currentHealth, maxHealth, bleeding = false }) {
+  function createBodyPart(
+    partId,
+    { currentHealth, maxHealth, bleeding = false, vitalOrganType = null }
+  ) {
     const components = {
       'anatomy:part': {
         subType: 'test_part',
@@ -135,6 +138,10 @@ describe('First-Aid body part scopes', () => {
 
     if (bleeding) {
       components['anatomy:bleeding'] = { severity: 'moderate' };
+    }
+
+    if (vitalOrganType) {
+      components['anatomy:vital_organ'] = { organType: vitalOrganType };
     }
 
     entityManager.addEntity({
@@ -185,6 +192,60 @@ describe('First-Aid body part scopes', () => {
       location: { id: 'test:location' },
       logger,
       jsonLogicEval,
+      target: actorEntity,
+      container: {
+        resolve: (token) => {
+          if (token === 'BodyGraphService') return mockBodyGraphService;
+          return null;
+        },
+      },
+    };
+
+    const result = scopeEngine.resolve(
+      scopeRegistry.getScopeAst('first-aid:wounded_actor_body_parts'),
+      actorEntity,
+      runtimeCtx
+    );
+
+    expect(result).toBeInstanceOf(Set);
+    expect(Array.from(result)).toEqual([woundedPartId]);
+    expect(mockBodyGraphService.getAllParts).toHaveBeenCalledWith(
+      bodyData,
+      actorId
+    );
+  });
+
+  it('excludes vital organs from first-aid:wounded_actor_body_parts', () => {
+    const actorId = 'test:patient-vital';
+    const vitalPartId = 'test:patient:heart';
+    const woundedPartId = 'test:patient:left_arm';
+
+    createBodyPart(vitalPartId, {
+      currentHealth: 20,
+      maxHealth: 40,
+      vitalOrganType: 'heart',
+    });
+    createBodyPart(woundedPartId, { currentHealth: 50, maxHealth: 100 });
+
+    const bodyData = {
+      body: {
+        root: vitalPartId,
+        parts: {
+          [vitalPartId]: { children: [woundedPartId] },
+          [woundedPartId]: { children: [] },
+        },
+      },
+    };
+
+    const actorEntity = createActorWithBody(actorId, bodyData);
+    setupBodyGraphService(actorId, bodyData, [vitalPartId, woundedPartId]);
+
+    const runtimeCtx = {
+      entityManager,
+      location: { id: 'test:location' },
+      logger,
+      jsonLogicEval,
+      target: actorEntity,
       container: {
         resolve: (token) => {
           if (token === 'BodyGraphService') return mockBodyGraphService;
@@ -244,6 +305,7 @@ describe('First-Aid body part scopes', () => {
       location: { id: 'test:location' },
       logger,
       jsonLogicEval,
+      target: actorEntity,
       container: {
         resolve: (token) => {
           if (token === 'BodyGraphService') return mockBodyGraphService;

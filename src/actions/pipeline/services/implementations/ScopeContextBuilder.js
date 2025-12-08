@@ -119,6 +119,11 @@ export class ScopeContextBuilder extends BaseService {
         actor.getComponentData('core:position')?.locationId
     );
 
+    // Preserve container if provided so ScopeEngine can resolve services like BodyGraphService
+    if (actionContext?.container) {
+      baseContext.container = actionContext.container;
+    }
+
     // Add resolved targets if this is a dependent target
     if (targetDef.contextFrom || Object.keys(resolvedTargets).length > 0) {
       const dependentContext = this.#contextBuilder.buildDependentContext(
@@ -186,6 +191,10 @@ export class ScopeContextBuilder extends BaseService {
     // Build context with the specific primary target
     const context = { ...baseContext };
 
+    if (actionContext?.container) {
+      context.container = actionContext.container;
+    }
+
     // Add all resolved targets
     context.targets = { ...resolvedTargets };
 
@@ -207,7 +216,13 @@ export class ScopeContextBuilder extends BaseService {
             actorId: actor.id,
           }
         );
+        if (context.target && context.target.id === actor.id) {
+          delete context.target;
+        }
       }
+    } else if (context.target && context.target.id === actor.id) {
+      // No specific primary resolved; avoid leaking actor as target for dependent scopes
+      delete context.target;
     }
 
     this.logOperation('buildScopeContextForSpecificPrimary', {

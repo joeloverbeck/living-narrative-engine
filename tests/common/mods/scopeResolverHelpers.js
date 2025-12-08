@@ -12,6 +12,7 @@ import ScopeConditionAnalyzer from '../engine/scopeConditionAnalyzer.js';
 import { ParameterValidator } from '../../../src/scopeDsl/core/parameterValidator.js';
 import { ParameterValidationError } from '../../../src/scopeDsl/errors/parameterValidationError.js';
 import { ClothingAccessibilityService } from '../../../src/clothing/services/clothingAccessibilityService.js';
+import * as coreTokens from '../../../src/dependencyInjection/tokens/tokens-core.js';
 
 /**
  * Resolves an entity reference from a scope context.
@@ -1214,6 +1215,22 @@ export class ScopeResolverHelpers {
         jsonLogicEval: testEnv.jsonLogic,
         logger: testEnv.logger,
         tracer: context?.tracer, // Pass tracer from context for scope tracing
+        get container() {
+          // Prefer a real container if the test environment exposes one
+          if (testEnv.container && typeof testEnv.container.resolve === 'function') {
+            return testEnv.container;
+          }
+
+          // Fallback: synthesize a minimal container that can serve BodyGraphService
+          if (testEnv.bodyGraphService) {
+            return {
+              resolve: (token) =>
+                token === coreTokens.BodyGraphService ? testEnv.bodyGraphService : undefined,
+            };
+          }
+
+          return null;
+        },
       };
 
       try {
