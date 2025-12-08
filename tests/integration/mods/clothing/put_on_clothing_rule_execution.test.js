@@ -25,16 +25,19 @@ describe('clothing:put_on_clothing rule execution', () => {
   });
 
   it('equips clothing from inventory and logs success', async () => {
-    const actor = new ModEntityBuilder('actor_put_on')
+    const actorBuilder = new ModEntityBuilder('actor_put_on')
       .withName('Alex')
       .asActor()
+      .withGrabbingHands(2)
       .withComponent('clothing:equipment', { equipped: {} })
       .withComponent('items:inventory', {
         items: ['shirt1'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
-      .atLocation('room_alpha')
-      .build();
+      .atLocation('room_alpha');
+
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     const clothing = new ModEntityBuilder('shirt1')
       .withName('shirt')
@@ -47,7 +50,7 @@ describe('clothing:put_on_clothing rule execution', () => {
       .withComponent('core:weight', { weight: 1 })
       .build();
 
-    testFixture.reset([actor, clothing]);
+    testFixture.reset([actor, ...handEntities, clothing]);
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
@@ -77,19 +80,104 @@ describe('clothing:put_on_clothing rule execution', () => {
       'Alex puts on shirt.'
     );
     expect(perceptibleEvent.payload.targetId).toBe(clothing.id);
+
+    const equippedEvent = testFixture.events.find(
+      (e) => e.eventType === 'clothing:equipped'
+    );
+    expect(equippedEvent).toBeDefined();
+    expect(equippedEvent.payload.clothingItemId).toBe(clothing.id);
+  });
+
+  it('relocates displaced clothing to inventory when equipping into an occupied slot', async () => {
+    const actorBuilder = new ModEntityBuilder('actor_put_on_conflict')
+      .withName('Casey')
+      .asActor()
+      .withGrabbingHands(2)
+      .withComponent('clothing:equipment', {
+        equipped: {
+          torso_upper: { base: 'base_tunic' },
+        },
+      })
+      .withComponent('items:inventory', {
+        items: ['fresh_shirt'],
+        capacity: { maxWeight: 10, maxItems: 5 },
+      })
+      .atLocation('room_gamma');
+
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
+
+    const displacedClothing = new ModEntityBuilder('base_tunic')
+      .withName('tunic')
+      .withComponent('clothing:wearable', {
+        layer: 'base',
+        equipmentSlots: { primary: 'torso_upper' },
+      })
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .withComponent('core:weight', { weight: 1 })
+      .build();
+
+    const newClothing = new ModEntityBuilder('fresh_shirt')
+      .withName('shirt')
+      .withComponent('clothing:wearable', {
+        layer: 'base',
+        equipmentSlots: { primary: 'torso_upper' },
+      })
+      .withComponent('items:item', {})
+      .withComponent('items:portable', {})
+      .withComponent('core:weight', { weight: 1 })
+      .build();
+
+    testFixture.reset([
+      actor,
+      ...handEntities,
+      displacedClothing,
+      newClothing,
+    ]);
+
+    await testFixture.eventBus.dispatch('core:attempt_action', {
+      eventName: 'core:attempt_action',
+      actorId: actor.id,
+      actionId: 'clothing:put_on_clothing',
+      targetId: newClothing.id,
+      originalInput: 'put on shirt',
+    });
+
+    const equipment = testFixture.entityManager.getComponentData(
+      actor.id,
+      'clothing:equipment'
+    );
+    expect(equipment.equipped.torso_upper.base).toBe(newClothing.id);
+
+    const inventory = testFixture.entityManager.getComponentData(
+      actor.id,
+      'items:inventory'
+    );
+    expect(inventory.items).toContain(displacedClothing.id);
+    expect(inventory.items).not.toContain(newClothing.id);
+
+    const equipEvent = testFixture.events.find(
+      (e) => e.eventType === 'clothing:equipped'
+    );
+    expect(equipEvent).toBeDefined();
+    expect(equipEvent.payload.conflictResolution).toBe('auto_remove');
   });
 
   it('dispatches failure event when equip fails', async () => {
-    const actor = new ModEntityBuilder('actor_fail_put_on')
+    const actorBuilder = new ModEntityBuilder('actor_fail_put_on')
       .withName('Blake')
       .asActor()
+      .withGrabbingHands(2)
       .withComponent('clothing:equipment', { equipped: {} })
       .withComponent('items:inventory', {
         items: ['invalid_item'],
         capacity: { maxWeight: 10, maxItems: 5 },
       })
-      .atLocation('room_beta')
-      .build();
+      .atLocation('room_beta');
+
+    const actor = actorBuilder.build();
+    const handEntities = actorBuilder.getHandEntities();
 
     const invalidClothing = new ModEntityBuilder('invalid_item')
       .withName('broken wrap')
@@ -99,7 +187,7 @@ describe('clothing:put_on_clothing rule execution', () => {
       .withComponent('core:weight', { weight: 1 })
       .build();
 
-    testFixture.reset([actor, invalidClothing]);
+    testFixture.reset([actor, ...handEntities, invalidClothing]);
 
     await testFixture.eventBus.dispatch('core:attempt_action', {
       eventName: 'core:attempt_action',
@@ -115,5 +203,22 @@ describe('clothing:put_on_clothing rule execution', () => {
     expect(failureEvent).toBeDefined();
     expect(failureEvent.payload.reason).toBe('equip_failed');
     expect(failureEvent.payload.actorId).toBe(actor.id);
+
+    const equipment = testFixture.entityManager.getComponentData(
+      actor.id,
+      'clothing:equipment'
+    );
+    expect(equipment.equipped).toEqual({});
+
+    const inventory = testFixture.entityManager.getComponentData(
+      actor.id,
+      'items:inventory'
+    );
+    expect(inventory.items).toContain(invalidClothing.id);
+
+    const perceptibleEvent = testFixture.events.find(
+      (e) => e.eventType === 'core:perceptible_event'
+    );
+    expect(perceptibleEvent).toBeUndefined();
   });
 });

@@ -10,6 +10,7 @@ import { CanScootCloserOperator } from '../../../src/logic/operators/canScootClo
 import { IsClosestLeftOccupantOperator } from '../../../src/logic/operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from '../../../src/logic/operators/isClosestRightOccupantOperator.js';
 import { IsSocketCoveredOperator } from '../../../src/logic/operators/isSocketCoveredOperator.js';
+import { SocketExposureOperator } from '../../../src/logic/operators/socketExposureOperator.js';
 import { HasOtherActorsAtLocationOperator } from '../../../src/logic/operators/hasOtherActorsAtLocationOperator.js';
 import { IsRemovalBlockedOperator } from '../../../src/logic/operators/isRemovalBlockedOperator.js';
 import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
@@ -116,6 +117,12 @@ describe('JsonLogicCustomOperators', () => {
         operatorClass: IsSocketCoveredOperator,
         invocationArgs: ['actor.path', 'socket-1'],
         expectedParams: ['actor.path', 'socket-1'],
+      },
+      {
+        operatorName: 'socketExposure',
+        operatorClass: SocketExposureOperator,
+        invocationArgs: ['actor.path', ['socket-1'], 'all', true, false],
+        expectedParams: ['actor.path', ['socket-1'], 'all', true, false],
       },
       {
         operatorName: 'hasSittingSpaceToRight',

@@ -18,126 +18,16 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
   let fixture;
 
   const registerScopes = async () => {
-    ScopeResolverHelpers._registerResolvers(
+    await ScopeResolverHelpers.registerCustomScope(
       fixture.testEnv,
-      fixture.testEnv.entityManager,
-      {
-        'first-aid:wounded_actor_body_parts': (context) => {
-          const actorId =
-            context.actor?.id || context.actorEntity?.id || context.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const body = fixture.testEnv.entityManager.getComponentData(
-            actorId,
-            'anatomy:body'
-          );
-        const rootId = body?.body?.root;
-        if (!rootId) {
-          return { success: true, value: new Set() };
-        }
-
-        const coverageContext = { actor: { id: actorId } };
-        const isCovered = (socketId) =>
-          socketId &&
-          fixture.testEnv.jsonLogic.evaluate(
-            { isSocketCovered: ['actor', socketId] },
-            coverageContext
-          );
-        const equipment = fixture.testEnv.entityManager.getComponentData(
-          actorId,
-          'clothing:equipment'
-        );
-        const hasCoveringInSlot = (slotId) => {
-          if (!slotId) return false;
-          const slot = equipment?.equipped?.[slotId];
-          if (!slot || typeof slot !== 'object') return false;
-          const layers = ['underwear', 'base', 'outer', 'armor'];
-          return layers.some((layer) => {
-            const items = slot[layer];
-            return Array.isArray(items)
-              ? items.length > 0
-              : Boolean(items);
-          });
-        };
-
-        const result = new Set();
-        const queue = [rootId];
-        while (queue.length > 0) {
-          const current = queue.shift();
-            const partHealth = fixture.testEnv.entityManager.getComponentData(
-              current,
-              'anatomy:part_health'
-            );
-            const joint = fixture.testEnv.entityManager.getComponentData(
-              current,
-              'anatomy:joint'
-            );
-            const socketId = joint?.socketId;
-            const visibilityRules = fixture.testEnv.entityManager.getComponentData(
-              current,
-              'anatomy:visibility_rules'
-            );
-            const clothingSlotId = visibilityRules?.clothingSlotId;
-            const vital = fixture.testEnv.entityManager.getComponentData(
-              current,
-              'anatomy:vital_organ'
-            );
-            if (
-              partHealth &&
-              partHealth.currentHealth < partHealth.maxHealth &&
-              !vital &&
-              !hasCoveringInSlot(clothingSlotId) &&
-              !isCovered(socketId)
-            ) {
-              result.add(current);
-            }
-
-            const part = fixture.testEnv.entityManager.getComponentData(
-              current,
-              'anatomy:part'
-            );
-            if (part?.children?.length) {
-              queue.push(...part.children);
-            }
-          }
-
-          return { success: true, value: result };
-        },
-        'items:disinfectant_liquids_in_inventory': (context) => {
-          const actorId =
-            context.actor?.id || context.actorEntity?.id || context.id;
-          if (!actorId) {
-            return { success: true, value: new Set() };
-          }
-
-          const inventory = fixture.testEnv.entityManager.getComponentData(
-            actorId,
-            'items:inventory'
-          );
-          const itemIds = inventory?.items || [];
-
-          const matches = itemIds.filter((itemId) => {
-            const container = fixture.testEnv.entityManager.getComponentData(
-              itemId,
-              'items:liquid_container'
-            );
-            if (!container) {
-              return false;
-            }
-
-            const tags = container.tags || [];
-            return (
-              Array.isArray(tags) &&
-              tags.includes('disinfectant') &&
-              container.currentVolumeMilliliters > 0
-            );
-          });
-
-          return { success: true, value: new Set(matches) };
-        },
-      }
+      'first-aid',
+      'wounded_actor_body_parts'
+    );
+    await ScopeResolverHelpers.registerCustomScope(
+      fixture.testEnv,
+      'items',
+      'disinfectant_liquids_in_inventory',
+      { loadConditions: false }
     );
   };
 
