@@ -474,6 +474,8 @@
 | ---- | ------------------------------------------------------------------------------------------------------------- | -------- | -------------------- |
 | 90   | `\`${this.operatorName}: Entity ${entityId} slot '${slotName}' layer '${layerName}' has items: ${hasItems}\`` | Medium   | Config               |
 
+*Status:* Legacy operator kept for compatibility; no active scope usage. Examples/tests should point to `!isSlotExposed` with explicit `layers`.
+
 ### src/logic/operators/hasClothingInSlotOperator.js
 
 | Line | Snippet                                                                                  | Severity | Refactoring Approach |
@@ -673,12 +675,6 @@ _No references detected in current scan._
 | Line | Snippet                | Severity | Refactoring Approach |
 | ---- | ---------------------- | -------- | -------------------- |
 | 150  | `'clothing:equipment'` | Medium   | Config               |
-
-### src/logic/operators/hasClothingInSlotLayerOperator.js
-
-| Line | Snippet                                                                            | Severity | Refactoring Approach |
-| ---- | ---------------------------------------------------------------------------------- | -------- | -------------------- |
-| 77   | `\`${this.operatorName}: Entity ${entityId} has no clothing:equipment component\`` | Medium   | Config               |
 
 ### src/logic/operators/hasClothingInSlotOperator.js
 

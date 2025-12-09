@@ -10,12 +10,7 @@ sex-breastplay:actors_with_breasts_facing_each_other_or_away := actor.components
         {"condition_ref": "positioning:actor-is-behind-entity"}
       ]
     },
-    {
-      "or": [
-        {"not": {"isSocketCovered": [".", "left_chest"]}},
-        {"not": {"isSocketCovered": [".", "right_chest"]}}
-      ]
-    }
+    {"socketExposure": [".", ["left_chest", "right_chest"]]}
   ]
 }
 ]

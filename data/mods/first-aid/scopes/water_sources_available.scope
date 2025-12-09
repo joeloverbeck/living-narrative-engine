@@ -1,0 +1,2 @@
+// Water sources available to the actor (in inventory OR at location)
+first-aid:water_sources_available := first-aid:water_in_inventory | first-aid:water_at_location

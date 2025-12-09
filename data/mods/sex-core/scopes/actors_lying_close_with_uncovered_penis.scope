@@ -12,7 +12,7 @@ sex-core:actors_lying_close_with_uncovered_penis := actor.components.positioning
       ]
     },
     {"hasPartOfType": [".", "penis"]},
-    {"not": {"isSocketCovered": [".", "penis"]}},
+    {"socketExposure": [".", "penis"]},
     {
       "not": {
         "and": [

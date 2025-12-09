@@ -1,0 +1,26 @@
+{
+    "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+    "id": "fantasy:wash_basin",
+    "components": {
+        "core:name": {
+            "text": "wash basin"
+        },
+        "core:description": {
+            "text": "A shallow, sturdy wash basin with a thick rim and a few honest chips from hard use. It holds a pool of clear water meant for rinsing blood and grit—cool to the touch, with a faint film of soap-scum and silt that catches the light when the basin is disturbed."
+        },
+        "items:item": {},
+        "core:weight": {
+            "weight": 0.5
+        },
+        "items:liquid_container": {
+            "currentVolumeMilliliters": 180,
+            "maxCapacityMilliliters": 250,
+            "servingSizeMilliliters": 15,
+            "isRefillable": true,
+            "flavorText": "Flat, lukewarm water with a dusty mineral tang—old clay, a hint of iron, and the faint bite of stale soap. Not unsafe-looking, just unmistakably \"wash water.\"",
+            "tags": [
+                "water"
+            ]
+        }
+    }
+}

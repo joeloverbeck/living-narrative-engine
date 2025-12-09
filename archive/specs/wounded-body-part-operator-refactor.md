@@ -1,6 +1,6 @@
 # Wounded Body Part Scope Operator Refactor
 
-**Status**: Draft  
+**Status**: Archived (Completed)  
 **Created**: 2026-02-06  
 **Purpose**: Identify operator-level refactors that collapse repeated coverage/visibility checks used in `data/mods/first-aid/scopes/wounded_actor_body_parts.scope` and `data/mods/first-aid/scopes/wounded_target_body_parts.scope`, and reuse them across other scopes to minimize JSON Logic duplication.
 

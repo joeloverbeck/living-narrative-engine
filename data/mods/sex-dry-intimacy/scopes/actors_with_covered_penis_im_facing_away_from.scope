@@ -4,7 +4,7 @@ sex-dry-intimacy:actors_with_covered_penis_im_facing_away_from := sex-core:actor
   {
     "and": [
       { "condition_ref": "positioning:entity-in-facing-away" },
-      { "isSocketCovered": [".", "penis"] }
+      { "socketExposure": [".", "penis", "any", true] }
     ]
   }
 ]

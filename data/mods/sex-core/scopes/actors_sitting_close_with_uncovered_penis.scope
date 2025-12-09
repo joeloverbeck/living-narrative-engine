@@ -6,7 +6,7 @@ sex-core:actors_sitting_close_with_uncovered_penis := actor.components.positioni
       {"!!": {"var": "entity.components.positioning:sitting_on"}},
       {"!!": {"var": "actor.components.positioning:sitting_on"}},
       {"hasPartOfType": [".", "penis"]},
-      {"not": {"isSocketCovered": [".", "penis"]}}
+      {"socketExposure": [".", "penis"]}
     ]
   }
 ]

@@ -192,23 +192,6 @@ describe('Prerequisite Error Messages', () => {
       expect(result.error.hint).toContain('Only the actor is at this location');
     });
 
-    it('should generate hint for hasClothingInSlot failures', () => {
-      entityManager.getComponentData.mockReturnValue(null);
-
-      const result = prereqDebugger.evaluate({
-        actionId: 'test:action',
-        prerequisiteIndex: 0,
-        prerequisiteLogic: { hasClothingInSlot: ['actor', 'chest'] },
-        evaluator: () => {
-          throw new Error('No clothing');
-        },
-        context: { actor: { id: 'actor-1' } },
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error.hint).toContain('No clothing in slot "chest"');
-    });
-
     it('should generate hint for component_present failures', () => {
       entityManager.hasComponent.mockReturnValue(false);
 

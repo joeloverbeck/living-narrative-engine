@@ -554,21 +554,6 @@ describe('FilterClauseAnalyzer', () => {
       expect(result.description).toBe('hasPartOfType("torso")');
     });
 
-    it('should handle clothing operators', () => {
-      const logic = { hasClothingInSlot: ['entity', 'torso'] };
-      const context = {};
-
-      const result = FilterClauseAnalyzer.analyzeFilter(
-        logic,
-        context,
-        mockLogicEval
-      );
-
-      expect(result.description).toContain('hasClothingInSlot');
-      expect(result.description).toContain('"entity"');
-      expect(result.description).toContain('"torso"');
-    });
-
     it('should format clothing operators with scalar arguments', () => {
       const logic = { isSocketCovered: 'torso' };
       const context = {};

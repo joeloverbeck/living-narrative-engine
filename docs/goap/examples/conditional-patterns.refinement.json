@@ -148,7 +148,9 @@
       "stepType": "conditional",
       "description": "PATTERN 8: Check if actor is wearing clothing in slot",
       "condition": {
-        "hasClothingInSlot": [{ "var": "actor" }, "torso"]
+        "!": {
+          "isSlotExposed": [{ "var": "actor" }, "torso", { "includeUnderwear": true, "includeAccessories": true }]
+        }
       },
       "thenSteps": [],
       "onFailure": "skip"

@@ -634,34 +634,6 @@ describe('Clothing-Specific Scope Integration Tests', () => {
   }
 
   describe('adjust_clothing action scope resolution', () => {
-    it('should verify hasClothingInSlot operator works correctly', () => {
-      // Arrange - Create entity with torso_upper clothing
-      const targetId = 'target1';
-      entityManager.addComponent(targetId, 'clothing:equipment', {
-        equipped: {
-          torso_upper: {
-            base: 'shirt123', // Changed from array to single string
-          },
-        },
-      });
-
-      // Test the operator directly
-      const context = {
-        entity: entityManager.getEntityInstance(targetId),
-      };
-
-      const result = jsonLogicEval.evaluate(
-        { hasClothingInSlot: ['.', 'torso_upper'] },
-        context
-      );
-
-      console.log('hasClothingInSlot direct test result:', result);
-      console.log('Entity context:', context.entity);
-      console.log('Entity components:', context.entity?.components);
-
-      expect(result).toBe(true);
-    });
-
     it('should verify both-actors-facing-each-other condition works correctly', () => {
       // Arrange - Create actor and target with closeness relationship
       const actorId = 'actor1';
@@ -959,6 +931,35 @@ describe('Clothing-Specific Scope Integration Tests', () => {
       );
 
       // Assert
+      const adjustClothingActions = result.actions.filter(
+        (action) => action.id === 'caressing:adjust_clothing'
+      );
+
+      expect(adjustClothingActions).toHaveLength(0);
+    });
+
+    it('should ignore underwear-only torso items for the clothing scope', async () => {
+      // Arrange
+      const actorId = createActorWithCloseness('actor1', 'target1', false);
+      entityManager.addComponent('target1', 'clothing:equipment', {
+        equipped: {
+          torso_upper: {
+            underwear: 'undershirt123',
+          },
+        },
+      });
+
+      // Facing condition succeeds so coverage is the deciding factor
+      setupJsonLogicMock(true);
+
+      // Act
+      const actorEntity = entityManager.getEntityInstance(actorId);
+      const result = await actionDiscoveryService.getValidActions(
+        actorEntity,
+        {}
+      );
+
+      // Assert - Underwear is not counted toward covering layers (base/outer/armor)
       const adjustClothingActions = result.actions.filter(
         (action) => action.id === 'caressing:adjust_clothing'
       );

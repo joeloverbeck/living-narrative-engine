@@ -23,7 +23,13 @@
     },
     {
       "logic": {
-        "hasClothingInSlot": ["actor", "torso_lower"]
+        "!": {
+          "isSlotExposed": [
+            "actor",
+            "torso_lower",
+            { "includeUnderwear": true, "includeAccessories": true }
+          ]
+        }
       },
       "failure_message": "Your crotch needs to be covered to emphasize the bulge."
     },

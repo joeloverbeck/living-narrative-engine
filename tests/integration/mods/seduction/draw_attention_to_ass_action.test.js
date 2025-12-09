@@ -106,10 +106,11 @@ describe('Seduction Mod: Draw Attention to Ass Action', () => {
 
     it('should require lower torso clothing', () => {
       const clothingPrerequisite = drawAttentionToAssAction.prerequisites[1];
-      expect(clothingPrerequisite.logic.hasClothingInSlot).toBeDefined();
-      expect(clothingPrerequisite.logic.hasClothingInSlot).toEqual([
+      expect(clothingPrerequisite.logic['!'].isSlotExposed).toBeDefined();
+      expect(clothingPrerequisite.logic['!'].isSlotExposed).toEqual([
         'actor',
         'torso_lower',
+        { includeUnderwear: true, includeAccessories: true },
       ]);
     });
 

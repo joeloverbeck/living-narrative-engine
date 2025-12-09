@@ -246,16 +246,16 @@ describe('PrerequisiteDebugger integration coverage', () => {
     );
   });
 
-  it('describes missing clothing slots for hasClothingInSlot prerequisites', () => {
+  it('describes missing clothing slots for isSlotExposed prerequisites', () => {
     const entities = [createActor(), createTarget()];
 
     const { result } = buildDebuggerScenario(entities, {
-      hasClothingInSlot: ['actor', 'head'],
+      isSlotExposed: ['actor', 'head'],
     });
 
     expect(result.error.entityState.wornItems).toEqual([]);
     expect(result.error.hint).toBe(
-      'No clothing in slot "head". Add worn_items component with slot.'
+      'Slot "head" is completely empty. Add covering clothing.'
     );
   });
 

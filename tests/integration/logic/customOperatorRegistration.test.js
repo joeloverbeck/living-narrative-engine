@@ -92,8 +92,6 @@ describe('Custom Operator Registration - Runtime Validation', () => {
     // Test a few more operators to ensure comprehensive registration
     const operators = [
       { hasPartOfType: ['dummy', 'type'] },
-      { hasClothingInSlot: ['dummy', 'slot'] },
-      { hasClothingInSlotLayer: ['dummy', 'slot', 'layer'] },
       { isSlotExposed: ['dummy', 'slot'] },
       {
         hasPartOfTypeWithComponentValue: [

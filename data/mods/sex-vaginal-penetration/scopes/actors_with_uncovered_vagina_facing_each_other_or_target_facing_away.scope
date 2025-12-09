@@ -3,7 +3,7 @@
 sex-vaginal-penetration:actors_with_uncovered_vagina_facing_each_other_or_target_facing_away := actor.components.positioning:closeness.partners[][{ 
   "and": [
     {"hasPartOfType": [".", "vagina"]},
-    {"not": {"isSocketCovered": [".", "vagina"]}},
+    {"socketExposure": [".", "vagina"]},
     {
       "or": [
         {"condition_ref": "positioning:both-actors-facing-each-other"},

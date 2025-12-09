@@ -169,6 +169,126 @@ function extractFailingData(rootData, error) {
 }
 
 /**
+ * Standard JSON Logic operators as defined by json-logic.
+ * @see http://jsonlogic.com/operations.html
+ */
+const STANDARD_JSON_LOGIC_OPERATORS = new Set([
+  // Logical operators
+  'and',
+  'or',
+  'not',
+  '!',
+  '!!',
+  'if',
+  // Comparison operators
+  '==',
+  '===',
+  '!=',
+  '!==',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  // String operators
+  'in',
+  'cat',
+  'substr',
+  // Arithmetic operators
+  '+',
+  '-',
+  '*',
+  '/',
+  '%',
+  'min',
+  'max',
+  // Array operators
+  'merge',
+  'missing',
+  'missing_some',
+  'some',
+  'all',
+  'none',
+  'filter',
+  'map',
+  'reduce',
+  // Data access
+  'var',
+  'log',
+]);
+
+/**
+ * Detects if an object looks like a JSON Logic rule.
+ * JSON Logic rules have operator keys (like 'and', 'or', '!', 'var', '==', custom operators)
+ * rather than 'type' or 'macro' fields that operations have.
+ *
+ * @param {any} data - The data to check
+ * @returns {boolean} True if the data appears to be a JSON Logic rule
+ */
+// Common operation fields that are NOT JSON Logic operators
+// These are used to avoid false positives when detecting JSON Logic rules
+const OPERATION_FIELD_EXCLUSIONS = new Set([
+  'parameters',
+  'type',
+  'macro',
+  'entity_ref',
+  'component_id',
+  'value',
+  'values',
+  'target',
+  'targets',
+  'source',
+  'result',
+  'context',
+  'options',
+  'config',
+  'data',
+  'metadata',
+]);
+
+/**
+ * @param {unknown} data
+ * @returns {boolean}
+ */
+function isLikelyJsonLogic(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return false;
+  }
+
+  const keys = Object.keys(data);
+  if (keys.length === 0) {
+    return false;
+  }
+
+  // JSON Logic rules typically have exactly one key (the operator)
+  // Check if any key is a known JSON Logic operator or matches custom operator pattern
+  return keys.some((key) => {
+    // First, exclude common operation field names that are NOT JSON Logic operators
+    if (OPERATION_FIELD_EXCLUSIONS.has(key)) {
+      return false;
+    }
+
+    // Check standard JSON Logic operators
+    if (STANDARD_JSON_LOGIC_OPERATORS.has(key)) {
+      return true;
+    }
+
+    // Custom operators in this project follow specific patterns:
+    // - Start with 'is', 'has', 'can', 'get', 'check' (verb prefixes)
+    // - e.g., 'isSlotExposed', 'hasPartOfType', 'hasOtherActorsAtLocation'
+    if (/^(is|has|can|get|check)[A-Z]/.test(key)) {
+      return true;
+    }
+
+    // Also check for condition_ref which is a JSON Logic extension
+    if (key === 'condition_ref') {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+/**
  * This function provides early detection for frequent validation issues,
  * returning targeted error messages before the complex anyOf processing begins.
  *
@@ -183,16 +303,23 @@ function detectCommonPatterns(errors, data) {
   }
 
   // Pattern 2: Missing type field (BEFORE anyOf processing)
-  // Only trigger if we have many errors AND no type/macro field
+  // Only trigger if we have many errors AND no type/macro field AND NOT a JSON Logic rule
   // Extract the actual failing object using instancePath from first error
   if (errors.length > 50) {
     const firstError = errors[0];
     const failingData = extractFailingData(data, firstError);
 
+    // Check if this looks like a JSON Logic rule (has operator keys)
+    // JSON Logic rules use keys like 'and', 'or', '!', 'var', '==', etc.
+    // They should NOT be flagged as missing operation type
+    const isJsonLogicRule = isLikelyJsonLogic(failingData);
+
     // Check if the failing data (not the root data) is missing type and macro
     // IMPORTANT: Check that type field is actually missing (undefined), not just falsy
     // (e.g., type: 42 should NOT trigger this pattern)
+    // Also skip if this appears to be a JSON Logic rule
     if (
+      !isJsonLogicRule &&
       !Object.prototype.hasOwnProperty.call(failingData, 'type') &&
       !Object.prototype.hasOwnProperty.call(failingData, 'macro')
     ) {
@@ -548,6 +675,20 @@ function formatOperationTypeSummary(groupedErrors, data, errors) {
     lines.push('');
     lines.push('If this should be a macro reference, use:');
     lines.push('  {"macro": "namespace:macroId"}');
+  } else if (isLikelyJsonLogic(failingItem)) {
+    // This is a JSON Logic rule being validated against an operation schema
+    // This can happen when JSON Logic is nested within a larger structure
+    // Don't show "Missing operation type" - show a more helpful message
+    lines.push(
+      'Validation failed for JSON Logic rule. Check the rule structure.'
+    );
+    lines.push('');
+    lines.push('JSON Logic rules use operators like:');
+    lines.push('  {"and": [...]}');
+    lines.push('  {"or": [...]}');
+    lines.push('  {"!": {...}}');
+    lines.push('  {"var": "path.to.data"}');
+    lines.push('  {"customOperator": [...]}');
   } else {
     // Note: This fallback exists for when pattern detection doesn't trigger
     // (e.g., error count < 50). Pattern detection should handle most cases.

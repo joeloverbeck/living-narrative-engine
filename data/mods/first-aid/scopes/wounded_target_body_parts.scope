@@ -15,11 +15,11 @@
 //     {"!": {"var": "entity.components.anatomy:vital_organ"}},
 //     {"or": [
 //       {"!": {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}},
-//       {"and": [
-//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "base"]}},
-//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "outer"]}},
-//         {"!": {"hasClothingInSlotLayer": ["target", {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"}, "armor"]}}
-//       ]}
+//       {"!": {"isSlotExposed": [
+//         "target",
+//         {"var": "entity.components.anatomy:visibility_rules.clothingSlotId"},
+//         ["base", "outer", "armor"]
+//       ]}}
 //     ]},
 //     {"or": [
 //       {"!": {"var": "entity.components.anatomy:joint.socketId"}},

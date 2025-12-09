@@ -1,6 +1,8 @@
 # WOUBODPAROPE-006: Migrate Socket Coverage Scopes to `socketExposure`
 
-**Goal:** Replace hand-rolled `isSocketCovered` boolean trees in sex/caressing scopes with the new `socketExposure` operator, preserving existing exposure semantics (any/all, covered vs uncovered) while reducing duplication.
+**Status:** Completed
+
+**Goal:** Replace hand-rolled `isSocketCovered` boolean trees in sex/caressing scopes with the existing `socketExposure` operator (already implemented/wired), preserving current exposure semantics (any/all, covered vs uncovered) while reducing duplication.
 
 ## File list
 - `data/mods/sex-core/scopes/actors_lying_close_with_uncovered_penis.scope`
@@ -24,7 +26,7 @@
 - `data/mods/sex-breastplay/scopes/actors_with_breasts_facing_each_other_or_away.scope`
 - `data/mods/sex-anal-penetration/scopes/actors_with_exposed_asshole_accessible_from_behind.scope`
 - `data/mods/caressing/scopes/close_actors_with_uncovered_back.scope`
-- `tests/common/mods/sex/*Fixtures.js` (update expectations/fixture operators where these scopes are referenced)
+- `tests/common/mods/sex/*Fixtures.js` (only if scope behavior changes; current fixtures match existing semantics)
 
 ## Out of scope
 - Changing narrative content, action definitions, or adding new scopes
@@ -39,3 +41,7 @@
   - Exposure/coverage truth tables stay identical to previous `not/isSocketCovered` combinations, including treatment of missing socket IDs
   - No new mod IDs, component references, or behavior changes beyond operator substitution
   - Scope JSON formatting and ordering remain consistent with repository style
+
+## Outcome
+- Updated listed scopes to use `socketExposure` while keeping exposed/covered semantics unchanged; no fixture adjustments were needed.
+- Verified operator wiring and scope behavior via unit (`tests/unit/logic/jsonLogicEvaluationService.customOperators.test.js`) and integration suites for sex/caressing mods.

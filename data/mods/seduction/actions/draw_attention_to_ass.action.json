@@ -18,7 +18,13 @@
     },
     {
       "logic": {
-        "hasClothingInSlot": ["actor", "torso_lower"]
+        "!": {
+          "isSlotExposed": [
+            "actor",
+            "torso_lower",
+            { "includeUnderwear": true, "includeAccessories": true }
+          ]
+        }
       },
       "failure_message": "You need to be wearing clothing on your lower torso to draw attention to your ass."
     },

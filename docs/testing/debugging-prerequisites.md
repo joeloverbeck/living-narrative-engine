@@ -140,24 +140,6 @@ Entity State:
 
 **Fix:** Add other actors to the same location
 
-### hasClothingInSlot
-
-**State Provided:**
-
-- `actorId` / `targetId`: Entity IDs
-- `wornItems`: Array of occupied clothing slots
-
-**Example:**
-
-```
-Entity State:
-  actorId: "actor-1"
-  wornItems: ["head", "feet"] (2 items)
-💡 Hint: No clothing in slot "chest". Add worn_items component
-```
-
-**Fix:** Add clothing to required slot in `clothing:worn_items` component
-
 ### component_present
 
 **State Provided:**

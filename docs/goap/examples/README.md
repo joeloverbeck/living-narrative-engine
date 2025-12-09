@@ -272,7 +272,6 @@ The system includes many domain-specific operators. **Important**: Use correct s
 **Common Operators**:
 
 - `has_component` - Check component existence
-- `hasClothingInSlot` - Check clothing in body slot
 - `isRemovalBlocked` - Check if clothing removal blocked
 - `hasSittingSpaceToRight` - Spatial positioning check
 - `canScootCloser` - Proximity check

@@ -5,10 +5,7 @@ sex-dry-intimacy:actors_with_exposed_ass_facing_away := caressing:actors_with_as
     "and": [
       { "condition_ref": "positioning:actor-in-entity-facing-away" },
       {
-        "or": [
-          { "not": { "isSocketCovered": [".", "left_ass"] } },
-          { "not": { "isSocketCovered": [".", "right_ass"] } }
-        ]
+        "socketExposure": [".", ["left_ass", "right_ass"]]
       }
     ]
   }

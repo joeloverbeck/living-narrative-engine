@@ -177,8 +177,9 @@ export class FilterClauseAnalyzer {
         return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
 
       // Custom clothing operators
-      case 'hasClothingInSlot':
-      case 'hasClothingInSlotLayer':
+      case 'isSlotExposed':
+        return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
+
       case 'isSocketCovered':
         return `${operator}(${Array.isArray(args) ? args.map((a) => this.#formatValue(a)).join(', ') : this.#formatValue(args)})`;
 

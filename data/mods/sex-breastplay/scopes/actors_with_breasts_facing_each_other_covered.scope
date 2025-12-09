@@ -5,11 +5,6 @@ sex-breastplay:actors_with_breasts_facing_each_other_covered := actor.components
   "and": [
     {"hasPartOfType": [".", "breast"]},
     {"condition_ref": "positioning:entity-not-in-facing-away"},
-    {
-      "and": [
-        {"isSocketCovered": [".", "left_chest"]},
-        {"isSocketCovered": [".", "right_chest"]}
-      ]
-    }
+    {"socketExposure": [".", ["left_chest", "right_chest"], "all", true]}
   ]
 }]

@@ -163,8 +163,6 @@ describe('Operator Whitelist Validation - Integration', () => {
       'hasPartWithComponentValue',
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
-      'hasClothingInSlot',
-      'hasClothingInSlotLayer',
       'isSlotExposed',
       'isSocketCovered',
       'socketExposure',

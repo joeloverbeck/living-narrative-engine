@@ -705,7 +705,7 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
   ])(
     'maps %o to the expected user-facing error message',
     async (error, expectedMessage) => {
-      jest.useRealTimers();
+      jest.useFakeTimers();
       setupDom();
 
       const schemaValidator = createSchemaValidator();
@@ -721,10 +721,10 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
       controller._disableEnhancedValidation();
       await controller.initialize();
 
-      await enterValidCharacterDefinition();
+      await enterValidCharacterDefinition({ useFakeTimers: true });
 
       document.getElementById('generate-btn').click();
-      await waitForGeneration({ duration: 700 });
+      await waitForGeneration({ duration: 700, useFakeTimers: true });
 
       expect(document.getElementById('error-message').textContent).toContain(
         expectedMessage
@@ -733,7 +733,7 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
   );
 
   it('displays validation errors with formatting and clears them when input becomes valid', async () => {
-    jest.useRealTimers();
+    jest.useFakeTimers();
     setupDom();
 
     const schemaValidator = createSchemaValidator();
@@ -755,14 +755,14 @@ describe('SpeechPatternsGeneratorController integration - error handling and acc
     textarea.value = '{ invalid json }';
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
 
-    await waitForGeneration({ duration: 400 });
+    await waitForGeneration({ duration: 400, useFakeTimers: true });
 
     const errorContainer = document.getElementById('character-input-error');
     expect(errorContainer.style.display).toBe('block');
     expect(errorContainer.innerHTML).toContain('JSON Syntax Error');
     expect(textarea.classList.contains('error')).toBe(true);
 
-    await enterValidCharacterDefinition();
+    await enterValidCharacterDefinition({ useFakeTimers: true });
 
     expect(errorContainer.style.display).toBe('none');
     expect(textarea.classList.contains('error')).toBe(false);

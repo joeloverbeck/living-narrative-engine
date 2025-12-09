@@ -7,8 +7,6 @@ import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTy
 import { HasPartWithStatusEffectOperator } from './operators/hasPartWithStatusEffectOperator.js';
 import { HasWoundedPartOperator } from './operators/hasWoundedPartOperator.js';
 import { IsBodyPartWoundedOperator } from './operators/isBodyPartWoundedOperator.js';
-import { HasClothingInSlotOperator } from './operators/hasClothingInSlotOperator.js';
-import { HasClothingInSlotLayerOperator } from './operators/hasClothingInSlotLayerOperator.js';
 import { IsSlotExposedOperator } from './operators/isSlotExposedOperator.js';
 import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
 import { SocketExposureOperator } from './operators/socketExposureOperator.js';
@@ -148,16 +146,6 @@ export class JsonLogicCustomOperators extends BaseService {
         bodyGraphService: this.#bodyGraphService,
         logger: this.#logger,
       });
-
-    const hasClothingInSlotOp = new HasClothingInSlotOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const hasClothingInSlotLayerOp = new HasClothingInSlotLayerOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
 
     const isSlotExposedOp = new IsSlotExposedOperator({
       entityManager: this.#entityManager,
@@ -344,29 +332,6 @@ export class JsonLogicCustomOperators extends BaseService {
         // 'this' is the evaluation context
         return hasPartOfTypeWithComponentValueOp.evaluate(
           [entityPath, partType, componentId, propertyPath, expectedValue],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasClothingInSlot operator
-    this.#registerOperator(
-      'hasClothingInSlot',
-      function (entityPath, slotName) {
-        // 'this' is the evaluation context
-        return hasClothingInSlotOp.evaluate([entityPath, slotName], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasClothingInSlotLayer operator
-    this.#registerOperator(
-      'hasClothingInSlotLayer',
-      function (entityPath, slotName, layerName) {
-        // 'this' is the evaluation context
-        return hasClothingInSlotLayerOp.evaluate(
-          [entityPath, slotName, layerName],
           this
         );
       },

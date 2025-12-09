@@ -18,7 +18,13 @@
     },
     {
       "logic": {
-        "hasClothingInSlot": ["actor", "torso_upper"]
+        "!": {
+          "isSlotExposed": [
+            "actor",
+            "torso_upper",
+            { "includeUnderwear": true, "includeAccessories": true }
+          ]
+        }
       },
       "failure_message": "You need to be wearing clothing on your upper torso to draw attention to your breasts."
     },

@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "first-aid:rinsed",
+  "description": "Marks a body part that has been rinsed with water and by whom.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "appliedById": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Entity ID of the actor who rinsed the wound."
+      },
+      "sourceItemId": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Entity ID of the water source used to rinse."
+      }
+    },
+    "required": ["appliedById", "sourceItemId"],
+    "additionalProperties": false
+  }
+}

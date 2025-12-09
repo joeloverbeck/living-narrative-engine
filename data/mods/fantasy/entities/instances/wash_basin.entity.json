@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:wash_basin_instance",
+    "definitionId": "fantasy:wash_basin",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:aldous_kitchen_instance"
+        }
+    }
+}

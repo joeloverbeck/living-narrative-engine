@@ -7,7 +7,7 @@ sex-anal-penetration:actors_with_exposed_asshole_accessible_from_behind := actor
     {
       "and": [
         {"hasPartOfType": [".", "asshole"]},
-        {"not": {"isSocketCovered": [".", "asshole"]}}
+        {"socketExposure": [".", "asshole"]}
       ]
     },
     {

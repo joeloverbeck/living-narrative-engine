@@ -3,6 +3,6 @@
 distress:close_actors_facing_each_other_with_torso_clothing := actor.components.positioning:closeness.partners[][{
   "and": [
     {"condition_ref": "positioning:both-actors-facing-each-other"},
-    {"hasClothingInSlot": [".", "torso_upper"]}
+    {"!": {"isSlotExposed": [".", "torso_upper"]}}
   ]
 }]
