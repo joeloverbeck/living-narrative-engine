@@ -8,7 +8,6 @@ caressing:close_actors_with_uncovered_back := actor.components.positioning:close
         {"condition_ref": "positioning:actor-is-behind-entity"}
       ]
     },
-    {"not": {"isSocketCovered": [".", "upper_back"]}},
-    {"not": {"isSocketCovered": [".", "lower_back"]}}
+    {"socketExposure": [".", ["upper_back", "lower_back"], "all"]}
   ]
 }]

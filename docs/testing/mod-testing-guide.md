@@ -1274,7 +1274,7 @@ const scopeResolver = (context) => {
 
 #### Custom Operators Auto-Registration
 
-Custom operators (`hasPartOfType`, `hasClothingInSlot`, etc.) are **automatically registered** during fixture initialization:
+Custom operators (`hasPartOfType`, etc.) are **automatically registered** during fixture initialization:
 
 - Registration happens in the DI initialization via `JsonLogicCustomOperators` service
 - In ModTestFixture tests, this occurs automatically during `ModTestFixture.forAction()` call

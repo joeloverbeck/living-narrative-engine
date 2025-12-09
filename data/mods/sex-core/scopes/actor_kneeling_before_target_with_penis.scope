@@ -3,7 +3,7 @@
 sex-core:actor_kneeling_before_target_with_penis := actor.components.positioning:closeness.partners[][{
   "and": [
     {"hasPartOfType": [".", "penis"]},
-    {"not": {"isSocketCovered": [".", "penis"]}},
+    {"socketExposure": [".", "penis"]},
     {
       "==": [
         {"var": "actor.components.positioning:kneeling_before.entityId"},

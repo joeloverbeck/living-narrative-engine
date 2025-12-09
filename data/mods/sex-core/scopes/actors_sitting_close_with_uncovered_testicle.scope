@@ -17,12 +17,7 @@ sex-core:actors_sitting_close_with_uncovered_testicle := actor.components.positi
         ]
       },
       {"hasPartOfType": [".", "testicle"]},
-      {
-        "or": [
-          {"not": {"isSocketCovered": [".", "left_testicle"]}},
-          {"not": {"isSocketCovered": [".", "right_testicle"]}}
-        ]
-      }
+      {"socketExposure": [".", ["left_testicle", "right_testicle"]]}
     ]
   }
 ]

@@ -258,8 +258,7 @@ All custom operators from `src/logic/jsonLogicCustomOperators.js` are available:
 
 **Clothing & Equipment**:
 
-- `hasClothingInSlot(entityPath, slotName)`
-- `hasClothingInSlotLayer(entityPath, slotName, layerName)`
+- `isSlotExposed(entityPath, slotName, options?)` - pass a layers array (e.g., `["base", "outer", "armor"]`) or a context variable holding options to mirror legacy layer checks; include underwear/accessories as needed.
 - `isSocketCovered(entityPath, socketId)`
 - `isRemovalBlocked(actorPath, targetItemPath)`
 

@@ -68,9 +68,10 @@ describe('seduction:draw_attention_to_ass action discovery', () => {
       ]);
 
       const clothingPrereq = drawAttentionToAssAction.prerequisites[1];
-      expect(clothingPrereq.logic.hasClothingInSlot).toEqual([
+      expect(clothingPrereq.logic['!'].isSlotExposed).toEqual([
         'actor',
         'torso_lower',
+        { includeUnderwear: true, includeAccessories: true },
       ]);
 
       const otherActorsPrereq = drawAttentionToAssAction.prerequisites[2];

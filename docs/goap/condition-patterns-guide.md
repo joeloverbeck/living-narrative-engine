@@ -322,7 +322,9 @@ This guide provides a comprehensive reference for common condition patterns used
 
 ```json
 {
-  "hasClothingInSlot": [{ "var": "actor" }, "torso"]
+  "!": {
+    "isSlotExposed": [{ "var": "actor" }, "torso", { "includeUnderwear": true, "includeAccessories": true }]
+  }
 }
 ```
 
@@ -330,17 +332,21 @@ This guide provides a comprehensive reference for common condition patterns used
 
 **Slots**: "head", "torso", "legs", "feet", "hands", "waist", etc.
 
-### Wearing Clothing in Slot Layer
+### Slot Exposure by Layer
 
 ```json
 {
-  "hasClothingInSlotLayer": [{ "var": "actor" }, "torso", "outer"]
+  "!": {
+    "isSlotExposed": [
+      { "var": "actor" },
+      "torso",
+      ["base", "outer", "armor"]
+    ]
+  }
 }
 ```
 
-**Use When**: Checking specific layer occupation (base, mid, outer).
-
-**Use Case**: "Can't wear coat without shirt" logic.
+**Use When**: Ensuring a slot is covered by any of the listed layers.
 
 ### Item Removal Blocked
 
@@ -870,7 +876,6 @@ Don't check the same condition multiple times:
 | And              | `and`               | `{"and": [condition1, condition2]}`                         |
 | Or               | `or`                | `{"or": [condition1, condition2]}`                          |
 | Not              | `!`                 | `{"!": condition}`                                          |
-| Clothing in slot | `hasClothingInSlot` | `{"hasClothingInSlot": [{"var": "actor"}, "torso"]}`        |
 | Removal blocked  | `isRemovalBlocked`  | `{"isRemovalBlocked": [{"var": "actor"}, {"var": "item"}]}` |
 
 ---

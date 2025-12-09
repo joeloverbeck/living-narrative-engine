@@ -4,7 +4,7 @@ sex-dry-intimacy:actors_with_penis_facing_straddler_covered := sex-core:actors_w
   {
     "and": [
       { "condition_ref": "positioning:entity-not-in-facing-away" },
-      { "isSocketCovered": [".", "penis"] },
+      { "socketExposure": [".", "penis", "any", true] },
       { "!!": { "var": "entity.components.positioning:sitting_on" } },
       {
         "==": [

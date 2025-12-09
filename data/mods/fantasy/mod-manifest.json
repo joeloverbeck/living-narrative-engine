@@ -123,6 +123,7 @@
         "vespera_main_gauche.entity.json",
         "vespera_nightwhisper.character.json",
         "vespera_rapier.entity.json",
+        "wash_basin.entity.json",
         "white_faced_buff_hen.character.json"
       ],
       "instances": [
@@ -168,6 +169,7 @@
         "vespera_main_gauche.entity.json",
         "vespera_nightwhisper.character.json",
         "vespera_rapier.entity.json",
+        "wash_basin.entity.json",
         "white_faced_buff_hen.character.json"
       ]
     },

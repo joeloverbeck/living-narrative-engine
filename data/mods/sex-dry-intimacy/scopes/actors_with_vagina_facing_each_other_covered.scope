@@ -4,7 +4,7 @@ sex-dry-intimacy:actors_with_vagina_facing_each_other_covered := positioning:clo
   {
     "and": [
       { "hasPartOfType": [".", "vagina"] },
-      { "isSocketCovered": [".", "vagina"] }
+      { "socketExposure": [".", "vagina", "any", true] }
     ]
   }
 ]

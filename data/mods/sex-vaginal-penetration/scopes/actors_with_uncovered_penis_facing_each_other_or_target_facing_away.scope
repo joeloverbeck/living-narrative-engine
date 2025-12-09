@@ -3,12 +3,12 @@
 sex-vaginal-penetration:actors_with_uncovered_penis_facing_each_other_or_target_facing_away := actor.components.positioning:closeness.partners[][
   {
     "and": [
-      {"hasPartOfType": [".", "penis"]},
-      {"not": {"isSocketCovered": [".", "penis"]}},
-      {
-        "or": [
-          {"condition_ref": "positioning:both-actors-facing-each-other"},
-          {"condition_ref": "positioning:actor-is-behind-entity"}
+    {"hasPartOfType": [".", "penis"]},
+    {"socketExposure": [".", "penis"]},
+    {
+      "or": [
+        {"condition_ref": "positioning:both-actors-facing-each-other"},
+        {"condition_ref": "positioning:actor-is-behind-entity"}
         ]
       },
       {"!": {"condition_ref": "positioning:entity-kneeling-before-actor"}},

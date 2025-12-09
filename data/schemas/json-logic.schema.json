@@ -10,7 +10,7 @@
       "type": ["boolean", "string", "number", "null"]
     },
     "rule_logic": {
-      "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a condition container (which can be either a nested rule or a condition reference).",
+      "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, an options object for custom operators, or a condition container (which can be either a nested rule or a condition reference).",
       "anyOf": [
         {
           "$ref": "#/definitions/primitive"
@@ -20,6 +20,11 @@
           "items": {
             "$ref": "#/definitions/rule_logic"
           }
+        },
+        {
+          "type": "object",
+          "description": "Arbitrary object arguments for custom operators (e.g., options objects like {includeUnderwear: true}).",
+          "additionalProperties": true
         },
         {
           "$ref": "./condition-container.schema.json#"

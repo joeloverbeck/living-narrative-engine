@@ -266,38 +266,6 @@ describe('PrerequisiteDebugger', () => {
     );
   });
 
-  it('offers guidance when clothing slot is empty', () => {
-    const logger = createLogger();
-    const entityManager = buildEntityManager();
-
-    const debuggerInstance = new PrerequisiteDebugger({
-      logger,
-      debugLevel: DebugLevel.ERROR,
-      entityManager,
-    });
-
-    const evaluator = jest.fn(() => {
-      throw new Error('no clothing');
-    });
-
-    const response = debuggerInstance.evaluate({
-      ...baseContext,
-      prerequisiteLogic: { hasClothingInSlot: ['actor', 'head'] },
-      evaluator,
-    });
-
-    expect(response.error.entityState).toEqual({
-      actorId: 'actor',
-      actorLocation: null,
-      targetId: 'target',
-      targetLocation: null,
-      wornItems: [],
-    });
-    expect(response.error.hint).toBe(
-      'No clothing in slot "head". Add worn_items component with slot.'
-    );
-  });
-
   it('notes when a required component is missing from an entity', () => {
     const logger = createLogger();
     const entityManager = buildEntityManager();
@@ -365,6 +333,70 @@ describe('PrerequisiteDebugger', () => {
     });
     expect(response.error.hint).toBe(
       'Review prerequisite logic and entity state above.'
+    );
+  });
+
+  it('offers guidance when slot is empty during isSlotExposed check (negated)', () => {
+    const logger = createLogger();
+    const entityManager = buildEntityManager();
+
+    const debuggerInstance = new PrerequisiteDebugger({
+      logger,
+      debugLevel: DebugLevel.ERROR,
+      entityManager,
+    });
+
+    const evaluator = jest.fn(() => {
+      throw new Error('exposed');
+    });
+
+    // !isSlotExposed failing means it IS exposed (returned true)
+    const response = debuggerInstance.evaluate({
+      ...baseContext,
+      prerequisiteLogic: {
+        '!': { isSlotExposed: ['actor', 'torso_lower', ['base']] },
+      },
+      evaluator,
+    });
+
+    expect(response.error.entityState.wornItems).toEqual([]);
+    expect(response.error.hint).toBe(
+      'Slot "torso_lower" is completely empty. Add covering clothing.'
+    );
+  });
+
+  it('offers specific guidance when slot has items but is still exposed (insufficient layers)', () => {
+    const logger = createLogger();
+    // actor has underwear but we check for base layer
+    const entityManager = buildEntityManager({
+      components: {
+        'actor:clothing:worn_items': {
+          slots: { torso_lower: true }, // wornItems just checks keys
+        },
+      },
+    });
+
+    const debuggerInstance = new PrerequisiteDebugger({
+      logger,
+      debugLevel: DebugLevel.ERROR,
+      entityManager,
+    });
+
+    const evaluator = jest.fn(() => {
+      throw new Error('exposed');
+    });
+
+    const response = debuggerInstance.evaluate({
+      ...baseContext,
+      prerequisiteLogic: {
+        '!': { isSlotExposed: ['actor', 'torso_lower', { layers: ['base'] }] },
+      },
+      evaluator,
+    });
+
+    expect(response.error.entityState.wornItems).toEqual(['torso_lower']);
+    expect(response.error.hint).toBe(
+      'Slot "torso_lower" has items but is considered exposed. Check layers (required: base).'
     );
   });
 });

@@ -172,8 +172,6 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
         'hasPartOfTypeWithComponentValue',
         'hasWoundedPart',
         'hasPartWithStatusEffect',
-        'hasClothingInSlot',
-        'hasClothingInSlotLayer',
         'isSlotExposed',
         'isSocketCovered',
         'socketExposure',

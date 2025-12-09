@@ -61,7 +61,6 @@ describe('JSON Logic Operator Registration', () => {
 
       expect(registered.size).toBeGreaterThan(0);
       expect(registered.has('hasPartOfType')).toBe(true);
-      expect(registered.has('hasClothingInSlot')).toBe(true);
       expect(registered.has('hasOtherActorsAtLocation')).toBe(true);
     });
 
@@ -127,8 +126,6 @@ describe('JSON Logic Operator Registration', () => {
         'hasPartWithComponentValue',
         'hasPartOfType',
         'hasPartOfTypeWithComponentValue',
-        'hasClothingInSlot',
-        'hasClothingInSlotLayer',
         'isSlotExposed',
         'isSocketCovered',
         'socketExposure',
@@ -349,7 +346,6 @@ describe('JSON Logic Operator Registration', () => {
       const logic = {
         and: [
           { hasPartOfType: ['actor', 'hand'] },
-          { hasClothingInSlot: ['actor', 'torso'] },
         ],
       };
 
@@ -362,7 +358,6 @@ describe('JSON Logic Operator Registration', () => {
           {
             and: [
               { hasPartOfType: ['actor', 'hand'] },
-              { hasClothingInSlot: ['actor', 'torso'] },
             ],
           },
           { hasOtherActorsAtLocation: ['actor'] },

@@ -113,10 +113,11 @@ describe('Seduction Mod: Draw Attention to Breasts Action', () => {
     it('should require upper torso clothing', () => {
       const clothingPrerequisite =
         drawAttentionToBreastsAction.prerequisites[1];
-      expect(clothingPrerequisite.logic.hasClothingInSlot).toBeDefined();
-      expect(clothingPrerequisite.logic.hasClothingInSlot).toEqual([
+      expect(clothingPrerequisite.logic['!'].isSlotExposed).toBeDefined();
+      expect(clothingPrerequisite.logic['!'].isSlotExposed).toEqual([
         'actor',
         'torso_upper',
+        { includeUnderwear: true, includeAccessories: true },
       ]);
     });
 

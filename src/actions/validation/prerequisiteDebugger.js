@@ -140,9 +140,11 @@ export class PrerequisiteDebugger {
     }
 
     // Operator-specific state
-    switch (operator) {
+    const { op, args: opArgs } = this.#unpackOperator(operator, args);
+
+    switch (op) {
       case 'hasPartOfType':
-        state.bodyParts = this.#getBodyParts(args[0], context);
+        state.bodyParts = this.#getBodyParts(opArgs[0], context);
         break;
 
       case 'hasOtherActorsAtLocation':
@@ -151,12 +153,12 @@ export class PrerequisiteDebugger {
         );
         break;
 
-      case 'hasClothingInSlot':
-        state.wornItems = this.#getWornItems(args[0], context);
+      case 'isSlotExposed':
+        state.wornItems = this.#getWornItems(opArgs[0], context);
         break;
 
       case 'component_present':
-        state.hasComponent = this.#hasComponent(args[0], args[1], context);
+        state.hasComponent = this.#hasComponent(opArgs[0], opArgs[1], context);
         break;
     }
 
@@ -171,10 +173,11 @@ export class PrerequisiteDebugger {
    * @returns {string} Debugging hint
    */
   #generateHint(logic, entityState) {
-    const operator = Object.keys(logic)[0];
-    const args = logic[operator];
+    const rawOperator = Object.keys(logic)[0];
+    const rawArgs = logic[rawOperator];
+    const { op, args } = this.#unpackOperator(rawOperator, rawArgs);
 
-    switch (operator) {
+    switch (op) {
       case 'hasPartOfType':
         if (!entityState.bodyParts || entityState.bodyParts.length === 0) {
           return `Actor does not have any body parts of type "${args[1]}". Check anatomy:body component.`;
@@ -187,11 +190,19 @@ export class PrerequisiteDebugger {
         }
         break;
 
-      case 'hasClothingInSlot':
-        if (!entityState.wornItems || entityState.wornItems.length === 0) {
-          return `No clothing in slot "${args[1]}". Add worn_items component with slot.`;
+      case 'isSlotExposed':
+        // If this operator fails (in a negated context like !isSlotExposed), it means the slot IS exposed.
+        if (
+          !entityState.wornItems ||
+          !entityState.wornItems.includes(args[1])
+        ) {
+          return `Slot "${args[1]}" is completely empty. Add covering clothing.`;
         }
-        break;
+        return `Slot "${
+          args[1]
+        }" has items but is considered exposed. Check layers (required: ${this.#formatLayers(
+          args[2]
+        )}).`;
 
       case 'component_present':
         if (!entityState.hasComponent) {
@@ -201,6 +212,60 @@ export class PrerequisiteDebugger {
     }
 
     return 'Review prerequisite logic and entity state above.';
+  }
+
+  /**
+   * Unpack operator handling negation.
+   *
+   * @param {string} operator - The top-level operator
+   * @param {any} args - The top-level arguments
+   * @returns {{op: string, args: any[]}} Unpacked operator and arguments
+   */
+  #unpackOperator(operator, args) {
+    if (operator === '!') {
+      // Handle {"!": {"isSlotExposed": ...}}
+      if (args && typeof args === 'object' && !Array.isArray(args)) {
+        const innerOp = Object.keys(args)[0];
+        return { op: innerOp, args: args[innerOp] };
+      }
+      // Handle {"!": [{"isSlotExposed": ...}]}
+      if (
+        Array.isArray(args) &&
+        args.length > 0 &&
+        args[0] &&
+        typeof args[0] === 'object'
+      ) {
+        const innerOp = Object.keys(args[0])[0];
+        return { op: innerOp, args: args[0][innerOp] };
+      }
+    }
+    return { op: operator, args };
+  }
+
+  /**
+   * Format layer requirements for display.
+   *
+   * @param {object|Array|undefined} options - Options argument from isSlotExposed
+   * @returns {string} Formatted layer list
+   */
+  #formatLayers(options) {
+    const defaults = ['base', 'outer', 'armor'];
+    if (!options) return defaults.join(', ');
+
+    if (Array.isArray(options)) return options.join(', ');
+
+    if (options.layers && Array.isArray(options.layers)) {
+      let layers = [...options.layers];
+      if (options.includeUnderwear) layers.push('underwear');
+      if (options.includeAccessories) layers.push('accessories');
+      return layers.join(', ');
+    }
+
+    // Handle object options without explicit layers (uses defaults)
+    let layers = [...defaults];
+    if (options.includeUnderwear) layers.push('underwear');
+    if (options.includeAccessories) layers.push('accessories');
+    return layers.join(', ');
   }
 
   /**

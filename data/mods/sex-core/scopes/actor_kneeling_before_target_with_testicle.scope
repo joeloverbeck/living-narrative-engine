@@ -4,12 +4,7 @@ sex-core:actor_kneeling_before_target_with_testicle := actor.components.position
   {
     "and": [
       {"hasPartOfType": [".", "testicle"]},
-      {
-        "or": [
-          {"not": {"isSocketCovered": [".", "left_testicle"]}},
-          {"not": {"isSocketCovered": [".", "right_testicle"]}}
-        ]
-      },
+      {"socketExposure": [".", ["left_testicle", "right_testicle"]]},
       {
         "==": [
           {"var": "actor.components.positioning:kneeling_before.entityId"},

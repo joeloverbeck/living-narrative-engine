@@ -111,18 +111,42 @@ export class IsSlotExposedOperator extends BaseEquipmentOperator {
    * @returns {{layers: string[]}} Validated options
    */
   #normalizeOptions(options) {
+    const normalizeLayerList = (layers) => {
+      const validLayers = [];
+      for (const layer of layers) {
+        const isValid = this.isValidLayerName(layer);
+        if (!isValid) {
+          this.logger.warn(
+            `${this.operatorName}: Invalid layer name '${layer}'. Valid layers: underwear, base, outer, accessories, armor`
+          );
+        } else {
+          validLayers.push(layer);
+        }
+      }
+      return validLayers;
+    };
+
+    if (Array.isArray(options)) {
+      const normalizedLayers = normalizeLayerList(options);
+      if (!normalizedLayers.length) {
+        this.logger.warn(
+          `${this.operatorName}: No valid layers provided; falling back to defaults`
+        );
+        return { layers: [...DEFAULT_LAYERS] };
+      }
+      const uniqueLayers = [];
+      for (const layer of normalizedLayers) {
+        if (!uniqueLayers.includes(layer)) {
+          uniqueLayers.push(layer);
+        }
+      }
+      return { layers: uniqueLayers };
+    }
+
     const optionsObj = options && typeof options === 'object' ? options : {};
 
     let layers = Array.isArray(optionsObj.layers)
-      ? optionsObj.layers.filter((layer) => {
-          const isValid = this.isValidLayerName(layer);
-          if (!isValid) {
-            this.logger.warn(
-              `${this.operatorName}: Invalid layer name '${layer}'. Valid layers: underwear, base, outer, accessories, armor`
-            );
-          }
-          return isValid;
-        })
+      ? normalizeLayerList(optionsObj.layers)
       : [...DEFAULT_LAYERS];
 
     if (!layers.length) {

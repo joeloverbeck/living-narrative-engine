@@ -399,7 +399,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       'hasClothingInSlot',
-      'hasClothingInSlotLayer',
+      'isSlotExposed',
       'isSocketCovered',
       'not', // Also remove the 'not' operator added by JsonLogicEvaluationService
     ];
@@ -435,7 +435,7 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       'hasPartOfType',
       'hasPartOfTypeWithComponentValue',
       'hasClothingInSlot',
-      'hasClothingInSlotLayer',
+      'isSlotExposed',
       'isSocketCovered',
     ];
 

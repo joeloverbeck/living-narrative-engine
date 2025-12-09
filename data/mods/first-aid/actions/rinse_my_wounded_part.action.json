@@ -1,0 +1,41 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "first-aid:rinse_my_wounded_part",
+  "name": "Rinse My Wounded Part",
+  "description": "Rinse one of your wounded body parts using a water source available at the location or in inventory.",
+  "template": "rinse my {woundedBodyPart} with {waterSource}",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["skills:medicine_skill"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ],
+    "primary": ["first-aid:rinsed"]
+  },
+  "targets": {
+    "primary": {
+      "scope": "first-aid:wounded_actor_body_parts",
+      "placeholder": "woundedBodyPart",
+      "description": "Your wounded body part to rinse"
+    },
+    "secondary": {
+      "scope": "first-aid:water_sources_available",
+      "placeholder": "waterSource",
+      "description": "Water source to use for rinsing"
+    }
+  },
+  "visual": {
+    "backgroundColor": "#1b5e20",
+    "textColor": "#e8f5e9",
+    "hoverBackgroundColor": "#2e7d32",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -1,0 +1,10 @@
+// Water sources at the actor's location
+first-aid:water_at_location := entities(core:position)[][{"and": [
+  {"!!": {"var": "entity.components.items:liquid_container"}},
+  {"in": ["water", {"var": "entity.components.items:liquid_container.tags"}]},
+  {"<": [0, {"var": "entity.components.items:liquid_container.currentVolumeMilliliters"}]},
+  {"==": [
+    {"var": "entity.components.core:position.locationId"},
+    {"var": "actor.components.core:position.locationId"}
+  ]}
+]}]
