@@ -14,9 +14,6 @@ import { SocketExposureOperator } from '../../../src/logic/operators/socketExpos
 import { HasOtherActorsAtLocationOperator } from '../../../src/logic/operators/hasOtherActorsAtLocationOperator.js';
 import { IsRemovalBlockedOperator } from '../../../src/logic/operators/isRemovalBlockedOperator.js';
 import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
-import { IsHungryOperator } from '../../../src/logic/operators/isHungryOperator.js';
-import { PredictedEnergyOperator } from '../../../src/logic/operators/predictedEnergyOperator.js';
-import { CanConsumeOperator } from '../../../src/logic/operators/canConsumeOperator.js';
 import { HasWoundedPartOperator } from '../../../src/logic/operators/hasWoundedPartOperator.js';
 import { HasPartWithStatusEffectOperator } from '../../../src/logic/operators/hasPartWithStatusEffectOperator.js';
 
@@ -187,24 +184,6 @@ describe('JsonLogicCustomOperators', () => {
           'severity',
           { op: '===', value: 'moderate' },
         ],
-      },
-      {
-        operatorName: 'is_hungry',
-        operatorClass: IsHungryOperator,
-        invocationArgs: ['entity.path'],
-        expectedParams: ['entity.path'],
-      },
-      {
-        operatorName: 'predicted_energy',
-        operatorClass: PredictedEnergyOperator,
-        invocationArgs: ['entity.path'],
-        expectedParams: ['entity.path'],
-      },
-      {
-        operatorName: 'can_consume',
-        operatorClass: CanConsumeOperator,
-        invocationArgs: ['consumer.path', 'item.path'],
-        expectedParams: ['consumer.path', 'item.path'],
       },
     ])(
       'delegates %s evaluation to operator instance',

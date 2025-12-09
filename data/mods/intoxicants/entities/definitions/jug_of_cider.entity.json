@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:jug_of_cider",
+  "components": {
+    "core:name": {
+      "text": "clay jug of cider"
+    },
+    "core:description": {
+      "text": "A stout clay jug with a rounded belly and narrow neck, sealed with a wooden stopper. The contents glint golden through the slightly translucent glaze when held to the light. A faint scent of apples and fermentation wafts from beneath the seal."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.2
+    },
+    "items:drinkable": {},
+    "items:liquid_container": {
+      "currentVolumeMilliliters": 1000,
+      "maxCapacityMilliliters": 1000,
+      "servingSizeMilliliters": 200,
+      "isRefillable": true,
+      "flavorText": "The cider is crisp and refreshing with a bright apple tartness that gives way to a subtle sweetness. It leaves a pleasant tingle on the tongue and a warm glow in the chest."
+    }
+  }
+}

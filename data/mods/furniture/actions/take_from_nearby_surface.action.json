@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "furniture:take_from_nearby_surface",
+  "name": "Take From Nearby Surface",
+  "description": "While seated, take an item from a container on nearby furniture",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory", "positioning:sitting_on"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:fallen",
+      "positioning:restraining"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "furniture:open_containers_on_nearby_furniture",
+      "placeholder": "container",
+      "description": "Container on nearby furniture to take from"
+    },
+    "secondary": {
+      "scope": "items:container_contents",
+      "placeholder": "item",
+      "description": "Item to take",
+      "contextFrom": "primary"
+    }
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to take items from the surface."
+    }
+  ],
+  "template": "reach over and take {secondary.name} from {primary.name}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
+}

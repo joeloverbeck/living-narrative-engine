@@ -1,2 +1,0 @@
-// Items that can be consumed (food or drinks with fuel_source component)
-metabolism:consumable_items := entities(metabolism:fuel_source)

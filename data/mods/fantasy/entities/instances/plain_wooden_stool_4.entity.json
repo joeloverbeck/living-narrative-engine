@@ -1,0 +1,16 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:plain_wooden_stool_4_instance",
+    "definitionId": "furniture:plain_wooden_stool",
+    "componentOverrides": {
+        "core:name": {
+            "text": "plain wooden stool #4"
+        },
+        "core:position": {
+            "locationId": "fantasy:aldous_kitchen_instance"
+        },
+        "furniture:near_furniture": {
+            "nearFurnitureIds": ["fantasy:aldous_kitchen_rustic_wooden_table_instance"]
+        }
+    }
+}

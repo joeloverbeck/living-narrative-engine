@@ -14,9 +14,9 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 48 defined color combinations
-**In Use**: 35 schemes actively implemented across mods
-**Available**: 13 schemes ready for future mods
+**Total Schemes**: 50 defined color combinations
+**In Use**: 36 schemes actively implemented across mods
+**Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
 
@@ -59,6 +59,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Personal-Space          | Molten Copper       | 11.6    | `#7c2d12`        | Active |
 | Ranged                  | Archer's Focus      | 15.1    | `#2a4a3f`        | Active |
 | Recovery                | Evergreen Shadow    | 11.5    | `#123524`        | Active |
+| Intoxicants             | Tavern Amber        | 17.1    | `#5c3d1e`        | Active |
 
 ## Available Color Schemes by Category
 
@@ -1059,8 +1060,43 @@ When modifying schemes:
 - **Use Cases**: Hexcraft rituals, entropic nature magic, lingering curses
 - **Theme**: Muted bog-green palette suggesting decay, blight, and creeping vines
 
+### 17. Intoxicants/Vice Colors
+
+#### 17.1 Tavern Amber ✅ IN USE: Intoxicants
+
+```json
+{
+  "backgroundColor": "#5c3d1e",
+  "textColor": "#fff3e0",
+  "hoverBackgroundColor": "#704b2a",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.52:1 🌟 AAA
+- **Hover Contrast**: 7.81:1 🌟 AAA
+- **Use Cases**: Drinking alcohol, tavern interactions, general intoxicant consumption
+- **Theme**: Warm whiskey/amber tones evoking tavern firelight and aged spirits
+
+#### 17.2 Hazy Smoke 🟢 AVAILABLE
+
+```json
+{
+  "backgroundColor": "#3d3a3f",
+  "textColor": "#e8e5eb",
+  "hoverBackgroundColor": "#504c52",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 9.18:1 🌟 AAA
+- **Hover Contrast**: 6.82:1 ✅ AA
+- **Use Cases**: Smoking, inhaling substances, drug-related actions
+- **Theme**: Smoky purple-gray evoking haze, pipe smoke, and altered states
+
 ## Version History
 
+- **2025-12**: Added Section 17 (Intoxicants/Vice Colors) with Tavern Amber (17.1) for Intoxicants mod and Hazy Smoke (17.2) available
 - **2026-02**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
 - **2025-12**: Added Archer's Focus (15.1) for Ranged mod
 - **2025-11**: Consolidated from multiple sources into single reference document

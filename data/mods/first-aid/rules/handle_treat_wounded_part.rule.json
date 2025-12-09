@@ -1,0 +1,190 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_treat_wounded_part",
+  "comment": "Handles the treat_wounded_part action with chance-based outcomes.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "first-aid:event-is-action-treat-wounded-part"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "primary", "result_variable": "targetName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "secondary", "result_variable": "bodyPartName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "comment": "Fixed difficulty contest using medicine_skill vs difficulty 50",
+      "parameters": {
+        "actor_skill_component": "skills:medicine_skill",
+        "actor_skill_default": 10,
+        "difficulty_modifier": 50,
+        "formula": "linear",
+        "result_variable": "treatmentResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.primaryId}"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - heal +20 HP",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.treatmentResult.outcome" }, "CRITICAL_SUCCESS"]
+        },
+        "then_actions": [
+          {
+            "type": "MODIFY_PART_HEALTH",
+            "parameters": {
+              "part_entity_ref": "secondary",
+              "delta": 20,
+              "clamp_to_bounds": true
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "primary" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "secondary" }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} expertly treats {context.targetName}'s wounded {context.bodyPartName}, achieving remarkable healing results!"
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - heal +10 HP",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.treatmentResult.outcome" }, "SUCCESS"]
+        },
+        "then_actions": [
+          {
+            "type": "MODIFY_PART_HEALTH",
+            "parameters": {
+              "part_entity_ref": "secondary",
+              "delta": 10,
+              "clamp_to_bounds": true
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "primary" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "secondary" }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} successfully treats {context.targetName}'s wounded {context.bodyPartName}."
+            }
+          },
+          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - no HP change",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.treatmentResult.outcome" }, "FAILURE"]
+        },
+        "then_actions": [
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} attempts to treat {context.targetName}'s wounded {context.bodyPartName} but fails to provide effective care."
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - deal 10 piercing damage",
+      "parameters": {
+        "condition": {
+          "==": [{ "var": "context.treatmentResult.outcome" }, "FUMBLE"]
+        },
+        "then_actions": [
+          {
+            "type": "APPLY_DAMAGE",
+            "parameters": {
+              "entity_ref": "primary",
+              "part_ref": "secondary",
+              "damage_entry": {
+                "amount": 10,
+                "type": "piercing"
+              }
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "primary" }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": { "entity_ref": "secondary" }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} fumbles badly while treating {context.targetName}'s wounded {context.bodyPartName}, causing additional injury!"
+            }
+          },
+          { "macro": "core:logFailureOutcomeAndEndTurn" }
+        ]
+      }
+    }
+  ]
+}

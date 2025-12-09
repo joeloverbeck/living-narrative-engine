@@ -1,6 +1,6 @@
 // Filename: src/tests/integration/bootstrap.test.js
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, jest } from '@jest/globals';
 
 // --- Core Components Under Test ---
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
@@ -14,6 +14,7 @@ describe('Application Bootstrap Integration Test', () => {
   let mockOutputDiv;
   let mockInputElement;
   let mockTitleElement;
+  let originalFetch;
 
   // PERFORMANCE: Create container in beforeAll but keep DOM elements fresh
   beforeAll(() => {
@@ -21,6 +22,49 @@ describe('Application Bootstrap Integration Test', () => {
     mockOutputDiv = document.createElement('div');
     mockInputElement = document.createElement('input');
     mockTitleElement = document.createElement('h1');
+
+    // PERFORMANCE: Mock fetch to prevent network timeouts during initializeAll()
+    // The WorkspaceDataFetcher uses global fetch() which in jsdom attempts real HTTP
+    // requests that timeout (~400-500ms each). Mocking eliminates this bottleneck.
+    originalFetch = global.fetch;
+    global.fetch = jest.fn(async (url) => {
+      // Mock prompt text requests to avoid network timeout
+      if (typeof url === 'string' && url.includes('prompts/')) {
+        return {
+          ok: true,
+          json: async () => ({
+            coreTaskDescriptionText: 'Mock core task description for testing.',
+            characterPortrayalGuidelinesTemplate: 'Mock guidelines for {{name}}.',
+            nc21ContentPolicyText: 'Mock NC-21 content policy.',
+            finalLlmInstructionText: 'Mock final LLM instruction.',
+          }),
+        };
+      }
+      // Mock logger config requests
+      if (typeof url === 'string' && url.includes('logger')) {
+        return {
+          ok: true,
+          json: async () => ({}),
+        };
+      }
+      // Mock trace config requests
+      if (typeof url === 'string' && url.includes('trace')) {
+        return {
+          ok: true,
+          json: async () => ({}),
+        };
+      }
+      // For other requests, return a generic success with empty object
+      return {
+        ok: true,
+        json: async () => ({}),
+      };
+    });
+  });
+
+  afterAll(() => {
+    // Restore original fetch
+    global.fetch = originalFetch;
   });
 
   // PERFORMANCE: Keep beforeEach for container - it's needed to avoid facade re-registration errors

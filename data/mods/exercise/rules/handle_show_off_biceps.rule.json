@@ -45,14 +45,6 @@
         "value": null
       }
     },
-    {
-      "type": "BURN_ENERGY",
-      "comment": "Exercise burns energy at 2.0x base burn rate (moderate activity).",
-      "parameters": {
-        "entity_ref": "actor",
-        "activity_multiplier": 2.0
-      }
-    },
     { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

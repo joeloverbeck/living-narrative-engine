@@ -68,8 +68,10 @@
         "item_pickup_failed",
         "item_picked_up",
         "item_put_in_container",
+        "item_put_on_nearby_surface",
         "item_read",
         "item_taken_from_container",
+        "item_taken_from_nearby_surface",
         "item_transfer",
         "item_transfer_failed",
         "item_use",
@@ -77,10 +79,12 @@
         "liquid_consumed_entirely",
         "notes_jotted",
         "put_in_container_failed",
+        "put_on_nearby_surface_failed",
         "rest_action",
         "speech_local",
         "state_change_observable",
         "take_from_container_failed",
+        "take_from_nearby_surface_failed",
         "thought_internal"
       ]
     },

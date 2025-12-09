@@ -51,14 +51,6 @@
       }
     },
     {
-      "type": "BURN_ENERGY",
-      "comment": "Gymnastics burns energy at 3.0x base burn rate (strenuous activity).",
-      "parameters": {
-        "entity_ref": "actor",
-        "activity_multiplier": 3.0
-      }
-    },
-    {
       "macro": "core:logSuccessAndEndTurn"
     }
   ]

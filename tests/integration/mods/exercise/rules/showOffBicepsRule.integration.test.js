@@ -98,8 +98,8 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
   });
 
   describe('Action Definitions', () => {
-    it('should have exactly eight actions', () => {
-      expect(testFixture.ruleFile.actions).toHaveLength(8);
+    it('should have exactly seven actions', () => {
+      expect(testFixture.ruleFile.actions).toHaveLength(7);
     });
 
     it('should get actor name as first action', () => {
@@ -151,18 +151,8 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       expect(targetIdAction.parameters.value).toBeNull();
     });
 
-    it('should burn energy at moderate activity level', () => {
-      const burnEnergyAction = testFixture.ruleFile.actions[6];
-      expect(burnEnergyAction.type).toBe('BURN_ENERGY');
-      expect(burnEnergyAction.parameters.entity_ref).toBe('actor');
-      expect(burnEnergyAction.parameters.activity_multiplier).toBe(2);
-      expect(burnEnergyAction.comment).toBe(
-        'Exercise burns energy at 2.0x base burn rate (moderate activity).'
-      );
-    });
-
     it('should use core:logSuccessAndEndTurn macro', () => {
-      const macroAction = testFixture.ruleFile.actions[7];
+      const macroAction = testFixture.ruleFile.actions[6];
       expect(macroAction.macro).toBe('core:logSuccessAndEndTurn');
     });
   });

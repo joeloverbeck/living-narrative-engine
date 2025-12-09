@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "furniture:put_on_nearby_surface",
+  "name": "Put On Nearby Surface",
+  "description": "While seated, place an item in a container on nearby furniture",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory", "positioning:sitting_on"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:fallen",
+      "positioning:restraining"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "furniture:open_containers_on_nearby_furniture",
+      "placeholder": "container",
+      "description": "Container on nearby furniture to put item in"
+    },
+    "secondary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "item",
+      "description": "Inventory item to place"
+    }
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to place items on the surface."
+    }
+  ],
+  "template": "reach over and put {secondary.name} on {primary.name}",
+  "visual": {
+    "backgroundColor": "#004d61",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#006978",
+    "hoverTextColor": "#ffffff"
+  }
+}

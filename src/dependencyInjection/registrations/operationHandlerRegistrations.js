@@ -27,12 +27,10 @@
 import { tokens } from '../tokens.js';
 
 // Import handlers (keep alphabetically sorted)
-import ConsumeItemHandler from '../../logic/operationHandlers/consumeItemHandler.js';
 import DispatchEventHandler from '../../logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../logic/operationHandlers/dispatchSpeechHandler.js';
 import DispatchThoughtHandler from '../../logic/operationHandlers/dispatchThoughtHandler.js';
-import DigestFoodHandler from '../../logic/operationHandlers/digestFoodHandler.js';
 import LogHandler from '../../logic/operationHandlers/logHandler.js';
 import ModifyComponentHandler from '../../logic/operationHandlers/modifyComponentHandler.js';
 import ModifyPartHealthHandler from '../../logic/operationHandlers/modifyPartHealthHandler.js';
@@ -57,8 +55,6 @@ import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCy
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
 import BreakBidirectionalClosenessHandler from '../../logic/operationHandlers/breakBidirectionalClosenessHandler.js';
 import BreakFollowRelationHandler from '../../logic/operationHandlers/breakFollowRelationHandler.js';
-import BurnEnergyHandler from '../../logic/operationHandlers/burnEnergyHandler.js';
-import UpdateHungerStateHandler from '../../logic/operationHandlers/updateHungerStateHandler.js';
 import UpdatePartHealthStateHandler from '../../logic/operationHandlers/updatePartHealthStateHandler.js';
 import AddPerceptionLogEntryHandler from '../../logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryEntitiesHandler from '../../logic/operationHandlers/queryEntitiesHandler.js';
@@ -119,16 +115,6 @@ export function registerOperationHandlers(registrar) {
   // Handler factory entries (keep alphabetically sorted by token name)
   const handlerFactories = [
     [
-      tokens.ConsumeItemHandler,
-      ConsumeItemHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          entityManager: c.resolve(tokens.IEntityManager),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        }),
-    ],
-    [
       tokens.DispatchEventHandler,
       DispatchEventHandler,
       (c, Handler) =>
@@ -165,16 +151,6 @@ export function registerOperationHandlers(registrar) {
         new Handler({
           logger: c.resolve(tokens.ILogger),
           dispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        }),
-    ],
-    [
-      tokens.DigestFoodHandler,
-      DigestFoodHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          entityManager: c.resolve(tokens.IEntityManager),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],
     [
@@ -407,26 +383,6 @@ export function registerOperationHandlers(registrar) {
           rebuildLeaderListCacheHandler: c.resolve(
             tokens.RebuildLeaderListCacheHandler
           ),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        }),
-    ],
-    [
-      tokens.BurnEnergyHandler,
-      BurnEnergyHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          entityManager: c.resolve(tokens.IEntityManager),
-          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        }),
-    ],
-    [
-      tokens.UpdateHungerStateHandler,
-      UpdateHungerStateHandler,
-      (c, Handler) =>
-        new Handler({
-          logger: c.resolve(tokens.ILogger),
-          entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         }),
     ],

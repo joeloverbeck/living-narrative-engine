@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "intoxicants",
+  "version": "1.0.0",
+  "name": "Intoxicants",
+  "description": "Alcoholic beverages and other intoxicating substances",
+  "actionPurpose": "Consume alcoholic beverages and other intoxicating substances for pleasure or ritual purposes.",
+  "actionConsiderWhen": "Seeking relaxation, socializing in taverns, participating in celebrations, or using substances for courage or ritual.",
+  "author": "Living Narrative Engine Team",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [],
+    "actions": [],
+    "rules": [],
+    "conditions": [],
+    "scopes": [],
+    "entities": {
+      "definitions": [
+        "jug_of_ale.entity.json",
+        "jug_of_cider.entity.json",
+        "jug_of_mead.entity.json"
+      ],
+      "instances": []
+    }
+  }
+}

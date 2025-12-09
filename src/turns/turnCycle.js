@@ -89,10 +89,12 @@ export default class TurnCycle {
         attempts++;
       }
 
-      // All actors exhausted or all non-participating
-      this.#logger.warn(
-        'TurnCycle.nextActor(): No participating actors found in turn queue after ' +
-          `${attempts} attempts (max: ${maxAttempts})`
+      // All remaining actors in queue are non-participating - this is expected behavior
+      // when users disable participation mid-round via Actor Participation Control.
+      // The game handles this gracefully by ending the round.
+      this.#logger.debug(
+        'TurnCycle.nextActor(): All remaining actors in queue are non-participating. ' +
+          `Skipped ${attempts} actors. Queue exhausted normally.`
       );
       return null;
     } catch (error) {

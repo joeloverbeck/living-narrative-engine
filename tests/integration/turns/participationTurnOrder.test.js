@@ -157,9 +157,9 @@ describe('Turn Order - Participation Integration', () => {
       const next = await turnCycle.nextActor();
       expect(next).toBeNull();
 
-      // Verify warning was logged about no participating actors
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No participating actors found')
+      // Verify debug log about non-participating actors (no warning - this is expected behavior)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('non-participating')
       );
     });
 
@@ -352,13 +352,13 @@ describe('Turn Order - Participation Integration', () => {
       const next = await turnCycle.nextActor();
       expect(next).toBeNull();
 
-      // Verify warning was logged
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No participating actors found')
+      // Verify debug log (no warning - skipping non-participating actors is expected behavior)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('non-participating')
       );
     });
 
-    it('should log warning when no participating actors found', async () => {
+    it('should log debug when no participating actors found', async () => {
       const actor1 = await createTestActor('actor1', 'Inactive1', false);
       const actor2 = await createTestActor('actor2', 'Inactive2', false);
 
@@ -366,9 +366,9 @@ describe('Turn Order - Participation Integration', () => {
 
       await turnCycle.nextActor();
 
-      // Verify warning was logged via mockLogger.warn
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringMatching(/No participating actors found/)
+      // Verify debug log (no warning - skipping non-participating actors is expected behavior)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringMatching(/non-participating/)
       );
     });
 
@@ -387,8 +387,10 @@ describe('Turn Order - Participation Integration', () => {
       const result = await turnCycle.nextActor();
       expect(result).toBeNull();
 
-      // Should have logged warning about no participating actors
-      expect(mockLogger.warn).toHaveBeenCalled();
+      // Should have logged debug (no warning - skipping non-participating actors is expected behavior)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('non-participating')
+      );
     });
 
     it('should verify max attempts limit prevents infinite loop', async () => {
@@ -404,9 +406,9 @@ describe('Turn Order - Participation Integration', () => {
       const result = await turnCycle.nextActor();
       expect(result).toBeNull();
 
-      // Verify warning logged
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('No participating actors found')
+      // Verify debug log (no warning - skipping non-participating actors is expected behavior)
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('non-participating')
       );
     });
   });

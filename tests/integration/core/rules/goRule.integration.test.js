@@ -106,10 +106,6 @@ describe('core_handle_go rule integration', () => {
       IF: {
         execute: jest.fn().mockResolvedValue(undefined),
       },
-      // Mock handler for BURN_ENERGY - satisfies fail-fast enforcement
-      BURN_ENERGY: {
-        execute: jest.fn().mockResolvedValue(undefined),
-      },
     };
   }
 

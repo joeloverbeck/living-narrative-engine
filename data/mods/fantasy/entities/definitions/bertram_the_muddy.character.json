@@ -130,6 +130,9 @@
     },
     "skills:resolve_skill": {
       "value": 53
+    },
+    "skills:medicine_skill": {
+      "value": 24
     }
   }
 }

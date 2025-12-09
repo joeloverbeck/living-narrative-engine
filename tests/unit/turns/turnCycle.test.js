@@ -192,10 +192,9 @@ describe('TurnCycle - Participation Filtering', () => {
       const result = await turnCycle.nextActor();
 
       expect(result).toBeNull();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'No participating actors found in turn queue after'
-        )
+      // Debug log instead of warn - skipping non-participating actors is expected behavior
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('non-participating')
       );
     });
 
@@ -219,8 +218,9 @@ describe('TurnCycle - Participation Filtering', () => {
 
       expect(result).toBeNull();
       expect(mockService.getNextEntity).toHaveBeenCalledTimes(3); // Should stop at queue size
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('max: 3')
+      // Debug log instead of warn - skipping non-participating actors is expected behavior
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipped 3 actors')
       );
     });
 
@@ -245,8 +245,9 @@ describe('TurnCycle - Participation Filtering', () => {
 
       expect(result).toBeNull();
       expect(mockService.getNextEntity).toHaveBeenCalledTimes(50); // Should cap at 50
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('max: 50')
+      // Debug log instead of warn - skipping non-participating actors is expected behavior
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipped 50 actors')
       );
     });
 

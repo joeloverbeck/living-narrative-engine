@@ -1,0 +1,116 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "first-aid:treat_my_wounded_part",
+  "name": "Treat My Wounded Part",
+  "description": "Treat one of your own wounded body parts using medicine skill.",
+  "template": "treat my wound in {woundedBodyPart} ({chance}% chance)",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["skills:medicine_skill"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:hugging",
+      "positioning:giving_blowjob",
+      "positioning:doing_complex_performance",
+      "positioning:bending_over",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "first-aid:treatable_actor_body_parts",
+      "placeholder": "woundedBodyPart",
+      "description": "Your wounded body part to treat"
+    }
+  },
+  "visual": {
+    "backgroundColor": "#1b5e20",
+    "textColor": "#e8f5e9",
+    "hoverBackgroundColor": "#2e7d32",
+    "hoverTextColor": "#ffffff"
+  },
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:medicine_skill",
+      "property": "value",
+      "default": 10
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    },
+    "modifiers": [
+      {
+        "condition": {
+          "logic": {
+            "or": [
+              {
+                "and": [
+                  { "var": "entity.primary.components.anatomy:visibility_rules.clothingSlotId" },
+                  { "!": { "isSlotExposed": ["entity.actor", { "var": "entity.primary.components.anatomy:visibility_rules.clothingSlotId" }, ["base", "outer", "armor"]] } }
+                ]
+              },
+              {
+                "and": [
+                  { "var": "entity.primary.components.anatomy:joint.socketId" },
+                  { "isSocketCovered": ["entity.actor", { "var": "entity.primary.components.anatomy:joint.socketId" }] }
+                ]
+              }
+            ]
+          }
+        },
+        "type": "flat",
+        "value": -20,
+        "tag": "wound covered",
+        "targetRole": "primary"
+      },
+      {
+        "condition": {
+          "logic": { "!!": { "var": "entity.primary.components.first-aid:rinsed" } }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "wound rinsed",
+        "targetRole": "primary"
+      },
+      {
+        "condition": {
+          "logic": { "!": { "var": "entity.primary.components.first-aid:rinsed" } }
+        },
+        "type": "flat",
+        "value": -10,
+        "tag": "wound not rinsed",
+        "targetRole": "primary"
+      },
+      {
+        "condition": {
+          "logic": { "!!": { "var": "entity.primary.components.first-aid:disinfected" } }
+        },
+        "type": "flat",
+        "value": 10,
+        "tag": "wound disinfected",
+        "targetRole": "primary"
+      },
+      {
+        "condition": {
+          "logic": { "!": { "var": "entity.primary.components.first-aid:disinfected" } }
+        },
+        "type": "flat",
+        "value": -5,
+        "tag": "wound not disinfected",
+        "targetRole": "primary"
+      }
+    ]
+  }
+}

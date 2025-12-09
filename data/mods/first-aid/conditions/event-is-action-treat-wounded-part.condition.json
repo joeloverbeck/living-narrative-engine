@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "first-aid:event-is-action-treat-wounded-part",
+  "description": "Checks if the triggering event is the treat_wounded_part action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "first-aid:treat_wounded_part"
+    ]
+  }
+}

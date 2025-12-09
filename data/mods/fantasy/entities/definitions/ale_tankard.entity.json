@@ -21,14 +21,6 @@
       "servingSizeMilliliters": 100,
       "isRefillable": true,
       "flavorText": "The ale is rich and malty with a slightly bitter hop finish. It's hearty and satisfying, warming your throat as it goes down."
-    },
-    "metabolism:fuel_source": {
-      "energy_content": 180,
-      "bulk": 25,
-      "fuel_type": "drink",
-      "fuel_tags": ["organic", "beverage", "alcohol"],
-      "digestion_speed": "medium",
-      "spoilage_rate": 0
     }
   }
 }

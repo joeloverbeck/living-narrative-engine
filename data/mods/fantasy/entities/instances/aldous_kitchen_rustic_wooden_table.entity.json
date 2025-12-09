@@ -1,0 +1,22 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:aldous_kitchen_rustic_wooden_table_instance",
+    "definitionId": "furniture:rustic_wooden_table",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "fantasy:aldous_kitchen_instance"
+        },
+        "items:container": {
+            "contents": [
+                "fantasy:jug_of_cider_instance",
+                "fantasy:jug_of_mead_instance"
+            ],
+            "capacity": {
+                "maxWeight": 5.0,
+                "maxItems": 20
+            },
+            "isOpen": true,
+            "requiresKey": false
+        }
+    }
+}

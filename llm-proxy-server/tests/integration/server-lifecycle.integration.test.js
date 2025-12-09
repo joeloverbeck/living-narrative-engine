@@ -272,34 +272,6 @@ describe('Server Lifecycle Integration Tests', () => {
       );
     });
 
-    // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log CORS configuration status when origins set', async () => {
-      process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: CORS enabled for origin(s):')
-      );
-    });
-
-    // NOTE: This test has been moved to tests/integration/isolated/server-api-key-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log API key file root path when set', async () => {
-      process.env.PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES = '/secure/path';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'LLM Proxy Server: API Key file root path set to:'
-        )
-      );
-    });
-
     it('should log cache configuration when enabled', async () => {
       process.env.CACHE_ENABLED = 'true';
 
@@ -599,37 +571,6 @@ describe('Server Lifecycle Integration Tests', () => {
   });
 
   describe('Feature 6: CORS Configuration Scenarios', () => {
-    // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should configure CORS with single allowed origin', async () => {
-      process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'LLM Proxy Server: Configuring CORS for 1 origin(s)'
-        )
-      );
-    });
-
-    // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should configure CORS with multiple allowed origins', async () => {
-      process.env.PROXY_ALLOWED_ORIGIN =
-        'http://localhost:8080,http://127.0.0.1:8080';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'LLM Proxy Server: Configuring CORS for 2 origin(s)'
-        )
-      );
-    });
-
     it('should log warning in development when CORS not configured', async () => {
       process.env.NODE_ENV = 'development';
 
@@ -655,23 +596,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('LLM Proxy Server: CORS not configured')
-      );
-    });
-
-    // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log warning in production when CORS not configured', async () => {
-      process.env.NODE_ENV = 'production';
-
-      delete process.env.PROXY_ALLOWED_ORIGIN;
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'LLM Proxy Server: PROXY_ALLOWED_ORIGIN environment variable not set'
-        )
       );
     });
 
@@ -714,22 +638,6 @@ describe('Server Lifecycle Integration Tests', () => {
       );
     });
 
-    // NOTE: This test has been moved to tests/integration/isolated/server-cors-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log CORS debug information', async () => {
-      process.env.PROXY_ALLOWED_ORIGIN = 'http://localhost:8080';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'CORS allowed origins:',
-        expect.objectContaining({ origins: expect.any(Array) })
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'CORS middleware applied successfully'
-      );
-    });
   });
 
   // =============================================================================
@@ -890,19 +798,6 @@ describe('Server Lifecycle Integration Tests', () => {
       );
     });
 
-    // NOTE: This test has been moved to tests/integration/isolated/server-cache-disabled-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log cache disabled status during startup', async () => {
-      process.env.CACHE_ENABLED = 'false';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: Cache DISABLED')
-      );
-    });
-
     it('should include cache configuration details in logs', async () => {
       process.env.CACHE_ENABLED = 'true';
 
@@ -924,19 +819,6 @@ describe('Server Lifecycle Integration Tests', () => {
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.stringContaining('HTTP Agent Pooling ENABLED')
-      );
-    });
-
-    // NOTE: This test has been moved to tests/integration/isolated/server-http-agent-disabled-logging.isolated.test.js
-    // to avoid AppConfigService singleton pollution when running the full test suite
-    it.skip('should log HTTP agent disabled status during startup', async () => {
-      process.env.HTTP_AGENT_ENABLED = 'false';
-
-      serverController = createProxyServer({ logger: mockLogger });
-      await serverController.start();
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        expect.stringContaining('LLM Proxy Server: HTTP Agent Pooling DISABLED')
       );
     });
 

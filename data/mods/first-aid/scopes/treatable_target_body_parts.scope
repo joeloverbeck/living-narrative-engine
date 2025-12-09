@@ -1,0 +1,16 @@
+// Returns the target actor's body part entity IDs that are wounded (health below max).
+//
+// BEHAVIOR: Iterates target.body_parts via BodyGraphService#getAllParts and keeps
+// parts with an anatomy:part_health component whose currentHealth is lower than
+// maxHealth while excluding vital organs.
+//
+// IMPORTANT: Unlike wounded_target_body_parts.scope, this scope does NOT filter out
+// covered wounds. This allows the action to target covered wounds (with a modifier
+// penalty) so that LLM characters can be informed about wounds under clothing.
+//
+// Usage: Scope for treat_wounded_part action targeting another actor's wounds.
+// Reference: specs/treat-wound-action.md
+first-aid:treatable_target_body_parts := target.body_parts[][{"and":[
+  {"isBodyPartWounded": ["target", {"var": "entity"}, true]},
+  {"!": {"var": "entity.components.anatomy:vital_organ"}}
+]}]
