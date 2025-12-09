@@ -202,6 +202,26 @@ export function createBaseRuleEnvironment({
     gameDataRepository: testDataRegistry,
   });
 
+  // Types that appear as 'type' property values but are NOT operation types
+  const NON_OPERATION_TYPES = new Set([
+    'flat',
+    'percentage',
+    // Damage types from APPLY_DAMAGE operation schema
+    'slashing',
+    'piercing',
+    'bludgeoning',
+    'fire',
+    'cold',
+    'lightning',
+    'poison',
+    'acid',
+    'psychic',
+    'necrotic',
+    'radiant',
+    'force',
+    'thunder',
+  ]);
+
   function collectOperationTypes(candidate, accumulator) {
     if (!candidate) {
       return;
@@ -216,7 +236,10 @@ export function createBaseRuleEnvironment({
       return;
     }
 
-    if (typeof candidate.type === 'string') {
+    if (
+      typeof candidate.type === 'string' &&
+      !NON_OPERATION_TYPES.has(candidate.type)
+    ) {
       accumulator.add(candidate.type);
     }
 

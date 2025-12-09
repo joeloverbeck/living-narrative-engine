@@ -1,0 +1,22 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "furniture:near_furniture",
+  "description": "Tracks which furniture entities this piece of furniture is 'near' for seated interaction purposes. Actors sitting on this furniture can interact with containers on nearby furniture.",
+  "dataSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["nearFurnitureIds"],
+    "properties": {
+      "nearFurnitureIds": {
+        "type": "array",
+        "description": "Array of entity instance IDs of furniture that this furniture is near",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$"
+        },
+        "uniqueItems": true,
+        "default": []
+      }
+    }
+  }
+}

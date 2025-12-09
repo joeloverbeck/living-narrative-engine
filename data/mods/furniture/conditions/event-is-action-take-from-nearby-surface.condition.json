@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "furniture:event-is-action-take-from-nearby-surface",
+  "description": "Checks if event is the take_from_nearby_surface action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "furniture:take_from_nearby_surface"]
+  }
+}

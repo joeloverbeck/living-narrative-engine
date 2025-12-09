@@ -1138,7 +1138,11 @@ async function updateAllManifests(options = {}) {
           if (result.success) {
             results.successful.push(modName);
           } else {
-            results.failed.push(modName);
+            results.failed.push({
+              modName,
+              errors: result.errors,
+              warnings: result.warnings,
+            });
           }
 
           // Aggregate validation data
@@ -1160,7 +1164,11 @@ async function updateAllManifests(options = {}) {
           }
         } else {
           console.error(`❌ Failed to process mod: ${modResult.reason}`);
-          results.failed.push('unknown');
+          results.failed.push({
+            modName: 'unknown',
+            errors: [modResult.reason?.message || String(modResult.reason)],
+            warnings: [],
+          });
         }
       });
     });
@@ -1194,6 +1202,24 @@ async function updateAllManifests(options = {}) {
           console.log(`   • ${violation} (${count} mods)`);
         });
       }
+    }
+
+    // Output failure details if any
+    if (results.failed.length > 0) {
+      console.log('\n❌ Failed Mod Details:');
+      results.failed.forEach((failure) => {
+        console.log(`\n   📦 ${failure.modName}:`);
+        if (failure.errors && failure.errors.length > 0) {
+          failure.errors.forEach((err) => {
+            console.log(`      ⛔ ${err}`);
+          });
+        }
+        if (failure.warnings && failure.warnings.length > 0) {
+          failure.warnings.forEach((warn) => {
+            console.log(`      ⚠️  ${warn}`);
+          });
+        }
+      });
     }
 
     return results;

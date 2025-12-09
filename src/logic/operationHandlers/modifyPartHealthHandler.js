@@ -30,6 +30,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { calculateStateFromPercentage } from '../../anatomy/registries/healthStateRegistry.js';
+import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 const PART_HEALTH_COMPONENT_ID = 'anatomy:part_health';
 const PART_COMPONENT_ID = 'anatomy:part';
@@ -87,10 +88,13 @@ class ModifyPartHealthHandler extends BaseOperationHandler {
    * @private
    */
   #resolveEntityRef(ref, context, logger) {
-    if (typeof ref === 'string' && ref.trim()) {
-      return ref.trim();
+    // First try resolveEntityId for placeholder/keyword support (e.g., "secondary", "actor")
+    const resolvedId = resolveEntityId(ref, context);
+    if (resolvedId) {
+      return resolvedId;
     }
 
+    // Fall back to JSON Logic evaluation for object refs
     if (typeof ref === 'object' && ref !== null) {
       try {
         const resolved = this.#jsonLogicService.evaluate(ref, context);

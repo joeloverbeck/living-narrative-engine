@@ -110,6 +110,7 @@
     "validate:effects": "node scripts/validateEffects.js",
     "validate:goap-contexts": "node scripts/validateGoapContexts.js",
     "validate:goals": "node scripts/validateGoals.js",
+    "validate:modifier-paths": "node scripts/validateModifierPaths.js",
     "update-manifest": "node scripts/updateManifest.js",
     "update-manifest:validate": "node scripts/updateManifest.js --validate-references",
     "update-manifest:strict": "node scripts/updateManifest.js --validate-references --fail-on-violations",

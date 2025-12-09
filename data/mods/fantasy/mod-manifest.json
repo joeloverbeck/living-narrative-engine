@@ -28,6 +28,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "intoxicants",
+      "version": "^1.0.0"
+    },
+    {
       "id": "clothing",
       "version": "^1.0.0"
     },
@@ -131,6 +135,7 @@
         "12_kiln_lane_yard.location.json",
         "aldous.character.json",
         "aldous_kitchen.location.json",
+        "aldous_kitchen_rustic_wooden_table.entity.json",
         "ale_tankard.entity.json",
         "back_of_tannery.location.json",
         "bertram_the_muddy.character.json",
@@ -141,6 +146,8 @@
         "copper_backed_rooster.character.json",
         "interior_of_chicken_coop.location.json",
         "jar_of_vinegar.entity.json",
+        "jug_of_cider.entity.json",
+        "jug_of_mead.entity.json",
         "kink_necked_black_pullet.character.json",
         "kitchen_cabinet.entity.json",
         "large_speckled_hen.character.json",
@@ -153,6 +160,10 @@
         "notice_reciprocal_services.entity.json",
         "notice_staged_threat.entity.json",
         "plain_wooden_stool.entity.json",
+        "plain_wooden_stool_1.entity.json",
+        "plain_wooden_stool_2.entity.json",
+        "plain_wooden_stool_3.entity.json",
+        "plain_wooden_stool_4.entity.json",
         "registrar_copperplate.character.json",
         "registry_ledger.entity.json",
         "rill.character.json",

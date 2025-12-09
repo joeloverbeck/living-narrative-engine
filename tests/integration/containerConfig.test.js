@@ -1,66 +1,72 @@
-// tests/config/containerConfig.test.js
+// tests/integration/containerConfig.test.js
 
-import AppContainer from '../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../src/dependencyInjection/containerConfig.js';
+/**
+ * @file Integration tests for Dependency Injection Container Configuration
+ *
+ * Performance Optimization:
+ * - Uses shared container pattern (beforeAll instead of beforeEach)
+ * - Skips async config loading (loadAndApplyLoggerConfig, loadAndApplyTraceConfig)
+ * - Tests only verify service resolution, not config loading behavior
+ *
+ * @see tests/integration/configuration/OPTIMIZATION.md
+ * @see tests/common/configuration/containerConfigTestHelpers.js
+ */
+
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 
 // --- Import the classes we want to check ---
 import CommandOutcomeInterpreter from '../../src/commands/interpreters/commandOutcomeInterpreter.js';
 import TurnManager from '../../src/turns/turnManager.js';
 import {
+  afterAll,
   afterEach,
+  beforeAll,
   beforeEach,
   describe,
   expect,
   it,
-  jest,
 } from '@jest/globals';
 import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 
-// Mock external dependencies (DOM elements, document)
-const mockOutputDiv = document.createElement('div');
-const mockInputElement = document.createElement('input');
-const mockTitleElement = document.createElement('h1');
-const mockDocument = document; // Or a more isolated mock if needed
+// Import test helpers
+import {
+  createContainerConfigTestContainer,
+  createPerformanceMonitor,
+  resetContainerMocksForNextTest,
+  PERFORMANCE_THRESHOLDS,
+} from '../common/configuration/containerConfigTestHelpers.js';
 
 describe('Dependency Injection Container Configuration', () => {
   let container;
+  let setupTime;
 
-  beforeEach(async () => {
-    // Create a fresh container and register dummy dispatchers before configuring
-    container = new AppContainer();
+  // Create container ONCE for all tests (performance optimization)
+  beforeAll(async () => {
+    const monitor = createPerformanceMonitor();
+    monitor.start();
 
-    // Register dummy dispatchers so that RetryHttpClient and other adapters can resolve their dependencies
-    container.register(
-      tokens.ISafeEventDispatcher,
-      {
-        dispatch: jest.fn(),
-      },
-      { lifecycle: 'singleton' }
-    );
+    container = await createContainerConfigTestContainer();
 
-    container.register(
-      tokens.IValidatedEventDispatcher,
-      {
-        dispatch: jest.fn(),
-      },
-      { lifecycle: 'singleton' }
-    );
+    setupTime = monitor.end();
+    // eslint-disable-next-line no-console
+    console.log(`[containerConfig.test] Container setup took ${setupTime.toFixed(2)}ms`);
+  });
 
-    // Now configure the container with all registrations
-    await configureContainer(container, {
-      outputDiv: mockOutputDiv,
-      inputElement: mockInputElement,
-      titleElement: mockTitleElement,
-      // Pass the mock document if needed by UI registrations
-      document: mockDocument,
-    });
+  afterAll(() => {
+    // Clean up container after all tests complete
+    if (container) {
+      container.reset();
+      container = null;
+    }
+  });
+
+  beforeEach(() => {
+    // Reset mocks between tests (lightweight operation)
+    resetContainerMocksForNextTest(container);
   });
 
   afterEach(() => {
-    // Clean up the container after each test
-    container.reset();
-    container = null;
+    // No per-test cleanup needed - container is shared
   });
 
   // Test 1: Verify CommandOutcomeInterpreter can be resolved
@@ -118,6 +124,27 @@ describe('Dependency Injection Container Configuration', () => {
       expect(() =>
         container.resolve(tokens.IActionCategorizationService)
       ).not.toThrow();
+    });
+  });
+
+  // Performance validation tests
+  describe('Performance Validation', () => {
+    it('should complete container setup within threshold', () => {
+      expect(setupTime).toBeLessThan(PERFORMANCE_THRESHOLDS.CONTAINER_SETUP_MS);
+    });
+
+    it('should resolve services quickly', () => {
+      const monitor = createPerformanceMonitor();
+      monitor.start();
+
+      // Resolve several key services
+      container.resolve(tokens.ICommandOutcomeInterpreter);
+      container.resolve(tokens.ActorTurnHandler);
+      container.resolve(tokens.ITurnManager);
+      container.resolve(tokens.IActionCategorizationService);
+
+      const duration = monitor.end();
+      expect(duration).toBeLessThan(PERFORMANCE_THRESHOLDS.SERVICE_RESOLUTION_MS);
     });
   });
 });

@@ -53,10 +53,31 @@
       "instanceId": "fantasy:jar_of_vinegar_instance"
     },
     {
+      "instanceId": "fantasy:jug_of_cider_instance"
+    },
+    {
+      "instanceId": "fantasy:jug_of_mead_instance"
+    },
+    {
       "instanceId": "fantasy:wash_basin_instance"
     },
     {
       "instanceId": "fantasy:kitchen_cabinet_instance"
+    },
+    {
+      "instanceId": "fantasy:plain_wooden_stool_1_instance"
+    },
+    {
+      "instanceId": "fantasy:plain_wooden_stool_2_instance"
+    },
+    {
+      "instanceId": "fantasy:plain_wooden_stool_3_instance"
+    },
+    {
+      "instanceId": "fantasy:plain_wooden_stool_4_instance"
+    },
+    {
+      "instanceId": "fantasy:aldous_kitchen_rustic_wooden_table_instance"
     },
     {
       "instanceId": "fantasy:chicken_coop_door_instance"

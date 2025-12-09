@@ -11,7 +11,6 @@ const handlerBasePath = '../../../../src/logic/operationHandlers';
 
 const handlerModuleDefinitions = [
   ['ApplyDamageHandler', `${handlerBasePath}/applyDamageHandler.js`],
-  ['ConsumeItemHandler', `${handlerBasePath}/consumeItemHandler.js`],
   ['DispatchEventHandler', `${handlerBasePath}/dispatchEventHandler.js`],
   [
     'DispatchPerceptibleEventHandler',
@@ -19,7 +18,6 @@ const handlerModuleDefinitions = [
   ],
   ['DispatchSpeechHandler', `${handlerBasePath}/dispatchSpeechHandler.js`],
   ['DispatchThoughtHandler', `${handlerBasePath}/dispatchThoughtHandler.js`],
-  ['DigestFoodHandler', `${handlerBasePath}/digestFoodHandler.js`],
   ['LogHandler', `${handlerBasePath}/logHandler.js`],
   ['ModifyComponentHandler', `${handlerBasePath}/modifyComponentHandler.js`],
   ['ModifyPartHealthHandler', `${handlerBasePath}/modifyPartHealthHandler.js`],
@@ -49,11 +47,6 @@ const handlerModuleDefinitions = [
   [
     'BreakFollowRelationHandler',
     `${handlerBasePath}/breakFollowRelationHandler.js`,
-  ],
-  ['BurnEnergyHandler', `${handlerBasePath}/burnEnergyHandler.js`],
-  [
-    'UpdateHungerStateHandler',
-    `${handlerBasePath}/updateHungerStateHandler.js`,
   ],
   [
     'UpdatePartHealthStateHandler',
@@ -283,15 +276,6 @@ beforeAll(async () => {
       ],
     },
     {
-      token: tokens.ConsumeItemHandler,
-      handlerName: 'ConsumeItemHandler',
-      dependencies: [
-        { property: 'logger', token: ILogger },
-        { property: 'entityManager', token: IEntityManager },
-        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-      ],
-    },
-    {
       token: tokens.DispatchEventHandler,
       handlerName: 'DispatchEventHandler',
       dependencies: [
@@ -325,15 +309,6 @@ beforeAll(async () => {
       dependencies: [
         { property: 'logger', token: ILogger },
         { property: 'dispatcher', token: IValidatedEventDispatcher },
-      ],
-    },
-    {
-      token: tokens.DigestFoodHandler,
-      handlerName: 'DigestFoodHandler',
-      dependencies: [
-        { property: 'logger', token: ILogger },
-        { property: 'entityManager', token: IEntityManager },
-        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },
     {
@@ -532,24 +507,6 @@ beforeAll(async () => {
           property: 'rebuildLeaderListCacheHandler',
           token: RebuildLeaderListCacheHandlerToken,
         },
-        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-      ],
-    },
-    {
-      token: tokens.BurnEnergyHandler,
-      handlerName: 'BurnEnergyHandler',
-      dependencies: [
-        { property: 'logger', token: ILogger },
-        { property: 'entityManager', token: IEntityManager },
-        { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
-      ],
-    },
-    {
-      token: tokens.UpdateHungerStateHandler,
-      handlerName: 'UpdateHungerStateHandler',
-      dependencies: [
-        { property: 'logger', token: ILogger },
-        { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
       ],
     },

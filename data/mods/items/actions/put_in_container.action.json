@@ -11,7 +11,8 @@
     "actor": [
       "positioning:bending_over",
       "positioning:fallen",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:sitting_on"
     ]
   },
   "prerequisites": [

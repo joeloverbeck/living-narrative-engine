@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "metabolism:event-is-action-drink-beverage",
-  "description": "Matches drink action attempt events",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "metabolism:drink"]
-  }
-}

@@ -78,7 +78,6 @@ export function registerInterpreters(container) {
 
     // Operation mappings - keep alphabetically sorted
     // Format: registry.register('OPERATION_TYPE', bind(tokens.HandlerToken));
-    registry.register('CONSUME_ITEM', bind(tokens.ConsumeItemHandler));
     registry.register('DISPATCH_EVENT', bind(tokens.DispatchEventHandler));
     registry.register(
       'DISPATCH_PERCEPTIBLE_EVENT',
@@ -86,7 +85,6 @@ export function registerInterpreters(container) {
     );
     registry.register('DISPATCH_SPEECH', bind(tokens.DispatchSpeechHandler));
     registry.register('DISPATCH_THOUGHT', bind(tokens.DispatchThoughtHandler));
-    registry.register('DIGEST_FOOD', bind(tokens.DigestFoodHandler));
     registry.register('LOG', bind(tokens.LogHandler));
     registry.register('MODIFY_COMPONENT', bind(tokens.ModifyComponentHandler));
     registry.register(
@@ -129,11 +127,6 @@ export function registerInterpreters(container) {
     registry.register(
       'BREAK_FOLLOW_RELATION',
       bind(tokens.BreakFollowRelationHandler)
-    );
-    registry.register('BURN_ENERGY', bind(tokens.BurnEnergyHandler));
-    registry.register(
-      'UPDATE_HUNGER_STATE',
-      bind(tokens.UpdateHungerStateHandler)
     );
     registry.register(
       'UPDATE_PART_HEALTH_STATE',

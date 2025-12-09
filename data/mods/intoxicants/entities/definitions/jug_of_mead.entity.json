@@ -1,0 +1,25 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "intoxicants:jug_of_mead",
+  "components": {
+    "core:name": {
+      "text": "clay jug of mead"
+    },
+    "core:description": {
+      "text": "A handsome clay jug with decorative bee motifs pressed into its surface, sealed with a cork and stamped with beeswax. The golden-amber liquid within is thick and viscous, promising sweetness. A rich honey fragrance clings to the vessel."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.3
+    },
+    "items:drinkable": {},
+    "items:liquid_container": {
+      "currentVolumeMilliliters": 1000,
+      "maxCapacityMilliliters": 1000,
+      "servingSizeMilliliters": 200,
+      "isRefillable": true,
+      "flavorText": "The mead is luxuriously sweet with deep honey notes and subtle floral undertones. It coats the throat like liquid gold and spreads warmth through your limbs with every swallow."
+    }
+  }
+}

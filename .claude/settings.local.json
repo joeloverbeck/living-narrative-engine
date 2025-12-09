@@ -642,7 +642,10 @@
       "Bash(do)",
       "Bash(if jq empty \"$f\")",
       "Bash(then echo \"✅ Valid JSON\")",
-      "Bash(else echo \"❌ Invalid JSON\")"
+      "Bash(else echo \"❌ Invalid JSON\")",
+      "WebSearch",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/edgeCases/consumeItemEdgeCases.test.js )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/edgeCases/digestFoodEdgeCases.test.js)"
     ],
     "deny": [],
     "ask": []

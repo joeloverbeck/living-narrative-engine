@@ -5,6 +5,11 @@
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",
   "definitions": {
+    "modifierEntityPath": {
+      "type": "string",
+      "pattern": "^entity\\.(actor|primary|secondary|tertiary|location)(\\..+)?$",
+      "description": "Entity path for modifier context. Must start with 'entity.' followed by a valid role (actor, primary, secondary, tertiary, location), optionally followed by additional path segments for component access (e.g., 'entity.actor.components.skills:medicine_skill.value')."
+    },
     "targetDefinition": {
       "type": "object",
       "description": "Defines a target specification for multi-target actions",

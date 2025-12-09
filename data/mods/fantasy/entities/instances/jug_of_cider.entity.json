@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "fantasy:jug_of_cider_instance",
+    "definitionId": "intoxicants:jug_of_cider"
+  }
+  

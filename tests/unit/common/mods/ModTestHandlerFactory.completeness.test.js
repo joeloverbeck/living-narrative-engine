@@ -216,7 +216,6 @@ describe('ModTestHandlerFactory - Completeness', () => {
 
       expect(handlers).toHaveProperty('ADD_PERCEPTION_LOG_ENTRY');
       expect(handlers).toHaveProperty('REGENERATE_DESCRIPTION');
-      expect(handlers).toHaveProperty('CONSUME_ITEM');
     });
 
     it('should register component modification handlers', () => {

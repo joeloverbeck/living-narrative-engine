@@ -47,7 +47,6 @@ import RemoveLyingClosenessHandler from '../../../src/logic/operationHandlers/re
 import RegenerateDescriptionHandler from '../../../src/logic/operationHandlers/regenerateDescriptionHandler.js';
 import IfHandler from '../../../src/logic/operationHandlers/ifHandler.js';
 import ForEachHandler from '../../../src/logic/operationHandlers/forEachHandler.js';
-import ConsumeItemHandler from '../../../src/logic/operationHandlers/consumeItemHandler.js';
 import UnwieldItemHandler from '../../../src/logic/operationHandlers/unwieldItemHandler.js';
 import PrepareActionContextHandler from '../../../src/logic/operationHandlers/prepareActionContextHandler.js';
 import * as closenessCircleService from '../../../src/logic/services/closenessCircleService.js';
@@ -57,7 +56,6 @@ import BreakFollowRelationHandler from '../../../src/logic/operationHandlers/bre
 import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
 import DispatchThoughtHandler from '../../../src/logic/operationHandlers/dispatchThoughtHandler.js';
-import DigestFoodHandler from '../../../src/logic/operationHandlers/digestFoodHandler.js';
 import EstablishFollowRelationHandler from '../../../src/logic/operationHandlers/establishFollowRelationHandler.js';
 import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
@@ -67,8 +65,8 @@ import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandle
 import RemoveSittingClosenessHandler from '../../../src/logic/operationHandlers/removeSittingClosenessHandler.js';
 import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveOutcomeHandler.js';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
-import UpdateHungerStateHandler from '../../../src/logic/operationHandlers/updateHungerStateHandler.js';
 import EquipClothingHandler from '../../../src/logic/operationHandlers/equipClothingHandler.js';
+import ModifyPartHealthHandler from '../../../src/logic/operationHandlers/modifyPartHealthHandler.js';
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 
@@ -96,10 +94,29 @@ const MOUTH_OPERATION_TYPES = new Set([
 
 /**
  * Types that use "type" property but are NOT operation types.
- * These are used in action schema structures like chanceOfSuccess.modifiers.
+ * These are used in action schema structures like chanceOfSuccess.modifiers,
+ * and damage_entry.type values in APPLY_DAMAGE operations.
  * @see data/schemas/action.schema.json - chanceModifier definition
+ * @see data/schemas/operations/applyDamage.schema.json - damage_entry.type values
  */
-const NON_OPERATION_TYPES = new Set(['flat', 'percentage']);
+const NON_OPERATION_TYPES = new Set([
+  'flat',
+  'percentage',
+  // Damage types from APPLY_DAMAGE operation schema
+  'slashing',
+  'piercing',
+  'bludgeoning',
+  'fire',
+  'cold',
+  'lightning',
+  'poison',
+  'acid',
+  'psychic',
+  'necrotic',
+  'radiant',
+  'force',
+  'thunder',
+]);
 
 const MUTATION_OR_PERCEPTION_TYPES = new Set([
   'ADD_COMPONENT',
@@ -117,7 +134,6 @@ const MUTATION_OR_PERCEPTION_TYPES = new Set([
   'UNLOCK_MOVEMENT',
   'BREAK_CLOSENESS_WITH_TARGET',
   'REGENERATE_DESCRIPTION',
-  'CONSUME_ITEM',
   'MODIFY_ARRAY_FIELD',
 ]);
 
@@ -501,10 +517,6 @@ export class ModTestHandlerFactory {
         jsonLogic: { evaluate: jest.fn((rule, data) => data) },
         logger,
       }),
-      // Mock handler for BURN_ENERGY - satisfies fail-fast enforcement
-      BURN_ENERGY: {
-        execute: jest.fn().mockResolvedValue(undefined),
-      },
       // Mock handler for REGENERATE_DESCRIPTION - satisfies fail-fast enforcement
       REGENERATE_DESCRIPTION: {
         execute: jest.fn().mockResolvedValue(undefined),
@@ -1076,6 +1088,7 @@ export class ModTestHandlerFactory {
       locks: this.createHandlersWithComponentMutations.bind(this),
       weapons: this.createHandlersWithPerceptionLogging.bind(this),
       distress: this.createHandlersWithPerceptionLogging.bind(this),
+      'first-aid': this.createHandlersWithPerceptionLogging.bind(this),
     };
 
     if (profileHint.hasDiscoveredOperations) {
@@ -1550,11 +1563,6 @@ export class ModTestHandlerFactory {
         closenessCircleService,
       }),
       REGENERATE_DESCRIPTION: regenerateDescriptionHandler,
-      CONSUME_ITEM: new ConsumeItemHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
       APPLY_DAMAGE: new ApplyDamageHandler({
         entityManager,
         logger,
@@ -1574,16 +1582,6 @@ export class ModTestHandlerFactory {
       DISPATCH_THOUGHT: new DispatchThoughtHandler({
         dispatcher: eventBus,
         logger,
-      }),
-      DIGEST_FOOD: new DigestFoodHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
-      UPDATE_HUNGER_STATE: new UpdateHungerStateHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
       }),
       REBUILD_LEADER_LIST_CACHE: rebuildLeaderListCacheHandler,
       ESTABLISH_FOLLOW_RELATION: new EstablishFollowRelationHandler({
@@ -1606,6 +1604,12 @@ export class ModTestHandlerFactory {
       RESOLVE_OUTCOME: new ResolveOutcomeHandler({
         chanceCalculationService,
         logger,
+      }),
+      MODIFY_PART_HEALTH: new ModifyPartHealthHandler({
+        logger,
+        entityManager,
+        safeEventDispatcher: safeDispatcher,
+        jsonLogicService: jsonLogicEvaluationService,
       }),
       // Mock handler for LOCK_GRABBING - satisfies fail-fast enforcement
       LOCK_GRABBING: {

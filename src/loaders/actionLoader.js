@@ -9,6 +9,7 @@ import {
   hasVisualProperties,
   countActionsWithVisualProperties,
 } from '../validation/visualPropertiesValidator.js';
+import { validateModifierCondition } from '../logic/utils/entityPathValidator.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -51,7 +52,43 @@ class ActionLoader extends SimpleItemLoader {
   }
 
   /**
-   * Override to add visual properties logging
+   * Validates entity paths in modifier conditions
+   *
+   * @param {object} data - Loaded action data
+   * @param {string} actionId - Action ID for error messages
+   * @returns {Array<{path: string, error: string, location: string, operatorName: string, actionId: string}>} - Array of validation errors
+   * @private
+   */
+  #validateModifierEntityPaths(data, actionId) {
+    const errors = [];
+
+    // Check chanceBased.modifiers if present
+    const modifiers = data?.chanceBased?.modifiers;
+    if (!Array.isArray(modifiers)) {
+      return errors;
+    }
+
+    for (let i = 0; i < modifiers.length; i++) {
+      const modifier = modifiers[i];
+      if (modifier?.condition) {
+        const result = validateModifierCondition(modifier.condition);
+        if (!result.isValid) {
+          for (const err of result.errors) {
+            errors.push({
+              ...err,
+              location: `chanceBased.modifiers[${i}].condition.${err.location}`,
+              actionId,
+            });
+          }
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Override to add modifier entity path validation and visual properties logging
    *
    * @protected
    * @override
@@ -66,6 +103,21 @@ class ActionLoader extends SimpleItemLoader {
       data,
       registryKey
     );
+
+    // Validate modifier entity paths
+    const pathErrors = this.#validateModifierEntityPaths(
+      data,
+      result.qualifiedId
+    );
+    if (pathErrors.length > 0) {
+      for (const error of pathErrors) {
+        this._logger.warn(
+          `ActionLoader: Invalid entity path in ${error.actionId} at ${error.location}: ` +
+            `"${error.path}" - ${error.error}`
+        );
+      }
+      // Graceful degradation: warn but continue loading
+    }
 
     // Add visual properties logging if present
     if (hasVisualProperties(data)) {

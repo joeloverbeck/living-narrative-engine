@@ -69,12 +69,6 @@
           "$ref": "./operations/dispatchThought.schema.json"
         },
         {
-          "$ref": "./operations/consumeItem.schema.json"
-        },
-        {
-          "$ref": "./operations/digestFood.schema.json"
-        },
-        {
           "$ref": "./operations/drinkEntirely.schema.json"
         },
         {
@@ -127,12 +121,6 @@
         },
         {
           "$ref": "./operations/breakFollowRelation.schema.json"
-        },
-        {
-          "$ref": "./operations/burnEnergy.schema.json"
-        },
-        {
-          "$ref": "./operations/updateHungerState.schema.json"
         },
         {
           "$ref": "./operations/addPerceptionLogEntry.schema.json"

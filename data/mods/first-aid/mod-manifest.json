@@ -35,22 +35,30 @@
       "disinfect_my_wounded_part.action.json",
       "disinfect_wounded_part.action.json",
       "rinse_my_wounded_part.action.json",
-      "rinse_wounded_part.action.json"
+      "rinse_wounded_part.action.json",
+      "treat_my_wounded_part.action.json",
+      "treat_wounded_part.action.json"
     ],
     "conditions": [
       "event-is-action-disinfect-my-wounded-part.condition.json",
       "event-is-action-disinfect-wounded-part.condition.json",
       "event-is-action-rinse-my-wounded-part.condition.json",
-      "event-is-action-rinse-wounded-part.condition.json"
+      "event-is-action-rinse-wounded-part.condition.json",
+      "event-is-action-treat-my-wounded-part.condition.json",
+      "event-is-action-treat-wounded-part.condition.json"
     ],
     "rules": [
       "handle_disinfect_my_wounded_part.rule.json",
       "handle_disinfect_wounded_part.rule.json",
       "handle_rinse_my_wounded_part.rule.json",
-      "handle_rinse_wounded_part.rule.json"
+      "handle_rinse_wounded_part.rule.json",
+      "handle_treat_my_wounded_part.rule.json",
+      "handle_treat_wounded_part.rule.json"
     ],
     "scopes": [
       "bleeding_actor_body_parts.scope",
+      "treatable_actor_body_parts.scope",
+      "treatable_target_body_parts.scope",
       "water_at_location.scope",
       "water_in_inventory.scope",
       "water_sources_available.scope",

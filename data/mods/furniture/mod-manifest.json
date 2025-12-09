@@ -21,10 +21,21 @@
     }
   ],
   "content": {
-    "components": [],
-    "actions": [],
-    "conditions": [],
-    "rules": [],
+    "components": [
+      "near_furniture.component.json"
+    ],
+    "actions": [
+      "put_on_nearby_surface.action.json",
+      "take_from_nearby_surface.action.json"
+    ],
+    "conditions": [
+      "event-is-action-put-on-nearby-surface.condition.json",
+      "event-is-action-take-from-nearby-surface.condition.json"
+    ],
+    "rules": [
+      "handle_put_on_nearby_surface.rule.json",
+      "handle_take_from_nearby_surface.rule.json"
+    ],
     "entities": {
       "definitions": [
         "bar_stools.entity.json",
@@ -48,6 +59,8 @@
     },
     "events": [],
     "macros": [],
-    "scopes": []
+    "scopes": [
+      "open_containers_on_nearby_furniture.scope"
+    ]
   }
 }

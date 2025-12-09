@@ -15,12 +15,10 @@ import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRig
 import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
 import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
 import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
+import { IsNearbyFurnitureOperator } from './operators/isNearbyFurnitureOperator.js';
 import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
 import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
 import { HasComponentOperator } from './operators/hasComponentOperator.js';
-import { IsHungryOperator } from './operators/isHungryOperator.js';
-import { PredictedEnergyOperator } from './operators/predictedEnergyOperator.js';
-import { CanConsumeOperator } from './operators/canConsumeOperator.js';
 import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAppendagesOperator.js';
 import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.js';
 import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
@@ -191,6 +189,11 @@ export class JsonLogicCustomOperators extends BaseService {
       logger: this.#logger,
     });
 
+    const isNearbyFurnitureOp = new IsNearbyFurnitureOperator({
+      entityManager: this.#entityManager,
+      logger: this.#logger,
+    });
+
     const hasOtherActorsAtLocationOp = new HasOtherActorsAtLocationOperator({
       entityManager: this.#entityManager,
       logger: this.#logger,
@@ -249,21 +252,6 @@ export class JsonLogicCustomOperators extends BaseService {
           componentData
         );
     };
-
-    const isHungryOp = new IsHungryOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const predictedEnergyOp = new PredictedEnergyOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const canConsumeOp = new CanConsumeOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
 
     const hasFreeGrabbingAppendagesOp = new HasFreeGrabbingAppendagesOperator({
       entityManager: this.#entityManager,
@@ -444,6 +432,16 @@ export class JsonLogicCustomOperators extends BaseService {
       jsonLogicEvaluationService
     );
 
+    // Register isNearbyFurniture operator
+    this.#registerOperator(
+      'isNearbyFurniture',
+      function (entityId) {
+        // 'this' is the evaluation context
+        return isNearbyFurnitureOp.evaluate([entityId], this);
+      },
+      jsonLogicEvaluationService
+    );
+
     // Register hasOtherActorsAtLocation operator
     this.#registerOperator(
       'hasOtherActorsAtLocation',
@@ -479,36 +477,6 @@ export class JsonLogicCustomOperators extends BaseService {
       'get_component_value',
       function (entityPath, componentId, propertyPath = null) {
         return getComponentValueOp(entityPath, componentId, propertyPath);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register is_hungry operator
-    this.#registerOperator(
-      'is_hungry',
-      function (entityPath) {
-        // 'this' is the evaluation context
-        return isHungryOp.evaluate([entityPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register predicted_energy operator
-    this.#registerOperator(
-      'predicted_energy',
-      function (entityPath) {
-        // 'this' is the evaluation context
-        return predictedEnergyOp.evaluate([entityPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register can_consume operator
-    this.#registerOperator(
-      'can_consume',
-      function (consumerPath, itemPath) {
-        // 'this' is the evaluation context
-        return canConsumeOp.evaluate([consumerPath, itemPath], this);
       },
       jsonLogicEvaluationService
     );
