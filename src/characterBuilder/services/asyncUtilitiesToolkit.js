@@ -172,8 +172,9 @@ export class AsyncUtilitiesToolkit {
         maxTimerId = null;
       }
       if (lastArgs) {
-        executeFunction();
+        return executeFunction();
       }
+      return result;
     };
 
     debounced.pending = () => Boolean(timerId);

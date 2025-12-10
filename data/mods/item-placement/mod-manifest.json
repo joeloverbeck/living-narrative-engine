@@ -1,0 +1,46 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "item-placement",
+  "version": "1.0.0",
+  "name": "Item Placement",
+  "description": "Actions for staging items on nearby surfaces and retrieving them while seated.",
+  "actionPurpose": "Place carried items onto nearby surfaces and take them back into inventory.",
+  "actionConsiderWhen": "A character is seated near furniture and needs to temporarily set down or pick up items.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "put_on_nearby_surface.action.json",
+      "take_from_nearby_surface.action.json"
+    ],
+    "scopes": [
+      "open_containers_on_nearby_furniture.scope"
+    ],
+    "conditions": [
+      "event-is-action-put-on-nearby-surface.condition.json",
+      "event-is-action-take-from-nearby-surface.condition.json"
+    ],
+    "rules": [
+      "handle_put_on_nearby_surface.rule.json",
+      "handle_take_from_nearby_surface.rule.json"
+    ]
+  }
+}

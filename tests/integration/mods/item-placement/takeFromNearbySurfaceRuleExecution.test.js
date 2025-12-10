@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the furniture:take_from_nearby_surface action and rule.
+ * @file Integration tests for the item-placement:take_from_nearby_surface action and rule.
  * @description Tests the rule execution after the take_from_nearby_surface action is performed.
  * This action allows a seated actor to take items from containers on nearby furniture.
  * Note: This test does not test action discovery or scope resolution - it assumes
@@ -9,8 +9,8 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import takeFromNearbySurfaceRule from '../../../../data/mods/furniture/rules/handle_take_from_nearby_surface.rule.json' assert { type: 'json' };
-import eventIsActionTakeFromNearbySurface from '../../../../data/mods/furniture/conditions/event-is-action-take-from-nearby-surface.condition.json' assert { type: 'json' };
+import takeFromNearbySurfaceRule from '../../../../data/mods/item-placement/rules/handle_take_from_nearby_surface.rule.json' assert { type: 'json' };
+import eventIsActionTakeFromNearbySurface from '../../../../data/mods/item-placement/conditions/event-is-action-take-from-nearby-surface.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standardized seated container interaction scenario.
@@ -106,13 +106,13 @@ function setupSeatedContainerScenario({
   };
 }
 
-describe('furniture:take_from_nearby_surface action integration', () => {
+describe('item-placement:take_from_nearby_surface action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'furniture',
-      'furniture:take_from_nearby_surface',
+      'item-placement',
+      'item-placement:take_from_nearby_surface',
       takeFromNearbySurfaceRule,
       eventIsActionTakeFromNearbySurface
     );

@@ -292,6 +292,16 @@ export class SpeechPatternsGeneratorController extends BaseCharacterBuilderContr
   }
 
   /**
+   * Flushes the debounced validation immediately.
+   * Intended for testing purposes to avoid waiting for debounce delays.
+   *
+   * @returns {Promise<void>|undefined} The result of the validation if pending.
+   */
+  flushDebouncedValidation() {
+    return this.#debouncedValidation?.flush();
+  }
+
+  /**
    * Set up event listeners for speech patterns generation UI
    *
    * @protected

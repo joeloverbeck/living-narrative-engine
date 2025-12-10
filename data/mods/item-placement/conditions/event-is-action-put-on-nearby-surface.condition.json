@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "item-placement:event-is-action-put-on-nearby-surface",
+  "description": "Checks if event is the put_on_nearby_surface action",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "item-placement:put_on_nearby_surface"
+    ]
+  }
+}

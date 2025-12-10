@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "furniture:put_on_nearby_surface",
+  "id": "item-placement:put_on_nearby_surface",
   "name": "Put On Nearby Surface",
   "description": "While seated, place an item in a container on nearby furniture",
   "generateCombinations": true,
@@ -15,7 +15,7 @@
   },
   "targets": {
     "primary": {
-      "scope": "furniture:open_containers_on_nearby_furniture",
+      "scope": "item-placement:open_containers_on_nearby_furniture",
       "placeholder": "container",
       "description": "Container on nearby furniture to put item in"
     },
@@ -35,9 +35,9 @@
   ],
   "template": "reach over and put {secondary.name} on {primary.name}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#3e2723",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#4e342e",
+    "hoverTextColor": "#efebe9"
   }
 }

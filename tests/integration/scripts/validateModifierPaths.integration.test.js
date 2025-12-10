@@ -22,28 +22,46 @@ const TEST_MOD_DIR = path.join(MODS_DIR, TEST_MOD_NAME);
  * @returns {Promise<{stdout: string, stderr: string, exitCode: number}>} CLI output and exit code
  */
 function runCLI(args = []) {
+  const logFile = path.join(
+    PROJECT_ROOT,
+    'tmp',
+    `validateModifierPaths-${Date.now()}-${Math.random()
+      .toString(16)
+      .slice(2)}.log`
+  );
+
   return new Promise((resolve) => {
-    const proc = spawn('node', [SCRIPT_PATH, ...args], {
-      cwd: PROJECT_ROOT,
-      env: { ...process.env },
-    });
+    const env = { ...process.env, MODIFIER_PATHS_LOG_FILE: logFile };
+    fs.mkdir(path.dirname(logFile), { recursive: true }).finally(() => {
+      const proc = spawn(process.execPath, [SCRIPT_PATH, ...args], {
+        cwd: PROJECT_ROOT,
+        env,
+        stdio: 'ignore',
+      });
 
-    let stdout = '';
-    let stderr = '';
+      proc.on('error', (error) => {
+        resolve({
+          stdout: '',
+          stderr: String(error),
+          exitCode: 1,
+        });
+      });
 
-    proc.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
+      proc.on('close', async (code) => {
+        let stdout = '';
+        try {
+          stdout = await fs.readFile(logFile, 'utf-8');
+        } catch {
+          stdout = '';
+        } finally {
+          await fs.rm(logFile, { force: true });
+        }
 
-    proc.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    proc.on('close', (code) => {
-      resolve({
-        stdout,
-        stderr,
-        exitCode: code,
+        resolve({
+          stdout,
+          stderr: '',
+          exitCode: code ?? 0,
+        });
       });
     });
   });

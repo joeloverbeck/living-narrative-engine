@@ -4,7 +4,7 @@
   "comment": "Handles put_on_nearby_surface action - seated actor putting item on nearby container",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "furniture:event-is-action-put-on-nearby-surface"
+    "condition_ref": "item-placement:event-is-action-put-on-nearby-surface"
   },
   "actions": [
     {

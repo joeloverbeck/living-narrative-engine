@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "furniture:take_from_nearby_surface",
+  "id": "item-placement:take_from_nearby_surface",
   "name": "Take From Nearby Surface",
   "description": "While seated, take an item from a container on nearby furniture",
   "generateCombinations": true,
@@ -15,7 +15,7 @@
   },
   "targets": {
     "primary": {
-      "scope": "furniture:open_containers_on_nearby_furniture",
+      "scope": "item-placement:open_containers_on_nearby_furniture",
       "placeholder": "container",
       "description": "Container on nearby furniture to take from"
     },
@@ -36,9 +36,9 @@
   ],
   "template": "reach over and take {secondary.name} from {primary.name}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
-    "hoverTextColor": "#ffffff"
+    "backgroundColor": "#3e2723",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#4e342e",
+    "hoverTextColor": "#efebe9"
   }
 }

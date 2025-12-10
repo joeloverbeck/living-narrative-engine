@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 51 defined color combinations
-**In Use**: 37 schemes actively implemented across mods
+**Total Schemes**: 52 defined color combinations
+**In Use**: 38 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -61,6 +61,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Recovery                | Evergreen Shadow    | 11.5    | `#123524`        | Active |
 | Intoxicants             | Tavern Amber        | 17.1    | `#5c3d1e`        | Active |
 | Item-Handling           | Tactile Brown       | 18.1    | `#5d4037`        | Active |
+| Item-Placement          | Foundation Earth    | 18.2    | `#3e2723`        | Active |
 
 ## Available Color Schemes by Category
 
@@ -1113,8 +1114,25 @@ When modifying schemes:
 - **Use Cases**: Item manipulation, picking up and dropping items, physical object handling
 - **Theme**: Earthy tactile feel evoking hands-on interaction with physical objects
 
+#### 18.2 Foundation Earth ✅ IN USE: Item-Placement
+
+```json
+{
+  "backgroundColor": "#3e2723",
+  "textColor": "#ffffff",
+  "hoverBackgroundColor": "#4e342e",
+  "hoverTextColor": "#efebe9"
+}
+```
+
+- **Normal Contrast**: 13.82:1 🌟 AAA
+- **Hover Contrast**: 9.56:1 🌟 AAA
+- **Use Cases**: On-surface item staging, tidying, and retrieving items from nearby furniture while seated
+- **Theme**: Grounded stability and surfaces, emphasizing steadiness and intentional placement
+
 ## Version History
 
+- **2025-12**: Added Foundation Earth (18.2) for Item-Placement mod
 - **2025-12**: Added Section 18 (Physical/Interaction Colors) with Tactile Brown (18.1) for Item-Handling mod
 - **2025-12**: Added Section 17 (Intoxicants/Vice Colors) with Tavern Amber (17.1) for Intoxicants mod and Hazy Smoke (17.2) available
 - **2026-02**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
