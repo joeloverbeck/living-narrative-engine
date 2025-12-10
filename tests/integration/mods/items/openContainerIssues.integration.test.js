@@ -76,8 +76,8 @@ describe('Open Container Issues - Integration', () => {
     it('should match template pattern of other item actions (lowercase verb)', () => {
       // Load action definitions directly to verify consistency
       const openContainerAction = require('../../../../data/mods/items/actions/open_container.action.json');
-      const dropItemAction = require('../../../../data/mods/items/actions/drop_item.action.json');
-      const pickUpItemAction = require('../../../../data/mods/items/actions/pick_up_item.action.json');
+      const dropItemAction = require('../../../../data/mods/item-handling/actions/drop_item.action.json');
+      const pickUpItemAction = require('../../../../data/mods/item-handling/actions/pick_up_item.action.json');
 
       // All templates should start with lowercase
       expect(openContainerAction.template.charAt(0)).toBe(

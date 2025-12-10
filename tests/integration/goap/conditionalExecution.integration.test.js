@@ -80,7 +80,7 @@ describe('Conditional Execution - Integration', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         elseSteps: [
@@ -148,7 +148,7 @@ describe('Conditional Execution - Integration', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         elseSteps: [

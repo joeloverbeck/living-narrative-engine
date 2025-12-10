@@ -235,15 +235,15 @@ describe('ModTestFixture - Error Hints', () => {
 
     it('should detect inventory category correctly', async () => {
       testFixture = await ModTestFixture.forAction(
-        'items',
-        'pick_up_item',
+        'item-handling',
+        'item-handling:pick_up_item',
         null,
         null
       );
 
       // Mock action definition with inventory scope
       testFixture._actionDefinition = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         targets: 'items:items_at_location',
       };
 

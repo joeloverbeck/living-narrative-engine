@@ -86,6 +86,15 @@
               "value": "{context.actorName} expertly treats their own wounded {context.bodyPartName}, achieving remarkable healing results!"
             }
           },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}"
+            }
+          },
           { "macro": "core:logSuccessOutcomeAndEndTurn" }
         ]
       }
@@ -121,6 +130,15 @@
               "value": "{context.actorName} successfully treats their own wounded {context.bodyPartName}."
             }
           },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}"
+            }
+          },
           { "macro": "core:logSuccessOutcomeAndEndTurn" }
         ]
       }
@@ -138,6 +156,15 @@
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} attempts to treat their own wounded {context.bodyPartName} but fails to provide effective care."
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}"
             }
           },
           { "macro": "core:logFailureOutcomeAndEndTurn" }
@@ -176,6 +203,15 @@
             "parameters": {
               "variable_name": "logMessage",
               "value": "{context.actorName} fumbles badly while treating their own wounded {context.bodyPartName}, causing additional injury!"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}"
             }
           },
           { "macro": "core:logFailureOutcomeAndEndTurn" }

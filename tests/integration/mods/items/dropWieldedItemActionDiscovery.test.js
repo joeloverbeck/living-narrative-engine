@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:drop_wielded_item action definition.
+ * @file Integration tests for the item-handling:drop_wielded_item action definition.
  * @description Tests that the drop_wielded_item action is properly defined and structured.
  * This action allows actors to drop items they are currently wielding without requiring
  * a free grabbing appendage (since they are releasing, not grabbing).
@@ -7,18 +7,18 @@
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import dropWieldedItemAction from '../../../../data/mods/items/actions/drop_wielded_item.action.json' assert { type: 'json' };
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import eventIsActionDropWieldedItem from '../../../../data/mods/items/conditions/event-is-action-drop-wielded-item.condition.json' assert { type: 'json' };
+import dropWieldedItemAction from '../../../../data/mods/item-handling/actions/drop_wielded_item.action.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import eventIsActionDropWieldedItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-wielded-item.condition.json' assert { type: 'json' };
 
-describe('items:drop_wielded_item action definition', () => {
+describe('item-handling:drop_wielded_item action definition', () => {
   let testFixture;
 
   beforeEach(async () => {
     // drop_wielded_item shares the handle_drop_item rule with drop_item action
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:drop_wielded_item',
+      'item-handling:drop_wielded_item',
       dropItemRule,
       eventIsActionDropWieldedItem
     );
@@ -32,7 +32,7 @@ describe('items:drop_wielded_item action definition', () => {
 
   describe('Action Structure', () => {
     it('should have correct action ID', () => {
-      expect(dropWieldedItemAction.id).toBe('items:drop_wielded_item');
+      expect(dropWieldedItemAction.id).toBe('item-handling:drop_wielded_item');
     });
 
     it('should have correct name', () => {
@@ -121,10 +121,10 @@ describe('items:drop_wielded_item action definition', () => {
     });
 
     it('should have matching visual style with drop_item', () => {
-      // Both drop actions should have the same visual style for consistency
-      expect(dropWieldedItemAction.visual.backgroundColor).toBe('#004d61');
-      expect(dropWieldedItemAction.visual.textColor).toBe('#e0f7fa');
-      expect(dropWieldedItemAction.visual.hoverBackgroundColor).toBe('#006978');
+      // Both drop actions should have the same visual style for consistency (Tactile Brown)
+      expect(dropWieldedItemAction.visual.backgroundColor).toBe('#5d4037');
+      expect(dropWieldedItemAction.visual.textColor).toBe('#efebe9');
+      expect(dropWieldedItemAction.visual.hoverBackgroundColor).toBe('#6d4c41');
       expect(dropWieldedItemAction.visual.hoverTextColor).toBe('#ffffff');
     });
   });

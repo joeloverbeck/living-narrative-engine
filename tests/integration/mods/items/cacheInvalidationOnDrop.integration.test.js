@@ -275,7 +275,7 @@ describe('AvailableActionsProvider - Cache Invalidation Integration', () => {
         actions: [
           { id: 'core:wait', command: 'Wait', params: {} },
           {
-            id: 'items:pick_up_item',
+            id: 'item-handling:pick_up_item',
             command: 'Pick up sword',
             params: { target: 'sword_1' },
           },
@@ -286,7 +286,7 @@ describe('AvailableActionsProvider - Cache Invalidation Integration', () => {
 
       const updatedActions = await provider.get(actor, turnContext, mockLogger);
       expect(updatedActions).toHaveLength(2);
-      expect(updatedActions.some((a) => a.id === 'items:pick_up_item')).toBe(
+      expect(updatedActions.some((a) => a.id === 'item-handling:pick_up_item')).toBe(
         true
       );
       expect(mockDiscoveryService.getValidActions).toHaveBeenCalledTimes(2);

@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "item-handling",
+  "version": "1.0.0",
+  "name": "Item Handling",
+  "description": "Actions for picking up, dropping, and manipulating items.",
+  "actionPurpose": "Manage how items are acquired and released through picking up and dropping actions.",
+  "actionConsiderWhen": "Picking up items from the environment or dropping items from inventory onto the ground.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "drop_item.action.json",
+      "drop_wielded_item.action.json",
+      "pick_up_item.action.json"
+    ],
+    "scopes": [
+      "non_wielded_inventory_items.scope"
+    ],
+    "conditions": [
+      "event-is-action-drop-item.condition.json",
+      "event-is-action-drop-wielded-item.condition.json",
+      "event-is-action-pick-up-item.condition.json"
+    ],
+    "rules": [
+      "handle_drop_item.rule.json",
+      "handle_pick_up_item.rule.json"
+    ]
+  }
+}

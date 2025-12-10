@@ -18,7 +18,7 @@ afterEach(() => {
 
 describe('Inventory scenario helpers - integration', () => {
   it('executes pick_up_item using the pickup scenario helper', async () => {
-    const fixture = await createFixture('items:pick_up_item');
+    const fixture = await createFixture('item-handling:pick_up_item');
     const scenario = fixture.createPickupScenario({
       actor: { id: 'picker', name: 'Picker' },
       item: { id: 'pickup_target', weight: 0.1 },
@@ -36,10 +36,10 @@ describe('Inventory scenario helpers - integration', () => {
   });
 
   it('executes drop_item using the drop scenario helper', async () => {
-    const fixture = await createFixture('items:drop_item');
+    const fixture = await createFixture('item-handling:drop_item');
     // Load additional condition required by the rule's "or" block
     await fixture.loadDependencyConditions([
-      'items:event-is-action-drop-wielded-item',
+      'item-handling:event-is-action-drop-wielded-item',
     ]);
     const scenario = fixture.createDropItemScenario({
       actor: { id: 'dropper' },

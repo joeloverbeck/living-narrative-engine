@@ -5,8 +5,8 @@
   "event_type": "core:attempt_action",
   "condition": {
     "or": [
-      { "condition_ref": "items:event-is-action-drop-item" },
-      { "condition_ref": "items:event-is-action-drop-wielded-item" }
+      { "condition_ref": "item-handling:event-is-action-drop-item" },
+      { "condition_ref": "item-handling:event-is-action-drop-wielded-item" }
     ]
   },
   "actions": [

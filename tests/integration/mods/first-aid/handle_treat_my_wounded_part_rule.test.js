@@ -15,11 +15,10 @@
  *    - REGENERATE_DESCRIPTION targets "actor" (not "primary")
  *    - Messages use "their own" phrasing
  *
- * 3. MACRO BEHAVIOR: The rule uses core:logSuccessOutcomeAndEndTurn macro which
- *    dispatches core:display_successful_action_result and core:action_success,
- *    but NOT core:perceptible_event. This differs from core:logSuccessAndEndTurn
- *    used by deterministic rules. The test assertions reflect this by using
- *    shouldHavePerceptibleEvent: false.
+ * 3. PERCEPTIBLE EVENTS: The rule dispatches DISPATCH_PERCEPTIBLE_EVENT in each
+ *    outcome branch (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE) to broadcast
+ *    the action result to other actors in the location. Uses perception_type
+ *    "action_self_general" since it's a self-targeting action.
  *
  * Full outcome testing for CRITICAL_SUCCESS, FAILURE, and FUMBLE would require
  * infrastructure changes to allow mocking different outcome types.
@@ -112,9 +111,8 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
     expect(finalHealth.currentHealth).toBe(15); // 5 + 10
 
     // Verify message matches SUCCESS outcome with self-treatment phrasing
-    // Note: core:logSuccessOutcomeAndEndTurn macro does NOT dispatch core:perceptible_event
     const message = 'Self-Medic successfully treats their own wounded torso.';
-    fixture.assertActionSuccess(message, { shouldHavePerceptibleEvent: false });
+    fixture.assertActionSuccess(message, { shouldHavePerceptibleEvent: true });
   });
 
   // eslint-disable-next-line jest/expect-expect -- assertion in assertOnlyExpectedEvents
@@ -336,5 +334,71 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
     );
     expect(setTargetIdOp).toBeDefined();
     expect(setTargetIdOp.parameters.value).toBe('{event.payload.actorId}');
+  });
+
+  describe('Perceptible Event Verification', () => {
+    it('all four outcome branches should have DISPATCH_PERCEPTIBLE_EVENT operation', () => {
+      const ifOps = treatMyRule.actions.filter((action) => action.type === 'IF');
+      expect(ifOps.length).toBe(4);
+
+      ifOps.forEach((ifOp) => {
+        const thenActions = ifOp.parameters.then_actions;
+
+        const dispatchPerceptibleOp = thenActions.find(
+          (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+        );
+
+        expect(dispatchPerceptibleOp).toBeDefined();
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty('location_id');
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty(
+          'description_text'
+        );
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty(
+          'perception_type'
+        );
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty('actor_id');
+
+        // Self-treatment should use action_self_general perception type
+        expect(dispatchPerceptibleOp.parameters.perception_type).toBe(
+          '{context.perceptionType}'
+        );
+      });
+    });
+
+    it('should dispatch perceptible event with correct payload structure (SUCCESS path)', async () => {
+      const { actorId, torsoId } = loadScenario();
+
+      await fixture.executeAction(actorId, torsoId, {
+        additionalPayload: {
+          primaryId: torsoId,
+          targets: {
+            primary: torsoId,
+          },
+        },
+      });
+
+      const perceptibleEvent = fixture.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvent).toBeDefined();
+
+      // Check required payload fields
+      expect(perceptibleEvent.payload).toHaveProperty('eventName');
+      expect(perceptibleEvent.payload).toHaveProperty('locationId');
+      expect(perceptibleEvent.payload).toHaveProperty('descriptionText');
+      expect(perceptibleEvent.payload).toHaveProperty('timestamp');
+      expect(perceptibleEvent.payload).toHaveProperty('perceptionType');
+      expect(perceptibleEvent.payload).toHaveProperty('actorId');
+
+      // Verify perception type for self-treatment
+      expect(perceptibleEvent.payload.perceptionType).toBe(
+        'action_self_general'
+      );
+
+      // Verify description contains expected content
+      expect(perceptibleEvent.payload.descriptionText).toContain('Self-Medic');
+      expect(perceptibleEvent.payload.descriptionText).toContain('torso');
+    });
   });
 });

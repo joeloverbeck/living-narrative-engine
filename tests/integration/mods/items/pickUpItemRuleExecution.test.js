@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:pick_up_item action and rule.
+ * @file Integration tests for the item-handling:pick_up_item action and rule.
  * @description Tests the rule execution after the pick_up_item action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -8,8 +8,8 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
-import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
+import pickUpItemRule from '../../../../data/mods/item-handling/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
+import eventIsActionPickUpItem from '../../../../data/mods/item-handling/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standardized pick up item scenario with actor, location, and items.
@@ -53,13 +53,13 @@ function setupPickUpItemScenario(
   return { room, actor, items: itemEntities };
 }
 
-describe('items:pick_up_item action integration', () => {
+describe('item-handling:pick_up_item action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:pick_up_item',
+      'item-handling:pick_up_item',
       pickUpItemRule,
       eventIsActionPickUpItem
     );

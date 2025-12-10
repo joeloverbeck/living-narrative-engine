@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 50 defined color combinations
-**In Use**: 36 schemes actively implemented across mods
+**Total Schemes**: 51 defined color combinations
+**In Use**: 37 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -60,6 +60,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Ranged                  | Archer's Focus      | 15.1    | `#2a4a3f`        | Active |
 | Recovery                | Evergreen Shadow    | 11.5    | `#123524`        | Active |
 | Intoxicants             | Tavern Amber        | 17.1    | `#5c3d1e`        | Active |
+| Item-Handling           | Tactile Brown       | 18.1    | `#5d4037`        | Active |
 
 ## Available Color Schemes by Category
 
@@ -1094,8 +1095,27 @@ When modifying schemes:
 - **Use Cases**: Smoking, inhaling substances, drug-related actions
 - **Theme**: Smoky purple-gray evoking haze, pipe smoke, and altered states
 
+### 18. Physical/Interaction Colors
+
+#### 18.1 Tactile Brown ✅ IN USE: Item-Handling
+
+```json
+{
+  "backgroundColor": "#5d4037",
+  "textColor": "#efebe9",
+  "hoverBackgroundColor": "#6d4c41",
+  "hoverTextColor": "#ffffff"
+}
+```
+
+- **Normal Contrast**: 7.61:1 🌟 AAA
+- **Hover Contrast**: 5.53:1 ✅ AA
+- **Use Cases**: Item manipulation, picking up and dropping items, physical object handling
+- **Theme**: Earthy tactile feel evoking hands-on interaction with physical objects
+
 ## Version History
 
+- **2025-12**: Added Section 18 (Physical/Interaction Colors) with Tactile Brown (18.1) for Item-Handling mod
 - **2025-12**: Added Section 17 (Intoxicants/Vice Colors) with Tavern Amber (17.1) for Intoxicants mod and Hazy Smoke (17.2) available
 - **2026-02**: Added Hexed Nightshade (16.1) for Hexing mod and Blighted Moss (16.2) to the available pool
 - **2025-12**: Added Archer's Focus (15.1) for Ranged mod

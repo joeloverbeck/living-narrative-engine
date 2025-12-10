@@ -12,9 +12,9 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
 import { clearEntityCache } from '../../../../src/scopeDsl/core/entityHelpers.js';
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
-import pickUpItemAction from '../../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import pickUpItemAction from '../../../../data/mods/item-handling/actions/pick_up_item.action.json' assert { type: 'json' };
 import actorHasFreeGrabbingCondition from '../../../../data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json' assert { type: 'json' };
 
 describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
@@ -22,14 +22,14 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:drop_item',
+      'item-handling',
+      'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
     );
     // Load additional condition required by the rule's "or" block
     await testFixture.loadDependencyConditions([
-      'items:event-is-action-drop-wielded-item',
+      'item-handling:event-is-action-drop-wielded-item',
     ]);
     // Register inventory scopes needed for drop and pickup actions
     ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
@@ -109,10 +109,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const actions = await testFixture.discoverActions('test:actor1');
 
     // Verify pickup action is available
-    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
+    const pickupAction = actions.find((a) => a.id === 'item-handling:pick_up_item');
 
     expect(pickupAction).toBeDefined();
-    expect(pickupAction.id).toBe('items:pick_up_item');
+    expect(pickupAction.id).toBe('item-handling:pick_up_item');
   });
 
   it('FIXED: should succeed with automatic cache invalidation', async () => {
@@ -155,7 +155,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     // Note: The item is in inventory (not at location), so scope resolution returns empty
     // Actions only appear when they have valid targets, so pick_up_item won't be in the list
     const pickupBeforeDrop = actionsBeforeDrop.find(
-      (a) => a.id === 'items:pick_up_item'
+      (a) => a.id === 'item-handling:pick_up_item'
     );
     // The action should NOT be defined because there are no items at the location yet
     expect(pickupBeforeDrop).toBeUndefined();
@@ -181,7 +181,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify pickup action IS available (bug is fixed with cache invalidation)
     const pickupAfterDrop = actionsAfterDrop.find(
-      (a) => a.id === 'items:pick_up_item'
+      (a) => a.id === 'item-handling:pick_up_item'
     );
 
     // THIS ASSERTION DOCUMENTS THE FIX
@@ -238,7 +238,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Action discovery succeeds because cache was automatically invalidated
     const actions = await testFixture.discoverActions('test:actor1');
-    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
+    const pickupAction = actions.find((a) => a.id === 'item-handling:pick_up_item');
 
     // Bug is fixed: entity data is correct and cache invalidation allows discovery
     expect(pickupAction).toBeDefined();
@@ -289,10 +289,10 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
     const actions = await testFixture.discoverActions('test:actor1');
 
     // With cleared cache, pickup action should be available
-    const pickupAction = actions.find((a) => a.id === 'items:pick_up_item');
+    const pickupAction = actions.find((a) => a.id === 'item-handling:pick_up_item');
 
     expect(pickupAction).toBeDefined();
-    expect(pickupAction.id).toBe('items:pick_up_item');
+    expect(pickupAction.id).toBe('item-handling:pick_up_item');
   });
 
   it('should handle multiple drop/pickup cycles with cache clearing', async () => {
@@ -339,7 +339,7 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify letter can be picked up
     let actions = await testFixture.discoverActions('test:actor1');
-    let letterPickup = actions.find((a) => a.id === 'items:pick_up_item');
+    let letterPickup = actions.find((a) => a.id === 'item-handling:pick_up_item');
     expect(letterPickup).toBeDefined();
 
     // Drop gun
@@ -348,8 +348,8 @@ describe('Drop/Pickup - Cache Staleness Bug Reproduction', () => {
 
     // Verify both items can be picked up
     actions = await testFixture.discoverActions('test:actor1');
-    letterPickup = actions.find((a) => a.id === 'items:pick_up_item');
-    const gunPickup = actions.find((a) => a.id === 'items:pick_up_item');
+    letterPickup = actions.find((a) => a.id === 'item-handling:pick_up_item');
+    const gunPickup = actions.find((a) => a.id === 'item-handling:pick_up_item');
 
     expect(letterPickup).toBeDefined();
     expect(gunPickup).toBeDefined();

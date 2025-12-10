@@ -76,7 +76,7 @@ describe('RefinementTracer - Integration', () => {
           stepIndex: 0,
           step: {
             stepType: 'primitive_action',
-            actionId: 'items:pick_up_item',
+            actionId: 'item-handling:pick_up_item',
           },
           timestamp: baseTime + 5,
         },

@@ -1,17 +1,17 @@
 /**
- * @file Integration tests for the items:drop_item action definition.
+ * @file Integration tests for the item-handling:drop_item action definition.
  * @description Tests that the drop_item action is properly defined and structured.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import dropItemAction from '../../../../data/mods/items/actions/drop_item.action.json' assert { type: 'json' };
+import dropItemAction from '../../../../data/mods/item-handling/actions/drop_item.action.json' assert { type: 'json' };
 
-describe('items:drop_item action definition', () => {
+describe('item-handling:drop_item action definition', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:drop_item');
+    testFixture = await ModTestFixture.forAction('item-handling', 'item-handling:drop_item');
   });
 
   afterEach(() => {
@@ -22,7 +22,7 @@ describe('items:drop_item action definition', () => {
 
   it('should have correct action structure', () => {
     expect(dropItemAction).toBeDefined();
-    expect(dropItemAction.id).toBe('items:drop_item');
+    expect(dropItemAction.id).toBe('item-handling:drop_item');
     expect(dropItemAction.name).toBe('Drop Item');
     expect(dropItemAction.description).toBe(
       'Drop an item from your inventory at your current location'
@@ -34,7 +34,7 @@ describe('items:drop_item action definition', () => {
     expect(dropItemAction.targets).toBeDefined();
     expect(dropItemAction.targets.primary).toBeDefined();
     expect(dropItemAction.targets.primary.scope).toBe(
-      'items:non_wielded_inventory_items'
+      'item-handling:non_wielded_inventory_items'
     );
     expect(dropItemAction.targets.primary.placeholder).toBe('item');
     expect(dropItemAction.targets.primary.description).toBe('Item to drop');
