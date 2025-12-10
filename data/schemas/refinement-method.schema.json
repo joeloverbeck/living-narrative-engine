@@ -77,7 +77,7 @@
         },
         "actionId": {
           "$ref": "./common.schema.json#/definitions/namespacedId",
-          "description": "Reference to a primitive action defined in mods (e.g., 'items:pick_up_item', 'items:consume_item'). The action must be registered in the action system. Format: 'modId:actionId' where both parts use alphanumeric characters and underscores."
+          "description": "Reference to a primitive action defined in mods (e.g., 'item-handling:pick_up_item', 'items:consume_item'). The action must be registered in the action system. Format: 'modId:actionId' where both parts use alphanumeric characters and underscores."
         },
         "targetBindings": {
           "type": "object",

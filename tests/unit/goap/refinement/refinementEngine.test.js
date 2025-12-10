@@ -197,7 +197,7 @@ describe('RefinementEngine', () => {
           steps: [
             {
               stepType: 'primitive_action',
-              actionRef: 'items:pick_up_item',
+              actionRef: 'item-handling:pick_up_item',
               storeResultAs: 'picked_item',
             },
             {
@@ -219,7 +219,7 @@ describe('RefinementEngine', () => {
             data: { itemId: 'item_7' },
             error: null,
             timestamp: Date.now(),
-            actionId: 'items:pick_up_item',
+            actionId: 'item-handling:pick_up_item',
           })
           .mockResolvedValueOnce({
             success: true,
@@ -271,7 +271,7 @@ describe('RefinementEngine', () => {
               thenSteps: [
                 {
                   stepType: 'primitive_action',
-                  actionRef: 'items:pick_up_item',
+                  actionRef: 'item-handling:pick_up_item',
                 },
               ],
               elseSteps: [],

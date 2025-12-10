@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:pick_up_item",
+  "id": "item-handling:pick_up_item",
   "name": "Pick Up Item",
   "description": "Pick up an item from the current location",
   "targets": {
@@ -32,9 +32,9 @@
   ],
   "template": "pick up {item}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
+    "backgroundColor": "#5d4037",
+    "textColor": "#efebe9",
+    "hoverBackgroundColor": "#6d4c41",
     "hoverTextColor": "#ffffff"
   }
 }

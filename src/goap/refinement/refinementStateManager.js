@@ -47,7 +47,7 @@ import RefinementError from '../errors/refinementError.js';
  *   data: { item: 'apple_7' },
  *   error: null,
  *   timestamp: Date.now(),
- *   actionId: 'items:pick_up_item'
+ *   actionId: 'item-handling:pick_up_item'
  * });
  *
  * // Access for parameter resolution (mutable)
@@ -128,7 +128,7 @@ class RefinementStateManager {
    *   data: { item: 'apple_7' },
    *   error: null,
    *   timestamp: 1638360000000,
-   *   actionId: 'items:pick_up_item'
+   *   actionId: 'item-handling:pick_up_item'
    * });
    */
   store(key, value) {

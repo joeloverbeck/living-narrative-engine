@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:drop_wielded_item action and rule.
+ * @file Integration tests for the item-handling:drop_wielded_item action and rule.
  * @description Tests the rule execution after the drop_wielded_item action is performed.
  * This tests the specific behavior for dropping items that are currently being wielded,
  * which does NOT require a free grabbing appendage (since releasing, not grabbing).
@@ -9,23 +9,23 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import '../../../common/mods/domainMatchers.js';
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import eventIsActionDropWieldedItem from '../../../../data/mods/items/conditions/event-is-action-drop-wielded-item.condition.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import eventIsActionDropWieldedItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-wielded-item.condition.json' assert { type: 'json' };
 
-describe('items:drop_wielded_item action integration', () => {
+describe('item-handling:drop_wielded_item action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:drop_wielded_item',
+      'item-handling:drop_wielded_item',
       dropItemRule,
       eventIsActionDropWieldedItem
     );
     // The shared rule has a composite OR condition referencing both drop_item
     // and drop_wielded_item conditions. Load the other condition for rule execution.
     await testFixture.loadDependencyConditions([
-      'items:event-is-action-drop-item',
+      'item-handling:event-is-action-drop-item',
     ]);
   });
 
@@ -350,9 +350,9 @@ describe('items:drop_wielded_item action integration', () => {
       const conditionRefs = dropItemRule.condition.or.map(
         (c) => c.condition_ref
       );
-      expect(conditionRefs).toContain('items:event-is-action-drop-item');
+      expect(conditionRefs).toContain('item-handling:event-is-action-drop-item');
       expect(conditionRefs).toContain(
-        'items:event-is-action-drop-wielded-item'
+        'item-handling:event-is-action-drop-wielded-item'
       );
     });
   });

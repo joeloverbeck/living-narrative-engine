@@ -1,17 +1,17 @@
 /**
- * @file Integration tests for the items:pick_up_item action definition.
+ * @file Integration tests for the item-handling:pick_up_item action definition.
  * @description Tests that the pick_up_item action is properly defined and structured.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
-import pickUpItemAction from '../../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
+import pickUpItemAction from '../../../../data/mods/item-handling/actions/pick_up_item.action.json' assert { type: 'json' };
 
-describe('items:pick_up_item action definition', () => {
+describe('item-handling:pick_up_item action definition', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
+    testFixture = await ModTestFixture.forAction('item-handling', 'item-handling:pick_up_item');
   });
 
   afterEach(() => {
@@ -22,7 +22,7 @@ describe('items:pick_up_item action definition', () => {
 
   it('should have correct action structure', () => {
     expect(pickUpItemAction).toBeDefined();
-    expect(pickUpItemAction.id).toBe('items:pick_up_item');
+    expect(pickUpItemAction.id).toBe('item-handling:pick_up_item');
     expect(pickUpItemAction.name).toBe('Pick Up Item');
     expect(pickUpItemAction.description).toBe(
       'Pick up an item from the current location'

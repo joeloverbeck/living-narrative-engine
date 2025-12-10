@@ -66,7 +66,7 @@ export function createMultiStepMethod() {
       },
       {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: {
           target: 'task.params.item',
         },
@@ -126,7 +126,7 @@ export function createConditionalMethod() {
         elseSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:pick_up_item',
+            actionId: 'item-handling:pick_up_item',
             targetBindings: { target: 'task.params.item' },
           },
           {

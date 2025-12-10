@@ -60,12 +60,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: { silent: false },
       };
@@ -88,7 +88,7 @@ describe('PrimitiveActionStepExecutor', () => {
 
       // Assert
       expect(mockActionIndex.getActionById).toHaveBeenCalledWith(
-        'items:pick_up_item'
+        'item-handling:pick_up_item'
       );
     });
 
@@ -102,8 +102,8 @@ describe('PrimitiveActionStepExecutor', () => {
 
       mockActionIndex.getActionById.mockReturnValue(undefined);
       mockGameDataRepository.getAllActions.mockReturnValue([
-        { id: 'items:pick_up_item' },
-        { id: 'items:drop_item' },
+        { id: 'item-handling:pick_up_item' },
+        { id: 'item-handling:drop_item' },
       ]);
 
       const context = {
@@ -123,12 +123,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: {},
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         // No operation field
         parameters: {},
       };
@@ -154,12 +154,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -196,12 +196,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'refinement.localState.foundItem.data.itemId' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -242,12 +242,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'actor.heldItem' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -333,12 +333,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.invalid' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -368,13 +368,13 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         parameters: { silent: true, force: true },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: { silent: false, validate: true },
       };
@@ -412,13 +412,13 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         // No parameters field
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: { silent: false, validate: true },
       };
@@ -455,13 +455,13 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         parameters: { silent: true },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         // No parameters field
       };
@@ -499,13 +499,13 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         parameters: { silent: true },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM', parameters: {} },
         parameters: {},
       };
@@ -535,7 +535,7 @@ describe('PrimitiveActionStepExecutor', () => {
           actor: context.actor,
           targets: { item: 'item_123' },
           parameters: { silent: true },
-          actionId: 'items:pick_up_item',
+          actionId: 'item-handling:pick_up_item',
         })
       );
     });
@@ -544,12 +544,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -586,12 +586,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -618,7 +618,7 @@ describe('PrimitiveActionStepExecutor', () => {
       expect(result.data).toEqual({ itemId: 'item_123', weight: 5 });
       expect(result).toHaveProperty('error', null);
       expect(result).toHaveProperty('timestamp');
-      expect(result).toHaveProperty('actionId', 'items:pick_up_item');
+      expect(result).toHaveProperty('actionId', 'item-handling:pick_up_item');
       expect(typeof result.timestamp).toBe('number');
     });
 
@@ -632,13 +632,13 @@ describe('PrimitiveActionStepExecutor', () => {
 
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         storeResultAs: 'pickupResult',
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -676,13 +676,13 @@ describe('PrimitiveActionStepExecutor', () => {
 
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         // No storeResultAs
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -713,12 +713,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -749,12 +749,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -789,13 +789,13 @@ describe('PrimitiveActionStepExecutor', () => {
 
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
         storeResultAs: 'pickupResult',
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -833,12 +833,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -874,12 +874,12 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         targetBindings: { item: 'task.params.item' },
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -912,18 +912,18 @@ describe('PrimitiveActionStepExecutor', () => {
       // Arrange
       const step1 = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         storeResultAs: 'pickup_result',
       };
 
       const step2 = {
         stepType: 'primitive_action',
-        actionId: 'items:drop_item',
+        actionId: 'item-handling:drop_item',
         storeResultAs: 'drop_result',
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };
@@ -971,12 +971,12 @@ describe('PrimitiveActionStepExecutor', () => {
 
       const step = {
         stepType: 'primitive_action',
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
         storeResultAs: 'result',
       };
 
       const mockAction = {
-        id: 'items:pick_up_item',
+        id: 'item-handling:pick_up_item',
         operation: { type: 'PICK_UP_ITEM' },
         parameters: {},
       };

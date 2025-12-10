@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-drop-wielded-item",
+  "id": "item-handling:event-is-action-drop-wielded-item",
   "description": "Checks if event is the drop_wielded_item action",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "items:drop_wielded_item"]
+    "==": [{ "var": "event.payload.actionId" }, "item-handling:drop_wielded_item"]
   }
 }

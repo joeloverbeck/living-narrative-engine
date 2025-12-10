@@ -9,11 +9,10 @@
  *    - SUCCESS path via actual execution (default mock behavior)
  *    - Rule structure validation for all 4 outcome branches (static analysis)
  *
- * 2. MACRO BEHAVIOR: The rule uses core:logSuccessOutcomeAndEndTurn macro which
- *    dispatches core:display_successful_action_result and core:action_success,
- *    but NOT core:perceptible_event. This differs from core:logSuccessAndEndTurn
- *    used by deterministic rules (like disinfect). The test assertions reflect
- *    this macro behavior by using shouldHavePerceptibleEvent: false.
+ * 2. PERCEPTIBLE EVENTS: The rule dispatches DISPATCH_PERCEPTIBLE_EVENT in each
+ *    outcome branch (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE) to broadcast
+ *    the action result to other actors in the location. Uses perception_type
+ *    "action_target_general" since it's treating another actor.
  *
  * Full outcome testing for CRITICAL_SUCCESS, FAILURE, and FUMBLE would require
  * infrastructure changes to allow mocking different outcome types, which is
@@ -116,12 +115,11 @@ describe('first-aid:handle_treat_wounded_part rule', () => {
     expect(finalHealth.currentHealth).toBe(15); // 5 + 10
 
     // Verify message matches SUCCESS outcome
-    // Note: core:logSuccessOutcomeAndEndTurn macro does NOT dispatch core:perceptible_event
-    // (unlike core:logSuccessAndEndTurn), so we use shouldHavePerceptibleEvent: false
     const message = "Medic successfully treats Patient's wounded torso.";
-    fixture.assertActionSuccess(message, { shouldHavePerceptibleEvent: false });
+    fixture.assertActionSuccess(message, { shouldHavePerceptibleEvent: true });
   });
 
+  // eslint-disable-next-line jest/expect-expect -- assertion in assertOnlyExpectedEvents
   it('ignores unrelated actions', async () => {
     const { medicId, patientId } = loadScenario();
 
@@ -234,5 +232,78 @@ describe('first-aid:handle_treat_wounded_part rule', () => {
       (a) => a.type === 'REGENERATE_DESCRIPTION'
     );
     expect(regenOps).toHaveLength(0);
+  });
+
+  describe('Perceptible Event Verification', () => {
+    it('all four outcome branches should have DISPATCH_PERCEPTIBLE_EVENT operation', () => {
+      const ifOps = treatRule.actions.filter((action) => action.type === 'IF');
+      expect(ifOps.length).toBe(4);
+
+      ifOps.forEach((ifOp) => {
+        const thenActions = ifOp.parameters.then_actions;
+
+        const dispatchPerceptibleOp = thenActions.find(
+          (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+        );
+
+        expect(dispatchPerceptibleOp).toBeDefined();
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty('location_id');
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty(
+          'description_text'
+        );
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty(
+          'perception_type'
+        );
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty('actor_id');
+        // Treating another actor should include target_id
+        expect(dispatchPerceptibleOp.parameters).toHaveProperty('target_id');
+
+        // Target treatment should use action_target_general perception type
+        expect(dispatchPerceptibleOp.parameters.perception_type).toBe(
+          '{context.perceptionType}'
+        );
+      });
+    });
+
+    it('should dispatch perceptible event with correct payload structure including targetId (SUCCESS path)', async () => {
+      const { medicId, patientId, torsoId } = loadScenario();
+
+      await fixture.executeAction(medicId, patientId, {
+        additionalPayload: {
+          primaryId: patientId,
+          secondaryId: torsoId,
+          targets: {
+            primary: patientId,
+            secondary: torsoId,
+          },
+        },
+      });
+
+      const perceptibleEvent = fixture.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvent).toBeDefined();
+
+      // Check required payload fields
+      expect(perceptibleEvent.payload).toHaveProperty('eventName');
+      expect(perceptibleEvent.payload).toHaveProperty('locationId');
+      expect(perceptibleEvent.payload).toHaveProperty('descriptionText');
+      expect(perceptibleEvent.payload).toHaveProperty('timestamp');
+      expect(perceptibleEvent.payload).toHaveProperty('perceptionType');
+      expect(perceptibleEvent.payload).toHaveProperty('actorId');
+      // Target treatment must include targetId
+      expect(perceptibleEvent.payload).toHaveProperty('targetId');
+
+      // Verify perception type for target treatment
+      expect(perceptibleEvent.payload.perceptionType).toBe(
+        'action_target_general'
+      );
+
+      // Verify description contains expected content
+      expect(perceptibleEvent.payload.descriptionText).toContain('Medic');
+      expect(perceptibleEvent.payload.descriptionText).toContain('Patient');
+      expect(perceptibleEvent.payload.descriptionText).toContain('torso');
+    });
   });
 });

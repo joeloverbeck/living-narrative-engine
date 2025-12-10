@@ -113,12 +113,23 @@ describe('Action Formatting with Metadata - Integration', () => {
     // No actionPurpose or actionConsiderWhen - tests graceful degradation
   };
 
+  const itemHandlingManifest = {
+    id: 'item-handling',
+    version: '1.0.0',
+    name: 'Item Handling',
+    actionPurpose:
+      'Manage how items are acquired and released through picking up and dropping actions.',
+    actionConsiderWhen:
+      'Picking up items from the environment or dropping items from inventory onto the ground.',
+  };
+
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockDataRegistry = createMockDataRegistry({
       positioning: positioningManifest,
       items: itemsManifest,
       core: coreManifest,
+      'item-handling': itemHandlingManifest,
     });
 
     // Create real ModActionMetadataProvider with mocked registry
@@ -262,17 +273,19 @@ describe('Action Formatting with Metadata - Integration', () => {
     });
 
     it('should include items mod metadata when items actions are present', () => {
+      // Note: drop_item and pick_up_item migrated to item-handling mod.
+      // This test uses items mod's container actions which remained in items.
       const itemsActions = [
         {
-          actionId: 'items:pickup',
-          commandString: 'pick up',
-          description: 'Pick up item',
+          actionId: 'items:take_from_container',
+          commandString: 'take gem from chest',
+          description: 'Take item from container',
           index: 0,
         },
         {
-          actionId: 'items:drop',
-          commandString: 'drop',
-          description: 'Drop item',
+          actionId: 'items:open_container',
+          commandString: 'open chest',
+          description: 'Open container',
           index: 1,
         },
       ];
@@ -496,17 +509,18 @@ describe('Action Formatting with Metadata - Integration', () => {
           description: 'Move closer',
           index: 1,
         },
-        // Items actions
+        // Item-handling actions (pick_up_item and drop_item were migrated here)
         {
-          actionId: 'items:pick_up_item',
+          actionId: 'item-handling:pick_up_item',
           commandString: 'pick up book',
           description: 'Pick up the book',
           index: 2,
         },
+        // Items actions (container actions remain in items mod)
         {
-          actionId: 'item-transfer:give_item',
-          commandString: 'give book to Alice',
-          description: 'Hand over the book',
+          actionId: 'items:take_from_container',
+          commandString: 'take gem from chest',
+          description: 'Take item from container',
           index: 3,
         },
         // Core actions
@@ -523,11 +537,13 @@ describe('Action Formatting with Metadata - Integration', () => {
 
       // Verify all sections are present
       expect(result).toContain('POSITIONING Actions');
+      expect(result).toContain('ITEM-HANDLING Actions');
       expect(result).toContain('ITEMS Actions');
       expect(result).toContain('CORE Actions');
 
       // Verify metadata is shown for mods that have it
       expect(result).toContain('Change body position'); // positioning purpose
+      expect(result).toContain('Manage how items are acquired'); // item-handling purpose
       expect(result).toContain('Interact with objects'); // items purpose
 
       // Verify action details are preserved

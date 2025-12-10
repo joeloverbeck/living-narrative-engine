@@ -10,14 +10,14 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import giveItemRule from '../../../../data/mods/item-transfer/rules/handle_give_item.rule.json' assert { type: 'json' };
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import pickUpItemRule from '../../../../data/mods/item-handling/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
 import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
 import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
 import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/item-transfer/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
-import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
-import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
+import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import eventIsActionPickUpItem from '../../../../data/mods/item-handling/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
 import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
 import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
@@ -28,13 +28,13 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
   beforeEach(async () => {
     const dropFixture = await ModTestFixture.forAction(
       'items',
-      'items:drop_item',
+      'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
     );
     // Load additional condition required by the rule's "or" block
     await dropFixture.loadDependencyConditions([
-      'items:event-is-action-drop-wielded-item',
+      'item-handling:event-is-action-drop-wielded-item',
     ]);
 
     fixtures = {
@@ -47,7 +47,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       drop: dropFixture,
       pickup: await ModTestFixture.forAction(
         'items',
-        'items:pick_up_item',
+        'item-handling:pick_up_item',
         pickUpItemRule,
         eventIsActionPickUpItem
       ),

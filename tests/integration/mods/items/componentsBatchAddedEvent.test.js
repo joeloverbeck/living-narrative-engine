@@ -14,8 +14,8 @@ import {
 } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
 
 describe('ComponentsBatchAddedEvent - Integration', () => {
   let testFixture;
@@ -25,7 +25,7 @@ describe('ComponentsBatchAddedEvent - Integration', () => {
     // Create fixture - uses real mod system with event loading
     testFixture = await ModTestFixture.forAction(
       'items',
-      'items:drop_item',
+      'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
     );

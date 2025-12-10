@@ -1,6 +1,6 @@
 {
   "$schema": "schema://living-narrative-engine/action.schema.json",
-  "id": "items:drop_wielded_item",
+  "id": "item-handling:drop_wielded_item",
   "name": "Drop Wielded Item",
   "description": "Release and drop an item you are currently wielding",
   "required_components": {
@@ -22,9 +22,9 @@
   "prerequisites": [],
   "template": "drop {item}",
   "visual": {
-    "backgroundColor": "#004d61",
-    "textColor": "#e0f7fa",
-    "hoverBackgroundColor": "#006978",
+    "backgroundColor": "#5d4037",
+    "textColor": "#efebe9",
+    "hoverBackgroundColor": "#6d4c41",
     "hoverTextColor": "#ffffff"
   }
 }

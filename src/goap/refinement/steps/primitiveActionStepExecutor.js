@@ -102,7 +102,7 @@ class PrimitiveActionStepExecutor {
    *
    * @param {object} step - PrimitiveActionStep from refinement method schema
    * @param {string} step.stepType - Must be 'primitive_action'
-   * @param {string} step.actionId - Namespaced action ID (e.g., 'items:pick_up_item')
+   * @param {string} step.actionId - Namespaced action ID (e.g., 'item-handling:pick_up_item')
    * @param {object} [step.targetBindings] - Target placeholder bindings
    * @param {object} [step.parameters] - Step-level parameter overrides
    * @param {string} [step.storeResultAs] - Key to store result in refinement.localState

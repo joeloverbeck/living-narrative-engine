@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for items:pick_up_item forbidden components validation.
+ * @file Integration tests for item-handling:pick_up_item forbidden components validation.
  * @description Tests that pick_up_item should NOT be available when actor has certain forbidden components.
  */
 
@@ -10,13 +10,13 @@ import {
   ModEntityBuilder,
 } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
-import pickUpItemAction from '../../../../data/mods/items/actions/pick_up_item.action.json';
+import pickUpItemAction from '../../../../data/mods/item-handling/actions/pick_up_item.action.json';
 
-describe('items:pick_up_item - Forbidden components validation', () => {
+describe('item-handling:pick_up_item - Forbidden components validation', () => {
   let testFixture;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', 'items:pick_up_item');
+    testFixture = await ModTestFixture.forAction('item-handling', 'item-handling:pick_up_item');
 
     // Register inventory scopes needed for item discovery
     ScopeResolverHelpers.registerInventoryScopes(testFixture.testEnv);
@@ -85,7 +85,7 @@ describe('items:pick_up_item - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has being_fucked_vaginally component
-      expect(actionIds).not.toContain('items:pick_up_item');
+      expect(actionIds).not.toContain('item-handling:pick_up_item');
     });
 
     it('should appear when actor does NOT have being_fucked_vaginally component', () => {
@@ -132,7 +132,7 @@ describe('items:pick_up_item - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Without the forbidden component, action should be available
-      expect(actionIds).toContain('items:pick_up_item');
+      expect(actionIds).toContain('item-handling:pick_up_item');
     });
   });
 
@@ -174,7 +174,7 @@ describe('items:pick_up_item - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has sitting_on component
-      expect(actionIds).not.toContain('items:pick_up_item');
+      expect(actionIds).not.toContain('item-handling:pick_up_item');
     });
 
     it('should appear when actor does NOT have sitting_on component', () => {
@@ -221,7 +221,7 @@ describe('items:pick_up_item - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Without the forbidden component, action should be available
-      expect(actionIds).toContain('items:pick_up_item');
+      expect(actionIds).toContain('item-handling:pick_up_item');
     });
   });
 });

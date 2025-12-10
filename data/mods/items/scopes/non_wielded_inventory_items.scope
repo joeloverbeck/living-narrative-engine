@@ -1,6 +1,0 @@
-// Scope: items:non_wielded_inventory_items
-// Description: Returns inventory items that are NOT currently being wielded
-// Usage: Primary target scope for drop_item action (excludes wielded items)
-// Pattern from: companionship:potential_leaders.scope (array membership check)
-
-items:non_wielded_inventory_items := actor.components.items:inventory.items[][{"not": {"in": [{"var": "entity.id"}, {"var": "actor.components.positioning:wielding.wielded_item_ids"}]}}]

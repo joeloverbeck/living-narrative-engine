@@ -13,7 +13,7 @@ import removeOthersClothingAction from '../../../data/mods/clothing/actions/remo
 import goAction from '../../../data/mods/movement/actions/go.action.json' assert { type: 'json' };
 import followAction from '../../../data/mods/companionship/actions/follow.action.json' assert { type: 'json' };
 import giveItemAction from '../../../data/mods/item-transfer/actions/give_item.action.json' assert { type: 'json' };
-import pickUpItemAction from '../../../data/mods/items/actions/pick_up_item.action.json' assert { type: 'json' };
+import pickUpItemAction from '../../../data/mods/item-handling/actions/pick_up_item.action.json' assert { type: 'json' };
 import placeYourselfBehindAction from '../../../data/mods/positioning/actions/place_yourself_behind.action.json' assert { type: 'json' };
 import stepBackAction from '../../../data/mods/positioning/actions/step_back.action.json' assert { type: 'json' };
 import turnAroundToFaceAction from '../../../data/mods/positioning/actions/turn_around_to_face.action.json' assert { type: 'json' };
@@ -205,7 +205,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const pickUpActions = availableActions.filter(
-        (a) => a.id === 'items:pick_up_item'
+        (a) => a.id === 'item-handling:pick_up_item'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)

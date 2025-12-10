@@ -131,8 +131,8 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
   it('should work with inventory scopes using "items" alias', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:pick_up_item',
+      'item-handling',
+      'item-handling:pick_up_item',
       null,
       null,
       {
@@ -172,14 +172,14 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions('actor_pickup');
 
     // Assert
-    expect(availableActions.map((a) => a.id)).toContain('items:pick_up_item');
+    expect(availableActions.map((a) => a.id)).toContain('item-handling:pick_up_item');
   });
 
   it('should work with inventory scopes using "inventory" category', async () => {
     // Arrange
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:drop_item',
+      'item-handling',
+      'item-handling:drop_item',
       null,
       null,
       {
@@ -198,6 +198,6 @@ describe('ModTestFixture - Auto-Registration Integration', () => {
     const availableActions = testFixture.discoverActions(scenario.actor.id);
 
     // Assert
-    expect(availableActions.map((a) => a.id)).toContain('items:drop_item');
+    expect(availableActions.map((a) => a.id)).toContain('item-handling:drop_item');
   });
 });

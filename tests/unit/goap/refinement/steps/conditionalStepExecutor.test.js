@@ -62,7 +62,7 @@ describe('ConditionalStepExecutor', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         elseSteps: [],
@@ -114,13 +114,13 @@ describe('ConditionalStepExecutor', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         elseSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:pick_up_item',
+            actionId: 'item-handling:pick_up_item',
           },
         ],
       };
@@ -170,7 +170,7 @@ describe('ConditionalStepExecutor', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         // No elseSteps property
@@ -213,13 +213,13 @@ describe('ConditionalStepExecutor', () => {
         thenSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:drop_item',
+            actionId: 'item-handling:drop_item',
           },
         ],
         elseSteps: [
           {
             stepType: 'primitive_action',
-            actionId: 'items:pick_up_item',
+            actionId: 'item-handling:pick_up_item',
           },
         ],
       };

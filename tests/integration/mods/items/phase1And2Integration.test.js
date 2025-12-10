@@ -7,11 +7,11 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import giveItemRule from '../../../../data/mods/item-transfer/rules/handle_give_item.rule.json' assert { type: 'json' };
-import dropItemRule from '../../../../data/mods/items/rules/handle_drop_item.rule.json' assert { type: 'json' };
-import pickUpItemRule from '../../../../data/mods/items/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
+import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
+import pickUpItemRule from '../../../../data/mods/item-handling/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/item-transfer/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
-import eventIsActionDropItem from '../../../../data/mods/items/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
-import eventIsActionPickUpItem from '../../../../data/mods/items/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
+import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
+import eventIsActionPickUpItem from '../../../../data/mods/item-handling/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
 
 describe('Items - Phase 1 and 2 Integration', () => {
   let giveFixture;
@@ -28,17 +28,17 @@ describe('Items - Phase 1 and 2 Integration', () => {
     );
     dropFixture = await ModTestFixture.forAction(
       'items',
-      'items:drop_item',
+      'item-handling:drop_item',
       dropItemRule,
       eventIsActionDropItem
     );
     // Load additional condition required by the rule's "or" block
     await dropFixture.loadDependencyConditions([
-      'items:event-is-action-drop-wielded-item',
+      'item-handling:event-is-action-drop-wielded-item',
     ]);
     pickupFixture = await ModTestFixture.forAction(
       'items',
-      'items:pick_up_item',
+      'item-handling:pick_up_item',
       pickUpItemRule,
       eventIsActionPickUpItem
     );

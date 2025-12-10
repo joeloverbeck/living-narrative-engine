@@ -4,7 +4,7 @@
   "comment": "Handles pick_up_item action with capacity validation and perception logging",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-pick-up-item"
+    "condition_ref": "item-handling:event-is-action-pick-up-item"
   },
   "actions": [
     {

@@ -112,8 +112,10 @@ describe('Perceptible Event Validation Regression Tests', () => {
     });
 
     // Check if any used types are invalid
+    // Exclude template variables like {context.perceptionType} which are resolved at runtime
     const invalidTypes = [...usedPerceptionTypes].filter(
-      (type) => !validPerceptionTypes.includes(type)
+      (type) =>
+        !validPerceptionTypes.includes(type) && !type.startsWith('{context.')
     );
 
     if (invalidTypes.length > 0) {

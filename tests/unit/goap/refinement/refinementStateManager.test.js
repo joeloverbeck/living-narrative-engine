@@ -98,7 +98,7 @@ describe('RefinementStateManager', () => {
         data: { item: 'apple_7' },
         error: null,
         timestamp: 1638360000000,
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
       };
 
       manager.store('pickupResult', result);
@@ -109,7 +109,7 @@ describe('RefinementStateManager', () => {
         expect.objectContaining({
           key: 'pickupResult',
           success: true,
-          actionId: 'items:pick_up_item',
+          actionId: 'item-handling:pick_up_item',
         })
       );
     });
@@ -555,7 +555,7 @@ describe('RefinementStateManager', () => {
         data: { item: 'apple_7' },
         error: null,
         timestamp: 1638360000000,
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
       };
 
       manager.store('pickupResult', result);
@@ -791,7 +791,7 @@ describe('RefinementStateManager', () => {
         data: { item: 'apple_7' },
         error: null,
         timestamp: 1000,
-        actionId: 'items:pick_up_item',
+        actionId: 'item-handling:pick_up_item',
       });
 
       // Step 2: Move to location

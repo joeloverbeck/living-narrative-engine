@@ -72,7 +72,7 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act
       const fixture = await ModTestFixture.forAction(
         'items',
-        'items:pick_up_item',
+        'item-handling:pick_up_item',
         null,
         null,
         {
@@ -93,7 +93,7 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act
       const fixture = await ModTestFixture.forAction(
         'items',
-        'items:pick_up_item',
+        'item-handling:pick_up_item',
         null,
         null,
         {
@@ -182,7 +182,7 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act
       const fixture = await ModTestFixture.forAction(
         'items',
-        'items:pick_up_item',
+        'item-handling:pick_up_item',
         null,
         null,
         {
@@ -284,7 +284,7 @@ describe('ModTestFixture - Auto-Registration', () => {
       // Act
       const fixture = await ModTestFixture.forAction(
         'items',
-        'items:pick_up_item',
+        'item-handling:pick_up_item',
         null,
         null,
         {
