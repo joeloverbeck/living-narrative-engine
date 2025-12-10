@@ -1,13 +1,13 @@
 /**
- * @file Bertram scenario integration tests for furniture:put_on_nearby_surface action
+ * @file Bertram scenario integration tests for item-placement:take_from_nearby_surface action
  * @description Tests the exact production scenario: Bertram sitting on stool near table
- * with inventory items. The table IS the container (not a bowl on the table).
+ * with jugs on it. The table IS the container (not a bowl on the table).
  *
  * CORRECT UNDERSTANDING:
- * - Table has items:container component
+ * - Table has items:container component with jugs in contents
  * - Stool has furniture:near_furniture pointing to table
- * - Table IS the primary target (the container to put items INTO)
- * - Actor's inventory items ARE the secondary targets (items to put)
+ * - Table IS the primary target (the container to take FROM)
+ * - Jugs ARE the secondary targets (items to take)
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -16,23 +16,23 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
-import putOnNearbySurfaceAction from '../../../../data/mods/furniture/actions/put_on_nearby_surface.action.json' assert { type: 'json' };
+import takeFromNearbySurfaceAction from '../../../../data/mods/item-placement/actions/take_from_nearby_surface.action.json' assert { type: 'json' };
 
-const ACTION_ID = 'furniture:put_on_nearby_surface';
+const ACTION_ID = 'item-placement:take_from_nearby_surface';
 
-describe('Bertram scenario: put_on_nearby_surface', () => {
+describe('Bertram scenario: take_from_nearby_surface', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('furniture', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('item-placement', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
       if (!testEnv) {
         return;
       }
-      testEnv.actionIndex.buildIndex([putOnNearbySurfaceAction]);
+      testEnv.actionIndex.buildIndex([takeFromNearbySurfaceAction]);
     };
   });
 
@@ -43,14 +43,14 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
   });
 
   describe('production scenario: Bertram in Aldous kitchen', () => {
-    it('should discover action when seated actor can put items on table (table IS the container)', () => {
+    it('should discover action when seated actor can take from table (table IS the container)', () => {
       // Create kitchen location
       const kitchen = ModEntityScenarios.createRoom(
         'fantasy:aldous_kitchen',
         "Aldous's Kitchen"
       );
 
-      // Table IS the container - actors put items directly ON the table
+      // Table IS the container with jugs directly in contents
       // This is the KEY difference - table is both furniture AND container
       const table = new ModEntityBuilder(
         'fantasy:aldous_kitchen_rustic_wooden_table_instance'
@@ -82,7 +82,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      // Jugs already on the table
+      // Jugs on the table (in table's contents)
       const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
         .withName('jug of cider')
         .atLocation('fantasy:aldous_kitchen')
@@ -97,14 +97,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withComponent('items:portable', { weight: 2 })
         .build();
 
-      // Pipe in Bertram's inventory (this is what he can put on the table)
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
-        .build();
-
-      // Bertram seated on stool with pipe in inventory
+      // Bertram seated on stool with grabbing hands
       const bertramBuilder = new ModEntityBuilder(
         'fantasy:bertram_the_muddy_instance'
       )
@@ -123,6 +116,13 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
 
       const bertram = bertramBuilder.build();
       const handEntities = bertramBuilder.getHandEntities();
+
+      // Pipe in Bertram's inventory
+      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
+        .withName('smoking pipe')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', { weight: 0.5 })
+        .build();
 
       testFixture.reset([
         kitchen,
@@ -139,87 +139,18 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
       // Should discover the action with table as primary target
-      expect(putActions.length).toBeGreaterThan(0);
+      expect(takeActions.length).toBeGreaterThan(0);
 
       // Verify the table is the primary target (if we can access target info)
-      if (putActions[0]?.targetId) {
-        expect(putActions[0].targetId).toBe(
+      if (takeActions[0]?.targetId) {
+        expect(takeActions[0].targetId).toBe(
           'fantasy:aldous_kitchen_rustic_wooden_table_instance'
         );
-      }
-    });
-
-    it('should NOT discover action when Bertram has empty inventory', () => {
-      const kitchen = ModEntityScenarios.createRoom(
-        'fantasy:aldous_kitchen',
-        "Aldous's Kitchen"
-      );
-
-      const table = new ModEntityBuilder(
-        'fantasy:aldous_kitchen_rustic_wooden_table_instance'
-      )
-        .withName('rustic wooden table')
-        .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
-          contents: [],
-          capacity: { maxWeight: 100, maxItems: 20 },
-          isOpen: true,
-          isLocked: false,
-        })
-        .build();
-
-      const stool = new ModEntityBuilder(
-        'fantasy:plain_wooden_stool_1_instance'
-      )
-        .withName('plain wooden stool')
-        .atLocation('fantasy:aldous_kitchen')
-        .withComponent('furniture:near_furniture', {
-          nearFurnitureIds: ['fantasy:aldous_kitchen_rustic_wooden_table_instance'],
-        })
-        .build();
-
-      // Bertram with EMPTY inventory
-      const bertramBuilder = new ModEntityBuilder(
-        'fantasy:bertram_the_muddy_instance'
-      )
-        .withName('Bertram the Muddy')
-        .atLocation('fantasy:aldous_kitchen')
-        .asActor()
-        .withComponent('items:inventory', {
-          items: [], // EMPTY
-          capacity: { maxWeight: 30, maxItems: 10 },
-        })
-        .withComponent('positioning:sitting_on', {
-          furniture_id: 'fantasy:plain_wooden_stool_1_instance',
-          spot_index: 0,
-        })
-        .withGrabbingHands(2);
-
-      const bertram = bertramBuilder.build();
-      const handEntities = bertramBuilder.getHandEntities();
-
-      testFixture.reset([kitchen, table, stool, ...handEntities, bertram]);
-      configureActionDiscovery();
-
-      const availableActions = testFixture.testEnv.getAvailableActions(
-        'fantasy:bertram_the_muddy_instance'
-      );
-      const putActions = availableActions.filter(
-        (action) => action.id === ACTION_ID
-      );
-
-      // Action may appear but with no secondary targets, or not appear at all
-      // Either behavior is acceptable for empty inventory
-      if (putActions.length > 0) {
-        // If present, should have no valid secondary targets
-        expect(putActions).toBeDefined();
-      } else {
-        expect(putActions.length).toBe(0);
       }
     });
 
@@ -235,7 +166,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:container', {
-          contents: [],
+          contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
           isLocked: false,
@@ -252,10 +183,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
+      const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
+        .withName('jug of cider')
+        .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items:portable', { weight: 2 })
         .build();
 
       // Bertram is STANDING (no sitting_on component)
@@ -266,22 +198,22 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .build();
 
-      testFixture.reset([kitchen, table, stool, pipe, bertram]);
+      testFixture.reset([kitchen, table, stool, jugCider, bertram]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
-      expect(putActions.length).toBe(0);
+      expect(takeActions.length).toBe(0);
     });
 
     it('should NOT discover action when stool has no near_furniture pointing to table', () => {
@@ -296,7 +228,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:container', {
-          contents: [],
+          contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
           isLocked: false,
@@ -314,10 +246,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
+      const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
+        .withName('jug of cider')
+        .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items:portable', { weight: 2 })
         .build();
 
       const bertram = new ModEntityBuilder(
@@ -327,7 +260,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .withComponent('positioning:sitting_on', {
@@ -336,17 +269,17 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      testFixture.reset([kitchen, table, stool, pipe, bertram]);
+      testFixture.reset([kitchen, table, stool, jugCider, bertram]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
-      expect(putActions.length).toBe(0);
+      expect(takeActions.length).toBe(0);
     });
 
     it('should NOT discover action when table container is closed', () => {
@@ -362,7 +295,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:container', {
-          contents: [],
+          contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false, // CLOSED
           isLocked: false,
@@ -379,10 +312,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
+      const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
+        .withName('jug of cider')
+        .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items:portable', { weight: 2 })
         .build();
 
       const bertram = new ModEntityBuilder(
@@ -392,7 +326,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .withComponent('positioning:sitting_on', {
@@ -401,32 +335,33 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      testFixture.reset([kitchen, table, stool, pipe, bertram]);
+      testFixture.reset([kitchen, table, stool, jugCider, bertram]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
-      expect(putActions.length).toBe(0);
+      expect(takeActions.length).toBe(0);
     });
 
-    it('should discover action with multiple inventory items', () => {
+    it('should NOT discover action when table is empty', () => {
       const kitchen = ModEntityScenarios.createRoom(
         'fantasy:aldous_kitchen',
         "Aldous's Kitchen"
       );
 
+      // Table container is EMPTY
       const table = new ModEntityBuilder(
         'fantasy:aldous_kitchen_rustic_wooden_table_instance'
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:container', {
-          contents: [],
+          contents: [], // EMPTY
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
           isLocked: false,
@@ -443,20 +378,6 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      // Multiple items in inventory
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
-        .build();
-
-      const coin = new ModEntityBuilder('fantasy:gold_coin_instance')
-        .withName('gold coin')
-        .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.1 })
-        .build();
-
-      // Bertram with multiple items in inventory
       const bertramBuilder = new ModEntityBuilder(
         'fantasy:bertram_the_muddy_instance'
       )
@@ -464,7 +385,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance', 'fantasy:gold_coin_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .withComponent('positioning:sitting_on', {
@@ -476,26 +397,19 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       const bertram = bertramBuilder.build();
       const handEntities = bertramBuilder.getHandEntities();
 
-      testFixture.reset([
-        kitchen,
-        table,
-        stool,
-        pipe,
-        coin,
-        ...handEntities,
-        bertram,
-      ]);
+      testFixture.reset([kitchen, table, stool, ...handEntities, bertram]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
-      // Should have actions for placing items
-      expect(putActions.length).toBeGreaterThan(0);
+      // Action may appear but with no secondary targets, or not appear at all
+      // Either behavior is acceptable for empty container
+      expect(takeActions).toBeDefined();
     });
 
     it('should work with multiple stools near the same table', () => {
@@ -510,7 +424,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:container', {
-          contents: [],
+          contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
           isLocked: false,
@@ -538,10 +452,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
+      const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
+        .withName('jug of cider')
+        .atLocation('fantasy:aldous_kitchen')
         .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items:portable', { weight: 2 })
         .build();
 
       // Bertram on stool 2
@@ -552,7 +467,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_kitchen')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .withComponent('positioning:sitting_on', {
@@ -569,7 +484,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         table,
         stool1,
         stool2,
-        pipe,
+        jugCider,
         ...handEntities,
         bertram,
       ]);
@@ -578,11 +493,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
-      expect(putActions.length).toBeGreaterThan(0);
+      expect(takeActions.length).toBeGreaterThan(0);
     });
 
     it('should work when actor is in different location than table', () => {
@@ -603,7 +518,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen') // Kitchen
         .withComponent('items:container', {
-          contents: [],
+          contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
           isLocked: false,
@@ -620,10 +535,11 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      const pipe = new ModEntityBuilder('fantasy:smoking_pipe_instance')
-        .withName('smoking pipe')
+      const jugCider = new ModEntityBuilder('fantasy:jug_of_cider_instance')
+        .withName('jug of cider')
+        .atLocation('fantasy:aldous_kitchen') // Kitchen
         .withComponent('items:item', {})
-        .withComponent('items:portable', { weight: 0.5 })
+        .withComponent('items:portable', { weight: 2 })
         .build();
 
       const bertram = new ModEntityBuilder(
@@ -633,7 +549,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         .atLocation('fantasy:aldous_hallway') // Hallway - different from table
         .asActor()
         .withComponent('items:inventory', {
-          items: ['fantasy:smoking_pipe_instance'],
+          items: [],
           capacity: { maxWeight: 30, maxItems: 10 },
         })
         .withComponent('positioning:sitting_on', {
@@ -642,19 +558,19 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
         })
         .build();
 
-      testFixture.reset([kitchen, hallway, table, stool, pipe, bertram]);
+      testFixture.reset([kitchen, hallway, table, stool, jugCider, bertram]);
       configureActionDiscovery();
 
       const availableActions = testFixture.testEnv.getAvailableActions(
         'fantasy:bertram_the_muddy_instance'
       );
-      const putActions = availableActions.filter(
+      const takeActions = availableActions.filter(
         (action) => action.id === ACTION_ID
       );
 
       // Should NOT discover because actor and table are in different locations
       // The scope requires same locationId
-      expect(putActions.length).toBe(0);
+      expect(takeActions.length).toBe(0);
     });
   });
 });

@@ -203,7 +203,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // For this complete character, validation should provide feedback
       // Even valid characters may show suggestions for improvement
@@ -234,7 +234,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Should display enhanced validation results
       expect(errorContainer.style.display).toBe('block');
@@ -276,7 +276,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Should display error with suggestions
       expect(errorContainer.style.display).toBe('block');
@@ -309,7 +309,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       textarea.dispatchEvent(event);
 
       // Wait for debounced validation to complete
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // The validation completes quickly and shows results directly
       // Instead of checking for progress indicator, verify that validation occurred
@@ -346,7 +346,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       expect(errorContainer.style.display).toBe('block');
 
@@ -429,7 +429,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // This rich character should either hide the error container or show positive feedback
       expect(
@@ -483,7 +483,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       expect(errorContainer.style.display).toBe('block');
 
@@ -531,7 +531,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Look for collapsible sections (warnings and suggestions)
       const collapsibleTitles = errorContainer.querySelectorAll(
@@ -576,7 +576,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       const collapsibleTitles = errorContainer.querySelectorAll(
         '.validation-section-title[role="button"]'
@@ -614,13 +614,10 @@ describe('Enhanced Validation Pipeline Integration', () => {
         textarea.value += char;
         const event = new Event('input', { bubbles: true });
         textarea.dispatchEvent(event);
-
-        // Small delay between keystrokes
-        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Wait for debounce to settle
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Should handle rapid input gracefully
       // The debounced validation should prevent excessive validation calls
@@ -640,7 +637,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       let event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // The production code generates structured enhanced validation feedback
       // (not a simple "Validation error:" message) because it properly handles the input
@@ -656,7 +653,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Should recover and show improved validation feedback or success state
       expect(errorContainer.style.display).toBe('block');
@@ -703,7 +700,7 @@ describe('Enhanced Validation Pipeline Integration', () => {
       const event = new Event('input', { bubbles: true });
       textarea.dispatchEvent(event);
 
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      await controller.flushDebouncedValidation();
 
       // Should have accessible content structure
       const sections = errorContainer.querySelectorAll('.validation-section');

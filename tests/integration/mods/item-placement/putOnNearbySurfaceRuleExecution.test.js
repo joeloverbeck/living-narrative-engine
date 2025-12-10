@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the furniture:put_on_nearby_surface action and rule.
+ * @file Integration tests for the item-placement:put_on_nearby_surface action and rule.
  * @description Tests the rule execution after the put_on_nearby_surface action is performed.
  * This action allows a seated actor to put items from their inventory onto containers on nearby furniture.
  * Note: This test does not test action discovery or scope resolution - it assumes
@@ -9,8 +9,8 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import putOnNearbySurfaceRule from '../../../../data/mods/furniture/rules/handle_put_on_nearby_surface.rule.json' assert { type: 'json' };
-import eventIsActionPutOnNearbySurface from '../../../../data/mods/furniture/conditions/event-is-action-put-on-nearby-surface.condition.json' assert { type: 'json' };
+import putOnNearbySurfaceRule from '../../../../data/mods/item-placement/rules/handle_put_on_nearby_surface.rule.json' assert { type: 'json' };
+import eventIsActionPutOnNearbySurface from '../../../../data/mods/item-placement/conditions/event-is-action-put-on-nearby-surface.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standardized seated container interaction scenario for putting items.
@@ -117,13 +117,13 @@ function setupPutOnSurfaceScenario({
   };
 }
 
-describe('furniture:put_on_nearby_surface action integration', () => {
+describe('item-placement:put_on_nearby_surface action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'furniture',
-      'furniture:put_on_nearby_surface',
+      'item-placement',
+      'item-placement:put_on_nearby_surface',
       putOnNearbySurfaceRule,
       eventIsActionPutOnNearbySurface
     );

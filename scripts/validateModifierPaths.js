@@ -20,6 +20,25 @@ import {
   VALID_ENTITY_ROLES,
 } from '../src/logic/utils/entityPathValidator.js';
 
+const logBuffer = [];
+const captureLogFile = process.env.MODIFIER_PATHS_LOG_FILE;
+const originalConsoleLog = console.log.bind(console);
+const originalConsoleError = console.error.bind(console);
+
+console.log = (...args) => {
+  const message = args.map((arg) => (typeof arg === 'string' ? arg : String(arg))).join(' ');
+  const entry = message.endsWith('\n') ? message : `${message}\n`;
+  logBuffer.push(entry);
+  originalConsoleLog(...args);
+};
+
+console.error = (...args) => {
+  const message = args.map((arg) => (typeof arg === 'string' ? arg : String(arg))).join(' ');
+  const entry = message.endsWith('\n') ? message : `${message}\n`;
+  logBuffer.push(entry);
+  originalConsoleError(...args);
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.resolve(__dirname, '..');
@@ -141,6 +160,20 @@ async function validateActionFile(filePath) {
 }
 
 /**
+ * Persist captured console output when a capture file is provided.
+ *
+ * @returns {Promise<void>}
+ */
+async function flushCapturedLogs() {
+  if (!captureLogFile) {
+    return;
+  }
+
+  const content = logBuffer.join('');
+  await fs.writeFile(captureLogFile, content, 'utf-8');
+}
+
+/**
  * Main validation function
  */
 async function main() {
@@ -148,7 +181,7 @@ async function main() {
 
   if (args.help) {
     printHelp();
-    process.exit(0);
+    return 0;
   }
 
   // Build glob pattern
@@ -168,7 +201,7 @@ async function main() {
     console.log(
       `${colors.yellow}No action files found matching pattern${colors.reset}`
     );
-    process.exit(0);
+    return 0;
   }
 
   // Validate all files
@@ -220,6 +253,7 @@ async function main() {
   // Output summary
   if (args.json) {
     console.log(JSON.stringify(results, null, 2));
+    return 0;
   } else {
     console.log('');
     console.log('━'.repeat(50));
@@ -239,18 +273,26 @@ async function main() {
       console.log(
         `${colors.red}Validation failed with ${results.errors.length} error(s)${colors.reset}`
       );
-      process.exit(1);
-    } else {
-      console.log('');
-      console.log(
-        `${colors.green}All modifier entity paths are valid!${colors.reset}`
-      );
-      process.exit(0);
+      return 1;
     }
+
+    console.log('');
+    console.log(
+      `${colors.green}All modifier entity paths are valid!${colors.reset}`
+    );
+    return 0;
   }
 }
 
-main().catch((err) => {
-  console.error(`${colors.red}Fatal error: ${err.message}${colors.reset}`);
-  process.exit(1);
-});
+main()
+  .catch(async (err) => {
+    console.error(`${colors.red}Fatal error: ${err.message}${colors.reset}`);
+    await flushCapturedLogs();
+    process.exitCode = 1;
+  })
+  .then(async (code) => {
+    await flushCapturedLogs();
+    if (typeof code === 'number') {
+      process.exitCode = code;
+    }
+  });

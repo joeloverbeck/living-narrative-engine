@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for furniture:take_from_nearby_surface action discovery
+ * @file Integration tests for item-placement:take_from_nearby_surface action discovery
  * @description Tests that the take_from_nearby_surface action is correctly discovered
  * for seated actors near furniture with open containers.
  *
@@ -17,16 +17,16 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
-import takeFromNearbySurfaceAction from '../../../../data/mods/furniture/actions/take_from_nearby_surface.action.json' assert { type: 'json' };
+import takeFromNearbySurfaceAction from '../../../../data/mods/item-placement/actions/take_from_nearby_surface.action.json' assert { type: 'json' };
 
-const ACTION_ID = 'furniture:take_from_nearby_surface';
+const ACTION_ID = 'item-placement:take_from_nearby_surface';
 
-describe('furniture:take_from_nearby_surface action discovery', () => {
+describe('item-placement:take_from_nearby_surface action discovery', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('furniture', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('item-placement', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -64,7 +64,7 @@ describe('furniture:take_from_nearby_surface action discovery', () => {
 
   it('should use correct scope for primary targets', () => {
     expect(takeFromNearbySurfaceAction.targets.primary.scope).toBe(
-      'furniture:open_containers_on_nearby_furniture'
+      'item-placement:open_containers_on_nearby_furniture'
     );
   });
 
