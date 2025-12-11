@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:chicken_eye_amber_concentric",
+  "description": "Chicken eye with amber iris featuring concentric ring patterns",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye",
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "eye"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
+    "descriptors:color_extended": {
+      "color": "amber"
+    },
+    "descriptors:pattern": {
+      "pattern": "concentric-rings"
+    },
+    "descriptors:shape_eye": {
+      "shape": "round"
+    }
+  }
+}

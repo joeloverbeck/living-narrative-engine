@@ -12,7 +12,7 @@ describe('Tortoise Person Recipe Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/recipes/tortoise_person.recipe.json'
+        'data/mods/anatomy-creatures/recipes/tortoise_person.recipe.json'
       ),
       'utf-8'
     )
@@ -26,11 +26,11 @@ describe('Tortoise Person Recipe Validation', () => {
     });
 
     it('should have correct recipe ID', () => {
-      expect(recipe.recipeId).toBe('anatomy:tortoise_person');
+      expect(recipe.recipeId).toBe('anatomy-creatures:tortoise_person');
     });
 
     it('should reference correct blueprint', () => {
-      expect(recipe.blueprintId).toBe('anatomy:tortoise_person');
+      expect(recipe.blueprintId).toBe('anatomy-creatures:tortoise_person');
     });
 
     it('should verify blueprint exists and has correct structure', () => {
@@ -38,16 +38,16 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/blueprints/tortoise_person.blueprint.json'
+            'data/mods/anatomy-creatures/blueprints/tortoise_person.blueprint.json'
           ),
           'utf-8'
         )
       );
 
-      expect(blueprint.id).toBe('anatomy:tortoise_person');
+      expect(blueprint.id).toBe('anatomy-creatures:tortoise_person');
       expect(blueprint.schemaVersion).toBe('2.0');
       expect(blueprint.structureTemplate).toBe(
-        'anatomy:structure_tortoise_biped'
+        'anatomy-creatures:structure_tortoise_biped'
       );
     });
   });
@@ -161,7 +161,7 @@ describe('Tortoise Person Recipe Validation', () => {
       const slot = recipe.slots.shell_upper;
       expect(slot).toBeDefined();
       expect(slot.partType).toBe('shell_carapace');
-      expect(slot.preferId).toBe('anatomy:tortoise_carapace');
+      expect(slot.preferId).toBe('anatomy-creatures:tortoise_carapace');
       expect(slot.properties).toBeDefined();
       expect(slot.properties['descriptors:texture']).toEqual({
         texture: 'scaled',
@@ -178,7 +178,7 @@ describe('Tortoise Person Recipe Validation', () => {
       const slot = recipe.slots.shell_lower;
       expect(slot).toBeDefined();
       expect(slot.partType).toBe('shell_plastron');
-      expect(slot.preferId).toBe('anatomy:tortoise_plastron');
+      expect(slot.preferId).toBe('anatomy-creatures:tortoise_plastron');
       expect(slot.properties).toBeDefined();
       expect(slot.properties['descriptors:texture']).toEqual({
         texture: 'smooth',
@@ -192,29 +192,29 @@ describe('Tortoise Person Recipe Validation', () => {
       const slot = recipe.slots.head;
       expect(slot).toBeDefined();
       expect(slot.partType).toBe('tortoise_head');
-      expect(slot.preferId).toBe('anatomy:tortoise_head');
+      expect(slot.preferId).toBe('anatomy-creatures:tortoise_head');
     });
 
     it('should define tail slot', () => {
       const slot = recipe.slots.tail;
       expect(slot).toBeDefined();
       expect(slot.partType).toBe('tortoise_tail');
-      expect(slot.preferId).toBe('anatomy:tortoise_tail');
+      expect(slot.preferId).toBe('anatomy-creatures:tortoise_tail');
     });
 
     it('should verify all slot entity definitions exist', () => {
       const slotIds = [
-        'anatomy:tortoise_carapace',
-        'anatomy:tortoise_plastron',
-        'anatomy:tortoise_head',
-        'anatomy:tortoise_tail',
+        'anatomy-creatures:tortoise_carapace',
+        'anatomy-creatures:tortoise_plastron',
+        'anatomy-creatures:tortoise_head',
+        'anatomy-creatures:tortoise_tail',
       ];
 
       slotIds.forEach((entityId) => {
         const fileName = entityId.split(':')[1] + '.entity.json';
         const entityPath = join(
           process.cwd(),
-          'data/mods/anatomy/entities/definitions',
+          'data/mods/anatomy-creatures/entities/definitions',
           fileName
         );
 
@@ -238,7 +238,7 @@ describe('Tortoise Person Recipe Validation', () => {
       );
       expect(armPattern).toBeDefined();
       expect(armPattern.partType).toBe('tortoise_arm');
-      expect(armPattern.preferId).toBe('anatomy:tortoise_arm');
+      expect(armPattern.preferId).toBe('anatomy-creatures:tortoise_arm');
       expect(armPattern.properties['descriptors:texture']).toEqual({
         texture: 'scaled',
       });
@@ -250,7 +250,7 @@ describe('Tortoise Person Recipe Validation', () => {
       );
       expect(legPattern).toBeDefined();
       expect(legPattern.partType).toBe('tortoise_leg');
-      expect(legPattern.preferId).toBe('anatomy:tortoise_leg');
+      expect(legPattern.preferId).toBe('anatomy-creatures:tortoise_leg');
       expect(legPattern.properties['descriptors:texture']).toEqual({
         texture: 'scaled',
       });
@@ -269,7 +269,7 @@ describe('Tortoise Person Recipe Validation', () => {
       expect(handPattern).toBeDefined();
       expect(handPattern.matches).toEqual(['left_hand', 'right_hand']);
       expect(handPattern.partType).toBe('tortoise_hand');
-      expect(handPattern.preferId).toBe('anatomy:tortoise_hand');
+      expect(handPattern.preferId).toBe('anatomy-creatures:tortoise_hand');
       expect(handPattern.properties['descriptors:digit_count']).toEqual({
         count: '3',
       });
@@ -288,7 +288,7 @@ describe('Tortoise Person Recipe Validation', () => {
       expect(footPattern).toBeDefined();
       expect(footPattern.matches).toEqual(['left_foot', 'right_foot']);
       expect(footPattern.partType).toBe('tortoise_foot');
-      expect(footPattern.preferId).toBe('anatomy:tortoise_foot');
+      expect(footPattern.preferId).toBe('anatomy-creatures:tortoise_foot');
       expect(footPattern.properties['descriptors:digit_count']).toEqual({
         count: '3',
       });
@@ -307,7 +307,7 @@ describe('Tortoise Person Recipe Validation', () => {
       expect(eyePattern).toBeDefined();
       expect(eyePattern.matches).toEqual(['left_eye', 'right_eye']);
       expect(eyePattern.partType).toBe('tortoise_eye');
-      expect(eyePattern.preferId).toBe('anatomy:tortoise_eye');
+      expect(eyePattern.preferId).toBe('anatomy-creatures:tortoise_eye');
       expect(eyePattern.properties['descriptors:color_extended']).toEqual({
         color: 'amber',
       });
@@ -315,18 +315,18 @@ describe('Tortoise Person Recipe Validation', () => {
 
     it('should verify all pattern entity definitions exist', () => {
       const patternIds = [
-        'anatomy:tortoise_arm',
-        'anatomy:tortoise_leg',
-        'anatomy:tortoise_hand',
-        'anatomy:tortoise_foot',
-        'anatomy:tortoise_eye',
+        'anatomy-creatures:tortoise_arm',
+        'anatomy-creatures:tortoise_leg',
+        'anatomy-creatures:tortoise_hand',
+        'anatomy-creatures:tortoise_foot',
+        'anatomy-creatures:tortoise_eye',
       ];
 
       patternIds.forEach((entityId) => {
         const fileName = entityId.split(':')[1] + '.entity.json';
         const entityPath = join(
           process.cwd(),
-          'data/mods/anatomy/entities/definitions',
+          'data/mods/anatomy-creatures/entities/definitions',
           fileName
         );
 
@@ -342,7 +342,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/structure-templates/structure_tortoise_biped.structure-template.json'
+            'data/mods/anatomy-creatures/structure-templates/structure_tortoise_biped.structure-template.json'
           ),
           'utf-8'
         )
@@ -404,7 +404,7 @@ describe('Tortoise Person Recipe Validation', () => {
       entityFiles.forEach((fileName) => {
         const entityPath = join(
           process.cwd(),
-          'data/mods/anatomy/entities/definitions',
+          'data/mods/anatomy-creatures/entities/definitions',
           fileName
         );
         const entity = JSON.parse(readFileSync(entityPath, 'utf-8'));
@@ -454,7 +454,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_head.entity.json'
           ),
           'utf-8'
         )
@@ -473,7 +473,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_head.entity.json'
           ),
           'utf-8'
         )
@@ -497,7 +497,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_arm.entity.json'
           ),
           'utf-8'
         )
@@ -516,7 +516,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_leg.entity.json'
           ),
           'utf-8'
         )
@@ -537,7 +537,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/blueprints/tortoise_person.blueprint.json'
+            'data/mods/anatomy-creatures/blueprints/tortoise_person.blueprint.json'
           ),
           'utf-8'
         )
@@ -567,7 +567,7 @@ describe('Tortoise Person Recipe Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/blueprints/tortoise_person.blueprint.json'
+            'data/mods/anatomy-creatures/blueprints/tortoise_person.blueprint.json'
           ),
           'utf-8'
         )
@@ -575,7 +575,7 @@ describe('Tortoise Person Recipe Validation', () => {
 
       expect(blueprint.schemaVersion).toBe('2.0');
       expect(blueprint.structureTemplate).toBe(
-        'anatomy:structure_tortoise_biped'
+        'anatomy-creatures:structure_tortoise_biped'
       );
     });
   });

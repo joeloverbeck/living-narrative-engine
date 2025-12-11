@@ -1,8 +1,8 @@
 /**
  * @file Test suite to validate damage_capabilities component on beak entities
- * @see data/mods/anatomy/entities/definitions/beak.entity.json
- * @see data/mods/anatomy/entities/definitions/chicken_beak.entity.json
- * @see data/mods/anatomy/entities/definitions/tortoise_beak.entity.json
+ * @see data/mods/anatomy-creatures/entities/definitions/beak.entity.json
+ * @see data/mods/anatomy-creatures/entities/definitions/chicken_beak.entity.json
+ * @see data/mods/anatomy-creatures/entities/definitions/tortoise_beak.entity.json
  */
 
 import Ajv from 'ajv';
@@ -14,9 +14,9 @@ import damageCapabilitiesComponent from '../../../../../data/mods/damage-types/c
 import damageCapabilityEntrySchema from '../../../../../data/schemas/damage-capability-entry.schema.json';
 
 // --- Beak entity files to validate ---
-import beakEntity from '../../../../../data/mods/anatomy/entities/definitions/beak.entity.json';
-import chickenBeakEntity from '../../../../../data/mods/anatomy/entities/definitions/chicken_beak.entity.json';
-import tortoiseBeakEntity from '../../../../../data/mods/anatomy/entities/definitions/tortoise_beak.entity.json';
+import beakEntity from '../../../../../data/mods/anatomy-creatures/entities/definitions/beak.entity.json';
+import chickenBeakEntity from '../../../../../data/mods/anatomy-creatures/entities/definitions/chicken_beak.entity.json';
+import tortoiseBeakEntity from '../../../../../data/mods/anatomy-creatures/entities/definitions/tortoise_beak.entity.json';
 
 /**
  * Test suite – Beak Damage Capabilities Validation.
@@ -46,7 +46,7 @@ describe('Beak Entity Damage Capabilities', () => {
     );
   });
 
-  describe('anatomy:beak (Kraken Beak)', () => {
+  describe('anatomy-creatures:beak (Kraken Beak)', () => {
     const componentData =
       beakEntity.components['damage-types:damage_capabilities'];
 
@@ -86,7 +86,7 @@ describe('Beak Entity Damage Capabilities', () => {
     });
   });
 
-  describe('anatomy:chicken_beak (Chicken Beak)', () => {
+  describe('anatomy-creatures:chicken_beak (Chicken Beak)', () => {
     const componentData =
       chickenBeakEntity.components['damage-types:damage_capabilities'];
 
@@ -125,7 +125,7 @@ describe('Beak Entity Damage Capabilities', () => {
     });
   });
 
-  describe('anatomy:tortoise_beak (Tortoise Beak)', () => {
+  describe('anatomy-creatures:tortoise_beak (Tortoise Beak)', () => {
     const componentData =
       tortoiseBeakEntity.components['damage-types:damage_capabilities'];
 

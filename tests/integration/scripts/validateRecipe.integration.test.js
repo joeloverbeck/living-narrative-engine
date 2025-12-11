@@ -87,7 +87,7 @@ describe('validate-recipe CLI integration tests', () => {
 
     const loadContext = createLoadContext({
       worldName: 'test-world',
-      requestedMods: ['core', 'descriptors', 'anatomy'],
+      requestedMods: ['core', 'descriptors', 'anatomy', 'anatomy-creatures'],
       registry: dataRegistry,
     });
 
@@ -161,14 +161,14 @@ describe('validate-recipe CLI integration tests', () => {
 
     it('should validate red_dragon recipe with structure template', async () => {
       const recipe = loadRecipe(
-        'data/mods/anatomy/recipes/red_dragon.recipe.json'
+        'data/mods/anatomy-creatures/recipes/red_dragon.recipe.json'
       );
       const report = await validator.validate(recipe, {
-        recipePath: 'data/mods/anatomy/recipes/red_dragon.recipe.json',
+        recipePath: 'data/mods/anatomy-creatures/recipes/red_dragon.recipe.json',
       });
 
       expect(report.isValid).toBe(true);
-      expect(report.summary.recipeId).toBe('anatomy:red_dragon');
+      expect(report.summary.recipeId).toBe('anatomy-creatures:red_dragon');
       expect(report.errors.length).toBe(0);
     });
 
@@ -176,7 +176,7 @@ describe('validate-recipe CLI integration tests', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/human_male.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
-        'data/mods/anatomy/recipes/red_dragon.recipe.json',
+        'data/mods/anatomy-creatures/recipes/red_dragon.recipe.json',
       ];
 
       const results = [];

@@ -921,7 +921,7 @@ describe('Anatomy Recipe Schema - Mixed V1 and V2 Patterns', () => {
         {
           matchesGroup: 'limbSet:wing',
           partType: 'wing',
-          preferId: 'anatomy:dragon_wing_scaled',
+          preferId: 'anatomy-creatures:dragon_wing_scaled',
           tags: ['anatomy:scaled', 'anatomy:membranous'],
           notTags: ['anatomy:feathered'],
           properties: {
@@ -960,7 +960,7 @@ describe('Anatomy Recipe Schema - Real-World Integration Examples', () => {
   it('should validate spider recipe with 8-leg group pattern', () => {
     const spiderRecipe = {
       recipeId: 'creatures:giant_spider',
-      blueprintId: 'anatomy:giant_spider_8leg',
+      blueprintId: 'anatomy-creatures:giant_spider_8leg',
       slots: {
         cephalothorax: { partType: 'cephalothorax' },
       },
@@ -1036,7 +1036,7 @@ describe('Anatomy Recipe Schema - Real-World Integration Examples', () => {
   it('should validate centaur recipe with property-based filters', () => {
     const centaurRecipe = {
       recipeId: 'creatures:centaur',
-      blueprintId: 'anatomy:centaur_composite',
+      blueprintId: 'anatomy-creatures:centaur_composite',
       slots: {
         torso_upper: { partType: 'human_torso' },
         torso_lower: { partType: 'horse_torso' },

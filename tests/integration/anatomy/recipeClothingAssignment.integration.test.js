@@ -29,7 +29,7 @@ describe('Recipe Clothing Assignment', () => {
 
     it('should pass ClothingInstantiationService to anatomy workflow', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy

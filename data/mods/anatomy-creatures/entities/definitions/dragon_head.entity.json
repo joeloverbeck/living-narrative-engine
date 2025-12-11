@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:dragon_head",
+  "description": "A draconic head with jaws and horns",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_head",
+      "hit_probability_weight": 12,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 60,
+      "maxHealth": 60,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "dragon head"
+    },
+    "core:weight": {
+      "weight": 50
+    },
+    "descriptors:color_extended": {
+      "color": "crimson"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    }
+  }
+}

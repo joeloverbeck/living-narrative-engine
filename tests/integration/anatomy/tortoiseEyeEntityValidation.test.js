@@ -7,7 +7,7 @@ describe('Tortoise Eye Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_eye.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_eye.entity.json'
       ),
       'utf-8'
     )
@@ -15,7 +15,7 @@ describe('Tortoise Eye Entity Validation', () => {
 
   describe('tortoise_eye entity', () => {
     it('should have correct entity ID', () => {
-      expect(eyeEntity.id).toBe('anatomy:tortoise_eye');
+      expect(eyeEntity.id).toBe('anatomy-creatures:tortoise_eye');
     });
 
     it('should have correct description', () => {
@@ -92,7 +92,7 @@ describe('Tortoise Eye Entity Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_head.entity.json'
           ),
           'utf-8'
         )

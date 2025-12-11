@@ -54,7 +54,7 @@ describe('validate-recipe CLI performance tests', () => {
       const recipePaths = [
         'data/mods/anatomy/recipes/human_male.recipe.json',
         'data/mods/anatomy/recipes/human_female.recipe.json',
-        'data/mods/anatomy/recipes/red_dragon.recipe.json',
+        'data/mods/anatomy/recipes/human_futa.recipe.json',
       ];
 
       const result = executeCLI(recipePaths);

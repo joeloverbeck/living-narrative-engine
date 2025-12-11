@@ -1,0 +1,56 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:centaur_warrior",
+  "schemaVersion": "2.0",
+  "root": "anatomy-creatures:centaur_torso",
+  "structureTemplate": "anatomy-creatures:structure_centauroid",
+  "additionalSlots": {
+    "quiver_mount": {
+      "socket": "back_upper",
+      "requirements": {
+        "partType": "equipment_mount",
+        "components": ["anatomy:part"]
+      },
+      "optional": true
+    },
+    "arm_left": {
+      "parent": "upper_torso",
+      "socket": "arm_left",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "arm_right": {
+      "parent": "upper_torso",
+      "socket": "arm_right",
+      "requirements": {
+        "partType": "arm",
+        "components": ["anatomy:part"]
+      }
+    },
+    "head": {
+      "parent": "upper_torso",
+      "socket": "head",
+      "requirements": {
+        "partType": "head",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
+  "clothingSlotMappings": {
+    "torso_upper": {
+      "blueprintSlots": ["upper_torso", "arm_left", "arm_right"],
+      "allowedLayers": ["base", "outer", "armor"]
+    },
+    "legs_equine": {
+      "blueprintSlots": [
+        "leg_left_front",
+        "leg_right_front",
+        "leg_left_rear",
+        "leg_right_rear"
+      ],
+      "allowedLayers": ["base", "outer", "armor"]
+    }
+  }
+}

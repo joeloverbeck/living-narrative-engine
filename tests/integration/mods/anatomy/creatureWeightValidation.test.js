@@ -17,7 +17,7 @@ import path from 'path';
 
 const DEFINITIONS_PATH = path.resolve(
   process.cwd(),
-  'data/mods/anatomy/entities/definitions'
+  'data/mods/anatomy-creatures/entities/definitions'
 );
 
 /**

@@ -20,7 +20,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should generate 8 tentacles matching recipe property requirements', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act - Generate anatomy for the actor
@@ -85,7 +85,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should use kraken_tentacle entity definition with required properties', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -111,9 +111,9 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
     expect(partComponent.subType).toBe('tentacle');
 
     // Verify it's based on anatomy:kraken_tentacle definition (has all required properties)
-    expect(tentacleEntity.definitionId).toBe('anatomy:kraken_tentacle');
+    expect(tentacleEntity.definitionId).toBe('anatomy-creatures:kraken_tentacle');
     const entityDefinition = testBed.getEntityDefinition(
-      'anatomy:kraken_tentacle'
+      'anatomy-creatures:kraken_tentacle'
     );
     expect(entityDefinition).toBeDefined();
     expect(entityDefinition.components['anatomy:part'].subType).toBe(
@@ -138,7 +138,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should validate part type compatibility after migration', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -177,7 +177,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should generate correct anatomy description with generic tentacles', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -200,7 +200,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should handle tentacle constraints correctly', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -234,7 +234,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should have both kraken_tentacle and generic tentacle entities', () => {
     // Assert - kraken_tentacle entity should exist with all required properties
-    const krakenEntity = testBed.getEntityDefinition('anatomy:kraken_tentacle');
+    const krakenEntity = testBed.getEntityDefinition('anatomy-creatures:kraken_tentacle');
     expect(krakenEntity).toBeDefined();
     expect(krakenEntity.components['anatomy:part'].subType).toBe('tentacle');
     expect(krakenEntity.components['descriptors:size_category']).toBeDefined();
@@ -247,17 +247,17 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
     // Specialized tentacle entities should exist for different species
     const octopusEntity = testBed.getEntityDefinition(
-      'anatomy:octopus_tentacle'
+      'anatomy-creatures:octopus_tentacle'
     );
     expect(octopusEntity).toBeDefined();
     expect(octopusEntity.components['anatomy:part'].subType).toBe('tentacle');
-    const squidEntity = testBed.getEntityDefinition('anatomy:squid_tentacle');
+    const squidEntity = testBed.getEntityDefinition('anatomy-creatures:squid_tentacle');
     expect(squidEntity).toBeDefined();
   });
 
   it('should use generic head entity for kraken', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -285,7 +285,7 @@ describe('Kraken Tentacle Generation - Property-Based Selection', () => {
 
   it('should generate unique tentacle instances', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act

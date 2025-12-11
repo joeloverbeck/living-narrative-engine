@@ -204,7 +204,7 @@ describe('PartSelectionService additional branch coverage', () => {
 
   it('logs diagnostic information when kraken_head definition is present', async () => {
     const krakenHead = {
-      id: 'anatomy:kraken_head',
+      id: 'anatomy-creatures:kraken_head',
       components: {
         'anatomy:part': { subType: 'tentacle' },
       },
@@ -221,11 +221,11 @@ describe('PartSelectionService additional branch coverage', () => {
     const rng = jest.fn().mockReturnValue(0);
     const result = await service.selectPart({}, ['tentacle'], undefined, rng);
 
-    expect(result).toBe('anatomy:kraken_head');
+    expect(result).toBe('anatomy-creatures:kraken_head');
     expect(logger.info).toHaveBeenCalledWith(
       'PartSelectionService: Checking kraken_head against requirements',
       {
-        entityId: 'anatomy:kraken_head',
+        entityId: 'anatomy-creatures:kraken_head',
         allowedTypes: ['tentacle'],
         requirements: {},
         hasAnatomyPart: true,
@@ -236,7 +236,7 @@ describe('PartSelectionService additional branch coverage', () => {
 
   it('logs when kraken_head is missing the anatomy part component', async () => {
     const defs = [
-      { id: 'anatomy:kraken_head', components: {} },
+      { id: 'anatomy-creatures:kraken_head', components: {} },
       {
         id: 'valid',
         components: {
@@ -264,7 +264,7 @@ describe('PartSelectionService additional branch coverage', () => {
   it('logs when kraken_head subtype is not in allowed types', async () => {
     const defs = [
       {
-        id: 'anatomy:kraken_head',
+        id: 'anatomy-creatures:kraken_head',
         components: {
           'anatomy:part': { subType: 'tentacle' },
         },
@@ -296,7 +296,7 @@ describe('PartSelectionService additional branch coverage', () => {
   it('logs when kraken_head subtype does not satisfy partType requirement', async () => {
     const defs = [
       {
-        id: 'anatomy:kraken_head',
+        id: 'anatomy-creatures:kraken_head',
         components: {
           'anatomy:part': { subType: 'arm' },
         },
@@ -333,7 +333,7 @@ describe('PartSelectionService additional branch coverage', () => {
   it('logs missing required components for kraken_head', async () => {
     const defs = [
       {
-        id: 'anatomy:kraken_head',
+        id: 'anatomy-creatures:kraken_head',
         components: {
           'anatomy:part': { subType: 'head' },
         },
@@ -372,7 +372,7 @@ describe('PartSelectionService additional branch coverage', () => {
   it('logs missing required tags for kraken_head', async () => {
     const defs = [
       {
-        id: 'anatomy:kraken_head',
+        id: 'anatomy-creatures:kraken_head',
         components: {
           'anatomy:part': { subType: 'head' },
           'tag:fire': {},

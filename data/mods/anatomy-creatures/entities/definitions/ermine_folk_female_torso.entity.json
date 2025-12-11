@@ -1,0 +1,175 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:ermine_folk_female_torso",
+  "description": "Ermine-folk female torso - slender humanoid torso with tail attachment",
+  "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "heart_socket",
+          "baseProbability": 0.3,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.5,
+            "blunt": 0.3,
+            "slashing": 0.8
+          }
+        },
+        {
+          "childSocketId": "spine_socket",
+          "baseProbability": 0.2,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.2,
+            "blunt": 0.5,
+            "slashing": 0.6
+          }
+        }
+      ]
+    },
+    "anatomy:part": {
+      "subType": "torso",
+      "hit_probability_weight": 45,
+      "health_calculation_weight": 10
+    },
+    "anatomy:part_health": {
+      "currentHealth": 45,
+      "maxHealth": 45,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "allowedTypes": [
+            "head",
+            "neck"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_shoulder",
+          "orientation": "left",
+          "allowedTypes": [
+            "arm"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_shoulder",
+          "orientation": "right",
+          "allowedTypes": [
+            "arm"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_hip",
+          "orientation": "left",
+          "allowedTypes": [
+            "leg"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_hip",
+          "orientation": "right",
+          "allowedTypes": [
+            "leg"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_chest",
+          "orientation": "left",
+          "allowedTypes": [
+            "breast"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_chest",
+          "orientation": "right",
+          "allowedTypes": [
+            "breast"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "pubic_hair",
+          "allowedTypes": [
+            "pubic_hair"
+          ],
+          "nameTpl": "pubic hair"
+        },
+        {
+          "id": "vagina",
+          "allowedTypes": [
+            "vagina"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "asshole",
+          "allowedTypes": [
+            "asshole"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_ass",
+          "orientation": "left",
+          "allowedTypes": [
+            "ass_cheek"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ass",
+          "orientation": "right",
+          "allowedTypes": [
+            "ass_cheek"
+          ],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "lower_back",
+          "allowedTypes": [
+            "tail"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "heart_socket",
+          "allowedTypes": [
+            "heart"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "spine_socket",
+          "allowedTypes": [
+            "spine"
+          ],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_upper",
+      "nonBlockingLayers": [
+        "underwear",
+        "accessories"
+      ]
+    },
+    "core:name": {
+      "text": "torso"
+    },
+    "core:weight": {
+      "weight": 20
+    },
+    "descriptors:build": {
+      "build": "lissom"
+    }
+  }
+}

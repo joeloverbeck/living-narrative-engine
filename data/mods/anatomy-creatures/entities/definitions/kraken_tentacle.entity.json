@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:kraken_tentacle",
+  "description": "Elder kraken tentacle with enormous size and dark purple coloring",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.5,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "tentacle",
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 60,
+      "maxHealth": 60,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "tentacle"
+    },
+    "core:weight": {
+      "weight": 100
+    },
+    "descriptors:color_extended": {
+      "color": "dark-purple"
+    },
+    "descriptors:length_category": {
+      "length": "extremely-long"
+    },
+    "descriptors:shape_general": {
+      "shape": "cylindrical"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
+    }
+  }
+}

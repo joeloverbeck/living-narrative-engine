@@ -20,7 +20,7 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
 
   it('should generate kraken with kraken_mantle root matching recipe properties', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -41,7 +41,7 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
     expect(partComp.subType).toBe('mantle');
 
     // Verify it's the kraken_mantle entity (selected because it matches recipe properties)
-    expect(rootEntity.definitionId).toBe('anatomy:kraken_mantle');
+    expect(rootEntity.definitionId).toBe('anatomy-creatures:kraken_mantle');
 
     // Verify all kraken-specific properties exist (from entity definition, not overrides)
     const sizeCategory = rootEntity.getComponentData(
@@ -59,7 +59,7 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
 
   it('should attach beak and ink sac to mantle sockets', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -106,7 +106,7 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
 
   it('should generate complete kraken anatomy with all parts', async () => {
     // Arrange
-    const recipeId = 'anatomy:kraken_elder';
+    const recipeId = 'anatomy-creatures:kraken_elder';
     const actor = await testBed.createActor({ recipeId });
 
     // Act
@@ -134,7 +134,7 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
 
   it('should have both kraken_mantle and generic mantle entities', () => {
     // Assert - kraken_mantle entity should exist with all required properties
-    const krakenEntity = testBed.getEntityDefinition('anatomy:kraken_mantle');
+    const krakenEntity = testBed.getEntityDefinition('anatomy-creatures:kraken_mantle');
     expect(krakenEntity).toBeDefined();
     expect(krakenEntity.components['anatomy:part'].subType).toBe('mantle');
 
@@ -161,10 +161,10 @@ describe('Kraken Mantle Generation - Property-Based Selection', () => {
     expect(krakenEntity.components['anatomy:sockets'].sockets).toHaveLength(2);
 
     // Specialized mantle entities should exist for different species
-    const octopusEntity = testBed.getEntityDefinition('anatomy:octopus_mantle');
+    const octopusEntity = testBed.getEntityDefinition('anatomy-creatures:octopus_mantle');
     expect(octopusEntity).toBeDefined();
     expect(octopusEntity.components['anatomy:part'].subType).toBe('mantle');
-    const squidEntity = testBed.getEntityDefinition('anatomy:squid_mantle');
+    const squidEntity = testBed.getEntityDefinition('anatomy-creatures:squid_mantle');
     expect(squidEntity).toBeDefined();
   });
 });

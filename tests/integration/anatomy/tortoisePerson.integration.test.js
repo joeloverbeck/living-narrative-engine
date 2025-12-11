@@ -37,7 +37,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should generate complete tortoise anatomy with all required parts', async () => {
       // Create test entity with tortoise person recipe
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy
@@ -113,7 +113,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should have correct body descriptors', async () => {
       // Create test entity
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy
@@ -138,7 +138,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should have shell parts with correct descriptors', async () => {
       // Create test entity
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy
@@ -207,7 +207,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should have clawed hands and feet', async () => {
       // Create test entity
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy
@@ -269,7 +269,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should have beak properly attached to head', async () => {
       // Create test entity
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy
@@ -317,7 +317,7 @@ describe('Tortoise Person Anatomy Integration', () => {
     it('should generate body description with correct descriptors', async () => {
       // Create test entity
       const tortoise = await testBed.createActor({
-        recipeId: 'anatomy:tortoise_person',
+        recipeId: 'anatomy-creatures:tortoise_person',
       });
 
       // Generate anatomy

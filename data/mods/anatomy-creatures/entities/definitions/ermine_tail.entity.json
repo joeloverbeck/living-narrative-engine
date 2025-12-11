@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:ermine_tail",
+  "description": "Ermine tail - thin, medium-length, covered in dense fur with black tip",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "ermine tail"
+    },
+    "core:weight": {
+      "weight": 0.08
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    }
+  }
+}

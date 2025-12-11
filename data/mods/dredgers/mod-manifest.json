@@ -16,6 +16,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "anatomy-creatures",
+      "version": "^1.0.0"
+    },
+    {
       "id": "descriptors",
       "version": "^1.0.0"
     },
@@ -51,12 +55,7 @@
         "concordance_salon.location.json",
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
-        "ermine_ear.entity.json",
-        "ermine_folk_female_torso.entity.json",
-        "ermine_tail.entity.json",
-        "toad_eye.entity.json",
-        "toad_folk_male_torso.entity.json",
-        "toad_tympanum.entity.json"
+        "mudsong_vane.character.json"
       ],
       "instances": [
         "cress_siltwell.character.json",
@@ -65,15 +64,9 @@
     },
     "events": [],
     "macros": [],
-    "scopes": [],
-    "blueprints": [
-      "ermine_folk_female.blueprint.json",
-      "toad_folk_male.blueprint.json"
-    ],
-    "parts": [
-      "amphibian_core.part.json",
-      "mustelid_core.part.json"
-    ],
+      "scopes": [],
+      "blueprints": [],
+      "parts": [],
     "recipes": [
       "ermine_folk_female.recipe.json",
       "toad_folk_male.recipe.json"

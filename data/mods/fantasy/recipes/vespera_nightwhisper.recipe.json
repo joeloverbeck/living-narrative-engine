@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "fantasy:vespera_nightwhisper_recipe",
-  "blueprintId": "anatomy:cat_girl",
+  "blueprintId": "anatomy-creatures:cat_girl",
   "bodyDescriptors": {
     "height": "average",
     "build": "athletic",
@@ -16,7 +16,7 @@
     },
     "left_eye": {
       "partType": "eye",
-      "preferId": "anatomy:feline_eye_amber_slit",
+      "preferId": "anatomy-creatures:feline_eye_amber_slit",
       "properties": {
         "descriptors:color_extended": {
           "color": "amber"
@@ -31,7 +31,7 @@
     },
     "right_eye": {
       "partType": "eye",
-      "preferId": "anatomy:feline_eye_ice_blue_slit",
+      "preferId": "anatomy-creatures:feline_eye_ice_blue_slit",
       "properties": {
         "descriptors:color_extended": {
           "color": "ice-blue"
@@ -46,7 +46,7 @@
     },
     "left_ear": {
       "partType": "ear",
-      "preferId": "anatomy:cat_ear_decorated",
+      "preferId": "anatomy-creatures:cat_ear_decorated",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"
@@ -58,7 +58,7 @@
     },
     "right_ear": {
       "partType": "ear",
-      "preferId": "anatomy:cat_ear_decorated",
+      "preferId": "anatomy-creatures:cat_ear_decorated",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"
@@ -70,7 +70,7 @@
     },
     "tail": {
       "partType": "tail",
-      "preferId": "anatomy:cat_tail",
+      "preferId": "anatomy-creatures:cat_tail",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"
@@ -82,7 +82,7 @@
     },
     "torso": {
       "partType": "torso",
-      "preferId": "anatomy:cat_girl_torso",
+      "preferId": "anatomy-creatures:cat_girl_torso",
       "properties": {
         "descriptors:build": {
           "build": "toned"

@@ -649,7 +649,13 @@
       "Bash(do echo \"=== Run $i ===\" NODE_ENV=test npx jest tests/performance/multiTargetActionPerformance.test.js --testNamePattern=\"should maintain performance parity\" --no-coverage --silent)",
       "Bash(time npm run test:unit:*)",
       "Bash(time npx jest:*)",
-      "Bash(shuf)"
+      "Bash(shuf)",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/cat_ear_decorated.entity.json )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/cat_tail.entity.json )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/cat_girl_torso.entity.json )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_abyssal_black_glow.entity.json )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_ice_blue_slit.entity.json )",
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_amber_slit.entity.json)"
     ],
     "deny": [],
     "ask": []

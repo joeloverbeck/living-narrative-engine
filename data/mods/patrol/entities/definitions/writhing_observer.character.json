@@ -18,7 +18,7 @@
       "logEntries": []
     },
     "anatomy:body": {
-      "recipeId": "anatomy:writhing_observer"
+      "recipeId": "anatomy-creatures:writhing_observer"
     },
     "core:gender": {
       "value": "male"

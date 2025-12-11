@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "fantasy:registrar_copperplate_recipe",
-  "blueprintId": "anatomy:tortoise_person",
+  "blueprintId": "anatomy-creatures:tortoise_person",
   "bodyDescriptors": {
     "height": "short",
     "build": "stocky",
@@ -13,7 +13,7 @@
   "slots": {
     "shell_upper": {
       "partType": "shell_carapace",
-      "preferId": "anatomy:tortoise_carapace",
+      "preferId": "anatomy-creatures:tortoise_carapace",
       "properties": {
         "descriptors:texture": {
           "texture": "scaled"
@@ -28,7 +28,7 @@
     },
     "shell_lower": {
       "partType": "shell_plastron",
-      "preferId": "anatomy:tortoise_plastron",
+      "preferId": "anatomy-creatures:tortoise_plastron",
       "properties": {
         "descriptors:texture": {
           "texture": "smooth"
@@ -40,7 +40,7 @@
     },
     "head": {
       "partType": "tortoise_head",
-      "preferId": "anatomy:tortoise_head",
+      "preferId": "anatomy-creatures:tortoise_head",
       "properties": {
         "descriptors:texture": {
           "texture": "scaled"
@@ -49,18 +49,18 @@
     },
     "beak": {
       "partType": "tortoise_beak",
-      "preferId": "anatomy:tortoise_beak"
+      "preferId": "anatomy-creatures:tortoise_beak"
     },
     "tail": {
       "partType": "tortoise_tail",
-      "preferId": "anatomy:tortoise_tail"
+      "preferId": "anatomy-creatures:tortoise_tail"
     }
   },
   "patterns": [
     {
       "matchesGroup": "limbSet:arm",
       "partType": "tortoise_arm",
-      "preferId": "anatomy:tortoise_arm",
+      "preferId": "anatomy-creatures:tortoise_arm",
       "properties": {
         "descriptors:texture": {
           "texture": "scaled"
@@ -70,7 +70,7 @@
     {
       "matchesGroup": "limbSet:leg",
       "partType": "tortoise_leg",
-      "preferId": "anatomy:tortoise_leg",
+      "preferId": "anatomy-creatures:tortoise_leg",
       "properties": {
         "descriptors:texture": {
           "texture": "scaled"
@@ -83,7 +83,7 @@
     {
       "matches": ["left_hand", "right_hand"],
       "partType": "tortoise_hand",
-      "preferId": "anatomy:tortoise_hand",
+      "preferId": "anatomy-creatures:tortoise_hand",
       "properties": {
         "descriptors:digit_count": {
           "count": "3"
@@ -96,7 +96,7 @@
     {
       "matches": ["left_foot", "right_foot"],
       "partType": "tortoise_foot",
-      "preferId": "anatomy:tortoise_foot",
+      "preferId": "anatomy-creatures:tortoise_foot",
       "properties": {
         "descriptors:digit_count": {
           "count": "3"
@@ -109,7 +109,7 @@
     {
       "matches": ["left_eye", "right_eye"],
       "partType": "tortoise_eye",
-      "preferId": "anatomy:tortoise_eye",
+      "preferId": "anatomy-creatures:tortoise_eye",
       "properties": {
         "descriptors:color_extended": {
           "color": "amber"

@@ -255,7 +255,7 @@ describe('Anatomy Recipe - Enhanced Descriptors Integration', () => {
   describe('Combined descriptor scenarios', () => {
     it('should accept horror entity with multiple enhanced descriptors', () => {
       const recipe = {
-        recipeId: 'anatomy:writhing_observer',
+        recipeId: 'anatomy-creatures:writhing_observer',
         blueprintId: 'anatomy:humanoid',
         bodyDescriptors: {
           build: 'hulking',

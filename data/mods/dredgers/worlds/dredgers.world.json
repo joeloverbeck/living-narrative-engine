@@ -1,0 +1,20 @@
+{
+    "$schema": "http://example.com/schemas/world.schema.json",
+    "id": "dredgers:dredgers",
+    "name": "Corrupted plug in Eira Quenreach's estate",
+    "description": "A self-contained game world centered around a corrupted plug in a noble's estate",
+    "instances": [
+        {
+            "instanceId": "dredgers:canal_vestibule_instance"
+        },
+        {
+            "instanceId": "dredgers:concordance_salon_instance"
+        },
+        {
+            "instanceId": "dredgers:eira_quenreach_instance"
+        },
+        {
+            "instanceId": "dredgers:cress_siltwell_instance"
+        }
+    ]
+}

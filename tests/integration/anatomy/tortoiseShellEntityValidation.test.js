@@ -7,7 +7,7 @@ describe('Tortoise Shell Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_carapace.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_carapace.entity.json'
       ),
       'utf-8'
     )
@@ -17,7 +17,7 @@ describe('Tortoise Shell Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_plastron.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_plastron.entity.json'
       ),
       'utf-8'
     )
@@ -27,7 +27,7 @@ describe('Tortoise Shell Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_torso_with_shell.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_torso_with_shell.entity.json'
       ),
       'utf-8'
     )
@@ -35,7 +35,7 @@ describe('Tortoise Shell Entity Validation', () => {
 
   describe('tortoise_carapace entity', () => {
     it('should have correct entity ID', () => {
-      expect(carapaceEntity.id).toBe('anatomy:tortoise_carapace');
+      expect(carapaceEntity.id).toBe('anatomy-creatures:tortoise_carapace');
     });
 
     it('should have correct description', () => {
@@ -101,7 +101,7 @@ describe('Tortoise Shell Entity Validation', () => {
 
   describe('tortoise_plastron entity', () => {
     it('should have correct entity ID', () => {
-      expect(plastronEntity.id).toBe('anatomy:tortoise_plastron');
+      expect(plastronEntity.id).toBe('anatomy-creatures:tortoise_plastron');
     });
 
     it('should have correct description', () => {

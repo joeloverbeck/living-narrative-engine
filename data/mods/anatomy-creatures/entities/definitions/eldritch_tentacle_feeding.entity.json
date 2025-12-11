@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:eldritch_tentacle_feeding",
+  "description": "Specialized feeding tentacle tipped with a lamprey-like mouth",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.6,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "eldritch_tentacle",
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "allowedTypes": ["eldritch_lamprey_mouth"],
+          "id": "tip_mouth",
+          "nameTpl": "tip mouth"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "feeding tentacle"
+    },
+    "core:weight": {
+      "weight": 12
+    },
+    "descriptors:color_extended": {
+      "color": "dark-purple"
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "smooth-muscular"
+    }
+  }
+}

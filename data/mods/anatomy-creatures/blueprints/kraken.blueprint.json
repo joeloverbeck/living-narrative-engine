@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:kraken",
+  "schemaVersion": "2.0",
+  "root": "anatomy-creatures:kraken_mantle",
+  "structureTemplate": "anatomy-creatures:structure_octopoid",
+  "additionalSlots": {
+    "ink_sac": {
+      "socket": "ink_sac",
+      "requirements": {
+        "partType": "ink_reservoir",
+        "components": ["anatomy:part"]
+      }
+    },
+    "beak": {
+      "socket": "beak",
+      "requirements": {
+        "partType": "beak",
+        "components": ["anatomy:part"]
+      },
+      "optional": true
+    }
+  }
+}

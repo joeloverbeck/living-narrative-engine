@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "dredgers:ermine_folk_female_standard",
-  "blueprintId": "dredgers:ermine_folk_female",
+  "blueprintId": "anatomy-creatures:ermine_folk_female",
   "bodyDescriptors": {
     "build": "lissom",
     "composition": "lean",
@@ -13,7 +13,7 @@
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "dredgers:ermine_folk_female_torso",
+      "preferId": "anatomy-creatures:ermine_folk_female_torso",
       "properties": {
         "descriptors:build": {
           "build": "lissom"
@@ -38,7 +38,7 @@
     },
     "left_ear": {
       "partType": "ear",
-      "preferId": "dredgers:ermine_ear",
+      "preferId": "anatomy-creatures:ermine_ear",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"
@@ -47,7 +47,7 @@
     },
     "right_ear": {
       "partType": "ear",
-      "preferId": "dredgers:ermine_ear",
+      "preferId": "anatomy-creatures:ermine_ear",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"
@@ -56,7 +56,7 @@
     },
     "tail": {
       "partType": "tail",
-      "preferId": "dredgers:ermine_tail",
+      "preferId": "anatomy-creatures:ermine_tail",
       "properties": {
         "descriptors:texture": {
           "texture": "fuzzy"

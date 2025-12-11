@@ -18,7 +18,7 @@
       "logEntries": []
     },
     "anatomy:body": {
-      "recipeId": "anatomy:kraken_elder"
+      "recipeId": "anatomy-creatures:kraken_elder"
     },
     "core:gender": {
       "value": "male"

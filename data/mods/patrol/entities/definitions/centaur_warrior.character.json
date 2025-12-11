@@ -18,7 +18,7 @@
       "logEntries": []
     },
     "anatomy:body": {
-      "recipeId": "anatomy:centaur_warrior"
+      "recipeId": "anatomy-creatures:centaur_warrior"
     },
     "core:gender": {
       "value": "male"

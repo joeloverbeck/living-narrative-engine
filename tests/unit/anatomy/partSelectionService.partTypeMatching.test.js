@@ -37,7 +37,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // Create entity definition with specific subType
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'spider_leg', // Specific type
@@ -69,14 +69,14 @@ describe('PartSelectionService - partType/subType Matching', () => {
         Math.random
       );
 
-      expect(result).toBe('anatomy:spider_leg');
+      expect(result).toBe('anatomy-creatures:spider_leg');
     });
 
     it('should reject entity when subType does not match partType', async () => {
       // Create entity definition with generic subType
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'leg', // Generic type (WRONG)
@@ -159,7 +159,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
           },
         },
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'spider_leg', // Specific (correct)
@@ -167,7 +167,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
           },
         },
         {
-          id: 'anatomy:dragon_leg',
+          id: 'anatomy-creatures:dragon_leg',
           components: {
             'anatomy:part': {
               subType: 'dragon_leg', // Specific (different creature)
@@ -198,7 +198,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
       );
 
       // Should select spider_leg, not human_leg or dragon_leg
-      expect(result).toBe('anatomy:spider_leg');
+      expect(result).toBe('anatomy-creatures:spider_leg');
     });
 
     it('should throw when no entities match both allowedTypes and partType', async () => {
@@ -212,7 +212,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
           },
         },
         {
-          id: 'anatomy:dragon_leg',
+          id: 'anatomy-creatures:dragon_leg',
           components: {
             'anatomy:part': {
               subType: 'dragon_leg', // Doesn't match partType
@@ -248,7 +248,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
     it('should validate both allowedTypes and partType constraints', async () => {
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'spider_leg',
@@ -277,7 +277,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
         undefined,
         Math.random
       );
-      expect(result1).toBe('anatomy:spider_leg'); // Should match
+      expect(result1).toBe('anatomy-creatures:spider_leg'); // Should match
 
       // allowedTypes does NOT include spider_leg
       const allowedTypes2 = ['leg', 'arm'];
@@ -291,7 +291,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
     it('should accept wildcard in allowedTypes', async () => {
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'spider_leg',
@@ -322,7 +322,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
         Math.random
       );
 
-      expect(result).toBe('anatomy:spider_leg');
+      expect(result).toBe('anatomy-creatures:spider_leg');
     });
   });
 
@@ -331,7 +331,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // This reproduces the actual bug from the error logs
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'leg', // BUG: Generic instead of specific
@@ -370,7 +370,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
       // This shows the fix: entity subType matches recipe partType
       const defs = [
         {
-          id: 'anatomy:spider_leg',
+          id: 'anatomy-creatures:spider_leg',
           components: {
             'anatomy:part': {
               subType: 'spider_leg', // FIXED: Specific type matches recipe
@@ -405,7 +405,7 @@ describe('PartSelectionService - partType/subType Matching', () => {
         Math.random
       );
 
-      expect(result).toBe('anatomy:spider_leg');
+      expect(result).toBe('anatomy-creatures:spider_leg');
     });
   });
 });

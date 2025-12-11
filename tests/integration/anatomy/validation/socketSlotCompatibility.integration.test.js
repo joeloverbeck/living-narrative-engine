@@ -13,10 +13,10 @@ describe('Socket/Slot Compatibility Integration', () => {
     mockDataRegistry = {
       get: (category, id) => {
         const entities = {
-          'anatomy:centaur_torso': {
-            id: 'anatomy:centaur_torso',
+          'anatomy-creatures:centaur_torso': {
+            id: 'anatomy-creatures:centaur_torso',
             _sourceFile:
-              'data/mods/anatomy/entities/definitions/centaur_torso.entity.json',
+              'data/mods/anatomy-creatures/entities/definitions/centaur_torso.entity.json',
             components: {
               'anatomy:sockets': {
                 sockets: [
@@ -90,10 +90,10 @@ describe('Socket/Slot Compatibility Integration', () => {
               },
             },
           },
-          'anatomy:spider_cephalothorax': {
-            id: 'anatomy:spider_cephalothorax',
+          'anatomy-creatures:spider_cephalothorax': {
+            id: 'anatomy-creatures:spider_cephalothorax',
             _sourceFile:
-              'data/mods/anatomy/entities/definitions/spider_cephalothorax.entity.json',
+              'data/mods/anatomy-creatures/entities/definitions/spider_cephalothorax.entity.json',
             components: {
               'anatomy:sockets': {
                 sockets: [
@@ -171,10 +171,10 @@ describe('Socket/Slot Compatibility Integration', () => {
               },
             },
           },
-          'anatomy:dragon_torso': {
-            id: 'anatomy:dragon_torso',
+          'anatomy-creatures:dragon_torso': {
+            id: 'anatomy-creatures:dragon_torso',
             _sourceFile:
-              'data/mods/anatomy/entities/definitions/dragon_torso.entity.json',
+              'data/mods/anatomy-creatures/entities/definitions/dragon_torso.entity.json',
             components: {
               'anatomy:sockets': {
                 sockets: [
@@ -241,9 +241,9 @@ describe('Socket/Slot Compatibility Integration', () => {
   describe('Real Blueprint Validation', () => {
     it('should validate centaur blueprint with valid additionalSlots', async () => {
       const blueprint = {
-        id: 'anatomy:centaur_warrior',
+        id: 'anatomy-creatures:centaur_warrior',
         schemaVersion: '2.0',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         structureTemplate: 'anatomy:structure_centauroid',
         additionalSlots: {
           quiver_mount: {
@@ -291,9 +291,9 @@ describe('Socket/Slot Compatibility Integration', () => {
 
     it('should validate spider blueprint with valid additionalSlots', async () => {
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_cephalothorax',
+        root: 'anatomy-creatures:spider_cephalothorax',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         additionalSlots: {
           venom_gland: {
@@ -327,9 +327,9 @@ describe('Socket/Slot Compatibility Integration', () => {
 
     it('should detect missing fire_gland socket in dragon blueprint', async () => {
       const blueprint = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         schemaVersion: '2.0',
-        root: 'anatomy:dragon_torso',
+        root: 'anatomy-creatures:dragon_torso',
         structureTemplate: 'anatomy:structure_winged_quadruped',
         additionalSlots: {
           fire_gland: {
@@ -351,11 +351,11 @@ describe('Socket/Slot Compatibility Integration', () => {
       expect(errors[0].type).toBe('SOCKET_NOT_FOUND');
       expect(errors[0].slotName).toBe('fire_gland');
       expect(errors[0].socketId).toBe('fire_gland');
-      expect(errors[0].rootEntityId).toBe('anatomy:dragon_torso');
+      expect(errors[0].rootEntityId).toBe('anatomy-creatures:dragon_torso');
       expect(errors[0].availableSockets).toContain('head');
       expect(errors[0].availableSockets).toContain('tail');
       expect(errors[0].availableSockets).toContain('wing_left');
-      expect(errors[0].message).toContain('anatomy:dragon_torso');
+      expect(errors[0].message).toContain('anatomy-creatures:dragon_torso');
       expect(errors[0].fix).toContain('dragon_torso.entity.json');
     });
   });
@@ -364,7 +364,7 @@ describe('Socket/Slot Compatibility Integration', () => {
     it('should report multiple invalid sockets', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           invalid1: {
             socket: 'nonexistent_socket_1',
@@ -419,7 +419,7 @@ describe('Socket/Slot Compatibility Integration', () => {
     it('should provide actionable fix suggestions', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'fire_glan', // Typo similar to 'fire_gland' but not in sockets
@@ -444,7 +444,7 @@ describe('Socket/Slot Compatibility Integration', () => {
     it('should include file path in fix suggestion', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'missing_socket',

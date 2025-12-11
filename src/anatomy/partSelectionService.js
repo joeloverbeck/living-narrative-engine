@@ -133,8 +133,8 @@ export class PartSelectionService {
     );
 
     for (const entityDef of allEntityDefs) {
-      const isKrakenHead = entityDef.id === 'anatomy:kraken_head';
-      const isKrakenTentacle = entityDef.id === 'anatomy:kraken_tentacle';
+      const isKrakenHead = entityDef.id === 'anatomy-creatures:kraken_head';
+      const isKrakenTentacle = entityDef.id === 'anatomy-creatures:kraken_tentacle';
       const isGenericTentacle = entityDef.id === 'anatomy:tentacle';
       const isGenericMantle = entityDef.id === 'anatomy:mantle';
       const isDragonWing = entityDef.id === 'anatomy:dragon_wing';
@@ -264,8 +264,8 @@ export class PartSelectionService {
    * @returns {boolean} True if all requirements are met
    */
   #meetsAllRequirements(entityDef, requirements, allowedTypes, recipeSlot) {
-    const isKrakenHead = entityDef.id === 'anatomy:kraken_head';
-    const isKrakenTentacle = entityDef.id === 'anatomy:kraken_tentacle';
+    const isKrakenHead = entityDef.id === 'anatomy-creatures:kraken_head';
+    const isKrakenTentacle = entityDef.id === 'anatomy-creatures:kraken_tentacle';
     const isGenericTentacle = entityDef.id === 'anatomy:tentacle';
     const isGenericMantle = entityDef.id === 'anatomy:mantle';
 
@@ -409,7 +409,7 @@ export class PartSelectionService {
         recipeSlot.properties &&
         Object.keys(recipeSlot.properties).length > 0
       ) {
-        const isDragonWing = entityDef.id === 'anatomy:dragon_wing';
+        const isDragonWing = entityDef.id === 'anatomy-creatures:dragon_wing';
         if (!this.#matchesProperties(entityDef, recipeSlot.properties)) {
           if (isDragonWing) {
             console.log(

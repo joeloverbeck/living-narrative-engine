@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:ermine_ear",
+  "description": "Ermine ear - small, rounded, covered in short dense fur",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear",
+      "hit_probability_weight": 0.4,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "ermine ear"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    }
+  }
+}

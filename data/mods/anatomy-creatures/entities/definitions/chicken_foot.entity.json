@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:chicken_foot",
+  "description": "Scaly clawed foot of a chicken",
+  "components": {
+    "anatomy:part": {
+      "subType": "chicken_foot",
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "chicken foot"
+    },
+    "core:weight": {
+      "weight": 0.03
+    },
+    "descriptors:color_basic": {
+      "color": "yellow"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    }
+  }
+}

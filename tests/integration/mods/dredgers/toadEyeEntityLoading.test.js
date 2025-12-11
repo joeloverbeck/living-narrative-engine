@@ -3,7 +3,7 @@ import { createTestBed } from '../../../common/testBed.js';
 import path from 'path';
 import fs from 'fs';
 
-describe('Dredgers - Toad Eye Entity Loading', () => {
+describe('Anatomy Creatures (dredgers dependency) - Toad Eye Entity Loading', () => {
   let testBed;
 
   beforeEach(() => {
@@ -15,14 +15,15 @@ describe('Dredgers - Toad Eye Entity Loading', () => {
   });
 
   describe('toad_eye entity', () => {
-    it('should load toad_eye with all required components', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+    const toadEyePath = path.resolve(
+      process.cwd(),
+      'data/mods/anatomy-creatures/entities/definitions/toad_eye.entity.json'
+    );
 
-      expect(entityDef.id).toBe('dredgers:toad_eye');
+    it('should load toad_eye with all required components', () => {
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
+
+      expect(entityDef.id).toBe('anatomy-creatures:toad_eye');
       expect(entityDef.components['anatomy:part']).toBeDefined();
       expect(entityDef.components['anatomy:part_health']).toBeDefined();
       expect(entityDef.components['core:name']).toBeDefined();
@@ -33,11 +34,7 @@ describe('Dredgers - Toad Eye Entity Loading', () => {
     });
 
     it('should have correct anatomy:part properties for eye subType', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       const part = entityDef.components['anatomy:part'];
       expect(part.subType).toBe('eye');
@@ -46,11 +43,7 @@ describe('Dredgers - Toad Eye Entity Loading', () => {
     });
 
     it('should have healthy initial state with correct health values', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       const health = entityDef.components['anatomy:part_health'];
       expect(health.currentHealth).toBe(5);
@@ -59,11 +52,7 @@ describe('Dredgers - Toad Eye Entity Loading', () => {
     });
 
     it('should have toad-specific descriptors (large, bulging, smooth)', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       expect(entityDef.components['descriptors:size_category'].size).toBe(
         'large'
@@ -77,31 +66,19 @@ describe('Dredgers - Toad Eye Entity Loading', () => {
     });
 
     it('should have descriptive name "bulging eye"', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       expect(entityDef.components['core:name'].text).toBe('bulging eye');
     });
 
     it('should have appropriate weight for an eye (0.02 kg)', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       expect(entityDef.components['core:weight'].weight).toBe(0.02);
     });
 
     it('should have valid JSON schema reference', () => {
-      const entityPath = path.resolve(
-        process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_eye.entity.json'
-      );
-      const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
+      const entityDef = JSON.parse(fs.readFileSync(toadEyePath, 'utf8'));
 
       expect(entityDef.$schema).toBe(
         'schema://living-narrative-engine/entity-definition.schema.json'

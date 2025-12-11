@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:spider_abdomen",
+  "description": "The bulbous abdomen of a spider",
+  "components": {
+    "anatomy:part": {
+      "subType": "spider_abdomen",
+      "hit_probability_weight": 30,
+      "health_calculation_weight": 6
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "spider abdomen"
+    },
+    "core:weight": {
+      "weight": 0.02
+    },
+    "descriptors:texture": {
+      "texture": "ridged"
+    }
+  }
+}

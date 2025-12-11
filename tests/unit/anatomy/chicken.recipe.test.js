@@ -18,21 +18,21 @@ describe('Chicken Recipes', () => {
     // Load the rooster recipe
     const roosterRecipePath = path.join(
       process.cwd(),
-      'data/mods/anatomy/recipes/rooster.recipe.json'
+      'data/mods/anatomy-creatures/recipes/rooster.recipe.json'
     );
     roosterRecipe = JSON.parse(fs.readFileSync(roosterRecipePath, 'utf8'));
 
     // Load the hen recipe
     const henRecipePath = path.join(
       process.cwd(),
-      'data/mods/anatomy/recipes/hen.recipe.json'
+      'data/mods/anatomy-creatures/recipes/hen.recipe.json'
     );
     henRecipe = JSON.parse(fs.readFileSync(henRecipePath, 'utf8'));
 
     // Load blueprints for reference
     const roosterBlueprintPath = path.join(
       process.cwd(),
-      'data/mods/anatomy/blueprints/rooster.blueprint.json'
+      'data/mods/anatomy-creatures/blueprints/rooster.blueprint.json'
     );
     roosterBlueprint = JSON.parse(
       fs.readFileSync(roosterBlueprintPath, 'utf8')
@@ -40,7 +40,7 @@ describe('Chicken Recipes', () => {
 
     const henBlueprintPath = path.join(
       process.cwd(),
-      'data/mods/anatomy/blueprints/hen.blueprint.json'
+      'data/mods/anatomy-creatures/blueprints/hen.blueprint.json'
     );
     henBlueprint = JSON.parse(fs.readFileSync(henBlueprintPath, 'utf8'));
   });
@@ -48,11 +48,11 @@ describe('Chicken Recipes', () => {
   describe('Rooster Recipe', () => {
     describe('Basic Structure', () => {
       it('should have correct recipe ID', () => {
-        expect(roosterRecipe.recipeId).toBe('anatomy:rooster');
+        expect(roosterRecipe.recipeId).toBe('anatomy-creatures:rooster');
       });
 
       it('should reference the rooster blueprint', () => {
-        expect(roosterRecipe.blueprintId).toBe('anatomy:rooster');
+        expect(roosterRecipe.blueprintId).toBe('anatomy-creatures:rooster');
       });
 
       it('should have the correct schema reference', () => {
@@ -72,7 +72,7 @@ describe('Chicken Recipes', () => {
       it('should have comb slot with chicken_comb part type', () => {
         expect(roosterRecipe.slots.comb).toBeDefined();
         expect(roosterRecipe.slots.comb.partType).toBe('chicken_comb');
-        expect(roosterRecipe.slots.comb.preferId).toBe('anatomy:chicken_comb');
+        expect(roosterRecipe.slots.comb.preferId).toBe('anatomy-creatures:chicken_comb');
       });
     });
 
@@ -81,7 +81,7 @@ describe('Chicken Recipes', () => {
         expect(roosterRecipe.slots.wattle).toBeDefined();
         expect(roosterRecipe.slots.wattle.partType).toBe('chicken_wattle');
         expect(roosterRecipe.slots.wattle.preferId).toBe(
-          'anatomy:chicken_wattle'
+          'anatomy-creatures:chicken_wattle'
         );
       });
     });
@@ -90,7 +90,7 @@ describe('Chicken Recipes', () => {
       it('should have tail slot with chicken_tail part type', () => {
         expect(roosterRecipe.slots.tail).toBeDefined();
         expect(roosterRecipe.slots.tail.partType).toBe('chicken_tail');
-        expect(roosterRecipe.slots.tail.preferId).toBe('anatomy:chicken_tail');
+        expect(roosterRecipe.slots.tail.preferId).toBe('anatomy-creatures:chicken_tail');
       });
     });
 
@@ -99,7 +99,7 @@ describe('Chicken Recipes', () => {
         expect(roosterRecipe.slots.left_spur).toBeDefined();
         expect(roosterRecipe.slots.left_spur.partType).toBe('chicken_spur');
         expect(roosterRecipe.slots.left_spur.preferId).toBe(
-          'anatomy:chicken_spur'
+          'anatomy-creatures:chicken_spur'
         );
       });
 
@@ -107,7 +107,7 @@ describe('Chicken Recipes', () => {
         expect(roosterRecipe.slots.right_spur).toBeDefined();
         expect(roosterRecipe.slots.right_spur.partType).toBe('chicken_spur');
         expect(roosterRecipe.slots.right_spur.preferId).toBe(
-          'anatomy:chicken_spur'
+          'anatomy-creatures:chicken_spur'
         );
       });
 
@@ -166,11 +166,11 @@ describe('Chicken Recipes', () => {
   describe('Hen Recipe', () => {
     describe('Basic Structure', () => {
       it('should have correct recipe ID', () => {
-        expect(henRecipe.recipeId).toBe('anatomy:hen');
+        expect(henRecipe.recipeId).toBe('anatomy-creatures:hen');
       });
 
       it('should reference the hen blueprint', () => {
-        expect(henRecipe.blueprintId).toBe('anatomy:hen');
+        expect(henRecipe.blueprintId).toBe('anatomy-creatures:hen');
       });
 
       it('should have the correct schema reference', () => {
@@ -190,7 +190,7 @@ describe('Chicken Recipes', () => {
       it('should have comb slot with chicken_comb part type', () => {
         expect(henRecipe.slots.comb).toBeDefined();
         expect(henRecipe.slots.comb.partType).toBe('chicken_comb');
-        expect(henRecipe.slots.comb.preferId).toBe('anatomy:chicken_comb');
+        expect(henRecipe.slots.comb.preferId).toBe('anatomy-creatures:chicken_comb');
       });
     });
 
@@ -198,7 +198,7 @@ describe('Chicken Recipes', () => {
       it('should have wattle slot with chicken_wattle part type', () => {
         expect(henRecipe.slots.wattle).toBeDefined();
         expect(henRecipe.slots.wattle.partType).toBe('chicken_wattle');
-        expect(henRecipe.slots.wattle.preferId).toBe('anatomy:chicken_wattle');
+        expect(henRecipe.slots.wattle.preferId).toBe('anatomy-creatures:chicken_wattle');
       });
     });
 
@@ -206,7 +206,7 @@ describe('Chicken Recipes', () => {
       it('should have tail slot with chicken_tail part type', () => {
         expect(henRecipe.slots.tail).toBeDefined();
         expect(henRecipe.slots.tail.partType).toBe('chicken_tail');
-        expect(henRecipe.slots.tail.preferId).toBe('anatomy:chicken_tail');
+        expect(henRecipe.slots.tail.preferId).toBe('anatomy-creatures:chicken_tail');
       });
     });
 
@@ -245,8 +245,8 @@ describe('Chicken Recipes', () => {
 
   describe('Rooster vs Hen Recipe Comparison', () => {
     it('should use different blueprints', () => {
-      expect(roosterRecipe.blueprintId).toBe('anatomy:rooster');
-      expect(henRecipe.blueprintId).toBe('anatomy:hen');
+      expect(roosterRecipe.blueprintId).toBe('anatomy-creatures:rooster');
+      expect(henRecipe.blueprintId).toBe('anatomy-creatures:hen');
     });
 
     it('should both have the same schema', () => {
@@ -308,7 +308,7 @@ describe('Chicken Recipes', () => {
      * character recipes (e.g., data/mods/fantasy/recipes/) to select specific
      * eye colors, hair types, skin tones, etc.
      *
-     * However, the BASE chicken recipes (anatomy:rooster, anatomy:hen) should NOT
+     * However, the BASE chicken recipes (anatomy-creatures:rooster, anatomy-creatures:hen) should NOT
      * use `properties` because:
      * 1. There are no entity variants for chicken parts (comb, wattle, tail, etc.)
      *    with different component values to filter between

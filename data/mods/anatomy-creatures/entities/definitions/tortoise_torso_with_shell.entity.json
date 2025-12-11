@@ -1,0 +1,48 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:tortoise_torso_with_shell",
+  "description": "Tortoise torso with integrated shell mounting points",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_torso",
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 10
+    },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "torso",
+          "allowedTypes": ["torso_clothing"],
+          "nameTpl": "torso"
+        },
+        {
+          "id": "carapace_mount",
+          "allowedTypes": ["shell_carapace"],
+          "nameTpl": "upper shell mount"
+        },
+        {
+          "id": "plastron_mount",
+          "allowedTypes": ["shell_plastron"],
+          "nameTpl": "lower shell mount"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "tortoise torso"
+    },
+    "core:weight": {
+      "weight": 15
+    },
+    "descriptors:color_extended": {
+      "color": "dark-olive"
+    },
+    "descriptors:texture": {
+      "texture": "leathery"
+    }
+  }
+}

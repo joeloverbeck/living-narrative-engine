@@ -225,6 +225,10 @@ export async function executeRecipeValidation(
     }
 
     try {
+      // Clear blueprint cache BEFORE each validation to prevent state leakage
+      // between recipes using different blueprint types (composed vs structure-template)
+      context.anatomyBlueprintRepository?.clearCache?.();
+
       const recipeData =
         preloadedRecipes.get(recipePath) ?? (await loadRecipe(recipePath));
       const report = await context.validator.validate(recipeData, {
@@ -612,6 +616,7 @@ async function createValidationContext({
   return {
     validator,
     config: configuration.rawConfig,
+    anatomyBlueprintRepository: validatorDeps.anatomyBlueprintRepository,
   };
 }
 

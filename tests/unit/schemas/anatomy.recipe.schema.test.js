@@ -812,7 +812,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
           {
             matchesGroup: 'limbSet:wing',
             partType: 'wing',
-            preferId: 'anatomy:dragon_wing',
+            preferId: 'anatomy-creatures:dragon_wing',
             tags: ['anatomy:scaled', 'anatomy:membranous'],
             notTags: ['anatomy:feathered'],
             properties: {
@@ -1286,7 +1286,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     test('should validate spider recipe with 8 legs using group selector', () => {
       const spiderRecipe = {
         recipeId: 'creatures:giant_spider',
-        blueprintId: 'anatomy:giant_spider',
+        blueprintId: 'anatomy-creatures:giant_spider',
         slots: {
           head: { partType: 'head' },
         },
@@ -1317,7 +1317,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
     test('should validate dragon recipe with mixed patterns', () => {
       const dragonRecipe = {
         recipeId: 'creatures:red_dragon',
-        blueprintId: 'anatomy:red_dragon',
+        blueprintId: 'anatomy-creatures:red_dragon',
         slots: {
           head: { partType: 'head' },
         },

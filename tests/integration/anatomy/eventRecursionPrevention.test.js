@@ -65,7 +65,7 @@ describe('Anatomy Event Recursion Prevention', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     const actor = await testBed.createActor({
-      recipeId: 'anatomy:octopus_common',
+      recipeId: 'anatomy-creatures:octopus_common',
     });
 
     // Generate anatomy (includes description generation)

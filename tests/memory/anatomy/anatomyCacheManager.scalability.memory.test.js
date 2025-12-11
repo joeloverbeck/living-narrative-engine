@@ -52,7 +52,7 @@ describe('AnatomyCacheManager - Scalability Memory Tests', () => {
         [
           'anatomy:human_male',
           'anatomy:human_female',
-          'anatomy:tortoise_person',
+          'anatomy-creatures:tortoise_person',
         ][i % 3]
     );
 
@@ -120,7 +120,7 @@ describe('AnatomyCacheManager - Scalability Memory Tests', () => {
           [
             'anatomy:human_male',
             'anatomy:human_female',
-            'anatomy:tortoise_person',
+            'anatomy-creatures:tortoise_person',
           ][i % 3]
       );
 

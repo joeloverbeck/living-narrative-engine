@@ -18,7 +18,7 @@
       "logEntries": []
     },
     "anatomy:body": {
-      "recipeId": "anatomy:red_dragon"
+      "recipeId": "anatomy-creatures:red_dragon"
     },
     "core:gender": {
       "value": "male"

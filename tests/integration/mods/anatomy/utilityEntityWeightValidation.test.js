@@ -1,13 +1,16 @@
 /**
  * @file utilityEntityWeightValidation.test.js
- * @description Validates that utility/generic entity definitions (humanoid_*, cephalopods,
- * spiders, tortoises, and utility parts) have appropriate core:weight components for the
- * dismemberment spawning feature.
+ * @description Validates that utility/generic entity definitions (humanoid_* and utility parts)
+ * have appropriate core:weight components for the dismemberment spawning feature.
  *
  * This test ensures the invariants from DISBODPARSPA-015 are maintained:
  * - All utility entities with anatomy:part have core:weight
  * - Weights are positive numbers within realistic ranges for each part type
  * - blueprint_slot.entity.json is correctly excluded (no anatomy:part)
+ *
+ * Note: Creature entity tests (cephalopods, spiders, tortoises) are in:
+ * tests/integration/mods/anatomy-creatures/creatureEntityWeightValidation.test.js
+ *
  * @see tickets/DISBODPARSPA-015-weight-utility.md
  */
 
@@ -217,210 +220,6 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
     );
   });
 
-  describe('Cephalopod Parts (9 files)', () => {
-    const CEPHALOPOD_PARTS = [
-      {
-        file: 'beak.entity.json',
-        minWeight: 3,
-        maxWeight: 7,
-        desc: 'Kraken beak',
-      },
-      {
-        file: 'ink_reservoir.entity.json',
-        minWeight: 1,
-        maxWeight: 3,
-        desc: 'Ink reservoir',
-      },
-      {
-        file: 'kraken_head.entity.json',
-        minWeight: 40,
-        maxWeight: 60,
-        desc: 'Kraken head',
-      },
-      {
-        file: 'kraken_mantle.entity.json',
-        minWeight: 150,
-        maxWeight: 250,
-        desc: 'Kraken mantle',
-      },
-      {
-        file: 'kraken_tentacle.entity.json',
-        minWeight: 80,
-        maxWeight: 120,
-        desc: 'Kraken tentacle',
-      },
-      {
-        file: 'octopus_mantle.entity.json',
-        minWeight: 10,
-        maxWeight: 20,
-        desc: 'Octopus mantle',
-      },
-      {
-        file: 'octopus_tentacle.entity.json',
-        minWeight: 2,
-        maxWeight: 5,
-        desc: 'Octopus tentacle',
-      },
-      {
-        file: 'squid_mantle.entity.json',
-        minWeight: 8,
-        maxWeight: 15,
-        desc: 'Squid mantle',
-      },
-      {
-        file: 'squid_tentacle.entity.json',
-        minWeight: 1,
-        maxWeight: 4,
-        desc: 'Squid tentacle',
-      },
-    ];
-
-    it.each(CEPHALOPOD_PARTS)(
-      'should have valid weight for $file ($desc)',
-      ({ file, minWeight, maxWeight }) => {
-        const entity = loadEntityFile(file);
-        const weight = getWeight(entity);
-
-        expect(weight).toBeDefined();
-        expect(typeof weight).toBe('number');
-        expect(weight).toBeGreaterThanOrEqual(minWeight);
-        expect(weight).toBeLessThanOrEqual(maxWeight);
-      }
-    );
-  });
-
-  describe('Spider Parts (5 files)', () => {
-    const SPIDER_PARTS = [
-      {
-        file: 'spider_abdomen.entity.json',
-        minWeight: 0.01,
-        maxWeight: 0.05,
-        desc: 'Spider abdomen',
-      },
-      {
-        file: 'spider_cephalothorax.entity.json',
-        minWeight: 0.008,
-        maxWeight: 0.03,
-        desc: 'Spider cephalothorax',
-      },
-      {
-        file: 'spider_leg.entity.json',
-        minWeight: 0.001,
-        maxWeight: 0.005,
-        desc: 'Spider leg',
-      },
-      {
-        file: 'spider_pedipalp.entity.json',
-        minWeight: 0.0005,
-        maxWeight: 0.003,
-        desc: 'Spider pedipalp',
-      },
-      {
-        file: 'spider_spinneret.entity.json',
-        minWeight: 0.002,
-        maxWeight: 0.01,
-        desc: 'Spider spinneret',
-      },
-    ];
-
-    it.each(SPIDER_PARTS)(
-      'should have valid weight for $file ($desc)',
-      ({ file, minWeight, maxWeight }) => {
-        const entity = loadEntityFile(file);
-        const weight = getWeight(entity);
-
-        expect(weight).toBeDefined();
-        expect(typeof weight).toBe('number');
-        expect(weight).toBeGreaterThanOrEqual(minWeight);
-        expect(weight).toBeLessThanOrEqual(maxWeight);
-      }
-    );
-  });
-
-  describe('Tortoise Parts (11 files)', () => {
-    const TORTOISE_PARTS = [
-      {
-        file: 'tortoise_arm.entity.json',
-        minWeight: 1,
-        maxWeight: 2,
-        desc: 'Tortoise arm',
-      },
-      {
-        file: 'tortoise_hand.entity.json',
-        minWeight: 0.2,
-        maxWeight: 0.5,
-        desc: 'Tortoise hand',
-      },
-      {
-        file: 'tortoise_leg.entity.json',
-        minWeight: 1.5,
-        maxWeight: 3,
-        desc: 'Tortoise leg',
-      },
-      {
-        file: 'tortoise_foot.entity.json',
-        minWeight: 0.3,
-        maxWeight: 0.6,
-        desc: 'Tortoise foot',
-      },
-      {
-        file: 'tortoise_head.entity.json',
-        minWeight: 0.5,
-        maxWeight: 1.2,
-        desc: 'Tortoise head',
-      },
-      {
-        file: 'tortoise_beak.entity.json',
-        minWeight: 0.03,
-        maxWeight: 0.1,
-        desc: 'Tortoise beak',
-      },
-      {
-        file: 'tortoise_eye.entity.json',
-        minWeight: 0.01,
-        maxWeight: 0.05,
-        desc: 'Tortoise eye',
-      },
-      {
-        file: 'tortoise_torso_with_shell.entity.json',
-        minWeight: 12,
-        maxWeight: 20,
-        desc: 'Tortoise body with shell',
-      },
-      {
-        file: 'tortoise_carapace.entity.json',
-        minWeight: 4,
-        maxWeight: 7,
-        desc: 'Tortoise carapace',
-      },
-      {
-        file: 'tortoise_plastron.entity.json',
-        minWeight: 2,
-        maxWeight: 4,
-        desc: 'Tortoise plastron',
-      },
-      {
-        file: 'tortoise_tail.entity.json',
-        minWeight: 0.1,
-        maxWeight: 0.4,
-        desc: 'Tortoise tail',
-      },
-    ];
-
-    it.each(TORTOISE_PARTS)(
-      'should have valid weight for $file ($desc)',
-      ({ file, minWeight, maxWeight }) => {
-        const entity = loadEntityFile(file);
-        const weight = getWeight(entity);
-
-        expect(weight).toBeDefined();
-        expect(typeof weight).toBe('number');
-        expect(weight).toBeGreaterThanOrEqual(minWeight);
-        expect(weight).toBeLessThanOrEqual(maxWeight);
-      }
-    );
-  });
-
   describe('Utility Parts', () => {
     it('should have valid weight for equipment_mount.entity.json', () => {
       const entity = loadEntityFile('equipment_mount.entity.json');
@@ -442,8 +241,9 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
   });
 
   describe('Coverage Completeness', () => {
-    it('should have all utility body parts with weight (62 files total)', () => {
+    it('should have all utility body parts with weight (37 files total)', () => {
       // Get all files NOT matching human_, chicken_, centaur_, dragon_, eldritch_, cat_, feline_, horse_
+      // Note: Creature files (cephalopods, spiders, tortoises) moved to anatomy-creatures mod
       const allFiles = fs
         .readdirSync(DEFINITIONS_PATH)
         .filter((f) => f.endsWith('.entity.json'));
@@ -466,8 +266,8 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
         return getWeight(entity) !== undefined;
       });
 
-      expect(bodyParts.length).toBe(62);
-      expect(bodyPartsWithWeight.length).toBe(62);
+      expect(bodyParts.length).toBe(37);
+      expect(bodyPartsWithWeight.length).toBe(37);
     });
 
     it('should have all weights as positive numbers', () => {

@@ -132,10 +132,10 @@ describe('SocketNameTplValidator', () => {
       it('should accept same nameTpl template when allowedTypes differ', async () => {
         // Arrange - like chicken_leg.entity.json: {{type}} but different allowedTypes
         const recipe = {
-          rootEntityDefinitionId: 'anatomy:chicken_leg',
+          rootEntityDefinitionId: 'anatomy-creatures:chicken_leg',
         };
         const entityDef = {
-          id: 'anatomy:chicken_leg',
+          id: 'anatomy-creatures:chicken_leg',
           sockets: [
             { id: 'foot', nameTpl: '{{type}}', allowedTypes: ['chicken_foot'] },
             { id: 'spur', nameTpl: '{{type}}', allowedTypes: ['chicken_spur'] },
@@ -375,10 +375,10 @@ describe('SocketNameTplValidator', () => {
     describe('error messages', () => {
       it('should include entity ID in error message', async () => {
         const recipe = {
-          rootEntityDefinitionId: 'anatomy:eldritch_mass',
+          rootEntityDefinitionId: 'anatomy-creatures:eldritch_mass',
         };
         const entityDef = {
-          id: 'anatomy:eldritch_mass',
+          id: 'anatomy-creatures:eldritch_mass',
           sockets: [
             { id: 'tentacle_1', nameTpl: 'tentacle' },
             { id: 'tentacle_2', nameTpl: 'tentacle' },
@@ -392,7 +392,7 @@ describe('SocketNameTplValidator', () => {
         await validator.performValidation(recipe, {}, builder);
 
         const result = builder.build();
-        expect(result.errors[0].message).toContain('anatomy:eldritch_mass');
+        expect(result.errors[0].message).toContain('anatomy-creatures:eldritch_mass');
       });
 
       it('should include duplicate nameTpl value in error message', async () => {
