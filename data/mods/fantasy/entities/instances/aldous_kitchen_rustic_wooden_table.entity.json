@@ -6,7 +6,7 @@
         "core:position": {
             "locationId": "fantasy:aldous_kitchen_instance"
         },
-        "items:container": {
+        "containers-core:container": {
             "contents": [
                 "fantasy:jug_of_cider_instance",
                 "fantasy:jug_of_mead_instance"

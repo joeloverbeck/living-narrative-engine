@@ -55,7 +55,7 @@ describe('Items - Entity Loading', () => {
     const entityDef = JSON.parse(fs.readFileSync(entityPath, 'utf8'));
 
     expect(entityDef.id).toBe('items:antiseptic_bottle');
-    const container = entityDef.components['items:liquid_container'];
+    const container = entityDef.components['containers-core:liquid_container'];
     expect(container).toBeDefined();
     expect(container.currentVolumeMilliliters).toBeGreaterThan(0);
     expect(container.tags).toContain('disinfectant');

@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "containers-core:container",
+  "description": "Entity can hold items internally. Separate from inventory - containers are objects that store items, not carried collections.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "contents": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+:[a-zA-Z0-9_-]+$"
+        },
+        "uniqueItems": true,
+        "description": "Array of entity IDs for items in container"
+      },
+      "capacity": {
+        "type": "object",
+        "properties": {
+          "maxWeight": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum weight in kilograms"
+          },
+          "maxItems": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum number of items"
+          }
+        },
+        "required": ["maxWeight", "maxItems"]
+      },
+      "isOpen": {
+        "type": "boolean",
+        "description": "Whether container is currently open"
+      },
+      "requiresKey": {
+        "type": "boolean",
+        "description": "Whether container requires a key to open"
+      },
+      "keyItemId": {
+        "type": "string",
+        "description": "Entity ID of required key item (if requiresKey is true)"
+      }
+    },
+    "required": ["contents", "capacity", "isOpen"],
+    "additionalProperties": false
+  }
+}

@@ -228,7 +228,7 @@ const relatedIds =
 // Lines 45-50: Hardcoded component types
 const containerComp = this.#entityManager.getComponent(
   containerId,
-  'items:container' // ❌ HARDCODED
+  'containers-core:container' // ❌ HARDCODED
 );
 
 const lockedComp = this.#entityManager.getComponent(
@@ -247,7 +247,7 @@ class ComponentTypeRegistry {
   registerType(category, type, componentId) {
     // category: 'container', 'locked', etc.
     // type: 'default', 'magical', 'cyberpunk'
-    // componentId: 'items:container', 'magic:mystical_storage', etc.
+    // componentId: 'containers-core:container', 'magic:mystical_storage', etc.
   }
 
   getComponent(entityId, category, type = 'default') {

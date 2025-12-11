@@ -184,7 +184,7 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
         'container-456',
-        'items:container'
+        'containers-core:container'
       );
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         3,
@@ -245,7 +245,7 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:container',
+            componentTypeId: 'containers-core:container',
             componentData: {
               isOpen: true,
               requiresKey: true,
@@ -257,7 +257,7 @@ describe('OpenContainerHandler', () => {
         true
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'items:container_opened',
+        'containers:container_opened',
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -291,13 +291,13 @@ describe('OpenContainerHandler', () => {
       expect(entityManager.getComponentData).toHaveBeenNthCalledWith(
         2,
         'container-456',
-        'items:container'
+        'containers-core:container'
       );
       expect(entityManager.batchAddComponentsOptimized).toHaveBeenCalledWith(
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:container',
+            componentTypeId: 'containers-core:container',
             componentData: {
               isOpen: true,
               contents: ['gold_bar', 'revolver'],
@@ -308,7 +308,7 @@ describe('OpenContainerHandler', () => {
         true
       );
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'items:container_opened',
+        'containers:container_opened',
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -334,7 +334,7 @@ describe('OpenContainerHandler', () => {
 
       expect(result).toEqual({ success: true, contents: [] });
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        'items:container_opened',
+        'containers:container_opened',
         {
           actorEntity: 'actor-123',
           containerEntity: 'container-456',
@@ -363,7 +363,7 @@ describe('OpenContainerHandler', () => {
         [
           {
             instanceId: 'container-456',
-            componentTypeId: 'items:container',
+            componentTypeId: 'containers-core:container',
             componentData: { isOpen: true, contents: ['item-1'] },
           },
         ],

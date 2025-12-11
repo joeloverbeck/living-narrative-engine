@@ -1,0 +1,88 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "dredgers",
+  "version": "1.0.0",
+  "name": "dredgers",
+  "description": "Scenario.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "descriptors",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "accessories",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "base-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "outer-clothing",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "fantasy",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [],
+    "components": [],
+    "conditions": [],
+    "rules": [],
+    "entities": {
+      "definitions": [
+        "canal_vestibule.location.json",
+        "concordance_salon.location.json",
+        "cress_siltwell.character.json",
+        "eira_quenreach.character.json",
+        "ermine_ear.entity.json",
+        "ermine_folk_female_torso.entity.json",
+        "ermine_tail.entity.json",
+        "toad_eye.entity.json",
+        "toad_folk_male_torso.entity.json",
+        "toad_tympanum.entity.json"
+      ],
+      "instances": [
+        "cress_siltwell.character.json",
+        "eira_quenreach.character.json"
+      ]
+    },
+    "events": [],
+    "macros": [],
+    "scopes": [],
+    "blueprints": [
+      "ermine_folk_female.blueprint.json",
+      "toad_folk_male.blueprint.json"
+    ],
+    "parts": [
+      "amphibian_core.part.json",
+      "mustelid_core.part.json"
+    ],
+    "recipes": [
+      "ermine_folk_female.recipe.json",
+      "toad_folk_male.recipe.json"
+    ],
+    "portraits": [
+      "canal_vestibule.png",
+      "concordance_salon.png",
+      "eira_quenreach.png"
+    ],
+    "worlds": []
+  }
+}

@@ -11,7 +11,7 @@
     },
     "items:item": {},
     "items:openable": {},
-    "items:container": {
+    "containers-core:container": {
       "contents": [],
       "capacity": {
         "maxWeight": 50,

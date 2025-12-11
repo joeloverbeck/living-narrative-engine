@@ -7,34 +7,34 @@
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
-import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
-import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
-import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
-import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
-import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/containers/rules/handle_open_container.rule.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import putInContainerRule from '../../../../data/mods/containers/rules/handle_put_in_container.rule.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/containers/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import eventIsActionTakeFromContainer from '../../../../data/mods/containers/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/containers/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
-describe('Items - Complete Container Workflow (Phase 3)', () => {
+describe('Containers - Complete Container Workflow (Phase 3)', () => {
   let openFixture;
   let takeFixture;
   let putFixture;
 
   beforeEach(async () => {
     openFixture = await ModTestFixture.forAction(
-      'items',
-      'items:open_container',
+      'containers',
+      'containers:open_container',
       openContainerRule,
       eventIsActionOpenContainer
     );
     takeFixture = await ModTestFixture.forAction(
-      'items',
-      'items:take_from_container',
+      'containers',
+      'containers:take_from_container',
       takeFromContainerRule,
       eventIsActionTakeFromContainer
     );
     putFixture = await ModTestFixture.forAction(
-      'items',
-      'items:put_in_container',
+      'containers',
+      'containers:put_in_container',
       putInContainerRule,
       eventIsActionPutInContainer
     );
@@ -72,7 +72,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const chest = new ModEntityBuilder('locked-chest-1')
         .withName('Locked Treasure Chest')
         .atLocation('treasure-vault')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['diamond-1', 'gold-bar-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -103,13 +103,13 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       // Verify container is now open
       const containerAfterOpen =
         openFixture.entityManager.getEntityInstance('locked-chest-1');
-      expect(containerAfterOpen.components['items:container'].isOpen).toBe(
+      expect(containerAfterOpen.components['containers-core:container'].isOpen).toBe(
         true
       );
 
       // Verify container_opened event
       const openedEvent = openFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeDefined();
       expect(openedEvent.payload.contents).toEqual(['diamond-1', 'gold-bar-1']);
@@ -149,15 +149,15 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       // Verify container updated
       const containerAfterTake =
         takeFixture.entityManager.getEntityInstance('locked-chest-1');
-      expect(containerAfterTake.components['items:container'].contents).toEqual(
+      expect(containerAfterTake.components['containers-core:container'].contents).toEqual(
         ['gold-bar-1']
       );
-      expect(containerAfterTake.components['items:container'].isOpen).toBe(
+      expect(containerAfterTake.components['containers-core:container'].isOpen).toBe(
         true
       );
 
       const takeEvent = takeFixture.events.find(
-        (event) => event.eventType === 'items:item_taken_from_container'
+        (event) => event.eventType === 'containers:item_taken_from_container'
       );
       expect(takeEvent).toBeDefined();
       expect(takeEvent.payload.itemEntity).toBe('diamond-1');
@@ -197,12 +197,12 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const containerAfterPut =
         putFixture.entityManager.getEntityInstance('locked-chest-1');
       expect(
-        new Set(containerAfterPut.components['items:container'].contents)
+        new Set(containerAfterPut.components['containers-core:container'].contents)
       ).toEqual(new Set(['gold-bar-1', 'diamond-1']));
-      expect(containerAfterPut.components['items:container'].isOpen).toBe(true);
+      expect(containerAfterPut.components['containers-core:container'].isOpen).toBe(true);
 
       const putRuleEvent = putFixture.events.find(
-        (event) => event.eventType === 'items:item_put_in_container'
+        (event) => event.eventType === 'containers:item_put_in_container'
       );
       expect(putRuleEvent).toBeDefined();
       expect(putRuleEvent.payload.itemEntity).toBe('diamond-1');
@@ -239,7 +239,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const chest = new ModEntityBuilder('closed-chest-2')
         .withName('Closed Chest')
         .atLocation('dungeon')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['treasure-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -270,10 +270,10 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
 
       const containerAfter =
         takeFixture.entityManager.getEntityInstance('closed-chest-2');
-      expect(containerAfter.components['items:container'].contents).toContain(
+      expect(containerAfter.components['containers-core:container'].contents).toContain(
         'treasure-1'
       );
-      expect(containerAfter.components['items:container'].isOpen).toBe(false);
+      expect(containerAfter.components['containers-core:container'].isOpen).toBe(false);
     });
 
     it('should handle multiple items taken sequentially from same container', async () => {
@@ -294,7 +294,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const crate = new ModEntityBuilder('supply-crate')
         .withName('Supply Crate')
         .atLocation('storage-room')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['potion-1', 'potion-2', 'potion-3'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -329,7 +329,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
 
       const crateAfterOpen =
         openFixture.entityManager.getEntityInstance('supply-crate');
-      expect(crateAfterOpen.components['items:container'].isOpen).toBe(true);
+      expect(crateAfterOpen.components['containers-core:container'].isOpen).toBe(true);
 
       // Step 2: Take first potion
       let currentActor =
@@ -379,7 +379,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       // Verify container is now empty
       const crateAfterAll =
         takeFixture.entityManager.getEntityInstance('supply-crate');
-      expect(crateAfterAll.components['items:container'].contents).toEqual([]);
+      expect(crateAfterAll.components['containers-core:container'].contents).toEqual([]);
     });
   });
 
@@ -400,7 +400,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const drawer = new ModEntityBuilder('desk-drawer')
         .withName('Desk Drawer')
         .atLocation('library')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['letter-1'],
           capacity: { maxWeight: 10, maxItems: 5 },
           isOpen: false,
@@ -474,7 +474,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const closedBox = new ModEntityBuilder('closed-box')
         .withName('Closed Box')
         .atLocation('shop')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 10, maxItems: 5 },
           isOpen: false,
@@ -505,7 +505,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
 
       const boxAfter =
         takeFixture.entityManager.getEntityInstance('closed-box');
-      expect(boxAfter.components['items:container'].contents).toContain(
+      expect(boxAfter.components['containers-core:container'].contents).toContain(
         'apple-1'
       );
     });
@@ -528,7 +528,7 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       const openCrate = new ModEntityBuilder('open-crate')
         .withName('Open Crate')
         .atLocation('warehouse')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -544,11 +544,11 @@ describe('Items - Complete Container Workflow (Phase 3)', () => {
       // Verify container remains open (no state change)
       const crateAfter =
         openFixture.entityManager.getEntityInstance('open-crate');
-      expect(crateAfter.components['items:container'].isOpen).toBe(true);
+      expect(crateAfter.components['containers-core:container'].isOpen).toBe(true);
 
       // Verify no container_opened event (already was open)
       const openedEvent = openFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeUndefined();
     });

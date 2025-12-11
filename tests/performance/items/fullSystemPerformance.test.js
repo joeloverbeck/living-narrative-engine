@@ -70,7 +70,7 @@ describe('Items System - Performance', () => {
           .atLocation('marketplace')
           .withComponent('items:item', {})
           .withComponent('items:openable', {})
-          .withComponent('items:container', {
+          .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 50, maxItems: 15 },
             isOpen: true,
@@ -89,7 +89,7 @@ describe('Items System - Performance', () => {
             .build();
           entities.push(item);
 
-          container.components['items:container'].contents.push(itemId);
+          container.components['containers-core:container'].contents.push(itemId);
         }
       }
 
@@ -247,7 +247,7 @@ describe('Items System - Performance', () => {
           .atLocation('warehouse')
           .withComponent('items:item', {})
           .withComponent('items:openable', {})
-          .withComponent('items:container', {
+          .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 30, maxItems: 10 },
             isOpen: true,
@@ -264,7 +264,7 @@ describe('Items System - Performance', () => {
             .withComponent('core:weight', { weight: 1.0 })
             .build();
           entities.push(item);
-          container.components['items:container'].contents.push(itemId);
+          container.components['containers-core:container'].contents.push(itemId);
         }
       }
 
@@ -378,7 +378,7 @@ describe('Items System - Performance', () => {
           .atLocation('bazaar')
           .withComponent('items:item', {})
           .withComponent('items:openable', {})
-          .withComponent('items:container', {
+          .withComponent('containers-core:container', {
             contents: [],
             capacity: { maxWeight: 60, maxItems: 20 },
             isOpen: true,
@@ -395,7 +395,7 @@ describe('Items System - Performance', () => {
             .withComponent('core:weight', { weight: 0.5 })
             .build();
           entities.push(item);
-          container.components['items:container'].contents.push(itemId);
+          container.components['containers-core:container'].contents.push(itemId);
         }
       }
 

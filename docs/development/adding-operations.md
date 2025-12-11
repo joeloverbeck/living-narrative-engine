@@ -275,7 +275,7 @@ import { safeDispatchError } from '../../utils/staticErrorDispatcher.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
 // Component and event constants
-const LIQUID_CONTAINER_COMPONENT_ID = 'items:liquid_container';
+const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
 const DRINKABLE_COMPONENT_ID = 'items:drinkable';
 const EMPTY_COMPONENT_ID = 'items:empty';
 const LIQUID_CONSUMED_EVENT = 'items:liquid_consumed';
@@ -1224,7 +1224,7 @@ describe('DRINK_FROM Rule Execution', () => {
       { type: 'items:portable', data: {} },
       { type: 'items:drinkable', data: {} },
       {
-        type: 'items:liquid_container',
+        type: 'containers-core:liquid_container',
         data: {
           currentVolumeMilliliters: 500,
           maxCapacityMilliliters: 1000,
@@ -1243,7 +1243,7 @@ describe('DRINK_FROM Rule Execution', () => {
 
     const updatedContainer = fixture.getComponentData(
       container.id,
-      'items:liquid_container'
+      'containers-core:liquid_container'
     );
     expect(updatedContainer.currentVolumeMilliliters).toBe(300); // 500 - 200
 
@@ -1268,7 +1268,7 @@ describe('DRINK_FROM Rule Execution', () => {
     const container = fixture.createEntity('water-bottle', [
       { type: 'items:drinkable', data: {} },
       {
-        type: 'items:liquid_container',
+        type: 'containers-core:liquid_container',
         data: {
           currentVolumeMilliliters: 200, // Exactly one serving
           servingSizeMilliliters: 200,
@@ -1599,7 +1599,7 @@ For complex validation logic:
 
    // Secondary effect event
    if (newVolume === 0) {
-     this.#dispatcher.dispatch('items:container_emptied', {...});
+     this.#dispatcher.dispatch('containers-core:container_emptied', {...});
    }
    ```
 
@@ -1786,7 +1786,7 @@ A:
 | Handler File   | camelCase + Handler.js               | drinkFromHandler.js    |
 | Token Name     | PascalCase + Handler (NO "I" prefix) | DrinkFromHandler       |
 | Event ID       | namespace:snake_case                 | items:liquid_consumed  |
-| Component ID   | namespace:snake_case                 | items:liquid_container |
+| Component ID   | namespace:snake_case                 | containers-core:liquid_container |
 
 ### Validation Command Sequence
 

@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:white_leather_elbow_gloves",
+  "description": "Formal elbow-length white leather gloves",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "elbow gloves"
+    },
+    "core:description": {
+      "text": "Opera-length gloves in supple white leather, extending past the elbow in the formal style favored at courtly functions. The leather is fine-grained and immaculately maintained, soft enough to permit delicate manipulation yet formal enough to signal elevated status. Tiny mother-of-pearl buttons secure the inner wrist, allowing the gloves to be donned and removed without struggling. These are gloves for receiving honored guests, signing treaties, or lifting a wine glass at a state banquet—accessories that transform every gesture into a statement of refined grace."
+    },
+    "descriptors:color_extended": {
+      "color": "white"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.18
+    }
+  }
+}

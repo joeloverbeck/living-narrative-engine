@@ -118,7 +118,7 @@ describe('take_from_nearby_surface Action Discovery', () => {
     it('should NOT discover action when container is closed', async () => {
       const { actor, container } =
         await setupSeatedActorWithNearbyContainer(fixture);
-      await fixture.setComponentData(container.id, 'items:container', {
+      await fixture.setComponentData(container.id, 'containers-core:container', {
         isOpen: false,
       });
 
@@ -191,7 +191,7 @@ async function setupSeatedActorWithNearbyContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const item = await fixture.createEntity('items:apple', {
     'core:position': { locationId: container.id },
@@ -212,7 +212,7 @@ async function setupStandingActorWithNearbyContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const item = await fixture.createEntity('items:apple', {
     'core:position': { locationId: container.id },
@@ -237,7 +237,7 @@ async function setupSeatedActorWithDistantContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const item = await fixture.createEntity('items:apple', {
     'core:position': { locationId: container.id },
@@ -297,7 +297,7 @@ describe('put_on_nearby_surface Action Discovery', () => {
     it('should NOT discover action when container is closed', async () => {
       const { actor, container } =
         await setupSeatedActorWithItemAndNearbyContainer(fixture);
-      await fixture.setComponentData(container.id, 'items:container', {
+      await fixture.setComponentData(container.id, 'containers-core:container', {
         isOpen: false,
       });
 
@@ -356,7 +356,7 @@ async function setupSeatedActorWithItemAndNearbyContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const inventoryItem = await fixture.createEntity('items:apple');
   const actor = await fixture.createActor({
@@ -383,7 +383,7 @@ async function setupSeatedActorWithEmptyInventoryNearContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const actor = await fixture.createActor({
     'core:position': { locationId: location.id },
@@ -401,7 +401,7 @@ async function setupStandingActorWithItemNearContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const inventoryItem = await fixture.createEntity('items:apple');
   const actor = await fixture.createActor({
@@ -427,7 +427,7 @@ async function setupSeatedActorWithItemNearDistantContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const inventoryItem = await fixture.createEntity('items:apple');
   const actor = await fixture.createActor({
@@ -578,7 +578,7 @@ async function setupSeatedActorWithNearbyContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const item = await fixture.createEntity('items:apple', {
     'core:position': { locationId: container.id },
@@ -604,7 +604,7 @@ async function setupSeatedActorWithFullInventory(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
+    'containers-core:container': { isOpen: true, maxWeight: 10, maxVolume: 10 },
   });
   const item = await fixture.createEntity('items:heavy_item', {
     'core:position': { locationId: container.id },
@@ -753,7 +753,7 @@ async function setupSeatedActorWithItemAndNearbyContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 50, maxVolume: 50 },
+    'containers-core:container': { isOpen: true, maxWeight: 50, maxVolume: 50 },
   });
   const inventoryItem = await fixture.createEntity('items:apple', {
     'items:physical': { weight: 1, volume: 1 },
@@ -782,7 +782,7 @@ async function setupSeatedActorWithItemNearFullContainer(fixture) {
   });
   const container = await fixture.createEntity('items:wooden_bowl', {
     'core:position': { locationId: table.id },
-    'items:container': { isOpen: true, maxWeight: 1, maxVolume: 1 }, // Very limited
+    'containers-core:container': { isOpen: true, maxWeight: 1, maxVolume: 1 }, // Very limited
   });
   const inventoryItem = await fixture.createEntity('items:heavy_item', {
     'items:physical': { weight: 100, volume: 100 }, // Too heavy/large

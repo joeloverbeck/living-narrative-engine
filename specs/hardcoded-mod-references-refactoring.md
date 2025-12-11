@@ -223,7 +223,7 @@ Events: `positioning:closeness_with_target_broken`, `positioning:sitting_closene
 
 **Drinking System** (10 references across 2 handlers):
 
-Components: `items:liquid_container`, `items:drinkable`, `items:empty`
+Components: `containers-core:liquid_container`, `items:drinkable`, `items:empty`
 Events: `items:liquid_consumed`, `items:liquid_consumed_entirely`
 
 **Files**:
@@ -246,8 +246,8 @@ Events: `items:item_dropped`, `items:item_picked_up`, `items:item_transferred`
 
 **Container System** (8 references across 3 handlers):
 
-Components: `items:container`, `items:openable`
-Events: `items:container_opened`, `items:item_put_in_container`, `items:item_taken_from_container`
+Components: `containers-core:container`, `items:openable`
+Events: `containers:container_opened`, `containers:item_put_in_container`, `containers:item_taken_from_container`
 
 **Files**:
 

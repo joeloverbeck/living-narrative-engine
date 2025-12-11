@@ -5,16 +5,16 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
-import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/containers/rules/handle_open_container.rule.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/containers/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 
 describe('DEBUG: open_container rule matching (WORKING)', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:open_container',
+      'containers',
+      'containers:open_container',
       openContainerRule,
       eventIsActionOpenContainer
     );
@@ -39,7 +39,7 @@ describe('DEBUG: open_container rule matching (WORKING)', () => {
     const container = new ModEntityBuilder('container1')
       .withName('Container')
       .atLocation('room1')
-      .withComponent('items:container', { items: [] })
+      .withComponent('containers-core:container', { items: [] })
       .withComponent('items:openable', { isOpen: false })
       .build();
 

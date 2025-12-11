@@ -1,0 +1,27 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "containers:container_opened",
+  "description": "Dispatched when an actor successfully opens a container",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "The entity ID of the actor opening the container"
+      },
+      "containerEntity": {
+        "type": "string",
+        "description": "The entity ID of the container being opened"
+      },
+      "contents": {
+        "type": "array",
+        "description": "Array of entity IDs representing items found in the container",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": ["actorEntity", "containerEntity", "contents"],
+    "additionalProperties": false
+  }
+}

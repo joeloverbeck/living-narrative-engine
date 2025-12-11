@@ -85,7 +85,7 @@ describe('PutInContainerHandler', () => {
           }),
           expect.objectContaining({
             instanceId: 'container1',
-            componentTypeId: 'items:container',
+            componentTypeId: 'containers-core:container',
             componentData: expect.objectContaining({
               isOpen: true,
               contents: ['existingItem', 'item1'],
@@ -97,7 +97,7 @@ describe('PutInContainerHandler', () => {
 
       // Verify event was dispatched
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'items:item_put_in_container',
+        'containers:item_put_in_container',
         expect.objectContaining({
           actorEntity: 'actor1',
           containerEntity: 'container1',
@@ -407,7 +407,7 @@ describe('PutInContainerHandler', () => {
       // Should still execute successfully
       expect(mockEntityManager.batchAddComponentsOptimized).toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'items:item_put_in_container',
+        'containers:item_put_in_container',
         expect.objectContaining({
           actorEntity: 'actor1',
           containerEntity: 'container1',

@@ -14,7 +14,7 @@
       "weight": 1.2
     },
     "items:drinkable": {},
-    "items:liquid_container": {
+    "containers-core:liquid_container": {
       "currentVolumeMilliliters": 1000,
       "maxCapacityMilliliters": 1000,
       "servingSizeMilliliters": 200,

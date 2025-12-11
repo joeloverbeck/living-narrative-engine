@@ -1,0 +1,97 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:mudsong_vane",
+    "components": {
+        "core:name": {
+            "text": "Jory \"Mudsong\" Vane"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/mudsong_vane.png",
+            "altText": "Jory \"Mudsong\" Vane - Dredgers crew leader"
+        },
+        "core:profile": {
+            "text": "Jory is a beaver-folk male. "
+        },
+        "core:personality": {
+            "text": ""
+        },
+        "core:strengths": {
+            "text": ""
+        },
+        "core:weaknesses": {
+            "text": ""
+        },
+        "core:likes": {
+            "text": ""
+        },
+        "core:dislikes": {
+            "text": ""
+        },
+        "core:fears": {
+            "text": ""
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": ""
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": ""
+        },
+        "core:internal_tensions": {
+            "text": ""
+        },
+        "core:motivations": {
+            "text": ""
+        },
+        "core:dilemmas": {
+            "text": ""
+        },
+        "core:speech_patterns": {
+            "patterns": [
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:beaver_folk_male_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 28,
+            "maxAge": 31
+        },
+        "skills:melee_skill": {
+            "value": 23
+        },
+        "skills:ranged_skill": {
+            "value": 17
+        },
+        "skills:defense_skill": {
+            "value": 34
+        },
+        "skills:grappling_skill": {
+            "value": 32
+        },
+        "skills:resolve_skill": {
+            "value": 82
+        },
+        "skills:medicine_skill": {
+            "value": 36
+        }
+    }
+}

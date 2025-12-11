@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:polished_riding_boots_smoke_brown",
+  "description": "Polished smoke-brown calf leather riding boots",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "calfskin"
+    },
+    "core:name": {
+      "text": "polished riding boots"
+    },
+    "core:description": {
+      "text": "Classic riding boots in smoke-brown calf leather, polished to a mirror shine that reflects ambient light. The warm brown carries a subtle grayish undertone, lending sophistication without severity. Rising to mid-calf, they provide ankle support and protection while remaining elegant enough for formal indoor wear. The soles are thin leather for quiet movement across polished floors, though a slight heel offers proper stirrup purchase should riding actually be required. These are boots that proclaim their wearer equally at home in saddle or salon."
+    },
+    "descriptors:color_extended": {
+      "color": "smoke-brown"
+    },
+    "descriptors:texture": {
+      "texture": "glossy"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.95
+    }
+  }
+}

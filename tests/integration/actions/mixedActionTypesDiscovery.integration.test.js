@@ -3,7 +3,7 @@
  * @description Tests that both single-target and multi-target actions can be
  * discovered and have correct structure when available simultaneously in the same pipeline.
  *
- * Test Strategy - Uses items mod only:
+ * Test Strategy - Uses containers mod only:
  * - Single-target actions: open_container
  * - Multi-target actions: take_from_container
  *
@@ -30,12 +30,12 @@ describe('Mixed Action Types Discovery - Integration', () => {
   let containerId;
 
   beforeEach(async () => {
-    // Create a test fixture for the items mod
+    // Create a test fixture for the containers mod
     // This mod contains both single-target (open_container) and
     // multi-target (take_from_container) actions for testing mixed discovery.
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:take_from_container',
+      'containers',
+      'containers:take_from_container',
       null,
       null
     );
@@ -132,7 +132,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('wooden chest')
       .atLocation('room1')
       .withComponent('items:item', {})
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [gemId, scrollId],
         capacity: { maxWeight: 100, maxItems: 20 },
         isOpen: true,
@@ -145,7 +145,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       .withName('metal box')
       .atLocation('room1')
       .withComponent('items:item', {})
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxWeight: 50, maxItems: 10 },
         isOpen: false,
@@ -213,13 +213,13 @@ describe('Mixed Action Types Discovery - Integration', () => {
       console.log('DEBUG discovered actions:', actionIds);
 
       // Should have both single-target and multi-target action types
-      expect(actionIds).toContain('items:open_container'); // Single-target
-      expect(actionIds).toContain('items:take_from_container'); // Multi-target
+      expect(actionIds).toContain('containers:open_container'); // Single-target
+      expect(actionIds).toContain('containers:take_from_container'); // Multi-target
 
       // Count each action type
-      const openActions = actions.filter((a) => a.id === 'items:open_container');
+      const openActions = actions.filter((a) => a.id === 'containers:open_container');
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       expect(openActions.length).toBeGreaterThan(0);
@@ -237,13 +237,13 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const openActions = actions.filter((a) => a.id === 'items:open_container');
+      const openActions = actions.filter((a) => a.id === 'containers:open_container');
 
       expect(openActions.length).toBeGreaterThan(0);
 
       // Check action definition properties (unformatted actions)
       for (const action of openActions) {
-        expect(action.id).toBe('items:open_container');
+        expect(action.id).toBe('containers:open_container');
         expect(action.template).toBeDefined();
         expect(action.template).toBe('open {container}');
         expect(action.targets).toBeDefined();
@@ -259,14 +259,14 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       expect(takeActions.length).toBeGreaterThan(0);
 
       // Check action definition properties (unformatted actions)
       for (const action of takeActions) {
-        expect(action.id).toBe('items:take_from_container');
+        expect(action.id).toBe('containers:take_from_container');
         expect(action.template).toBeDefined();
         expect(action.template).toBe(
           'take {secondary.name} from {primary.name}'
@@ -286,7 +286,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       // Check for duplicates in each action type
-      const actionTypes = ['items:open_container', 'items:take_from_container'];
+      const actionTypes = ['containers:open_container', 'containers:take_from_container'];
 
       for (const actionType of actionTypes) {
         const typeActions = actions.filter((a) => a.id === actionType);
@@ -313,7 +313,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       // There is a single action definition that should generate combinations.
@@ -324,7 +324,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(scopeResolver).toBeDefined();
 
       const containerResult = scopeResolver.resolveSync(
-        'items:open_containers_at_location',
+        'containers-core:open_containers_at_location',
         { actor: { id: actorId } }
       );
       expect(containerResult?.success).toBe(true);
@@ -332,7 +332,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(containers).toContain(containerId);
 
       const contentsResult = scopeResolver.resolveSync(
-        'items:container_contents',
+        'containers-core:container_contents',
         {
           primary: { id: containerId },
         }
@@ -348,7 +348,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       // All actions should have proper structure
       for (const action of takeActions) {
-        expect(action.id).toBe('items:take_from_container');
+        expect(action.id).toBe('containers:take_from_container');
         expect(action.template).toBe(
           'take {secondary.name} from {primary.name}'
         );
@@ -370,9 +370,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const openActions = actions.filter((a) => a.id === 'items:open_container');
+      const openActions = actions.filter((a) => a.id === 'containers:open_container');
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       // Should only have single-target actions (open_container)
@@ -381,7 +381,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       // open_container actions should have proper structure
       for (const action of openActions) {
-        expect(action.id).toBe('items:open_container');
+        expect(action.id).toBe('containers:open_container');
         expect(action.template).toBe('open {container}');
         console.log(`  ✅ Single-target only: open_container found`);
       }
@@ -395,9 +395,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const openActions = actions.filter((a) => a.id === 'items:open_container');
+      const openActions = actions.filter((a) => a.id === 'containers:open_container');
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       // Should only have multi-target actions (take_from_container)
@@ -422,14 +422,14 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       expect(takeActions.length).toBeGreaterThan(0);
 
       // Check that multi-target action structure is complete
       for (const action of takeActions) {
-        expect(action.id).toBe('items:take_from_container');
+        expect(action.id).toBe('containers:take_from_container');
         expect(action.template).toBeDefined();
         expect(action.template).toBe(
           'take {secondary.name} from {primary.name}'
@@ -448,9 +448,9 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const openActions = actions.filter((a) => a.id === 'items:open_container');
+      const openActions = actions.filter((a) => a.id === 'containers:open_container');
       const takeActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       expect(openActions.length).toBeGreaterThan(0);
@@ -482,7 +482,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
       expect(Array.isArray(actions)).toBe(true);
 
       const multiTargetActions = actions.filter(
-        (a) => a.id === 'items:take_from_container'
+        (a) => a.id === 'containers:take_from_container'
       );
 
       expect(multiTargetActions.length).toBeGreaterThan(0);
@@ -517,7 +517,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       const relevantActions = actions.filter(
         (a) =>
-          a.id === 'items:open_container' || a.id === 'items:take_from_container'
+          a.id === 'containers:open_container' || a.id === 'containers:take_from_container'
       );
 
       expect(relevantActions.length).toBeGreaterThan(0);
@@ -529,8 +529,8 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
         // Templates should use proper placeholder syntax
         const expectedTemplates = {
-          'items:open_container': 'open {container}',
-          'items:take_from_container':
+          'containers:open_container': 'open {container}',
+          'containers:take_from_container':
             'take {secondary.name} from {primary.name}',
         };
         const expectedTemplate = expectedTemplates[action.id];
@@ -547,7 +547,7 @@ describe('Mixed Action Types Discovery - Integration', () => {
 
       expect(Array.isArray(actions)).toBe(true);
 
-      const actionTypes = ['items:open_container', 'items:take_from_container'];
+      const actionTypes = ['containers:open_container', 'containers:take_from_container'];
 
       for (const actionType of actionTypes) {
         const typeActions = actions.filter((a) => a.id === actionType);

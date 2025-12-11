@@ -13,7 +13,7 @@
     "core:weight": {
       "weight": 0.4
     },
-    "items:liquid_container": {
+    "containers-core:liquid_container": {
       "currentVolumeMilliliters": 120,
       "maxCapacityMilliliters": 150,
       "servingSizeMilliliters": 10,

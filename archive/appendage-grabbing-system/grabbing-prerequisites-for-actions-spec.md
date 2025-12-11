@@ -78,7 +78,7 @@ See `data/mods/weapons/actions/wield_threateningly.action.json` for the establis
 | `drink_entirely`             | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/drink_entirely.action.json`                |
 | `drink_from`                 | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/drink_from.action.json`                    |
 | `pick_up_item`               | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/pick_up_item.action.json`                  |
-| `take_from_container`        | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/items/actions/take_from_container.action.json`           |
+| `take_from_container`        | items    | 1          | `anatomy:actor-has-free-grabbing-appendage`      | `data/mods/containers/actions/take_from_container.action.json`           |
 
 ### Detailed Changes
 
@@ -360,7 +360,7 @@ npm run test:ci
 | `data/mods/items/actions/drink_entirely.action.json`                | Add prerequisites key            |
 | `data/mods/items/actions/drink_from.action.json`                    | Add prerequisites key            |
 | `data/mods/items/actions/pick_up_item.action.json`                  | Populate empty prerequisites     |
-| `data/mods/items/actions/take_from_container.action.json`           | Add prerequisites key            |
+| `data/mods/containers/actions/take_from_container.action.json`           | Add prerequisites key            |
 
 ### Files to Create (9 test files)
 

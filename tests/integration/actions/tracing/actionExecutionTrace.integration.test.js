@@ -105,8 +105,8 @@ describe('Action Tracing - Execution Integration', () => {
         );
       });
 
-      // Wait for all traces to be written
-      await testBed.waitForTraceOutput(500);
+      // Wait for all traces to be written (mock resolves quickly)
+      await testBed.waitForTraceOutput(50);
 
       // Verify trace files were created
       const traces = await testBed.getWrittenTraces();
@@ -578,7 +578,7 @@ describe('Action Tracing - Execution Integration', () => {
           commandString: 'test action',
         });
         // Small delay to ensure timestamp differences
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
       await testBed.waitForTraceOutput();

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:take_from_container action definition.
+ * @file Integration tests for the containers:take_from_container action definition.
  * @description Tests that the take_from_container action is properly defined and structured.
  */
 
@@ -9,16 +9,16 @@ import {
   ModEntityBuilder,
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
-import takeFromContainerAction from '../../../../data/mods/items/actions/take_from_container.action.json' assert { type: 'json' };
+import takeFromContainerAction from '../../../../data/mods/containers/actions/take_from_container.action.json' assert { type: 'json' };
 
-const ACTION_ID = 'items:take_from_container';
+const ACTION_ID = 'containers:take_from_container';
 
-describe('items:take_from_container action definition', () => {
+describe('containers:take_from_container action definition', () => {
   let testFixture;
   let configureActionDiscovery;
 
   beforeEach(async () => {
-    testFixture = await ModTestFixture.forAction('items', ACTION_ID);
+    testFixture = await ModTestFixture.forAction('containers', ACTION_ID);
 
     configureActionDiscovery = () => {
       const { testEnv } = testFixture;
@@ -38,7 +38,7 @@ describe('items:take_from_container action definition', () => {
 
   it('should have correct action structure', () => {
     expect(takeFromContainerAction).toBeDefined();
-    expect(takeFromContainerAction.id).toBe('items:take_from_container');
+    expect(takeFromContainerAction.id).toBe('containers:take_from_container');
     expect(takeFromContainerAction.name).toBe('Take From Container');
     expect(takeFromContainerAction.description).toBe(
       'Take an item from an open container'
@@ -52,7 +52,7 @@ describe('items:take_from_container action definition', () => {
     expect(takeFromContainerAction.targets).toBeDefined();
     expect(takeFromContainerAction.targets.primary).toBeDefined();
     expect(takeFromContainerAction.targets.primary.scope).toBe(
-      'items:open_containers_at_location'
+      'containers-core:open_containers_at_location'
     );
     expect(takeFromContainerAction.targets.primary.placeholder).toBe(
       'container'
@@ -65,7 +65,7 @@ describe('items:take_from_container action definition', () => {
     expect(takeFromContainerAction.targets).toBeDefined();
     expect(takeFromContainerAction.targets.secondary).toBeDefined();
     expect(takeFromContainerAction.targets.secondary.scope).toBe(
-      'items:container_contents'
+      'containers-core:container_contents'
     );
     expect(takeFromContainerAction.targets.secondary.placeholder).toBe('item');
     expect(takeFromContainerAction.targets.secondary.contextFrom).toBe(
@@ -74,7 +74,7 @@ describe('items:take_from_container action definition', () => {
   });
 
   // Note: The action schema uses 'prerequisites', not 'conditions'
-  // Container open state is handled by the scope (items:open_containers_at_location)
+  // Container open state is handled by the scope (containers-core:open_containers_at_location)
   // which filters for open containers, so no prerequisites are needed in the action definition
 
   it('should enable combination generation for multi-target action', () => {
@@ -145,7 +145,7 @@ describe('items:take_from_container action definition', () => {
         .withName('wooden chest')
         .atLocation('storage')
         .withComponent('items:item', {})
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['sword1'],
           capacity: { maxWeight: 50, maxItems: 10 },
           isOpen: true,
@@ -200,7 +200,7 @@ describe('items:take_from_container action definition', () => {
         .withName('wooden chest')
         .atLocation('storage')
         .withComponent('items:item', {})
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['potion1'],
           capacity: { maxWeight: 50, maxItems: 10 },
           isOpen: true,
@@ -257,7 +257,7 @@ describe('items:take_from_container action definition', () => {
         .withName('bookcase')
         .atLocation('library')
         .withComponent('items:item', {})
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['book1'],
           capacity: { maxWeight: 100, maxItems: 50 },
           isOpen: true,

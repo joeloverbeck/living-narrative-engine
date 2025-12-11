@@ -6,8 +6,8 @@
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
-import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/containers/rules/handle_open_container.rule.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/containers/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 
 describe('Open Container Issues - Integration', () => {
   let testFixture;
@@ -17,8 +17,8 @@ describe('Open Container Issues - Integration', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:open_container',
+      'containers',
+      'containers:open_container',
       openContainerRule,
       eventIsActionOpenContainer
     );
@@ -45,7 +45,7 @@ describe('Open Container Issues - Integration', () => {
     const container = new ModEntityBuilder(containerId)
       .withName('wooden desk')
       .atLocation(locationId)
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxWeight: 50, maxItems: 5 },
         isOpen: false, // Starts closed
@@ -63,7 +63,7 @@ describe('Open Container Issues - Integration', () => {
   describe('Issue 1: Template Capitalization', () => {
     it('should use lowercase "open" in template (matching other actions)', () => {
       // Check the action file template directly by importing it
-      const actionDef = require('../../../../data/mods/items/actions/open_container.action.json');
+      const actionDef = require('../../../../data/mods/containers/actions/open_container.action.json');
 
       expect(actionDef.template).toBeDefined();
       expect(actionDef.template).toBe('open {container}');
@@ -75,7 +75,7 @@ describe('Open Container Issues - Integration', () => {
 
     it('should match template pattern of other item actions (lowercase verb)', () => {
       // Load action definitions directly to verify consistency
-      const openContainerAction = require('../../../../data/mods/items/actions/open_container.action.json');
+      const openContainerAction = require('../../../../data/mods/containers/actions/open_container.action.json');
       const dropItemAction = require('../../../../data/mods/item-handling/actions/drop_item.action.json');
       const pickUpItemAction = require('../../../../data/mods/item-handling/actions/pick_up_item.action.json');
 
@@ -102,17 +102,17 @@ describe('Open Container Issues - Integration', () => {
       const path = require('path');
       const scopePath = path.resolve(
         __dirname,
-        '../../../../data/mods/items/scopes/openable_containers_at_location.scope'
+        '../../../../data/mods/containers-core/scopes/openable_containers_at_location.scope'
       );
       const scopeContent = fs.readFileSync(scopePath, 'utf8');
 
       // Verify the scope includes the isOpen filter
-      expect(scopeContent).toContain('items:container.isOpen');
+      expect(scopeContent).toContain('containers-core:container.isOpen');
       expect(scopeContent).toContain('false');
 
       // Verify the filter checks that isOpen equals false
       expect(scopeContent).toMatch(
-        /{\s*"=="\s*:\s*\[.*items:container\.isOpen.*false.*\]/
+        /{\s*"=="\s*:\s*\[.*containers-core:container\.isOpen.*false.*\]/
       );
     });
 
@@ -121,15 +121,12 @@ describe('Open Container Issues - Integration', () => {
       const path = require('path');
       const scopePath = path.resolve(
         __dirname,
-        '../../../../data/mods/items/scopes/openable_containers_at_location.scope'
+        '../../../../data/mods/containers-core/scopes/openable_containers_at_location.scope'
       );
       const scopeContent = fs.readFileSync(scopePath, 'utf8');
 
-      // Should check for items:openable component
-      expect(scopeContent).toContain('items:openable');
-
-      // Should check for items:container component
-      expect(scopeContent).toContain('items:container');
+      // Should check for container component
+      expect(scopeContent).toContain('containers-core:container');
 
       // Should check for matching location
       expect(scopeContent).toContain('core:position.locationId');
@@ -158,7 +155,7 @@ describe('Open Container Issues - Integration', () => {
       const closedContainer = new ModEntityBuilder(containerId)
         .withName('wooden desk')
         .atLocation(locationId)
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 50, maxItems: 5 },
           isOpen: false, // Closed
@@ -171,7 +168,7 @@ describe('Open Container Issues - Integration', () => {
       const openDrawer = new ModEntityBuilder(openContainerId)
         .withName('drawer')
         .atLocation(locationId)
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 30, maxItems: 3 },
           isOpen: true, // Open
@@ -187,7 +184,7 @@ describe('Open Container Issues - Integration', () => {
       expect(scopeResolver).toBeDefined();
 
       const result = scopeResolver.resolveSync(
-        'items:openable_containers_at_location',
+        'containers-core:openable_containers_at_location',
         {
           actor: { id: actorId },
         }
@@ -213,7 +210,7 @@ describe('Open Container Issues - Integration', () => {
         [
           {
             instanceId: containerId,
-            componentTypeId: 'items:container',
+            componentTypeId: 'containers-core:container',
             componentData: {
               contents: [],
               capacity: { maxWeight: 50, maxItems: 5 },
@@ -230,7 +227,7 @@ describe('Open Container Issues - Integration', () => {
       // Verify the container is still open (no change)
       const container =
         testFixture.entityManager.getEntityInstance(containerId);
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
 
       // Verify turn ended with failure
       const turnEndedEvent = testFixture.events.find(
@@ -241,7 +238,7 @@ describe('Open Container Issues - Integration', () => {
 
       // Verify no container_opened event was dispatched
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeUndefined();
     });

@@ -22,7 +22,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
 | `data/mods/items/actions/drink_entirely.action.json`      | Has `"prerequisites": []` | Populate empty array             |
 | `data/mods/items/actions/drink_from.action.json`          | Has `"prerequisites": []` | Populate empty array             |
 | `data/mods/items/actions/pick_up_item.action.json`        | Has `"prerequisites": []` | Populate empty array             |
-| `data/mods/items/actions/take_from_container.action.json` | **No prerequisites key**  | Add prerequisites key with array |
+| `data/mods/containers/actions/take_from_container.action.json` | **No prerequisites key**  | Add prerequisites key with array |
 
 ## Detailed Changes
 
@@ -122,7 +122,7 @@ The grabbing limitation system ensures actions requiring hands are only availabl
   - `items:drink_entirely`
   - `items:drink_from`
   - `items:pick_up_item`
-  - `items:take_from_container`
+  - `containers:take_from_container`
 - [ ] Target configurations unchanged
 - [ ] Template strings unchanged
 - [ ] Visual styling unchanged
@@ -139,7 +139,7 @@ npm run validate
 node -e "require('./data/mods/items/actions/drink_entirely.action.json')"
 node -e "require('./data/mods/items/actions/drink_from.action.json')"
 node -e "require('./data/mods/items/actions/pick_up_item.action.json')"
-node -e "require('./data/mods/items/actions/take_from_container.action.json')"
+node -e "require('./data/mods/containers/actions/take_from_container.action.json')"
 
 # Verify all have prerequisites with correct condition
 node -e "

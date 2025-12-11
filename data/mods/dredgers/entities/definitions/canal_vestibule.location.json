@@ -1,0 +1,24 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:canal_vestibule",
+    "components": {
+      "core:name": {
+        "text": "Eira Quenreach's mansion vestibule"
+      },
+      "core:description": {
+        "text": "An entrance hall opening directly onto a foggy canal landing. At the center, double doors stand open, revealing short stone steps that lead down to a wet, indistinct street or canal edge veiled in mist. Inside, the floor is pale stone tile with a long metal drainage grate running toward the doors and a rectangular mat placed in front of the threshold. Along the left wall, a wooden rail of coat pegs holds several dark cloaks. Below and nearby, there is a low boot-scraper and a simple stand with towels draped over it. The walls are pale plaster with dark wood wainscoting and trim. Heavy light-colored curtains frame the doorway, tied back to keep clear of the damp. On either side of the doors, wall-mounted lamps with glass shades cast a warm light. On the right wall, a large board is filled with evenly spaced hooks and small labeled tags, resembling an organized key rack."
+      },
+      "core:portrait": {
+        "imagePath": "portraits/canal_vestibule.png",
+        "altText": "Eira Quenreach's mansion vestibule"
+      },
+      "movement:exits": [
+        {
+          "direction": "to the concordance salon",
+          "target": "dredgers:concordance_salon_instance",
+          "blocker": null
+        }
+      ]
+    }
+  }
+  

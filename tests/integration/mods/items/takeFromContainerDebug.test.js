@@ -5,16 +5,16 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
-import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import eventIsActionTakeFromContainer from '../../../../data/mods/containers/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
 
 describe('DEBUG: take_from_container rule matching', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:take_from_container',
+      'containers',
+      'containers:take_from_container',
       takeFromContainerRule,
       eventIsActionTakeFromContainer
     );
@@ -52,7 +52,7 @@ describe('DEBUG: take_from_container rule matching', () => {
     const container = new ModEntityBuilder('container1')
       .withName('Container')
       .atLocation('room1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: ['item1'],
         capacity: { maxWeight: 50, maxItems: 10 },
         isOpen: true,
@@ -176,7 +176,7 @@ describe('DEBUG: take_from_container rule matching', () => {
     const actorAfter = testFixture.entityManager.getEntityInstance('actor1');
     console.log(
       'Container contents:',
-      containerAfter.components['items:container'].contents
+      containerAfter.components['containers-core:container'].contents
     );
     console.log(
       'Actor inventory:',
@@ -193,7 +193,7 @@ describe('DEBUG: take_from_container rule matching', () => {
     );
 
     // The test will PASS if the item was moved (rule executed successfully)
-    expect(containerAfter.components['items:container'].contents).toEqual([]);
+    expect(containerAfter.components['containers-core:container'].contents).toEqual([]);
     expect(actorAfter.components['items:inventory'].items).toContain('item1');
   });
 });

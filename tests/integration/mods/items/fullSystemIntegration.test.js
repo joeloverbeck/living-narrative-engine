@@ -12,15 +12,15 @@ import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import giveItemRule from '../../../../data/mods/item-transfer/rules/handle_give_item.rule.json' assert { type: 'json' };
 import dropItemRule from '../../../../data/mods/item-handling/rules/handle_drop_item.rule.json' assert { type: 'json' };
 import pickUpItemRule from '../../../../data/mods/item-handling/rules/handle_pick_up_item.rule.json' assert { type: 'json' };
-import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
-import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
-import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/containers/rules/handle_open_container.rule.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import putInContainerRule from '../../../../data/mods/containers/rules/handle_put_in_container.rule.json' assert { type: 'json' };
 import eventIsActionGiveItem from '../../../../data/mods/item-transfer/conditions/event-is-action-give-item.condition.json' assert { type: 'json' };
 import eventIsActionDropItem from '../../../../data/mods/item-handling/conditions/event-is-action-drop-item.condition.json' assert { type: 'json' };
 import eventIsActionPickUpItem from '../../../../data/mods/item-handling/conditions/event-is-action-pick-up-item.condition.json' assert { type: 'json' };
-import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
-import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
-import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/containers/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import eventIsActionTakeFromContainer from '../../../../data/mods/containers/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/containers/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
 
 describe('Items - Full System Integration (Phase 1-4)', () => {
   let fixtures;
@@ -52,20 +52,20 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         eventIsActionPickUpItem
       ),
       open: await ModTestFixture.forAction(
-        'items',
-        'items:open_container',
+        'containers',
+        'containers:open_container',
         openContainerRule,
         eventIsActionOpenContainer
       ),
       take: await ModTestFixture.forAction(
-        'items',
-        'items:take_from_container',
+        'containers',
+        'containers:take_from_container',
         takeFromContainerRule,
         eventIsActionTakeFromContainer
       ),
       put: await ModTestFixture.forAction(
-        'items',
-        'items:put_in_container',
+        'containers',
+        'containers:put_in_container',
         putInContainerRule,
         eventIsActionPutInContainer
       ),
@@ -120,7 +120,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
         .atLocation('verification-room')
         .withComponent('items:item', {})
         .withComponent('items:openable', {})
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['chest-item'],
           capacity: { maxWeight: 20, maxItems: 5 },
           isOpen: false,
@@ -199,7 +199,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       await fixtures.open.executeAction('test-actor', 'test-chest');
       expect(
         fixtures.open.events.some(
-          (e) => e.eventType === 'items:container_opened'
+          (e) => e.eventType === 'containers:container_opened'
         )
       ).toBe(true);
 
@@ -228,7 +228,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       });
       expect(
         fixtures.take.events.some(
-          (e) => e.eventType === 'items:item_taken_from_container'
+          (e) => e.eventType === 'containers:item_taken_from_container'
         )
       ).toBe(true);
 
@@ -257,7 +257,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       });
       expect(
         fixtures.put.events.some(
-          (e) => e.eventType === 'items:item_put_in_container'
+          (e) => e.eventType === 'containers:item_put_in_container'
         )
       ).toBe(true);
 
@@ -293,7 +293,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       const drawer = new ModEntityBuilder('desk-drawer')
         .withName('Desk Drawer')
         .atLocation('study')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['book-1'],
           capacity: { maxWeight: 20, maxItems: 5 },
           isOpen: false,
@@ -383,7 +383,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       });
 
       const putRuleEvent = fixtures.put.events.find(
-        (event) => event.eventType === 'items:item_put_in_container'
+        (event) => event.eventType === 'containers:item_put_in_container'
       );
       expect(putRuleEvent).toBeDefined();
       expect(putRuleEvent.payload.itemEntity).toBe('book-1');
@@ -397,10 +397,10 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const drawerAfterPut =
         fixtures.put.entityManager.getEntityInstance('desk-drawer');
-      expect(drawerAfterPut.components['items:container'].contents).toContain(
+      expect(drawerAfterPut.components['containers-core:container'].contents).toContain(
         'book-1'
       );
-      expect(drawerAfterPut.components['items:container'].isOpen).toBe(true);
+      expect(drawerAfterPut.components['containers-core:container'].isOpen).toBe(true);
 
       const actor2AfterPut =
         fixtures.put.entityManager.getEntityInstance('actor-2');
@@ -444,7 +444,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
       const merchantChest = new ModEntityBuilder('merchant-chest')
         .withName('Merchant Chest')
         .atLocation('marketplace')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['rare-item'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -515,7 +515,7 @@ describe('Items - Full System Integration (Phase 1-4)', () => {
 
       const chestAfterOpen =
         fixtures.open.entityManager.getEntityInstance('merchant-chest');
-      expect(chestAfterOpen.components['items:container'].isOpen).toBe(true);
+      expect(chestAfterOpen.components['containers-core:container'].isOpen).toBe(true);
 
       // Step 3: Customer takes the rare item
       currentMerchant =

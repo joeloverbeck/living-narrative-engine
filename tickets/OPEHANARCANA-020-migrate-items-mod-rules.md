@@ -19,8 +19,8 @@ Migrate the 4 inventory validation rules in the `items` mod from the expanded pa
 
 - `data/mods/items/rules/handle_give_item.rule.json`
 - `data/mods/items/rules/handle_pick_up_item.rule.json`
-- `data/mods/items/rules/handle_put_in_container.rule.json`
-- `data/mods/items/rules/handle_take_from_container.rule.json`
+- `data/mods/containers/rules/handle_put_in_container.rule.json`
+- `data/mods/containers/rules/handle_take_from_container.rule.json`
 
 ---
 

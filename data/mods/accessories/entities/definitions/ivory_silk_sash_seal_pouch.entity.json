@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:ivory_silk_sash_seal_pouch",
+  "description": "Woven ivory silk sash with integrated seal pouch",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "accessories"
+    },
+    "core:material": {
+      "material": "silk"
+    },
+    "core:name": {
+      "text": "sash with seal pouch"
+    },
+    "core:description": {
+      "text": "A broad sash woven from ivory silk tape, wrapped twice around the waist and secured with a discreet fastening. Integrated into the layered fabric is a small pouch, barely visible, designed to carry an official seal, correspondence, or other items of diplomatic importance. The silk catches light with each movement, its ivory hue complementing formal attire while the hidden pouch ensures readiness for official duties. This is an accessory of quiet authority—understated yet essential for one who may need to authenticate documents or display credentials at a moment's notice."
+    },
+    "descriptors:color_extended": {
+      "color": "ivory"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.22
+    }
+  }
+}

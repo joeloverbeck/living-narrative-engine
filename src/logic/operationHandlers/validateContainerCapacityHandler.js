@@ -24,7 +24,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
-const CONTAINER_COMPONENT_ID = 'items:container';
+const CONTAINER_COMPONENT_ID = 'containers-core:container';
 const WEIGHT_COMPONENT_ID = 'core:weight';
 
 /**

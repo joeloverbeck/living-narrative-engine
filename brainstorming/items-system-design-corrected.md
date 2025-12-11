@@ -483,10 +483,10 @@ actor.positioning:closeness.partners[
 ```
 
 ```
-// items:containers_in_location.scope
+// containers-core:containers_in_location.scope
 // Furniture/objects that can contain items
 location.entities[
-  {"!!": {"var": "items:container"}}
+  {"!!": {"var": "containers-core:container"}}
 ]
 ```
 
@@ -494,7 +494,7 @@ location.entities[
 
 ```json
 {
-  "id": "items:container",
+  "id": "containers-core:container",
   "description": "Entity can contain items (chest, drawer, etc.)",
   "dataSchema": {
     "type": "object",
@@ -915,7 +915,7 @@ class ValidateInventoryCapacityHandler extends BaseOperationHandler {
 
 **Goal**: Chests, storage furniture
 
-1. Implement `items:container` component
+1. Implement `containers-core:container` component
 2. Add container interaction actions
 3. Locked container logic
 4. Container UI

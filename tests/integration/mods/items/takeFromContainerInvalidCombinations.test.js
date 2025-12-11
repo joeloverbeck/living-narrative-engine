@@ -36,7 +36,7 @@ describe('take_from_container - invalid multi-target combinations bug', () => {
 
     // Setup action definition for take_from_container
     const actionDef = {
-      id: 'items:take_from_container',
+      id: 'containers:take_from_container',
       name: 'Take from Container',
       template: 'take {secondary} from {primary}',
       targets: {

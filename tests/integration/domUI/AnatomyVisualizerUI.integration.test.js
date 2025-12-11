@@ -9,6 +9,8 @@ import {
   expect,
   beforeEach,
   afterEach,
+  beforeAll,
+  afterAll,
   jest,
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
@@ -48,91 +50,40 @@ import humanMaleRecipe from '../../../data/mods/anatomy/recipes/human_male.recip
 import humanFemaleRecipe from '../../../data/mods/anatomy/recipes/human_female.recipe.json';
 
 describe('AnatomyVisualizerUI Integration Tests', () => {
-  let container;
+  // Shared state (configured once in beforeAll)
+  let sharedContainer;
+  let sharedLogger;
+  let sharedRegistry;
+  let sharedEntityManager;
+  let sharedAnatomyDescriptionService;
+  let sharedEventDispatcher;
+  let sharedValidatedEventDispatcher;
+  let originalFetch;
+
+  // Per-test state (reset in beforeEach)
   let visualizerUI;
   let dom;
   let document;
   let mockFetch;
-  let logger;
-  let registry;
-  let entityManager;
-  let anatomyDescriptionService;
-  let eventDispatcher;
-  let originalFetch;
   let visualizerState;
   let anatomyLoadingDetector;
   let visualizerStateController;
   let visualizationComposer;
 
-  beforeEach(async () => {
-    // Set up JSDOM for DOM operations
-    dom = new JSDOM(`
-      <!DOCTYPE html>
-      <html>
-        <body>
-          <div id="entity-selector"></div>
-          <div id="entity-description-content"></div>
-          <div id="anatomy-graph-container"></div>
-        </body>
-      </html>
-    `);
-    document = dom.window.document;
-    global.document = document;
-    global.window = dom.window;
-    global.SVGElement = dom.window.SVGElement;
+  // Aliases for compatibility with existing tests
+  let logger;
+  let registry;
+  let entityManager;
+  let anatomyDescriptionService;
+  let eventDispatcher;
 
-    // Note: window.location is not actually used in the visualizer, so we don't need to mock it
-
-    // Mock fetch for game.json loading
-    originalFetch = global.fetch;
-    mockFetch = jest.fn();
-    global.fetch = mockFetch;
-
-    // Default fetch response for game.json
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => ({ mods: ['core', 'anatomy'] }),
-    });
-
-    // Create and configure real container
-    container = new AppContainer();
-    await configureMinimalContainer(container);
-
-    // Resolve real services
-    logger = container.resolve(tokens.ILogger);
-    registry = container.resolve(tokens.IDataRegistry);
-    entityManager = container.resolve(tokens.IEntityManager);
-    anatomyDescriptionService = container.resolve(
-      tokens.AnatomyDescriptionService
-    );
-    eventDispatcher = container.resolve(tokens.ISafeEventDispatcher);
-
-    // Create visualizer state management components
-    visualizerState = new VisualizerState({ logger });
-    anatomyLoadingDetector = new AnatomyLoadingDetector({
-      entityManager,
-      eventDispatcher: container.resolve(tokens.IValidatedEventDispatcher),
-      logger,
-    });
-
-    // Mock the waitForEntityWithAnatomy method to resolve immediately for testing
-    jest
-      .spyOn(anatomyLoadingDetector, 'waitForEntityWithAnatomy')
-      .mockResolvedValue(true);
-
-    visualizerStateController = new VisualizerStateController({
-      visualizerState,
-      anatomyLoadingDetector,
-      eventDispatcher: container.resolve(tokens.IValidatedEventDispatcher),
-      entityManager,
-      logger,
-    });
-
-    // Set the entity manager for testing
-    visualizerStateController._setEntityManager(entityManager);
-
-    // Create mock visualization composer
-    visualizationComposer = {
+  /**
+   * Create mock visualization composer with current document reference.
+   *
+   * @returns {object} Mock visualization composer
+   */
+  function createVisualizationComposer() {
+    return {
       initialize: jest.fn(),
       renderGraph: jest.fn().mockImplementation((rootEntityId, bodyData) => {
         // Create the expected DOM structure for tests
@@ -216,56 +167,11 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
         }
       }),
     };
-
-    // Pre-load essential components and entities into registry
-    loadTestData();
-  });
-
-  afterEach(async () => {
-    // Clean up visualizer UI first
-    if (visualizerUI) {
-      // Dispose the UI which should clean up event subscriptions
-      visualizerUI.dispose();
-      // Wait a bit for async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-
-    // Clean up entities
-    if (entityManager) {
-      entityManager.clearAll();
-    }
-
-    // Restore globals
-    global.fetch = originalFetch;
-    delete global.document;
-    delete global.window;
-    delete global.SVGElement;
-
-    // Restore mock
-    if (
-      anatomyLoadingDetector &&
-      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore
-    ) {
-      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore();
-    }
-
-    // Dispose visualizer state components
-    if (visualizerStateController) {
-      visualizerStateController.dispose();
-    }
-    if (
-      anatomyLoadingDetector &&
-      typeof anatomyLoadingDetector.dispose === 'function'
-    ) {
-      anatomyLoadingDetector.dispose();
-    }
-    if (visualizerState && typeof visualizerState.dispose === 'function') {
-      visualizerState.dispose();
-    }
-  });
+  }
 
   /**
    * Load component and entity definitions used throughout the tests.
+   * Called once in beforeAll to avoid redundant loading.
    */
   function loadTestData() {
     // Load component definitions
@@ -341,6 +247,143 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
     registry.store('anatomyRecipes', 'anatomy:human_male', humanMaleRecipe);
     registry.store('anatomyRecipes', 'anatomy:human_female', humanFemaleRecipe);
   }
+
+  // Run expensive setup once for all tests
+  beforeAll(async () => {
+    // Store original fetch
+    originalFetch = global.fetch;
+
+    // Create and configure container once - this is the expensive operation
+    sharedContainer = new AppContainer();
+    await configureMinimalContainer(sharedContainer);
+
+    // Resolve services once
+    sharedLogger = sharedContainer.resolve(tokens.ILogger);
+    sharedRegistry = sharedContainer.resolve(tokens.IDataRegistry);
+    sharedEntityManager = sharedContainer.resolve(tokens.IEntityManager);
+    sharedAnatomyDescriptionService = sharedContainer.resolve(
+      tokens.AnatomyDescriptionService
+    );
+    sharedEventDispatcher = sharedContainer.resolve(tokens.ISafeEventDispatcher);
+    sharedValidatedEventDispatcher = sharedContainer.resolve(
+      tokens.IValidatedEventDispatcher
+    );
+
+    // Set aliases for compatibility
+    logger = sharedLogger;
+    registry = sharedRegistry;
+    entityManager = sharedEntityManager;
+    anatomyDescriptionService = sharedAnatomyDescriptionService;
+    eventDispatcher = sharedEventDispatcher;
+
+    // Load test data once
+    loadTestData();
+  });
+
+  afterAll(() => {
+    // Restore original fetch
+    global.fetch = originalFetch;
+  });
+
+  beforeEach(() => {
+    // Set up fresh JSDOM for each test (cheap operation)
+    dom = new JSDOM(`
+      <!DOCTYPE html>
+      <html>
+        <body>
+          <div id="entity-selector"></div>
+          <div id="entity-description-content"></div>
+          <div id="anatomy-graph-container"></div>
+        </body>
+      </html>
+    `);
+    document = dom.window.document;
+    global.document = document;
+    global.window = dom.window;
+    global.SVGElement = dom.window.SVGElement;
+
+    // Mock fetch for game.json loading
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
+
+    // Default fetch response for game.json
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ mods: ['core', 'anatomy'] }),
+    });
+
+    // Create visualizer state management components (fresh per test)
+    visualizerState = new VisualizerState({ logger });
+    anatomyLoadingDetector = new AnatomyLoadingDetector({
+      entityManager,
+      eventDispatcher: sharedValidatedEventDispatcher,
+      logger,
+    });
+
+    // Mock the waitForEntityWithAnatomy method to resolve immediately for testing
+    jest
+      .spyOn(anatomyLoadingDetector, 'waitForEntityWithAnatomy')
+      .mockResolvedValue(true);
+
+    visualizerStateController = new VisualizerStateController({
+      visualizerState,
+      anatomyLoadingDetector,
+      eventDispatcher: sharedValidatedEventDispatcher,
+      entityManager,
+      logger,
+    });
+
+    // Set the entity manager for testing
+    visualizerStateController._setEntityManager(entityManager);
+
+    // Create mock visualization composer (fresh per test with current document)
+    visualizationComposer = createVisualizationComposer();
+  });
+
+  afterEach(async () => {
+    // Clean up visualizer UI first
+    if (visualizerUI) {
+      // Dispose the UI which should clean up event subscriptions
+      visualizerUI.dispose();
+      // Brief pause for async cleanup (reduced from 100ms)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    // Clean up entities (but don't clear the shared registry data)
+    if (entityManager) {
+      entityManager.clearAll();
+    }
+
+    // Restore fetch for next test
+    global.fetch = mockFetch;
+
+    // Clean up globals
+    delete global.document;
+    delete global.window;
+    delete global.SVGElement;
+
+    // Restore mock
+    if (
+      anatomyLoadingDetector &&
+      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore
+    ) {
+      anatomyLoadingDetector.waitForEntityWithAnatomy.mockRestore();
+    }
+
+    // Dispose visualizer state components
+    if (visualizerStateController) {
+      visualizerStateController.dispose();
+    }
+    if (
+      anatomyLoadingDetector &&
+      typeof anatomyLoadingDetector.dispose === 'function'
+    ) {
+      anatomyLoadingDetector.dispose();
+    }
+    if (visualizerState && typeof visualizerState.dispose === 'function') {
+      visualizerState.dispose();
+    }
+  });
 
   describe('Initialization', () => {
     it('should successfully initialize with real container and services', async () => {
@@ -503,8 +546,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Act
       await visualizerUI._loadEntity(entityDefId);
 
-      // Wait for state changes to propagate
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for state changes to propagate (reduced from 100ms - mocks resolve immediately)
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Assert
       expect(createdEntityId).toBeDefined();
@@ -520,7 +563,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Arrange
       const entityDefId = 'anatomy:human_male';
       let checkedMethod = false;
-      let createdEntityId;
 
       // Mock createEntityInstance
       const originalCreate = entityManager.createEntityInstance;
@@ -532,7 +574,6 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             defId,
             overrides
           );
-          createdEntityId = entity.id;
           return entity;
         });
 
@@ -954,8 +995,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Act
       await visualizerUI._loadEntity('non:existent:entity');
 
-      // Wait for state changes to propagate
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      // Wait for state changes to propagate (reduced from 100ms)
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Assert
       expect(errorSpy).toHaveBeenCalledWith(
@@ -984,7 +1025,7 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       // Act
       visualizerUI._loadEntity(entityDefId);
 
-      // Trigger entity created event without anatomy
+      // Trigger entity created event without anatomy (reduced from 50ms)
       setTimeout(() => {
         eventDispatcher.dispatch(ENTITY_CREATED_ID, {
           payload: {
@@ -993,10 +1034,10 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
             wasReconstructed: false,
           },
         });
-      }, 50);
+      }, 5);
 
-      // Wait for timeout
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Wait for timeout (reduced from 300ms)
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Assert - should still be waiting as no anatomy was generated
       expect(visualizerUI._currentEntityId).not.toBe('test-entity');
@@ -1096,8 +1137,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       Object.defineProperty(changeEvent, 'target', { value: selector });
       selector.dispatchEvent(changeEvent);
 
-      // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Wait for async operations (reduced from 300ms)
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Assert 2: Entity should be loading (checking log output is not critical for integration test)
       // The important thing is that the entity loads without errors
@@ -1108,7 +1149,8 @@ describe('AnatomyVisualizerUI Integration Tests', () => {
       selector.value = 'anatomy:human_female';
       selector.dispatchEvent(changeEvent);
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
+      // Wait for async operations (reduced from 300ms)
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Assert 3: Previous entities should be cleaned up
       // The cleanup is internal - we just verify no errors occur

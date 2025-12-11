@@ -14,7 +14,15 @@
  * Coverage: Workflow 2 (Registry Management) - Multi-mod aspects
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
@@ -40,12 +48,54 @@ describe('Multi-Mod Scope Interactions E2E', () => {
   let dslParser;
   let logger;
   let modSystem;
-  let testWorld;
+  let _testWorld; // eslint-disable-line no-unused-vars -- World setup needed for entity creation
   let testActors;
 
   // Shared container setup for performance optimization
-  let sharedContainer;
+  let sharedContainer = null;
   let containerSetupCompleted = false;
+
+  /**
+   * One-time container setup for performance optimization
+   * Eliminates expensive container configuration per test
+   */
+  async function setupSharedContainer() {
+    if (!containerSetupCompleted) {
+      sharedContainer = new AppContainer();
+      await configureContainer(sharedContainer, {
+        outputDiv: document.createElement('div'),
+        inputElement: document.createElement('input'),
+        titleElement: document.createElement('h1'),
+        document,
+      });
+      containerSetupCompleted = true;
+    }
+    return sharedContainer;
+  }
+
+  // PERFORMANCE OPTIMIZATION: Use beforeAll for expensive container setup
+  beforeAll(async () => {
+    // Create shared container once for all tests
+    container = await setupSharedContainer();
+
+    // Get real services from shared container
+    entityManager = container.resolve(tokens.IEntityManager);
+    scopeRegistry = container.resolve(tokens.IScopeRegistry);
+    scopeEngine = container.resolve(tokens.IScopeEngine);
+    dataRegistry = container.resolve(tokens.IDataRegistry);
+    dslParser = container.resolve(tokens.DslParser);
+    logger = container.resolve(tokens.ILogger);
+
+    // Set up base test conditions once
+    ScopeTestUtilities.setupScopeTestConditions(dataRegistry);
+  });
+
+  // PERFORMANCE OPTIMIZATION: Proper cleanup after all tests
+  afterAll(async () => {
+    // Reset shared container state
+    containerSetupCompleted = false;
+    sharedContainer = null;
+  });
 
   /**
    * Performance-optimized helper to create test mods using in-memory system
@@ -68,24 +118,6 @@ describe('Multi-Mod Scope Interactions E2E', () => {
    */
   function loadScopesFromMod(modId, scopeFiles) {
     return modSystem.loadScopesFromMod(modId, scopeFiles, dslParser, logger);
-  }
-
-  /**
-   * One-time container setup for performance optimization
-   * Eliminates expensive container configuration per test
-   */
-  async function setupSharedContainer() {
-    if (!containerSetupCompleted) {
-      sharedContainer = new AppContainer();
-      await configureContainer(sharedContainer, {
-        outputDiv: document.createElement('div'),
-        inputElement: document.createElement('input'),
-        titleElement: document.createElement('h1'),
-        document,
-      });
-      containerSetupCompleted = true;
-    }
-    return sharedContainer;
   }
 
   /**
@@ -116,28 +148,11 @@ describe('Multi-Mod Scope Interactions E2E', () => {
   }
 
   beforeEach(async () => {
-    // Create container with optimized initialization
-    container = new AppContainer();
-    await configureContainer(container, {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document,
-    });
-
-    // Get real services from container
-    entityManager = container.resolve(tokens.IEntityManager);
-    scopeRegistry = container.resolve(tokens.IScopeRegistry);
-    scopeEngine = container.resolve(tokens.IScopeEngine);
-    dataRegistry = container.resolve(tokens.IDataRegistry);
-    dslParser = container.resolve(tokens.DslParser);
-    logger = container.resolve(tokens.ILogger);
-
-    // Initialize high-performance in-memory mod system
+    // Initialize high-performance in-memory mod system (lightweight, per-test)
     modSystem = new InMemoryModSystem();
 
     // Set up test world and actors using optimized utilities
-    testWorld = await ActionTestUtilities.createStandardTestWorld({
+    _testWorld = await ActionTestUtilities.createStandardTestWorld({
       entityManager,
       registry: dataRegistry,
     });
@@ -146,12 +161,14 @@ describe('Multi-Mod Scope Interactions E2E', () => {
       entityManager,
       registry: dataRegistry,
     });
-
-    // Set up base test conditions
-    ScopeTestUtilities.setupScopeTestConditions(dataRegistry);
   });
 
   afterEach(async () => {
+    // Clear entities from shared entity manager to ensure test isolation
+    if (entityManager && entityManager.clearAll) {
+      entityManager.clearAll();
+    }
+
     // Performance-optimized cleanup - automatic garbage collection
     if (modSystem) {
       modSystem.clear();
@@ -248,20 +265,6 @@ describe('Multi-Mod Scope Interactions E2E', () => {
         playerEntity,
         gameContext,
         { scopeRegistry, scopeEngine }
-      );
-
-      console.log('Enhanced actors result:', Array.from(enhancedActorsResult));
-      console.log(
-        'Enhanced actor entity:',
-        entityManager.getEntityInstance(enhancedActorId)
-      );
-      console.log(
-        'Super actor entity:',
-        entityManager.getEntityInstance(superActorId)
-      );
-      console.log(
-        'Normal actor entity:',
-        entityManager.getEntityInstance(normalActorId)
       );
 
       expect(enhancedActorsResult instanceof Set).toBe(true);

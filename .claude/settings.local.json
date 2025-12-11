@@ -646,7 +646,10 @@
       "WebSearch",
       "Bash(/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/edgeCases/consumeItemEdgeCases.test.js )",
       "Bash(/home/joeloverbeck/projects/living-narrative-engine/tests/unit/logic/operationHandlers/edgeCases/digestFoodEdgeCases.test.js)",
-      "Bash(do echo \"=== Run $i ===\" NODE_ENV=test npx jest tests/performance/multiTargetActionPerformance.test.js --testNamePattern=\"should maintain performance parity\" --no-coverage --silent)"
+      "Bash(do echo \"=== Run $i ===\" NODE_ENV=test npx jest tests/performance/multiTargetActionPerformance.test.js --testNamePattern=\"should maintain performance parity\" --no-coverage --silent)",
+      "Bash(time npm run test:unit:*)",
+      "Bash(time npx jest:*)",
+      "Bash(shuf)"
     ],
     "deny": [],
     "ask": []

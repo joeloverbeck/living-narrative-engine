@@ -4,7 +4,7 @@
  * with inventory items. The table IS the container (not a bowl on the table).
  *
  * CORRECT UNDERSTANDING:
- * - Table has items:container component
+ * - Table has containers-core:container component
  * - Stool has furniture:near_furniture pointing to table
  * - Table IS the primary target (the container to put items INTO)
  * - Actor's inventory items ARE the secondary targets (items to put)
@@ -57,7 +57,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [
             'fantasy:jug_of_cider_instance',
             'fantasy:jug_of_mead_instance',
@@ -165,7 +165,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -234,7 +234,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -295,7 +295,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -361,7 +361,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false, // CLOSED
@@ -425,7 +425,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -509,7 +509,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -602,7 +602,7 @@ describe('Bertram scenario: put_on_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen') // Kitchen
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,

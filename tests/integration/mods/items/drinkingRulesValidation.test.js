@@ -43,7 +43,7 @@ function setupDrinkingScenario(
     .withName('waterskin')
     .withComponent('items:item', {})
     .withComponent('items:portable', {})
-    .withComponent('items:liquid_container', {
+    .withComponent('containers-core:liquid_container', {
       currentVolume: 500, // 500ml of liquid
       maxVolume: 1000, // 1L capacity
       liquidType: 'water',
@@ -188,7 +188,7 @@ describe('Drinking Rules Validation and Execution', () => {
       const { room, actor, container } = setupDrinkingScenario();
 
       // Make container empty
-      container.components['items:liquid_container'].currentVolume = 0;
+      container.components['containers-core:liquid_container'].currentVolume = 0;
 
       testFixture.reset([room, actor, container]);
 
@@ -211,7 +211,7 @@ describe('Drinking Rules Validation and Execution', () => {
         const { room, actor, container } = setupDrinkingScenario();
 
         // Set container to have small amount for complete consumption
-        container.components['items:liquid_container'].currentVolume = 100;
+        container.components['containers-core:liquid_container'].currentVolume = 100;
 
         entirelyFixture.reset([room, actor, container]);
 

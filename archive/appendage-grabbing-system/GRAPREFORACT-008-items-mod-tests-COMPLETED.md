@@ -26,7 +26,7 @@ Each action with grabbing prerequisites requires a dedicated integration test fi
 | `tests/integration/mods/items/drink_entirely_prerequisites.test.js`      | `items:drink_entirely`      |
 | `tests/integration/mods/items/drink_from_prerequisites.test.js`          | `items:drink_from`          |
 | `tests/integration/mods/items/pick_up_item_prerequisites.test.js`        | `items:pick_up_item`        |
-| `tests/integration/mods/items/take_from_container_prerequisites.test.js` | `items:take_from_container` |
+| `tests/integration/mods/items/take_from_container_prerequisites.test.js` | `containers:take_from_container` |
 
 ## Test Structure (All 4 Files)
 
@@ -66,14 +66,14 @@ Each test file follows the established pattern with these test groups:
 
 - ID: `items:drink_entirely`
 - Template: `drink entirety of {primary}`
-- Required components on primary: `items:drinkable`, `items:liquid_container`
+- Required components on primary: `items:drinkable`, `containers-core:liquid_container`
 - Forbidden components on primary: `items:empty`
 
 ### drink_from
 
 - ID: `items:drink_from`
 - Template: `drink from {primary}`
-- Required components on primary: `items:drinkable`, `items:liquid_container`
+- Required components on primary: `items:drinkable`, `containers-core:liquid_container`
 - Forbidden components on primary: `items:empty`
 
 ### pick_up_item
@@ -85,7 +85,7 @@ Each test file follows the established pattern with these test groups:
 
 ### take_from_container
 
-- ID: `items:take_from_container`
+- ID: `containers:take_from_container`
 - Template: `take {secondary.name} from {primary.name}`
 - Required components on actor: `items:inventory`
 - Forbidden components on actor: `positioning:sitting_on`

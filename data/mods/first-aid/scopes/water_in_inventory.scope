@@ -1,6 +1,6 @@
 // Items in the actor's inventory whose liquid contents are tagged water and still have volume left
 first-aid:water_in_inventory := actor.components.items:inventory.items[][{"and": [
-  {"!!": {"var": "entity.components.items:liquid_container"}},
-  {"in": ["water", {"var": "entity.components.items:liquid_container.tags"}]},
-  {"<": [0, {"var": "entity.components.items:liquid_container.currentVolumeMilliliters"}]}
+  {"!!": {"var": "entity.components.containers-core:liquid_container"}},
+  {"in": ["water", {"var": "entity.components.containers-core:liquid_container.tags"}]},
+  {"<": [0, {"var": "entity.components.containers-core:liquid_container.currentVolumeMilliliters"}]}
 ]}]

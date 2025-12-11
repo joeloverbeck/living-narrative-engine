@@ -6,6 +6,7 @@ import {
   describe,
   it,
   expect,
+  beforeAll,
   beforeEach,
   afterEach,
   jest,
@@ -20,97 +21,95 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { MockThematicDirectionGenerator } from '../../common/mocks/mockThematicDirectionGenerator.js';
 
 describe('Character Concepts Manager - Event Validation with Mocked Storage', () => {
-  let bootstrapResult;
-  let eventBus;
-  let validatedDispatcher;
+  // Shared infrastructure (initialized once in beforeAll)
+  let sharedContainer;
+  let sharedEventBus;
+  let sharedSchemaValidator;
+  let tokens;
+
+  // Per-test instances (recreated in beforeEach for test isolation)
   let logger;
+  let validatedDispatcher;
   let builderService;
   let mockStorageService;
   let mockDirectionGenerator;
+  let storedConcepts;
+  let storedDirections;
 
-  beforeEach(async () => {
-    // Initialize core services
-    logger = new ConsoleLogger({ prefix: 'EventTest' });
+  // Test event definitions (reusable configuration)
+  const testEventDefinitions = {
+    'core:character_concept_created': {
+      id: 'core:character_concept_created',
+      description: 'Dispatched when a new character concept is created.',
+      payloadSchema: {
+        type: 'object',
+        properties: {
+          conceptId: { type: 'string' },
+          concept: { type: 'string' },
+          autoSaved: { type: 'boolean' },
+        },
+        required: ['conceptId', 'concept'],
+        additionalProperties: true,
+      },
+    },
+    'core:character_concept_deleted': {
+      id: 'core:character_concept_deleted',
+      description: 'Dispatched when a character concept is deleted.',
+      payloadSchema: {
+        type: 'object',
+        properties: {
+          conceptId: { type: 'string' },
+        },
+        required: ['conceptId'],
+        additionalProperties: true,
+      },
+    },
+  };
 
-    // Bootstrap to get container
+  const gameDataRepository = {
+    getEventDefinition: (eventName) => testEventDefinitions[eventName],
+    getAllEventDefinitions: () => Object.values(testEventDefinitions),
+  };
+
+  beforeAll(async () => {
+    // Bootstrap once for all tests - this is the expensive operation
     const bootstrapper = new CommonBootstrapper();
-    bootstrapResult = await bootstrapper.bootstrap({
+    const bootstrapResult = await bootstrapper.bootstrap({
       containerConfigType: 'minimal',
       skipModLoading: true,
     });
 
-    // Get event bus from bootstrapped container
-    const { tokens } = await import(
+    // Import tokens once
+    const tokensModule = await import(
       '../../../src/dependencyInjection/tokens.js'
     );
-    eventBus = bootstrapResult.container.resolve(tokens.IEventBus);
+    tokens = tokensModule.tokens;
 
-    // Get services from bootstrap result
-    const container = bootstrapResult.container;
-    const schemaValidator = container.resolve(tokens.ISchemaValidator);
+    // Get shared infrastructure from bootstrapped container
+    sharedContainer = bootstrapResult.container;
+    sharedEventBus = sharedContainer.resolve(tokens.IEventBus);
+    sharedSchemaValidator = sharedContainer.resolve(tokens.ISchemaValidator);
 
-    // Create a mock gameDataRepository with test event definitions
-    const testEventDefinitions = {
-      'core:character_concept_created': {
-        id: 'core:character_concept_created',
-        description: 'Dispatched when a new character concept is created.',
-        payloadSchema: {
-          type: 'object',
-          properties: {
-            conceptId: { type: 'string' },
-            concept: { type: 'string' },
-            autoSaved: { type: 'boolean' },
-          },
-          required: ['conceptId', 'concept'],
-          additionalProperties: true,
-        },
-      },
-      'core:character_concept_deleted': {
-        id: 'core:character_concept_deleted',
-        description: 'Dispatched when a character concept is deleted.',
-        payloadSchema: {
-          type: 'object',
-          properties: {
-            conceptId: { type: 'string' },
-          },
-          required: ['conceptId'],
-          additionalProperties: true,
-        },
-      },
-    };
-
-    const gameDataRepository = {
-      getEventDefinition: (eventName) => testEventDefinitions[eventName],
-      getAllEventDefinitions: () => Object.values(testEventDefinitions),
-    };
-
-    // Load the schemas into the schema validator with the expected IDs
+    // Load the schemas into the schema validator once (they persist across tests)
     for (const [eventName, definition] of Object.entries(
       testEventDefinitions
     )) {
       if (definition.payloadSchema) {
         const schemaId = `${eventName}#payload`;
-        await schemaValidator.addSchema(definition.payloadSchema, schemaId);
+        await sharedSchemaValidator.addSchema(definition.payloadSchema, schemaId);
       }
     }
+  });
 
-    // Create validated dispatcher with all required dependencies
-    validatedDispatcher = new ValidatedEventDispatcher({
-      logger,
-      eventBus,
-      gameDataRepository,
-      schemaValidator,
-    });
+  beforeEach(() => {
+    // Create fresh instances for each test to ensure isolation
+    logger = new ConsoleLogger({ prefix: 'EventTest' });
 
-    // Create safe dispatcher that wraps the validated dispatcher
-    const safeDispatcher = new SafeEventDispatcher({
-      logger,
-      validatedEventDispatcher: validatedDispatcher,
-    });
+    // Reset storage state
+    storedConcepts = new Map();
+    storedDirections = new Map();
 
-    // Create mock storage service
-    const storedConcepts = new Map();
-    const storedDirections = new Map();
+    // Create fresh mock storage service
     mockStorageService = {
       initialize: jest.fn(async () => {}),
       storeCharacterConcept: jest.fn(async (concept) => {
@@ -139,10 +138,24 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       close: jest.fn(),
     };
 
-    // Create mock direction generator
+    // Create fresh validated dispatcher with shared infrastructure
+    validatedDispatcher = new ValidatedEventDispatcher({
+      logger,
+      eventBus: sharedEventBus,
+      gameDataRepository,
+      schemaValidator: sharedSchemaValidator,
+    });
+
+    // Create safe dispatcher that wraps the validated dispatcher
+    const safeDispatcher = new SafeEventDispatcher({
+      logger,
+      validatedEventDispatcher: validatedDispatcher,
+    });
+
+    // Create fresh mock direction generator
     mockDirectionGenerator = new MockThematicDirectionGenerator();
 
-    // Initialize builder service
+    // Initialize builder service with fresh mocks
     builderService = new CharacterBuilderService({
       logger,
       eventBus: safeDispatcher,
@@ -159,7 +172,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     it('should dispatch character_concept_created event when creating a concept', async () => {
       // Arrange
       let capturedEvent = null;
-      eventBus.subscribe('core:character_concept_created', (event) => {
+      sharedEventBus.subscribe('core:character_concept_created', (event) => {
         capturedEvent = event;
       });
 
@@ -168,10 +181,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
         'Test concept with enough characters'
       );
 
-      // Wait for event propagation
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Assert
+      // Assert - Event is captured synchronously during the await above
       expect(capturedEvent).toBeTruthy();
       expect(capturedEvent.type).toBe('core:character_concept_created');
       expect(capturedEvent.payload).toMatchObject({
@@ -188,17 +198,14 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       );
 
       let capturedEvent = null;
-      eventBus.subscribe('core:character_concept_deleted', (event) => {
+      sharedEventBus.subscribe('core:character_concept_deleted', (event) => {
         capturedEvent = event;
       });
 
       // Act
       await builderService.deleteCharacterConcept(result.id);
 
-      // Wait for event propagation
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Assert
+      // Assert - Event is captured synchronously during the await above
       expect(capturedEvent).toBeTruthy();
       expect(capturedEvent.type).toBe('core:character_concept_deleted');
       expect(capturedEvent.payload).toMatchObject({
@@ -236,13 +243,13 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
     it('should handle concurrent event dispatches', async () => {
       // Arrange
       const events = [];
-      eventBus.subscribe('core:character_concept_created', (event) => {
+      sharedEventBus.subscribe('core:character_concept_created', (event) => {
         events.push(event);
       });
 
       // Enable batch mode to increase recursion limits for concurrent operations
       // This prevents the global recursion limit from blocking events
-      eventBus.setBatchMode(true, {
+      sharedEventBus.setBatchMode(true, {
         context: 'concurrent-event-test',
         maxGlobalRecursion: 30, // Increase from default 10 to handle 5 concurrent events
         maxRecursionDepth: 10,
@@ -258,17 +265,14 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
 
         await Promise.all(promises);
 
-        // Wait for all events to propagate
-        await new Promise((resolve) => setTimeout(resolve, 200));
-
-        // Assert
+        // Assert - Events are captured synchronously during the await above
         expect(events).toHaveLength(5);
         events.forEach((event) => {
           expect(event.payload.concept).toMatch(/Concept number \d/);
         });
       } finally {
         // Always disable batch mode after test to restore normal operation
-        eventBus.setBatchMode(false);
+        sharedEventBus.setBatchMode(false);
       }
     });
   });
@@ -280,7 +284,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
       let busEvent = null;
 
       // Listen at bus level
-      eventBus.subscribe('core:character_concept_created', (event) => {
+      sharedEventBus.subscribe('core:character_concept_created', (event) => {
         busEvent = event;
       });
 
@@ -292,10 +296,7 @@ describe('Character Concepts Manager - Event Validation with Mocked Storage', ()
         'Cross-service test with enough characters'
       );
 
-      // Wait for event propagation
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Assert - Event should be received and validated
+      // Assert - Event is captured synchronously during the await above
       expect(busEvent).toBeTruthy();
       expect(busEvent.payload).toMatchObject({
         conceptId: result.id,

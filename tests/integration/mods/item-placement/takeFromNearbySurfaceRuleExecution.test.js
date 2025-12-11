@@ -77,7 +77,7 @@ function setupSeatedContainerScenario({
   const container = new ModEntityBuilder(containerId)
     .withName('Wooden Bowl')
     .atLocation(locationId)
-    .withComponent('items:container', {
+    .withComponent('containers-core:container', {
       contents: containerContents,
       capacity: { maxWeight: 20, maxItems: 10 },
       isOpen,
@@ -144,7 +144,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Assert: Verify item removed from container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toEqual([]);
+      expect(container.components['containers-core:container'].contents).toEqual([]);
 
       // Assert: Verify item added to actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -221,7 +221,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify container now empty
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toEqual([]);
+      expect(container.components['containers-core:container'].contents).toEqual([]);
 
       // Verify item in actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -262,7 +262,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify container has only one item left
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].contents).toEqual([
         'emerald-1',
       ]);
     });
@@ -293,7 +293,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify item NOT removed from container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'sword-1'
       );
 
@@ -363,7 +363,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify item NOT removed from container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'book-1'
       );
 
@@ -394,7 +394,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify container unchanged
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].contents).toEqual([
         'diary-1',
       ]);
 
@@ -610,7 +610,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
       const sharedBowl = new ModEntityBuilder('shared-bowl')
         .withName('Shared Bowl')
         .atLocation('inn')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1', 'bread-1'],
           capacity: { maxWeight: 20, maxItems: 10 },
           isOpen: true,
@@ -672,7 +672,7 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
       // Verify container now empty
       const containerAfter =
         testFixture.entityManager.getEntityInstance('shared-bowl');
-      expect(containerAfter.components['items:container'].contents).toEqual([]);
+      expect(containerAfter.components['containers-core:container'].contents).toEqual([]);
     });
 
     it('preserves container components after taking item', async () => {
@@ -699,12 +699,12 @@ describe('item-placement:take_from_nearby_surface action integration', () => {
 
       // Verify all components intact
       expect(container.components['items:openable']).toBeDefined();
-      expect(container.components['items:container']).toBeDefined();
+      expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
       expect(container.components['furniture:on_furniture']).toBeDefined();
 
       // Verify open state preserved
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
     });
   });
 });

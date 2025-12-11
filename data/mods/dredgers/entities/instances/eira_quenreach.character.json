@@ -1,0 +1,19 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:eira_quenreach_instance",
+    "definitionId": "dredgers:eira_quenreach",
+    "componentOverrides": {
+      "core:position": {
+        "locationId": "dredgers:concordance_salon_instance"
+      },
+      "items:inventory": {
+        "items": [
+        ],
+        "capacity": {
+          "maxWeight": 50.0,
+          "maxItems": 20
+        }
+      }
+    }
+  }
+  

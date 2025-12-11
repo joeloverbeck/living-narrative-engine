@@ -1278,7 +1278,7 @@ const scenario = testFixture.createStandardActorTarget([
 
 ---
 
-### `items:containers_at_location`
+### `containers-core:containers_at_location`
 
 **Description**: All containers at the actor's current location.
 
@@ -1286,7 +1286,7 @@ const scenario = testFixture.createStandardActorTarget([
 
 **Requirements**:
 
-- Entities have `items:container` component
+- Entities have `containers-core:container` component
 - Entities at same location as actor
 
 **Returns**: Set of container entity IDs
@@ -1295,8 +1295,8 @@ const scenario = testFixture.createStandardActorTarget([
 
 ```javascript
 {
-  "id": "items:open_container",
-  "targets": "items:containers_at_location",
+  "id": "containers:open_container",
+  "targets": "containers-core:containers_at_location",
   // ...
 }
 ```
@@ -1306,7 +1306,7 @@ const scenario = testFixture.createStandardActorTarget([
 ```javascript
 const chest = testFixture.createEntity('container_chest', {
   'core:position': { locationId: 'location_room' },
-  'items:container': {
+  'containers-core:container': {
     contents: [],
     is_open: false,
     capacity: 100,
@@ -1655,7 +1655,7 @@ ScopeResolverHelpers._registerResolvers(
 | Items at location            | `items:items_at_location`                                     | Inventory   |
 | Portable items at location   | `items:portable_items_at_location`                            | Inventory   |
 | Actors at location (items)   | `items:actors_at_location`                                    | Inventory   |
-| Containers at location       | `items:containers_at_location`                                | Inventory   |
+| Containers at location       | `containers-core:containers_at_location`                                | Inventory   |
 | Actors at location (anatomy) | `anatomy:actors_at_location`                                  | Anatomy     |
 | Target's body parts          | `anatomy:target_body_parts`                                   | Anatomy     |
 

@@ -19,7 +19,7 @@ This ticket series adds free grabbing appendage prerequisites to 5 existing acti
 | GRAPREEXP-001 | `violence:slap`                   | violence  | Simple - add new prerequisites array  | ✅ COMPLETED |
 | GRAPREEXP-002 | `violence:sucker_punch`           | violence  | Simple - add new prerequisites array  | ✅ COMPLETED |
 | GRAPREEXP-003 | `seduction:brush_hair_back_coyly` | seduction | Moderate - insert into existing array | ✅ COMPLETED |
-| GRAPREEXP-004 | `items:put_in_container`          | items     | Simple - add new prerequisites array  | ✅ COMPLETED |
+| GRAPREEXP-004 | `containers:put_in_container`          | items     | Simple - add new prerequisites array  | ✅ COMPLETED |
 | GRAPREEXP-005 | `items:give_item`                 | items     | Simple - add new prerequisites array  | ✅ COMPLETED |
 
 ## Implementation Order
@@ -54,7 +54,7 @@ npm run test:integration -- --testPathPattern="prerequisites"
 npx eslint data/mods/violence/actions/slap.action.json \
            data/mods/violence/actions/sucker_punch.action.json \
            data/mods/seduction/actions/brush_hair_back_coyly.action.json \
-           data/mods/items/actions/put_in_container.action.json \
+           data/mods/containers/actions/put_in_container.action.json \
            data/mods/items/actions/give_item.action.json \
            tests/integration/mods/violence/*_prerequisites.test.js \
            tests/integration/mods/seduction/*_prerequisites.test.js \

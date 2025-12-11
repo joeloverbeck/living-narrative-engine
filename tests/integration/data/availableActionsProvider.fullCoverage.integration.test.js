@@ -304,7 +304,7 @@ describe('AvailableActionsProvider integration coverage', () => {
     expect(orchestrator.callHistory).toHaveLength(2);
 
     await eventBus.dispatch(COMPONENT_ADDED_ID, {
-      componentTypeId: 'items:container.backpack',
+      componentTypeId: 'containers-core:container',
     });
     await provider.get(actor, nextContext, logger);
     expect(orchestrator.callHistory).toHaveLength(3);

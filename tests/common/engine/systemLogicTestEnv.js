@@ -844,8 +844,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: allItems };
         }
 
-        // Handle the items:open_containers_at_location scope
-        if (scopeName === 'items:open_containers_at_location') {
+        // Handle the containers-core:open_containers_at_location scope
+        if (scopeName === 'containers-core:open_containers_at_location') {
           const actorId = context?.actor?.id || context;
 
           const actor = entityManager.getEntityInstance(actorId);
@@ -861,7 +861,7 @@ export function createBaseRuleEnvironment({
           });
 
           const openContainers = allEntities.filter((entity) => {
-            const containerComponent = entity.components?.['items:container'];
+            const containerComponent = entity.components?.['containers-core:container'];
             const entityPosition = entity.components?.['core:position'];
 
             if (!containerComponent || !entityPosition) {
@@ -879,8 +879,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(containerIds) };
         }
 
-        // Handle the items:openable_containers_at_location scope
-        if (scopeName === 'items:openable_containers_at_location') {
+        // Handle the containers-core:openable_containers_at_location scope
+        if (scopeName === 'containers-core:openable_containers_at_location') {
           // Extract actor ID from context
           const actorId = context?.actor?.id || context;
 
@@ -891,7 +891,7 @@ export function createBaseRuleEnvironment({
             return { success: true, value: new Set() };
           }
 
-          // Find all entities with items:container at same location that are open
+          // Find all entities with containers-core:container at same location that are open
           const allEntityIds = entityManager.getEntityIds();
           const allEntities = allEntityIds.map((id) => {
             const instance = entityManager.getEntityInstance(id);
@@ -900,7 +900,7 @@ export function createBaseRuleEnvironment({
 
           const containersAtLocation = allEntities.filter((entity) => {
             const hasContainerComponent =
-              entity.components?.['items:container'];
+              entity.components?.['containers-core:container'];
             const entityPosition = entity.components?.['core:position'];
 
             if (!hasContainerComponent || !entityPosition) {
@@ -922,8 +922,8 @@ export function createBaseRuleEnvironment({
           return { success: true, value: new Set(containerIds) };
         }
 
-        // Handle the items:container_contents scope
-        if (scopeName === 'items:container_contents') {
+        // Handle the containers-core:container_contents scope
+        if (scopeName === 'containers-core:container_contents') {
           // This scope uses contextFrom: primary, so the container should be in context
           const containerId = context?.primary?.id || context?.target?.id;
 
@@ -933,7 +933,7 @@ export function createBaseRuleEnvironment({
 
           // Get container entity and its contents
           const container = entityManager.getEntityInstance(containerId);
-          const containerComponent = container?.components?.['items:container'];
+          const containerComponent = container?.components?.['containers-core:container'];
 
           if (
             !containerComponent ||

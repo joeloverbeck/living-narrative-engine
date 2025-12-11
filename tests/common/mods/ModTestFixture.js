@@ -1925,7 +1925,7 @@ export class ModActionTestFixture extends BaseModTestFixture {
         'items:items_at_location',
         'items:portable_items_at_location',
         'items:actors_at_location',
-        'items:containers_at_location',
+        'containers-core:containers_at_location',
       ],
       anatomy: ['anatomy:actors_at_location', 'anatomy:target_body_parts'],
     };

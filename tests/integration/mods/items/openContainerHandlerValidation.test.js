@@ -34,7 +34,7 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
         if (entityId === 'container1' && componentType === 'items:openable') {
           return {};
         }
-        if (entityId === 'container1' && componentType === 'items:container') {
+        if (entityId === 'container1' && componentType === 'containers-core:container') {
           return {
             contents: ['item1', 'item2'],
             isOpen: false,
@@ -112,7 +112,7 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
 
       // Verify values are correct
       expect(spec.instanceId).toBe('container1');
-      expect(spec.componentTypeId).toBe('items:container');
+      expect(spec.componentTypeId).toBe('containers-core:container');
       expect(spec.componentData).toEqual({
         contents: ['item1', 'item2'],
         isOpen: true,
@@ -143,7 +143,7 @@ describe('OpenContainerHandler - Parameter Structure Validation', () => {
 
       // First parameter should be the event name STRING
       expect(typeof call.firstArg).toBe('string');
-      expect(call.firstArg).toBe('items:container_opened');
+      expect(call.firstArg).toBe('containers:container_opened');
 
       // Second parameter should be the payload OBJECT
       expect(typeof call.secondArg).toBe('object');

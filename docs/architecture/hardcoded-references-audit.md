@@ -377,7 +377,7 @@
 | Line | Snippet                                                                    | Severity | Refactoring Approach |
 | ---- | -------------------------------------------------------------------------- | -------- | -------------------- |
 | 12   | `* 6. Dispatches items:liquid_consumed_entirely event`                     | Critical | Registry             |
-| 29   | `const LIQUID_CONTAINER_COMPONENT_ID = 'items:liquid_container';`          | Critical | Registry             |
+| 29   | `const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';`          | Critical | Registry             |
 | 30   | `const DRINKABLE_COMPONENT_ID = 'items:drinkable';`                        | Critical | Registry             |
 | 31   | `const EMPTY_COMPONENT_ID = 'items:empty';`                                | Critical | Registry             |
 | 33   | `const LIQUID_CONSUMED_ENTIRELY_EVENT = 'items:liquid_consumed_entirely';` | Critical | Registry             |
@@ -387,7 +387,7 @@
 | Line | Snippet                                                           | Severity | Refactoring Approach |
 | ---- | ----------------------------------------------------------------- | -------- | -------------------- |
 | 12   | `* 6. Dispatches items:liquid_consumed event`                     | Critical | Registry             |
-| 29   | `const LIQUID_CONTAINER_COMPONENT_ID = 'items:liquid_container';` | Critical | Registry             |
+| 29   | `const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';` | Critical | Registry             |
 | 30   | `const DRINKABLE_COMPONENT_ID = 'items:drinkable';`               | Critical | Registry             |
 | 31   | `const EMPTY_COMPONENT_ID = 'items:empty';`                       | Critical | Registry             |
 | 33   | `const LIQUID_CONSUMED_EVENT = 'items:liquid_consumed';`          | Critical | Registry             |
@@ -407,9 +407,9 @@
 
 | Line | Snippet                                                    | Severity | Refactoring Approach |
 | ---- | ---------------------------------------------------------- | -------- | -------------------- |
-| 27   | `const CONTAINER_OPENED_EVENT = 'items:container_opened';` | Critical | Registry             |
+| 27   | `const CONTAINER_OPENED_EVENT = 'containers:container_opened';` | Critical | Registry             |
 | 28   | `const OPENABLE_COMPONENT_ID = 'items:openable';`          | Critical | Registry             |
-| 29   | `const CONTAINER_COMPONENT_ID = 'items:container';`        | Critical | Registry             |
+| 29   | `const CONTAINER_COMPONENT_ID = 'containers-core:container';`        | Critical | Registry             |
 | 30   | `const INVENTORY_COMPONENT_ID = 'items:inventory';`        | Critical | Registry             |
 
 ### src/logic/operationHandlers/pickUpItemFromLocationHandler.js
@@ -426,8 +426,8 @@
 | Line | Snippet                                                    | Severity | Refactoring Approach |
 | ---- | ---------------------------------------------------------- | -------- | -------------------- |
 | 28   | `const INVENTORY_COMPONENT_ID = 'items:inventory';`        | Critical | Registry             |
-| 29   | `const CONTAINER_COMPONENT_ID = 'items:container';`        | Critical | Registry             |
-| 30   | `const ITEM_PUT_EVENT = 'items:item_put_in_container';`    | Critical | Registry             |
+| 29   | `const CONTAINER_COMPONENT_ID = 'containers-core:container';`        | Critical | Registry             |
+| 30   | `const ITEM_PUT_EVENT = 'containers:item_put_in_container';`    | Critical | Registry             |
 | 253  | `items: inventoryItems.filter((id) => id !== itemEntity),` | Critical | Registry             |
 
 ### src/logic/operationHandlers/takeFromContainerHandler.js
@@ -435,8 +435,8 @@
 | Line | Snippet                                                       | Severity | Refactoring Approach |
 | ---- | ------------------------------------------------------------- | -------- | -------------------- |
 | 27   | `const INVENTORY_COMPONENT_ID = 'items:inventory';`           | Critical | Registry             |
-| 28   | `const CONTAINER_COMPONENT_ID = 'items:container';`           | Critical | Registry             |
-| 29   | `const ITEM_TAKEN_EVENT = 'items:item_taken_from_container';` | Critical | Registry             |
+| 28   | `const CONTAINER_COMPONENT_ID = 'containers-core:container';`           | Critical | Registry             |
+| 29   | `const ITEM_TAKEN_EVENT = 'containers:item_taken_from_container';` | Critical | Registry             |
 | 193  | `items: [...inventoryItems, itemEntity],`                     | Critical | Registry             |
 
 ### src/logic/operationHandlers/transferItemHandler.js
@@ -452,7 +452,7 @@
 
 | Line | Snippet                                             | Severity | Refactoring Approach |
 | ---- | --------------------------------------------------- | -------- | -------------------- |
-| 28   | `const CONTAINER_COMPONENT_ID = 'items:container';` | Critical | Registry             |
+| 28   | `const CONTAINER_COMPONENT_ID = 'containers-core:container';` | Critical | Registry             |
 | 29   | `const WEIGHT_COMPONENT_ID = 'items:weight';`       | Critical | Registry             |
 
 ### src/logic/operationHandlers/validateInventoryCapacityHandler.js

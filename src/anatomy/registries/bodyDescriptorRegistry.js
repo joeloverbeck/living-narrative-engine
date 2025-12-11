@@ -115,6 +115,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
       'lean',
       'average',
       'soft',
+      'bumpy',
       'chubby',
       'overweight',
       'obese',

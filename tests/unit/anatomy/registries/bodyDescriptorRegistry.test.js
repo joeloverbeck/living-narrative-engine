@@ -206,6 +206,7 @@ describe('bodyDescriptorRegistry', () => {
           'lean',
           'average',
           'soft',
+          'bumpy',
           'chubby',
           'overweight',
           'obese',

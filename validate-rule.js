@@ -1,7 +1,7 @@
 const Ajv = require('ajv').default;
 const ajv = new Ajv();
 const ruleSchema = require('./data/schemas/rule.schema.json');
-const rule = require('./data/mods/items/rules/handle_take_from_container.rule.json');
+const rule = require('./data/mods/containers/rules/handle_take_from_container.rule.json');
 
 const valid = ajv.validate(ruleSchema, rule);
 if (!valid) {

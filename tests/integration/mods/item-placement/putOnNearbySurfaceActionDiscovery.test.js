@@ -4,7 +4,7 @@
  * for seated actors with inventory items near furniture with open containers.
  *
  * CORRECT PATTERN: The table (nearby furniture) IS the container.
- * Items from actor's inventory can be placed INTO the table's items:container.contents.
+ * Items from actor's inventory can be placed INTO the table's containers-core:container.contents.
  * The stool's furniture:near_furniture.nearFurnitureIds points to the table.
  *
  * Primary target = table (the nearby furniture that IS a container)
@@ -82,7 +82,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -142,7 +142,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -196,7 +196,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -255,7 +255,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -300,7 +300,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -355,7 +355,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -409,7 +409,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -482,7 +482,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table1 = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -493,7 +493,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table2 = new ModEntityBuilder('table-2')
         .withName('stone table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -561,7 +561,7 @@ describe('item-placement:put_on_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['existing-item-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,

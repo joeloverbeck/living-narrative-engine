@@ -158,7 +158,7 @@ describe('first-aid:rinse_wounded_part action definition', () => {
           itemIds.forEach((itemId) => {
             const container = fixture.testEnv.entityManager.getComponentData(
               itemId,
-              'items:liquid_container'
+              'containers-core:liquid_container'
             );
             if (!container) return;
 
@@ -190,7 +190,7 @@ describe('first-aid:rinse_wounded_part action definition', () => {
 
               const container = fixture.testEnv.entityManager.getComponentData(
                 entityId,
-                'items:liquid_container'
+                'containers-core:liquid_container'
               );
               if (!container) return;
 
@@ -243,12 +243,12 @@ describe('first-aid:rinse_wounded_part action definition', () => {
 
     if (hasWater) {
       waterBuilder.withComponent(
-        'items:liquid_container',
+        'containers-core:liquid_container',
         buildWaterContainer({ currentVolumeMilliliters: waterVolume })
       );
     } else {
       waterBuilder.withComponent(
-        'items:liquid_container',
+        'containers-core:liquid_container',
         buildWaterContainer({ tags: ['saline'], currentVolumeMilliliters: 500 })
       );
     }

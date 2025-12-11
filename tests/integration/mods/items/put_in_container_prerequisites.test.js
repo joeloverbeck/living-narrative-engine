@@ -1,11 +1,11 @@
 /**
  * @jest-environment node
- * @file Integration tests for items:put_in_container action prerequisites
+ * @file Integration tests for containers:put_in_container action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
  * Tests the prerequisite `anatomy:actor-has-free-grabbing-appendage` which uses
  * the hasFreeGrabbingAppendages custom JSON Logic operator.
- * @see data/mods/items/actions/put_in_container.action.json
+ * @see data/mods/containers/actions/put_in_container.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-004-put-in-container-prerequisite.md
  */
@@ -15,7 +15,7 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
-import putInContainerAction from '../../../../data/mods/items/actions/put_in_container.action.json';
+import putInContainerAction from '../../../../data/mods/containers/actions/put_in_container.action.json';
 import actorHasFreeGrabbingCondition from '../../../../data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json';
 
 // Mock grabbingUtils to control the free appendage count
@@ -23,7 +23,7 @@ jest.mock('../../../../src/utils/grabbingUtils.js', () => ({
   countFreeGrabbingAppendages: jest.fn(),
 }));
 
-describe('items:put_in_container prerequisites', () => {
+describe('containers:put_in_container prerequisites', () => {
   let prerequisiteService;
   let jsonLogicService;
   let customOperators;
@@ -133,10 +133,10 @@ describe('items:put_in_container prerequisites', () => {
     });
 
     test('should preserve other action properties', () => {
-      expect(putInContainerAction.id).toBe('items:put_in_container');
+      expect(putInContainerAction.id).toBe('containers:put_in_container');
       expect(putInContainerAction.generateCombinations).toBe(true);
       expect(putInContainerAction.targets.primary.scope).toBe(
-        'items:open_containers_at_location'
+        'containers-core:open_containers_at_location'
       );
       expect(putInContainerAction.targets.secondary.scope).toBe(
         'items:actor_inventory_items'

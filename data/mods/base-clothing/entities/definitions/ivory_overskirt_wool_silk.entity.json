@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:ivory_overskirt_wool_silk",
+  "description": "Flowing ivory overskirt in wool-silk blend",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower",
+        "secondary": ["legs"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower", "legs"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "overskirt"
+    },
+    "core:description": {
+      "text": "A gracefully flowing overskirt in matching ivory wool-silk, designed to layer over formal attire and cascade to the floor in elegant folds. The fabric pools softly with each step, creating movement and visual interest while maintaining the cohesive ivory palette of the ensemble. Silver piping echoes the companion gown, ensuring the pieces read as a unified whole rather than separate garments."
+    },
+    "descriptors:color_extended": {
+      "color": "ivory"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "descriptors:length_category": {
+      "length": "very-long"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.55
+    }
+  }
+}

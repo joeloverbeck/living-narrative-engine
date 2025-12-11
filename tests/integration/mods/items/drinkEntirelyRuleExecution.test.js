@@ -45,7 +45,7 @@ function setupDrinkEntirelyScenario(
   const containerBuilder = new ModEntityBuilder(containerId)
     .withName(containerName)
     .atLocation(locationId)
-    .withComponent('items:liquid_container', {
+    .withComponent('containers-core:liquid_container', {
       currentVolumeMilliliters: currentVolume,
       servingSizeMilliliters: servingSize,
       flavorText,
@@ -90,7 +90,7 @@ describe('items:drink_entirely action integration', () => {
       const container =
         testFixture.entityManager.getEntityInstance('whiskey-bottle-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
 
       // Assert: Verify empty component added
@@ -177,7 +177,7 @@ describe('items:drink_entirely action integration', () => {
       // Assert: Verify all volume consumed
       const container = testFixture.entityManager.getEntityInstance('flask-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
 
       // Assert: Verify empty component added
@@ -214,7 +214,7 @@ describe('items:drink_entirely action integration', () => {
       const container =
         testFixture.entityManager.getEntityInstance('canteen-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
 
       // Assert: Verify empty component added
@@ -251,7 +251,7 @@ describe('items:drink_entirely action integration', () => {
       const container =
         testFixture.entityManager.getEntityInstance('pitcher-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
@@ -454,7 +454,7 @@ describe('items:drink_entirely action integration', () => {
 
       const container = testFixture.entityManager.getEntityInstance('vial-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
@@ -481,7 +481,7 @@ describe('items:drink_entirely action integration', () => {
 
       const container = testFixture.entityManager.getEntityInstance('barrel-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
@@ -508,7 +508,7 @@ describe('items:drink_entirely action integration', () => {
 
       const container = testFixture.entityManager.getEntityInstance('jar-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 
@@ -540,7 +540,7 @@ describe('items:drink_entirely action integration', () => {
       // Verify ALL 750ml consumed, not just 100ml (one serving)
       const container = testFixture.entityManager.getEntityInstance('jug-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:empty']).toBeDefined();
 

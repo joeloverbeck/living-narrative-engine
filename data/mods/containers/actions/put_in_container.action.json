@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "containers:put_in_container",
+  "name": "Put In Container",
+  "description": "Store an item from your inventory inside an open container",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:bending_over",
+      "positioning:fallen",
+      "positioning:restraining",
+      "positioning:sitting_on"
+    ]
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to put an item in a container."
+    }
+  ],
+  "targets": {
+    "primary": {
+      "scope": "containers-core:open_containers_at_location",
+      "placeholder": "container",
+      "description": "Container to store the item in"
+    },
+    "secondary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "item",
+      "description": "Inventory item to store"
+    }
+  },
+  "template": "put {secondary.name} in {primary.name}",
+  "visual": {
+    "backgroundColor": "#354230",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455740",
+    "hoverTextColor": "#f0f4f0"
+  }
+}

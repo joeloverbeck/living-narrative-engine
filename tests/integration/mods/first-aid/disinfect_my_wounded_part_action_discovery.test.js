@@ -61,7 +61,7 @@ describe('first-aid:disinfect_my_wounded_part action definition', () => {
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
       .withComponent(
-        'items:liquid_container',
+        'containers-core:liquid_container',
         buildLiquidContainer(
           hasDisinfectant
             ? { currentVolumeMilliliters: disinfectantVolume }

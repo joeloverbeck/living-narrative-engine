@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:toad_eye",
+  "description": "A large, bulging toad eye with horizontal pupil",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "bulging eye"
+    },
+    "core:weight": {
+      "weight": 0.02
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:shape_eye": {
+      "shape": "bulging"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

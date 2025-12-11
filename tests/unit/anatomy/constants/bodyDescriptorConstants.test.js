@@ -182,6 +182,7 @@ describe('bodyDescriptorConstants - Registry Derivation', () => {
         'lean',
         'average',
         'soft',
+        'bumpy',
         'chubby',
         'overweight',
         'obese',

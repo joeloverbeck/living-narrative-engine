@@ -32,7 +32,7 @@ describe('first-aid:handle_disinfect_my_wounded_part rule', () => {
       .withName('Antiseptic Bottle')
       .withComponent('items:item', {})
       .withComponent('items:portable', {})
-      .withComponent('items:liquid_container', buildLiquidContainer())
+      .withComponent('containers-core:liquid_container', buildLiquidContainer())
       .atLocation(ROOM_ID)
       .build();
 

@@ -4,17 +4,20 @@
  * @see src/anatomy-visualizer.js
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { CommonBootstrapper } from '../../src/bootstrapper/CommonBootstrapper.js';
 import { tokens } from '../../src/dependencyInjection/tokens.js';
 import { JSDOM } from 'jsdom';
 
 describe('Anatomy Visualizer - Bootstrap Integration', () => {
   let dom;
-  let cleanup;
+  let sharedBootstrapper;
+  let sharedContainer;
+  let sharedServices;
+  let registerVisualizerComponents;
 
-  beforeEach(() => {
-    // Setup DOM environment
+  beforeAll(async () => {
+    // Setup DOM environment once for all tests
     dom = new JSDOM(
       `
       <!DOCTYPE html>
@@ -36,12 +39,44 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
     global.window = dom.window;
     global.document = dom.window.document;
     global.navigator = dom.window.navigator;
+
+    // Pre-load the visualizer registration module
+    const visualizerModule = await import(
+      '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
+    );
+    registerVisualizerComponents = visualizerModule.registerVisualizerComponents;
+
+    // Bootstrap once for shared tests
+    sharedBootstrapper = new CommonBootstrapper();
+    const result = await sharedBootstrapper.bootstrap({
+      containerConfigType: 'minimal',
+      worldName: 'default',
+      includeAnatomyFormatting: true,
+      skipModLoading: true,
+    });
+
+    if (!result?.container || !result?.services) {
+      throw new Error(
+        'Bootstrap failed: container or services not initialized'
+      );
+    }
+
+    sharedContainer = result.container;
+    sharedServices = result.services;
+
+    // Register IDocumentContext for shared container
+    sharedContainer.register(tokens.IDocumentContext, {
+      document: global.document,
+    });
+
+    // Register visualizer components on shared container
+    registerVisualizerComponents(sharedContainer);
   });
 
-  afterEach(() => {
-    // Clean up DOM
-    if (cleanup) {
-      cleanup();
+  afterAll(() => {
+    // Clean up shared resources
+    if (sharedContainer?.cleanup) {
+      sharedContainer.cleanup();
     }
     dom.window.close();
     delete global.window;
@@ -49,48 +84,16 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
     delete global.navigator;
   });
 
-  it('should successfully register and resolve VisualizerStateController with minimal configuration', async () => {
+  it('should successfully register and resolve VisualizerStateController with minimal configuration', () => {
     // This test verifies the fix for the "No service registered for key VisualizerStateController" error
 
-    const bootstrapper = new CommonBootstrapper();
-    let resolvedVisualizerStateController = null;
-    let resolvedAnatomyDescriptionService = null;
-    let registrationsCalled = false;
-
-    const { container, services } = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      includeAnatomyFormatting: true,
-      skipModLoading: true,
-      postInitHook: async (services, container) => {
-        // Import and call registerVisualizerComponents
-        const { registerVisualizerComponents } = await import(
-          '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
-        );
-
-        // Register IDocumentContext for the test
-        container.register(tokens.IDocumentContext, {
-          document: global.document,
-        });
-
-        registrationsCalled = true;
-        registerVisualizerComponents(container);
-
-        // Try to resolve the services that anatomy-visualizer.js needs
-        resolvedAnatomyDescriptionService = container.resolve(
-          tokens.AnatomyDescriptionService
-        );
-        resolvedVisualizerStateController = container.resolve(
-          tokens.VisualizerStateController
-        );
-      },
-    });
-
-    // Store cleanup function
-    cleanup = bootstrapper.cleanup?.bind(bootstrapper);
-
-    // Assert that registrations were called
-    expect(registrationsCalled).toBe(true);
+    // Try to resolve the services that anatomy-visualizer.js needs
+    const resolvedAnatomyDescriptionService = sharedContainer.resolve(
+      tokens.AnatomyDescriptionService
+    );
+    const resolvedVisualizerStateController = sharedContainer.resolve(
+      tokens.VisualizerStateController
+    );
 
     // Assert that services were successfully resolved
     expect(resolvedAnatomyDescriptionService).toBeDefined();
@@ -110,28 +113,28 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
   });
 
   it('should fail to resolve VisualizerStateController without registerVisualizerComponents', async () => {
-    // This test verifies that without the fix, the error would occur
-
-    const bootstrapper = new CommonBootstrapper();
+    // This test requires a fresh bootstrapper to verify the negative case
+    const freshBootstrapper = new CommonBootstrapper();
     let errorThrown = null;
 
-    const { container, services } = await bootstrapper.bootstrap({
+    const { container } = await freshBootstrapper.bootstrap({
       containerConfigType: 'minimal',
       worldName: 'default',
       includeAnatomyFormatting: true,
       skipModLoading: true,
-      postInitHook: async (services, container) => {
-        // Try to resolve VisualizerStateController WITHOUT calling registerVisualizerComponents
-        try {
-          container.resolve(tokens.VisualizerStateController);
-        } catch (error) {
-          errorThrown = error;
-        }
-      },
     });
 
-    // Store cleanup function
-    cleanup = bootstrapper.cleanup?.bind(bootstrapper);
+    // Try to resolve VisualizerStateController WITHOUT calling registerVisualizerComponents
+    try {
+      container.resolve(tokens.VisualizerStateController);
+    } catch (error) {
+      errorThrown = error;
+    }
+
+    // Clean up the fresh bootstrapper
+    if (freshBootstrapper.cleanup) {
+      freshBootstrapper.cleanup();
+    }
 
     // Assert that the expected error was thrown
     expect(errorThrown).toBeDefined();
@@ -140,45 +143,20 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
     );
   });
 
-  it('should register all required visualizer dependencies', async () => {
+  it('should register all required visualizer dependencies', () => {
     // This test ensures all visualizer dependencies are properly registered
+    const resolvedServices = {};
 
-    const bootstrapper = new CommonBootstrapper();
-    let resolvedServices = {};
-
-    const { container, services } = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      includeAnatomyFormatting: true,
-      skipModLoading: true,
-      postInitHook: async (services, container) => {
-        // Import and call registerVisualizerComponents
-        const { registerVisualizerComponents } = await import(
-          '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
-        );
-
-        // Register IDocumentContext for the test
-        container.register(tokens.IDocumentContext, {
-          document: global.document,
-        });
-
-        registerVisualizerComponents(container);
-
-        // Resolve all visualizer-related services
-        resolvedServices.visualizerState = container.resolve(
-          tokens.VisualizerState
-        );
-        resolvedServices.anatomyLoadingDetector = container.resolve(
-          tokens.AnatomyLoadingDetector
-        );
-        resolvedServices.visualizerStateController = container.resolve(
-          tokens.VisualizerStateController
-        );
-      },
-    });
-
-    // Store cleanup function
-    cleanup = bootstrapper.cleanup?.bind(bootstrapper);
+    // Resolve all visualizer-related services from shared container
+    resolvedServices.visualizerState = sharedContainer.resolve(
+      tokens.VisualizerState
+    );
+    resolvedServices.anatomyLoadingDetector = sharedContainer.resolve(
+      tokens.AnatomyLoadingDetector
+    );
+    resolvedServices.visualizerStateController = sharedContainer.resolve(
+      tokens.VisualizerStateController
+    );
 
     // Assert all services are resolved
     expect(resolvedServices.visualizerState).toBeDefined();
@@ -199,68 +177,38 @@ describe('Anatomy Visualizer - Bootstrap Integration', () => {
 
   it('should create AnatomyVisualizerUI with all required dependencies', async () => {
     // This test verifies the complete initialization flow works
+    const AnatomyVisualizerUI = (
+      await import('../../src/domUI/AnatomyVisualizerUI.js')
+    ).default;
 
-    const bootstrapper = new CommonBootstrapper();
-    let anatomyVisualizerUI = null;
-    let initializationComplete = false;
+    // Get all required services from shared container
+    const { logger, registry, entityManager, eventDispatcher } = sharedServices;
+    const anatomyDescriptionService = sharedContainer.resolve(
+      tokens.AnatomyDescriptionService
+    );
+    const visualizerStateController = sharedContainer.resolve(
+      tokens.VisualizerStateController
+    );
+    const visualizationComposer = sharedContainer.resolve(
+      tokens.VisualizationComposer
+    );
 
-    const { container, services } = await bootstrapper.bootstrap({
-      containerConfigType: 'minimal',
-      worldName: 'default',
-      includeAnatomyFormatting: true,
-      skipModLoading: true,
-      postInitHook: async (services, container) => {
-        // Import required modules
-        const { registerVisualizerComponents } = await import(
-          '../../src/dependencyInjection/registrations/visualizerRegistrations.js'
-        );
-        const AnatomyVisualizerUI = (
-          await import('../../src/domUI/AnatomyVisualizerUI.js')
-        ).default;
-
-        // Register IDocumentContext for the test
-        container.register(tokens.IDocumentContext, {
-          document: global.document,
-        });
-
-        // Register visualizer components
-        registerVisualizerComponents(container);
-
-        // Get all required services
-        const { logger, registry, entityManager, eventDispatcher } = services;
-        const anatomyDescriptionService = container.resolve(
-          tokens.AnatomyDescriptionService
-        );
-        const visualizerStateController = container.resolve(
-          tokens.VisualizerStateController
-        );
-        const visualizationComposer = container.resolve(
-          tokens.VisualizationComposer
-        );
-
-        // Create UI instance
-        anatomyVisualizerUI = new AnatomyVisualizerUI({
-          logger,
-          registry,
-          entityManager,
-          anatomyDescriptionService,
-          eventDispatcher,
-          documentContext: { document: global.document },
-          visualizerStateController,
-          visualizationComposer,
-        });
-
-        // Initialize UI
-        await anatomyVisualizerUI.initialize();
-        initializationComplete = true;
-      },
+    // Create UI instance
+    const anatomyVisualizerUI = new AnatomyVisualizerUI({
+      logger,
+      registry,
+      entityManager,
+      anatomyDescriptionService,
+      eventDispatcher,
+      documentContext: { document: global.document },
+      visualizerStateController,
+      visualizationComposer,
     });
 
-    // Store cleanup function
-    cleanup = bootstrapper.cleanup?.bind(bootstrapper);
+    // Initialize UI
+    await anatomyVisualizerUI.initialize();
 
     // Assert successful initialization
     expect(anatomyVisualizerUI).toBeDefined();
-    expect(initializationComplete).toBe(true);
   });
 });

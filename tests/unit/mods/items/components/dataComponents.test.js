@@ -166,7 +166,7 @@ describe('Items - Data Components', () => {
     });
   });
 
-  describe('items:container', () => {
+  describe('containers-core:container', () => {
     it('should validate valid container data', () => {
       const data = {
         contents: ['items:gold_bar', 'items:revolver'],
@@ -175,7 +175,7 @@ describe('Items - Data Components', () => {
         requiresKey: true,
         keyItemId: 'items:brass_key',
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(true);
     });
 
@@ -184,7 +184,7 @@ describe('Items - Data Components', () => {
         contents: [],
         capacity: { maxWeight: 100, maxItems: 20 },
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(false);
     });
 
@@ -194,7 +194,7 @@ describe('Items - Data Components', () => {
         capacity: { maxWeight: 100, maxItems: 20 },
         isOpen: true,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(false);
     });
 
@@ -204,7 +204,7 @@ describe('Items - Data Components', () => {
         capacity: { maxWeight: 100, maxItems: 20 },
         isOpen: false,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(true);
     });
 
@@ -214,7 +214,7 @@ describe('Items - Data Components', () => {
         capacity: { maxWeight: -1, maxItems: 0 },
         isOpen: true,
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(false);
     });
 
@@ -225,12 +225,12 @@ describe('Items - Data Components', () => {
         isOpen: true,
         extraProperty: 'not allowed',
       };
-      const result = testBed.validateAgainstSchema(data, 'items:container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:container');
       expect(result.isValid).toBe(false);
     });
   });
 
-  describe('items:liquid_container', () => {
+  describe('containers-core:liquid_container', () => {
     const createLiquidContainerData = (overrides = {}) => ({
       currentVolumeMilliliters: 250,
       maxCapacityMilliliters: 500,
@@ -242,32 +242,32 @@ describe('Items - Data Components', () => {
 
     it('should validate valid liquid container data without tags', () => {
       const data = createLiquidContainerData();
-      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:liquid_container');
       expect(result.isValid).toBe(true);
     });
 
     it('should accept tags array of non-empty strings', () => {
       const data = createLiquidContainerData({ tags: ['disinfectant', 'antiseptic'] });
-      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:liquid_container');
       expect(result.isValid).toBe(true);
     });
 
     it('should accept an empty tags array', () => {
       const data = createLiquidContainerData({ tags: [] });
-      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:liquid_container');
       expect(result.isValid).toBe(true);
     });
 
     it('should reject tags with non-string entries', () => {
       const data = createLiquidContainerData({ tags: ['disinfectant', 42] });
-      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:liquid_container');
       expect(result.isValid).toBe(false);
     });
 
     it('should still require existing fields', () => {
       const data = createLiquidContainerData();
       delete data.servingSizeMilliliters;
-      const result = testBed.validateAgainstSchema(data, 'items:liquid_container');
+      const result = testBed.validateAgainstSchema(data, 'containers-core:liquid_container');
       expect(result.isValid).toBe(false);
     });
   });

@@ -32,7 +32,7 @@ const flushMicrotasks = async (cycles = 5) => {
 
 const waitForCondition = async (
   checkFn,
-  { timeout = 30000, interval = 50 } = {}
+  { timeout = 30000, interval = 25 } = {}
 ) => {
   const start = Date.now();
   while (true) {
@@ -301,7 +301,10 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
       .mockImplementation(async function wrappedBootstrap(config) {
-        const result = await originalBootstrap.call(this, config);
+        const result = await originalBootstrap.call(this, {
+          ...config,
+          includeModLoading: false,
+        });
         const originalResolve = result.container.resolve.bind(result.container);
         const llmAdapter = await originalResolve(tokens.LLMAdapter);
         jest.spyOn(llmAdapter, 'getCurrentActiveLlmId').mockResolvedValue(null);
@@ -327,7 +330,10 @@ describe('traits-rewriter-main entrypoint (integration)', () => {
     bootstrapSpy = jest
       .spyOn(CharacterBuilderBootstrap.prototype, 'bootstrap')
       .mockImplementation(async function wrappedBootstrap(config) {
-        const result = await originalBootstrap.call(this, config);
+        const result = await originalBootstrap.call(this, {
+          ...config,
+          includeModLoading: false,
+        });
         const originalResolve = result.container.resolve.bind(result.container);
         result.container.resolve = (token) => {
           if (token === tokens.LLMAdapter) {

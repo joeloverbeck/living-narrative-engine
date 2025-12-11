@@ -93,7 +93,7 @@ describe('Target Required Components Validation - Integration', () => {
     const item2Def = new EntityDefinition('test:item2', {
       description: 'Container without portable',
       components: {
-        'items:container': { capacity: 10 },
+        'containers-core:container': { capacity: 10 },
       },
     });
 

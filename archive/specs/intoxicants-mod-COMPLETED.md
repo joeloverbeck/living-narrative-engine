@@ -65,7 +65,7 @@ data/mods/intoxicants/
       "weight": 1.2
     },
     "items:drinkable": {},
-    "items:liquid_container": {
+    "containers-core:liquid_container": {
       "currentVolumeMilliliters": 1000,
       "maxCapacityMilliliters": 1000,
       "servingSizeMilliliters": 200,
@@ -105,7 +105,7 @@ data/mods/intoxicants/
       "weight": 1.2
     },
     "items:drinkable": {},
-    "items:liquid_container": {
+    "containers-core:liquid_container": {
       "currentVolumeMilliliters": 1000,
       "maxCapacityMilliliters": 1000,
       "servingSizeMilliliters": 200,
@@ -145,7 +145,7 @@ data/mods/intoxicants/
       "weight": 1.3
     },
     "items:drinkable": {},
-    "items:liquid_container": {
+    "containers-core:liquid_container": {
       "currentVolumeMilliliters": 1000,
       "maxCapacityMilliliters": 1000,
       "servingSizeMilliliters": 200,

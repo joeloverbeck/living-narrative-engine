@@ -2,7 +2,7 @@
  * @jest-environment node
  * @file Integration tests for take_from_container action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
- * @see data/mods/items/actions/take_from_container.action.json
+ * @see data/mods/containers/actions/take_from_container.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREFORACT-008-items-mod-tests.md
  */
@@ -12,7 +12,7 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import JsonLogicCustomOperators from '../../../../src/logic/jsonLogicCustomOperators.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
-import takeFromContainerAction from '../../../../data/mods/items/actions/take_from_container.action.json';
+import takeFromContainerAction from '../../../../data/mods/containers/actions/take_from_container.action.json';
 import actorHasFreeGrabbingCondition from '../../../../data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json';
 
 // Mock grabbingUtils to control the free appendage count
@@ -20,7 +20,7 @@ jest.mock('../../../../src/utils/grabbingUtils.js', () => ({
   countFreeGrabbingAppendages: jest.fn(),
 }));
 
-describe('items:take_from_container prerequisites', () => {
+describe('containers:take_from_container prerequisites', () => {
   let prerequisiteService;
   let jsonLogicService;
   let customOperators;
@@ -130,7 +130,7 @@ describe('items:take_from_container prerequisites', () => {
     });
 
     test('should preserve other action properties', () => {
-      expect(takeFromContainerAction.id).toBe('items:take_from_container');
+      expect(takeFromContainerAction.id).toBe('containers:take_from_container');
       expect(takeFromContainerAction.template).toBe(
         'take {secondary.name} from {primary.name}'
       );

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:take_from_container action and rule.
+ * @file Integration tests for the containers:take_from_container action and rule.
  * @description Tests the rule execution after the take_from_container action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -8,8 +8,8 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
-import eventIsActionTakeFromContainer from '../../../../data/mods/items/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import eventIsActionTakeFromContainer from '../../../../data/mods/containers/conditions/event-is-action-take-from-container.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standardized take from container scenario with actor, location, container, and items.
@@ -49,7 +49,7 @@ function setupTakeFromContainerScenario(
   const container = new ModEntityBuilder(containerId)
     .withName('Treasure Chest')
     .atLocation(locationId)
-    .withComponent('items:container', {
+    .withComponent('containers-core:container', {
       contents: containerContents,
       capacity: { maxWeight: 100, maxItems: 20 },
       isOpen,
@@ -70,13 +70,13 @@ function setupTakeFromContainerScenario(
   return { room, actor, container, items: itemEntities };
 }
 
-describe('items:take_from_container action integration', () => {
+describe('containers:take_from_container action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:take_from_container',
+      'containers',
+      'containers:take_from_container',
       takeFromContainerRule,
       eventIsActionTakeFromContainer
     );
@@ -119,7 +119,7 @@ describe('items:take_from_container action integration', () => {
 
       // Assert: Verify item removed from container
       const container = testFixture.entityManager.getEntityInstance('chest-1');
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].contents).toEqual([
         'letter-1',
       ]);
 
@@ -165,7 +165,7 @@ describe('items:take_from_container action integration', () => {
 
       // Find the item_taken_from_container event
       const takenEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:item_taken_from_container'
+        (e) => e.eventType === 'containers:item_taken_from_container'
       );
       expect(takenEvent).toBeDefined();
       expect(takenEvent.payload.actorEntity).toBe('test:actor1');
@@ -195,7 +195,7 @@ describe('items:take_from_container action integration', () => {
 
       // Verify container now empty
       const container = testFixture.entityManager.getEntityInstance('box-1');
-      expect(container.components['items:container'].contents).toEqual([]);
+      expect(container.components['containers-core:container'].contents).toEqual([]);
 
       // Verify item in actor inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -236,7 +236,7 @@ describe('items:take_from_container action integration', () => {
 
       // Verify container has only one item left
       const container = testFixture.entityManager.getEntityInstance('trunk-1');
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].contents).toEqual([
         'emerald-1',
       ]);
     });
@@ -268,7 +268,7 @@ describe('items:take_from_container action integration', () => {
 
       // Verify item NOT removed from container
       const container = testFixture.entityManager.getEntityInstance('chest-2');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'sword-1'
       );
 
@@ -340,7 +340,7 @@ describe('items:take_from_container action integration', () => {
       // Verify item NOT removed from container
       const container =
         testFixture.entityManager.getEntityInstance('locked-chest');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'book-1'
       );
 
@@ -371,7 +371,7 @@ describe('items:take_from_container action integration', () => {
 
       // Verify container unchanged
       const container = testFixture.entityManager.getEntityInstance('crate-1');
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].contents).toEqual([
         'diary-1',
       ]);
 
@@ -510,11 +510,11 @@ describe('items:take_from_container action integration', () => {
 
       // Verify all components intact
       expect(container.components['items:openable']).toBeDefined();
-      expect(container.components['items:container']).toBeDefined();
+      expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
 
       // Verify open state preserved
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
     });
 
     it('handles multiple actors taking from same container', async () => {
@@ -545,7 +545,7 @@ describe('items:take_from_container action integration', () => {
       const sharedContainer = new ModEntityBuilder('supply-crate')
         .withName('Supply Crate')
         .atLocation('town-square')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1', 'bread-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -596,7 +596,7 @@ describe('items:take_from_container action integration', () => {
       // Verify container now empty
       const containerAfter =
         testFixture.entityManager.getEntityInstance('supply-crate');
-      expect(containerAfter.components['items:container'].contents).toEqual([]);
+      expect(containerAfter.components['containers-core:container'].contents).toEqual([]);
     });
   });
 
@@ -627,7 +627,7 @@ describe('items:take_from_container action integration', () => {
 
       const container =
         testFixture.entityManager.getEntityInstance('display-case');
-      expect(container.components['items:container'].contents).not.toContain(
+      expect(container.components['containers-core:container'].contents).not.toContain(
         'artifact-1'
       );
     });
@@ -650,8 +650,8 @@ describe('items:take_from_container action integration', () => {
       // First open the container (manually set for this test)
       const container =
         testFixture.entityManager.getEntityInstance('sealed-box');
-      testFixture.entityManager.addComponent('sealed-box', 'items:container', {
-        ...container.components['items:container'],
+      testFixture.entityManager.addComponent('sealed-box', 'containers-core:container', {
+        ...container.components['containers-core:container'],
         isOpen: true,
       });
 

@@ -18,7 +18,7 @@ describe('OPEN_CONTAINER Rule Validation Integration', () => {
   let ruleData;
   const rulePath = join(
     process.cwd(),
-    'data/mods/items/rules/handle_open_container.rule.json'
+    'data/mods/containers/rules/handle_open_container.rule.json'
   );
 
   beforeEach(() => {

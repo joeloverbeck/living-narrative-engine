@@ -66,7 +66,7 @@ GRAPREFORACT-004 (items actions) ──────────► GRAPREFORACT-
 | `data/mods/items/actions/drink_entirely.action.json`                | Populate empty prerequisites         | 1          |
 | `data/mods/items/actions/drink_from.action.json`                    | Populate empty prerequisites         | 1          |
 | `data/mods/items/actions/pick_up_item.action.json`                  | Populate empty prerequisites         | 1          |
-| `data/mods/items/actions/take_from_container.action.json`           | **Add** prerequisites key            | 1          |
+| `data/mods/containers/actions/take_from_container.action.json`           | **Add** prerequisites key            | 1          |
 
 ### Files Created (9 test files)
 

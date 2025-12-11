@@ -123,6 +123,15 @@ describe('Action Formatting with Metadata - Integration', () => {
       'Picking up items from the environment or dropping items from inventory onto the ground.',
   };
 
+  const containersManifest = {
+    id: 'containers',
+    version: '1.0.0',
+    name: 'Containers',
+    actionPurpose: 'Open containers, store items, and retrieve them from storage.',
+    actionConsiderWhen:
+      'Interacting with storage furniture or chests, organizing inventory, or managing locked containers.',
+  };
+
   beforeEach(() => {
     mockLogger = createMockLogger();
     mockDataRegistry = createMockDataRegistry({
@@ -130,6 +139,7 @@ describe('Action Formatting with Metadata - Integration', () => {
       items: itemsManifest,
       core: coreManifest,
       'item-handling': itemHandlingManifest,
+      containers: containersManifest,
     });
 
     // Create real ModActionMetadataProvider with mocked registry
@@ -272,18 +282,16 @@ describe('Action Formatting with Metadata - Integration', () => {
       expect(corePurposeLine).toBeUndefined();
     });
 
-    it('should include items mod metadata when items actions are present', () => {
-      // Note: drop_item and pick_up_item migrated to item-handling mod.
-      // This test uses items mod's container actions which remained in items.
-      const itemsActions = [
-        {
-          actionId: 'items:take_from_container',
-          commandString: 'take gem from chest',
+  it('should include containers mod metadata when container actions are present', () => {
+    const itemsActions = [
+      {
+        actionId: 'containers:take_from_container',
+        commandString: 'take gem from chest',
           description: 'Take item from container',
           index: 0,
         },
         {
-          actionId: 'items:open_container',
+          actionId: 'containers:open_container',
           commandString: 'open chest',
           description: 'Open container',
           index: 1,
@@ -293,9 +301,13 @@ describe('Action Formatting with Metadata - Integration', () => {
       const result =
         aiPromptContentProvider._formatCategorizedActions(itemsActions);
 
-      expect(result).toContain('ITEMS Actions');
-      expect(result).toContain('Interact with objects');
-      expect(result).toContain('Managing inventory');
+      expect(result).toContain('CONTAINERS Actions');
+      expect(result).toContain(
+        'Open containers, store items, and retrieve them from storage.'
+      );
+      expect(result).toContain(
+        'Interacting with storage furniture or chests, organizing inventory, or managing locked containers.'
+      );
     });
   });
 
@@ -516,9 +528,9 @@ describe('Action Formatting with Metadata - Integration', () => {
           description: 'Pick up the book',
           index: 2,
         },
-        // Items actions (container actions remain in items mod)
+        // Containers actions (container actions moved to containers mod)
         {
-          actionId: 'items:take_from_container',
+          actionId: 'containers:take_from_container',
           commandString: 'take gem from chest',
           description: 'Take item from container',
           index: 3,
@@ -538,13 +550,15 @@ describe('Action Formatting with Metadata - Integration', () => {
       // Verify all sections are present
       expect(result).toContain('POSITIONING Actions');
       expect(result).toContain('ITEM-HANDLING Actions');
-      expect(result).toContain('ITEMS Actions');
+      expect(result).toContain('CONTAINERS Actions');
       expect(result).toContain('CORE Actions');
 
       // Verify metadata is shown for mods that have it
       expect(result).toContain('Change body position'); // positioning purpose
       expect(result).toContain('Manage how items are acquired'); // item-handling purpose
-      expect(result).toContain('Interact with objects'); // items purpose
+      expect(result).toContain(
+        'Open containers, store items, and retrieve them from storage.'
+      ); // containers purpose
 
       // Verify action details are preserved
       expect(result).toContain('sit on couch');

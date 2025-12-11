@@ -19,13 +19,13 @@ Add a non-chance-based first-aid action/rule that lets an actor disinfect anothe
 - Targets/scopes:
   - Primary `target`: `core:actors_in_location`
   - Secondary `woundedBodyPart`: `first-aid:wounded_actor_body_parts` with `contextFrom: "primary"` so we scope parts on the selected `target`.
-  - Tertiary `disinfectant`: new scope that returns items in the actor’s inventory whose `items:liquid_container.tags` includes `"disinfectant"` and `currentVolumeMilliliters > 0` (see Scope section).
+  - Tertiary `disinfectant`: new scope that returns items in the actor’s inventory whose `containers-core:liquid_container.tags` includes `"disinfectant"` and `currentVolumeMilliliters > 0` (see Scope section).
 - generateCombinations: true (match body-part target pattern in `peck_target` to surface all valid tuples).
 
 ## Scope: disinfectant inventory items
 - Add `data/mods/items/scopes/disinfectant_liquids_in_inventory.scope` (or similar name) that:
   - Starts from `actor.components.items:inventory.items[]`
-  - Filters for entities with an `items:liquid_container` component whose `tags` array contains `"disinfectant"` and `currentVolumeMilliliters > 0`.
+  - Filters for entities with an `containers-core:liquid_container` component whose `tags` array contains `"disinfectant"` and `currentVolumeMilliliters > 0`.
   - Emits the item entity IDs (mirror patterns from `actor_inventory_items.scope` and other filter scopes).
 
 ## Component & schema changes
@@ -44,7 +44,7 @@ Add a non-chance-based first-aid action/rule that lets an actor disinfect anothe
   - End turn/advance time according to existing first-aid cadence (follow patterns used in other healing/recovery rules).
 
 ## Entities / content updates
-- Tag at least one disinfectant-carrying item so the action is discoverable (e.g., create `data/mods/first-aid/entities/definitions/antiseptic_bottle.entity.json` with `items:liquid_container.tags: ["disinfectant"]` and required volume fields). Update any existing relevant items similarly.
+- Tag at least one disinfectant-carrying item so the action is discoverable (e.g., create `data/mods/first-aid/entities/definitions/antiseptic_bottle.entity.json` with `containers-core:liquid_container.tags: ["disinfectant"]` and required volume fields). Update any existing relevant items similarly.
 - Ensure manifest wiring includes new action/rule/condition/components if needed.
 
 ## Tests

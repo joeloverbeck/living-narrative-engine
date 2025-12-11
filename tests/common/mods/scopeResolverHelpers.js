@@ -964,11 +964,11 @@ export class ScopeResolverHelpers {
       ),
 
       // "containers at location"
-      'items:containers_at_location': this.createLocationMatchResolver(
-        'items:containers_at_location',
+      'containers-core:containers_at_location': this.createLocationMatchResolver(
+        'containers-core:containers_at_location',
         {
           filterFn: (entityId, source, context, em) => {
-            return em.hasComponent(entityId, 'items:container');
+            return em.hasComponent(entityId, 'containers-core:container');
           },
         }
       ),

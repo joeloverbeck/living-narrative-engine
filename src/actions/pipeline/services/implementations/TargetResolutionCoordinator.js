@@ -589,7 +589,7 @@ export default class TargetResolutionCoordinator {
         scope,
         resolutionContext,
         {
-          // FIX: Disable caching for context-dependent scopes (e.g., items:container_contents)
+          // FIX: Disable caching for context-dependent scopes (e.g., containers-core:container_contents)
           // The cache key doesn't include context.target, so scopes that depend on the specific
           // primary target would incorrectly return cached results from a different primary.
           // This bug caused "take X from Y" actions to generate for items from the wrong container.

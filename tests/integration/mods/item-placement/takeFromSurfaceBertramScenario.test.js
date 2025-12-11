@@ -4,7 +4,7 @@
  * with jugs on it. The table IS the container (not a bowl on the table).
  *
  * CORRECT UNDERSTANDING:
- * - Table has items:container component with jugs in contents
+ * - Table has containers-core:container component with jugs in contents
  * - Stool has furniture:near_furniture pointing to table
  * - Table IS the primary target (the container to take FROM)
  * - Jugs ARE the secondary targets (items to take)
@@ -57,7 +57,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [
             'fantasy:jug_of_cider_instance',
             'fantasy:jug_of_mead_instance',
@@ -165,7 +165,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -227,7 +227,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -294,7 +294,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false, // CLOSED
@@ -360,7 +360,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [], // EMPTY
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -423,7 +423,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -517,7 +517,7 @@ describe('Bertram scenario: take_from_nearby_surface', () => {
       )
         .withName('rustic wooden table')
         .atLocation('fantasy:aldous_kitchen') // Kitchen
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['fantasy:jug_of_cider_instance'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,

@@ -20,7 +20,7 @@
       "description": "Container on nearby furniture to take from"
     },
     "secondary": {
-      "scope": "items:container_contents",
+      "scope": "containers-core:container_contents",
       "placeholder": "item",
       "description": "Item to take",
       "contextFrom": "primary"
