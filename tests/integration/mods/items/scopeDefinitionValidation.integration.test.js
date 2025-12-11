@@ -8,10 +8,10 @@ import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
-describe('container_contents Scope Definition Validation', () => {
+describe('containers-core:container_contents Scope Definition Validation', () => {
   const scopePath = path.join(
     process.cwd(),
-    'data/mods/items/scopes/container_contents.scope'
+    'data/mods/containers-core/scopes/container_contents.scope'
   );
 
   it('should have container_contents.scope file', () => {
@@ -25,14 +25,14 @@ describe('container_contents Scope Definition Validation', () => {
     expect(scopeContent).toContain(':=');
 
     // Must follow pattern: scopeName := dslExpression
-    const scopePattern = /^[a-zA-Z_][a-zA-Z0-9_:]*\s*:=\s*.+$/;
+    const scopePattern = /^[a-zA-Z_][a-zA-Z0-9_:-]*\s*:=\s*.+$/;
     expect(scopeContent).toMatch(scopePattern);
 
     // Must start with namespaced scope name
-    expect(scopeContent).toMatch(/^items:container_contents\s*:=/);
+    expect(scopeContent).toMatch(/^containers-core:container_contents\s*:=/);
 
     // Must include the DSL expression for container contents
-    expect(scopeContent).toContain('target.items:container.contents[]');
+    expect(scopeContent).toContain('target.containers-core:container.contents[]');
   });
 
   it('should have correct scope name and DSL expression', () => {
@@ -45,11 +45,11 @@ describe('container_contents Scope Definition Validation', () => {
     const scopeName = parts[0].trim();
     const dslExpression = parts[1].trim();
 
-    expect(scopeName).toBe('items:container_contents');
-    expect(dslExpression).toBe('target.items:container.contents[]');
+    expect(scopeName).toBe('containers-core:container_contents');
+    expect(dslExpression).toBe('target.containers-core:container.contents[]');
   });
 
-  it('should follow the same pattern as other item scopes', () => {
+  it('should follow the same pattern as other scope definitions', () => {
     // Compare with actor_inventory_items.scope which we know is correct
     const referenceScopePath = path.join(
       process.cwd(),
@@ -64,18 +64,18 @@ describe('container_contents Scope Definition Validation', () => {
     expect(targetContent).toContain(':=');
 
     // Both should follow same pattern
-    const scopePattern = /^[a-zA-Z_][a-zA-Z0-9_:]*\s*:=\s*.+$/;
+    const scopePattern = /^[a-zA-Z_][a-zA-Z0-9_:-]*\s*:=\s*.+$/;
     expect(referenceContent).toMatch(scopePattern);
     expect(targetContent).toMatch(scopePattern);
 
-    // Both should be namespaced with 'items:'
+    // Namespaces should be applied consistently
     expect(referenceContent).toMatch(/^items:/);
-    expect(targetContent).toMatch(/^items:/);
+    expect(targetContent).toMatch(/^containers-core:/);
   });
 
   it('should reject invalid scope format (no := operator)', () => {
     // Test that validates the error condition we fixed
-    const invalidScopeContent = 'target.items:container.contents[]';
+    const invalidScopeContent = 'target.containers-core:container.contents[]';
 
     // This should NOT match the scope pattern
     const scopePattern = /^[a-zA-Z_][a-zA-Z0-9_:]*\s*:=\s*.+$/;

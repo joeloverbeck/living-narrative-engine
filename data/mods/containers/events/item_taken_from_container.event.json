@@ -1,0 +1,23 @@
+{
+  "$schema": "schema://living-narrative-engine/event.schema.json",
+  "id": "containers:item_taken_from_container",
+  "description": "Dispatched when an item is taken from a container",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "actorEntity": {
+        "type": "string",
+        "description": "Actor who took the item"
+      },
+      "containerEntity": {
+        "type": "string",
+        "description": "Container the item was taken from"
+      },
+      "itemEntity": {
+        "type": "string",
+        "description": "Item that was taken"
+      }
+    },
+    "required": ["actorEntity", "containerEntity", "itemEntity"]
+  }
+}

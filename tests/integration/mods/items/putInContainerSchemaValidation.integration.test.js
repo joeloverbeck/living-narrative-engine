@@ -14,7 +14,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'conditions',
         'event-is-action-put-in-container.condition.json'
       );
@@ -30,7 +30,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'conditions',
         'event-is-action-put-in-container.condition.json'
       );
@@ -38,7 +38,7 @@ describe('Put In Container Schema Validation', () => {
 
       expect(conditionData.logic).toHaveProperty('==');
       expect(Array.isArray(conditionData.logic['=='])).toBe(true);
-      expect(conditionData.logic['=='][1]).toBe('items:put_in_container');
+      expect(conditionData.logic['=='][1]).toBe('containers:put_in_container');
     });
 
     it('should have required schema fields', () => {
@@ -46,7 +46,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'conditions',
         'event-is-action-put-in-container.condition.json'
       );
@@ -54,7 +54,7 @@ describe('Put In Container Schema Validation', () => {
 
       expect(conditionData).toHaveProperty('id');
       expect(conditionData).toHaveProperty('description');
-      expect(conditionData.id).toBe('items:event-is-action-put-in-container');
+      expect(conditionData.id).toBe('containers:event-is-action-put-in-container');
     });
   });
 
@@ -64,7 +64,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'rules',
         'handle_put_in_container.rule.json'
       );
@@ -92,7 +92,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'rules',
         'handle_put_in_container.rule.json'
       );
@@ -114,7 +114,7 @@ describe('Put In Container Schema Validation', () => {
         process.cwd(),
         'data',
         'mods',
-        'items',
+        'containers',
         'rules',
         'handle_put_in_container.rule.json'
       );

@@ -24,7 +24,7 @@ describe('MultiTargetActionFormatter - dot notation placeholders', () => {
 
   it('resolves primary target name placeholders', () => {
     const actionDef = {
-      id: 'items:open_container',
+      id: 'containers:open_container',
       template: 'Open {primary.name}',
     };
 
@@ -55,7 +55,7 @@ describe('MultiTargetActionFormatter - dot notation placeholders', () => {
 
   it('resolves multi-target combinations with dot notation placeholders', () => {
     const actionDef = {
-      id: 'items:take_from_container',
+      id: 'containers:take_from_container',
       template: 'take {secondary.name} from {primary.name}',
       generateCombinations: true,
     };
@@ -97,7 +97,7 @@ describe('MultiTargetActionFormatter - dot notation placeholders', () => {
 
   it('falls back to target id when template requests it explicitly', () => {
     const actionDef = {
-      id: 'items:put_in_container',
+      id: 'containers:put_in_container',
       template: 'Put {secondary.id} in {primary.name}',
       generateCombinations: true,
     };

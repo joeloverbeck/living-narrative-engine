@@ -87,7 +87,7 @@ function setupPutOnSurfaceScenario({
   const container = new ModEntityBuilder(containerId)
     .withName('Wooden Bowl')
     .atLocation(locationId)
-    .withComponent('items:container', {
+    .withComponent('containers-core:container', {
       contents: containerContents,
       capacity: { maxWeight: containerMaxWeight, maxItems: containerMaxItems },
       isOpen,
@@ -156,7 +156,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Assert: Verify item added to container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'apple-1'
       );
 
@@ -243,7 +243,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify item in container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'coin-1'
       );
     });
@@ -270,7 +270,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
         },
       });
       let container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'diamond-1'
       );
 
@@ -281,7 +281,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
         },
       });
       container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'ruby-1'
       );
 
@@ -314,13 +314,13 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify all items in container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'existing-1'
       );
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'existing-2'
       );
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'new-item-1'
       );
     });
@@ -352,7 +352,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify item NOT added to container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).not.toContain(
+      expect(container.components['containers-core:container'].contents).not.toContain(
         'sword-1'
       );
 
@@ -393,7 +393,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify successful put
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toContain(
+      expect(container.components['containers-core:container'].contents).toContain(
         'potion-1'
       );
     });
@@ -424,7 +424,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify item NOT added to container
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).not.toContain(
+      expect(container.components['containers-core:container'].contents).not.toContain(
         'book-1'
       );
 
@@ -456,7 +456,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify container unchanged
       const container = testFixture.entityManager.getEntityInstance('bowl-1');
-      expect(container.components['items:container'].contents).toEqual([]);
+      expect(container.components['containers-core:container'].contents).toEqual([]);
 
       // Verify original item still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
@@ -686,7 +686,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
       const sharedBowl = new ModEntityBuilder('shared-bowl')
         .withName('Shared Bowl')
         .atLocation('inn')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 20, maxItems: 10 },
           isOpen: true,
@@ -734,10 +734,10 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
       // Verify container has both items
       const containerAfter =
         testFixture.entityManager.getEntityInstance('shared-bowl');
-      expect(containerAfter.components['items:container'].contents).toContain(
+      expect(containerAfter.components['containers-core:container'].contents).toContain(
         'apple-1'
       );
-      expect(containerAfter.components['items:container'].contents).toContain(
+      expect(containerAfter.components['containers-core:container'].contents).toContain(
         'bread-1'
       );
     });
@@ -768,12 +768,12 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       // Verify all components intact
       expect(container.components['items:openable']).toBeDefined();
-      expect(container.components['items:container']).toBeDefined();
+      expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
       expect(container.components['furniture:on_furniture']).toBeDefined();
 
       // Verify open state preserved
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
     });
   });
 });

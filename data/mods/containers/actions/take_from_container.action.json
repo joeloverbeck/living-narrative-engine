@@ -1,0 +1,45 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "containers:take_from_container",
+  "name": "Take From Container",
+  "description": "Take an item from an open container",
+  "generateCombinations": true,
+  "required_components": {
+    "actor": ["items:inventory"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:sitting_on",
+      "positioning:fallen",
+      "positioning:restraining"
+    ]
+  },
+  "targets": {
+    "primary": {
+      "scope": "containers-core:open_containers_at_location",
+      "placeholder": "container",
+      "description": "Container to take from"
+    },
+    "secondary": {
+      "scope": "containers-core:container_contents",
+      "placeholder": "item",
+      "description": "Item to take",
+      "contextFrom": "primary"
+    }
+  },
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
+      },
+      "failure_message": "You need a free hand to take items from the container."
+    }
+  ],
+  "template": "take {secondary.name} from {primary.name}",
+  "visual": {
+    "backgroundColor": "#354230",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455740",
+    "hoverTextColor": "#f0f4f0"
+  }
+}

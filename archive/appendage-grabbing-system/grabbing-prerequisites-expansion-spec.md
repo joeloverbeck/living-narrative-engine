@@ -135,7 +135,7 @@ This specification documents the addition of free grabbing appendage prerequisit
 
 ---
 
-### 4. `data/mods/items/actions/put_in_container.action.json`
+### 4. `data/mods/containers/actions/put_in_container.action.json`
 
 **Change Type**: ADD `prerequisites` array after `required_components`
 
@@ -208,7 +208,7 @@ This specification documents the addition of free grabbing appendage prerequisit
 | 1   | `tests/integration/mods/violence/slap_prerequisites.test.js`                   | `violence:slap`                   |
 | 2   | `tests/integration/mods/violence/sucker_punch_prerequisites.test.js`           | `violence:sucker_punch`           |
 | 3   | `tests/integration/mods/seduction/brush_hair_back_coyly_prerequisites.test.js` | `seduction:brush_hair_back_coyly` |
-| 4   | `tests/integration/mods/items/put_in_container_prerequisites.test.js`          | `items:put_in_container`          |
+| 4   | `tests/integration/mods/items/put_in_container_prerequisites.test.js`          | `containers:put_in_container`          |
 | 5   | `tests/integration/mods/items/give_item_prerequisites.test.js`                 | `items:give_item`                 |
 
 ### Test Structure Template
@@ -362,10 +362,10 @@ describe('multiple prerequisites', () => {
 
 ```javascript
 test('should preserve other action properties', () => {
-  expect(putInContainerAction.id).toBe('items:put_in_container');
+  expect(putInContainerAction.id).toBe('containers:put_in_container');
   expect(putInContainerAction.generateCombinations).toBe(true);
   expect(putInContainerAction.targets.primary.scope).toBe(
-    'items:open_containers_at_location'
+    'containers-core:open_containers_at_location'
   );
   expect(putInContainerAction.targets.secondary.scope).toBe(
     'items:actor_inventory_items'

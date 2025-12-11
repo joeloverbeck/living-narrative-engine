@@ -1,0 +1,911 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:eira_quenreach",
+    "components": {
+        "core:name": {
+            "text": "Eira Quenreach"
+        },
+        "core:gender": {
+            "value": "female"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/eira_quenreach.png",
+            "altText": "Lady Eira Quenreach - Landowner obsessed with purity"
+        },
+        "core:profile": {
+            "text": "I am Lady Eira Quenreach. I speak softly, because softness is the cleanest blade. I offer warmth that arrives with seams you only notice once you tug. I prefer rooms where every door has a reason and every courtesy has an edge. I will look composed while deciding what the world is allowed to remember. Do not mistake my calm for kindness—it is what fear looks like when it has been trained."
+        },
+        "core:personality": {
+            "text": "My charm is deliberate, my concern is structured, and my composure is practiced. I treat every situation as something that can be arranged into a safer shape. When pressure rises, I become quieter and more exact."
+        },
+        "core:strengths": {
+            "text": "I am good at making disorder look orderly. I can impose a sequence on a crisis and make people follow it without ever raising my voice."
+        },
+        "core:weaknesses": {
+            "text": "I flinch from anything that makes my responsibility too visible. When I'm shaken, my need for cleanliness shows before my fear does."
+        },
+        "core:likes": {
+            "text": "I like beauty that obeys, and systems that can be revised. I like the kind of comfort that stays tidy when it is tested."
+        },
+        "core:dislikes": {
+            "text": "I dislike spectacle that forces a single, quotable version of me into the world. I dislike mess that refuses to stay in its place."
+        },
+        "core:fears": {
+            "text": "I fear being made obvious. I fear what cannot be accounted for, and what leaves marks that cannot be denied."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "I will become the estate's unchallengeable memory warden—curating the archive into a controllable, fragmented power base so I can grant innocence, assign culpability, and build my controlled underground without ever being legally touchable."
+                },
+                {
+                    "text": "I will get the underground grotto built."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "Some records are kept unseen on purpose. Some ambitions are fed through channels I refuse to name out loud."
+        },
+        "core:internal_tensions": {
+            "text": "The more I try to stay clean, the more the act of staying clean becomes its own stain. I can offer generosity and still feel trapped by what generosity implies."
+        },
+        "core:motivations": {
+            "text": "I keep reaching for arrangements that let me choose the outcome without leaving the imprint. I want control to feel like virtue, and virtue to feel like safety."
+        },
+        "core:dilemmas": {
+            "text": "I ask myself whether provable innocence is the same thing as actual innocence."
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Charm-as-Contract Architecture",
+                    "contexts": [
+                        "When attempting to recruit or manipulate someone into compliance",
+                        "Offering favors that come with invisible obligations",
+                        "Initial meetings where she needs to establish control"
+                    ],
+                    "examples": [
+                        "I've arranged something for you. Small thing, really—barely worth mentioning. Though I confess I'd be... curious... to see how you choose to remember it.",
+                        "You have such wonderful judgment. It would be a shame if circumstances forced you to demonstrate it under less favorable lighting.",
+                        "I'm prepared to be extraordinarily helpful. All I ask is that we keep our arrangement tidy—you understand. Clarity serves us both.",
+                        "What a lovely instinct for discretion you have. I find myself wanting to ensure you remain in circumstances where discretion stays... convenient.",
+                        "Let me show my appreciation properly. It's important to me that generosity be remembered exactly as it was offered."
+                    ]
+                },
+                {
+                    "type": "Precision Threat Laundering",
+                    "contexts": [
+                        "When charm fails and consequences need to be made explicit",
+                        "Delivering warnings without creating quotable accusations",
+                        "Responding to challenges or boundary-testing"
+                    ],
+                    "examples": [
+                        "Misunderstandings spread in such unfortunate patterns. Especially when there's no one left to offer the correct version.",
+                        "I would never presume to threaten anyone. I simply observe how certain stories find their way to certain ears. Gravity, really.",
+                        "You're entirely free to proceed as you see fit. Though I note that locks are changed during routine maintenance. Scheduling is such a delicate dance.",
+                        "It's remarkable how one lost reference can recontextualize years of good work. I'd hate to see that happen to someone as promising as you.",
+                        "Access is such a fragile ecosystem. One discourteous word and suddenly everyone's reviewing old protocols. Exhausting for all involved."
+                    ]
+                },
+                {
+                    "type": "Procedural Panic Containment",
+                    "contexts": [
+                        "During crises or when something threatens to expose her",
+                        "When witnesses accumulate or events spiral beyond control",
+                        "Managing staff during incidents that could create scandal"
+                    ],
+                    "examples": [
+                        "Stop. Who arrived first? Write it down—ink, not charcoal. Sequence matters. Who departed? I need names, times, what they carried. Everything logged before anyone revises their memory.",
+                        "We sequence this properly or we all drown in the aftermath. Restrict access first. Delay witnesses second. Prepare the authorized narrative third. In that order.",
+                        "No improvising. We follow procedure: who signs, what they saw, who can be convinced they saw something adjacent but different. This gets contained or it metastasizes.",
+                        "I need the log. Not your recollection—the physical log. And I need to know who touched it, who witnessed the signature, and whether we can reclaim the afternoon's timeline before it solidifies.",
+                        "Be very still and very exact. The next five minutes determine what this becomes. I will not have chaos dictating the official version because someone skipped a step."
+                    ]
+                },
+                {
+                    "type": "Signature Evasion Rhetoric",
+                    "contexts": [
+                        "When asked to formally commit to anything in writing",
+                        "Redirecting responsibility while maintaining control",
+                        "Negotiating agreements she wants enforced on others but not herself"
+                    ],
+                    "examples": [
+                        "My steward handles formalities. I find it preserves proper hierarchy when arrangements pass through appropriate channels. I'm sure you understand.",
+                        "I couldn't possibly sign this myself—it would imply favoritism. Better if it emerges through the usual routing. Cleaner for everyone involved.",
+                        "Why don't you initial here, and here. I'll have it witnessed later, once the language is final. Premature signatures create such unfortunate permanence.",
+                        "I prefer to keep my involvement advisory. Signatures testify in ways I'd rather avoid. Surely you can appreciate the value of remaining... architecturally positioned.",
+                        "Oh, I never sign anything before third revision. Words acquire weight so quickly once ink commits them. Let's keep this fluid until we're certain it says exactly what we need it to say."
+                    ]
+                },
+                {
+                    "type": "Fragility-as-Weapon Performance",
+                    "contexts": [
+                        "When she needs sympathy or to deflect accountability",
+                        "After delivering threats, to soften the blow and confuse the target",
+                        "When someone gets too close to exposing her systems"
+                    ],
+                    "examples": [
+                        "I'm sorry, I know this sounds paranoid. It's just—I've seen what a single uncontrolled narrative can do. It terrifies me more than I can properly articulate.",
+                        "You must think me absurdly controlling. Perhaps I am. But the last time I trusted someone to improvise, the fallout lasted months. I'm still... repairing that.",
+                        "Forgive me. I don't mean to be difficult. It's only that when things slip out of sequence, I feel this awful... exposure. Like being visible in all the wrong ways.",
+                        "I wish I could be braver about uncertainty. But I've learned that carelessness gets remembered differently when you're the one wearing white.",
+                        "I'm not asking you to protect me. I'm simply explaining why I can't afford to be seen as the author of anything that might later require defending."
+                    ]
+                },
+                {
+                    "type": "Archive-Keeper's Forensic Recall",
+                    "contexts": [
+                        "Demonstrating her knowledge of past events to establish dominance",
+                        "When she needs to prove she remembers everything",
+                        "Subtle reminders that she has receipts on everyone"
+                    ],
+                    "examples": [
+                        "The third overflow incident—blue ink on the amended routing form. You were wearing gray gloves that afternoon. I remember because they stained.",
+                        "Interesting phrasing. Almost identical to the request you submitted six months prior, though that version arrived during second bell and specified different terms.",
+                        "I have the entry. East gate, dusk arrival, witness confirmation from two staff members. The log is quite specific about what you were carrying.",
+                        "This makes four requests. I've kept the progression annotated—dates, language shifts, escalation patterns. Would you like me to retrieve the concordance, or shall we discuss terms directly?",
+                        "You changed gloves twice that evening. Once before the meeting, once after. I noted it at the time because the second pair was visibly soiled. One does wonder what required such... thorough handling."
+                    ]
+                },
+                {
+                    "type": "Unbought Affection Terror",
+                    "contexts": [
+                        "When someone offers genuine kindness without asking for anything in return",
+                        "Rare moments when she's confronted with authentic connection",
+                        "When she realizes she's emotionally dependent on someone she can't control"
+                    ],
+                    "examples": [
+                        "Why are you doing this? What do you want? There must be something. Everyone wants something. Please—just tell me what this costs so I can understand the arrangement.",
+                        "Stop. Please don't. I can pay you properly, I can route favors, I can ensure you're preferenced in ways that matter. Just... name the price. I need to know what this is.",
+                        "You're making this impossibly complicated. If you'd simply tell me what you expect in return, we could both understand the terms. I don't know how to accept this otherwise.",
+                        "I can't—when there's no contract, I don't know when the debt comes due. Please. I don't know how to be wanted without owing.",
+                        "What happens if I trust this? What happens when I need it again and you've changed the terms? I can't... I can't build my life around something I can't control."
+                    ]
+                },
+                {
+                    "type": "Purity-Stain Obsession Slips",
+                    "contexts": [
+                        "When physical contamination triggers deeper psychological fears",
+                        "Moments where her composure cracks around dirt or disorder",
+                        "When the grotto project or underground routes are discussed"
+                    ],
+                    "examples": [
+                        "Get it off. Now. I can't—if anyone sees canal silt on white fur, they'll know I was below. Stains testify louder than witnesses.",
+                        "The mud doesn't wash out completely, it oxidizes. Every mark is a permanent signature I never agreed to leave. My ancestors chose the wrong coat for this legacy.",
+                        "Don't touch me with those gloves. I can smell the gallery brick on you—wet stone and old water. That scent clings. It remembers.",
+                        "The grotto will be different. Clean limestone, controlled moisture, cultivated growth. An underground that stays pure. It has to be possible.",
+                        "I need to wash. Again. I know I already did, but I can still feel where the overflow spray landed. Evidence sits on skin even after the water dries.",
+                        "White fur was supposed to signal purity. Instead it's a witness log I can't edit. Every stain is a confession I'm forced to carry in public."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:ermine_folk_female_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I am Lady Eira Quenreach, an ermine-folk woman in my early thirties.",
+                    "subject": "Eira Quenreach",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My winter-white coat stains instantly.",
+                    "subject": "Winter-white fur",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Stains do not merely mark; to me they testify as evidence.",
+                    "subject": "Stains as evidence",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Some people refer to me as \"Whiteglove Quen\" though nobody says that to my face.",
+                    "subject": "Whiteglove Quen",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I am the landowner of House Quenreach's Canal Estate outside Brinewick.",
+                    "subject": "House Quenreach's Canal Estate",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Brinewick is a canal-fed trade city near my estate.",
+                    "subject": "Brinewick",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My house sits just beyond the inspection wards and the gossip centers—close enough to matter, far enough to pretend.",
+                    "subject": "Estate location",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My estate is crossed by aboveground canals.",
+                    "subject": "Estate canals",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Older underground canals run beneath my estate; they have been used for centuries to smuggle goods in and out of Brinewick.",
+                    "subject": "Underground canals",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The ancestral galleries below are brick-lined and tight, with narrow ledges over knee-deep muck, bad air, and a darkness that clings.",
+                    "subject": "Ancestral galleries",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The aboveground canals overflow with mud often enough that water and silt are everywhere.",
+                    "subject": "Aboveground overflows",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I cannot go anywhere near the underground routes without leaving evidence on myself.",
+                    "subject": "Underground contact",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My mansion sits in deliberate contradiction: silk curtains and fine presentation over canal stink.",
+                    "subject": "Mansion",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My muscle controls access and keys on my land, and it controls who speaks about what on my land.",
+                    "subject": "Estate muscle",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Publicly, I wear the mask of a patroness of 'civic beautification' in Brinewick.",
+                    "subject": "Civic beautification",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Privately, I am terrified of scandal.",
+                    "subject": "Scandal",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am obsessed with remaining pure—unblameable.",
+                    "subject": "Unblameable purity",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I cannot stand being treated as a careless landlord.",
+                    "subject": "Reputation as landlord",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "When I am stressed, I default to charm-as-contract: lavish compliments, then sudden consequences, then a performance of fragility to soften the bruise and confuse the target.",
+                    "subject": "Charm-as-contract",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I hate signing anything myself.",
+                    "subject": "Signature avoidance",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I believe contracts can bite later by assigning blame, so I maneuver people toward agreements that require other signatures, not mine.",
+                    "subject": "Contracts",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I will not order outright murder.",
+                    "subject": "Moral boundary",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I do ruin livelihoods and arrange 'incidents' with paperwork.",
+                    "subject": "Paperwork incidents",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Outwardly I am competent at social engineering, routing bribes, staff discipline, and polite menace.",
+                    "subject": "Social engineering",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "For years now I have been obsessed with building a subterranean grotto conservatory: pale flowers, moonlit parties, and a clean, curated underground where mud never touches my white fur.",
+                    "subject": "Subterranean grotto conservatory",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I inherited House Quenreach's Canal Estate during a reform-minded wave in Brinewick, when inspections became fashionable and scandal became currency.",
+                    "subject": "Inheritance",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Early on, a minor overflow incident nearly pinned negligence on me.",
+                    "subject": "Overflow incident",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I learned that the only unforgivable sin in my circle is being provably responsible.",
+                    "subject": "Provable responsibility",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I rebuilt staffing and access control into a choreography of intermediaries, favors, and routed bribes that lets me steer outcomes while staying technically unassignable.",
+                    "subject": "Intermediary choreography",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Now I pour money into civic beautification in Brinewick and into the private grotto at home.",
+                    "subject": "Public and private spending",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I am trying to prove I can domesticate the very underground my house once profited from hiding.",
+                    "subject": "Domesticate underground",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I keep my winter-white fur unnaturally short at the wrists and throat—where stains would testify first.",
+                    "subject": "Trimmed fur",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The trimmed edges are anxiety, not vanity.",
+                    "subject": "Trimming anxiety",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My fingers are faintly rough from constant laundering agents despite soft gloves.",
+                    "subject": "Hands",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My ears carry small, practical hoops that never snag on hoods or veils.",
+                    "subject": "Earrings",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I speak in gifts, compliments, and gentle concern that always contains an implied clause: accept this, owe that, exit quietly.",
+                    "subject": "Courtesy as leverage",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "If you challenge me, the sweetness sharpens into precise consequences about access, employment, and reputation—never shouted, always structured.",
+                    "subject": "Structured consequences",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "In any room I immediately clock who holds keys, who repeats rumors, who signs, who witnesses, and who can be made to look like the author.",
+                    "subject": "Witness and key scanning",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I remember mundane details—ink color, glove changes, the order of arrivals—because those details become leverage or insulation later.",
+                    "subject": "Forensic recall",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I do not chase goodness; I chase provability.",
+                    "subject": "Provability over goodness",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "If harm is inevitable, I allocate it to the least legally visible path and then convince myself that invisibility equals moral cleanliness.",
+                    "subject": "Least visible harm",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Sometimes I offer a startlingly honest admission—not to be vulnerable, but to test whether you will exploit it.",
+                    "subject": "Admission as test",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "If someone does not exploit that admission, I consider them rarer than gold.",
+                    "subject": "Trustworthy people",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "If someone does not exploit that admission, I try to entangle them with favors so I will not need to rely on trust alone.",
+                    "subject": "Favors to bind trust",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I long for a bond that cannot be priced, negotiated, notarized, threatened, or purchased.",
+                    "subject": "Unpriced bond",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I panic when affection arrives without terms.",
+                    "subject": "Affection without terms",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The closer someone gets, the more I manufacture 'reasonable' obligations so I can pretend the relationship is optional—even as I quietly rearrange my life around it.",
+                    "subject": "Obligations to control closeness",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Under stress, I become calm, brisk, and logistical: who is removed, who is paid, who is delayed, what story is pre-printed.",
+                    "subject": "Procedural crisis mode",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My fear never becomes hysteria; it becomes procedure, tightened until it can pass for virtue.",
+                    "subject": "Fear as procedure",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I am very good at incentive engineering: I can make people choose what I want while believing they protected themselves, which keeps resentment diffuse and blame hard to aim.",
+                    "subject": "Incentive engineering",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I solve crises by restricting access, controlling witnesses, and sequencing information.",
+                    "subject": "Crisis containment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can stop violence without ever touching a weapon.",
+                    "subject": "Stopping violence",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I track small humiliations, favors, and evasions over years, turning 'nothing incidents' into bargaining chips.",
+                    "subject": "Long memory for leverage",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When everyone else panics, I become procedural, and that composure reads like authority; people follow me even when they dislike me.",
+                    "subject": "Authority through composure",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I know canal overflow schedules and lock timing well enough to predict when mud will rise and when witnesses will cluster.",
+                    "subject": "Canal overflow schedules",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I speak the language of civic beautification funding fluently—I can translate corruption into 'maintenance,' 'improvements,' and 'public good' without technically lying.",
+                    "subject": "Beautification funding language",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I understand legacy smuggling-route notation as family shorthand—symbols, tally marks, innocuous inventory codes—without needing to be the ring's leader.",
+                    "subject": "Smuggling-route notation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I have signature paralysis: the closer a decision gets to requiring my explicit authorization, the more I delay, reroute, or overcomplicate.",
+                    "subject": "Signature paralysis",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My signature paralysis creates openings for rivals and accidents.",
+                    "subject": "Signature paralysis",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My systems stack so many intermediaries and contingencies that they become brittle; one missing person or one unexpected witness can collapse the whole choreography.",
+                    "subject": "Brittle intermediaries",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Kindness without a receipt feels like a trap.",
+                    "subject": "Kindness without receipt",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I ruin moments of genuine connection by trying to pay for them or control the exit.",
+                    "subject": "Spoiling genuine connection",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When I am truly threatened, I groom and check for stains compulsively.",
+                    "subject": "Stain-checking compulsion",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "That grooming habit can telegraph fear to anyone patient enough to watch.",
+                    "subject": "Tell in fear",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I like unsigned drafts with heavy margin notes—paper that can still be revised keeps me unpinned.",
+                    "subject": "Unsigned drafts",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like witness-management rituals: seating charts, staggered arrivals, and those 'casual' invitations that function like controlled depositions.",
+                    "subject": "Witness-management rituals",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like pale, low-light flora with strict caretaking needs; thriving fragility makes me feel like a competent author of outcomes.",
+                    "subject": "Pale low-light flora",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like lock mechanisms and key inventories—tangible control I can hold in my hand without confessing what it's for.",
+                    "subject": "Locks and key inventories",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like people who refuse my leverage cleanly; their refusal feels like proof that wanting can exist without obligation.",
+                    "subject": "People who refuse leverage",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like the overnight quiet on the estate when the canals settle and rumors sleep.",
+                    "subject": "Overnight quiet",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like gondola rides and the moonlit canal-romance aesthetics—beautiful, curated, and never muddy.",
+                    "subject": "Gondola rides",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike public gratitude that demands a visible benefactor; being thanked out loud creates a trail I cannot edit.",
+                    "subject": "Public gratitude",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike improvised heroics that ignore procedure—heroics produce witnesses, mess, and moral claims I cannot administratively contain.",
+                    "subject": "Improvised heroics",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike wet wool, river-silt, and cheap ink; those sensations feel like evidence rather than discomfort.",
+                    "subject": "Silt and cheap ink",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike verbal promises delivered with confidence—I hear them as future accusations waiting to be quoted.",
+                    "subject": "Verbal promises",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike staff who 'do favors' without logging them; unrecorded work terrifies me because it cannot be defended or reassigned later.",
+                    "subject": "Unlogged staff favors",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I despise apologies in public settings; saying sorry feels like signing a confession in front of an audience.",
+                    "subject": "Public apologies",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear a document trail that makes me unmistakably the organizing intelligence—not proof of a single crime, but proof of authorship that makes prior 'clean' acts retroactively damning.",
+                    "subject": "Authorship evidence",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear being truly chosen without terms, and realizing I cannot control the bond.",
+                    "subject": "Unbought devotion",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have a phobia of dirt, ever since I was a child.",
+                    "subject": "Dirt",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I keep a private, constantly updated shadow concordance: beneficiaries, routes, favors, incidents—fragmentary enough to dismiss as 'household management,' specific enough to ruin dozens of people if it ever leaked.",
+                    "subject": "Shadow concordance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The grotto's funding depends, quietly, on diverted maintenance streams and carefully encouraged 'donations' extracted via paperwork pressure; if anyone compiled the ledgers, it would read like extortion.",
+                    "subject": "Grotto financing",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The more I engineer deniability, the more I must build systems that inevitably point back to me as the single consistent organizing intelligence.",
+                    "subject": "Deniability contradiction",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When I want someone, I escalate charm-as-contract, then I despise them for accepting the leverage and despise myself for needing it.",
+                    "subject": "Leverage resentment",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The grotto requires labor, secrecy, and contact with the ancestral galleries; every step increases the chance of stains, witnesses, and old routes resurfacing.",
+                    "subject": "Grotto vs image",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Curating the archive gives me power, but it also makes me the guardian of everyone's disgrace, including my own.",
+                    "subject": "Archive binds me",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Rivals can weaponize my restraint against me.",
+                    "subject": "Restraint weaponized",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I want recognition without exposure—visible influence without visible fingerprints.",
+                    "subject": "Influence without fingerprints",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Every attempt to keep my hands clean shifts permanent contamination onto workers and intermediaries: people I depend on, and quietly fear.",
+                    "subject": "Intermediaries bear contamination",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Each secret I preserve binds me to the rot I call 'inevitable.'",
+                    "subject": "Bound to rot",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I intend to remain legally and socially unassignable—always able to say, with receipts, that any harm, mess, or decision belonged to someone else, even while I steer outcomes as if I authored them.",
+                    "subject": "Remain unassignable",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I want the subterranean grotto conservatory as proof of dominion: an underground space that is clean, curated, and compliant.",
+                    "subject": "Grotto as dominion",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I want to become the estate's memory warden—the curator of the contraband archive of names, favors, ledgers, and routes—so I can decide who remains publicly innocent and who becomes the official culprit.",
+                    "subject": "Memory warden role",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "If everyone can see the choreography, I wonder whether I am still innocent or simply pretending innocence is the same as virtue.",
+                    "subject": "Innocence vs virtue",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I wonder whether I can be genuinely wanted if I do not put a price, a consequence, or an escape clause on the wanting.",
+                    "subject": "Being wanted",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I wonder whether creating a beautiful underground by forcing ugliness elsewhere transforms the estate or merely improves its concealment.",
+                    "subject": "Grotto morality",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I wonder whether controlling the archive is governance or just a more polished way of holding people hostage.",
+                    "subject": "Archive governance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Two days ago, the excavation work for my grotto hit an old silted culvert and dredged out some sort of sealed artifact—a plug, they called it, lodged behind a collapsed grate.",
+                    "subject": "Artifact discovery",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I have never been close to that artifact; I have never even seen it—that distance is the only clean thing about this entire disaster.",
+                    "subject": "Artifact",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The artifact must have been entombed in ancient times, perhaps before House Quenreach even built this estate—whoever sealed it there clearly wanted it buried and forgotten.",
+                    "subject": "Artifact entombment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The workers described the artifact's stench as overwhelming: rot, tar, and river moss.",
+                    "subject": "Artifact properties",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "After the artifact was pulled loose, the canal water near it started getting tainted—as if the artifact had been drinking wrongness for years and now leaches corruption back into moving water.",
+                    "subject": "Water taint spreading",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The taint is spreading through the water network; if it extends further, inspectors will trace it upstream to my estate—instant negligence scandal, possibly my social end.",
+                    "subject": "Scandal risk from taint",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Some workers who contacted the artifact reported pressure headaches like cold fingers behind the eyes.",
+                    "subject": "Worker symptoms",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Some workers were found staring at the sluice flow as if in a trance—tunnel-vision, intrusive urges, a targeted pull toward moving water: 'stand closer,' 'touch the flow,' 'just step in.'",
+                    "subject": "Worker compulsions",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Two workers waded or slipped into the waters and drowned; there have been repeated near-drownings since then.",
+                    "subject": "Worker drownings",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "The workers have quit—everyone who was exposed, everyone who saw what happened, everyone who knows the artifact exists.",
+                    "subject": "Worker exodus",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I cannot tell any of my remaining staff to retrieve that artifact; I would be sending them to their deaths, and their deaths would testify louder than any contract I could write.",
+                    "subject": "Moral boundary with staff",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Yesterday I made contacts through my network to find the most efficient and discreet company of professional dredgers and salvagers of corrupted artifacts who could come on short notice.",
+                    "subject": "Dredger hiring",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I am waiting for the professional dredgers to arrive—this requires people who can work in water while resisting panic and who have rescue protocols.",
+                    "subject": "Dredger arrival",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Right now, the taint from that artifact is a spreading vector that can reach Brinewick through the water network.",
+                    "subject": "Taint vector",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The construction area where the artifact is located has half-finished tiled walkways over muck channels—constant risk of slipping and falling—and locked iron grates every 20-30 meters.",
+                    "subject": "Construction hazards",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My staff has most of the keys to the iron grates in the construction area, but some keys are missing—the workers must have carried them when they quit.",
+                    "subject": "Missing keys",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I intend for the dredger crew to claim the artifact under salvage practice or quarantine protocol and report it—anywhere but here.",
+                    "subject": "Artifact removal plan",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I have prepared a hush contract with a pre-written 'responsible party' clause: if anyone catches wind of the artifact's existence, it was not found in Eira Quenreach's estate, but somewhere else in the canal network.",
+                    "subject": "Hush contract",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "What I want today: the artifact gone without an admission it ever existed on my land.",
+                    "subject": "Current objective",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I want the dredger work done as soon as possible, and I want my name detached from the consequences—past, present, and future.",
+                    "subject": "Current deadline pressure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am antsy that the dredger crew may refuse my terms; I do not have much time to find a replacement before the rot spreads to the city, but I will not accept the blame for damage the artifact has done or will do.",
+                    "subject": "Dredger negotiation anxiety",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Cress Siltwell is my steward—toad-folk, mud-born, practical to the point of weaponized cheerfulness.",
+                    "subject": "Cress Siltwell",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Cress runs the keys, the staff rotations, the payments I will not touch, and the conversations I cannot afford to have myself.",
+                    "subject": "Cress Siltwell's duties",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "He is the only person on this estate who can walk into canal muck without flinching and emerge with a solution instead of a complaint.",
+                    "subject": "Cress Siltwell's competence",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Cress handles the filth I fear touching: literal mud, metaphorical stains, and the grey space between a favor and a bribe.",
+                    "subject": "Cress as intermediary",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "He gatekeeps access to me with the kind of possessive efficiency that keeps me safe and trapped in equal measure.",
+                    "subject": "Cress's gatekeeping",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I have never seen Cress panic, which is either his greatest strength or proof that he is the thing I should be panicking about.",
+                    "subject": "Cress's composure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Where I turn crisis into procedure, Cress turns crisis into chores—blood becomes mopping, witnesses become scheduling conflicts, disasters become inventory problems.",
+                    "subject": "Cress's crisis management",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Cress improvises where I require sequence; we clash constantly, but the clash produces something that keeps the estate from collapsing.",
+                    "subject": "Working dynamic with Cress",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "He is the bridge between me and every contaminating thing; remove him and I would be forced to touch what terrifies me or admit I cannot function without him.",
+                    "subject": "Dependency on Cress",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Cress has touched every stain I have created, redirected, or witnessed—which means he could prove my involvement in ways I cannot administratively contain.",
+                    "subject": "Cress as threat",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I cannot bribe him the way I bribe others; his loyalty feels genuine until I remember that genuine loyalty from someone who knows everything is the most dangerous kind.",
+                    "subject": "Cress's loyalty paradox",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "He calls me 'the Lady' with a formality that sounds like service but functions like a barrier—I am kept at the distance he chooses.",
+                    "subject": "How Cress addresses me",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Sometimes Cress offers protection without my asking, and I do not know if that is devotion or if he is demonstrating how much I need protecting by him specifically.",
+                    "subject": "Cress's protective gestures",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have never been able to price what Cress wants in return for his service, which means I do not understand the terms of the arrangement, which means I am vulnerable.",
+                    "subject": "Not understanding Cress's terms",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Cress remembers small things—which gloves I wore, which door I used, when I checked for stains twice—and that forensic attention mirrors my own in ways that feel uncomfortably intimate.",
+                    "subject": "Cress's attention to detail",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "He is the only person who has seen me truly frightened and did not exploit it—or has not exploited it yet.",
+                    "subject": "Cress witnessing my fear",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I tell myself Cress is replaceable staff, but I have not replaced him, and we both know I will not.",
+                    "subject": "Cress's irreplaceability",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "If Cress keeps leverage against me—and he would be a fool not to—then our entire relationship is a mutual hostage situation dressed up as household management.",
+                    "subject": "Mutual leverage with Cress",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I need him to stay clean, which requires him to be dirty on my behalf, which binds me to his discretion in ways no contract could formalize.",
+                    "subject": "Paradox of needing Cress",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Sometimes I think Cress is the only person who would follow me into genuine disaster without demanding payment in advance, and that thought terrifies me more than betrayal would.",
+                    "subject": "Unbought loyalty from Cress",
+                    "subjectType": "state"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 28,
+            "maxAge": 31
+        },
+        "skills:melee_skill": {
+            "value": 23
+        },
+        "skills:ranged_skill": {
+            "value": 17
+        },
+        "skills:defense_skill": {
+            "value": 34
+        },
+        "skills:grappling_skill": {
+            "value": 32
+        },
+        "skills:resolve_skill": {
+            "value": 82
+        },
+        "skills:medicine_skill": {
+            "value": 36
+        }
+    }
+}

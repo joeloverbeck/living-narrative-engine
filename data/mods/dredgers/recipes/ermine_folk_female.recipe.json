@@ -1,0 +1,158 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:ermine_folk_female_standard",
+  "blueprintId": "dredgers:ermine_folk_female",
+  "bodyDescriptors": {
+    "build": "lissom",
+    "composition": "lean",
+    "skinColor": "winter white",
+    "hairDensity": "furred",
+    "height": "average",
+    "smell": "faint perfume"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "dredgers:ermine_folk_female_torso",
+      "properties": {
+        "descriptors:build": {
+          "build": "lissom"
+        }
+      }
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head_beautiful"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    },
+    "left_ear": {
+      "partType": "ear",
+      "preferId": "dredgers:ermine_ear",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        }
+      }
+    },
+    "right_ear": {
+      "partType": "ear",
+      "preferId": "dredgers:ermine_ear",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        }
+      }
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "dredgers:ermine_tail",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        },
+        "descriptors:length_category": {
+          "length": "medium"
+        }
+      }
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_soft"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina"
+    }
+  },
+  "patterns": [
+    {
+      "matches": [
+        "left_eye",
+        "right_eye"
+      ],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_gray_hooded"
+    },
+    {
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    {
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": [
+        "left_hand",
+        "right_hand"
+      ],
+      "partType": "hand",
+      "preferId": "anatomy:human_hand"
+    },
+    {
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": [
+        "left_ass",
+        "right_ass"
+      ],
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_bubbly"
+    }
+  ],
+  "clothingEntities": [
+    {
+      "entityId": "base-clothing:ivory_high_neck_gown_wool_silk",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:ivory_overskirt_wool_silk",
+      "equip": true
+    },
+    {
+      "entityId": "outer-clothing:pearl_gray_mantle_stand_collar",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:white_leather_elbow_gloves",
+      "equip": true
+    },
+    {
+      "entityId": "base-clothing:polished_riding_boots_smoke_brown",
+      "equip": true
+    },
+    {
+      "entityId": "accessories:ivory_silk_sash_seal_pouch",
+      "equip": true
+    }
+  ]
+}

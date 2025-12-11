@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "containers:open_container",
+  "name": "Open Container",
+  "description": "Open a container to access its contents",
+  "targets": {
+    "primary": {
+      "scope": "containers-core:openable_containers_at_location",
+      "placeholder": "container",
+      "description": "Container to open"
+    }
+  },
+  "prerequisites": [],
+  "forbidden_components": {
+    "actor": [
+      "positioning:bending_over",
+      "positioning:fallen",
+      "positioning:restraining"
+    ]
+  },
+  "template": "open {container}",
+  "visual": {
+    "backgroundColor": "#354230",
+    "textColor": "#ffffff",
+    "hoverBackgroundColor": "#455740",
+    "hoverTextColor": "#f0f4f0"
+  }
+}

@@ -1,6 +1,6 @@
 # Items System Mod
 
-Complete items, inventory, and container system for Living Narrative Engine.
+Core items and inventory system for Living Narrative Engine. Container components now live in `containers-core`, and container interactions are provided by the `containers` mod.
 
 ## Overview
 
@@ -8,7 +8,7 @@ The items mod provides a modular ECS-based system for item management with:
 
 - **Modular Components**: Marker and data components that combine to create items
 - **Multi-Target Actions**: Discovery-time combination generation
-- **Container System**: Locked/unlocked storage with capacity limits
+- **Container System**: Locked/unlocked storage with capacity limits (via `containers-core` components and `containers` actions)
 - **Inventory Management**: Weight and count-based capacity
 
 ## Components
@@ -75,11 +75,11 @@ The items mod provides a modular ECS-based system for item management with:
 }
 ```
 
-**items:container** - Storage for items
+**containers-core:container** - Storage for items
 
 ```json
 {
-  "items:container": {
+  "containers-core:container": {
     "contents": ["item-id-1"],
     "capacity": {
       "maxWeight": 100,
@@ -146,7 +146,7 @@ The items mod provides a modular ECS-based system for item management with:
     "core:name": { "name": "Wooden Chest" },
     "items:item": {},
     "items:openable": {},
-    "items:container": {
+    "containers-core:container": {
       "contents": [],
       "capacity": { "maxWeight": 50, "maxItems": 10 },
       "isOpen": false,
@@ -166,7 +166,7 @@ The items mod provides a modular ECS-based system for item management with:
     "core:name": { "name": "Treasure Chest" },
     "items:item": {},
     "items:openable": {},
-    "items:container": {
+    "containers-core:container": {
       "contents": ["gold-bar-1"],
       "capacity": { "maxWeight": 100, "maxItems": 20 },
       "isOpen": false,
@@ -192,27 +192,20 @@ The items mod provides a modular ECS-based system for item management with:
    - Requires: Item at actor's location, inventory capacity available
    - Multi-target: Actor → Item
 
-4. **open_container**: Open a container (with key if required)
-   - Requires: Container at location, key in inventory (if locked)
-   - Multi-target: Actor → Container
-
-5. **take_from_container**: Retrieve item from open container
-   - Requires: Container is open, inventory capacity available
-   - Multi-target: Actor → Container → Item
-
-6. **examine_item**: View full item description (free action)
+4. **examine_item**: View full item description (free action)
    - Requires: Item in inventory or at location
    - Multi-target: Actor → Item
    - Note: This is a free action that doesn't consume a turn
 
-7. **read_item**: Read readable item content (free action)
+5. **read_item**: Read readable item content (free action)
    - Requires: Item has `items:readable` component
    - Multi-target: Actor → Item
    - Note: This is a free action that doesn't consume a turn
 
-8. **put_in_container**: Store item in open container
-   - Requires: Container is open, container capacity available
-   - Multi-target: Actor → Container → Item
+6. **Container interactions** (provided by `containers` mod)
+   - `containers:open_container`: Open a container (with key if required)
+   - `containers:take_from_container`: Retrieve an item from an open container
+   - `containers:put_in_container`: Store an item from inventory into an open container
 
 ## Scopes
 
@@ -221,9 +214,9 @@ The items mod provides the following scopes for action discovery:
 - **items:actor_inventory_items** - Items in actor's inventory
 - **items:items_at_location** - Portable items at actor's location
 - **items:non_portable_items_at_location** - Non-portable items at location
-- **items:openable_containers_at_location** - Containers at location
-- **items:open_containers_at_location** - Open containers at location
-- **items:container_contents** - Items inside a container
+- **containers-core:openable_containers_at_location** - Containers at location
+- **containers-core:open_containers_at_location** - Open containers at location
+- **containers-core:container_contents** - Items inside a container
 - **items:examinable_items** - Items with descriptions (inventory + location)
 - **items:close_actors_with_inventory** - Nearby actors with inventories
 
@@ -303,7 +296,7 @@ npm run test:ci
 ```javascript
 // 1. Open locked chest with key
 {
-  "actionId": "items:open_container",
+  "actionId": "containers:open_container",
   "actorId": "actor-1",
   "primaryTargetId": "treasure-chest-1"
   // Actor must have brass-key-1 in inventory
@@ -311,7 +304,7 @@ npm run test:ci
 
 // 2. Take gold bar from chest
 {
-  "actionId": "items:take_from_container",
+  "actionId": "containers:take_from_container",
   "actorId": "actor-1",
   "primaryTargetId": "treasure-chest-1",
   "secondaryTargetId": "gold-bar-1"
@@ -319,7 +312,7 @@ npm run test:ci
 
 // 3. Put gold bar back
 {
-  "actionId": "items:put_in_container",
+  "actionId": "containers:put_in_container",
   "actorId": "actor-1",
   "primaryTargetId": "treasure-chest-1",
   "secondaryTargetId": "gold-bar-1"

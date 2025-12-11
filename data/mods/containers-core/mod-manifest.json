@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "containers-core",
+  "version": "1.0.0",
+  "name": "Containers Core",
+  "description": "Shared container components and scopes used by items and container interactions.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "container.component.json",
+      "liquid_container.component.json"
+    ],
+    "scopes": [
+      "container_contents.scope",
+      "open_containers_at_location.scope",
+      "openable_containers_at_location.scope"
+    ]
+  }
+}

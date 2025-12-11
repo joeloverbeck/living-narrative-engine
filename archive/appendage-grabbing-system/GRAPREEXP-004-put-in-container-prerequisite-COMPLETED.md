@@ -2,13 +2,13 @@
 
 ## Summary
 
-Add a prerequisite to the `items:put_in_container` action requiring the actor to have at least one free grabbing appendage (hand/tentacle/claw). Uses the existing `anatomy:actor-has-free-grabbing-appendage` condition.
+Add a prerequisite to the `containers:put_in_container` action requiring the actor to have at least one free grabbing appendage (hand/tentacle/claw). Uses the existing `anatomy:actor-has-free-grabbing-appendage` condition.
 
 ## Files to Modify
 
 | File                                                   | Change                                                |
 | ------------------------------------------------------ | ----------------------------------------------------- |
-| `data/mods/items/actions/put_in_container.action.json` | Add `prerequisites` array after `required_components` |
+| `data/mods/containers/actions/put_in_container.action.json` | Add `prerequisites` array after `required_components` |
 
 ## Files to Create
 
@@ -54,10 +54,10 @@ Follow the pattern from `tests/integration/mods/weapons/wield_threateningly_prer
 /**
  * @jest-environment node
  *
- * @file Integration tests for items:put_in_container action prerequisites
+ * @file Integration tests for containers:put_in_container action prerequisites
  * @description Tests that the action correctly requires one free grabbing appendage
  *
- * @see data/mods/items/actions/put_in_container.action.json
+ * @see data/mods/containers/actions/put_in_container.action.json
  * @see data/mods/anatomy/conditions/actor-has-free-grabbing-appendage.condition.json
  * @see tickets/GRAPREEXP-004-put-in-container-prerequisite.md
  */
@@ -83,7 +83,7 @@ NODE_ENV=test npx jest tests/integration/mods/items/put_in_container_prerequisit
 npm run validate
 
 # Lint
-npx eslint data/mods/items/actions/put_in_container.action.json tests/integration/mods/items/put_in_container_prerequisites.test.js
+npx eslint data/mods/containers/actions/put_in_container.action.json tests/integration/mods/items/put_in_container_prerequisites.test.js
 ```
 
 ### Required Test Suites
@@ -118,10 +118,10 @@ npx eslint data/mods/items/actions/put_in_container.action.json tests/integratio
 
 ### Invariants That Must Remain True
 
-- [x] Action ID remains `items:put_in_container`
+- [x] Action ID remains `containers:put_in_container`
 - [x] `generateCombinations` remains `true`
 - [x] Template remains `put {secondary.name} in {primary.name}`
-- [x] Primary target scope remains `items:open_containers_at_location`
+- [x] Primary target scope remains `containers-core:open_containers_at_location`
 - [x] Secondary target scope remains `items:actor_inventory_items`
 - [x] `required_components` remain unchanged (`actor: ["items:inventory"]`)
 - [x] `visual` properties remain unchanged
@@ -146,10 +146,10 @@ npx eslint data/mods/items/actions/put_in_container.action.json tests/integratio
 
 ```javascript
 test('should preserve other action properties', () => {
-  expect(putInContainerAction.id).toBe('items:put_in_container');
+  expect(putInContainerAction.id).toBe('containers:put_in_container');
   expect(putInContainerAction.generateCombinations).toBe(true);
   expect(putInContainerAction.targets.primary.scope).toBe(
-    'items:open_containers_at_location'
+    'containers-core:open_containers_at_location'
   );
   expect(putInContainerAction.targets.secondary.scope).toBe(
     'items:actor_inventory_items'
@@ -170,7 +170,7 @@ test('should preserve other action properties', () => {
 
 ### Changes Made
 
-1. **Modified `data/mods/items/actions/put_in_container.action.json`**
+1. **Modified `data/mods/containers/actions/put_in_container.action.json`**
    - Added `prerequisites` array with `anatomy:actor-has-free-grabbing-appendage` condition reference
    - Added user-friendly failure message: "You need a free hand to put an item in a container."
 

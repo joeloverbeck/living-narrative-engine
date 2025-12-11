@@ -1,5 +1,5 @@
-item-placement:open_containers_on_nearby_furniture := entities(items:container)[][{"and": [
-  {"==": [{"var": "entity.components.items:container.isOpen"}, true]},
+item-placement:open_containers_on_nearby_furniture := entities(containers-core:container)[][{"and": [
+  {"==": [{"var": "entity.components.containers-core:container.isOpen"}, true]},
   {"==": [
     {"var": "entity.components.core:position.locationId"},
     {"var": "actor.components.core:position.locationId"}

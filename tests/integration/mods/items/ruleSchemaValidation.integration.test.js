@@ -7,7 +7,7 @@
 import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
-import takeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import takeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
 
 describe('handle_take_from_container Rule Schema Validation', () => {
   it('should successfully import handle_take_from_container.rule.json', () => {

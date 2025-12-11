@@ -4,10 +4,10 @@
 Completed.
 
 ## Goal
-Add a scope that returns inventory items with `items:liquid_container.tags` containing `"disinfectant"` and `currentVolumeMilliliters > 0`, usable by first-aid actions.
+Add a scope that returns inventory items with `containers-core:liquid_container.tags` containing `"disinfectant"` and `currentVolumeMilliliters > 0`, usable by first-aid actions.
 
 ## Current state check
-- `items:liquid_container` already supports optional `tags` (schema + unit tests in `tests/unit/mods/items/components/dataComponents.test.js`).
+- `containers-core:liquid_container` already supports optional `tags` (schema + unit tests in `tests/unit/mods/items/components/dataComponents.test.js`).
 - No disinfectant-specific scope exists yet and `data/mods/items/mod-manifest.json` has no entry for one.
 - Inventory items remain string IDs (`items:inventory.items`), so the scope should resolve entity components from those IDs (mirror `items:aimable_items_in_inventory` and similar filters).
 

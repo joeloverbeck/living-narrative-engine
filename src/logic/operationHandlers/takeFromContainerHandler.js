@@ -24,8 +24,8 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const CONTAINER_COMPONENT_ID = 'items:container';
-const ITEM_TAKEN_EVENT = 'items:item_taken_from_container';
+const CONTAINER_COMPONENT_ID = 'containers-core:container';
+const ITEM_TAKEN_EVENT = 'containers:item_taken_from_container';
 
 /**
  * @typedef {object} TakeFromContainerParams

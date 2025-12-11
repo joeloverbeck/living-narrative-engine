@@ -25,7 +25,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/staticErrorDispatcher.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
-const LIQUID_CONTAINER_COMPONENT_ID = 'items:liquid_container';
+const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
 const DRINKABLE_COMPONENT_ID = 'items:drinkable';
 const EMPTY_COMPONENT_ID = 'items:empty';
 const POSITION_COMPONENT_ID = 'core:position';

@@ -115,7 +115,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:antiseptic_bottle',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             currentVolumeMilliliters: 25,
             tags: ['disinfectant'],
           }),
@@ -125,7 +125,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:saline_vial',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             tags: ['saline'],
           }),
         },
@@ -134,7 +134,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:empty_disinfectant',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             currentVolumeMilliliters: 0,
             tags: ['disinfectant'],
           }),
@@ -144,7 +144,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:off_inventory_disinfectant',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             currentVolumeMilliliters: 10,
             tags: ['disinfectant'],
           }),
@@ -186,7 +186,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:plain_water',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             tags: ['water'],
             currentVolumeMilliliters: 40,
           }),
@@ -196,7 +196,7 @@ describe('items:disinfectant_liquids_in_inventory scope', () => {
         id: 'items:empty_jar',
         components: {
           'items:item': {},
-          'items:liquid_container': buildLiquidContainer({
+          'containers-core:liquid_container': buildLiquidContainer({
             tags: ['disinfectant'],
             currentVolumeMilliliters: 0,
           }),

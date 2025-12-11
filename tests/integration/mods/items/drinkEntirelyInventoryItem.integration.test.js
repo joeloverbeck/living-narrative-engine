@@ -34,7 +34,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       });
 
       // Make bottle drinkable liquid container
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'whiskey',
         currentVolumeMilliliters: 500,
         maxCapacityMilliliters: 750,
@@ -69,7 +69,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       // Bottle should be completely emptied
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBe(0);
 
@@ -93,7 +93,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       });
 
       // Make bottle drinkable with only 50ml remaining
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'whiskey',
         currentVolumeMilliliters: 50, // Almost empty
         maxCapacityMilliliters: 750,
@@ -117,7 +117,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       // Should consume all remaining liquid
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBe(0);
     });
@@ -137,7 +137,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
 
       // Make bottle drinkable with full capacity
       const maxCapacity = 750;
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'whiskey',
         currentVolumeMilliliters: maxCapacity, // Full bottle
         maxCapacityMilliliters: maxCapacity,
@@ -161,7 +161,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       // Should consume entire bottle
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBe(0);
       expect(
@@ -185,7 +185,7 @@ describe('Drink Entirely - Inventory Items Integration', () => {
       });
 
       // Make bottle an empty liquid container (no drinkable component)
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'whiskey',
         currentVolumeMilliliters: 0, // Empty
         maxCapacityMilliliters: 750,

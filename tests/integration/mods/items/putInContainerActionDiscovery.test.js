@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for items:put_in_container action discovery.
+ * @file Integration tests for containers:put_in_container action discovery.
  * @description Tests that the put_in_container action is discovered correctly
  * based on game state (actor has items, open container available, etc.).
  */
@@ -7,9 +7,9 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import putInContainerRule from '../../../../data/mods/items/rules/handle_put_in_container.rule.json' assert { type: 'json' };
-import eventIsActionPutInContainer from '../../../../data/mods/items/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
-import putInContainerAction from '../../../../data/mods/items/actions/put_in_container.action.json' assert { type: 'json' };
+import putInContainerRule from '../../../../data/mods/containers/rules/handle_put_in_container.rule.json' assert { type: 'json' };
+import eventIsActionPutInContainer from '../../../../data/mods/containers/conditions/event-is-action-put-in-container.condition.json' assert { type: 'json' };
+import putInContainerAction from '../../../../data/mods/containers/actions/put_in_container.action.json' assert { type: 'json' };
 
 describe('Put In Container Action Discovery Integration Tests', () => {
   let testFixture;
@@ -17,8 +17,8 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:put_in_container',
+      'containers',
+      'containers:put_in_container',
       putInContainerRule,
       eventIsActionPutInContainer
     );
@@ -65,7 +65,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     const chest = new ModEntityBuilder('chest1')
       .withName('Chest')
       .atLocation('location1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
@@ -81,7 +81,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Find put_in_container action
     const putInContainerActions = actions.filter(
-      (a) => a.id === 'items:put_in_container'
+      (a) => a.id === 'containers:put_in_container'
     );
 
     expect(putInContainerActions).toHaveLength(1);
@@ -100,7 +100,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     const containerResult =
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:open_containers_at_location',
+        'containers-core:open_containers_at_location',
         scopeContext
       );
     expect(containerResult.success).toBe(true);
@@ -133,7 +133,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     const chest = new ModEntityBuilder('chest1')
       .withName('Chest')
       .atLocation('location1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
@@ -149,7 +149,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.id === 'items:put_in_container'
+      (a) => a.id === 'containers:put_in_container'
     );
 
     expect(putInContainerActions.length).toBe(0);
@@ -179,7 +179,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     const chest = new ModEntityBuilder('chest1')
       .withName('Chest')
       .atLocation('location1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: false,
@@ -195,7 +195,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Verify no put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.id === 'items:put_in_container'
+      (a) => a.id === 'containers:put_in_container'
     );
 
     expect(putInContainerActions.length).toBe(0);
@@ -236,7 +236,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     const chest1 = new ModEntityBuilder('chest1')
       .withName('Chest 1')
       .atLocation('location1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
@@ -247,7 +247,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
     const chest2 = new ModEntityBuilder('chest2')
       .withName('Chest 2')
       .atLocation('location1')
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: [],
         capacity: { maxItems: 5, maxWeight: 100 },
         isOpen: true,
@@ -271,7 +271,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     // Assert: Find put_in_container actions
     const putInContainerActions = actions.filter(
-      (a) => a.id === 'items:put_in_container'
+      (a) => a.id === 'containers:put_in_container'
     );
 
     expect(putInContainerActions).toHaveLength(1);
@@ -286,7 +286,7 @@ describe('Put In Container Action Discovery Integration Tests', () => {
 
     const containerResult =
       testFixture.testEnv.unifiedScopeResolver.resolveSync(
-        'items:open_containers_at_location',
+        'containers-core:open_containers_at_location',
         scopeContext
       );
     expect(containerResult.success).toBe(true);

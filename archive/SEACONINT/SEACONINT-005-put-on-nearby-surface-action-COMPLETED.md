@@ -71,7 +71,7 @@ None.
 
 ## Out of Scope
 
-- **DO NOT** modify existing `items:put_in_container` action
+- **DO NOT** modify existing `containers:put_in_container` action
 - **DO NOT** modify the furniture mod manifest (handled in SEACONINT-007)
 - **DO NOT** create integration tests (handled in SEACONINT-009)
 - **DO NOT** modify any engine code
@@ -338,7 +338,7 @@ Create `data/mods/furniture/rules/handle_put_on_nearby_surface.rule.json`:
 
 | Aspect | Take Action | Put Action |
 |--------|-------------|------------|
-| Secondary scope | `items:container_contents` | `items:actor_inventory_items` |
+| Secondary scope | `containers-core:container_contents` | `items:actor_inventory_items` |
 | Secondary contextFrom | `primary` | (none - actor's inventory) |
 | Validation operation | `VALIDATE_INVENTORY_CAPACITY` | `VALIDATE_CONTAINER_CAPACITY` |
 | Transfer operation | `TAKE_FROM_CONTAINER` | `PUT_IN_CONTAINER` |
@@ -360,7 +360,7 @@ Create `data/mods/furniture/rules/handle_put_on_nearby_surface.rule.json`:
 
 ### Invariants That Must Remain True
 
-1. ✅ Existing `items:put_in_container` action unchanged
+1. ✅ Existing `containers:put_in_container` action unchanged
 2. ✅ Standing actors cannot discover this action (requires `positioning:sitting_on`)
 3. ✅ Actors with empty inventory cannot discover this action (no secondary targets)
 4. ✅ All schema validations pass
@@ -378,6 +378,6 @@ npm run test:ci
 
 ## Related Files (For Reference)
 
-- `data/mods/items/actions/put_in_container.action.json` - Existing action to reference
-- `data/mods/items/rules/handle_put_in_container.rule.json` - Existing rule pattern
-- `data/mods/items/conditions/event-is-action-put-in-container.condition.json` - Existing condition pattern
+- `data/mods/containers/actions/put_in_container.action.json` - Existing action to reference
+- `data/mods/containers/rules/handle_put_in_container.rule.json` - Existing rule pattern
+- `data/mods/containers/conditions/event-is-action-put-in-container.condition.json` - Existing condition pattern

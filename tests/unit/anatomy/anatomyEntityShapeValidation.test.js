@@ -36,6 +36,7 @@ describe('Anatomy Entity Shape Validation', () => {
       'elongated',
       'angular',
       'curved',
+      'circular',
     ];
 
     validShapes.forEach((shape) => {
@@ -52,7 +53,6 @@ describe('Anatomy Entity Shape Validation', () => {
   describe('Invalid shape values', () => {
     const invalidShapes = [
       'normal',
-      'circular',
       'wide',
       '',
       null,

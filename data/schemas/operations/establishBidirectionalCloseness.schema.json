@@ -12,14 +12,12 @@
           "type": "object",
           "properties": {
             "actor_component_type": {
-              "type": "string",
-              "description": "Component type to add to actor, e.g., 'hugging:hugging'",
-              "pattern": "^[a-z_]+:[a-z_]+$"
+              "$ref": "../common.schema.json#/definitions/namespacedId",
+              "description": "Component type to add to actor, e.g., 'hugging:hugging'"
             },
             "target_component_type": {
-              "type": "string",
-              "description": "Component type to add to target, e.g., 'hugging:being_hugged'",
-              "pattern": "^[a-z_]+:[a-z_]+$"
+              "$ref": "../common.schema.json#/definitions/namespacedId",
+              "description": "Component type to add to target, e.g., 'hugging:being_hugged'"
             },
             "actor_data": {
               "type": "object",

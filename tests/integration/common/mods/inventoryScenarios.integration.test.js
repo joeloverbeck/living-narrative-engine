@@ -3,8 +3,8 @@ import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 
 const fixtures = [];
 
-const createFixture = async (actionId) => {
-  const fixture = await ModTestFixture.forAction('items', actionId);
+const createFixture = async (actionId, modId = actionId.split(':')[0]) => {
+  const fixture = await ModTestFixture.forAction(modId, actionId);
   fixtures.push(fixture);
   return fixture;
 };
@@ -79,7 +79,7 @@ describe('Inventory scenario helpers - integration', () => {
   });
 
   it('opens locked and unlocked containers using the container helper', async () => {
-    const unlockedFixture = await createFixture('items:open_container');
+    const unlockedFixture = await createFixture('containers:open_container');
     const unlockedScenario = unlockedFixture.createOpenContainerScenario({
       actor: { id: 'unlocked_actor' },
       container: { id: 'unlocked_crate', isOpen: false },
@@ -90,10 +90,10 @@ describe('Inventory scenario helpers - integration', () => {
 
     const unlockedContainer =
       unlockedFixture.entityManager.getEntityInstance('unlocked_crate');
-    expect(unlockedContainer.components['items:container'].isOpen).toBe(true);
+    expect(unlockedContainer.components['containers-core:container'].isOpen).toBe(true);
     expect(unlockedScenario.actor.id).toBe('unlocked_actor');
 
-    const lockedFixture = await createFixture('items:open_container');
+    const lockedFixture = await createFixture('containers:open_container');
     const lockedScenario = lockedFixture.createOpenContainerScenario({
       actor: {
         id: 'locked_actor',
@@ -108,14 +108,14 @@ describe('Inventory scenario helpers - integration', () => {
 
     const lockedContainer =
       lockedFixture.entityManager.getEntityInstance('locked_vault');
-    expect(lockedContainer.components['items:container'].isOpen).toBe(true);
+    expect(lockedContainer.components['containers-core:container'].isOpen).toBe(true);
     expect(lockedScenario.actorInventoryItems.map((item) => item.id)).toContain(
       'vault_key'
     );
   });
 
   it('moves items into containers using the put in container helper', async () => {
-    const fixture = await createFixture('items:put_in_container');
+    const fixture = await createFixture('containers:put_in_container');
     const scenario = fixture.createPutInContainerScenario({
       actor: { id: 'storer' },
       container: { id: 'storage_crate' },
@@ -127,7 +127,7 @@ describe('Inventory scenario helpers - integration', () => {
     });
 
     const container = fixture.entityManager.getEntityInstance('storage_crate');
-    expect(container.components['items:container'].contents).toContain(
+    expect(container.components['containers-core:container'].contents).toContain(
       'supply_crate'
     );
 
@@ -139,7 +139,7 @@ describe('Inventory scenario helpers - integration', () => {
   });
 
   it('rejects put in container when container capacity is full', async () => {
-    const fixture = await createFixture('items:put_in_container');
+    const fixture = await createFixture('containers:put_in_container');
     const scenario = fixture.createPutInContainerScenario({
       actor: { id: 'overloader' },
       container: {
@@ -155,13 +155,13 @@ describe('Inventory scenario helpers - integration', () => {
     });
 
     const container = fixture.entityManager.getEntityInstance('full_crate');
-    expect(container.components['items:container'].contents).not.toContain(
+    expect(container.components['containers-core:container'].contents).not.toContain(
       'extra_supply'
     );
     const actor = fixture.entityManager.getEntityInstance('overloader');
     expect(actor.components['items:inventory'].items).toContain('extra_supply');
     const successEvent = fixture.events.find(
-      (event) => event.eventType === 'items:item_put_in_container'
+      (event) => event.eventType === 'containers:item_put_in_container'
     );
     expect(successEvent).toBeUndefined();
     expect(scenario.containerCapacity.maxItems).toBeGreaterThan(0);

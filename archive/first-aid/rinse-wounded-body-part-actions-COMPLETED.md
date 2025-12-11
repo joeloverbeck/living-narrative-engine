@@ -48,7 +48,7 @@ The existing disinfect actions serve as the template:
 **File**: `data/mods/first-aid/scopes/water_sources_available.scope`
 
 This scope should return entities that:
-1. Have the `items:liquid_container` component
+1. Have the `containers-core:liquid_container` component
 2. Have `"water"` in their `tags` array
 3. Have `currentVolumeMilliliters > 0`
 4. Are either:
@@ -62,15 +62,15 @@ This scope should return entities that:
 // Entities with liquid_container component tagged 'water' with volume remaining
 first-aid:water_sources_available := (
   actor.components.items:inventory.items[][{"and": [
-    {"!!": {"var": "entity.components.items:liquid_container"}},
-    {"in": ["water", {"var": "entity.components.items:liquid_container.tags"}]},
-    {"<": [0, {"var": "entity.components.items:liquid_container.currentVolumeMilliliters"}]}
+    {"!!": {"var": "entity.components.containers-core:liquid_container"}},
+    {"in": ["water", {"var": "entity.components.containers-core:liquid_container.tags"}]},
+    {"<": [0, {"var": "entity.components.containers-core:liquid_container.currentVolumeMilliliters"}]}
   ]}]
   |
   entities(core:position)[][{"and": [
-    {"!!": {"var": "entity.components.items:liquid_container"}},
-    {"in": ["water", {"var": "entity.components.items:liquid_container.tags"}]},
-    {"<": [0, {"var": "entity.components.items:liquid_container.currentVolumeMilliliters"}]},
+    {"!!": {"var": "entity.components.containers-core:liquid_container"}},
+    {"in": ["water", {"var": "entity.components.containers-core:liquid_container.tags"}]},
+    {"<": [0, {"var": "entity.components.containers-core:liquid_container.currentVolumeMilliliters"}]},
     {"==": [
       {"var": "entity.components.core:position.locationId"},
       {"var": "actor.components.core:position.locationId"}

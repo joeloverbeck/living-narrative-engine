@@ -1810,7 +1810,7 @@ Usage tips:
 | `createInventoryTransfer(options)`      | Two actors configured for `items:give_item` style transfers.             |
 | `createDropItemScenario(options)`       | Actor ready to drop an owned item.                                       |
 | `createPickupScenario(options)`         | Actor and ground item setup for `items:pick_up_item`.                    |
-| `createOpenContainerScenario(options)`  | Actor, container, and optional key for `items:open_container`.           |
+| `createOpenContainerScenario(options)`  | Actor, container, and optional key for `containers:open_container`.           |
 | `createPutInContainerScenario(options)` | Actor holding an item plus container prepared for storage actions.       |
 
 ```javascript

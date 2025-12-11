@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:ivory_high_neck_gown_wool_silk",
+  "description": "Elegant ivory high-neck gown in wool-silk blend",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "high-neck gown"
+    },
+    "core:description": {
+      "text": "An exquisitely tailored gown in ivory-hued wool-silk blend, featuring a high mandarin collar that frames the face with elegant severity. The fabric carries the warmth of fine wool tempered by silk's lustrous drape, pale silver piping tracing each seam with restrained ornamentation. Cut to emphasize a refined silhouette, this formal garment speaks of aristocratic taste and measured dignity—the sort of attire worn at diplomatic functions or court audiences where one must appear both approachable and untouchable."
+    },
+    "descriptors:color_extended": {
+      "color": "ivory"
+    },
+    "descriptors:texture": {
+      "texture": "silky"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.45
+    }
+  }
+}

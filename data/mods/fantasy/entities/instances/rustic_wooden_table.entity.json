@@ -6,7 +6,7 @@
     "core:position": {
       "locationId": "fantasy:mudbrook_municipal_aid_registry_instance"
     },
-    "items:container": {
+    "containers-core:container": {
       "contents": ["fantasy:ale_tankard_instance"],
       "capacity": {
         "maxWeight": 5.0,

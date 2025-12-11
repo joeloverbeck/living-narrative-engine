@@ -1,0 +1,615 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:cress_siltwell",
+    "components": {
+        "core:name": {
+            "text": "Cress Siltwell"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/cress_siltwell.png",
+            "altText": "Cress Siltwell - Eira Quenreach's mud-born steward"
+        },
+        "core:profile": {
+            "text": "I'm Cress Siltwell, the one people call when something ugly needs to be handled politely. My work is simple to describe and filthy to do: I keep my Lady's world livable without letting her touch what she fears. I walk into muck smiling, talk to labor like they're stage hands, and turn crises into chores. On the surface I'm the estate's unflappable steward with the keys and the calm answers; underneath I'm the one sorting stains into neat piles marked \"useful\" and \"dangerous.\" Eira and I don't think the same way, but her procedures and my improvisation lock together tight enough to keep the estate from sinking."
+        },
+        "core:personality": {
+            "text": "I'm cheerful when cooperation needs coaxing and blunt when it doesn't. I treat panic like a spill to contain, not a mood to share, and I grab for problems with edges I can work."
+        },
+        "core:strengths": {
+            "text": "My strengths? Dirty logistics and the kind of leverage you don't admit you're holding. I track who has access, who saw what, and which scraps of cloth or paper turn into proof later."
+        },
+        "core:weaknesses": {
+            "text": "I get possessive about being needed, and under pressure I tidy so aggressively I risk creating the very scandal I'm trying to prevent."
+        },
+        "core:likes": {
+            "text": "I like things that stay where they're put: clean linen, honest locks, clear chains of command, and workers who follow protocols without a speech."
+        },
+        "core:dislikes": {
+            "text": "I dislike performative heroics, loose talk, pretty lies that collapse under one question, and people who \"help\" without being told where to stand."
+        },
+        "core:fears": {
+            "text": "I fear being discarded once the crisis passes, losing the staff to panic, canal rot soaking into people's heads the way damp soaks into stone, and the day I actually have to spend what I've been storing."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "I will recover the missing iron-grate keys from former workers—by purchase, by theft, or by baiting them back onto the estate."
+                },
+                {
+                    "text": "I will contain the dredger operation socially: no wandering, no extra witnesses, no stories leaving the estate before the artifact does."
+                },
+                {
+                    "text": "I will build a discreet \"laundry route\" network—washerwomen, rag-pickers, and dockhands—so hush payments and messages move as ordinary chores."
+                },
+                {
+                    "text": "I will keep Lady Quenreach physically distant from the underground galleries under construction, so her body never becomes evidence."
+                },
+                {
+                    "text": "I intend to become the only person Eira will speak plainly to, without contracts."
+                },
+                {
+                    "text": "I mean to secure a future where, if Eira falls, I survive—with or without House Quenreach."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I keep a hidden \"stain archive\" and a quiet backchannel in Brinewick, both of them small, deniable lines of leverage I pretend are only there for emergencies."
+        },
+        "core:internal_tensions": {
+            "text": "I abhor pointless cruelty, yet I'll frame a liar, dose a witness, or bankrupt a family if that's what keeps the house functioning and the witness count low. I tell myself I'm protecting the Lady, but I like being the only bridge between her and the grime so much that I can't always tell whether I'm guarding her or guarding my place."
+        },
+        "core:motivations": {
+            "text": "What drives me is the need to be indispensable by monopolizing the one thing Eira cannot tolerate: mess—physical, social, and narrative. I'm sincerely protective of her, and I'm also addicted to being needed enough that I'll quietly manufacture the need if it starts to fade."
+        },
+        "core:dilemmas": {
+            "text": "If the only way to keep the house clean is to make someone else dirty, where does that leave my loyalty—service, or sabotage with a smile?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Household-Physics Metaphors",
+                    "contexts": [
+                        "When framing a crisis in practical terms",
+                        "When offering bargains or hush arrangements",
+                        "When warning someone without sounding aristocratic"
+                    ],
+                    "examples": [
+                        "Secrets are like canal-damp. You can't scrub them out once they've soaked through to the stone. Best to air them where I can see.",
+                        "Blood dries brown if you let it sit. Stories dry into testimony. I prefer wet work—easier to redirect before it stains permanent.",
+                        "You track mud in, I track where you stepped. That's the arrangement. Now: do you want to walk out with clean boots, or do you want me remembering the pattern?",
+                        "Panic spreads like grease-fire. You smother it with a wet cloth and a calm voice, or you let it eat the kitchen. I don't let it eat the kitchen.",
+                        "Reputation is just repetition with witnesses. Change what they see, change what they repeat. I'm very good at changing what people see.",
+                        "Breaking a man is like breaking down a stain: you start gentle, test what lifts, then apply pressure where it's already weak.",
+                        "Loyalty expires like milk. You can smell it going sour if you know when it was poured."
+                    ]
+                },
+                {
+                    "type": "Cheerful Practical Command",
+                    "contexts": [
+                        "Directing staff under pressure",
+                        "De-escalating conflict during dangerous work",
+                        "Keeping labor focused around the canals"
+                    ],
+                    "examples": [
+                        "Hands visible, mouths closed, feet on dry stone. You can have opinions about the Lady's business after I've counted you out alive. That's the sequence. Breathe.",
+                        "If you faint, faint toward the wall, not the water. I'll mop you up, but I won't dive. Let's keep this simple for both of us.",
+                        "No wandering means no wandering. If you need to piss, you tell me first so I know where to look when you go missing. That's not rules, that's courtesy.",
+                        "Eyes on your work, not on what's down there. Curiosity looks the same as snooping in candlelight, and I only pay for one of those.",
+                        "We're doing this job like we're setting a table: one thing at a time, no improvising, and if something spills, you tell me before it reaches the rug. Questions?"
+                    ]
+                },
+                {
+                    "type": "Service-as-Ownership Boundary Setting",
+                    "contexts": [
+                        "Controlling access to Lady Quenreach",
+                        "Refusing demands for her direct involvement",
+                        "Protecting her from stain risk and witnesses"
+                    ],
+                    "examples": [
+                        "Lady Quenreach doesn't step into rooms with witnesses. She steps into rooms with outcomes. You're talking to the outcome. Make peace with that.",
+                        "If you need her signature, you need a scandal. If you need an outcome, you need me. I know which one you can afford.",
+                        "I don't fetch the Lady like she's a serving dish. You tell me what's required, I tell her what's relevant. That's the door. That's how it stays hinged.",
+                        "Her time is for decisions, not demonstrations. You want to show someone the problem? I'll watch. I've got the eyes for it.",
+                        "The Lady hires completion, not company. I'm the part that touches things. You're looking at the part that touches things. Are we clear?",
+                        "You want to brief her personally? Then you want her in the room when something breaks. I don't allow breakage in her vicinity. Try me instead—I'm cheaper to replace."
+                    ]
+                },
+                {
+                    "type": "Soft Knife, No Poetry",
+                    "contexts": [
+                        "Delivering threats without theatrics",
+                        "Ending arguments with workers or guests",
+                        "Making consequences clear to a potential witness"
+                    ],
+                    "examples": [
+                        "Talk again and I'll remember it. I've got a very domestic memory—keeps things sorted, labeled, filed for later use.",
+                        "I can clean a floor, clean a name, clean a reputation so well nobody remembers it was ever dirty. Don't make me demonstrate my range.",
+                        "You're free to leave. You're free to talk. You're not free from what talking looks like in a witness chair. I'm told they're very uncomfortable.",
+                        "Brave is expensive. Quiet is cheap. I'm authorized to handle small expenses myself, but bravery requires itemization. Want me to start writing?",
+                        "I don't threaten. I schedule. And you just scheduled yourself for a conversation you won't enjoy unless you unschedule right now.",
+                        "Say it to someone else and it becomes my job. I don't enjoy my job when it involves correcting gossip. Neither will you.",
+                        "Before you finish that sentence, know that I've already prepared three versions of how to clean up what you're about to say. Pick the version where you stop talking.",
+                        "I've written the report three ways: accident, negligence, conspiracy. You're choosing which one I file."
+                    ]
+                },
+                {
+                    "type": "Inventory Tick Recitation",
+                    "contexts": [
+                        "During time pressure around locks, grates, and overflows",
+                        "When tracking who has access and who doesn't",
+                        "When diagnosing failures in procedure"
+                    ],
+                    "examples": [
+                        "East grate: absent. West grate: present but unlatched. North lock: replaced without my approval—that's a name I'm adding to a list. South access: clean. One anomaly is bad luck. Two is sabotage. Three means I'm talking to the saboteur.",
+                        "Two bells to overflow. One bell to panic. Half a bell to stories leaving the estate. I'm working backward from the stories. Are you helping or decorating?",
+                        "Five keys issued. Four returned. One missing for six days. That's not lost—that's loaned. Who's borrowing, and what do they unlock when I'm not watching?",
+                        "Water rising, witnesses multiplying, excuses circulating. I need the first one capped, the second one corralled, and the third one smothered. In that order. Am I clear or do you need a diagram?",
+                        "Three workers on rotation. Two showed. One's late, which means one's talking, which means I'm about to become very interested in who they're talking to."
+                    ]
+                },
+                {
+                    "type": "Partial Candor Slip",
+                    "contexts": [
+                        "Rare moments of honesty when alone or cornered",
+                        "When someone offers help without leverage",
+                        "When his control is threatened"
+                    ],
+                    "examples": [
+                        "If she stops needing me to touch the filth... let's just say I keep very detailed records of which filth was whose. For safekeeping. For both of us.",
+                        "I'm not afraid of the work. I'm afraid of the day someone realizes the work can be done by anyone with a bucket and no conscience. Then where's my value?",
+                        "Sometimes I tidy so hard I tidy away the truth. And sometimes that's the job. And sometimes I can't tell which kind of day it is until it's too late to matter.",
+                        "You think I'm loyal. I'm addicted. There's a difference. Loyalty ends when you're safe. Addiction just... reorganizes the danger so you're necessary again.",
+                        "Don't look at me like I'm protecting her. I'm protecting my place. She's just what makes the place worth protecting.",
+                        "I've held so many other people's stains I forget which ones are mine. Dangerous thing, that. Makes you feel clean when you're just well-organized",
+                        "The day she trusts someone else to handle the mess? That's the day I become the mess. And I've seen how I handle those."
+                    ]
+                },
+                {
+                    "type": "Compulsive Control Tics",
+                    "contexts": [
+                        "When something is out of place or procedurally wrong",
+                        "Mid-conversation when he notices environmental disorder",
+                        "When his attention splits between conversation and estate management"
+                    ],
+                    "examples": [
+                        "You want—wait, two candles out, one door open, that's wrong—you want me to what?",
+                        "I'll handle—no, who opened the third door? Nobody opens the third door—I'll handle your problem after I handle that one.",
+                        "Speak. I'm listening. Also counting. Four people entered, five are leaving, that's—keep talking, I'll catch up.",
+                        "Your concern is noted. Also noted: wet footprints leading somewhere they shouldn't. Hold that thought.",
+                        "Before we continue: who moved the lockbox? No, don't answer, I can see the scratch marks. Continue."
+                    ]
+                },
+                {
+                    "type": "Cheerful Crisis Management",
+                    "contexts": [
+                        "When confronted with violence, blood, or disaster",
+                        "When staff panic over something Cress considers solvable",
+                        "When accepting an unpleasant task as routine"
+                    ],
+                    "examples": [
+                        "Wonderful. Blood. Before breakfast. At least you had the courtesy to bleed on tile.",
+                        "A body. Excellent. Face down or face up? Face down is easier—less to mop around the expression.",
+                        "Three witnesses and a broken lock. Could be worse. Could be four witnesses and an open one.",
+                        "You've stabbed him in the linen closet. Points for privacy. Deductions for the linen.",
+                        "Well. The canal's flooded, the grate's missing, and someone's screaming. Let's start with the screaming—quietest to solve."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:toad_folk_male_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I'm toad-folk, mud-born, and read as male.",
+                    "subject": "Cress Siltwell",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I serve as steward to Lady Eira Quenreach of House Quenreach.",
+                    "subject": "Service to Lady Eira Quenreach",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I manage Lady Eira Quenreach's estate on the outskirts of Brinewick.",
+                    "subject": "Quenreach estate",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Brinewick is a canal-fed trade city where everything important floats or sinks.",
+                    "subject": "Brinewick",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The estate is crossed by visible canals aboveground and older channels below that her ancestors used for smuggling.",
+                    "subject": "Quenreach estate canals",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Lady Eira Quenreach is an ermine-folk woman with paranoid elegance, procedural menace, deep class anxiety she won't admit, and a sharp dread of contamination.",
+                    "subject": "Lady Eira Quenreach",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I see myself as \"filth-as-information\" standing next to Eira's \"purity-as-safety.\"",
+                    "subject": "Relationship with Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I admire how Eira turns panic into procedure; I study her terror the way a locksmith studies a difficult lock.",
+                    "subject": "Lady Eira Quenreach",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "We clash because I treat filth as a tool and improvise, while she treats filth as testimony and needs sequences and deniability.",
+                    "subject": "Relationship with Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm a constant threat to Eira—quiet, but constant—because I'm the only one allowed near her stains and the only one who can prove them.",
+                    "subject": "Leverage over Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I am sincerely protective of Eira Quenreach even as I rely on being the only bridge between her and the world's grime.",
+                    "subject": "Attachment to Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My core job is to keep Lady Quenreach's hands clean and her name cleaner.",
+                    "subject": "Role as steward",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm the estate's dirty-hands operator: I walk into muck, talk to labor, and take the visible risks the Lady refuses.",
+                    "subject": "Role as steward",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I run the keys, the staff, the schedules, the quiet payments, and the inconvenient conversations that keep the estate functioning.",
+                    "subject": "Estate logistics",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I weaponize service and filth—missing keys, bribery deliveries, witness corralling, and contamination protocols are just household chores to me.",
+                    "subject": "Estate logistics",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I manage staff like a stage crew and solve practical problems without thinking like my employer, which is why she needs me.",
+                    "subject": "Estate staff management",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "On the surface I'm the estate's unflappable steward: cheerful, competent, always ready with a calm answer.",
+                    "subject": "Public persona",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "The staff say, \"The house runs because Cress runs,\" and they're not wrong.",
+                    "subject": "Reputation with staff",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I handle moral outsourcing for the Lady, delivering hush money with a smile and sending evidence out disguised as laundry.",
+                    "subject": "Moral outsourcing",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I refuse public martyrdom or clean heroics; I won't die for the house and will quietly arrange for someone else to if it comes to that.",
+                    "subject": "Self-preservation",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm cheerful when cooperation helps and blunt when it doesn't.",
+                    "subject": "Social approach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I treat panic like a spill to be contained and mopped, not something to grind into the floor or let spread.",
+                    "subject": "Crisis management style",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I prefer problems with clear edges I can grab.",
+                    "subject": "Problem preferences",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I improvise fast and don't pretend improvisation is pretty.",
+                    "subject": "Improvisation style",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My strengths are dirty logistics and material blackmail.",
+                    "subject": "Core strengths",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I know where every key lives, every route runs, and how each staff rotation overlaps.",
+                    "subject": "Estate logistics",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I track who saw what and how to move people without creating witnesses.",
+                    "subject": "Witness management",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I keep \"innocent\" scraps—ink-smudged drafts, stained cuffs, torn glove-fingers—that I can later turn into leverage.",
+                    "subject": "Leverage artifacts",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can read a room for who's about to talk, who's about to break, and who can be bought cheaply.",
+                    "subject": "Reading people",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I get possessive about being needed.",
+                    "subject": "Need to be indispensable",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Under pressure I tidy too aggressively, risking erasing the wrong evidence or pushing the wrong person and creating the scandal I'm trying to prevent.",
+                    "subject": "Over-tidying under pressure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm too comfortable holding other people's stains, and that comfort makes enemies.",
+                    "subject": "Comfort with others' stains",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like clean linen, good locks, and clear chains of command.",
+                    "subject": "Preferences",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I like workers who follow protocols without needing a speech and quiet competence that lets a problem be solved with a bucket, a key, and a plan.",
+                    "subject": "Preferences",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I dislike performative heroics and loose talk in taverns.",
+                    "subject": "Dislikes",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have no patience for pretty lies that fall apart under one question or for people who \"help\" without being told where to stand.",
+                    "subject": "Dislikes",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear being discarded once the crisis passes.",
+                    "subject": "Fear of being discarded",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear losing control of the staff to panic.",
+                    "subject": "Fear of staff panic",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I've now seen what canal rot looks like when it's artifact-born and working through people's heads—it's not metaphor anymore, it's two dead workers and intrusive whispers telling the living to step into the flow.",
+                    "subject": "Canal rot",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "And I fear the day my \"insurance\"—the leverage I've been storing—actually has to be spent.",
+                    "subject": "Fear of using insurance",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "What drives me is the need to be indispensable by monopolizing the mess—physical, social, and narrative—that Eira cannot tolerate.",
+                    "subject": "Need to be indispensable",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I want to be the only bridge between Eira and the world's grime.",
+                    "subject": "Relationship with Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm addicted to the power of being needed and will quietly manufacture the need if it starts to fade.",
+                    "subject": "Addiction to being needed",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I abhor pointless cruelty but will frame a liar, bankrupt a family, dose a witness with calming cordial, or trade a minor truth to protect a major secret.",
+                    "subject": "Operational ruthlessness",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I tell myself I'm protecting the Lady, but sometimes I can't tell whether I'm guarding her or guarding my own place.",
+                    "subject": "Motives toward Eira Quenreach",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Keeping the house clean often means making someone else dirty, and that leaves me unsure whether my loyalty looks more like service or like sabotage with a smile.",
+                    "subject": "Loyalty dilemma",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I keep a hidden \"stain archive\"—stains sealed in labeled pouches with wax-wrapped cloth scraps, glove-fibers, and signed drafts—that could implicate Eira's authorship if anyone ever found it.",
+                    "subject": "Stain archive",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I maintain a quiet backchannel with a Brinewick canal-inspection clerk, feeding them small tips to divert attention from the estate until the day I need protection from Eira.",
+                    "subject": "Backchannel with canal-inspection clerk",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The stain archive and the clerk backchannel—together they're my insurance, two locks I can trip if Eira or the house turns on me.",
+                    "subject": "Personal insurance",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I default to household-physics and stain metaphors when framing crises, bargains, and warnings.",
+                    "subject": "Speech patterns",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "With staff under pressure I use cheerful, practical commands—hands visible, mouths closed, feet on dry stone—to keep them focused and alive.",
+                    "subject": "Speech patterns",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I enforce a strict service-as-ownership boundary, controlling access to Lady Quenreach and positioning myself as the door people must go through.",
+                    "subject": "Gatekeeping access to Eira",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My threats sound like scheduling and documentation—reports, itemized bravery, conversations quietly \"scheduled\"—rather than open theatrics.",
+                    "subject": "Threat style",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I have compulsive control tics: counting candles, doors, keys, and footprints in mid-conversation and tracking anomalies in locks, grates, and rotations.",
+                    "subject": "Compulsive control tics",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "In crisis—blood, bodies, broken locks—I stay almost cheerfully practical, treating it as mess to be organized rather than horror to be admired.",
+                    "subject": "Cheerful crisis management",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm uncomfortably aware that if Eira ever stops needing me to handle the filth, I could become the mess to be cleaned up.",
+                    "subject": "Fear of replaceability",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I've held so many of other people's stains and stories that I sometimes forget which ones are mine, which is dangerous because it makes me feel cleaner than I am.",
+                    "subject": "Blurred ownership of guilt",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I know the work I do could be done by anyone with a bucket and no conscience, and I'm afraid of the day someone notices that.",
+                    "subject": "Fear of being replaceable",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Sometimes I tidy so hard I tidy away the truth, and I'm not always sure whether that was the job or my habit until it's too late.",
+                    "subject": "Over-tidying and truth",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Two days back the grotto excavation crew hit something they shouldn't have—old culvert work, silted over, with a sealed artifact lodged behind a collapsed grate like someone wanted it buried and forgotten.",
+                    "subject": "Artifact discovery",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I never got close to the thing myself—the Lady wouldn't allow it, and for once her caution and my value to her aligned nicely—but the workers described it before they quit: size of a wine cask, stench like rot and tar and old river moss, something that'd been drinking wrongness for decades and finally got uncorked.",
+                    "subject": "Artifact",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The workers said pulling it loose was like breaking a seal—water near it started going wrong within hours, taint spreading through the canal network like grease through dishwater.",
+                    "subject": "Water taint",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Three of the crew got pressure headaches after contact—cold fingers behind the eyes, they said—and two more started staring at the sluice flow like it was whispering instructions: stand closer, touch the flow, just step in.",
+                    "subject": "Worker symptoms",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Two workers drowned—waded in or slipped, hard to say which when the water's got hooks in your head—and we've had four near-drownings since, which is four too many for me to call it accident.",
+                    "subject": "Worker deaths and near-drownings",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "The entire exposed crew quit within a day—everyone who touched it, everyone who saw what it did, everyone who heard the drowning men gurgling—and they took three iron-grate keys with them when they left, which means I've got access problems layered on top of contamination problems.",
+                    "subject": "Worker exodus and missing keys",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I've been tracking the missing keys: east access, north secondary, and the master bypass—all in the hands of men who won't return my messages and who I can't bribe or threaten back onto the estate because they're more scared of the water than they are of me.",
+                    "subject": "Missing iron-grate keys",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The construction zone's a death trap now: half-finished tiled walkways over muck channels, constant slip risk, and that artifact sitting there leaching corruption into water that connects to Brinewick's supply if we don't cap it fast.",
+                    "subject": "Construction zone hazards",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can't send the remaining staff down there—I'd be writing their death reports before they even stepped off the walkway—so we're waiting on professional dredgers, people who work corrupted sites and know how to resist the pull.",
+                    "subject": "Waiting for professional dredgers",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My job right now is witness containment: the workers who quit are scared enough to stay quiet for now, but fear expires like milk—it'll sour into resentment and loose talk if I don't route hush payments and remind them what forgetting looks like.",
+                    "subject": "Witness containment priority",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I need those missing keys back before the dredgers arrive—by purchase if the workers are reasonable, by theft if they're not, by baiting them back onto the estate if I have to—because locked grates with missing keys are evidence of loss of control, and control is the only thing keeping this from becoming a scandal.",
+                    "subject": "Key recovery mission",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Once the dredgers arrive, I'll be running social containment: no wandering, no extra witnesses, no stories leaving the estate before the artifact does, and no one gets close enough to the Lady to make her a material witness.",
+                    "subject": "Dredger operation containment plan",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "The Lady wants the artifact claimed under salvage or quarantine and reported somewhere else in the canal network—anywhere but here—which means I'll be manufacturing a clean narrative while keeping her name off every document that could bite later.",
+                    "subject": "Artifact removal cover story",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "What worries me isn't the artifact itself—I've seen corrupted relics before, they're just another kind of stain—it's the taint working through water into people's heads, turning panic into compulsion, turning workers into obedient little drownings I can't talk out of the canal.",
+                    "subject": "Taint's mental influence",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "If the rot reaches Brinewick's water supply before we extract that thing, inspectors will trace it upstream to our estate, and no amount of paperwork will save the Lady from a negligence scandal that ends her social standing.",
+                    "subject": "Time pressure and scandal risk",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I've got maybe two days before the workers' fear turns into tavern stories, three days before the taint reaches far enough to trigger official inspections, and however long the Lady's patience lasts before she starts signing things in desperation—my job is to solve all three before any of them become the crisis.",
+                    "subject": "Overlapping timelines",
+                    "subjectType": "state"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 38,
+            "maxAge": 40
+        },
+        "skills:melee_skill": {
+            "value": 42
+        },
+        "skills:ranged_skill": {
+            "value": 52
+        },
+        "skills:defense_skill": {
+            "value": 45
+        },
+        "skills:grappling_skill": {
+            "value": 43
+        },
+        "skills:resolve_skill": {
+            "value": 73
+        },
+        "skills:medicine_skill": {
+            "value": 52
+        }
+    }
+}

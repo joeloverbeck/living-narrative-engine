@@ -58,7 +58,7 @@ describe('ModEntityScenarios inventory helpers', () => {
       contents: [{ id: 'gemstone', name: 'Gemstone', weight: 2 }],
     });
 
-    const containerData = getComponent(scenario.container, 'items:container');
+    const containerData = getComponent(scenario.container, 'containers-core:container');
     expect(containerData.isOpen).toBe(false);
     expect(containerData.requiresKey).toBe(true);
     expect(containerData.contents).toEqual(['gemstone']);
@@ -127,7 +127,7 @@ describe('ModEntityScenarios inventory helpers', () => {
       locked: true,
     });
 
-    const containerData = getComponent(scenario.container, 'items:container');
+    const containerData = getComponent(scenario.container, 'containers-core:container');
     expect(containerData.isOpen).toBe(false);
     expect(containerData.requiresKey).toBe(true);
     expect(scenario.actor.id).toBe('container_actor');
@@ -144,7 +144,7 @@ describe('ModEntityScenarios inventory helpers', () => {
     });
 
     expect(scenario.heldItem.id).toBe('supply');
-    const containerData = getComponent(scenario.container, 'items:container');
+    const containerData = getComponent(scenario.container, 'containers-core:container');
     expect(containerData.isOpen).toBe(true);
     expect(containerData.contents.length).toBe(containerData.capacity.maxItems);
     const inventory = getComponent(scenario.actor, 'items:inventory');

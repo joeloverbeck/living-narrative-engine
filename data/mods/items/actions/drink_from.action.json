@@ -11,7 +11,7 @@
     }
   },
   "required_components": {
-    "primary": ["items:drinkable", "items:liquid_container"]
+    "primary": ["items:drinkable", "containers-core:liquid_container"]
   },
   "forbidden_components": {
     "actor": ["positioning:being_restrained", "positioning:restraining"],

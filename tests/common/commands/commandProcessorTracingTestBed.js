@@ -300,25 +300,26 @@ class CommandProcessorTracingTestBed {
   /**
    * Wait for trace output to complete
    *
-   * @param {number} [timeout] - Maximum wait time in ms
+   * @param {number} [timeout] - Optional additional wait time in ms (default 0)
    * @returns {Promise<void>}
    */
-  async waitForTraceOutput(timeout = 100) {
+  async waitForTraceOutput(timeout = 0) {
     // Wait for async writes to complete
     await this.actionTraceOutputService?.waitForPendingWrites();
-    // Add small delay to ensure all async operations complete
-    await new Promise((resolve) => setTimeout(resolve, timeout));
+    // Only add delay if explicitly requested (for timing-sensitive tests)
+    if (timeout > 0) {
+      await new Promise((resolve) => setTimeout(resolve, timeout));
+    }
   }
 
   /**
-   * Get latest trace for a specific action
+   * Get latest trace for a specific action.
+   * Note: Caller should call waitForTraceOutput() first if needed.
    *
    * @param {string} actionId - Action ID to find
-   * @returns {Promise<object>} Latest trace data
+   * @returns {object|null} Latest trace data
    */
-  async getLatestTrace(actionId) {
-    await this.waitForTraceOutput();
-
+  getLatestTrace(actionId) {
     const traces = this.writtenTraces.filter(
       (t) => t.trace.actionId === actionId
     );

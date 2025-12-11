@@ -15,7 +15,7 @@ import DefaultPathResolver from '../../../../src/pathing/defaultPathResolver.js'
 import ConsoleLogger from '../../../../src/logging/consoleLogger.js';
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import SchemaLoader from '../../../../src/loaders/schemaLoader.js';
-import handleTakeFromContainerRule from '../../../../data/mods/items/rules/handle_take_from_container.rule.json' assert { type: 'json' };
+import handleTakeFromContainerRule from '../../../../data/mods/containers/rules/handle_take_from_container.rule.json' assert { type: 'json' };
 
 describe('Rule Schema Additional Properties Validation', () => {
   let schemaValidator;

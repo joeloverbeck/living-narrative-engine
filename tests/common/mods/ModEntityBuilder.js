@@ -1730,7 +1730,7 @@ export class ModEntityScenarios {
       .withName(containerName)
       .atLocation(room.id)
       .withComponent('items:item', containerOptions.itemData || {})
-      .withComponent('items:container', {
+      .withComponent('containers-core:container', {
         contents: contentIds,
         capacity: normalizedCapacity,
         isOpen: resolvedIsOpen,

@@ -21,7 +21,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../src/entities/entityManager.js').default} IEntityManager */
 
-const LIQUID_CONTAINER_COMPONENT_ID = 'items:liquid_container';
+const LIQUID_CONTAINER_COMPONENT_ID = 'containers-core:liquid_container';
 const DRINKABLE_COMPONENT_ID = 'items:drinkable';
 const EMPTY_COMPONENT_ID = 'items:empty';
 const POSITION_COMPONENT_ID = 'core:position';

@@ -26,9 +26,9 @@ import {
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
-const CONTAINER_OPENED_EVENT = 'items:container_opened';
+const CONTAINER_OPENED_EVENT = 'containers:container_opened';
 const OPENABLE_COMPONENT_ID = 'items:openable';
-const CONTAINER_COMPONENT_ID = 'items:container';
+const CONTAINER_COMPONENT_ID = 'containers-core:container';
 const INVENTORY_COMPONENT_ID = 'items:inventory';
 
 /**

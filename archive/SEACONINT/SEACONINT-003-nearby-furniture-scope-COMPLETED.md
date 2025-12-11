@@ -33,8 +33,8 @@ None.
 Create the scope file at `data/mods/furniture/scopes/open_containers_on_nearby_furniture.scope`:
 
 ```
-furniture:open_containers_on_nearby_furniture := entities(items:container)[][{"and": [
-  {"==": [{"var": "entity.components.items:container.isOpen"}, true]},
+furniture:open_containers_on_nearby_furniture := entities(containers-core:container)[][{"and": [
+  {"==": [{"var": "entity.components.containers-core:container.isOpen"}, true]},
   {"==": [
     {"var": "entity.components.core:position.locationId"},
     {"var": "actor.components.core:position.locationId"}
@@ -45,7 +45,7 @@ furniture:open_containers_on_nearby_furniture := entities(items:container)[][{"a
 
 ## Scope Logic Breakdown
 
-1. **`entities(items:container)`**: Start with all entities that have the `items:container` component
+1. **`entities(containers-core:container)`**: Start with all entities that have the `containers-core:container` component
 2. **`[][]`**: Iterate and filter with JSON Logic
 3. **Filter conditions (AND)**:
    - Container must be open (`isOpen: true`)
@@ -68,13 +68,13 @@ furniture:open_containers_on_nearby_furniture := entities(items:container)[][{"a
    - Actor is not sitting
    - Actor is sitting but furniture has no `near_furniture` component
    - Actor is sitting but `nearFurnitureIds` is empty
-   - Nearby furniture has no `items:container` component
+   - Nearby furniture has no `containers-core:container` component
    - Nearby furniture has container but `isOpen: false`
    - Nearby furniture is in a different location
 4. Scope resolves to container(s) when:
    - Actor is sitting on furniture with `near_furniture` component
    - `nearFurnitureIds` contains a furniture ID
-   - That furniture has `items:container` with `isOpen: true`
+   - That furniture has `containers-core:container` with `isOpen: true`
    - That furniture is in the same location as the actor
 
 ### Invariants That Must Remain True

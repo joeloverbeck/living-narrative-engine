@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:open_container action and rule.
+ * @file Integration tests for the containers:open_container action and rule.
  * @description Tests the rule execution after the open_container action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -8,8 +8,8 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import openContainerRule from '../../../../data/mods/items/rules/handle_open_container.rule.json' assert { type: 'json' };
-import eventIsActionOpenContainer from '../../../../data/mods/items/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
+import openContainerRule from '../../../../data/mods/containers/rules/handle_open_container.rule.json' assert { type: 'json' };
+import eventIsActionOpenContainer from '../../../../data/mods/containers/conditions/event-is-action-open-container.condition.json' assert { type: 'json' };
 
 /**
  * Creates a standardized open container scenario with actor, location, and container.
@@ -58,20 +58,20 @@ function setupOpenContainerScenario(
   const container = new ModEntityBuilder(containerId)
     .withName('Treasure Chest')
     .atLocation(locationId)
-    .withComponent('items:container', containerData)
+    .withComponent('containers-core:container', containerData)
     .withComponent('items:openable', {})
     .build();
 
   return { room, actor, container };
 }
 
-describe('items:open_container action integration', () => {
+describe('containers:open_container action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:open_container',
+      'containers',
+      'containers:open_container',
       openContainerRule,
       eventIsActionOpenContainer
     );
@@ -92,7 +92,7 @@ describe('items:open_container action integration', () => {
 
       // Assert: Verify container is now open
       const container = testFixture.entityManager.getEntityInstance('chest-1');
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
 
       // Assert: Verify turn ended successfully
       const turnEndedEvent = testFixture.events.find(
@@ -114,7 +114,7 @@ describe('items:open_container action integration', () => {
 
       // Find the container_opened event
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeDefined();
       expect(openedEvent.payload.actorEntity).toBe('test:actor1');
@@ -138,10 +138,10 @@ describe('items:open_container action integration', () => {
       await testFixture.executeAction('test:actor1', 'box-1');
 
       const container = testFixture.entityManager.getEntityInstance('box-1');
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
 
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent.payload.contents).toEqual([]);
     });
@@ -165,11 +165,11 @@ describe('items:open_container action integration', () => {
       // Verify container opened
       const container =
         testFixture.entityManager.getEntityInstance('locked-chest');
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
 
       // Verify container_opened event dispatched
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeDefined();
       expect(openedEvent.payload.contents).toEqual(['diamond-1', 'gold-bar-1']);
@@ -192,11 +192,11 @@ describe('items:open_container action integration', () => {
       // Verify container remains closed
       const container =
         testFixture.entityManager.getEntityInstance('locked-box');
-      expect(container.components['items:container'].isOpen).toBe(false);
+      expect(container.components['containers-core:container'].isOpen).toBe(false);
 
       // Verify no container_opened event
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeUndefined();
 
@@ -220,7 +220,7 @@ describe('items:open_container action integration', () => {
       const lockedContainer = new ModEntityBuilder('locked-crate')
         .withName('Locked Crate')
         .atLocation('cave')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['item-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -237,7 +237,7 @@ describe('items:open_container action integration', () => {
       // Verify container remains closed
       const container =
         testFixture.entityManager.getEntityInstance('locked-crate');
-      expect(container.components['items:container'].isOpen).toBe(false);
+      expect(container.components['containers-core:container'].isOpen).toBe(false);
     });
   });
 
@@ -257,11 +257,11 @@ describe('items:open_container action integration', () => {
       // Verify container remains in open state (no change)
       const container =
         testFixture.entityManager.getEntityInstance('open-chest');
-      expect(container.components['items:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
 
       // Verify no container_opened event (since it was already open)
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent).toBeUndefined();
 
@@ -339,7 +339,7 @@ describe('items:open_container action integration', () => {
       await testFixture.executeAction('test:actor1', 'barrel-1');
 
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent.payload.contents).toEqual(['wine-bottle-1']);
     });
@@ -359,9 +359,9 @@ describe('items:open_container action integration', () => {
       await testFixture.executeAction('test:actor1', 'drawer-1');
 
       const container = testFixture.entityManager.getEntityInstance('drawer-1');
-      expect(container.components['items:container'].isOpen).toBe(true);
-      expect(container.components['items:container'].requiresKey).toBe(true);
-      expect(container.components['items:container'].keyItemId).toBe(
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].requiresKey).toBe(true);
+      expect(container.components['containers-core:container'].keyItemId).toBe(
         'desk-key'
       );
     });
@@ -394,7 +394,7 @@ describe('items:open_container action integration', () => {
       const container1 = new ModEntityBuilder('crate-1')
         .withName('Crate 1')
         .atLocation('marketplace')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -405,7 +405,7 @@ describe('items:open_container action integration', () => {
       const container2 = new ModEntityBuilder('crate-2')
         .withName('Crate 2')
         .atLocation('marketplace')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['bread-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -419,17 +419,17 @@ describe('items:open_container action integration', () => {
       await testFixture.executeAction('actor-1', 'crate-1');
       const container1After =
         testFixture.entityManager.getEntityInstance('crate-1');
-      expect(container1After.components['items:container'].isOpen).toBe(true);
+      expect(container1After.components['containers-core:container'].isOpen).toBe(true);
 
       // Actor 2 opens container 2
       await testFixture.executeAction('actor-2', 'crate-2');
       const container2After =
         testFixture.entityManager.getEntityInstance('crate-2');
-      expect(container2After.components['items:container'].isOpen).toBe(true);
+      expect(container2After.components['containers-core:container'].isOpen).toBe(true);
 
       // Verify both containers opened
       const openedEvents = testFixture.events.filter(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvents).toHaveLength(2);
     });
@@ -451,15 +451,15 @@ describe('items:open_container action integration', () => {
       // Verify container is open and contents are accessible
       const container =
         testFixture.entityManager.getEntityInstance('toolbox-1');
-      expect(container.components['items:container'].isOpen).toBe(true);
-      expect(container.components['items:container'].contents).toEqual([
+      expect(container.components['containers-core:container'].isOpen).toBe(true);
+      expect(container.components['containers-core:container'].contents).toEqual([
         'hammer-1',
         'wrench-1',
       ]);
 
       // Verify the contents are still tracked
       const openedEvent = testFixture.events.find(
-        (e) => e.eventType === 'items:container_opened'
+        (e) => e.eventType === 'containers:container_opened'
       );
       expect(openedEvent.payload.contents).toContain('hammer-1');
       expect(openedEvent.payload.contents).toContain('wrench-1');
@@ -481,11 +481,11 @@ describe('items:open_container action integration', () => {
 
       // Verify all components intact
       expect(container.components['items:openable']).toBeDefined();
-      expect(container.components['items:container']).toBeDefined();
+      expect(container.components['containers-core:container']).toBeDefined();
       expect(container.components['core:position']).toBeDefined();
 
       // Verify container data preserved
-      expect(container.components['items:container'].contents).toHaveLength(3);
+      expect(container.components['containers-core:container'].contents).toHaveLength(3);
       expect(container.components['core:position'].locationId).toBe('museum');
     });
   });

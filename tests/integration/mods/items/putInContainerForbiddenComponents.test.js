@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for items:put_in_container forbidden components validation.
+ * @file Integration tests for containers:put_in_container forbidden components validation.
  * @description Tests that put_in_container should NOT be available when actor has certain forbidden components.
  */
 
@@ -7,15 +7,15 @@ import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
 import { ScopeResolverHelpers } from '../../../common/mods/scopeResolverHelpers.js';
-import putInContainerAction from '../../../../data/mods/items/actions/put_in_container.action.json';
+import putInContainerAction from '../../../../data/mods/containers/actions/put_in_container.action.json';
 
-describe('items:put_in_container - Forbidden components validation', () => {
+describe('containers:put_in_container - Forbidden components validation', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:put_in_container'
+      'containers',
+      'containers:put_in_container'
     );
 
     // Register inventory scopes needed for item discovery
@@ -81,7 +81,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const chest = new ModEntityBuilder('chest1')
         .withName('Chest')
         .atLocation('room1')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
@@ -95,7 +95,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has sitting_on component
-      expect(actionIds).not.toContain('items:put_in_container');
+      expect(actionIds).not.toContain('containers:put_in_container');
     });
 
     it('should appear when actor does NOT have sitting_on component', () => {
@@ -128,7 +128,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const chest = new ModEntityBuilder('chest1')
         .withName('Chest')
         .atLocation('room1')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
@@ -142,7 +142,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Without the forbidden component, action should be available
-      expect(actionIds).toContain('items:put_in_container');
+      expect(actionIds).toContain('containers:put_in_container');
     });
   });
 
@@ -176,7 +176,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const chest = new ModEntityBuilder('chest1')
         .withName('Chest')
         .atLocation('room1')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxItems: 5, maxWeight: 100 },
           isOpen: true,
@@ -190,7 +190,7 @@ describe('items:put_in_container - Forbidden components validation', () => {
       const actionIds = actions.map((action) => action.id);
 
       // Action should NOT appear when actor has bending_over component
-      expect(actionIds).not.toContain('items:put_in_container');
+      expect(actionIds).not.toContain('containers:put_in_container');
     });
   });
 });

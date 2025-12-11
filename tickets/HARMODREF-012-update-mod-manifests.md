@@ -89,7 +89,7 @@ Update mod manifests for positioning, items, affection, violence, and clothing m
   "componentTypeRegistrations": [
     {
       "category": "container",
-      "componentId": "items:container",
+      "componentId": "containers-core:container",
       "default": true
     },
     { "category": "locked", "componentId": "items:locked", "default": true },

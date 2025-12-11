@@ -9,11 +9,12 @@
         "type": "string",
         "description": "The shape of the eye",
         "enum": [
-          "round",
           "almond",
+          "bulging",
+          "downturned",
           "hooded",
           "monolid",
-          "downturned",
+          "round",
           "upturned"
         ],
         "default": "round"

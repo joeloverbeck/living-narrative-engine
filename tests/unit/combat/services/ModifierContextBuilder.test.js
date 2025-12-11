@@ -213,7 +213,7 @@ describe('ModifierContextBuilder', () => {
           'status:allied': {},
         });
         const tertiaryEntity = createMockEntity('tertiary-4', {
-          'items:container': {},
+          'containers-core:container': {},
         });
 
         mockEntityManager.getEntity.mockImplementation((id) => {
@@ -250,7 +250,7 @@ describe('ModifierContextBuilder', () => {
         });
         expect(result.entity.tertiary).toEqual({
           id: 'tertiary-4',
-          components: { 'items:container': {} },
+          components: { 'containers-core:container': {} },
         });
       });
 

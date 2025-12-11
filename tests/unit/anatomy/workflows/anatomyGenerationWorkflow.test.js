@@ -559,7 +559,7 @@ describe('AnatomyGenerationWorkflow', () => {
       expect(() =>
         workflow.validateBodyDescriptors(bodyDescriptors, 'test-recipe')
       ).toThrow(
-        "Invalid composition descriptor: 'extremely-overweight' in recipe 'test-recipe'. Must be one of: underweight, lean, average, soft, chubby, overweight, obese"
+        "Invalid composition descriptor: 'extremely-overweight' in recipe 'test-recipe'. Must be one of: underweight, lean, average, soft, bumpy, chubby, overweight, obese, atrophied, emaciated, skeletal, malnourished, dehydrated, wasted, desiccated, bloated, rotting"
       );
     });
 

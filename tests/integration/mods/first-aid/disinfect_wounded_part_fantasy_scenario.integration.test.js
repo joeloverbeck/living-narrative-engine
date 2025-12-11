@@ -192,7 +192,7 @@ function createProductionScopeResolver(testEnv) {
       const matches = items.filter((itemId) => {
         const liquid = testEnv.entityManager.getComponentData(
           itemId,
-          'items:liquid_container'
+          'containers-core:liquid_container'
         );
         const tags = liquid?.tags || [];
         return (
@@ -221,7 +221,7 @@ function buildEntities() {
     .withName('jar of vinegar')
     .withComponent('items:item', {})
     .withComponent('items:portable', {})
-    .withComponent('items:liquid_container', {
+    .withComponent('containers-core:liquid_container', {
       currentVolumeMilliliters: 180,
       maxCapacityMilliliters: 250,
       servingSizeMilliliters: 15,

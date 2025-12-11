@@ -6,7 +6,7 @@ This specification describes the implementation of actions that allow seated act
 
 ## Problem Statement
 
-The existing `items:take_from_container` and `items:put_in_container` actions have `positioning:sitting_on` as a **forbidden component**. This prevents seated actors from interacting with ANY containers in the location, which is intentional - it prevents unrealistic scenarios like reaching across a room to grab a book from a bookcase while seated on a distant chair.
+The existing `containers:take_from_container` and `containers:put_in_container` actions have `positioning:sitting_on` as a **forbidden component**. This prevents seated actors from interacting with ANY containers in the location, which is intentional - it prevents unrealistic scenarios like reaching across a room to grab a book from a bookcase while seated on a distant chair.
 
 However, this creates a UX problem for realistic scenarios where:
 - An actor sits at a stool placed near a kitchen table
@@ -22,7 +22,7 @@ However, this creates a UX problem for realistic scenarios where:
 │  ┌──────────────────────────────────────────────────────┐   │
 │  │ fantasy:aldous_kitchen_rustic_wooden_table_instance  │   │
 │  │ - definitionId: furniture:rustic_wooden_table        │   │
-│  │ - items:container: { contents: [cider, mead], ...}   │   │
+│  │ - containers-core:container: { contents: [cider, mead], ...}   │   │
 │  └──────────────────────────────────────────────────────┘   │
 │                                                             │
 │  ┌─────────────────────────┐ ┌─────────────────────────┐   │
@@ -139,7 +139,7 @@ The existing `take_from_container` and `put_in_container` actions serve a valid 
       "description": "Container on nearby furniture to take from"
     },
     "secondary": {
-      "scope": "items:container_contents",
+      "scope": "containers-core:container_contents",
       "placeholder": "item",
       "description": "Item to take",
       "contextFrom": "primary"
@@ -163,7 +163,7 @@ The existing `take_from_container` and `put_in_container` actions serve a valid 
 }
 ```
 
-**Key Differences from `items:take_from_container`:**
+**Key Differences from `containers:take_from_container`:**
 - `required_components.actor` includes `positioning:sitting_on` (actor MUST be sitting)
 - Does NOT have `positioning:sitting_on` in forbidden (existing action forbids it)
 - Uses `furniture:open_containers_on_nearby_furniture` scope (new, restricted scope)
@@ -234,8 +234,8 @@ This multi-step lookup cannot be expressed purely in Scope DSL + JSON Logic with
 
 **Scope Definition:**
 ```
-furniture:open_containers_on_nearby_furniture := entities(items:container)[][{"and": [
-  {"==": [{"var": "entity.components.items:container.isOpen"}, true]},
+furniture:open_containers_on_nearby_furniture := entities(containers-core:container)[][{"and": [
+  {"==": [{"var": "entity.components.containers-core:container.isOpen"}, true]},
   {"==": [
     {"var": "entity.components.core:position.locationId"},
     {"var": "actor.components.core:position.locationId"}
@@ -245,7 +245,7 @@ furniture:open_containers_on_nearby_furniture := entities(items:container)[][{"a
 ```
 
 **Explanation:**
-- Starts with all entities that have `items:container` component
+- Starts with all entities that have `containers-core:container` component
 - Filters to only open containers (`isOpen: true`)
 - Filters to same location as actor (basic proximity check)
 - Uses custom `isOnNearbyFurniture` operator to check if the container's entity ID is in the nearby furniture list
@@ -853,10 +853,10 @@ Add new content entries:
 |-----------|-------------------|
 | Actor sitting but furniture has no `near_furniture` component | Scope returns empty set → action not discovered |
 | Actor sitting but `nearFurnitureIds` is empty array | Scope returns empty set → action not discovered |
-| Nearby furniture exists but has no `items:container` component | Filtered out by scope (requires `items:container`) |
+| Nearby furniture exists but has no `containers-core:container` component | Filtered out by scope (requires `containers-core:container`) |
 | Nearby furniture has container but it's closed (`isOpen: false`) | Filtered out by scope (`isOpen: true` required) |
 | Multiple furniture pieces in `nearFurnitureIds` | All nearby furniture with open containers are available as targets |
-| Actor sitting on furniture that IS a container | Use existing `items:take_from_container` - our scope filters for NEARBY furniture only |
+| Actor sitting on furniture that IS a container | Use existing `containers:take_from_container` - our scope filters for NEARBY furniture only |
 | Nearby furniture in different location | Filtered out by location check in scope |
 
 ---
@@ -875,8 +875,8 @@ All tests should follow patterns in `docs/testing/mod-testing-guide.md` and use 
 | Action NOT discovered when standing | Actor not sitting (no `positioning:sitting_on` component) |
 | Action NOT discovered when no near_furniture | Sitting furniture has no `furniture:near_furniture` component |
 | Action NOT discovered when nearFurnitureIds empty | `nearFurnitureIds` is `[]` |
-| Action NOT discovered when no container | Nearby furniture has no `items:container` component |
-| Action NOT discovered when container closed | Nearby furniture has `items:container` with `isOpen: false` |
+| Action NOT discovered when no container | Nearby furniture has no `containers-core:container` component |
+| Action NOT discovered when container closed | Nearby furniture has `containers-core:container` with `isOpen: false` |
 | Action discovered for multiple nearby | Multiple furniture in `nearFurnitureIds`, action available for each with container |
 | Secondary targets resolve correctly | Container contents appear as secondary targets |
 
@@ -979,8 +979,8 @@ All tests should follow patterns in `docs/testing/mod-testing-guide.md` and use 
 
 ## Related Files
 
-- `data/mods/items/actions/take_from_container.action.json` - Existing action pattern
-- `data/mods/items/rules/handle_take_from_container.rule.json` - Existing rule pattern
+- `data/mods/containers/actions/take_from_container.action.json` - Existing action pattern
+- `data/mods/containers/rules/handle_take_from_container.rule.json` - Existing rule pattern
 - `data/mods/items/scopes/open_containers_at_location.scope` - Existing scope pattern
 - `data/mods/positioning/components/sitting_on.component.json` - Sitting detection
 - `docs/testing/mod-testing-guide.md` - Testing patterns

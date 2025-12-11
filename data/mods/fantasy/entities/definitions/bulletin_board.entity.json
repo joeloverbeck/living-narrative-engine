@@ -9,7 +9,7 @@
       "text": "A weathered wooden board mounted to the wall, peppered with notices pinned by rusted nails and the occasional knife. The wood is stained by years of rain, ale spills, and what you hope is just mud. Several posted requests flutter in the draft, ranging from the mundane to the deeply concerning."
     },
     "items:item": {},
-    "items:container": {
+    "containers-core:container": {
       "contents": [
         "fantasy:notice_reciprocal_services_instance",
         "fantasy:notice_alibi_wanted_instance",

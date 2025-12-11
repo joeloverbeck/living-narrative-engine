@@ -22,7 +22,7 @@
 - `npm run validate` passed with 0 cross-reference violations
 - All 72 items mod integration tests passed (547 tests)
 - All 1966 integration test suites passed (16058 tests)
-- Existing `items:take_from_container` tests continue to pass (31 tests)
+- Existing `containers:take_from_container` tests continue to pass (31 tests)
 - `isOnNearbyFurnitureOperator` unit tests pass (13 tests)
 
 **Discrepancies from plan:**
@@ -50,7 +50,7 @@ None.
 
 ## Out of Scope
 
-- **DO NOT** modify existing `items:take_from_container` action
+- **DO NOT** modify existing `containers:take_from_container` action
 - **DO NOT** modify the furniture mod manifest (handled in SEACONINT-007)
 - **DO NOT** create integration tests (handled in SEACONINT-009)
 - **DO NOT** modify any engine code
@@ -85,7 +85,7 @@ Create `data/mods/furniture/actions/take_from_nearby_surface.action.json`:
       "description": "Container on nearby furniture to take from"
     },
     "secondary": {
-      "scope": "items:container_contents",
+      "scope": "containers-core:container_contents",
       "placeholder": "item",
       "description": "Item to take",
       "contextFrom": "primary"
@@ -331,11 +331,11 @@ Create `data/mods/furniture/rules/handle_take_from_nearby_surface.rule.json`:
 4. Rule schema validation passes
 5. All referenced operations exist (`TAKE_FROM_CONTAINER`, `VALIDATE_INVENTORY_CAPACITY`, etc.)
 6. All referenced conditions exist (`anatomy:actor-has-free-grabbing-appendage`)
-7. All referenced scopes exist (`furniture:open_containers_on_nearby_furniture`, `items:container_contents`)
+7. All referenced scopes exist (`furniture:open_containers_on_nearby_furniture`, `containers-core:container_contents`)
 
 ### Invariants That Must Remain True
 
-1. Existing `items:take_from_container` action unchanged
+1. Existing `containers:take_from_container` action unchanged
 2. Standing actors cannot discover this action (requires `positioning:sitting_on`)
 3. All schema validations pass
 4. No breaking changes to the items mod
@@ -352,6 +352,6 @@ npm run test:ci
 
 ## Related Files (For Reference)
 
-- `data/mods/items/actions/take_from_container.action.json` - Existing action to reference
-- `data/mods/items/rules/handle_take_from_container.rule.json` - Existing rule pattern
-- `data/mods/items/conditions/event-is-action-take-from-container.condition.json` - Existing condition pattern
+- `data/mods/containers/actions/take_from_container.action.json` - Existing action to reference
+- `data/mods/containers/rules/handle_take_from_container.rule.json` - Existing rule pattern
+- `data/mods/containers/conditions/event-is-action-take-from-container.condition.json` - Existing condition pattern

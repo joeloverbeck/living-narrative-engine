@@ -1,8 +1,0 @@
-{
-  "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-take-from-container",
-  "description": "Checks if event is the take_from_container action",
-  "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "items:take_from_container"]
-  }
-}

@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 52 defined color combinations
-**In Use**: 38 schemes actively implemented across mods
+**Total Schemes**: 53 defined color combinations
+**In Use**: 39 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -36,6 +36,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Hugging                 | Warm Embrace        | 3.4     | `#7d2a50`        | Active |
 | Hexing                  | Hexed Nightshade    | 16.1    | `#1f0d2a`        | Active |
 | Items                   | Aurora Depths       | 11.1    | `#004d61`        | Active |
+| Containers              | Depot Olive         | 18.3    | `#354230`        | Active |
 | Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
 | Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
 | Music                   | Starlight Navy      | 11.4    | `#1a2332`        | Active |
@@ -1130,8 +1131,25 @@ When modifying schemes:
 - **Use Cases**: On-surface item staging, tidying, and retrieving items from nearby furniture while seated
 - **Theme**: Grounded stability and surfaces, emphasizing steadiness and intentional placement
 
+#### 18.3 Depot Olive ✅ IN USE: Containers
+
+```json
+{
+  "backgroundColor": "#354230",
+  "textColor": "#ffffff",
+  "hoverBackgroundColor": "#455740",
+  "hoverTextColor": "#f0f4f0"
+}
+```
+
+- **Normal Contrast**: 10.64:1 🌟 AAA
+- **Hover Contrast**: 7.03:1 🌟 AAA
+- **Use Cases**: Storage and logistics interactions, container management actions
+- **Theme**: Depot-inspired olive tones conveying sturdy storage and organized shelving
+
 ## Version History
 
+- **2026-03**: Added Depot Olive (18.3) for Containers mod
 - **2025-12**: Added Foundation Earth (18.2) for Item-Placement mod
 - **2025-12**: Added Section 18 (Physical/Interaction Colors) with Tactile Brown (18.1) for Item-Handling mod
 - **2025-12**: Added Section 17 (Intoxicants/Vice Colors) with Tavern Amber (17.1) for Intoxicants mod and Hazy Smoke (17.2) available

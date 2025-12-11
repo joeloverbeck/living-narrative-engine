@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:pearl_gray_mantle_stand_collar",
+  "description": "Short pearl-gray mantle with stand collar in felted wool",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": [
+        "underwear",
+        "base",
+        "outer"
+      ]
+    },
+    "clothing:coverage_mapping": {
+      "covers": [
+        "torso_upper"
+      ],
+      "coveragePriority": "outer"
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "mantle"
+    },
+    "core:description": {
+      "text": "A distinguished short mantle in pearl-gray felted wool, cut to drape elegantly across the shoulders without obscuring the formal attire beneath. The stand collar rises to frame the neck and jaw, lending an air of composed authority. Dense felted wool provides structure and warmth without bulk, the gray carrying subtle luminosity that catches light like nacre. This is outerwear meant for moments of transition—entering a great hall, stepping onto a balcony, receiving guests—rather than extended outdoor exposure."
+    },
+    "descriptors:color_extended": {
+      "color": "pearl-gray"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.75
+    }
+  }
+}

@@ -3,14 +3,18 @@
   "id": "items",
   "version": "1.0.0",
   "name": "Items System",
-  "description": "Core items, inventory, and container system with multi-target actions",
-  "actionPurpose": "Interact with objects through pickup, examination, use, storage, and transfer between characters and containers.",
-  "actionConsiderWhen": "Managing inventory, examining interesting objects, sharing items with others, storing belongings, or using functional items.",
+  "description": "Core items and inventory system; container interactions are provided by the containers mod.",
+  "actionPurpose": "Interact with objects through pickup, examination, use, and transfer between characters.",
+  "actionConsiderWhen": "Managing inventory, examining interesting objects, sharing items with others, or using functional items. Use the containers mod to store or retrieve items.",
   "author": "Living Narrative Engine",
   "gameVersion": "0.0.1",
   "dependencies": [
     {
       "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "containers-core",
       "version": "1.0.0"
     },
     {
@@ -28,12 +32,10 @@
       "aimed_at.component.json",
       "allows_soothing_hug.component.json",
       "can_apply_lipstick.component.json",
-      "container.component.json",
       "drinkable.component.json",
       "empty.component.json",
       "inventory.component.json",
       "item.component.json",
-      "liquid_container.component.json",
       "openable.component.json",
       "portable.component.json",
       "readable.component.json"
@@ -46,10 +48,7 @@
       "hug_item_for_comfort.action.json",
       "jot_down_notes.action.json",
       "lower_aim.action.json",
-      "open_container.action.json",
-      "put_in_container.action.json",
       "read_item.action.json",
-      "take_from_container.action.json",
       "unwield_item.action.json"
     ],
     "rules": [
@@ -60,10 +59,7 @@
       "handle_hug_item_for_comfort.rule.json",
       "handle_jot_down_notes.rule.json",
       "handle_lower_aim.rule.json",
-      "handle_open_container.rule.json",
-      "handle_put_in_container.rule.json",
       "handle_read_item.rule.json",
-      "handle_take_from_container.rule.json",
       "handle_unwield_item.rule.json"
     ],
     "conditions": [
@@ -74,10 +70,7 @@
       "event-is-action-hug-item-for-comfort.condition.json",
       "event-is-action-jot-down-notes.condition.json",
       "event-is-action-lower-aim.condition.json",
-      "event-is-action-open-container.condition.json",
-      "event-is-action-put-in-container.condition.json",
       "event-is-action-read-item.condition.json",
-      "event-is-action-take-from-container.condition.json",
       "event-is-action-unwield-item.condition.json",
       "secondary-has-portable.condition.json"
     ],
@@ -87,24 +80,18 @@
       "aimable_targets.scope",
       "aimed_items_in_inventory.scope",
       "close_actors_with_inventory.scope",
-      "container_contents.scope",
       "disinfectant_liquids_in_inventory.scope",
       "examinable_items.scope",
       "items_at_actor_location.scope",
       "items_at_location.scope",
       "non_portable_items_at_location.scope",
-      "open_containers_at_location.scope",
-      "openable_containers_at_location.scope",
       "wielded_items.scope"
     ],
     "events": [
       "aim_lowered.event.json",
-      "container_opened.event.json",
       "item_aimed.event.json",
       "item_dropped.event.json",
       "item_picked_up.event.json",
-      "item_put_in_container.event.json",
-      "item_taken_from_container.event.json",
       "item_transferred.event.json",
       "item_unwielded.event.json",
       "liquid_consumed.event.json",

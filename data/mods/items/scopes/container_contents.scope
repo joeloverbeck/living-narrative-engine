@@ -1,1 +1,0 @@
-items:container_contents := target.items:container.contents[]

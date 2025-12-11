@@ -32,6 +32,7 @@ import {
 const ACTION_AFFECTING_COMPONENTS = [
   'core:position', // Items moving to/from locations
   'items:', // Any items component (portable, container, inventory, etc.)
+  'containers-core:', // Container components for storage interactions
 ];
 
 /**

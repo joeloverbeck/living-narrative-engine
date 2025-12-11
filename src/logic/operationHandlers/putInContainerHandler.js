@@ -25,8 +25,8 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const INVENTORY_COMPONENT_ID = 'items:inventory';
-const CONTAINER_COMPONENT_ID = 'items:container';
-const ITEM_PUT_EVENT = 'items:item_put_in_container';
+const CONTAINER_COMPONENT_ID = 'containers-core:container';
+const ITEM_PUT_EVENT = 'containers:item_put_in_container';
 
 /**
  * @typedef {object} PutInContainerParams

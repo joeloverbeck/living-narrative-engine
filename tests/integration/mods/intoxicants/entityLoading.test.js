@@ -29,7 +29,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
-      expect(entityDef.components['items:liquid_container']).toBeDefined();
+      expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
 
     it('should have correct weight and liquid container properties', () => {
@@ -42,7 +42,7 @@ describe('Intoxicants - Entity Loading', () => {
       const weight = entityDef.components['core:weight'];
       expect(weight.weight).toBe(1.2);
 
-      const container = entityDef.components['items:liquid_container'];
+      const container = entityDef.components['containers-core:liquid_container'];
       expect(container.currentVolumeMilliliters).toBe(1000);
       expect(container.maxCapacityMilliliters).toBe(1000);
       expect(container.servingSizeMilliliters).toBe(200);
@@ -66,7 +66,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
-      expect(entityDef.components['items:liquid_container']).toBeDefined();
+      expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
   });
 
@@ -85,7 +85,7 @@ describe('Intoxicants - Entity Loading', () => {
       expect(entityDef.components['items:portable']).toBeDefined();
       expect(entityDef.components['core:weight']).toBeDefined();
       expect(entityDef.components['items:drinkable']).toBeDefined();
-      expect(entityDef.components['items:liquid_container']).toBeDefined();
+      expect(entityDef.components['containers-core:liquid_container']).toBeDefined();
     });
 
     it('should be slightly heavier than other jugs', () => {

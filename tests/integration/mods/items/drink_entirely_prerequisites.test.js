@@ -136,7 +136,7 @@ describe('items:drink_entirely prerequisites', () => {
         'items:drinkable'
       );
       expect(drinkEntirelyAction.required_components.primary).toContain(
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(drinkEntirelyAction.forbidden_components.primary).toContain(
         'items:empty'

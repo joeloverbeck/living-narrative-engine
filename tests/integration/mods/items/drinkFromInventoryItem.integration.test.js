@@ -34,7 +34,7 @@ describe('Drink From - Inventory Items Integration', () => {
       });
 
       // Make bottle drinkable liquid container
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'whiskey',
         currentVolumeMilliliters: 500,
         maxCapacityMilliliters: 750,
@@ -69,7 +69,7 @@ describe('Drink From - Inventory Items Integration', () => {
       // Bottle should have reduced volume
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBeLessThan(500);
     });
@@ -86,7 +86,7 @@ describe('Drink From - Inventory Items Integration', () => {
         maxWeightKg: 50,
       });
 
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'water',
         currentVolumeMilliliters: 1, // Minimal volume
         maxCapacityMilliliters: 1000,
@@ -110,7 +110,7 @@ describe('Drink From - Inventory Items Integration', () => {
       // Bottle should have reduced volume (even if minimal)
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBeLessThanOrEqual(1);
     });
@@ -133,7 +133,7 @@ describe('Drink From - Inventory Items Integration', () => {
         maxWeightKg: 50,
       });
 
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'water',
         currentVolumeMilliliters: 500,
         maxCapacityMilliliters: 1000,
@@ -160,7 +160,7 @@ describe('Drink From - Inventory Items Integration', () => {
       // (The handler doesn't prevent drinking, other systems handle waste/effects)
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBe(400); // 500 - 100 serving
     });
@@ -183,7 +183,7 @@ describe('Drink From - Inventory Items Integration', () => {
         maxWeightKg: 50,
       });
 
-      fixture.entityManager.addComponent(bottle.id, 'items:liquid_container', {
+      fixture.entityManager.addComponent(bottle.id, 'containers-core:liquid_container', {
         liquidType: 'wine',
         currentVolumeMilliliters: 750,
         maxCapacityMilliliters: 750,
@@ -212,7 +212,7 @@ describe('Drink From - Inventory Items Integration', () => {
       // Bottle should have reduced volume
       const liquidContainer = fixture.entityManager.getComponentData(
         bottle.id,
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(liquidContainer.currentVolumeMilliliters).toBeLessThan(750);
     });

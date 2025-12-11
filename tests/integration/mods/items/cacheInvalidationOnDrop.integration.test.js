@@ -135,16 +135,16 @@ describe('AvailableActionsProvider - Cache Invalidation Integration', () => {
       expect(mockDiscoveryService.getValidActions).toHaveBeenCalledTimes(2);
     });
 
-    it('should invalidate cache when items:container component is added', async () => {
+    it('should invalidate cache when containers-core:container component is added', async () => {
       // First call - should cache results
       await provider.get(actor, turnContext, mockLogger);
       expect(mockDiscoveryService.getValidActions).toHaveBeenCalledTimes(1);
 
-      // Fire component added event with items:container
+      // Fire component added event with containers-core:container
       const handler = eventHandlers.get(COMPONENT_ADDED_ID);
       handler({
         type: COMPONENT_ADDED_ID,
-        payload: { componentTypeId: 'items:container' },
+        payload: { componentTypeId: 'containers-core:container' },
       });
 
       // Second call - should NOT use cache

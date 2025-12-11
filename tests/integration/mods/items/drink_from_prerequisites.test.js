@@ -136,7 +136,7 @@ describe('items:drink_from prerequisites', () => {
         'items:drinkable'
       );
       expect(drinkFromAction.required_components.primary).toContain(
-        'items:liquid_container'
+        'containers-core:liquid_container'
       );
       expect(drinkFromAction.forbidden_components.primary).toContain(
         'items:empty'

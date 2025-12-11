@@ -14,7 +14,7 @@
 
 ## Problem Statement
 
-Operation handlers currently contain hardcoded component IDs (e.g., `positioning:sitting`, `items:container`), preventing mods from providing alternative implementations. We need a registry system that allows mods to register component types under semantic categories, enabling handlers to work with abstract categories instead of concrete component IDs.
+Operation handlers currently contain hardcoded component IDs (e.g., `positioning:sitting`, `containers-core:container`), preventing mods from providing alternative implementations. We need a registry system that allows mods to register component types under semantic categories, enabling handlers to work with abstract categories instead of concrete component IDs.
 
 ## Objectives
 

@@ -22,145 +22,22 @@
       }
     },
     {
-      "type": "QUERY_COMPONENTS",
+      "type": "ESTABLISH_BIDIRECTIONAL_CLOSENESS",
       "parameters": {
-        "entity_ref": "actor",
-        "pairs": [
-          {
-            "component_type": "hand-holding:holding_hand",
-            "result_variable": "actorExistingHoldingComponent"
-          },
-          {
-            "component_type": "hand-holding:hand_held",
-            "result_variable": "actorExistingHandHeldComponent"
-          }
-        ]
-      }
-    },
-    {
-      "type": "QUERY_COMPONENTS",
-      "parameters": {
-        "entity_ref": "target",
-        "pairs": [
-          {
-            "component_type": "hand-holding:holding_hand",
-            "result_variable": "targetExistingHoldingComponent"
-          },
-          {
-            "component_type": "hand-holding:hand_held",
-            "result_variable": "targetExistingHandHeldComponent"
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.actorExistingHoldingComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.actorExistingHoldingComponent.held_entity_id}",
-              "component_type": "hand-holding:hand_held"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.actorExistingHandHeldComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.actorExistingHandHeldComponent.holding_entity_id}",
-              "component_type": "hand-holding:holding_hand"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.targetExistingHoldingComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.targetExistingHoldingComponent.held_entity_id}",
-              "component_type": "hand-holding:hand_held"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "IF",
-      "parameters": {
-        "condition": { "var": "context.targetExistingHandHeldComponent" },
-        "then_actions": [
-          {
-            "type": "REMOVE_COMPONENT",
-            "parameters": {
-              "entity_ref": "{context.targetExistingHandHeldComponent.holding_entity_id}",
-              "component_type": "hand-holding:holding_hand"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "hand-holding:holding_hand"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "hand-holding:hand_held"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "hand-holding:holding_hand"
-      }
-    },
-    {
-      "type": "REMOVE_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "hand-holding:hand_held"
-      }
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "parameters": {
-        "entity_ref": "actor",
-        "component_type": "hand-holding:holding_hand",
-        "value": {
+        "actor_component_type": "hand-holding:holding_hand",
+        "target_component_type": "hand-holding:hand_held",
+        "actor_data": {
           "held_entity_id": "{event.payload.targetId}",
           "initiated": true
-        }
-      }
-    },
-    {
-      "type": "ADD_COMPONENT",
-      "parameters": {
-        "entity_ref": "target",
-        "component_type": "hand-holding:hand_held",
-        "value": {
+        },
+        "target_data": {
           "holding_entity_id": "{event.payload.actorId}",
           "consented": true
-        }
+        },
+        "existing_component_types_to_clean": [
+          "hand-holding:holding_hand",
+          "hand-holding:hand_held"
+        ]
       }
     },
     {
@@ -189,18 +66,6 @@
       "parameters": {
         "variable_name": "targetId",
         "value": "{event.payload.targetId}"
-      }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "actor"
-      }
-    },
-    {
-      "type": "REGENERATE_DESCRIPTION",
-      "parameters": {
-        "entity_ref": "target"
       }
     },
     { "macro": "core:logSuccessAndEndTurn" }

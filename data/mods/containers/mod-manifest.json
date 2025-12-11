@@ -1,0 +1,55 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "containers",
+  "version": "1.0.0",
+  "name": "Containers",
+  "description": "Container interaction actions, rules, and events separated from core items.",
+  "actionPurpose": "Open containers, store items, and retrieve them from storage.",
+  "actionConsiderWhen": "Interacting with storage furniture or chests, organizing inventory, or managing locked containers.",
+  "author": "Living Narrative Engine",
+  "gameVersion": "0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "containers-core",
+      "version": "1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "1.0.0"
+    },
+    {
+      "id": "anatomy",
+      "version": "1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "open_container.action.json",
+      "put_in_container.action.json",
+      "take_from_container.action.json"
+    ],
+    "rules": [
+      "handle_open_container.rule.json",
+      "handle_put_in_container.rule.json",
+      "handle_take_from_container.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-open-container.condition.json",
+      "event-is-action-put-in-container.condition.json",
+      "event-is-action-take-from-container.condition.json"
+    ],
+    "events": [
+      "container_opened.event.json",
+      "item_put_in_container.event.json",
+      "item_taken_from_container.event.json"
+    ]
+  }
+}

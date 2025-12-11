@@ -57,7 +57,7 @@ describe('validate-rule.js CLI script', () => {
     });
 
     const expectedSchema = require('../../../data/schemas/rule.schema.json');
-    const expectedRule = require('../../../data/mods/items/rules/handle_take_from_container.rule.json');
+    const expectedRule = require('../../../data/mods/containers/rules/handle_take_from_container.rule.json');
 
     expect(ajvCtorMock).toHaveBeenCalledTimes(1);
     expect(validateMock).toHaveBeenCalledTimes(1);
@@ -76,7 +76,7 @@ describe('validate-rule.js CLI script', () => {
     });
 
     const expectedSchema = require('../../../data/schemas/rule.schema.json');
-    const expectedRule = require('../../../data/mods/items/rules/handle_take_from_container.rule.json');
+    const expectedRule = require('../../../data/mods/containers/rules/handle_take_from_container.rule.json');
 
     expect(validateMock).toHaveBeenCalledTimes(1);
     expect(validateMock).toHaveBeenCalledWith(expectedSchema, expectedRule);

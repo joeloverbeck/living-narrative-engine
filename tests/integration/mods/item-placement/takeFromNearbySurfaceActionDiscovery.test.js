@@ -4,7 +4,7 @@
  * for seated actors near furniture with open containers.
  *
  * CORRECT PATTERN: The table (nearby furniture) IS the container.
- * Items to take are directly in the table's items:container.contents array.
+ * Items to take are directly in the table's containers-core:container.contents array.
  * The stool's furniture:near_furniture.nearFurnitureIds points to the table.
  *
  * Primary target = table (the nearby furniture that IS a container)
@@ -70,7 +70,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
 
   it('should use container_contents scope for secondary targets', () => {
     expect(takeFromNearbySurfaceAction.targets.secondary.scope).toBe(
-      'items:container_contents'
+      'containers-core:container_contents'
     );
     expect(takeFromNearbySurfaceAction.targets.secondary.contextFrom).toBe(
       'primary'
@@ -85,7 +85,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1', 'bread-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -162,7 +162,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: false,
@@ -219,7 +219,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -265,7 +265,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -321,7 +321,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -377,7 +377,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: [],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -434,7 +434,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table1 = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -445,7 +445,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table2 = new ModEntityBuilder('table-2')
         .withName('stone table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['bread-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,
@@ -521,7 +521,7 @@ describe('item-placement:take_from_nearby_surface action discovery', () => {
       const table = new ModEntityBuilder('table-1')
         .withName('wooden table')
         .atLocation('kitchen')
-        .withComponent('items:container', {
+        .withComponent('containers-core:container', {
           contents: ['apple-1'],
           capacity: { maxWeight: 100, maxItems: 20 },
           isOpen: true,

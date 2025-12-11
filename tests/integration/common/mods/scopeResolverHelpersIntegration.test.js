@@ -105,7 +105,7 @@ describe('ScopeResolverHelpers Integration - Inventory Registration', () => {
       'items:non_portable_items_at_location',
       'items:items_at_actor_location',
       'items:actors_at_location',
-      'items:containers_at_location',
+      'containers-core:containers_at_location',
     ];
 
     expectedScopes.forEach((scopeName) => {

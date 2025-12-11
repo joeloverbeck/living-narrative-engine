@@ -45,7 +45,7 @@ function setupDrinkFromScenario(
   const containerBuilder = new ModEntityBuilder(containerId)
     .withName(containerName)
     .atLocation(locationId)
-    .withComponent('items:liquid_container', {
+    .withComponent('containers-core:liquid_container', {
       currentVolumeMilliliters: currentVolume,
       maxCapacityMilliliters: currentVolume,
       servingSizeMilliliters: servingSize,
@@ -92,7 +92,7 @@ describe('items:drink_from action integration', () => {
       const container =
         testFixture.entityManager.getEntityInstance('water-bottle-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(300);
 
       // Assert: Verify drinkable component still present
@@ -179,7 +179,7 @@ describe('items:drink_from action integration', () => {
       // Assert: Verify container emptied
       const container = testFixture.entityManager.getEntityInstance('flask-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
 
       // Assert: Verify empty component added
@@ -205,7 +205,7 @@ describe('items:drink_from action integration', () => {
       await testFixture.executeAction('test:actor1', 'pitcher-1');
       let container = testFixture.entityManager.getEntityInstance('pitcher-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(400);
       expect(container.components['items:drinkable']).toBeDefined();
 
@@ -213,7 +213,7 @@ describe('items:drink_from action integration', () => {
       await testFixture.executeAction('test:actor1', 'pitcher-1');
       container = testFixture.entityManager.getEntityInstance('pitcher-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(200);
       expect(container.components['items:drinkable']).toBeDefined();
 
@@ -221,7 +221,7 @@ describe('items:drink_from action integration', () => {
       await testFixture.executeAction('test:actor1', 'pitcher-1');
       container = testFixture.entityManager.getEntityInstance('pitcher-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(0);
       expect(container.components['items:drinkable']).toBeUndefined();
       expect(container.components['items:empty']).toBeDefined();
@@ -421,7 +421,7 @@ describe('items:drink_from action integration', () => {
 
       const container = testFixture.entityManager.getEntityInstance('vial-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(40);
     });
 
@@ -440,7 +440,7 @@ describe('items:drink_from action integration', () => {
 
       const container = testFixture.entityManager.getEntityInstance('barrel-1');
       expect(
-        container.components['items:liquid_container'].currentVolumeMilliliters
+        container.components['containers-core:liquid_container'].currentVolumeMilliliters
       ).toBe(4750);
     });
   });

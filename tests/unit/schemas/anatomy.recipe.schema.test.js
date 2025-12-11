@@ -476,6 +476,7 @@ describe('JSON-Schema – Anatomy Recipe Definition', () => {
         'lean',
         'average',
         'soft',
+        'bumpy',
         'chubby',
         'overweight',
         'obese',

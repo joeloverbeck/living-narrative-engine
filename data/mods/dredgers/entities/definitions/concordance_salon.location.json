@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:concordance_salon",
+    "components": {
+        "core:name": {
+            "text": "concordance salon"
+        },
+        "core:description": {
+            "text": "The room is a small, formal sitting space with muted, low lighting. Three upholstered armchairs in pale beige and gray form a loose arc around a rectangular wooden coffee table. On the table lie several neat stacks of papers, spread in ordered piles, with a metal tray holding a seal or stamp near one corner. The floor is carpeted in a similar neutral tone, and the walls are paneled and painted in a soft, warm shade. To the left, a tall bookcase stands against the wall, filled with uniformly bound volumes. A narrow side table in front of it holds a simple ceramic vase with pale dried flowers. On the far wall a round clock hangs above an empty stretch of paneling. To the right, heavy curtains frame a single tall window; sheer inner curtains diffuse a strip of cool daylight into the room. Beneath the window, a small wooden desk or console table holds a few small framed items and a closed box. Another chair with wooden arms sits nearby, angled slightly toward the center of the room."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/concordance_salon.png",
+            "altText": "Eira Quenreach's concordance salon"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the vestibule",
+                "target": "dredgers:canal_vestibule_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

@@ -11,7 +11,7 @@ Implement seated container interaction actions that allow actors sitting on furn
 
 ## Problem Being Solved
 
-The existing `items:take_from_container` and `items:put_in_container` actions have `positioning:sitting_on` as a **forbidden component**. This prevents seated actors from interacting with ANY containers, which is intentional for unrealistic scenarios (reaching across a room), but creates a UX problem for realistic scenarios (reaching over to a nearby table while seated).
+The existing `containers:take_from_container` and `containers:put_in_container` actions have `positioning:sitting_on` as a **forbidden component**. This prevents seated actors from interacting with ANY containers, which is intentional for unrealistic scenarios (reaching across a room), but creates a UX problem for realistic scenarios (reaching over to a nearby table while seated).
 
 ## Solution Overview
 
@@ -80,7 +80,7 @@ The existing `items:take_from_container` and `items:put_in_container` actions ha
 
 ## Global Invariants (Must Remain True)
 
-1. Existing `items:take_from_container` and `items:put_in_container` actions continue to work unchanged
+1. Existing `containers:take_from_container` and `containers:put_in_container` actions continue to work unchanged
 2. Standing actors should NOT gain access to the new seated-only actions
 3. Seated actors can still NOT access distant containers (original restriction preserved)
 4. All existing tests continue to pass
