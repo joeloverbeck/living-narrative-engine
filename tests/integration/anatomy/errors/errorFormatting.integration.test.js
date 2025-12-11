@@ -52,7 +52,7 @@ describe('Error Formatting Integration', () => {
       const error = new ComponentNotFoundError({
         recipeId: 'dragon_scale',
         location: { type: 'pattern', name: 'body_scales' },
-        componentId: 'anatomy:dragon_scale',
+        componentId: 'anatomy-creatures:dragon_scale',
       });
 
       const str = error.toString();

@@ -1,0 +1,121 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:writhing_observer",
+  "schemaVersion": "2.0",
+  "root": "anatomy-creatures:eldritch_core_mass",
+  "structureTemplate": "anatomy-creatures:structure_eldritch_abomination",
+  "additionalSlots": {
+    "central_baleful_eye": {
+      "socket": "central_eye",
+      "requirements": {
+        "partType": "eldritch_baleful_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_1": {
+      "socket": "surface_eye_1",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_2": {
+      "socket": "surface_eye_2",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_3": {
+      "socket": "surface_eye_3",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_4": {
+      "socket": "surface_eye_4",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_5": {
+      "socket": "surface_eye_5",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_6": {
+      "socket": "surface_eye_6",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_7": {
+      "socket": "surface_eye_7",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_8": {
+      "socket": "surface_eye_8",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_9": {
+      "socket": "surface_eye_9",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_10": {
+      "socket": "surface_eye_10",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_11": {
+      "socket": "surface_eye_11",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "surface_eye_12": {
+      "socket": "surface_eye_12",
+      "requirements": {
+        "partType": "eldritch_surface_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "vocal_sac_1": {
+      "socket": "vocal_sac_1",
+      "requirements": {
+        "partType": "eldritch_vocal_sac",
+        "components": ["anatomy:part"]
+      }
+    },
+    "vocal_sac_2": {
+      "socket": "vocal_sac_2",
+      "requirements": {
+        "partType": "eldritch_vocal_sac",
+        "components": ["anatomy:part"]
+      }
+    },
+    "vocal_sac_3": {
+      "socket": "vocal_sac_3",
+      "requirements": {
+        "partType": "eldritch_vocal_sac",
+        "components": ["anatomy:part"]
+      }
+    }
+  }
+}

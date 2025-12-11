@@ -1,0 +1,57 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy-creatures:red_dragon",
+  "blueprintId": "anatomy-creatures:red_dragon",
+  "bodyDescriptors": {
+    "build": "hulking",
+    "skinColor": "crimson"
+  },
+  "slots": {
+    "head": {
+      "partType": "dragon_head",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:size_category": {
+          "size": "massive"
+        },
+        "descriptors:color_extended": {
+          "color": "crimson"
+        },
+        "descriptors:texture": {
+          "texture": "scaled"
+        }
+      }
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:leg",
+      "partType": "dragon_leg",
+      "tags": ["anatomy:part"],
+      "properties": {}
+    },
+    {
+      "matchesGroup": "limbSet:wing",
+      "partType": "dragon_wing",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:length_category": {
+          "length": "immense"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:tail",
+      "partType": "dragon_tail",
+      "tags": ["anatomy:part"],
+      "properties": {}
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": ["dragon_wing", "dragon_tail"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:chicken_torso",
+  "description": "Compact feathered torso of a chicken",
+  "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "heart_socket",
+          "baseProbability": 0.3,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.5,
+            "blunt": 0.3,
+            "slashing": 0.8
+          }
+        },
+        {
+          "childSocketId": "spine_socket",
+          "baseProbability": 0.2,
+          "damageFraction": 0.5,
+          "damageTypeModifiers": {
+            "piercing": 1.2,
+            "blunt": 0.5,
+            "slashing": 0.6
+          }
+        }
+      ]
+    },
+    "anatomy:part": {
+      "subType": "chicken_torso",
+      "hit_probability_weight": 25,
+      "health_calculation_weight": 10
+    },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "neck",
+          "allowedTypes": ["chicken_head"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "left_wing_root",
+          "orientation": "left",
+          "allowedTypes": ["chicken_wing"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_wing_root",
+          "orientation": "right",
+          "allowedTypes": ["chicken_wing"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_hip",
+          "orientation": "left",
+          "allowedTypes": ["chicken_leg"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_hip",
+          "orientation": "right",
+          "allowedTypes": ["chicken_leg"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "tail_root",
+          "allowedTypes": ["chicken_tail"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "heart_socket",
+          "allowedTypes": ["chicken_heart"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "spine_socket",
+          "allowedTypes": ["chicken_spine"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "chicken torso"
+    },
+    "core:weight": {
+      "weight": 1.5
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "feathered"
+    }
+  }
+}

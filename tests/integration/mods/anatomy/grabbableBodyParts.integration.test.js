@@ -3,7 +3,9 @@
  *
  * Validates that body parts capable of grabbing/holding items have the
  * anatomy:can_grab component correctly configured.
+ * Human body parts are in the anatomy mod, creature body parts are in anatomy-creatures.
  * @see data/mods/anatomy/components/can_grab.component.json
+ * @see data/mods/anatomy-creatures/entities/definitions/
  * @see tickets/APPGRAOCCSYS-007-can-grab-to-body-parts.md
  */
 
@@ -21,14 +23,24 @@ const ANATOMY_ENTITIES_PATH = path.resolve(
   '../../../../data/mods/anatomy/entities/definitions'
 );
 
+const ANATOMY_CREATURES_ENTITIES_PATH = path.resolve(
+  currentDirname,
+  '../../../../data/mods/anatomy-creatures/entities/definitions'
+);
+
 /**
- * Load JSON entity file
+ * Load JSON entity file from the appropriate mod directory
  *
  * @param {string} filename - Entity filename
+ * @param {'anatomy'|'anatomy-creatures'} mod - Which mod contains the entity
  * @returns {object} Parsed entity data
  */
-function loadEntityFile(filename) {
-  const filePath = path.join(ANATOMY_ENTITIES_PATH, filename);
+function loadEntityFile(filename, mod = 'anatomy') {
+  const basePath =
+    mod === 'anatomy-creatures'
+      ? ANATOMY_CREATURES_ENTITIES_PATH
+      : ANATOMY_ENTITIES_PATH;
+  const filePath = path.join(basePath, filename);
   const content = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(content);
 }
@@ -46,23 +58,25 @@ describe('Grabbable Body Parts Integration', () => {
 
   describe('Hand entities should have anatomy:can_grab component', () => {
     const handEntities = [
-      { file: 'human_hand.entity.json', expectedGripStrength: 1.0 },
+      { file: 'human_hand.entity.json', expectedGripStrength: 1.0, mod: 'anatomy' },
       {
         file: 'humanoid_hand_craftsman_stained.entity.json',
         expectedGripStrength: 1.0,
+        mod: 'anatomy',
       },
-      { file: 'humanoid_hand_scarred.entity.json', expectedGripStrength: 1.0 },
+      { file: 'humanoid_hand_scarred.entity.json', expectedGripStrength: 1.0, mod: 'anatomy' },
       {
         file: 'eldritch_malformed_hand.entity.json',
         expectedGripStrength: 0.7,
+        mod: 'anatomy-creatures',
       },
-      { file: 'tortoise_hand.entity.json', expectedGripStrength: 0.8 },
+      { file: 'tortoise_hand.entity.json', expectedGripStrength: 0.8, mod: 'anatomy-creatures' },
     ];
 
     it.each(handEntities)(
       'should have anatomy:can_grab component in $file',
-      ({ file, expectedGripStrength }) => {
-        const entity = loadEntityFile(file);
+      ({ file, expectedGripStrength, mod }) => {
+        const entity = loadEntityFile(file, mod);
 
         expect(entity.components).toHaveProperty('anatomy:can_grab');
         const canGrab = entity.components['anatomy:can_grab'];
@@ -76,27 +90,30 @@ describe('Grabbable Body Parts Integration', () => {
 
   describe('Tentacle entities should have anatomy:can_grab component', () => {
     const tentacleEntities = [
-      { file: 'squid_tentacle.entity.json', expectedGripStrength: 0.8 },
-      { file: 'octopus_tentacle.entity.json', expectedGripStrength: 0.9 },
-      { file: 'kraken_tentacle.entity.json', expectedGripStrength: 1.5 },
+      { file: 'squid_tentacle.entity.json', expectedGripStrength: 0.8, mod: 'anatomy-creatures' },
+      { file: 'octopus_tentacle.entity.json', expectedGripStrength: 0.9, mod: 'anatomy-creatures' },
+      { file: 'kraken_tentacle.entity.json', expectedGripStrength: 1.5, mod: 'anatomy-creatures' },
       {
         file: 'eldritch_tentacle_feeding.entity.json',
         expectedGripStrength: 0.6,
+        mod: 'anatomy-creatures',
       },
       {
         file: 'eldritch_tentacle_large.entity.json',
         expectedGripStrength: 1.2,
+        mod: 'anatomy-creatures',
       },
       {
         file: 'eldritch_tentacle_sensory.entity.json',
         expectedGripStrength: 0.3,
+        mod: 'anatomy-creatures',
       },
     ];
 
     it.each(tentacleEntities)(
       'should have anatomy:can_grab component in $file',
-      ({ file, expectedGripStrength }) => {
-        const entity = loadEntityFile(file);
+      ({ file, expectedGripStrength, mod }) => {
+        const entity = loadEntityFile(file, mod);
 
         expect(entity.components).toHaveProperty('anatomy:can_grab');
         const canGrab = entity.components['anatomy:can_grab'];
@@ -110,18 +127,18 @@ describe('Grabbable Body Parts Integration', () => {
 
   describe('Non-grabbable body parts should NOT have anatomy:can_grab', () => {
     const nonGrabbableEntities = [
-      'human_foot.entity.json',
-      'tortoise_foot.entity.json',
-      'spider_leg.entity.json',
-      'humanoid_head.entity.json',
-      'humanoid_arm.entity.json', // Arms contain hands, but arms themselves don't grab
-      'human_leg.entity.json',
+      { file: 'human_foot.entity.json', mod: 'anatomy' },
+      { file: 'tortoise_foot.entity.json', mod: 'anatomy-creatures' },
+      { file: 'spider_leg.entity.json', mod: 'anatomy-creatures' },
+      { file: 'humanoid_head.entity.json', mod: 'anatomy' },
+      { file: 'humanoid_arm.entity.json', mod: 'anatomy' }, // Arms contain hands, but arms themselves don't grab
+      { file: 'human_leg.entity.json', mod: 'anatomy' },
     ];
 
     it.each(nonGrabbableEntities)(
-      'should NOT have anatomy:can_grab component in %s',
-      (file) => {
-        const entity = loadEntityFile(file);
+      'should NOT have anatomy:can_grab component in $file',
+      ({ file, mod }) => {
+        const entity = loadEntityFile(file, mod);
         expect(entity.components).not.toHaveProperty('anatomy:can_grab');
       }
     );
@@ -129,39 +146,39 @@ describe('Grabbable Body Parts Integration', () => {
 
   describe('anatomy:can_grab component invariants', () => {
     const allGrabbableEntities = [
-      'human_hand.entity.json',
-      'humanoid_hand_craftsman_stained.entity.json',
-      'humanoid_hand_scarred.entity.json',
-      'eldritch_malformed_hand.entity.json',
-      'tortoise_hand.entity.json',
-      'squid_tentacle.entity.json',
-      'octopus_tentacle.entity.json',
-      'kraken_tentacle.entity.json',
-      'eldritch_tentacle_feeding.entity.json',
-      'eldritch_tentacle_large.entity.json',
-      'eldritch_tentacle_sensory.entity.json',
+      { file: 'human_hand.entity.json', mod: 'anatomy' },
+      { file: 'humanoid_hand_craftsman_stained.entity.json', mod: 'anatomy' },
+      { file: 'humanoid_hand_scarred.entity.json', mod: 'anatomy' },
+      { file: 'eldritch_malformed_hand.entity.json', mod: 'anatomy-creatures' },
+      { file: 'tortoise_hand.entity.json', mod: 'anatomy-creatures' },
+      { file: 'squid_tentacle.entity.json', mod: 'anatomy-creatures' },
+      { file: 'octopus_tentacle.entity.json', mod: 'anatomy-creatures' },
+      { file: 'kraken_tentacle.entity.json', mod: 'anatomy-creatures' },
+      { file: 'eldritch_tentacle_feeding.entity.json', mod: 'anatomy-creatures' },
+      { file: 'eldritch_tentacle_large.entity.json', mod: 'anatomy-creatures' },
+      { file: 'eldritch_tentacle_sensory.entity.json', mod: 'anatomy-creatures' },
     ];
 
     it.each(allGrabbableEntities)(
-      'should have locked: false (initially available) in %s',
-      (file) => {
-        const entity = loadEntityFile(file);
+      'should have locked: false (initially available) in $file',
+      ({ file, mod }) => {
+        const entity = loadEntityFile(file, mod);
         expect(entity.components['anatomy:can_grab'].locked).toBe(false);
       }
     );
 
     it.each(allGrabbableEntities)(
-      'should have heldItemId: null (not holding anything) in %s',
-      (file) => {
-        const entity = loadEntityFile(file);
+      'should have heldItemId: null (not holding anything) in $file',
+      ({ file, mod }) => {
+        const entity = loadEntityFile(file, mod);
         expect(entity.components['anatomy:can_grab'].heldItemId).toBeNull();
       }
     );
 
     it.each(allGrabbableEntities)(
-      'should have gripStrength >= 0 in %s',
-      (file) => {
-        const entity = loadEntityFile(file);
+      'should have gripStrength >= 0 in $file',
+      ({ file, mod }) => {
+        const entity = loadEntityFile(file, mod);
         expect(
           entity.components['anatomy:can_grab'].gripStrength
         ).toBeGreaterThanOrEqual(0);
@@ -169,9 +186,9 @@ describe('Grabbable Body Parts Integration', () => {
     );
 
     it.each(allGrabbableEntities)(
-      'should have components in alphabetical order in %s',
-      (file) => {
-        const entity = loadEntityFile(file);
+      'should have components in alphabetical order in $file',
+      ({ file, mod }) => {
+        const entity = loadEntityFile(file, mod);
         const componentKeys = Object.keys(entity.components);
         const sortedKeys = [...componentKeys].sort();
         expect(componentKeys).toEqual(sortedKeys);
@@ -181,28 +198,29 @@ describe('Grabbable Body Parts Integration', () => {
 
   describe('Grip strength value reasonableness', () => {
     it('should have human_hand gripStrength as the baseline (1.0)', () => {
-      const entity = loadEntityFile('human_hand.entity.json');
+      const entity = loadEntityFile('human_hand.entity.json', 'anatomy');
       expect(entity.components['anatomy:can_grab'].gripStrength).toBe(1.0);
     });
 
     it('should have kraken_tentacle with highest grip strength (> 1.0)', () => {
-      const entity = loadEntityFile('kraken_tentacle.entity.json');
+      const entity = loadEntityFile('kraken_tentacle.entity.json', 'anatomy-creatures');
       expect(
         entity.components['anatomy:can_grab'].gripStrength
       ).toBeGreaterThan(1.0);
     });
 
     it('should have eldritch_tentacle_sensory with lowest grip strength (< 0.5)', () => {
-      const entity = loadEntityFile('eldritch_tentacle_sensory.entity.json');
+      const entity = loadEntityFile('eldritch_tentacle_sensory.entity.json', 'anatomy-creatures');
       expect(entity.components['anatomy:can_grab'].gripStrength).toBeLessThan(
         0.5
       );
     });
 
     it('should have eldritch_malformed_hand with reduced grip strength', () => {
-      const humanHand = loadEntityFile('human_hand.entity.json');
+      const humanHand = loadEntityFile('human_hand.entity.json', 'anatomy');
       const eldritchHand = loadEntityFile(
-        'eldritch_malformed_hand.entity.json'
+        'eldritch_malformed_hand.entity.json',
+        'anatomy-creatures'
       );
       expect(
         eldritchHand.components['anatomy:can_grab'].gripStrength
@@ -210,8 +228,8 @@ describe('Grabbable Body Parts Integration', () => {
     });
 
     it('should have tortoise_hand with reduced grip strength (3 digits)', () => {
-      const humanHand = loadEntityFile('human_hand.entity.json');
-      const tortoiseHand = loadEntityFile('tortoise_hand.entity.json');
+      const humanHand = loadEntityFile('human_hand.entity.json', 'anatomy');
+      const tortoiseHand = loadEntityFile('tortoise_hand.entity.json', 'anatomy-creatures');
       expect(
         tortoiseHand.components['anatomy:can_grab'].gripStrength
       ).toBeLessThan(humanHand.components['anatomy:can_grab'].gripStrength);

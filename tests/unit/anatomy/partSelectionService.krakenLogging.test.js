@@ -30,7 +30,7 @@ describe('PartSelectionService kraken diagnostics', () => {
   it('logs detailed diagnostics when kraken tentacle passes validation', async () => {
     const definitions = [
       {
-        id: 'anatomy:kraken_tentacle',
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           'anatomy:part': { subType: 'tentacle' },
           tentacle_component: {},
@@ -53,10 +53,10 @@ describe('PartSelectionService kraken diagnostics', () => {
       () => 0
     );
 
-    expect(result).toBe('anatomy:kraken_tentacle');
+    expect(result).toBe('anatomy-creatures:kraken_tentacle');
     expect(mockLogger.info).toHaveBeenCalledWith(
       'PartSelectionService: Checking kraken_tentacle against requirements',
-      expect.objectContaining({ entityId: 'anatomy:kraken_tentacle' })
+      expect.objectContaining({ entityId: 'anatomy-creatures:kraken_tentacle' })
     );
     expect(mockLogger.info).toHaveBeenCalledWith(
       'PartSelectionService: kraken_tentacle PASSED all validation checks'
@@ -66,7 +66,7 @@ describe('PartSelectionService kraken diagnostics', () => {
   it('logs missing anatomy component diagnostics for kraken tentacle', async () => {
     const definitions = [
       {
-        id: 'anatomy:kraken_tentacle',
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {},
       },
     ];
@@ -90,7 +90,7 @@ describe('PartSelectionService kraken diagnostics', () => {
   it('logs allowed type mismatch diagnostics for kraken tentacle', async () => {
     const definitions = [
       {
-        id: 'anatomy:kraken_tentacle',
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           'anatomy:part': { subType: 'arm' },
         },
@@ -111,7 +111,7 @@ describe('PartSelectionService kraken diagnostics', () => {
   it('logs required partType mismatch diagnostics for kraken tentacle', async () => {
     const definitions = [
       {
-        id: 'anatomy:kraken_tentacle',
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           'anatomy:part': { subType: 'tentacle' },
         },
@@ -133,7 +133,7 @@ describe('PartSelectionService kraken diagnostics', () => {
   it('logs missing component diagnostics for kraken tentacle', async () => {
     const definitions = [
       {
-        id: 'anatomy:kraken_tentacle',
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           'anatomy:part': { subType: 'tentacle' },
         },
@@ -167,7 +167,7 @@ describe('PartSelectionService kraken diagnostics', () => {
           },
         },
         {
-          id: 'anatomy:kraken_tentacle',
+          id: 'anatomy-creatures:kraken_tentacle',
           components: {
             'anatomy:part': { subType: 'tentacle' },
           },

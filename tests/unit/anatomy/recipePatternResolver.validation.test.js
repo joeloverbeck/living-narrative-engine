@@ -191,7 +191,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       };
 
       const blueprint = {
-        id: 'anatomy:spider_v2',
+        id: 'anatomy-creatures:spider_v2',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_spider',
         slots: { leg_left: {} },
@@ -208,7 +208,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       };
 
       const blueprint = {
-        id: 'anatomy:spider_v1',
+        id: 'anatomy-creatures:spider_v1',
         schemaVersion: '1.0',
         slots: {},
       };
@@ -227,7 +227,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       };
 
       const blueprint = {
-        id: 'anatomy:dragon_v2',
+        id: 'anatomy-creatures:dragon_v2',
         schemaVersion: '2.0',
         slots: {},
       };
@@ -268,7 +268,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       };
 
       const blueprint = {
-        id: 'anatomy:spider_v1',
+        id: 'anatomy-creatures:spider_v1',
         schemaVersion: '1.0',
         slots: { leg_1: {}, leg_2: {} },
       };
@@ -1105,7 +1105,7 @@ describe('RecipePatternResolver - Pattern Validation (ANABLUNONHUM-016)', () => 
       const blueprint = {
         id: 'anatomy:spider',
         schemaVersion: '2.0',
-        structureTemplate: 'anatomy:spider_template',
+        structureTemplate: 'anatomy-creatures:spider_template',
         slots: {
           leg_left: { orientation: 'left' },
           leg_right: { orientation: 'right' },

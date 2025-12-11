@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "fantasy:copper_backed_rooster_recipe",
-  "blueprintId": "anatomy:rooster",
+  "blueprintId": "anatomy-creatures:rooster",
   "bodyDescriptors": {
     "build": "barrel-chested",
     "height": "short",
@@ -13,65 +13,65 @@
   "slots": {
     "head": {
       "partType": "chicken_head",
-      "preferId": "anatomy:chicken_head_rust_red"
+      "preferId": "anatomy-creatures:chicken_head_rust_red"
     },
     "beak": {
       "partType": "chicken_beak",
-      "preferId": "anatomy:chicken_beak"
+      "preferId": "anatomy-creatures:chicken_beak"
     },
     "comb": {
       "partType": "chicken_comb",
-      "preferId": "anatomy:chicken_comb"
+      "preferId": "anatomy-creatures:chicken_comb"
     },
     "wattle": {
       "partType": "chicken_wattle",
-      "preferId": "anatomy:chicken_wattle"
+      "preferId": "anatomy-creatures:chicken_wattle"
     },
     "tail": {
       "partType": "chicken_tail",
-      "preferId": "anatomy:chicken_tail_large_long"
+      "preferId": "anatomy-creatures:chicken_tail_large_long"
     },
     "heart": {
       "partType": "chicken_heart",
-      "preferId": "anatomy:chicken_heart"
+      "preferId": "anatomy-creatures:chicken_heart"
     },
     "spine": {
       "partType": "chicken_spine",
-      "preferId": "anatomy:chicken_spine"
+      "preferId": "anatomy-creatures:chicken_spine"
     },
     "brain": {
       "partType": "chicken_brain",
-      "preferId": "anatomy:chicken_brain"
+      "preferId": "anatomy-creatures:chicken_brain"
     },
     "left_spur": {
       "partType": "chicken_spur",
-      "preferId": "anatomy:chicken_spur"
+      "preferId": "anatomy-creatures:chicken_spur"
     },
     "right_spur": {
       "partType": "chicken_spur",
-      "preferId": "anatomy:chicken_spur"
+      "preferId": "anatomy-creatures:chicken_spur"
     }
   },
   "patterns": [
     {
       "matches": ["left_wing", "right_wing"],
       "partType": "chicken_wing",
-      "preferId": "anatomy:chicken_wing_copper_metallic"
+      "preferId": "anatomy-creatures:chicken_wing_copper_metallic"
     },
     {
       "matches": ["left_leg", "right_leg"],
       "partType": "chicken_leg",
-      "preferId": "anatomy:chicken_leg"
+      "preferId": "anatomy-creatures:chicken_leg"
     },
     {
       "matches": ["left_foot", "right_foot"],
       "partType": "chicken_foot",
-      "preferId": "anatomy:chicken_foot"
+      "preferId": "anatomy-creatures:chicken_foot"
     },
     {
       "matches": ["left_eye", "right_eye"],
       "partType": "eye",
-      "preferId": "anatomy:feline_eye_amber_slit"
+      "preferId": "anatomy-creatures:feline_eye_amber_slit"
     }
   ]
 }

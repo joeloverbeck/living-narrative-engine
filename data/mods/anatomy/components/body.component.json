@@ -8,7 +8,7 @@
       "recipeId": {
         "type": "string",
         "description": "The namespaced ID of the anatomy recipe to use for body generation",
-        "pattern": "^[a-zA-Z][a-zA-Z0-9_]*:[a-zA-Z][a-zA-Z0-9_]*$"
+        "pattern": "^[a-zA-Z][a-zA-Z0-9_-]*:[a-zA-Z][a-zA-Z0-9_]*$"
       },
       "body": {
         "type": ["object", "null"],

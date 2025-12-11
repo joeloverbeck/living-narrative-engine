@@ -1,0 +1,76 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
+  "id": "anatomy-creatures:structure_centauroid",
+  "description": "Hybrid centaur body plan with quadruped base and humanoid upper body",
+  "topology": {
+    "rootType": "torso",
+    "limbSets": [
+      {
+        "type": "leg",
+        "count": 4,
+        "arrangement": "quadrupedal",
+        "arrangementHint": "equine_lower_body",
+        "socketPattern": {
+          "idTemplate": "leg_{{orientation}}",
+          "orientationScheme": "bilateral",
+          "allowedTypes": [
+            "horse_leg",
+            "equine_leg",
+            "centaur_leg",
+            "centaur_leg_front",
+            "centaur_leg_rear"
+          ],
+          "nameTpl": "{{orientation}} leg"
+        }
+      },
+      {
+        "type": "arm",
+        "count": 2,
+        "arrangement": "bilateral",
+        "socketPattern": {
+          "idTemplate": "arm_{{orientation}}",
+          "orientationScheme": "bilateral",
+          "allowedTypes": ["arm", "human_arm", "humanoid_arm", "centaur_arm"],
+          "nameTpl": "{{orientation}} arm"
+        }
+      }
+    ],
+    "appendages": [
+      {
+        "type": "upper_torso",
+        "count": 1,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "upper_torso",
+          "allowedTypes": [
+            "human_torso",
+            "humanoid_torso",
+            "centaur_upper_torso"
+          ],
+          "nameTpl": "upper torso"
+        }
+      },
+      {
+        "type": "head",
+        "count": 1,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "head",
+          "allowedTypes": ["human_head", "humanoid_head", "centaur_head"],
+          "nameTpl": "head"
+        }
+      },
+      {
+        "type": "tail",
+        "count": 1,
+        "attachment": "posterior",
+        "optional": true,
+        "socketPattern": {
+          "idTemplate": "tail",
+          "allowedTypes": ["horse_tail", "equine_tail"],
+          "nameTpl": "tail"
+        }
+      }
+    ]
+  }
+}

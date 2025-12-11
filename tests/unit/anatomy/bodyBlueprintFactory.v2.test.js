@@ -275,9 +275,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
   describe('V2 Blueprint Processing', () => {
     it('should use processed blueprint from blueprintProcessorService', async () => {
       const v2Blueprint = {
-        id: 'anatomy:spider_v2',
+        id: 'anatomy-creatures:spider_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_body',
+        root: 'anatomy-creatures:spider_body',
         structureTemplate: 'anatomy:template_spider_octopedal',
       };
 
@@ -325,7 +325,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         processedBlueprint
       );
 
-      const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -333,8 +333,8 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       );
 
       await factory.createAnatomyGraph(
-        'anatomy:spider_v2',
-        'anatomy:spider_standard'
+        'anatomy-creatures:spider_v2',
+        'anatomy-creatures:spider_standard'
       );
 
       // Verify blueprintProcessorService was called with the raw blueprint
@@ -351,9 +351,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
     it('should use merged slots from blueprintProcessorService (additionalSlots merged)', async () => {
       const v2Blueprint = {
-        id: 'anatomy:centaur_v2',
+        id: 'anatomy-creatures:centaur_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:centaur_body',
+        root: 'anatomy-creatures:centaur_body',
         structureTemplate: 'anatomy:template_centaur',
         additionalSlots: {
           head: {
@@ -401,7 +401,7 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         processedBlueprint
       );
 
-      const recipe = { recipeId: 'anatomy:centaur_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:centaur_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -409,8 +409,8 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
       );
 
       await factory.createAnatomyGraph(
-        'anatomy:centaur_v2',
-        'anatomy:centaur_standard'
+        'anatomy-creatures:centaur_v2',
+        'anatomy-creatures:centaur_standard'
       );
 
       // Verify blueprintProcessorService was called with the raw blueprint
@@ -522,9 +522,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
   describe('Error Handling', () => {
     it('should throw ValidationError if blueprintProcessorService throws on missing template', async () => {
       const v2Blueprint = {
-        id: 'anatomy:dragon_v2',
+        id: 'anatomy-creatures:dragon_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:dragon_body',
+        root: 'anatomy-creatures:dragon_body',
         structureTemplate: 'anatomy:template_dragon_missing',
       };
 
@@ -560,21 +560,21 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       });
 
-      const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:dragon_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
         errorFactory.createAnatomyGraph(
-          'anatomy:dragon_v2',
-          'anatomy:dragon_standard'
+          'anatomy-creatures:dragon_v2',
+          'anatomy-creatures:dragon_standard'
         )
       ).rejects.toThrow(ValidationError);
 
       await expect(
         errorFactory.createAnatomyGraph(
-          'anatomy:dragon_v2',
-          'anatomy:dragon_standard'
+          'anatomy-creatures:dragon_v2',
+          'anatomy-creatures:dragon_standard'
         )
       ).rejects.toThrow(
         'Structure template not found: anatomy:template_dragon_missing'
@@ -583,9 +583,9 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
 
     it('should handle errors from blueprintProcessorService during socket generation', async () => {
       const v2Blueprint = {
-        id: 'anatomy:spider_v2',
+        id: 'anatomy-creatures:spider_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_body',
+        root: 'anatomy-creatures:spider_body',
         structureTemplate: 'anatomy:template_spider',
       };
 
@@ -619,23 +619,23 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       });
 
-      const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
         errorFactory.createAnatomyGraph(
-          'anatomy:spider_v2',
-          'anatomy:spider_standard'
+          'anatomy-creatures:spider_v2',
+          'anatomy-creatures:spider_standard'
         )
       ).rejects.toThrow('Invalid template structure');
     });
 
     it('should handle errors from blueprintProcessorService during slot generation', async () => {
       const v2Blueprint = {
-        id: 'anatomy:spider_v2',
+        id: 'anatomy-creatures:spider_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_body',
+        root: 'anatomy-creatures:spider_body',
         structureTemplate: 'anatomy:template_spider',
       };
 
@@ -669,14 +669,14 @@ describe('BodyBlueprintFactory - V2 Blueprint Processing', () => {
         },
       });
 
-      const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
 
       await expect(
         errorFactory.createAnatomyGraph(
-          'anatomy:spider_v2',
-          'anatomy:spider_standard'
+          'anatomy-creatures:spider_v2',
+          'anatomy-creatures:spider_standard'
         )
       ).rejects.toThrow('Invalid slot generation');
     });

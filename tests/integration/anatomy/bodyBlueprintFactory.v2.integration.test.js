@@ -160,9 +160,9 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       };
 
       const spiderBlueprint = {
-        id: 'anatomy:spider_v2',
+        id: 'anatomy-creatures:spider_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_body',
+        root: 'anatomy-creatures:spider_body',
         structureTemplate: 'anatomy:template_spider_octopedal',
       };
 
@@ -172,7 +172,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         return null;
       });
 
-      const recipe = { recipeId: 'anatomy:spider_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:spider_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -180,8 +180,8 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       );
 
       await factory.createAnatomyGraph(
-        'anatomy:spider_v2',
-        'anatomy:spider_standard'
+        'anatomy-creatures:spider_v2',
+        'anatomy-creatures:spider_standard'
       );
 
       // Verify that 8 sockets and 8 slots were generated
@@ -233,9 +233,9 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       };
 
       const centaurBlueprint = {
-        id: 'anatomy:centaur_v2',
+        id: 'anatomy-creatures:centaur_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:centaur_body',
+        root: 'anatomy-creatures:centaur_body',
         structureTemplate: 'anatomy:template_centaur_quadrupedal',
         additionalSlots: {
           head: {
@@ -252,7 +252,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         return null;
       });
 
-      const recipe = { recipeId: 'anatomy:centaur_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:centaur_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -260,8 +260,8 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       );
 
       await factory.createAnatomyGraph(
-        'anatomy:centaur_v2',
-        'anatomy:centaur_standard'
+        'anatomy-creatures:centaur_v2',
+        'anatomy-creatures:centaur_standard'
       );
 
       // Verify that 5 sockets and 6 slots were processed (5 generated + 1 additional)
@@ -336,9 +336,9 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       };
 
       const dragonBlueprint = {
-        id: 'anatomy:dragon_v2',
+        id: 'anatomy-creatures:dragon_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:dragon_body',
+        root: 'anatomy-creatures:dragon_body',
         structureTemplate: 'anatomy:template_dragon_hexapedal',
       };
 
@@ -348,7 +348,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         return null;
       });
 
-      const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:dragon_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -356,8 +356,8 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       );
 
       await factory.createAnatomyGraph(
-        'anatomy:dragon_v2',
-        'anatomy:dragon_standard'
+        'anatomy-creatures:dragon_v2',
+        'anatomy-creatures:dragon_standard'
       );
 
       // Verify that 8 sockets and 8 slots were generated (4 legs + 2 wings + 1 tail + 1 head)
@@ -600,9 +600,9 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
       };
 
       const dragonBlueprint = {
-        id: 'anatomy:dragon_complex_v2',
+        id: 'anatomy-creatures:dragon_complex_v2',
         schemaVersion: '2.0',
-        root: 'anatomy:dragon_body',
+        root: 'anatomy-creatures:dragon_body',
         structureTemplate: 'anatomy:template_dragon_complex',
       };
 
@@ -612,7 +612,7 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
         return null;
       });
 
-      const recipe = { recipeId: 'anatomy:dragon_standard', slots: {} };
+      const recipe = { recipeId: 'anatomy-creatures:dragon_standard', slots: {} };
       mockRecipeProcessor.loadRecipe.mockReturnValue(recipe);
       mockRecipeProcessor.processRecipe.mockReturnValue(recipe);
       mockEntityGraphBuilder.createRootEntity.mockResolvedValue(
@@ -621,8 +621,8 @@ describe('BodyBlueprintFactory - V2 Integration Tests', () => {
 
       const startTime = performance.now();
       await factory.createAnatomyGraph(
-        'anatomy:dragon_complex_v2',
-        'anatomy:dragon_standard'
+        'anatomy-creatures:dragon_complex_v2',
+        'anatomy-creatures:dragon_standard'
       );
       const endTime = performance.now();
 

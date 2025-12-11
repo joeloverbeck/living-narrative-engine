@@ -4,15 +4,15 @@ import SocketGenerator from '../../../src/anatomy/socketGenerator.js';
 import SlotGenerator from '../../../src/anatomy/slotGenerator.js';
 import BlueprintProcessorService from '../../../src/anatomy/services/blueprintProcessorService.js';
 
-import giantSpiderBlueprint from '../../../data/mods/anatomy/blueprints/giant_spider.blueprint.json';
-import redDragonBlueprint from '../../../data/mods/anatomy/blueprints/red_dragon.blueprint.json';
-import krakenBlueprint from '../../../data/mods/anatomy/blueprints/kraken.blueprint.json';
-import centaurBlueprint from '../../../data/mods/anatomy/blueprints/centaur_warrior.blueprint.json';
+import giantSpiderBlueprint from '../../../data/mods/anatomy-creatures/blueprints/giant_spider.blueprint.json';
+import redDragonBlueprint from '../../../data/mods/anatomy-creatures/blueprints/red_dragon.blueprint.json';
+import krakenBlueprint from '../../../data/mods/anatomy-creatures/blueprints/kraken.blueprint.json';
+import centaurBlueprint from '../../../data/mods/anatomy-creatures/blueprints/centaur_warrior.blueprint.json';
 
-import structureArachnidTemplate from '../../../data/mods/anatomy/structure-templates/structure_arachnid_8leg.structure-template.json';
-import structureWingedQuadrupedTemplate from '../../../data/mods/anatomy/structure-templates/structure_winged_quadruped.structure-template.json';
-import structureOctopoidTemplate from '../../../data/mods/anatomy/structure-templates/structure_octopoid.structure-template.json';
-import structureCentauroidTemplate from '../../../data/mods/anatomy/structure-templates/structure_centauroid.structure-template.json';
+import structureArachnidTemplate from '../../../data/mods/anatomy-creatures/structure-templates/structure_arachnid_8leg.structure-template.json';
+import structureWingedQuadrupedTemplate from '../../../data/mods/anatomy-creatures/structure-templates/structure_winged_quadruped.structure-template.json';
+import structureOctopoidTemplate from '../../../data/mods/anatomy-creatures/structure-templates/structure_octopoid.structure-template.json';
+import structureCentauroidTemplate from '../../../data/mods/anatomy-creatures/structure-templates/structure_centauroid.structure-template.json';
 
 const TEST_RECIPE_ID = 'anatomy:test_recipe';
 

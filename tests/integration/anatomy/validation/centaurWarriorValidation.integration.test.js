@@ -18,6 +18,18 @@ describe('Centaur Warrior Recipe Validation', () => {
   let validator;
   let dataRegistry;
   let originalFetch;
+  const recipePath = path.resolve(
+    process.cwd(),
+    'data/mods/anatomy-creatures/recipes/centaur_warrior.recipe.json'
+  );
+  const blueprintPath = path.resolve(
+    process.cwd(),
+    'data/mods/anatomy-creatures/blueprints/centaur_warrior.blueprint.json'
+  );
+  const structureTemplatePath = path.resolve(
+    process.cwd(),
+    'data/mods/anatomy-creatures/structure-templates/structure_centauroid.structure-template.json'
+  );
 
   beforeAll(async () => {
     // Mock fetch to read from filesystem for schema loading
@@ -61,7 +73,7 @@ describe('Centaur Warrior Recipe Validation', () => {
 
     const loadContext = createLoadContext({
       worldName: 'test-world',
-      requestedMods: ['core', 'descriptors', 'anatomy'],
+      requestedMods: ['core', 'descriptors', 'anatomy', 'anatomy-creatures'],
       registry: dataRegistry,
     });
 
@@ -90,6 +102,50 @@ describe('Centaur Warrior Recipe Validation', () => {
     });
   });
 
+  const getCentaurRecipe = () => {
+    const existing = dataRegistry.get(
+      'anatomyRecipes',
+      'anatomy-creatures:centaur_warrior'
+    );
+    if (existing) {
+      return existing;
+    }
+
+    const recipe = JSON.parse(fs.readFileSync(recipePath, 'utf-8'));
+    dataRegistry.store('anatomyRecipes', recipe.recipeId, recipe);
+    return recipe;
+  };
+
+  const getCentaurBlueprint = () => {
+    const existing = dataRegistry.get(
+      'anatomyBlueprints',
+      'anatomy-creatures:centaur_warrior'
+    );
+    if (existing) {
+      return existing;
+    }
+
+    const blueprint = JSON.parse(fs.readFileSync(blueprintPath, 'utf-8'));
+    dataRegistry.store('anatomyBlueprints', blueprint.id, blueprint);
+    return blueprint;
+  };
+
+  const getCentauroidTemplate = () => {
+    const existing = dataRegistry.get(
+      'anatomyStructureTemplates',
+      'anatomy-creatures:structure_centauroid'
+    );
+    if (existing) {
+      return existing;
+    }
+
+    const template = JSON.parse(
+      fs.readFileSync(structureTemplatePath, 'utf-8')
+    );
+    dataRegistry.store('anatomyStructureTemplates', template.id, template);
+    return template;
+  };
+
   afterAll(() => {
     // Restore original fetch
     global.fetch = originalFetch;
@@ -97,18 +153,15 @@ describe('Centaur Warrior Recipe Validation', () => {
 
   it('should validate centaur_warrior recipe without false positive warnings', async () => {
     // Get the actual centaur_warrior recipe from loaded mods
-    const recipe = dataRegistry.get(
-      'anatomyRecipes',
-      'anatomy:centaur_warrior'
-    );
+    const recipe = getCentaurRecipe();
 
     expect(recipe).toBeDefined();
-    expect(recipe.recipeId).toBe('anatomy:centaur_warrior');
-    expect(recipe.blueprintId).toBe('anatomy:centaur_warrior');
+    expect(recipe.recipeId).toBe('anatomy-creatures:centaur_warrior');
+    expect(recipe.blueprintId).toBe('anatomy-creatures:centaur_warrior');
 
     // Validate the recipe
     const report = await validator.validate(recipe, {
-      recipePath: 'data/mods/anatomy/recipes/centaur_warrior.recipe.json',
+      recipePath,
     });
 
     // Should pass validation
@@ -117,8 +170,12 @@ describe('Centaur Warrior Recipe Validation', () => {
     // Should have no errors
     expect(report.errors).toHaveLength(0);
 
+    const nonUsageWarnings = report.warnings.filter(
+      (w) => w.type !== 'RECIPE_UNUSED'
+    );
+
     // Should have no warnings about pattern matching
-    const patternWarnings = report.warnings.filter(
+    const patternWarnings = nonUsageWarnings.filter(
       (w) => w.type === 'NO_MATCHING_SLOTS'
     );
     expect(patternWarnings).toHaveLength(0);
@@ -132,16 +189,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should correctly match arm pattern against additionalSlots', async () => {
-    const recipe = dataRegistry.get(
-      'anatomyRecipes',
-      'anatomy:centaur_warrior'
-    );
+    const recipe = getCentaurRecipe();
 
     // Get the blueprint
-    const blueprint = dataRegistry.get(
-      'anatomyBlueprints',
-      'anatomy:centaur_warrior'
-    );
+    const blueprint = getCentaurBlueprint();
 
     expect(blueprint).toBeDefined();
     expect(blueprint.additionalSlots).toBeDefined();
@@ -167,16 +218,10 @@ describe('Centaur Warrior Recipe Validation', () => {
   });
 
   it('should correctly match leg patterns against generated slots with orientation', async () => {
-    const recipe = dataRegistry.get(
-      'anatomyRecipes',
-      'anatomy:centaur_warrior'
-    );
+    const recipe = getCentaurRecipe();
 
     // Get the structure template to verify it generates leg slots
-    const template = dataRegistry.get(
-      'anatomyStructureTemplates',
-      'anatomy:structure_centauroid'
-    );
+    const template = getCentauroidTemplate();
 
     expect(template).toBeDefined();
     expect(template.topology.limbSets).toBeDefined();
@@ -220,7 +265,7 @@ describe('Centaur Warrior Recipe Validation', () => {
   it('should have only descriptor coverage suggestions, no critical warnings', async () => {
     const recipe = dataRegistry.get(
       'anatomyRecipes',
-      'anatomy:centaur_warrior'
+      'anatomy-creatures:centaur_warrior'
     );
 
     const report = await validator.validate(recipe);
@@ -239,7 +284,7 @@ describe('Centaur Warrior Recipe Validation', () => {
   it('should process blueprint slots correctly for pattern resolution', async () => {
     const recipe = dataRegistry.get(
       'anatomyRecipes',
-      'anatomy:centaur_warrior'
+      'anatomy-creatures:centaur_warrior'
     );
 
     // This test verifies that the validator processes the blueprint
@@ -257,7 +302,7 @@ describe('Centaur Warrior Recipe Validation', () => {
     expect(allPatternsPassed).toBe(true);
 
     // Verify the report structure
-    expect(report).toHaveProperty('recipeId', 'anatomy:centaur_warrior');
+    expect(report).toHaveProperty('recipeId', 'anatomy-creatures:centaur_warrior');
     expect(report).toHaveProperty('isValid', true);
     expect(report.errors).toHaveLength(0);
   });

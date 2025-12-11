@@ -7,7 +7,7 @@ describe('Tortoise Arm Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_arm.entity.json'
       ),
       'utf-8'
     )
@@ -15,7 +15,7 @@ describe('Tortoise Arm Entity Validation', () => {
 
   describe('tortoise_arm entity', () => {
     it('should have correct entity ID', () => {
-      expect(armEntity.id).toBe('anatomy:tortoise_arm');
+      expect(armEntity.id).toBe('anatomy-creatures:tortoise_arm');
     });
 
     it('should have correct description', () => {

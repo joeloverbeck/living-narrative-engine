@@ -26,7 +26,7 @@ describe('Octopoid Regression Tests', () => {
   describe('Octopus Anatomy Generation', () => {
     it('should prevent recurrence of tentacle slot mismatch', async () => {
       // Create entity with octopus anatomy
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       // Generate anatomy
@@ -71,7 +71,7 @@ describe('Octopoid Regression Tests', () => {
 
     it('should properly generate sockets for radial arrangement (8 tentacles)', async () => {
       // Create octopus with 8 tentacles in radial arrangement
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -100,7 +100,7 @@ describe('Octopoid Regression Tests', () => {
     });
 
     it('should maintain slot-socket synchronization for all tentacles', async () => {
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -132,7 +132,7 @@ describe('Octopoid Regression Tests', () => {
 
   describe('Kraken Anatomy Generation', () => {
     it('should prevent recurrence of tentacle issues in larger cephalopods', async () => {
-      const recipeId = 'anatomy:kraken_elder';
+      const recipeId = 'anatomy-creatures:kraken_elder';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -174,7 +174,7 @@ describe('Octopoid Regression Tests', () => {
 
   describe('Edge Cases - Cephalopod Variations', () => {
     it('should handle squid anatomy with consistent tentacle generation', async () => {
-      const recipeId = 'anatomy:squid_common';
+      const recipeId = 'anatomy-creatures:squid_common';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -199,7 +199,7 @@ describe('Octopoid Regression Tests', () => {
     });
 
     it('should properly serialize and deserialize octopoid anatomy', async () => {
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -234,7 +234,7 @@ describe('Octopoid Regression Tests', () => {
 
   describe('Performance Regression', () => {
     it('should generate octopoid anatomy within reasonable time', async () => {
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       const anatomyService = testBed.container.get('AnatomyGenerationService');
@@ -250,7 +250,7 @@ describe('Octopoid Regression Tests', () => {
     });
 
     it('should handle multiple octopoid generations efficiently', async () => {
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const count = 5;
       const actors = [];
 

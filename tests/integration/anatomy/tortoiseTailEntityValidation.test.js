@@ -1,21 +1,36 @@
 import { describe, it, expect } from '@jest/globals';
-import { readFileSync } from 'fs';
+import fs, { readFileSync } from 'fs';
 import { join } from 'path';
 
+const ANATOMY_DEFINITIONS_PATH = join(
+  process.cwd(),
+  'data/mods/anatomy/entities/definitions'
+);
+const CREATURE_DEFINITIONS_PATH = join(
+  process.cwd(),
+  'data/mods/anatomy-creatures/entities/definitions'
+);
+const STRUCTURE_TEMPLATE_PATH = join(
+  process.cwd(),
+  'data/mods/anatomy-creatures/structure-templates/structure_tortoise_biped.structure-template.json'
+);
+
+const loadDefinition = (filename) => {
+  const creaturePath = join(CREATURE_DEFINITIONS_PATH, filename);
+  if (fs.existsSync(creaturePath)) {
+    return JSON.parse(readFileSync(creaturePath, 'utf-8'));
+  }
+
+  const anatomyPath = join(ANATOMY_DEFINITIONS_PATH, filename);
+  return JSON.parse(readFileSync(anatomyPath, 'utf-8'));
+};
+
 describe('Tortoise Tail Entity Validation', () => {
-  const tailEntity = JSON.parse(
-    readFileSync(
-      join(
-        process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_tail.entity.json'
-      ),
-      'utf-8'
-    )
-  );
+  const tailEntity = loadDefinition('tortoise_tail.entity.json');
 
   describe('tortoise_tail entity', () => {
     it('should have correct entity ID', () => {
-      expect(tailEntity.id).toBe('anatomy:tortoise_tail');
+      expect(tailEntity.id).toBe('anatomy-creatures:tortoise_tail');
     });
 
     it('should have correct description', () => {
@@ -292,13 +307,7 @@ describe('Tortoise Tail Entity Validation', () => {
 
   describe('Compatibility with structure template', () => {
     const structureTemplate = JSON.parse(
-      readFileSync(
-        join(
-          process.cwd(),
-          'data/mods/anatomy/structure-templates/structure_tortoise_biped.structure-template.json'
-        ),
-        'utf-8'
-      )
+      readFileSync(STRUCTURE_TEMPLATE_PATH, 'utf-8')
     );
 
     it('should be compatible with structure template tail appendage', () => {
@@ -323,15 +332,7 @@ describe('Tortoise Tail Entity Validation', () => {
 
   describe('Reptilian characteristics', () => {
     it('should have scaled texture like other tortoise limbs', () => {
-      const armEntity = JSON.parse(
-        readFileSync(
-          join(
-            process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
-          ),
-          'utf-8'
-        )
-      );
+      const armEntity = loadDefinition('tortoise_arm.entity.json');
       expect(tailEntity.components['descriptors:texture'].texture).toBe(
         armEntity.components['descriptors:texture'].texture
       );
@@ -345,15 +346,7 @@ describe('Tortoise Tail Entity Validation', () => {
     });
 
     it('should have olive-green color consistent with tortoise body', () => {
-      const armEntity = JSON.parse(
-        readFileSync(
-          join(
-            process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
-          ),
-          'utf-8'
-        )
-      );
+      const armEntity = loadDefinition('tortoise_arm.entity.json');
       expect(tailEntity.components['descriptors:color_extended'].color).toBe(
         armEntity.components['descriptors:color_extended'].color
       );

@@ -3,7 +3,7 @@ import { createTestBed } from '../../../common/testBed.js';
 import path from 'path';
 import fs from 'fs';
 
-describe('Dredgers - Toad Tympanum Entity Loading', () => {
+describe('Anatomy Creatures (dredgers dependency) - Toad Tympanum Entity Loading', () => {
   let testBed;
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('Dredgers - Toad Tympanum Entity Loading', () => {
     const loadEntity = () => {
       const entityPath = path.resolve(
         process.cwd(),
-        'data/mods/dredgers/entities/definitions/toad_tympanum.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/toad_tympanum.entity.json'
       );
       return JSON.parse(fs.readFileSync(entityPath, 'utf8'));
     };
@@ -26,7 +26,7 @@ describe('Dredgers - Toad Tympanum Entity Loading', () => {
     it('should load with all required components', () => {
       const entityDef = loadEntity();
 
-      expect(entityDef.id).toBe('dredgers:toad_tympanum');
+      expect(entityDef.id).toBe('anatomy-creatures:toad_tympanum');
       expect(entityDef.components['anatomy:part']).toBeDefined();
       expect(entityDef.components['anatomy:part_health']).toBeDefined();
       expect(entityDef.components['core:name']).toBeDefined();

@@ -2,7 +2,7 @@ import { describe, it, expect } from '@jest/globals';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const ENTITY_PATH = 'data/mods/anatomy/entities/definitions';
+const ENTITY_PATH = 'data/mods/anatomy-creatures/entities/definitions';
 
 /**
  * Helper to load an entity JSON file
@@ -41,7 +41,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_torso.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_torso');
+      expect(entity.id).toBe('anatomy-creatures:chicken_torso');
     });
 
     it('should have anatomy:part component with chicken_torso subType', () => {
@@ -66,7 +66,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_head.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_head');
+      expect(entity.id).toBe('anatomy-creatures:chicken_head');
     });
 
     it('should have anatomy:part component with chicken_head subType', () => {
@@ -91,7 +91,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_beak.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_beak');
+      expect(entity.id).toBe('anatomy-creatures:chicken_beak');
     });
 
     it('should have anatomy:part component with chicken_beak subType', () => {
@@ -116,8 +116,8 @@ describe('Chicken Entity Validation', () => {
       expect(entity.components['descriptors:color_basic'].color).toBe('yellow');
     });
 
-    it('should be distinct from anatomy:beak (Kraken beak)', () => {
-      expect(entity.id).not.toBe('anatomy:beak');
+    it('should be distinct from anatomy-creatures:beak (Kraken beak)', () => {
+      expect(entity.id).not.toBe('anatomy-creatures:beak');
       expect(entity.components['anatomy:part'].subType).toBe('chicken_beak');
     });
   });
@@ -126,7 +126,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_comb.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_comb');
+      expect(entity.id).toBe('anatomy-creatures:chicken_comb');
     });
 
     it('should have anatomy:part component with chicken_comb subType', () => {
@@ -149,7 +149,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_wattle.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_wattle');
+      expect(entity.id).toBe('anatomy-creatures:chicken_wattle');
     });
 
     it('should have anatomy:part component with chicken_wattle subType', () => {
@@ -172,7 +172,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_wing.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_wing');
+      expect(entity.id).toBe('anatomy-creatures:chicken_wing');
     });
 
     it('should have anatomy:part component with chicken_wing subType', () => {
@@ -192,7 +192,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_leg.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_leg');
+      expect(entity.id).toBe('anatomy-creatures:chicken_leg');
     });
 
     it('should have anatomy:part component with chicken_leg subType', () => {
@@ -215,7 +215,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_foot.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_foot');
+      expect(entity.id).toBe('anatomy-creatures:chicken_foot');
     });
 
     it('should have anatomy:part component with chicken_foot subType', () => {
@@ -238,7 +238,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_tail.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_tail');
+      expect(entity.id).toBe('anatomy-creatures:chicken_tail');
     });
 
     it('should have anatomy:part component with chicken_tail subType', () => {
@@ -258,7 +258,7 @@ describe('Chicken Entity Validation', () => {
     const entity = loadEntity('chicken_spur.entity.json');
 
     it('should have correct entity ID', () => {
-      expect(entity.id).toBe('anatomy:chicken_spur');
+      expect(entity.id).toBe('anatomy-creatures:chicken_spur');
     });
 
     it('should have anatomy:part component with chicken_spur subType', () => {

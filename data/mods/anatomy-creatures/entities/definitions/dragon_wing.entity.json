@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:dragon_wing",
+  "description": "A broad, leathery dragon wing",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_wing",
+      "hit_probability_weight": 10,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 45,
+      "maxHealth": 45,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "dragon wing"
+    },
+    "core:weight": {
+      "weight": 40
+    },
+    "descriptors:length_category": {
+      "length": "immense"
+    }
+  }
+}

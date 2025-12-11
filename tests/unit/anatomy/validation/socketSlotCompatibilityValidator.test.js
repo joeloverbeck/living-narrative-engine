@@ -12,8 +12,8 @@ describe('socketSlotCompatibilityValidator', () => {
     mockDataRegistry = {
       get: (category, id) => {
         const entities = {
-          'anatomy:centaur_torso': {
-            id: 'anatomy:centaur_torso',
+          'anatomy-creatures:centaur_torso': {
+            id: 'anatomy-creatures:centaur_torso',
             components: {
               'anatomy:sockets': {
                 sockets: [
@@ -30,8 +30,8 @@ describe('socketSlotCompatibilityValidator', () => {
               },
             },
           },
-          'anatomy:spider_cephalothorax': {
-            id: 'anatomy:spider_cephalothorax',
+          'anatomy-creatures:spider_cephalothorax': {
+            id: 'anatomy-creatures:spider_cephalothorax',
             components: {
               'anatomy:sockets': {
                 sockets: [
@@ -91,7 +91,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should pass validation when root entity exists with no additionalSlots', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {},
       };
 
@@ -107,8 +107,8 @@ describe('socketSlotCompatibilityValidator', () => {
   describe('Socket Reference Validation', () => {
     it('should pass when all additionalSlots reference valid sockets', async () => {
       const blueprint = {
-        id: 'anatomy:centaur_warrior',
-        root: 'anatomy:centaur_torso',
+        id: 'anatomy-creatures:centaur_warrior',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           quiver_mount: {
             socket: 'back_upper',
@@ -132,7 +132,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should return error when additionalSlot references invalid socket', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           invalid_slot: {
             socket: 'nonexistent_socket',
@@ -159,7 +159,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should return error when additionalSlot missing socket property', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           missing_socket: {
             requirements: { partType: 'test' },
@@ -183,7 +183,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should detect multiple invalid sockets', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           invalid1: {
             socket: 'nonexistent1',
@@ -215,7 +215,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should include blueprint ID in all errors', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           invalid: {
             socket: 'nonexistent',
@@ -236,7 +236,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should include socket ID in socket not found errors', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'missing_socket',
@@ -257,7 +257,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should include available sockets in error message', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'nonexistent',
@@ -273,13 +273,13 @@ describe('socketSlotCompatibilityValidator', () => {
 
       expect(errors.length).toBe(1);
       expect(errors[0].availableSockets.length).toBeGreaterThan(0);
-      expect(errors[0].message).toContain('anatomy:centaur_torso');
+      expect(errors[0].message).toContain('anatomy-creatures:centaur_torso');
     });
 
     it('should suggest similar socket name when available', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'hed', // Typo: should be 'head'
@@ -301,7 +301,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should list available sockets when no similar name found', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'completely_different',
@@ -325,7 +325,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should handle blueprint with no additionalSlots', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
       };
 
       const errors = await validateSocketSlotCompatibility(
@@ -361,7 +361,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should handle empty additionalSlots object', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {},
       };
 
@@ -394,7 +394,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should handle null dataRegistry', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {},
       };
 
@@ -408,7 +408,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should suggest "head" for "hed"', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'hed',
@@ -428,7 +428,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should suggest "arm_left" for "arm_lft"', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'arm_lft',
@@ -448,7 +448,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should be case-insensitive for similarity matching', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'HEAD',
@@ -468,7 +468,7 @@ describe('socketSlotCompatibilityValidator', () => {
     it('should not suggest when distance > 3', async () => {
       const blueprint = {
         id: 'anatomy:test_blueprint',
-        root: 'anatomy:centaur_torso',
+        root: 'anatomy-creatures:centaur_torso',
         additionalSlots: {
           test: {
             socket: 'completely_unrelated_socket_name',

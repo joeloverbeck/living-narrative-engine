@@ -358,7 +358,7 @@ describe('AnatomyBlueprintRepository', () => {
   describe('getBlueprint - Wizard ID mismatch scenario', () => {
     it('should return null when trying to get blueprint by non-namespaced ID when registry stores by full ID', async () => {
       // This reproduces the wizard bug where getAll returns blueprints with
-      // id="giant_spider" but registry stores them as "anatomy:giant_spider"
+      // id="giant_spider" but registry stores them as "anatomy-creatures:giant_spider"
       mockDataRegistry.get.mockImplementation((category, id) => {
         // Simulate registry storing by full ID only
         if (category === 'anatomyBlueprints' && id === 'anatomy:human_female') {

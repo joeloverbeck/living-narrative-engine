@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:kraken_head",
+  "description": "A kraken head with massive beak",
+  "components": {
+    "anatomy:part": {
+      "subType": "head",
+      "hit_probability_weight": 18,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "kraken head"
+    },
+    "core:weight": {
+      "weight": 50
+    },
+    "descriptors:color_extended": {
+      "color": "murky-green"
+    },
+    "descriptors:shape_general": {
+      "shape": "bulbous"
+    },
+    "descriptors:size_category": {
+      "size": "gigantic"
+    }
+  }
+}

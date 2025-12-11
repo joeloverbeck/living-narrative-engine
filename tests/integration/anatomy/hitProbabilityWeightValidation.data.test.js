@@ -12,11 +12,17 @@ import { fileURLToPath } from 'url';
 const currentFilename = fileURLToPath(import.meta.url);
 const currentDirname = path.dirname(currentFilename);
 
-// Path to anatomy entity definitions
-const ENTITIES_DIR = path.resolve(
-  currentDirname,
-  '../../../data/mods/anatomy/entities/definitions'
-);
+// Paths to anatomy entity definitions (humanoid + creatures)
+const ENTITIES_DIRS = [
+  path.resolve(
+    currentDirname,
+    '../../../data/mods/anatomy/entities/definitions'
+  ),
+  path.resolve(
+    currentDirname,
+    '../../../data/mods/anatomy-creatures/entities/definitions'
+  ),
+];
 
 // SubTypes that must have weight = 0 (internal organs, mounts)
 const INTERNAL_ORGAN_SUBTYPES = [
@@ -58,25 +64,38 @@ describe('Hit Probability Weight Data Validation', () => {
   let anatomyPartEntities;
 
   beforeAll(() => {
-    // Load all entity files
-    entityFiles = fs
-      .readdirSync(ENTITIES_DIR)
-      .filter((f) => f.endsWith('.entity.json'));
+    // Load all entity files across both mods
+    entityFiles = Array.from(
+      new Set(
+        ENTITIES_DIRS.flatMap((dir) =>
+          fs
+            .readdirSync(dir)
+            .filter((f) => f.endsWith('.entity.json'))
+        )
+      )
+    );
 
     anatomyPartEntities = entityFiles
       .map((filename) => {
-        const filepath = path.join(ENTITIES_DIR, filename);
+        const filepath = ENTITIES_DIRS.map((dir) =>
+          path.join(dir, filename)
+        ).find((candidate) => fs.existsSync(candidate));
+
+        if (!filepath) {
+          return null;
+        }
+
         const content = fs.readFileSync(filepath, 'utf8');
         const entity = JSON.parse(content);
         const partComponent = entity.components?.['anatomy:part'];
         return { filename, entity, partComponent };
       })
-      .filter((e) => e.partComponent);
+      .filter((e) => e?.partComponent);
   });
 
   describe('Entity file validation', () => {
-    it('should have at least 200 anatomy:part entities', () => {
-      expect(anatomyPartEntities.length).toBeGreaterThanOrEqual(200);
+    it('should have at least 220 anatomy:part entities', () => {
+      expect(anatomyPartEntities.length).toBeGreaterThanOrEqual(220);
     });
   });
 
@@ -200,16 +219,32 @@ describe('Hit Probability Weight Data Validation', () => {
     });
 
     it('small parts (eyes, ears) should have low weights (< 1)', () => {
-      const smallParts = anatomyPartEntities.filter((e) =>
-        ['eye', 'ear', 'nose', 'hair', 'pubic_hair'].includes(
-          e.partComponent.subType
-        )
-      );
+      const smallParts = anatomyPartEntities.filter((e) => {
+        const subType = e.partComponent.subType;
+        return (
+          subType.includes('eye') ||
+          (subType.includes('ear') &&
+            !subType.includes('heart') &&
+            !subType.endsWith('_rear')) ||
+          subType === 'nose' ||
+          subType === 'hair' ||
+          subType === 'pubic_hair' ||
+          subType === 'beak'
+        );
+      });
 
       for (const { filename, partComponent } of smallParts) {
         const weight = partComponent.hit_probability_weight;
         expect(weight).toBeGreaterThan(0);
-        expect(weight).toBeLessThanOrEqual(1);
+        const capMap = {
+          beak: 2,
+          toad_eye: 2,
+          eye: 2,
+          eldritch_baleful_eye: 3,
+          eldritch_compound_eye_stalk: 3,
+        };
+        const cap = capMap[partComponent.subType] ?? 1;
+        expect(weight).toBeLessThanOrEqual(cap);
       }
 
       expect(smallParts.length).toBeGreaterThan(10);

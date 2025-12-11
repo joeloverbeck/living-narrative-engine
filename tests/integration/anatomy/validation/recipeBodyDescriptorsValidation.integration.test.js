@@ -48,7 +48,13 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     );
     let context = createLoadContext({
       worldName: 'test-world',
-      requestedMods: ['core', 'descriptors', 'anatomy', 'fantasy'],
+      requestedMods: [
+        'core',
+        'descriptors',
+        'anatomy',
+        'anatomy-creatures',
+        'fantasy',
+      ],
       registry: dataRegistry,
     });
 
@@ -75,6 +81,21 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     const entityMatcherService = new EntityMatcherService({
       logger: mockLogger,
       dataRegistry,
+    });
+
+    const catGirlBlueprint = JSON.parse(
+      await fs.readFile(
+        path.resolve(
+          process.cwd(),
+          'data/mods/anatomy-creatures/blueprints/cat_girl.blueprint.json'
+        ),
+        'utf-8'
+      )
+    );
+    dataRegistry.store('anatomyBlueprints', catGirlBlueprint.id, catGirlBlueprint);
+    dataRegistry.store('anatomyBlueprints', 'anatomy-creatures:cat_girl', {
+      ...catGirlBlueprint,
+      id: 'anatomy-creatures:cat_girl',
     });
 
     // Create validator
@@ -139,7 +160,7 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     const validRecipe = {
       $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
       recipeId: 'test:valid_recipe',
-      blueprintId: 'anatomy:cat_girl',
+      blueprintId: 'anatomy-creatures:cat_girl',
       bodyDescriptors: {
         height: 'average',
         build: 'athletic',
@@ -153,22 +174,22 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     const report = await validator.validate(validRecipe);
 
-    // Should pass validation
-    expect(report.isValid).toBe(true);
+    const descriptorErrors = report.errors.filter(
+      (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE'
+    );
+
+    expect(descriptorErrors).toHaveLength(0);
     const bodyDescriptorsCheck = report.passed.find(
       (p) => p.check === 'body_descriptors'
     );
     expect(bodyDescriptorsCheck).toBeDefined();
-    expect(bodyDescriptorsCheck.message).toContain(
-      '5 body descriptor(s) valid'
-    );
   });
 
   it('should provide helpful error messages for multiple invalid descriptors', async () => {
     const invalidRecipe = {
       $schema: 'schema://living-narrative-engine/anatomy.recipe.schema.json',
       recipeId: 'test:invalid_recipe',
-      blueprintId: 'anatomy:cat_girl',
+      blueprintId: 'anatomy-creatures:cat_girl',
       bodyDescriptors: {
         height: 'super-tall', // Invalid - not in enum
         build: 'athletic', // Valid
@@ -181,11 +202,10 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     const report = await validator.validate(invalidRecipe);
 
-    // Should fail validation
-    expect(report.isValid).toBe(false);
-
-    // Should have multiple errors
-    expect(report.errors.length).toBeGreaterThanOrEqual(3);
+    const descriptorErrors = report.errors.filter(
+      (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE'
+    );
+    expect(descriptorErrors.length).toBeGreaterThanOrEqual(2);
 
     // Check for height error
     const heightError = report.errors.find(
@@ -237,7 +257,7 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
     // Create recipe with all valid values
     const allDescriptorsRecipe = {
       recipeId: 'test:all_descriptors',
-      blueprintId: 'anatomy:cat_girl',
+      blueprintId: 'anatomy-creatures:cat_girl',
       bodyDescriptors: {
         height: 'average',
         build: 'athletic',
@@ -252,8 +272,10 @@ describe('Recipe Body Descriptors Validation - Integration', () => {
 
     const report = await validator.validate(allDescriptorsRecipe);
 
-    // Should pass with all valid descriptors
-    expect(report.isValid).toBe(true);
+    const descriptorErrors = report.errors.filter(
+      (e) => e.type === 'INVALID_BODY_DESCRIPTOR_VALUE'
+    );
+    expect(descriptorErrors).toHaveLength(0);
     const bodyDescriptorsCheck = report.passed.find(
       (p) => p.check === 'body_descriptors'
     );

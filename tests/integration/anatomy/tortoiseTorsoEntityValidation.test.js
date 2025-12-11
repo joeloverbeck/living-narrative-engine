@@ -25,7 +25,7 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
     // Load the entity definition file
     const entityPath = join(
       process.cwd(),
-      'data/mods/anatomy/entities/definitions/tortoise_torso_with_shell.entity.json'
+      'data/mods/anatomy-creatures/entities/definitions/tortoise_torso_with_shell.entity.json'
     );
     const entityContent = readFileSync(entityPath, 'utf-8');
     entityDefinition = JSON.parse(entityContent);
@@ -53,7 +53,7 @@ describe('Tortoise Torso Entity Definition (TORPERANAREC-003)', () => {
     });
 
     it('should have correct entity ID', () => {
-      expect(entityDefinition.id).toBe('anatomy:tortoise_torso_with_shell');
+      expect(entityDefinition.id).toBe('anatomy-creatures:tortoise_torso_with_shell');
     });
 
     it('should have a description', () => {

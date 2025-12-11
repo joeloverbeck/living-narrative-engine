@@ -7,7 +7,7 @@ describe('Tortoise Foot Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_foot.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_foot.entity.json'
       ),
       'utf-8'
     )
@@ -15,7 +15,7 @@ describe('Tortoise Foot Entity Validation', () => {
 
   describe('tortoise_foot entity', () => {
     it('should have correct entity ID', () => {
-      expect(footEntity.id).toBe('anatomy:tortoise_foot');
+      expect(footEntity.id).toBe('anatomy-creatures:tortoise_foot');
     });
 
     it('should have correct description', () => {
@@ -266,7 +266,7 @@ describe('Tortoise Foot Entity Validation', () => {
       readFileSync(
         join(
           process.cwd(),
-          'data/mods/anatomy/entities/definitions/tortoise_leg.entity.json'
+          'data/mods/anatomy-creatures/entities/definitions/tortoise_leg.entity.json'
         ),
         'utf-8'
       )

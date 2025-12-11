@@ -39,8 +39,8 @@ describe('AnatomyCacheManager - Scalability', () => {
       'anatomy:human_female',
       'anatomy:human_female',
       'anatomy:human_female',
-      'anatomy:tortoise_person', // 2x tortoise
-      'anatomy:tortoise_person',
+      'anatomy-creatures:tortoise_person', // 2x tortoise
+      'anatomy-creatures:tortoise_person',
     ];
 
     // Act: Generate all concurrently using testBed API and measure time
@@ -111,7 +111,7 @@ describe('AnatomyCacheManager - Scalability', () => {
     const batches = [
       Array.from({ length: 5 }, () => 'anatomy:human_male'),
       Array.from({ length: 5 }, () => 'anatomy:human_female'),
-      Array.from({ length: 5 }, () => 'anatomy:tortoise_person'),
+      Array.from({ length: 5 }, () => 'anatomy-creatures:tortoise_person'),
     ];
 
     // Act: Process each batch concurrently, batches sequentially

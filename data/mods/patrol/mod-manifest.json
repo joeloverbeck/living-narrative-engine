@@ -24,6 +24,10 @@
       "version": "^1.0.0"
     },
     {
+      "id": "anatomy-creatures",
+      "version": "^1.0.0"
+    },
+    {
       "id": "items",
       "version": "^1.0.0"
     },

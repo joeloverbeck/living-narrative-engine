@@ -78,10 +78,10 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
 
   it('should validate spider blueprint referencing 8-leg template', () => {
     const spiderBlueprint = {
-      id: 'anatomy:giant_spider',
+      id: 'anatomy-creatures:giant_spider',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_arachnid_8leg',
-      root: 'anatomy:spider_cephalothorax',
+      root: 'anatomy-creatures:spider_cephalothorax',
       additionalSlots: {
         venom_gland: {
           socket: 'venom_gland',
@@ -132,10 +132,10 @@ describe('Template-Blueprint Integration - Spider (8 Legs)', () => {
     };
 
     const blueprint = {
-      id: 'anatomy:giant_spider',
+      id: 'anatomy-creatures:giant_spider',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_arachnid_8leg',
-      root: 'anatomy:spider_cephalothorax',
+      root: 'anatomy-creatures:spider_cephalothorax',
     };
 
     const templateResult = validator.validate(TEMPLATE_SCHEMA_ID, template);
@@ -232,10 +232,10 @@ describe('Template-Blueprint Integration - Dragon (Winged Quadruped)', () => {
 
   it('should validate dragon blueprint with additional fire gland slot', () => {
     const dragonBlueprint = {
-      id: 'anatomy:red_dragon',
+      id: 'anatomy-creatures:red_dragon',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_winged_quadruped',
-      root: 'anatomy:dragon_torso_red',
+      root: 'anatomy-creatures:dragon_torso_red',
       additionalSlots: {
         fire_gland: {
           socket: 'fire_gland',
@@ -335,7 +335,7 @@ describe('Template-Blueprint Integration - Octopoid (Radial Tentacles)', () => {
       id: 'anatomy:giant_octopus',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_octopoid_8arm',
-      root: 'anatomy:octopus_mantle',
+      root: 'anatomy-creatures:octopus_mantle',
       additionalSlots: {
         beak: {
           socket: 'beak_socket',
@@ -493,7 +493,7 @@ describe('Template-Blueprint Integration - AdditionalSlots Validation', () => {
       id: 'anatomy:rideable_dragon',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_winged_quadruped',
-      root: 'anatomy:dragon_torso',
+      root: 'anatomy-creatures:dragon_torso',
       additionalSlots: {
         fire_gland: {
           socket: 'fire_gland',

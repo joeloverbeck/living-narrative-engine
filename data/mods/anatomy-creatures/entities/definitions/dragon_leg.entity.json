@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:dragon_leg",
+  "description": "A muscular dragon leg ending in talons",
+  "components": {
+    "anatomy:part": {
+      "subType": "dragon_leg",
+      "hit_probability_weight": 12,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "dragon leg"
+    },
+    "core:weight": {
+      "weight": 60
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:tortoise_head",
+  "description": "Reptilian head with beak mount and eye sockets",
+  "components": {
+    "anatomy:part": {
+      "subType": "tortoise_head",
+      "hit_probability_weight": 8,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "allowedTypes": ["tortoise_eye"],
+          "nameTpl": "left eye"
+        },
+        {
+          "id": "right_eye",
+          "allowedTypes": ["tortoise_eye"],
+          "nameTpl": "right eye"
+        },
+        {
+          "id": "beak_mount",
+          "allowedTypes": ["tortoise_beak"],
+          "nameTpl": "beak"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "tortoise head"
+    },
+    "core:weight": {
+      "weight": 0.8
+    },
+    "descriptors:color_extended": {
+      "color": "sickly-gray-green"
+    },
+    "descriptors:shape_general": {
+      "shape": "domed"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    }
+  }
+}

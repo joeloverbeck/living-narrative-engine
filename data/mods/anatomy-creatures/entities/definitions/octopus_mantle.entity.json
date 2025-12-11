@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:octopus_mantle",
+  "description": "Common octopus mantle body with medium size and reddish-brown bumpy texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "mantle",
+      "hit_probability_weight": 40,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ink_sac",
+          "allowedTypes": ["ink_reservoir", "ink_sac"],
+          "nameTpl": "ink sac"
+        },
+        {
+          "id": "beak",
+          "allowedTypes": ["beak", "cephalopod_beak"],
+          "nameTpl": "beak"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "mantle"
+    },
+    "core:weight": {
+      "weight": 15
+    },
+    "descriptors:color_extended": {
+      "color": "reddish-brown"
+    },
+    "descriptors:shape_general": {
+      "shape": "oval"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "bumpy"
+    }
+  }
+}

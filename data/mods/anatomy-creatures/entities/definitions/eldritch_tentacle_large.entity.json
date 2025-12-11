@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:eldritch_tentacle_large",
+  "description": "Massive grasping tentacle with powerful musculature and acidic mucus",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1.2,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "eldritch_tentacle",
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 50,
+      "maxHealth": 50,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "large grasping tentacle"
+    },
+    "core:weight": {
+      "weight": 20
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    },
+    "descriptors:color_extended": {
+      "color": "mottled-purple-gray"
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "extremely-long"
+    },
+    "descriptors:secretion": {
+      "secretion": "acidic-mucus"
+    },
+    "descriptors:size_category": {
+      "size": "enormous"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
+    }
+  }
+}

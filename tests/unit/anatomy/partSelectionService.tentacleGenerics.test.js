@@ -189,7 +189,7 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
         };
       }
       // Old kraken_tentacle no longer exists
-      if (entityId === 'anatomy:kraken_tentacle') {
+      if (entityId === 'anatomy-creatures:kraken_tentacle') {
         return null;
       }
       return null;
@@ -207,7 +207,7 @@ describe('PartSelectionService - Generic Tentacle Selection', () => {
 
     expect(result).toBe('anatomy:tentacle');
     expect(mockDataRegistry.getEntityDefinition).not.toHaveBeenCalledWith(
-      'anatomy:kraken_tentacle'
+      'anatomy-creatures:kraken_tentacle'
     );
   });
 });

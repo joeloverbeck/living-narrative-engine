@@ -7,7 +7,7 @@ describe('Tortoise Beak Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_beak.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_beak.entity.json'
       ),
       'utf-8'
     )
@@ -15,7 +15,7 @@ describe('Tortoise Beak Entity Validation', () => {
 
   describe('tortoise_beak entity', () => {
     it('should have correct entity ID', () => {
-      expect(beakEntity.id).toBe('anatomy:tortoise_beak');
+      expect(beakEntity.id).toBe('anatomy-creatures:tortoise_beak');
     });
 
     it('should have correct description', () => {
@@ -101,7 +101,7 @@ describe('Tortoise Beak Entity Validation', () => {
         readFileSync(
           join(
             process.cwd(),
-            'data/mods/anatomy/entities/definitions/tortoise_head.entity.json'
+            'data/mods/anatomy-creatures/entities/definitions/tortoise_head.entity.json'
           ),
           'utf-8'
         )

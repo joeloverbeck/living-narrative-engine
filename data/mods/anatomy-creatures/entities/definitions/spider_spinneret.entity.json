@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:spider_spinneret",
+  "description": "Spider silk-producing organ located on the abdomen",
+  "components": {
+    "anatomy:part": {
+      "subType": "spinneret",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "spinneret"
+    },
+    "core:weight": {
+      "weight": 0.005
+    },
+    "descriptors:body_hair": {
+      "hairDensity": "hairy"
+    },
+    "descriptors:texture": {
+      "texture": "chitinous"
+    }
+  }
+}

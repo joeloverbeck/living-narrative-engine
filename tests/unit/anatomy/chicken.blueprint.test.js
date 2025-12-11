@@ -16,14 +16,14 @@ describe('Chicken Blueprints', () => {
     // Load the rooster blueprint
     const roosterPath = path.join(
       process.cwd(),
-      'data/mods/anatomy/blueprints/rooster.blueprint.json'
+      'data/mods/anatomy-creatures/blueprints/rooster.blueprint.json'
     );
     roosterBlueprint = JSON.parse(fs.readFileSync(roosterPath, 'utf8'));
 
     // Load the hen blueprint
     const henPath = path.join(
       process.cwd(),
-      'data/mods/anatomy/blueprints/hen.blueprint.json'
+      'data/mods/anatomy-creatures/blueprints/hen.blueprint.json'
     );
     henBlueprint = JSON.parse(fs.readFileSync(henPath, 'utf8'));
   });
@@ -31,11 +31,11 @@ describe('Chicken Blueprints', () => {
   describe('Rooster Blueprint', () => {
     describe('Basic Structure', () => {
       it('should have correct id', () => {
-        expect(roosterBlueprint.id).toBe('anatomy:rooster');
+        expect(roosterBlueprint.id).toBe('anatomy-creatures:rooster');
       });
 
       it('should have chicken_torso as root', () => {
-        expect(roosterBlueprint.root).toBe('anatomy:chicken_torso');
+        expect(roosterBlueprint.root).toBe('anatomy-creatures:chicken_torso');
       });
 
       it('should have the correct schema reference', () => {
@@ -186,11 +186,11 @@ describe('Chicken Blueprints', () => {
   describe('Hen Blueprint', () => {
     describe('Basic Structure', () => {
       it('should have correct id', () => {
-        expect(henBlueprint.id).toBe('anatomy:hen');
+        expect(henBlueprint.id).toBe('anatomy-creatures:hen');
       });
 
       it('should have chicken_torso as root (same as rooster)', () => {
-        expect(henBlueprint.root).toBe('anatomy:chicken_torso');
+        expect(henBlueprint.root).toBe('anatomy-creatures:chicken_torso');
       });
 
       it('should have the correct schema reference', () => {

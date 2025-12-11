@@ -68,6 +68,12 @@ export async function extractHierarchicalSockets(
 ) {
   const hierarchicalSockets = new Map();
 
+  // Extract namespace from blueprint root entity ID for entity resolution preference
+  // This prevents cross-mod contamination when validating recipes from different mods in batch
+  // Note: We use blueprint.root (e.g., "anatomy:human_male_torso") instead of blueprint.id
+  // because the id field may not include the namespace prefix after loading/processing
+  const blueprintNamespace = blueprint?.root?.split(':')[0] || null;
+
   // 1. Extract root entity sockets (direct attachments)
   const rootSockets = extractSocketsFromEntity(rootEntity);
   for (const [socketId, socketData] of rootSockets) {
@@ -83,7 +89,8 @@ export async function extractHierarchicalSockets(
     await extractStructureTemplateSockets(
       structureTemplate,
       hierarchicalSockets,
-      dataRegistry
+      dataRegistry,
+      blueprintNamespace
     );
   }
 
@@ -95,13 +102,13 @@ export async function extractHierarchicalSockets(
   // handles both V1 (slots) and V2 (additionalSlots) by processing all slots with
   // partType requirements.
   if (blueprint?.compose && dataRegistry) {
-    await extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry);
+    await extractComposedSlots(blueprint, hierarchicalSockets, dataRegistry, blueprintNamespace);
   }
 
   // 4. For blueprints without structure template, extract child sockets
   //    from entities attached to slots that have child slots with parent refs
   if (!structureTemplate && dataRegistry && blueprint) {
-    await extractSlotChildSockets(blueprint, hierarchicalSockets, dataRegistry);
+    await extractSlotChildSockets(blueprint, hierarchicalSockets, dataRegistry, blueprintNamespace);
   }
 
   return hierarchicalSockets;
@@ -118,13 +125,15 @@ export async function extractHierarchicalSockets(
  * @param {object} blueprint - Blueprint definition
  * @param {Map<string, object>} hierarchicalSockets - Socket map to populate
  * @param {object} dataRegistry - Data registry for entity lookups
+ * @param {string} [preferredNamespace] - Optional namespace to prefer for entity resolution
  * @returns {Promise<void>}
  * @private
  */
 async function extractSlotChildSockets(
   blueprint,
   hierarchicalSockets,
-  dataRegistry
+  dataRegistry,
+  preferredNamespace = null
 ) {
   // Combine both slots and additionalSlots for complete coverage
   const allSlots = {
@@ -151,7 +160,8 @@ async function extractSlotChildSockets(
     }
 
     // Try to find entity definition for this part type
-    const entityId = await resolveEntityId(partType, dataRegistry);
+    // Pass preferredNamespace to avoid cross-mod contamination in batch validation
+    const entityId = await resolveEntityId(partType, dataRegistry, preferredNamespace);
     if (!entityId) {
       continue;
     }
@@ -191,7 +201,8 @@ async function extractSlotChildSockets(
 async function extractStructureTemplateSockets(
   structureTemplate,
   hierarchicalSockets,
-  dataRegistry
+  dataRegistry,
+  preferredNamespace = null
 ) {
   const topology = structureTemplate?.topology;
   if (!topology) {
@@ -201,7 +212,7 @@ async function extractStructureTemplateSockets(
   // Extract sockets from limbSets (arms, legs, wings, etc.)
   if (Array.isArray(topology.limbSets)) {
     for (const limbSet of topology.limbSets) {
-      await extractLimbSetSockets(limbSet, hierarchicalSockets, dataRegistry);
+      await extractLimbSetSockets(limbSet, hierarchicalSockets, dataRegistry, preferredNamespace);
     }
   }
 
@@ -211,7 +222,8 @@ async function extractStructureTemplateSockets(
       await extractAppendageSockets(
         appendage,
         hierarchicalSockets,
-        dataRegistry
+        dataRegistry,
+        preferredNamespace
       );
     }
   }
@@ -233,7 +245,8 @@ async function extractStructureTemplateSockets(
 async function extractLimbSetSockets(
   limbSet,
   hierarchicalSockets,
-  dataRegistry
+  dataRegistry,
+  preferredNamespace = null
 ) {
   const socketPattern = limbSet?.socketPattern;
   if (!socketPattern) {
@@ -259,7 +272,8 @@ async function extractLimbSetSockets(
 
     // Now extract child sockets from the parts that attach to these sockets
     for (const partType of allowedTypes) {
-      const entityId = await resolveEntityId(partType, dataRegistry);
+      // Pass preferredNamespace to avoid cross-mod entity contamination in batch validation
+      const entityId = await resolveEntityId(partType, dataRegistry, preferredNamespace);
       if (entityId) {
         const partEntity = await getEntityDefinition(dataRegistry, entityId);
         if (partEntity) {
@@ -297,7 +311,8 @@ async function extractLimbSetSockets(
 async function extractAppendageSockets(
   appendage,
   hierarchicalSockets,
-  dataRegistry
+  dataRegistry,
+  preferredNamespace = null
 ) {
   const socketPattern = appendage?.socketPattern;
   if (!socketPattern) {
@@ -317,7 +332,8 @@ async function extractAppendageSockets(
 
   // Now extract child sockets from the parts that attach to this socket
   for (const partType of allowedTypes) {
-    const entityId = await resolveEntityId(partType, dataRegistry);
+    // Pass preferredNamespace to avoid cross-mod entity contamination in batch validation
+    const entityId = await resolveEntityId(partType, dataRegistry, preferredNamespace);
     if (entityId) {
       const partEntity = await getEntityDefinition(dataRegistry, entityId);
       if (partEntity) {
@@ -374,13 +390,17 @@ function generateSocketIds(idTemplate, arrangement, count) {
  * Entity IDs don't directly match partTypes (e.g., partType "head" → entity "anatomy:humanoid_head"),
  * so we search all entity definitions to find one with matching subType.
  *
+ * When preferredNamespace is provided, entities from that namespace are strongly preferred.
+ * This prevents cross-mod contamination when validating recipes from different mods in batch.
+ *
  * @param {string} partType - Part type identifier (e.g., "head", "arm", "leg")
  * @param {object} dataRegistry - Data registry for lookups
+ * @param {string} [preferredNamespace] - Optional namespace to prefer (e.g., "anatomy")
  * @returns {Promise<string|null>} Resolved entity ID or null
  * @private
  * @internal Exported for unit testing only
  */
-export async function resolveEntityId(partType, dataRegistry) {
+export async function resolveEntityId(partType, dataRegistry, preferredNamespace = null) {
   if (!dataRegistry || !partType) {
     return null;
   }
@@ -410,10 +430,22 @@ export async function resolveEntityId(partType, dataRegistry) {
     return candidates[0].id;
   }
 
-  // Multiple candidates: apply deterministic priority rules
+  // Multiple candidates: apply deterministic priority rules with namespace preference
   candidates.sort((a, b) => {
     const aId = a.id || '';
     const bId = b.id || '';
+
+    // Rule 0 (NEW): Prefer entities from the preferred namespace
+    // This is critical for batch validation to prevent cross-mod contamination
+    if (preferredNamespace) {
+      const aNamespace = aId.split(':')[0] || '';
+      const bNamespace = bId.split(':')[0] || '';
+      const aMatches = aNamespace === preferredNamespace;
+      const bMatches = bNamespace === preferredNamespace;
+
+      if (aMatches && !bMatches) return -1;
+      if (bMatches && !aMatches) return 1;
+    }
 
     // Rule 1: Fewer underscores = higher priority (base entities)
     const aUnderscores = (aId.match(/_/g) || []).length;
@@ -437,7 +469,7 @@ export async function resolveEntityId(partType, dataRegistry) {
   const selectedId = candidates[0].id;
 
   logger?.debug?.(
-    `[socketExtractor] Multiple entities with subType "${partType}": ${candidateIds.join(', ')}. Selected "${selectedId}" (priority: fewest underscores, alphabetical, shortest ID).`
+    `[socketExtractor] Multiple entities with subType "${partType}": ${candidateIds.join(', ')}. Selected "${selectedId}" (priority: ${preferredNamespace ? `namespace "${preferredNamespace}", ` : ''}fewest underscores, alphabetical, shortest ID).`
   );
 
   return candidates[0].id;
@@ -552,7 +584,8 @@ function resolveSlotDefinition(slotConfig, library) {
 async function extractComposedSlots(
   blueprint,
   hierarchicalSockets,
-  dataRegistry
+  dataRegistry,
+  preferredNamespace = null
 ) {
   const composeInstructions = blueprint?.compose;
   if (!Array.isArray(composeInstructions)) {
@@ -622,7 +655,8 @@ async function extractComposedSlots(
       }
 
       // Try to find entity definition for this part type
-      const entityId = await resolveEntityId(partType, dataRegistry);
+      // Pass preferredNamespace to avoid cross-mod entity contamination in batch validation
+      const entityId = await resolveEntityId(partType, dataRegistry, preferredNamespace);
       if (!entityId) {
         continue;
       }

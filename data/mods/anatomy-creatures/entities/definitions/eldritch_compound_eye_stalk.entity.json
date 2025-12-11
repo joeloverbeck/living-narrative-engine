@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:eldritch_compound_eye_stalk",
+  "description": "Flexible stalk topped with insectoid compound eye cluster",
+  "components": {
+    "anatomy:part": {
+      "subType": "eldritch_compound_eye_stalk",
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 12,
+      "maxHealth": 12,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "compound eye stalk"
+    },
+    "core:weight": {
+      "weight": 1.5
+    },
+    "descriptors:color_extended": {
+      "color": "iridescent-green"
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "faceted"
+    },
+    "descriptors:visual_capability": {
+      "capability": "compound-multidirectional"
+    }
+  }
+}

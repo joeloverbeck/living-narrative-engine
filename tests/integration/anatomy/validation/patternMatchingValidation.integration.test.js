@@ -133,8 +133,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
   describe('Real Blueprint & Structure Template Integration', () => {
     it('should validate spider recipe with matchesGroup pattern successfully', () => {
       const recipe = {
-        recipeId: 'anatomy:spider_recipe',
-        blueprintId: 'anatomy:giant_spider',
+        recipeId: 'anatomy-creatures:spider_recipe',
+        blueprintId: 'anatomy-creatures:giant_spider',
         patterns: [
           {
             matchesGroup: 'limbSet:leg',
@@ -152,9 +152,9 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_cephalothorax',
+        root: 'anatomy-creatures:spider_cephalothorax',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         slots,
       };
@@ -172,8 +172,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should detect pattern with non-existent slot group', () => {
       const recipe = {
-        recipeId: 'anatomy:spider_recipe',
-        blueprintId: 'anatomy:giant_spider',
+        recipeId: 'anatomy-creatures:spider_recipe',
+        blueprintId: 'anatomy-creatures:giant_spider',
         patterns: [
           {
             matchesGroup: 'limbSet:wing', // Spider has no wings!
@@ -190,7 +190,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         slots,
@@ -216,8 +216,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should validate dragon recipe with multiple patterns', () => {
       const recipe = {
-        recipeId: 'anatomy:dragon_recipe',
-        blueprintId: 'anatomy:red_dragon',
+        recipeId: 'anatomy-creatures:dragon_recipe',
+        blueprintId: 'anatomy-creatures:red_dragon',
         patterns: [
           {
             matchesGroup: 'limbSet:leg',
@@ -244,7 +244,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_winged_quadruped',
         slots,
@@ -263,8 +263,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should detect some patterns matching and some not matching', () => {
       const recipe = {
-        recipeId: 'anatomy:dragon_recipe',
-        blueprintId: 'anatomy:red_dragon',
+        recipeId: 'anatomy-creatures:dragon_recipe',
+        blueprintId: 'anatomy-creatures:red_dragon',
         patterns: [
           {
             matchesGroup: 'limbSet:leg', // This exists
@@ -284,7 +284,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_winged_quadruped',
         slots,
@@ -306,8 +306,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
   describe('matchesPattern with Generated Slots', () => {
     it('should validate matchesPattern with indexed slot keys', () => {
       const recipe = {
-        recipeId: 'anatomy:spider_recipe',
-        blueprintId: 'anatomy:giant_spider',
+        recipeId: 'anatomy-creatures:spider_recipe',
+        blueprintId: 'anatomy-creatures:giant_spider',
         patterns: [
           {
             matchesPattern: 'leg_*', // Matches leg_1, leg_2, ..., leg_8
@@ -323,7 +323,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         slots,
@@ -342,8 +342,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should validate matchesPattern with bilateral orientation', () => {
       const recipe = {
-        recipeId: 'anatomy:dragon_recipe',
-        blueprintId: 'anatomy:red_dragon',
+        recipeId: 'anatomy-creatures:dragon_recipe',
+        blueprintId: 'anatomy-creatures:red_dragon',
         patterns: [
           {
             matchesPattern: 'leg_*', // Matches leg_left_front, leg_right_front, etc.
@@ -363,7 +363,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_winged_quadruped',
         slots,
@@ -382,8 +382,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should detect pattern that does not match any slots', () => {
       const recipe = {
-        recipeId: 'anatomy:spider_recipe',
-        blueprintId: 'anatomy:giant_spider',
+        recipeId: 'anatomy-creatures:spider_recipe',
+        blueprintId: 'anatomy-creatures:giant_spider',
         patterns: [
           {
             matchesPattern: 'tentacle_*', // Spider has no tentacles
@@ -399,7 +399,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         slots,
@@ -422,8 +422,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
   describe('matchesAll with Generated Slots', () => {
     it('should filter slots by slotType', () => {
       const recipe = {
-        recipeId: 'anatomy:dragon_recipe',
-        blueprintId: 'anatomy:red_dragon',
+        recipeId: 'anatomy-creatures:dragon_recipe',
+        blueprintId: 'anatomy-creatures:red_dragon',
         patterns: [
           {
             matchesAll: { slotType: 'leg' },
@@ -439,7 +439,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_winged_quadruped',
         slots,
@@ -458,8 +458,8 @@ describe('Pattern Matching Validation - Integration Tests', () => {
 
     it('should detect filter that matches no slots', () => {
       const recipe = {
-        recipeId: 'anatomy:spider_recipe',
-        blueprintId: 'anatomy:giant_spider',
+        recipeId: 'anatomy-creatures:spider_recipe',
+        blueprintId: 'anatomy-creatures:giant_spider',
         patterns: [
           {
             matchesAll: { slotType: 'tentacle' },
@@ -475,7 +475,7 @@ describe('Pattern Matching Validation - Integration Tests', () => {
       const slots = slotGenerator.generateBlueprintSlots(structureTemplate);
 
       const blueprint = {
-        id: 'anatomy:giant_spider',
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         slots,

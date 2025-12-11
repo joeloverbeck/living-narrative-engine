@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "dredgers:toad_folk_male_standard",
-  "blueprintId": "dredgers:toad_folk_male",
+  "blueprintId": "anatomy-creatures:toad_folk_male",
   "bodyDescriptors": {
     "height": "average",
     "skinColor": "olive",
@@ -13,7 +13,7 @@
   "slots": {
     "torso": {
       "partType": "torso",
-      "preferId": "dredgers:toad_folk_male_torso"
+      "preferId": "anatomy-creatures:toad_folk_male_torso"
     },
     "head": {
       "partType": "head",
@@ -21,19 +21,19 @@
     },
     "left_eye": {
       "partType": "eye",
-      "preferId": "dredgers:toad_eye"
+      "preferId": "anatomy-creatures:toad_eye"
     },
     "right_eye": {
       "partType": "eye",
-      "preferId": "dredgers:toad_eye"
+      "preferId": "anatomy-creatures:toad_eye"
     },
     "left_ear": {
       "partType": "ear",
-      "preferId": "dredgers:toad_tympanum"
+      "preferId": "anatomy-creatures:toad_tympanum"
     },
     "right_ear": {
       "partType": "ear",
-      "preferId": "dredgers:toad_tympanum"
+      "preferId": "anatomy-creatures:toad_tympanum"
     },
     "nose": {
       "partType": "nose",

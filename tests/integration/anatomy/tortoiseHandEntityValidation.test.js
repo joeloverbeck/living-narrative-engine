@@ -7,7 +7,7 @@ describe('Tortoise Hand Entity Validation', () => {
     readFileSync(
       join(
         process.cwd(),
-        'data/mods/anatomy/entities/definitions/tortoise_hand.entity.json'
+        'data/mods/anatomy-creatures/entities/definitions/tortoise_hand.entity.json'
       ),
       'utf-8'
     )
@@ -15,7 +15,7 @@ describe('Tortoise Hand Entity Validation', () => {
 
   describe('tortoise_hand entity', () => {
     it('should have correct entity ID', () => {
-      expect(handEntity.id).toBe('anatomy:tortoise_hand');
+      expect(handEntity.id).toBe('anatomy-creatures:tortoise_hand');
     });
 
     it('should have correct description', () => {
@@ -277,7 +277,7 @@ describe('Tortoise Hand Entity Validation', () => {
       readFileSync(
         join(
           process.cwd(),
-          'data/mods/anatomy/entities/definitions/tortoise_arm.entity.json'
+          'data/mods/anatomy-creatures/entities/definitions/tortoise_arm.entity.json'
         ),
         'utf-8'
       )

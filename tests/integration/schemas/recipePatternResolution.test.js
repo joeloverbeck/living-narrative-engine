@@ -40,11 +40,11 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
   it('should validate spider recipe with limbSet:leg group pattern', () => {
     const spiderRecipe = {
       recipeId: 'creatures:giant_spider',
-      blueprintId: 'anatomy:giant_spider',
+      blueprintId: 'anatomy-creatures:giant_spider',
       slots: {
         cephalothorax: {
           partType: 'cephalothorax',
-          preferId: 'anatomy:spider_cephalothorax_hairy',
+          preferId: 'anatomy-creatures:spider_cephalothorax_hairy',
           tags: ['anatomy:chitinous'],
         },
       },
@@ -73,10 +73,10 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
 
   it('should validate spider blueprint compatible with group pattern', () => {
     const spiderBlueprint = {
-      id: 'anatomy:giant_spider',
+      id: 'anatomy-creatures:giant_spider',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_arachnid_8leg',
-      root: 'anatomy:spider_cephalothorax',
+      root: 'anatomy-creatures:spider_cephalothorax',
       additionalSlots: {
         venom_gland: {
           socket: 'venom_gland',
@@ -114,15 +114,15 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
     };
 
     const blueprint = {
-      id: 'anatomy:giant_spider',
+      id: 'anatomy-creatures:giant_spider',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_arachnid_8leg',
-      root: 'anatomy:spider_cephalothorax',
+      root: 'anatomy-creatures:spider_cephalothorax',
     };
 
     const recipe = {
       recipeId: 'creatures:giant_spider',
-      blueprintId: 'anatomy:giant_spider',
+      blueprintId: 'anatomy-creatures:giant_spider',
       slots: {
         cephalothorax: { partType: 'cephalothorax' },
       },
@@ -147,7 +147,7 @@ describe('Recipe Pattern Resolution - Spider (8 Legs with Group Patterns)', () =
   it('should validate spider recipe with multiple group patterns', () => {
     const spiderRecipe = {
       recipeId: 'creatures:complex_spider',
-      blueprintId: 'anatomy:giant_spider',
+      blueprintId: 'anatomy-creatures:giant_spider',
       slots: {
         cephalothorax: { partType: 'cephalothorax' },
       },
@@ -195,11 +195,11 @@ describe('Recipe Pattern Resolution - Dragon (Wildcard Patterns)', () => {
   it('should validate dragon recipe with wildcard patterns', () => {
     const dragonRecipe = {
       recipeId: 'creatures:red_dragon',
-      blueprintId: 'anatomy:red_dragon',
+      blueprintId: 'anatomy-creatures:red_dragon',
       slots: {
         torso: {
           partType: 'dragon_torso',
-          preferId: 'anatomy:dragon_torso_red_scaled',
+          preferId: 'anatomy-creatures:dragon_torso_red_scaled',
         },
       },
       patterns: [
@@ -236,10 +236,10 @@ describe('Recipe Pattern Resolution - Dragon (Wildcard Patterns)', () => {
 
   it('should validate dragon blueprint with quadruped template', () => {
     const dragonBlueprint = {
-      id: 'anatomy:red_dragon',
+      id: 'anatomy-creatures:red_dragon',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_winged_quadruped',
-      root: 'anatomy:dragon_torso_red',
+      root: 'anatomy-creatures:dragon_torso_red',
       additionalSlots: {
         fire_gland: {
           socket: 'fire_gland',
@@ -258,7 +258,7 @@ describe('Recipe Pattern Resolution - Dragon (Wildcard Patterns)', () => {
   it('should validate dragon recipe with mixed group and wildcard patterns', () => {
     const dragonRecipe = {
       recipeId: 'creatures:ancient_dragon',
-      blueprintId: 'anatomy:red_dragon',
+      blueprintId: 'anatomy-creatures:red_dragon',
       slots: {
         torso: { partType: 'dragon_torso' },
       },
@@ -813,7 +813,7 @@ describe('Recipe Pattern Resolution - Complete Integration Examples', () => {
       id: 'anatomy:giant_octopus',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_octopoid_8arm',
-      root: 'anatomy:octopus_mantle',
+      root: 'anatomy-creatures:octopus_mantle',
     };
 
     const recipe = {

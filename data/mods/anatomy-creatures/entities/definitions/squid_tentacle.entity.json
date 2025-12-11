@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:squid_tentacle",
+  "description": "Common squid tentacle with medium size, long length and translucent-white coloring",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 0.8,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "tentacle",
+      "hit_probability_weight": 6,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "tentacle"
+    },
+    "core:weight": {
+      "weight": 2
+    },
+    "descriptors:color_extended": {
+      "color": "translucent-white"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:shape_general": {
+      "shape": "cylindrical"
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "suckered"
+    }
+  }
+}

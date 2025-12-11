@@ -1,0 +1,52 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:centaur_upper_torso",
+  "description": "Centaur humanoid upper torso section with muscular build",
+  "components": {
+    "anatomy:part": {
+      "subType": "centaur_upper_torso",
+      "hit_probability_weight": 25,
+      "health_calculation_weight": 10
+    },
+    "anatomy:part_health": {
+      "currentHealth": 80,
+      "maxHealth": 80,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "head",
+          "allowedTypes": [
+            "head",
+            "centaur_head",
+            "human_head",
+            "humanoid_head"
+          ],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "arm_left",
+          "orientation": "left",
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "arm_right",
+          "orientation": "right",
+          "allowedTypes": ["arm", "humanoid_arm", "centaur_arm", "human_arm"],
+          "nameTpl": "{{orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "upper torso"
+    },
+    "core:weight": {
+      "weight": 35
+    },
+    "descriptors:build": {
+      "build": "muscular"
+    }
+  }
+}

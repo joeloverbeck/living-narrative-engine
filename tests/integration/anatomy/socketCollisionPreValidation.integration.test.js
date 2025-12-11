@@ -58,28 +58,28 @@ describe('Socket Collision Pre-Validation (integration)', () => {
       const blueprint = {
         id: 'anatomy:chicken',
         slots: {
-          body: { entityDefinition: 'anatomy:chicken_body' },
+          body: { entityDefinition: 'anatomy-creatures:chicken_body' },
           left_leg: {
             parent: 'body',
             socket: 'hip_left',
-            entityDefinition: 'anatomy:chicken_leg',
+            entityDefinition: 'anatomy-creatures:chicken_leg',
           },
           right_leg: {
             parent: 'body',
             socket: 'hip_right',
-            entityDefinition: 'anatomy:chicken_leg',
+            entityDefinition: 'anatomy-creatures:chicken_leg',
           },
           // These should use different sockets on their respective parents
           // This is VALID because they have different parents (left_leg vs right_leg)
           left_foot: {
             parent: 'left_leg',
             socket: 'ankle',
-            entityDefinition: 'anatomy:chicken_foot',
+            entityDefinition: 'anatomy-creatures:chicken_foot',
           },
           right_foot: {
             parent: 'right_leg',
             socket: 'ankle',
-            entityDefinition: 'anatomy:chicken_foot',
+            entityDefinition: 'anatomy-creatures:chicken_foot',
           },
           // These are ALSO valid - different parents
           left_spur: {

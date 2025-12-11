@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:tortoise_carapace",
+  "description": "Domed upper shell (carapace) with growth rings",
+  "components": {
+    "anatomy:part": {
+      "subType": "shell_carapace",
+      "hit_probability_weight": 32,
+      "health_calculation_weight": 10
+    },
+    "anatomy:part_health": {
+      "currentHealth": 100,
+      "maxHealth": 100,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "carapace"
+    },
+    "core:weight": {
+      "weight": 5
+    },
+    "descriptors:color_extended": {
+      "color": "bronze"
+    },
+    "descriptors:pattern": {
+      "pattern": "hexagonal-scutes"
+    },
+    "descriptors:shape_general": {
+      "shape": "domed"
+    },
+    "descriptors:texture": {
+      "texture": "scaled"
+    }
+  }
+}

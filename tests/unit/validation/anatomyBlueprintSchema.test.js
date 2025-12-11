@@ -176,10 +176,10 @@ describe('Anatomy Blueprint Schema - Valid V2 Blueprints', () => {
 
   it('should validate minimal v2 blueprint (only required fields)', () => {
     const minimalV2 = {
-      id: 'anatomy:giant_spider',
+      id: 'anatomy-creatures:giant_spider',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_arachnid_8leg',
-      root: 'anatomy:spider_cephalothorax',
+      root: 'anatomy-creatures:spider_cephalothorax',
     };
 
     const result = validator.validate(SCHEMA_ID, minimalV2);
@@ -191,10 +191,10 @@ describe('Anatomy Blueprint Schema - Valid V2 Blueprints', () => {
 
   it('should validate v2 blueprint with additionalSlots', () => {
     const v2WithAdditionalSlots = {
-      id: 'anatomy:red_dragon',
+      id: 'anatomy-creatures:red_dragon',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_winged_quadruped',
-      root: 'anatomy:dragon_torso',
+      root: 'anatomy-creatures:dragon_torso',
       additionalSlots: {
         fire_gland: {
           socket: 'fire_gland',
@@ -212,10 +212,10 @@ describe('Anatomy Blueprint Schema - Valid V2 Blueprints', () => {
 
   it('should validate v2 blueprint with optional additionalSlots', () => {
     const v2WithOptional = {
-      id: 'anatomy:dragon_variant',
+      id: 'anatomy-creatures:dragon_variant',
       schemaVersion: '2.0',
       structureTemplate: 'anatomy:structure_dragon',
-      root: 'anatomy:dragon_torso',
+      root: 'anatomy-creatures:dragon_torso',
       additionalSlots: {
         venom_gland: {
           socket: 'venom_gland',

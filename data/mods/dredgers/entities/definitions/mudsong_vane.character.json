@@ -13,47 +13,140 @@
             "altText": "Jory \"Mudsong\" Vane - Dredgers crew leader"
         },
         "core:profile": {
-            "text": "Jory is a beaver-folk male. "
+            "text": "Jory is a beaver-folk male. He's the leader of a crew of dredgers, professionals in charge of salvaging stuff, sometimes occult stuff, from the bottom of canals, but also from locations that sane people wouldn't want to get in. Jory's public mask is that of a tough provider, but inside, he's desperate to prove that salvage work is real labor, not \"river trash\". Jory has broad hands, and a flat tail used like a punctuation slap on planks. Physically, he's shorter than the vast majority of humans and even non-humans he deals with on a regular basis, which can get annoying."
         },
         "core:personality": {
-            "text": ""
+            "text": "His default stress tactic is procedural bluff (\"I know the rules\"), then explosive solidarity. Jory will never abandon a member of his crew; he will even sacrifice reputation, and his own future, to save them."
         },
         "core:strengths": {
-            "text": ""
-        },
-        "core:weaknesses": {
-            "text": ""
+            "text": "Logistics, rigging, reading people, improvising under pressure. Being beaver-folk makes him canal labor embodied. He has practical intelligence, and a natural obsession with flow, gates, and rights-of-way. He usually understands infrastructure better than the owners of the canals he works on."
         },
         "core:likes": {
-            "text": ""
+            "text": "Honestly. Being spoken to frankly."
         },
         "core:dislikes": {
-            "text": ""
-        },
-        "core:fears": {
-            "text": ""
+            "text": "Being treated as disposable, illiterate, or \"born to stink\". He hates when someone associates his crew or him with the occult trash they dredge, and start considering them contaminated as well. He also hates when a client refuses to say terms out loud. It annoys him when people assume he's \"built for water\" so they push risk on him."
         },
         "core:goals": {
             "goals": [
                 {
-                    "text": ""
+                    "text": "On every job, Jory wants to secure salvage claim and keep the crew paid an uninjured."
                 }
             ]
         },
-        "core:secrets": {
-            "text": ""
-        },
-        "core:internal_tensions": {
-            "text": ""
-        },
-        "core:motivations": {
-            "text": ""
-        },
-        "core:dilemmas": {
-            "text": ""
-        },
         "core:speech_patterns": {
             "patterns": [
+                {
+                    "type": "Procedural Authority Defense",
+                    "contexts": [
+                        "When challenged by clients or authorities who question his legitimacy",
+                        "During negotiations where he needs to establish professional standing",
+                        "When someone tries to shortchange or dismiss his crew"
+                    ],
+                    "examples": [
+                        "Section twelve, subsection four. Salvage claim transfers on recovery, not on your say-so.",
+                        "I know the waterways code better than the bastards who wrote it. You want to test me on that?",
+                        "There's a process here. We follow it, or you find another crew to risk their necks in your canal.",
+                        "Don't tell me what's legal. I've been citing chapter and verse since before you owned a boat."
+                    ]
+                },
+                {
+                    "type": "Physical Punctuation and Body Language",
+                    "contexts": [
+                        "When making a point he needs others to remember",
+                        "During moments of frustration or when asserting boundaries",
+                        "To emphasize finality in negotiations"
+                    ],
+                    "examples": [
+                        "That's the deal. *slaps tail on deck* We're done haggling.",
+                        "No. *tail thump* Not negotiable. My crew doesn't work without proper rigging.",
+                        "You hear that sound? *slaps plank* That's me being done with your excuses."
+                    ]
+                },
+                {
+                    "type": "Labor Dignity Assertions",
+                    "contexts": [
+                        "When someone implies dredging is dirty work for dirty people",
+                        "When clients treat him or his crew as disposable or contaminated",
+                        "Defending his profession against occult stigma"
+                    ],
+                    "examples": [
+                        "We pull your trash out of the water. That doesn't make us trash. Get that straight.",
+                        "It's salvage work. Real labor. Not river scum picking through garbage.",
+                        "We touch the occult shit so you don't have to. Show some goddamn respect for that.",
+                        "Just because we're built for water doesn't mean we're built to die in it for your convenience.",
+                        "Call it dirty work one more time. See if I don't leave your canal clogged with whatever's down there."
+                    ]
+                },
+                {
+                    "type": "Crew Solidarity Language",
+                    "contexts": [
+                        "When a crew member is threatened or in danger",
+                        "Making decisions that prioritize crew safety over profit",
+                        "Explosive moments when loyalty overrides everything else"
+                    ],
+                    "examples": [
+                        "You want to go after one of mine? You go through me first.",
+                        "I don't leave crew behind. Not for your gold, not for your threats, not ever.",
+                        "My people get paid. My people get out safe. Everything else is negotiable.",
+                        "Touch them and we're done. More than done—you'll wish the canal was your biggest problem."
+                    ]
+                },
+                {
+                    "type": "Infrastructure Obsession Tangents",
+                    "contexts": [
+                        "When discussing jobs or locations",
+                        "Moments where his expertise shows through unconsciously",
+                        "When he's thinking through logistics or problems"
+                    ],
+                    "examples": [
+                        "That gate's been leaking for three seasons. Flow's all wrong through the east channel now.",
+                        "See how the current shifts there? Someone changed the sluice timing. Idiots don't understand cascade effect.",
+                        "This canal's a disaster. Rights-of-way are overlapping, and nobody's maintained the locks since the old regime.",
+                        "You don't understand—if the upstream gate fails, this whole district floods. It's not just about your salvage."
+                    ]
+                },
+                {
+                    "type": "Height and Respect Irritation",
+                    "contexts": [
+                        "When people literally or figuratively talk down to him",
+                        "Subtle jabs that reveal ongoing frustration with physical stature",
+                        "When asserting presence despite size disadvantage"
+                    ],
+                    "examples": [
+                        "I'm down here. Eyes down here when you're talking terms.",
+                        "Yeah, I'm short. My memory's not. You owe us three days' wages.",
+                        "Don't pat my shoulder like I'm a child. I run this crew, not you."
+                    ]
+                },
+                {
+                    "type": "Blunt Honesty Preference",
+                    "contexts": [
+                        "When clients dance around dangerous or uncomfortable truths",
+                        "Appreciating or demanding straightforward communication",
+                        "When someone wastes time with euphemisms"
+                    ],
+                    "examples": [
+                        "Just say it. You think there's bodies down there. Stop calling it 'sensitive material.'",
+                        "I appreciate you not lying to me. Tell me what we're really pulling up.",
+                        "Don't pretty it up with words. Is it cursed or isn't it? I need to know what gear to bring.",
+                        "Finally. Someone who doesn't talk around the shit they want done.",
+                        "Alright, what the fuck is... What seems to be the problem here?"
+                    ]
+                },
+                {
+                    "type": "Controlled Desperation Leaks",
+                    "contexts": [
+                        "Rare moments when his mask slips and inner fears surface",
+                        "When reputation or legitimacy is genuinely threatened",
+                        "Private conversations with trusted individuals"
+                    ],
+                    "examples": [
+                        "They already think we're contaminated just for touching this stuff. If word gets out...",
+                        "I need this to work. I need people to see we're real professionals, not just... not just river trash.",
+                        "Every job, I'm proving something. Every single one. And I'm tired of proving it."
+                    ]
+                }
             ]
         },
         "anatomy:body": {
@@ -68,30 +161,29 @@
             "type": "human"
         },
         "core:notes": {
-            "notes": [
-            ]
+            "notes": []
         },
         "core:apparent_age": {
-            "minAge": 28,
-            "maxAge": 31
+            "minAge": 34,
+            "maxAge": 37
         },
         "skills:melee_skill": {
-            "value": 23
+            "value": 38
         },
         "skills:ranged_skill": {
-            "value": 17
+            "value": 31
         },
         "skills:defense_skill": {
-            "value": 34
+            "value": 43
         },
         "skills:grappling_skill": {
-            "value": 32
+            "value": 67
         },
         "skills:resolve_skill": {
-            "value": 82
+            "value": 77
         },
         "skills:medicine_skill": {
-            "value": 36
+            "value": 58
         }
     }
 }

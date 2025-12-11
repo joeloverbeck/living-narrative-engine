@@ -126,7 +126,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'torso',
               descriptors: {
@@ -160,7 +160,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'head-1',
               parts: {},
@@ -243,7 +243,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'upper-torso-1',
               parts: {},
@@ -288,7 +288,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'centaur-torso-1',
               parts: {},
@@ -333,7 +333,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'quiver-mount-1',
               parts: {},
@@ -377,7 +377,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'tail-1',
               parts: {},
@@ -424,7 +424,7 @@ describe('Centaur Description Generation Integration', () => {
         id: 'centaur-body',
         components: {
           [ANATOMY_BODY_COMPONENT_ID]: {
-            recipeId: 'anatomy:centaur_warrior',
+            recipeId: 'anatomy-creatures:centaur_warrior',
             body: {
               root: 'centaur-torso',
               descriptors: {

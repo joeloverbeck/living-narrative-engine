@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
   "recipeId": "tests:broken_patterns",
-  "blueprintId": "anatomy:giant_spider",
+  "blueprintId": "anatomy-creatures:giant_spider",
   "bodyDescriptors": {
     "build": "athletic",
     "hairDensity": "hairy"

@@ -1,0 +1,109 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:tortoise_person",
+  "schemaVersion": "2.0",
+  "root": "anatomy-creatures:tortoise_torso_with_shell",
+  "structureTemplate": "anatomy-creatures:structure_tortoise_biped",
+  "additionalSlots": {
+    "shell_upper": {
+      "socket": "carapace_mount",
+      "requirements": {
+        "partType": "shell_carapace",
+        "components": ["anatomy:part"]
+      }
+    },
+    "shell_lower": {
+      "socket": "plastron_mount",
+      "requirements": {
+        "partType": "shell_plastron",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_hand": {
+      "parent": "arm_left",
+      "socket": "hand",
+      "requirements": {
+        "partType": "tortoise_hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_hand": {
+      "parent": "arm_right",
+      "socket": "hand",
+      "requirements": {
+        "partType": "tortoise_hand",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_foot": {
+      "parent": "leg_left",
+      "socket": "foot",
+      "requirements": {
+        "partType": "tortoise_foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_foot": {
+      "parent": "leg_right",
+      "socket": "foot",
+      "requirements": {
+        "partType": "tortoise_foot",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_eye": {
+      "parent": "head",
+      "socket": "left_eye",
+      "requirements": {
+        "partType": "tortoise_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_eye": {
+      "parent": "head",
+      "socket": "right_eye",
+      "requirements": {
+        "partType": "tortoise_eye",
+        "components": ["anatomy:part"]
+      }
+    },
+    "beak": {
+      "parent": "head",
+      "socket": "beak_mount",
+      "requirements": {
+        "partType": "tortoise_beak",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
+  "clothingSlotMappings": {
+    "shell_armor": {
+      "anatomySockets": ["carapace_mount"],
+      "allowedLayers": ["armor", "accessories"]
+    },
+    "torso_upper": {
+      "anatomySockets": ["torso"],
+      "allowedLayers": ["base", "outer", "accessories"]
+    },
+    "torso_lower": {
+      "anatomySockets": ["torso"],
+      "allowedLayers": ["base", "outer"]
+    },
+    "head_accessory": {
+      "anatomySockets": ["head"],
+      "allowedLayers": ["accessories"]
+    },
+    "head_gear": {
+      "anatomySockets": ["head"],
+      "allowedLayers": ["accessories"]
+    },
+    "left_arm_clothing": {
+      "anatomySockets": ["arm_left"],
+      "allowedLayers": ["base", "accessories"]
+    },
+    "right_arm_clothing": {
+      "anatomySockets": ["arm_right"],
+      "allowedLayers": ["base", "accessories"]
+    }
+  }
+}

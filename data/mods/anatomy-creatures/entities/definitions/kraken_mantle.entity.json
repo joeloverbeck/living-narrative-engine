@@ -1,0 +1,49 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:kraken_mantle",
+  "description": "Elder kraken mantle body with massive size and abyssal black coloring",
+  "components": {
+    "anatomy:part": {
+      "subType": "mantle",
+      "hit_probability_weight": 40,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 100,
+      "maxHealth": 100,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ink_sac",
+          "allowedTypes": ["ink_reservoir", "ink_sac"],
+          "nameTpl": "ink sac"
+        },
+        {
+          "id": "beak",
+          "allowedTypes": ["beak", "cephalopod_beak"],
+          "nameTpl": "beak"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "mantle"
+    },
+    "core:weight": {
+      "weight": 200
+    },
+    "descriptors:color_extended": {
+      "color": "abyssal-black"
+    },
+    "descriptors:shape_general": {
+      "shape": "oval"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

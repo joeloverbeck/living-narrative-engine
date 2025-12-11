@@ -121,7 +121,7 @@ describe('ComponentExistenceValidation Integration', () => {
       });
 
       const recipe = {
-        id: 'anatomy:red_dragon',
+        id: 'anatomy-creatures:red_dragon',
         slots: {
           head: {
             tags: ['anatomy:part', 'anatomy:horned'], // horned missing
@@ -144,7 +144,7 @@ describe('ComponentExistenceValidation Integration', () => {
 
       const context = new LoadTimeValidationContext({
         blueprints: {},
-        recipes: { 'anatomy:red_dragon': recipe },
+        recipes: { 'anatomy-creatures:red_dragon': recipe },
       });
 
       const issues = await validationRule.validate(context);

@@ -34,7 +34,7 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
     it('should generate complete anatomy from blueprint and recipe', async () => {
       // Create owner entity
       const actor = await testBed.createActor({
-        recipeId: 'anatomy:octopus_common',
+        recipeId: 'anatomy-creatures:octopus_common',
       });
 
       // Generate anatomy using the service
@@ -72,7 +72,7 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
     it('should properly link all tentacles to root', async () => {
       const actor = await testBed.createActor({
-        recipeId: 'anatomy:octopus_common',
+        recipeId: 'anatomy-creatures:octopus_common',
       });
 
       await anatomyGenerationService.generateAnatomy(actor.id);
@@ -100,7 +100,7 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
     it('should maintain clothing slot consistency across regeneration', async () => {
       const actor = await testBed.createActor({
-        recipeId: 'anatomy:octopus_common',
+        recipeId: 'anatomy-creatures:octopus_common',
       });
 
       // First generation
@@ -225,7 +225,7 @@ describe('Anatomy Generation Pipeline - Enhanced', () => {
 
   describe('Pipeline Validation', () => {
     it('should ensure all sockets have corresponding slots', async () => {
-      const recipes = ['anatomy:human_male', 'anatomy:octopus_common'];
+      const recipes = ['anatomy:human_male', 'anatomy-creatures:octopus_common'];
 
       for (const recipeId of recipes) {
         const actor = await testBed.createActor({ recipeId });

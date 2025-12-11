@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:ink_reservoir",
+  "description": "Massive ink reservoir for a titanic kraken",
+  "components": {
+    "anatomy:part": {
+      "subType": "ink_reservoir",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 30,
+      "maxHealth": 30,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "ink reservoir"
+    },
+    "core:weight": {
+      "weight": 2
+    },
+    "descriptors:color_extended": {
+      "color": "abyssal-black"
+    },
+    "descriptors:size_category": {
+      "size": "massive"
+    },
+    "descriptors:texture": {
+      "texture": "slick"
+    }
+  }
+}

@@ -1531,8 +1531,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Species-specific cephalopod entities
-      'anatomy:kraken_tentacle': {
-        id: 'anatomy:kraken_tentacle',
+      'anatomy-creatures:kraken_tentacle': {
+        id: 'anatomy-creatures:kraken_tentacle',
         description:
           'Elder kraken tentacle with enormous size and dark purple coloring',
         components: {
@@ -1559,8 +1559,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:kraken_mantle': {
-        id: 'anatomy:kraken_mantle',
+      'anatomy-creatures:kraken_mantle': {
+        id: 'anatomy-creatures:kraken_mantle',
         description:
           'Elder kraken mantle body with massive size and abyssal black coloring',
         components: {
@@ -1598,8 +1598,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:squid_tentacle': {
-        id: 'anatomy:squid_tentacle',
+      'anatomy-creatures:squid_tentacle': {
+        id: 'anatomy-creatures:squid_tentacle',
         description:
           'Common squid tentacle with medium size, long length and translucent-white coloring',
         components: {
@@ -1620,8 +1620,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:squid_mantle': {
-        id: 'anatomy:squid_mantle',
+      'anatomy-creatures:squid_mantle': {
+        id: 'anatomy-creatures:squid_mantle',
         description:
           'Common squid mantle body with small size and pale-translucent smooth texture',
         components: {
@@ -1656,8 +1656,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:octopus_tentacle': {
-        id: 'anatomy:octopus_tentacle',
+      'anatomy-creatures:octopus_tentacle': {
+        id: 'anatomy-creatures:octopus_tentacle',
         description:
           'Common octopus tentacle with medium size, thick shape and reddish-brown coloring',
         components: {
@@ -1678,8 +1678,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:octopus_mantle': {
-        id: 'anatomy:octopus_mantle',
+      'anatomy-creatures:octopus_mantle': {
+        id: 'anatomy-creatures:octopus_mantle',
         description:
           'Common octopus mantle body with medium size and soft texture',
         components: {
@@ -1711,8 +1711,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:beak': {
-        id: 'anatomy:beak',
+      'anatomy-creatures:beak': {
+        id: 'anatomy-creatures:beak',
         description: 'Cephalopod beak',
         components: {
           'anatomy:part': {
@@ -1723,8 +1723,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:ink_reservoir': {
-        id: 'anatomy:ink_reservoir',
+      'anatomy-creatures:ink_reservoir': {
+        id: 'anatomy-creatures:ink_reservoir',
         description: 'Cephalopod ink reservoir',
         components: {
           'anatomy:part': {
@@ -1747,8 +1747,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:kraken_head': {
-        id: 'anatomy:kraken_head',
+      'anatomy-creatures:kraken_head': {
+        id: 'anatomy-creatures:kraken_head',
         description: 'A kraken head with massive beak',
         components: {
           'anatomy:part': {
@@ -1769,8 +1769,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Species-specific spider entities
-      'anatomy:spider_cephalothorax': {
-        id: 'anatomy:spider_cephalothorax',
+      'anatomy-creatures:spider_cephalothorax': {
+        id: 'anatomy-creatures:spider_cephalothorax',
         description: 'Root cephalothorax for an eight-legged spider',
         components: {
           'anatomy:part': {
@@ -1853,8 +1853,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:spider_leg': {
-        id: 'anatomy:spider_leg',
+      'anatomy-creatures:spider_leg': {
+        id: 'anatomy-creatures:spider_leg',
         description: 'A segmented spider leg',
         components: {
           'anatomy:part': {
@@ -1871,8 +1871,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:spider_pedipalp': {
-        id: 'anatomy:spider_pedipalp',
+      'anatomy-creatures:spider_pedipalp': {
+        id: 'anatomy-creatures:spider_pedipalp',
         description: 'A spider pedipalp for sensory and manipulation',
         components: {
           'anatomy:part': {
@@ -1889,8 +1889,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:spider_abdomen': {
-        id: 'anatomy:spider_abdomen',
+      'anatomy-creatures:spider_abdomen': {
+        id: 'anatomy-creatures:spider_abdomen',
         description: 'The bulbous abdomen of a spider',
         components: {
           'anatomy:part': {
@@ -1904,8 +1904,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:spider_spinneret': {
-        id: 'anatomy:spider_spinneret',
+      'anatomy-creatures:spider_spinneret': {
+        id: 'anatomy-creatures:spider_spinneret',
         description: 'Spider silk-producing organ located on the abdomen',
         components: {
           'anatomy:part': {
@@ -1923,8 +1923,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Tortoise person entities
-      'anatomy:tortoise_torso_with_shell': {
-        id: 'anatomy:tortoise_torso_with_shell',
+      'anatomy-creatures:tortoise_torso_with_shell': {
+        id: 'anatomy-creatures:tortoise_torso_with_shell',
         description: 'Tortoise torso with integrated shell mounting points',
         components: {
           'anatomy:part': {
@@ -1955,8 +1955,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_carapace': {
-        id: 'anatomy:tortoise_carapace',
+      'anatomy-creatures:tortoise_carapace': {
+        id: 'anatomy-creatures:tortoise_carapace',
         description: 'Domed upper shell (carapace) with growth rings',
         components: {
           'anatomy:part': {
@@ -1979,8 +1979,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_plastron': {
-        id: 'anatomy:tortoise_plastron',
+      'anatomy-creatures:tortoise_plastron': {
+        id: 'anatomy-creatures:tortoise_plastron',
         description: 'Flat lower shell (plastron) protecting underside',
         components: {
           'anatomy:part': {
@@ -2000,8 +2000,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_head': {
-        id: 'anatomy:tortoise_head',
+      'anatomy-creatures:tortoise_head': {
+        id: 'anatomy-creatures:tortoise_head',
         description: 'Reptilian head with beak mount and eye sockets',
         components: {
           'anatomy:part': {
@@ -2040,8 +2040,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_beak': {
-        id: 'anatomy:tortoise_beak',
+      'anatomy-creatures:tortoise_beak': {
+        id: 'anatomy-creatures:tortoise_beak',
         description: 'Hard, hooked beak for eating vegetation',
         components: {
           'anatomy:part': {
@@ -2058,8 +2058,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_eye': {
-        id: 'anatomy:tortoise_eye',
+      'anatomy-creatures:tortoise_eye': {
+        id: 'anatomy-creatures:tortoise_eye',
         description: 'Reptilian eye with protective nictitating membrane',
         components: {
           'anatomy:part': {
@@ -2076,8 +2076,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_arm': {
-        id: 'anatomy:tortoise_arm',
+      'anatomy-creatures:tortoise_arm': {
+        id: 'anatomy-creatures:tortoise_arm',
         description: 'Scaled reptilian arm with hand socket',
         components: {
           'anatomy:part': {
@@ -2103,8 +2103,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_hand': {
-        id: 'anatomy:tortoise_hand',
+      'anatomy-creatures:tortoise_hand': {
+        id: 'anatomy-creatures:tortoise_hand',
         description: 'Thick-skinned hand with three prominent claws',
         components: {
           'anatomy:part': {
@@ -2127,8 +2127,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_leg': {
-        id: 'anatomy:tortoise_leg',
+      'anatomy-creatures:tortoise_leg': {
+        id: 'anatomy-creatures:tortoise_leg',
         description: 'Sturdy reptilian leg with foot socket',
         components: {
           'anatomy:part': {
@@ -2157,8 +2157,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_foot': {
-        id: 'anatomy:tortoise_foot',
+      'anatomy-creatures:tortoise_foot': {
+        id: 'anatomy-creatures:tortoise_foot',
         description: 'Broad foot with three clawed toes',
         components: {
           'anatomy:part': {
@@ -2181,8 +2181,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
         },
       },
-      'anatomy:tortoise_tail': {
-        id: 'anatomy:tortoise_tail',
+      'anatomy-creatures:tortoise_tail': {
+        id: 'anatomy-creatures:tortoise_tail',
         description: 'Short, thick reptilian tail',
         components: {
           'anatomy:part': {
@@ -2817,7 +2817,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       'anatomy:kraken': {
         id: 'anatomy:kraken',
         schemaVersion: '2.0',
-        root: 'anatomy:kraken_mantle',
+        root: 'anatomy-creatures:kraken_mantle',
         structureTemplate: 'anatomy:structure_octopoid',
         additionalSlots: {
           ink_sac: {
@@ -2838,10 +2838,10 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Spider blueprint for arachnids
-      'anatomy:giant_spider': {
-        id: 'anatomy:giant_spider',
+      'anatomy-creatures:giant_spider': {
+        id: 'anatomy-creatures:giant_spider',
         schemaVersion: '2.0',
-        root: 'anatomy:spider_cephalothorax',
+        root: 'anatomy-creatures:spider_cephalothorax',
         structureTemplate: 'anatomy:structure_arachnid_8leg',
         additionalSlots: {
           venom_gland: {
@@ -2862,10 +2862,10 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Tortoise person blueprint
-      'anatomy:tortoise_person': {
-        id: 'anatomy:tortoise_person',
+      'anatomy-creatures:tortoise_person': {
+        id: 'anatomy-creatures:tortoise_person',
         schemaVersion: '2.0',
-        root: 'anatomy:tortoise_torso_with_shell',
+        root: 'anatomy-creatures:tortoise_torso_with_shell',
         structureTemplate: 'anatomy:structure_tortoise_biped',
         additionalSlots: {
           shell_upper: {
@@ -3187,8 +3187,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         ],
       },
       // Cephalopod recipes
-      'anatomy:kraken_elder': {
-        recipeId: 'anatomy:kraken_elder',
+      'anatomy-creatures:kraken_elder': {
+        recipeId: 'anatomy-creatures:kraken_elder',
         blueprintId: 'anatomy:kraken',
         bodyDescriptors: {
           build: 'hulking',
@@ -3259,8 +3259,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           ],
         },
       },
-      'anatomy:squid_common': {
-        recipeId: 'anatomy:squid_common',
+      'anatomy-creatures:squid_common': {
+        recipeId: 'anatomy-creatures:squid_common',
         blueprintId: 'anatomy:kraken',
         bodyDescriptors: {
           build: 'slim',
@@ -3300,8 +3300,8 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           ],
         },
       },
-      'anatomy:octopus_common': {
-        recipeId: 'anatomy:octopus_common',
+      'anatomy-creatures:octopus_common': {
+        recipeId: 'anatomy-creatures:octopus_common',
         blueprintId: 'anatomy:kraken',
         bodyDescriptors: {
           build: 'stocky',
@@ -3344,7 +3344,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
       // Spider recipe
       'anatomy:giant_forest_spider': {
         recipeId: 'anatomy:giant_forest_spider',
-        blueprintId: 'anatomy:giant_spider',
+        blueprintId: 'anatomy-creatures:giant_spider',
         bodyDescriptors: {
           build: 'athletic',
           hairDensity: 'hairy',
@@ -3404,9 +3404,9 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         },
       },
       // Tortoise person recipe
-      'anatomy:tortoise_person': {
-        recipeId: 'anatomy:tortoise_person',
-        blueprintId: 'anatomy:tortoise_person',
+      'anatomy-creatures:tortoise_person': {
+        recipeId: 'anatomy-creatures:tortoise_person',
+        blueprintId: 'anatomy-creatures:tortoise_person',
         bodyDescriptors: {
           height: 'short',
           build: 'stocky',
@@ -3418,7 +3418,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
         slots: {
           shell_upper: {
             partType: 'shell_carapace',
-            preferId: 'anatomy:tortoise_carapace',
+            preferId: 'anatomy-creatures:tortoise_carapace',
             properties: {
               'descriptors:texture': { texture: 'scaled' },
               'descriptors:pattern': { pattern: 'hexagonal-scutes' },
@@ -3427,7 +3427,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           shell_lower: {
             partType: 'shell_plastron',
-            preferId: 'anatomy:tortoise_plastron',
+            preferId: 'anatomy-creatures:tortoise_plastron',
             properties: {
               'descriptors:texture': { texture: 'smooth' },
               'descriptors:color_extended': { color: 'cream' },
@@ -3435,21 +3435,21 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           },
           head: {
             partType: 'tortoise_head',
-            preferId: 'anatomy:tortoise_head',
+            preferId: 'anatomy-creatures:tortoise_head',
             properties: {
               'descriptors:texture': { texture: 'scaled' },
             },
           },
           tail: {
             partType: 'tortoise_tail',
-            preferId: 'anatomy:tortoise_tail',
+            preferId: 'anatomy-creatures:tortoise_tail',
           },
         },
         patterns: [
           {
             matchesGroup: 'limbSet:arm',
             partType: 'tortoise_arm',
-            preferId: 'anatomy:tortoise_arm',
+            preferId: 'anatomy-creatures:tortoise_arm',
             properties: {
               'descriptors:texture': { texture: 'scaled' },
             },
@@ -3457,7 +3457,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matchesGroup: 'limbSet:leg',
             partType: 'tortoise_leg',
-            preferId: 'anatomy:tortoise_leg',
+            preferId: 'anatomy-creatures:tortoise_leg',
             properties: {
               'descriptors:texture': { texture: 'scaled' },
               'descriptors:build': { build: 'stocky' },
@@ -3466,7 +3466,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['left_hand'],
             partType: 'tortoise_hand',
-            preferId: 'anatomy:tortoise_hand',
+            preferId: 'anatomy-creatures:tortoise_hand',
             properties: {
               'descriptors:digit_count': { count: '3' },
               'descriptors:projection': { projection: 'clawed' },
@@ -3475,7 +3475,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['right_hand'],
             partType: 'tortoise_hand',
-            preferId: 'anatomy:tortoise_hand',
+            preferId: 'anatomy-creatures:tortoise_hand',
             properties: {
               'descriptors:digit_count': { count: '3' },
               'descriptors:projection': { projection: 'clawed' },
@@ -3484,7 +3484,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['left_foot'],
             partType: 'tortoise_foot',
-            preferId: 'anatomy:tortoise_foot',
+            preferId: 'anatomy-creatures:tortoise_foot',
             properties: {
               'descriptors:digit_count': { count: '3' },
               'descriptors:projection': { projection: 'clawed' },
@@ -3493,7 +3493,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['right_foot'],
             partType: 'tortoise_foot',
-            preferId: 'anatomy:tortoise_foot',
+            preferId: 'anatomy-creatures:tortoise_foot',
             properties: {
               'descriptors:digit_count': { count: '3' },
               'descriptors:projection': { projection: 'clawed' },
@@ -3502,7 +3502,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['left_eye', 'right_eye'],
             partType: 'tortoise_eye',
-            preferId: 'anatomy:tortoise_eye',
+            preferId: 'anatomy-creatures:tortoise_eye',
             properties: {
               'descriptors:color_extended': { color: 'amber' },
             },
@@ -3510,7 +3510,7 @@ export default class AnatomyIntegrationTestBed extends BaseTestBed {
           {
             matches: ['beak'],
             partType: 'tortoise_beak',
-            preferId: 'anatomy:tortoise_beak',
+            preferId: 'anatomy-creatures:tortoise_beak',
             properties: {},
           },
         ],

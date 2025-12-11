@@ -20,7 +20,7 @@ describe('Cephalopod Species Variety - E2E', () => {
   describe('Kraken (Elder)', () => {
     it('should generate complete elder kraken with massive mantle and enormous tentacles', async () => {
       // Arrange
-      const recipeId = 'anatomy:kraken_elder';
+      const recipeId = 'anatomy-creatures:kraken_elder';
       const actor = await testBed.createActor({ recipeId });
 
       // Act
@@ -60,7 +60,7 @@ describe('Cephalopod Species Variety - E2E', () => {
   describe('Squid (Common)', () => {
     it('should generate complete common squid with small mantle and medium tentacles', async () => {
       // Arrange
-      const recipeId = 'anatomy:squid_common';
+      const recipeId = 'anatomy-creatures:squid_common';
       const actor = await testBed.createActor({ recipeId });
 
       // Act
@@ -100,7 +100,7 @@ describe('Cephalopod Species Variety - E2E', () => {
   describe('Octopus (Common)', () => {
     it('should generate complete common octopus with medium mantle and thick tentacles', async () => {
       // Arrange
-      const recipeId = 'anatomy:octopus_common';
+      const recipeId = 'anatomy-creatures:octopus_common';
       const actor = await testBed.createActor({ recipeId });
 
       // Act
@@ -141,13 +141,13 @@ describe('Cephalopod Species Variety - E2E', () => {
     it('should use same generic mantle entity for all three species', async () => {
       // Arrange - Create all three species
       const krakenActor = await testBed.createActor({
-        recipeId: 'anatomy:kraken_elder',
+        recipeId: 'anatomy-creatures:kraken_elder',
       });
       const squidActor = await testBed.createActor({
-        recipeId: 'anatomy:squid_common',
+        recipeId: 'anatomy-creatures:squid_common',
       });
       const octopusActor = await testBed.createActor({
-        recipeId: 'anatomy:octopus_common',
+        recipeId: 'anatomy-creatures:octopus_common',
       });
 
       // Act - Generate anatomy for all
@@ -193,13 +193,13 @@ describe('Cephalopod Species Variety - E2E', () => {
     it('should use same generic tentacle entity for all three species', async () => {
       // Arrange - Create all three species
       const krakenActor = await testBed.createActor({
-        recipeId: 'anatomy:kraken_elder',
+        recipeId: 'anatomy-creatures:kraken_elder',
       });
       const squidActor = await testBed.createActor({
-        recipeId: 'anatomy:squid_common',
+        recipeId: 'anatomy-creatures:squid_common',
       });
       const octopusActor = await testBed.createActor({
-        recipeId: 'anatomy:octopus_common',
+        recipeId: 'anatomy-creatures:octopus_common',
       });
 
       // Act - Generate anatomy for all
@@ -267,18 +267,18 @@ describe('Cephalopod Species Variety - E2E', () => {
 
       // Assert - Species-specific entities should exist
       const krakenTentacle = testBed.getEntityDefinition(
-        'anatomy:kraken_tentacle'
+        'anatomy-creatures:kraken_tentacle'
       );
-      const krakenMantle = testBed.getEntityDefinition('anatomy:kraken_mantle');
+      const krakenMantle = testBed.getEntityDefinition('anatomy-creatures:kraken_mantle');
       const squidTentacle = testBed.getEntityDefinition(
-        'anatomy:squid_tentacle'
+        'anatomy-creatures:squid_tentacle'
       );
-      const squidMantle = testBed.getEntityDefinition('anatomy:squid_mantle');
+      const squidMantle = testBed.getEntityDefinition('anatomy-creatures:squid_mantle');
       const octopusTentacle = testBed.getEntityDefinition(
-        'anatomy:octopus_tentacle'
+        'anatomy-creatures:octopus_tentacle'
       );
       const octopusMantle = testBed.getEntityDefinition(
-        'anatomy:octopus_mantle'
+        'anatomy-creatures:octopus_mantle'
       );
 
       expect(krakenTentacle).toBeDefined();

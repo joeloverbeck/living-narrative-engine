@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:red_dragon",
+  "schemaVersion": "2.0",
+  "root": "anatomy-creatures:dragon_torso",
+  "structureTemplate": "anatomy-creatures:structure_winged_quadruped",
+  "clothingSlotMappings": {
+    "saddle": {
+      "anatomySockets": ["back_mount"],
+      "allowedLayers": ["armor", "accessories"]
+    },
+    "wing_harness": {
+      "blueprintSlots": ["wing_left", "wing_right"],
+      "allowedLayers": ["base", "outer", "armor"]
+    }
+  }
+}

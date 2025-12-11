@@ -1,0 +1,73 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "anatomy-creatures:kraken_elder",
+  "blueprintId": "anatomy-creatures:kraken",
+  "bodyDescriptors": {
+    "build": "hulking",
+    "composition": "average",
+    "hairDensity": "hairless"
+  },
+  "slots": {
+    "root": {
+      "partType": "mantle",
+      "properties": {
+        "descriptors:size_category": {
+          "size": "massive"
+        },
+        "descriptors:color_extended": {
+          "color": "abyssal-black"
+        },
+        "descriptors:texture": {
+          "texture": "smooth"
+        },
+        "descriptors:shape_general": {
+          "shape": "oval"
+        }
+      }
+    },
+    "ink_sac": {
+      "partType": "ink_reservoir",
+      "tags": ["anatomy:part"]
+    },
+    "beak": {
+      "partType": "beak",
+      "tags": ["anatomy:part"]
+    }
+  },
+  "patterns": [
+    {
+      "matchesGroup": "limbSet:tentacle",
+      "partType": "tentacle",
+      "tags": ["anatomy:part"],
+      "properties": {
+        "descriptors:size_category": {
+          "size": "enormous"
+        },
+        "descriptors:length_category": {
+          "length": "extremely-long"
+        },
+        "descriptors:texture": {
+          "texture": "suckered"
+        },
+        "descriptors:color_extended": {
+          "color": "dark-purple"
+        },
+        "descriptors:shape_general": {
+          "shape": "cylindrical"
+        }
+      }
+    },
+    {
+      "matchesGroup": "appendage:head",
+      "partType": "head",
+      "tags": ["anatomy:part"]
+    }
+  ],
+  "constraints": {
+    "requires": [
+      {
+        "partTypes": ["tentacle", "ink_reservoir"]
+      }
+    ]
+  }
+}

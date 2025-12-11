@@ -15,10 +15,22 @@ import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 import path from 'path';
 
-const DEFINITIONS_PATH = path.resolve(
+const ANATOMY_DEFINITIONS_PATH = path.resolve(
   process.cwd(),
   'data/mods/anatomy/entities/definitions'
 );
+const CREATURE_DEFINITIONS_PATH = path.resolve(
+  process.cwd(),
+  'data/mods/anatomy-creatures/entities/definitions'
+);
+
+function resolveDefinitionPath(filename) {
+  const creaturePath = path.join(CREATURE_DEFINITIONS_PATH, filename);
+  if (fs.existsSync(creaturePath)) {
+    return creaturePath;
+  }
+  return path.join(ANATOMY_DEFINITIONS_PATH, filename);
+}
 
 /**
  * Helper to load entity JSON file
@@ -27,7 +39,7 @@ const DEFINITIONS_PATH = path.resolve(
  * @returns {object} Parsed JSON
  */
 function loadEntityFile(filename) {
-  const filePath = path.join(DEFINITIONS_PATH, filename);
+  const filePath = resolveDefinitionPath(filename);
   const content = fs.readFileSync(filePath, 'utf-8');
   return JSON.parse(content);
 }

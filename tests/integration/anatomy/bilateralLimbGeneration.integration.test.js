@@ -20,7 +20,7 @@ describe('Bilateral Limb Generation', () => {
   describe('Tortoise Blueprint Bilateral Symmetry', () => {
     it('should create both left and right hands for tortoise anatomy', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy
@@ -59,7 +59,7 @@ describe('Bilateral Limb Generation', () => {
 
     it('should create both left and right feet for tortoise anatomy', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy
@@ -91,7 +91,7 @@ describe('Bilateral Limb Generation', () => {
 
     it('should create all four extremities (2 hands, 2 feet) symmetrically', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy
@@ -126,7 +126,7 @@ describe('Bilateral Limb Generation', () => {
   describe('Blueprint Slot Processing', () => {
     it('should process all bilateral slots defined in blueprint', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy
@@ -159,7 +159,7 @@ describe('Bilateral Limb Generation', () => {
 
     it('should not misclassify anatomy sockets as equipment slots', async () => {
       // Arrange: Create actor with tortoise recipe
-      const recipeId = 'anatomy:tortoise_person';
+      const recipeId = 'anatomy-creatures:tortoise_person';
       const actor = await testBed.createActor({ recipeId });
 
       // Act: Generate anatomy

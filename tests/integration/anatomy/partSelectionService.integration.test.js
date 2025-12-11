@@ -261,8 +261,8 @@ describe('PartSelectionService Integration', () => {
           'descriptors:material': { type: 'bone' },
         },
       },
-      'anatomy:dragon_wing': {
-        id: 'anatomy:dragon_wing',
+      'anatomy-creatures:dragon_wing': {
+        id: 'anatomy-creatures:dragon_wing',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'wing' },
           'tags:organic': {},
@@ -332,7 +332,7 @@ describe('PartSelectionService Integration', () => {
     expect(
       logMessages.some((message) =>
         message.includes(
-          "❌ anatomy:dragon_wing FAILED - properties don't match recipe slot requirements"
+          "❌ anatomy-creatures:dragon_wing FAILED - properties don't match recipe slot requirements"
         )
       )
     ).toBe(true);
@@ -341,9 +341,9 @@ describe('PartSelectionService Integration', () => {
       expect.arrayContaining([
         [
           expect.stringContaining(
-            "Entity anatomy:dragon_wing filtered out - properties don't match recipe slot requirements"
+            "Entity anatomy-creatures:dragon_wing filtered out - properties don't match recipe slot requirements"
           ),
-          expect.objectContaining({ entityId: 'anatomy:dragon_wing' }),
+          expect.objectContaining({ entityId: 'anatomy-creatures:dragon_wing' }),
         ],
         [
           expect.stringContaining(
@@ -359,12 +359,12 @@ describe('PartSelectionService Integration', () => {
 
   it('provides kraken-specific validation logs across failure and success paths', async () => {
     testBed.loadEntityDefinitions({
-      'anatomy:kraken_head': {
-        id: 'anatomy:kraken_head',
+      'anatomy-creatures:kraken_head': {
+        id: 'anatomy-creatures:kraken_head',
         components: {},
       },
-      'anatomy:kraken_tentacle': {
-        id: 'anatomy:kraken_tentacle',
+      'anatomy-creatures:kraken_tentacle': {
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {},
       },
       'anatomy:tentacle': {
@@ -408,15 +408,15 @@ describe('PartSelectionService Integration', () => {
     testBed.logger.info.mockClear();
 
     testBed.loadEntityDefinitions({
-      'anatomy:kraken_head': {
-        id: 'anatomy:kraken_head',
+      'anatomy-creatures:kraken_head': {
+        id: 'anatomy-creatures:kraken_head',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'head' },
           'tags:organic': {},
         },
       },
-      'anatomy:kraken_tentacle': {
-        id: 'anatomy:kraken_tentacle',
+      'anatomy-creatures:kraken_tentacle': {
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'tentacle' },
           'tags:organic': {},
@@ -455,16 +455,16 @@ describe('PartSelectionService Integration', () => {
     testBed.logger.info.mockClear();
 
     testBed.loadEntityDefinitions({
-      'anatomy:kraken_head': {
-        id: 'anatomy:kraken_head',
+      'anatomy-creatures:kraken_head': {
+        id: 'anatomy-creatures:kraken_head',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'head' },
           'tags:organic': {},
           'tags:elite': {},
         },
       },
-      'anatomy:kraken_tentacle': {
-        id: 'anatomy:kraken_tentacle',
+      'anatomy-creatures:kraken_tentacle': {
+        id: 'anatomy-creatures:kraken_tentacle',
         components: {
           [ANATOMY_PART_COMPONENT_ID]: { subType: 'tentacle' },
           'tags:organic': {},
@@ -485,7 +485,7 @@ describe('PartSelectionService Integration', () => {
       RNG_FIRST
     );
 
-    expect(headResult).toBe('anatomy:kraken_head');
+    expect(headResult).toBe('anatomy-creatures:kraken_head');
     expect(testBed.logger.info.mock.calls).toEqual(
       expect.arrayContaining([
         [
@@ -510,7 +510,7 @@ describe('PartSelectionService Integration', () => {
       RNG_FIRST
     );
 
-    expect(tentacleResult).toBe('anatomy:kraken_tentacle');
+    expect(tentacleResult).toBe('anatomy-creatures:kraken_tentacle');
     expect(testBed.logger.info.mock.calls).toEqual(
       expect.arrayContaining([
         [

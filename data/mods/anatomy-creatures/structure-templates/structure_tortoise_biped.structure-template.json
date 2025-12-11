@@ -1,0 +1,54 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.structure-template.schema.json",
+  "id": "anatomy-creatures:structure_tortoise_biped",
+  "description": "Bipedal tortoise body plan with shell, clawed limbs, and beak",
+  "topology": {
+    "rootType": "torso_with_shell",
+    "limbSets": [
+      {
+        "type": "arm",
+        "count": 2,
+        "arrangement": "bilateral",
+        "socketPattern": {
+          "idTemplate": "arm_{{orientation}}",
+          "orientationScheme": "bilateral",
+          "allowedTypes": ["tortoise_arm"],
+          "nameTpl": "{{orientation}} arm"
+        }
+      },
+      {
+        "type": "leg",
+        "count": 2,
+        "arrangement": "bilateral",
+        "socketPattern": {
+          "idTemplate": "leg_{{orientation}}",
+          "orientationScheme": "bilateral",
+          "allowedTypes": ["tortoise_leg"],
+          "nameTpl": "{{orientation}} leg"
+        }
+      }
+    ],
+    "appendages": [
+      {
+        "type": "head",
+        "count": 1,
+        "attachment": "anterior",
+        "socketPattern": {
+          "idTemplate": "head",
+          "allowedTypes": ["tortoise_head"],
+          "nameTpl": "head"
+        }
+      },
+      {
+        "type": "tail",
+        "count": 1,
+        "attachment": "posterior",
+        "socketPattern": {
+          "idTemplate": "tail",
+          "allowedTypes": ["tortoise_tail"],
+          "nameTpl": "tail"
+        }
+      }
+    ]
+  }
+}
