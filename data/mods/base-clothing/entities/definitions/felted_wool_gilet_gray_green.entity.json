@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:felted_wool_gilet_gray_green",
+  "description": "A sleeveless felted wool gilet in gray-green with visible patches",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "felted wool gilet"
+    },
+    "core:description": {
+      "text": "A sleeveless gilet of felted wool dyed a dull gray-green, the color of river moss. The felting has made the fabric dense and wind-resistant, though years of wear have necessitated patches at the shoulder seams and along the hem. Bone buttons secure the front, and the cut is practical rather than fashionable—a working garment for a working creature."
+    },
+    "descriptors:color_extended": {
+      "color": "gray-green"
+    },
+    "descriptors:texture": {
+      "texture": "patched"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.38
+    }
+  }
+}

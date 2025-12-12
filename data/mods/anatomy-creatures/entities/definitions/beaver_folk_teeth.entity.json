@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:beaver_folk_teeth",
+  "description": "Large beaver-folk incisors - prominent chisel-shaped front teeth characteristic of the species",
+  "components": {
+    "anatomy:part": {
+      "subType": "teeth",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "teeth"
+    },
+    "core:weight": {
+      "weight": 0.05
+    },
+    "descriptors:size_category": {
+      "size": "large"
+    },
+    "descriptors:color_extended": {
+      "color": "ivory"
+    },
+    "descriptors:shape_general": {
+      "shape": "chisel-shaped"
+    }
+  }
+}

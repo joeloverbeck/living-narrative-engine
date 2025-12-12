@@ -1,13 +1,13 @@
 {
     "$schema": "http://example.com/schemas/entity-instance.schema.json",
-    "instanceId": "dredgers:cress_siltwell_instance",
-    "definitionId": "dredgers:cress_siltwell",
+    "instanceId": "dredgers:jorren_weir_instance",
+    "definitionId": "dredgers:jorren_weir",
     "componentOverrides": {
         "core:position": {
-            "locationId": "dredgers:concordance_salon_instance"
+            "locationId": "dredgers:canal_vestibule_instance"
         },
         "items:inventory": {
-            "items": ["dredgers:keyring_instance"],
+            "items": [],
             "capacity": {
                 "maxWeight": 50.0,
                 "maxItems": 20

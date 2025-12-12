@@ -500,7 +500,7 @@ function normalizeFormat(value) {
  * @param params.runtimeOverrides
  * @returns {Promise<{validator: RecipeValidationRunner, config: object}>} Context payload.
  */
-async function createValidationContext({
+export async function createValidationContext({
   verbose = false,
   configPath,
   overrides = {},

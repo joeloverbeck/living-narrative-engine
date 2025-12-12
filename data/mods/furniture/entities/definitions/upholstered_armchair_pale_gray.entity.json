@@ -1,0 +1,21 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:upholstered_armchair_pale_gray",
+  "description": "An upholstered armchair in pale beige and gray",
+  "components": {
+    "core:name": {
+      "text": "pale and gray upholstered armchair"
+    },
+    "core:description": {
+      "text": "A comfortable upholstered armchair, subtly blending pale beige and soft gray tones. Its inviting form suggests relaxation, and its neutral palette allows it to fit seamlessly into various interior designs."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/upholstered_armchair_pale_gray.png",
+      "altText": "A pale and gray upholstered armchair"
+    },
+    "positioning:allows_sitting": {
+      "spots": [null]
+    },
+    "items:item": {}
+  }
+}

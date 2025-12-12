@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:beaver_folk_mouth",
+  "description": "A beaver-folk mouth with strong jaw muscles",
+  "components": {
+    "anatomy:part": {
+      "subType": "mouth",
+      "hit_probability_weight": 0.6,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "teeth",
+          "allowedTypes": ["teeth"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:mouth_engagement": {
+      "locked": false,
+      "forcedOverride": false
+    },
+    "core:name": {
+      "text": "mouth"
+    },
+    "core:weight": {
+      "weight": 0.05
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:firmness": {
+      "firmness": "firm"
+    }
+  }
+}

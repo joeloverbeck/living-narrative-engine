@@ -1,0 +1,18 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "furniture:coffee_table_rectangular_wood",
+  "description": "A rectangular wooden coffee table",
+  "components": {
+    "core:name": {
+      "text": "rectangular wooden coffee table"
+    },
+    "core:description": {
+      "text": "A functional and understated rectangular coffee table made of polished wood. Its simple design provides a convenient surface for holding items, perfect for a salon or sitting area."
+    },
+    "core:portrait": {
+      "imagePath": "portraits/coffee_table_rectangular_wood.png",
+      "altText": "A rectangular wooden coffee table"
+    },
+    "items:item": {}
+  }
+}

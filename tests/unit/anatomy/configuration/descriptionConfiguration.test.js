@@ -65,6 +65,7 @@ describe('DescriptionConfiguration', () => {
         'ear',
         'nose',
         'mouth',
+        'teeth',
         'neck',
         'breast',
         'torso',
@@ -82,7 +83,7 @@ describe('DescriptionConfiguration', () => {
       config = new DescriptionConfiguration({});
       const result = config.getDescriptionOrder();
 
-      expect(result.length).toBe(22);
+      expect(result.length).toBe(23);
       expect(result[0]).toBe('height');
     });
 

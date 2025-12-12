@@ -11,6 +11,8 @@
     "caressing",
     "clothing",
     "companionship",
+    "containers-core",
+    "containers",
     "damage-types",
     "deference",
     "descriptors",
@@ -26,8 +28,8 @@
     "items",
     "item-handling",
     "item-placement",
-    "intoxicants",
     "item-transfer",
+    "intoxicants",
     "observation",
     "kissing",
     "locks",
@@ -56,5 +58,5 @@
     "weapons",
     "ranged"
   ],
-  "startWorld": "fantasy:vespera"
+  "startWorld": "dredgers:dredgers"
 }

@@ -1,8 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
+import fs from 'fs';
+import path from 'path';
 import { DescriptorFormatter } from '../../../src/anatomy/descriptorFormatter.js';
 import { BodyPartDescriptionBuilder } from '../../../src/anatomy/bodyPartDescriptionBuilder.js';
 import { BodyDescriptionComposer } from '../../../src/anatomy/bodyDescriptionComposer.js';
 import { AnatomyDescriptionService } from '../../../src/anatomy/anatomyDescriptionService.js';
+import { AnatomyFormattingService } from '../../../src/services/anatomyFormattingService.js';
 import {
   ANATOMY_BODY_COMPONENT_ID,
   ANATOMY_PART_COMPONENT_ID,
@@ -379,6 +382,101 @@ describe('Body Description Generation Integration', () => {
       expect(updatedComponents['body-1'][DESCRIPTION_COMPONENT_ID]).toEqual({
         text: 'A simple body with a torso.',
       });
+    });
+  });
+
+  describe('Teeth description coverage', () => {
+    const loadDefaultFormattingConfig = () => {
+      const formattingConfigPath = path.resolve(
+        process.cwd(),
+        'data/mods/anatomy/anatomy-formatting/default.json'
+      );
+      return JSON.parse(fs.readFileSync(formattingConfigPath, 'utf8'));
+    };
+
+    const createPart = (id, subType, description) => {
+      const components = {
+        [ANATOMY_PART_COMPONENT_ID]: { subType },
+        'core:description': { text: description },
+      };
+      return {
+        id,
+        components,
+        hasComponent: (componentId) =>
+          Object.prototype.hasOwnProperty.call(components, componentId),
+        getComponentData: (componentId) => components[componentId],
+      };
+    };
+
+    it('should surface teeth when formatting order includes the part', async () => {
+      const formattingConfig = loadDefaultFormattingConfig();
+      const formattingConfigWithMeta = { ...formattingConfig, _modId: 'anatomy' };
+
+      const mockDataRegistry = {
+        getAll: (type) =>
+          type === 'anatomyFormatting' ? [formattingConfigWithMeta] : [],
+        get: (type, id) => {
+          if (type === 'meta' && id === 'final_mod_order') {
+            return ['anatomy'];
+          }
+          if (type === 'anatomyFormatting' && id === 'default') {
+            return formattingConfigWithMeta;
+          }
+          return null;
+        },
+      };
+
+      const formattingService = new AnatomyFormattingService({
+        dataRegistry: mockDataRegistry,
+        logger: {
+          info: () => {},
+          warn: () => {},
+          error: () => {},
+          debug: () => {},
+        },
+        safeEventDispatcher: { dispatch: () => {} },
+      });
+      formattingService.initialize();
+
+      const parts = {
+        'torso-1': createPart('torso-1', 'torso', 'stocky torso'),
+        'mouth-1': createPart('mouth-1', 'mouth', 'medium, firm'),
+        'teeth-1': createPart(
+          'teeth-1',
+          'teeth',
+          'large, ivory, chisel-shaped'
+        ),
+      };
+
+      const bodyComponents = {
+        [ANATOMY_BODY_COMPONENT_ID]: {
+          recipeId: 'dredgers:beaver_folk_male_standard',
+          body: { root: 'torso-1' },
+        },
+      };
+
+      const bodyEntity = {
+        id: 'actor-1',
+        components: bodyComponents,
+        hasComponent: (componentId) =>
+          Object.prototype.hasOwnProperty.call(bodyComponents, componentId),
+        getComponentData: (componentId) => bodyComponents[componentId],
+      };
+
+      const composer = new BodyDescriptionComposer({
+        bodyGraphService: {
+          getAllParts: () => Object.keys(parts),
+        },
+        entityFinder: {
+          getEntityInstance: (id) => parts[id] || null,
+        },
+        anatomyFormattingService: formattingService,
+      });
+
+      const description = await composer.composeDescription(bodyEntity);
+
+      expect(description).toContain('Mouth: medium, firm');
+      expect(description).toContain('Teeth: large, ivory, chisel-shaped');
     });
   });
 });

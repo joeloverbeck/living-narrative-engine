@@ -462,6 +462,113 @@ describe('PerceptionLogRenderer', () => {
       expect(li.classList.contains('log-type-target-action')).toBe(true);
       expect(li.innerHTML).toBe('*draws sword');
     });
+
+    // =========================================================================
+    // Speech quote handling tests - verifies no double-quoting bug
+    // The entity_speech.rule.json adds quotes around speech content, so
+    // the renderer must not add additional quotes.
+    // =========================================================================
+
+    it('should NOT double-quote speech that already has quotes from the rule', () => {
+      // This reflects the actual format from entity_speech.rule.json line 51:
+      // description_text: "{name} says: \"{speechContent}\""
+      const speechEntry = {
+        descriptionText: 'Cress Siltwell says: "Hello world"',
+        timestamp: '14:30',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:cress',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should contain single quotes, not double
+      expect(li.innerHTML).toContain('"Hello world"');
+      expect(li.innerHTML).not.toContain('""Hello world""');
+    });
+
+    it('should handle speech without pre-existing quotes', () => {
+      // Edge case: if someone creates a perception entry without quotes
+      const speechEntry = {
+        descriptionText: 'Bob says: Hi there',
+        timestamp: '14:30',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:bob',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should add quotes
+      expect(li.innerHTML).toContain('"Hi there"');
+    });
+
+    it('should handle empty quoted speech without quadruple quotes', () => {
+      const speechEntry = {
+        descriptionText: 'Charlie says: ""',
+        timestamp: '14:30',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:charlie',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should have exactly two quotes (empty string in quotes), not four
+      expect(li.innerHTML).toContain('""');
+      expect(li.innerHTML).not.toContain('""""');
+    });
+
+    it('should preserve speech with only partial quote at start', () => {
+      // Edge case: quote at start but not end - regex won't strip partial quotes
+      // This is acceptable behavior since properly formatted speech always has
+      // matching quotes from the rule template
+      const speechEntry = {
+        descriptionText: 'Dana says: "incomplete quote',
+        timestamp: '14:30',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:dana',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should render in dialogue span (partial quote is not stripped, then wrapped)
+      // This edge case produces ""incomplete quote" which is suboptimal but
+      // unlikely in real usage since rule always adds complete quotes
+      expect(li.innerHTML).toContain('dialogue');
+      expect(li.innerHTML).toContain('incomplete quote');
+    });
+
+    it('should reproduce the reported bug scenario with realistic speech content', () => {
+      // Exact scenario from bug report: 'Cress Siltwell says: ""aaaa""'
+      const speechEntry = {
+        descriptionText: 'Cress Siltwell says: "aaaa"',
+        timestamp: '10:00',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:cress_siltwell',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should show "aaaa", not ""aaaa""
+      const dialogueMatch = li.innerHTML.match(
+        /<span class="dialogue">(.*?)<\/span>/
+      );
+      expect(dialogueMatch).not.toBeNull();
+      expect(dialogueMatch[1]).toBe('"aaaa"');
+      expect(dialogueMatch[1]).not.toBe('""aaaa""');
+    });
+
+    it('should handle second reported bug scenario', () => {
+      // Second scenario from bug report: 'Eira Quenreach says: ""I\'ve said this.""'
+      const speechEntry = {
+        descriptionText: "Eira Quenreach says: \"I've said this.\"",
+        timestamp: '10:05',
+        perceptionType: 'communication.speech',
+        actorId: 'npc:eira_quenreach',
+      };
+      const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
+
+      // Should show "I've said this.", not ""I've said this.""
+      const dialogueMatch = li.innerHTML.match(
+        /<span class="dialogue">(.*?)<\/span>/
+      );
+      expect(dialogueMatch).not.toBeNull();
+      expect(dialogueMatch[1]).toBe('"I\'ve said this."');
+      expect(dialogueMatch[1]).not.toBe('""I\'ve said this.""');
+    });
   });
 
   describe('_getEmptyListMessage', () => {

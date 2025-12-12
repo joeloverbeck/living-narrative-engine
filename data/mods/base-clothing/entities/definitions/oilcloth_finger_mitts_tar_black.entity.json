@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:oilcloth_finger_mitts_tar_black",
+  "description": "Tar-black oilcloth finger-mitts with linen backing",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "oilcloth finger-mitts"
+    },
+    "core:description": {
+      "text": "Work mitts of tar-black oilcloth backed with sturdy linen, leaving the fingers exposed for dexterity while protecting the palms and backs of the hands from rope burn and splinters. The oilcloth outer layer sheds water and fish slime, and the stitching is reinforced at the stress points where a grip would pull hardest. These are the hands of a dredger—protected where it matters, bare where nimbleness counts."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-black"
+    },
+    "descriptors:texture": {
+      "texture": "oiled"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.10
+    }
+  }
+}

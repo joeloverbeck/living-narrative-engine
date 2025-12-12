@@ -93,5 +93,13 @@
       "partType": "ass_cheek",
       "preferId": "anatomy-creatures:toad_folk_ass_cheek"
     }
+  ],
+  "clothingEntities": [
+    { "entityId": "underwear:wick_linen_undershirt_oat", "equip": true },
+    { "entityId": "base-clothing:silt_weave_breeches_clay_umber", "equip": true },
+    { "entityId": "base-clothing:stewards_waistcoat_moss_felted_wool", "equip": true },
+    { "entityId": "outer-clothing:waxed_oversmock_tar_black", "equip": true },
+    { "entityId": "base-clothing:river_sole_work_shoes_iron_brown", "equip": true },
+    { "entityId": "base-clothing:oilcloth_finger_mitts_tar_black", "equip": true }
   ]
 }

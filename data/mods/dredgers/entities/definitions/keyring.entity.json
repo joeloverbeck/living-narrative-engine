@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "dredgers:keyring",
+  "components": {
+    "core:name": {
+      "text": "iron keyring"
+    },
+    "core:description": {
+      "text": "A heavy iron ring holding a multitude of keys, worn on a cord around the neck. It contains keys that open the majority of locks in Eira Quenreach's estate."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.5
+    },
+    "core:conspicuous": {}
+  }
+}

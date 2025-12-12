@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:waxed_linen_undershirt_bone_white",
+  "description": "A waxed-linen undershirt in bone-white with sweat-darkened patches",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "waxed-linen undershirt"
+    },
+    "core:description": {
+      "text": "An undershirt of waxed linen, originally bone-white but now darkened at the collar and underarms by the salt of honest labor. The waxing keeps the worst of the damp out, though it gives the fabric a faintly waxy sheen. Serviceable construction, meant for work rather than appearance."
+    },
+    "descriptors:color_extended": {
+      "color": "bone-white"
+    },
+    "descriptors:texture": {
+      "texture": "sweat-stained"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.14
+    }
+  }
+}

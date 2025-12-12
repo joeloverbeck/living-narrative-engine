@@ -11,6 +11,24 @@
             "instanceId": "dredgers:concordance_salon_instance"
         },
         {
+            "instanceId": "dredgers:keyring_instance"
+        },
+        {
+            "instanceId": "dredgers:concordance_salon_armchair_1_instance"
+        },
+        {
+            "instanceId": "dredgers:concordance_salon_armchair_2_instance"
+        },
+        {
+            "instanceId": "dredgers:concordance_salon_armchair_3_instance"
+        },
+        {
+            "instanceId": "dredgers:concordance_salon_coffee_table_instance"
+        },
+        {
+            "instanceId": "dredgers:jorren_weir_instance"
+        },
+        {
             "instanceId": "dredgers:eira_quenreach_instance"
         },
         {

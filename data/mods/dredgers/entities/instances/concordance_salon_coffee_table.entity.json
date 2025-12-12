@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:concordance_salon_coffee_table_instance",
+    "definitionId": "furniture:coffee_table_rectangular_wood",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "dredgers:concordance_salon_instance"
+        }
+    }
+}

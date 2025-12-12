@@ -1,0 +1,104 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:beaver_folk_male_standard",
+  "blueprintId": "anatomy-creatures:beaver_folk_male",
+  "bodyDescriptors": {
+    "height": "short",
+    "skinColor": "brown",
+    "build": "stocky",
+    "composition": "soft",
+    "hairDensity": "furred",
+    "smell": "earthy"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy-creatures:beaver_folk_male_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head_plain"
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy-creatures:beaver_folk_nose"
+    },
+    "mouth": {
+      "partType": "mouth",
+      "preferId": "anatomy-creatures:beaver_folk_mouth"
+    },
+    "teeth": {
+      "partType": "teeth",
+      "preferId": "anatomy-creatures:beaver_folk_teeth"
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy-creatures:beaver_tail"
+    },
+    "penis": {
+      "partType": "penis",
+      "preferId": "anatomy:human_penis"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_brown"
+    },
+    {
+      "matches": ["left_ear", "right_ear"],
+      "partType": "ear",
+      "preferId": "anatomy:humanoid_ear"
+    },
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy:human_hand"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["left_testicle", "right_testicle"],
+      "partType": "testicle",
+      "preferId": "anatomy:human_testicle"
+    },
+    {
+      "matches": ["left_ass", "right_ass"],
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek"
+    }
+  ],
+  "clothingEntities": [
+    { "entityId": "underwear:waxed_linen_undershirt_bone_white", "equip": true },
+    { "entityId": "base-clothing:felted_wool_gilet_gray_green", "equip": true },
+    { "entityId": "base-clothing:deck_trousers_hemp_canvas_dark_umber", "equip": true },
+    { "entityId": "base-clothing:knee_high_lock_boot_waders_near_black", "equip": true },
+    { "entityId": "base-clothing:half_finger_rope_gloves_smoke_gray", "equip": true }
+  ]
+}
