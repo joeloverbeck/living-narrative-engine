@@ -74,7 +74,7 @@ describe('sex-physical-control:pull_head_to_clothed_crotch action integration', 
       locationId: ROOM_ID,
       actorId: ACTOR_ID,
       targetId: PRIMARY_ID,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

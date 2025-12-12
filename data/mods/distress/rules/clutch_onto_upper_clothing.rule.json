@@ -59,11 +59,13 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.perceptibleLogMessage}",
-        "perception_type": "action_target_general",
+        "perception_type": "physical.target_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.primaryId}"
       }
     },
-    { "macro": "core:displaySuccessAndEndTurn" }
+    {
+      "macro": "core:displaySuccessAndEndTurn"
+    }
   ]
 }

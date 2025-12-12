@@ -17,7 +17,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} lunges forward with their beak to attack {context.targetName} but completely misses, losing balance and falling to the ground!",
-        "perception_type": "action_target_general",
+        "perception_type": "combat.violence",
         "actor_id": "{event.payload.actorId}"
       }
     },

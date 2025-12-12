@@ -40,7 +40,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "character_exit"
+        "value": "movement.departure"
       }
     },
     {
@@ -102,7 +102,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "character_enter"
+        "value": "movement.arrival"
       }
     },
     {

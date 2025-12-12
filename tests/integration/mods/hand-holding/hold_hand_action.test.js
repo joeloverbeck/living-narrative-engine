@@ -43,7 +43,7 @@ describe('hand-holding:hold_hand action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: "Alice reaches and holds Bob's hand.",
       locationId: 'living_room',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -102,7 +102,7 @@ describe('hand-holding:hold_hand action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.locationId).toBe('garden');
@@ -248,7 +248,7 @@ describe('hand-holding:hold_hand action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Elena reaches and holds Marcus's hand."

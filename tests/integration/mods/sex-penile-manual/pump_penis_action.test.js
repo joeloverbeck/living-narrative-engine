@@ -174,7 +174,7 @@ describe('sex-penile-manual:pump_penis action integration', () => {
     expect(perceptibleEvent.payload.actorId).toBe('alice');
     expect(perceptibleEvent.payload.targetId).toBe('bob');
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
   });
 

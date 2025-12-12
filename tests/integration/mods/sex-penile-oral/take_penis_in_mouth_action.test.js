@@ -77,7 +77,7 @@ describe('sex-penile-oral:take_penis_in_mouth action integration', () => {
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

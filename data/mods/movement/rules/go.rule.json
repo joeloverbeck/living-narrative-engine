@@ -30,8 +30,12 @@
       "parameters": {
         "condition": {
           "and": [
-            { "var": "context.actorNameComponent" },
-            { "var": "context.actorPositionComponentPreMove" }
+            {
+              "var": "context.actorNameComponent"
+            },
+            {
+              "var": "context.actorPositionComponentPreMove"
+            }
           ]
         },
         "then_actions": [
@@ -91,7 +95,7 @@
                   "parameters": {
                     "location_id": "{context.actorPositionComponentPreMove.locationId}",
                     "description_text": "{context.actorNameComponent.text} leaves to go to {context.targetLocationNameComponent.text}.",
-                    "perception_type": "character_exit",
+                    "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
                     "involved_entities": []
@@ -128,7 +132,7 @@
                   "parameters": {
                     "location_id": "{context.resolvedTargetLocationId}",
                     "description_text": "{context.actorNameComponent.text} arrives from {context.currentLocationNameComponentPreMove.text}.",
-                    "perception_type": "character_enter",
+                    "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
                     "involved_entities": []
@@ -142,7 +146,9 @@
                     "value": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
                   }
                 },
-                { "macro": "core:displaySuccessAndEndTurn" }
+                {
+                  "macro": "core:displaySuccessAndEndTurn"
+                }
               ],
               "else_actions": [
                 {

@@ -21,7 +21,11 @@
       "type": "IF",
       "comment": "Fail fast if target is not lockable.",
       "parameters": {
-        "condition": { "!": { "var": "context.openable" } },
+        "condition": {
+          "!": {
+            "var": "context.openable"
+          }
+        },
         "then_actions": [
           {
             "type": "DISPATCH_EVENT",
@@ -76,18 +80,30 @@
             "parameters": {
               "condition": {
                 "or": [
-                  { "!": { "var": "context.key" } },
+                  {
+                    "!": {
+                      "var": "context.key"
+                    }
+                  },
                   {
                     "!=": [
-                      { "var": "context.key" },
-                      { "var": "context.openable.requiredKeyId" }
+                      {
+                        "var": "context.key"
+                      },
+                      {
+                        "var": "context.openable.requiredKeyId"
+                      }
                     ]
                   },
                   {
                     "!": {
                       "in": [
-                        { "var": "context.key" },
-                        { "var": "context.actorInventory.items" }
+                        {
+                          "var": "context.key"
+                        },
+                        {
+                          "var": "context.actorInventory.items"
+                        }
                       ]
                     }
                   }
@@ -107,10 +123,12 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.logMessage}",
-                    "perception_type": "connection_unlock_failed",
+                    "perception_type": "error.action_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
-                    "involved_entities": ["{event.payload.secondaryId}"],
+                    "involved_entities": [
+                      "{event.payload.secondaryId}"
+                    ],
                     "contextual_data": {
                       "reason": "missing_or_wrong_key"
                     }
@@ -143,7 +161,12 @@
                   "comment": "Guard against already unlocked state.",
                   "parameters": {
                     "condition": {
-                      "==": [{ "var": "context.openable.isLocked" }, false]
+                      "==": [
+                        {
+                          "var": "context.openable.isLocked"
+                        },
+                        false
+                      ]
                     },
                     "then_actions": [
                       {
@@ -159,10 +182,12 @@
                         "parameters": {
                           "location_id": "{context.actorPosition.locationId}",
                           "description_text": "{context.logMessage}",
-                          "perception_type": "connection_unlock_failed",
+                          "perception_type": "error.action_failed",
                           "actor_id": "{event.payload.actorId}",
                           "target_id": "{event.payload.targetId}",
-                          "involved_entities": ["{event.payload.secondaryId}"],
+                          "involved_entities": [
+                            "{event.payload.secondaryId}"
+                          ],
                           "contextual_data": {
                             "reason": "already_unlocked"
                           }
@@ -247,7 +272,7 @@
                         "type": "SET_VARIABLE",
                         "parameters": {
                           "variable_name": "perceptionType",
-                          "value": "connection_unlocked"
+                          "value": "connection.unlock"
                         }
                       },
                       {
@@ -264,7 +289,9 @@
                           "value": "{event.payload.targetId}"
                         }
                       },
-                      { "macro": "core:logSuccessAndEndTurn" }
+                      {
+                        "macro": "core:logSuccessAndEndTurn"
+                      }
                     ]
                   }
                 }

@@ -182,7 +182,7 @@ describe('sex-penile-oral:pull_penis_out_of_mouth action integration', () => {
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

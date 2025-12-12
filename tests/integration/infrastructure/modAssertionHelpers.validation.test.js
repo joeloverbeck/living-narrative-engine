@@ -49,7 +49,7 @@ describe('ModAssertionHelpers - Deep Validation (TSTAIMIG-002)', () => {
           locationId: 'test-room',
           actorId: 'test-actor',
           targetId: 'test-target',
-          perceptionType: 'action_target_general',
+          perceptionType: 'physical.target_action',
           involvedEntities: [],
         },
       },
@@ -182,7 +182,7 @@ describe('ModAssertionHelpers - Deep Validation (TSTAIMIG-002)', () => {
           locationId: 'test-room',
           actorId: 'test-actor',
           targetId: 'test-target',
-          perceptionType: 'action_target_general',
+          perceptionType: 'physical.target_action',
         };
 
         expect(() => {

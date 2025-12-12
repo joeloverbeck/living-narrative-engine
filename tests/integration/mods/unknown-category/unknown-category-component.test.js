@@ -34,7 +34,7 @@ const unknownCategoryRule = {
         location_id: 'room1',
         entry: {
           descriptionText: 'Unknown category marker added',
-          perceptionType: 'narration',
+          perceptionType: 'state.observable_change',
         },
       },
     },

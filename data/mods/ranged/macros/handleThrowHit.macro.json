@@ -25,7 +25,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} throws {context.throwableName} at {context.targetName}, and it hits the target.",
-        "perception_type": "action_target_general",
+        "perception_type": "combat.attack",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.secondaryId}"
       }
@@ -41,7 +41,9 @@
       "type": "DISPATCH_EVENT",
       "parameters": {
         "eventType": "core:display_successful_action_result",
-        "payload": { "message": "{context.logMessage}" }
+        "payload": {
+          "message": "{context.logMessage}"
+        }
       }
     },
     {
@@ -54,7 +56,9 @@
             "type": "APPLY_DAMAGE",
             "parameters": {
               "entity_ref": "secondary",
-              "damage_entry": { "var": "context.dmgEntry" }
+              "damage_entry": {
+                "var": "context.dmgEntry"
+              }
             }
           },
           {

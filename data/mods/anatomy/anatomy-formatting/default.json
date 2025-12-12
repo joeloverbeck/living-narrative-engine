@@ -199,5 +199,16 @@
     "separator": ", ",
     "itemSeparator": " | ",
     "placement": "after_anatomy"
+  },
+  "descriptorFormatRules": {
+    "descriptors:embellishment": {
+      "prefix": "embellished with "
+    },
+    "descriptors:digit_count": {
+      "suffix": " digits"
+    },
+    "descriptors:shape_eye": {
+      "transform": "underscore_to_hyphen"
+    }
   }
 }

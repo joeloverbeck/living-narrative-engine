@@ -107,7 +107,7 @@ describe('sex-vaginal-penetration:insert_penis_into_vagina action integration', 
       locationId: 'room1',
       actorId: 'alice',
       targetId: 'beth',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

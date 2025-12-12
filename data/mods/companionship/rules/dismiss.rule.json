@@ -28,11 +28,15 @@
     },
     {
       "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "target" }
+      "parameters": {
+        "entity_ref": "target"
+      }
     },
     {
       "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "actor" }
+      "parameters": {
+        "entity_ref": "actor"
+      }
     },
     {
       "type": "GET_NAME",
@@ -77,7 +81,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} has dismissed {context.targetName} from their service.",
-              "perception_type": "state_change_observable",
+              "perception_type": "state.observable_change",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
               "involved_entities": []
@@ -94,6 +98,8 @@
         "value": "{context.actorName} dismisses {context.targetName}."
       }
     },
-    { "macro": "core:displaySuccessAndEndTurn" }
+    {
+      "macro": "core:displaySuccessAndEndTurn"
+    }
   ]
 }

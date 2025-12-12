@@ -34,7 +34,7 @@ const ACTION_SCHEMA = 'schema://living-narrative-engine/action.schema.json';
 const RULE_SCHEMA = 'schema://living-narrative-engine/rule.schema.json';
 const CONDITION_SCHEMA =
   'schema://living-narrative-engine/condition.schema.json';
-const PERCEPTION_TYPE = 'action_self_general';
+const PERCEPTION_TYPE = 'physical.self_action';
 
 /**
  * Runs a complete integration test suite for a gymnastics action using shared assertions.

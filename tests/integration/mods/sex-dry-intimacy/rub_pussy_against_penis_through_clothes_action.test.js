@@ -232,7 +232,7 @@ describe('sex-dry-intimacy:rub_pussy_against_penis_through_clothes action execut
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'action_target_general'
+        'physical.target_action'
       );
     });
   });

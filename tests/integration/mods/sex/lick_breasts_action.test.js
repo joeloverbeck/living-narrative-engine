@@ -76,7 +76,7 @@ describe('sex-breastplay:lick_breasts action integration', () => {
       locationId: roomId,
       actorId: actorId,
       targetId: targetId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

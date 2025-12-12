@@ -410,7 +410,7 @@ describe('containers:take_from_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const takenEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_taken_from_container'
+        (e) => e.payload.perceptionType === 'container.take'
       );
       expect(takenEvent).toBeDefined();
       expect(takenEvent.payload.locationId).toBe('warehouse');
@@ -447,7 +447,7 @@ describe('containers:take_from_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const failedEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'take_from_container_failed'
+        (e) => e.payload.perceptionType === 'error.action_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');

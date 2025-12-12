@@ -62,7 +62,7 @@ describe('hand-holding:warm_hands_between_yours action integration', () => {
     expect(successEvent.payload.message).toBe(expectedMessage);
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('garden');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

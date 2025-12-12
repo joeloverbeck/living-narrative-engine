@@ -111,7 +111,8 @@ export class ModAssertionHelpers {
     if (expectedEvent.perceptionType) {
       expect(payload.perceptionType).toBe(expectedEvent.perceptionType);
     } else {
-      expect(payload.perceptionType).toBe('action_target_general');
+      // Default to new consolidated perceptionType format
+      expect(payload.perceptionType).toBe('physical.target_action');
     }
 
     // Default expectations for perceptible events

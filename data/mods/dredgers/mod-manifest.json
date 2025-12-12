@@ -55,18 +55,20 @@
         "concordance_salon.location.json",
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
-        "mudsong_vane.character.json"
+        "jorren_weir.json"
       ],
       "instances": [
+        "canal_vestibule.location.json",
+        "concordance_salon.location.json",
         "cress_siltwell.character.json",
         "eira_quenreach.character.json"
       ]
     },
     "events": [],
     "macros": [],
-      "scopes": [],
-      "blueprints": [],
-      "parts": [],
+    "scopes": [],
+    "blueprints": [],
+    "parts": [],
     "recipes": [
       "ermine_folk_female.recipe.json",
       "toad_folk_male.recipe.json"
@@ -76,6 +78,8 @@
       "concordance_salon.png",
       "eira_quenreach.png"
     ],
-    "worlds": []
+    "worlds": [
+      "dredgers.world.json"
+    ]
   }
 }

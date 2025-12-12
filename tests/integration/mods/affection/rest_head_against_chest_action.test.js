@@ -60,7 +60,7 @@ describe('affection:rest_head_against_chest action integration', () => {
         'Beth'
       ),
       locationId: 'intimate_corner',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -110,7 +110,7 @@ describe('affection:rest_head_against_chest action integration', () => {
       )
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('library_nook');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

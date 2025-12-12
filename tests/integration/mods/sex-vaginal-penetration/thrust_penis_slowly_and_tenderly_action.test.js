@@ -96,7 +96,7 @@ describe('sex-vaginal-penetration:thrust_penis_slowly_and_tenderly - Action Exec
       locationId: 'bedroom',
       actorId: 'alice',
       targetId: 'beth',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

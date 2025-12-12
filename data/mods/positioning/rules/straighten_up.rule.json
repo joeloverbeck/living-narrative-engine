@@ -79,7 +79,7 @@
             "type": "SET_VARIABLE",
             "parameters": {
               "variable_name": "perceptionType",
-              "value": "action_self_general"
+              "value": "physical.self_action"
             }
           },
           {

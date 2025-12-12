@@ -85,7 +85,7 @@ describe('deference:stand_up action integration', () => {
     expect(perceptibleEvent.payload.locationId).toBe('castle_hall');
     expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
     expect(perceptibleEvent.payload.targetId).toBe(null);
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_self_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe('physical.self_action');
   });
 
   it('only fires for correct action ID', async () => {

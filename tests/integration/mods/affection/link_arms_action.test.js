@@ -52,7 +52,7 @@ describe('affection:link_arms action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: 'Alice links arms with Bob.',
       locationId: 'living_room',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -96,7 +96,7 @@ describe('affection:link_arms action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.locationId).toBe('garden');

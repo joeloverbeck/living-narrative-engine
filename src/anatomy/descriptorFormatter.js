@@ -38,6 +38,13 @@ export class DescriptorFormatter {
       'weight',
       'projection',
     ];
+
+    // Default format rules for backward compatibility when no service is provided
+    this._defaultDescriptorFormatRules = {
+      'descriptors:embellishment': { prefix: 'embellished with ' },
+      'descriptors:digit_count': { suffix: ' digits' },
+      'descriptors:shape_eye': { transform: 'underscore_to_hyphen' },
+    };
   }
 
   /**
@@ -85,20 +92,33 @@ export class DescriptorFormatter {
   formatSingleDescriptor(descriptor) {
     const { componentId, value } = descriptor;
 
-    // Handle embellishment descriptors with "embellished with" prefix
-    if (componentId === 'descriptors:embellishment') {
-      return `embellished with ${value}`;
+    // Get format rules from service (with fallback to defaults)
+    const formatRules =
+      this.anatomyFormattingService?.getDescriptorFormatRules?.() ??
+      this._defaultDescriptorFormatRules;
+
+    const rule = formatRules[componentId];
+
+    if (rule) {
+      let formattedValue = value;
+
+      // Apply transform first (if applicable)
+      if (
+        rule.transform === 'underscore_to_hyphen' &&
+        formattedValue.includes('_')
+      ) {
+        formattedValue = formattedValue.replace(/_/g, '-');
+      }
+
+      // Apply prefix and suffix
+      const prefix = rule.prefix || '';
+      const suffix = rule.suffix || '';
+      return `${prefix}${formattedValue}${suffix}`;
     }
 
-    // Handle multi-word values that should stay hyphenated
+    // Default: handle hyphenated values (keep intact)
     if (value.includes('-')) {
       return value;
-    }
-
-    // Handle special cases
-    if (componentId === 'descriptors:shape_eye' && value.includes('_')) {
-      // Convert underscore to hyphen for eye shapes
-      return value.replace('_', '-');
     }
 
     return value;

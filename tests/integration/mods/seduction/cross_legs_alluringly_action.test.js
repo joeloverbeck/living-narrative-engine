@@ -122,7 +122,7 @@ describe('seduction:cross_legs_alluringly - Rule Execution', () => {
 
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'action_self_general'
+        'physical.self_action'
       );
     });
 

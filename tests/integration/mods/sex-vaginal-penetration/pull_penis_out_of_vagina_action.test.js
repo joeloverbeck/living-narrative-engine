@@ -147,7 +147,7 @@ describe('sex-vaginal-penetration:pull_penis_out_of_vagina - Action Execution', 
       locationId: 'bedroom',
       actorId: 'alice',
       targetId: 'beth',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

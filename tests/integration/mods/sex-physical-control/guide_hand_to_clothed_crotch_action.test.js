@@ -76,7 +76,7 @@ describe('sex-physical-control:guide_hand_to_clothed_crotch rule', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe(ROOM_ID);
     expect(perceptibleEvent.payload.targetId).toBe(PRIMARY_ID);

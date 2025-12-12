@@ -94,7 +94,7 @@ describe('items:read_item action integration', () => {
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item_read'
+          event.payload.perceptionType === 'item.examine'
       );
 
       expect(perceptibleEvent).toBeDefined();

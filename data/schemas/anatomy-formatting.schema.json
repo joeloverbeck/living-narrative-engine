@@ -90,6 +90,30 @@
         }
       },
       "additionalProperties": false
+    },
+    "descriptorFormatRules": {
+      "type": "object",
+      "description": "Custom formatting rules for specific descriptor types. Keys are descriptor component IDs (e.g., 'descriptors:embellishment')",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Formatting rule for a specific descriptor type",
+        "properties": {
+          "prefix": {
+            "type": "string",
+            "description": "Text to prepend before the descriptor value"
+          },
+          "suffix": {
+            "type": "string",
+            "description": "Text to append after the descriptor value"
+          },
+          "transform": {
+            "type": "string",
+            "enum": ["underscore_to_hyphen"],
+            "description": "Value transformation to apply before prefix/suffix"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "required": ["id"]

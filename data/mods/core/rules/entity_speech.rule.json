@@ -27,8 +27,12 @@
       "parameters": {
         "condition": {
           "and": [
-            { "var": "context.speakerNameComponent" },
-            { "var": "context.speakerPositionComponent" }
+            {
+              "var": "context.speakerNameComponent"
+            },
+            {
+              "var": "context.speakerPositionComponent"
+            }
           ]
         },
         "then_actions": [
@@ -45,7 +49,7 @@
             "parameters": {
               "location_id": "{context.speakerPositionComponent.locationId}",
               "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
-              "perception_type": "speech_local",
+              "perception_type": "communication.speech",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
               "involved_entities": [],
@@ -59,7 +63,9 @@
             "comment": "Skip UI bubble when suppressDisplay is true (e.g., preview already shown).",
             "parameters": {
               "condition": {
-                "not": { "var": "event.payload.suppressDisplay" }
+                "not": {
+                  "var": "event.payload.suppressDisplay"
+                }
               },
               "then_actions": [
                 {

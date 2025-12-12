@@ -250,7 +250,7 @@ describe('hand-holding:withdraw_hand_from_grasp action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: "Lena withdraws their hand from Milo's grasp.",
       locationId: 'balcony',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });

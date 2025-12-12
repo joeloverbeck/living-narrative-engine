@@ -79,7 +79,7 @@ describe('sex-vaginal-penetration:ride_penis_greedily action integration', () =>
       locationId: STRADDLING_MILKING_ROOM_ID,
       actorId: STRADDLING_MILKING_ACTOR_ID,
       targetId: STRADDLING_MILKING_PRIMARY_ID,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

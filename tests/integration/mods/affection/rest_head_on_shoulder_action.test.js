@@ -56,7 +56,7 @@ describe('affection:rest_head_on_shoulder action integration', () => {
         'Bob'
       ),
       locationId: 'living_room',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -98,7 +98,7 @@ describe('affection:rest_head_on_shoulder action integration', () => {
     const perceptibleEvent = findPerceptibleEvent();
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('garden');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

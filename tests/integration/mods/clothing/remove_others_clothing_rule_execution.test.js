@@ -61,7 +61,7 @@ describe('clothing:remove_others_clothing rule execution', () => {
     expect(perceptibleEvent.payload.descriptionText).toContain('shirt');
     expect(perceptibleEvent.payload.locationId).toBe('bedroom');
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
   });
 
@@ -183,7 +183,7 @@ describe('clothing:remove_others_clothing rule execution', () => {
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('park');
   });

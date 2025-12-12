@@ -116,7 +116,7 @@ describe('locks:unlock_connection rule (integration)', () => {
     const perception = env.events.find(
       (e) =>
         e.eventType === 'core:perceptible_event' &&
-        e.payload.perceptionType === 'connection_unlocked'
+        e.payload.perceptionType === 'connection.unlock'
     );
     expect(perception).toBeDefined();
     expect(perception.payload.descriptionText).toBe(

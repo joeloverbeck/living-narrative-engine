@@ -37,7 +37,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     const params = {
       location_id: 'loc:1',
       description_text: 'A arrives.',
-      perception_type: 'character_enter',
+      perception_type: 'movement.arrival',
       actor_id: 'npc:a',
       log_entry: true,
     };
@@ -86,7 +86,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     const params = {
       location_id: 'loc:2',
       description_text: 'B leaves.',
-      perception_type: 'character_exit',
+      perception_type: 'movement.departure',
       actor_id: 'npc:b',
       log_entry: false,
     };
@@ -105,7 +105,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       {
         location_id: 'loc:2',
         description_text: 'Observations occur.',
-        perception_type: 'ambient',
+        perception_type: 'state.observable_change',
         actor_id: 'npc:b',
       },
       {}
@@ -128,7 +128,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       {
         location_id: 'loc:3',
         description_text: 'Only observers should hear.',
-        perception_type: 'speech',
+        perception_type: 'communication.speech',
         actor_id: 'npc:c',
         contextual_data: { recipientIds: ['observer-1'] },
       },
@@ -152,7 +152,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       {
         location_id: '',
         description_text: 'desc',
-        perception_type: 'type',
+        perception_type: 'physical.target_action',
         actor_id: 'actor',
       },
       {}
@@ -171,7 +171,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       {
         location_id: 'loc',
         description_text: '',
-        perception_type: 'type',
+        perception_type: 'physical.target_action',
         actor_id: 'actor',
       },
       {}
@@ -207,7 +207,7 @@ describe('DispatchPerceptibleEventHandler', () => {
       {
         location_id: 'loc',
         description_text: 'desc',
-        perception_type: 'type',
+        perception_type: 'physical.target_action',
         actor_id: '',
       },
       {}
@@ -255,7 +255,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         {
           location_id: 'loc:test',
           description_text: 'Brief observation.',
-          perception_type: 'item_examined_brief',
+          perception_type: 'item.examine',
           actor_id: 'npc:a',
           contextual_data: { excludedActorIds: ['npc:a'] },
         },
@@ -279,7 +279,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         {
           location_id: 'loc:test',
           description_text: 'Test event.',
-          perception_type: 'test',
+          perception_type: 'physical.target_action',
           actor_id: 'npc:b',
           contextual_data: {},
         },
@@ -303,7 +303,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         {
           location_id: 'loc:test',
           description_text: 'Test event.',
-          perception_type: 'test',
+          perception_type: 'physical.target_action',
           actor_id: 'npc:c',
           contextual_data: {
             recipientIds: ['npc:observer'],
@@ -335,7 +335,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         {
           location_id: 'loc:test',
           description_text: 'Brief observation.',
-          perception_type: 'item_examined_brief',
+          perception_type: 'item.examine',
           actor_id: 'npc:a',
           contextual_data: { excludedActorIds: ['npc:a'] },
           log_entry: true,
@@ -357,7 +357,7 @@ describe('DispatchPerceptibleEventHandler', () => {
         {
           location_id: 'loc:test',
           description_text: 'Test.',
-          perception_type: 'test',
+          perception_type: 'physical.target_action',
           actor_id: 'npc:a',
           contextual_data: {
             recipientIds: ['npc:b'],

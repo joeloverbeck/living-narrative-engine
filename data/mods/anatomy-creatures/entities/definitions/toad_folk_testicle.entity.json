@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:toad_folk_testicle",
+  "description": "A small toad-folk reproductive gland with smooth amphibian texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "testicle",
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_lower",
+      "nonBlockingLayers": ["underwear", "accessories"]
+    },
+    "core:name": {
+      "text": "testicle"
+    },
+    "core:weight": {
+      "weight": 0.025
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

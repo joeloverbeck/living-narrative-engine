@@ -45,7 +45,7 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: null,
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
       });
     });
 
@@ -133,7 +133,7 @@ describe('Seduction Mod: Draw Attention to Breasts Rule', () => {
       expect(perceptionTypeAction.parameters.variable_name).toBe(
         'perceptionType'
       );
-      expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
+      expect(perceptionTypeAction.parameters.value).toBe('physical.self_action');
 
       // Check locationId variable
       const locationIdAction = actions[4];

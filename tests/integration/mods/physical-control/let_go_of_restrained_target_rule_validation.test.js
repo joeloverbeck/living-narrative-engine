@@ -83,7 +83,7 @@ describe('handle_let_go_of_restrained_target rule', () => {
     expect(locationVar?.parameters.value).toBe(
       '{context.actorPosition.locationId}'
     );
-    expect(perceptionVar?.parameters.value).toBe('action_target_general');
+    expect(perceptionVar?.parameters.value).toBe('physical.target_action');
     expect(targetIdVar?.parameters.value).toBe('{event.payload.targetId}');
   });
 

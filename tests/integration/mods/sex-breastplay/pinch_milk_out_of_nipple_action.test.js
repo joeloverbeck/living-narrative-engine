@@ -88,7 +88,7 @@ describe('sex-breastplay:pinch_milk_out_of_nipple action integration', () => {
       locationId: scenario.roomId,
       actorId: scenario.actorId,
       targetId: null,
-      perceptionType: 'action_self_general',
+      perceptionType: 'physical.self_action',
     });
   });
 

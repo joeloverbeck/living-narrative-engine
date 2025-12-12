@@ -88,7 +88,7 @@ describe('Wield Threateningly Rule - Validation', () => {
         action.parameters.variable_name === 'perceptionType'
     );
     expect(perceptionTypeAction).toBeDefined();
-    expect(perceptionTypeAction.parameters.value).toBe('action_target_general');
+    expect(perceptionTypeAction.parameters.value).toBe('physical.target_action');
 
     // Assert: locationId is set
     const locationIdAction = ruleFile.actions.find(

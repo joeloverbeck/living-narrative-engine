@@ -55,11 +55,13 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.publicMessage}",
-        "perception_type": "liquid_consumed_entirely",
+        "perception_type": "consumption.consume",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
         "contextual_data": {
-          "excludedActorIds": ["{event.payload.actorId}"],
+          "excludedActorIds": [
+            "{event.payload.actorId}"
+          ],
           "volumeConsumed": "{context.drinkResult.volumeConsumed}"
         }
       }
@@ -88,11 +90,13 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.privateMessage}",
-        "perception_type": "liquid_consumed_entirely",
+        "perception_type": "consumption.consume",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
         "contextual_data": {
-          "recipientIds": ["{event.payload.actorId}"],
+          "recipientIds": [
+            "{event.payload.actorId}"
+          ],
           "volumeConsumed": "{context.drinkResult.volumeConsumed}",
           "flavorText": "{context.drinkResult.flavorText}"
         }

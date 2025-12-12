@@ -47,11 +47,13 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} examines {context.itemName}: {context.itemDescription.text}",
-        "perception_type": "item_examined",
+        "perception_type": "item.examine",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
         "contextual_data": {
-          "recipientIds": ["{event.payload.actorId}"]
+          "recipientIds": [
+            "{event.payload.actorId}"
+          ]
         }
       }
     },

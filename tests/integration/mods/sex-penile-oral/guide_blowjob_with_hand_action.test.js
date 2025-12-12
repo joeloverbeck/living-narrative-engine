@@ -183,7 +183,7 @@ describe('sex-penile-oral:guide_blowjob_with_hand action integration', () => {
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

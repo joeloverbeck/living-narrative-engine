@@ -78,7 +78,7 @@ describe('sex-penile-oral:nuzzle_penis_through_clothing_sitting_close action int
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

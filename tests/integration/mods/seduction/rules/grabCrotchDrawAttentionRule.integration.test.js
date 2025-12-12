@@ -91,7 +91,7 @@ describe('Seduction Mod: Grab Crotch to Draw Attention Rule', () => {
         actorId,
         targetId: null,
         locationId: 'room1',
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
         descriptionText: expectedMessage,
       });
     });

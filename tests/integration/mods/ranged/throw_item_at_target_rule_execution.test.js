@@ -352,7 +352,7 @@ describe('throw_item_at_target outcome resolution rule', () => {
       // Throw rule should set these context variables for use by macros
       expect(ruleString).toContain('"variable_name":"locationId"');
       expect(ruleString).toContain('"variable_name":"perceptionType"');
-      expect(ruleString).toContain('"value":"action_target_general"');
+      expect(ruleString).toContain('"value":"physical.target_action"');
       expect(ruleString).toContain('"variable_name":"targetId"');
     });
 

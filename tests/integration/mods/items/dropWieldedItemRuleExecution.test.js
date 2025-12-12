@@ -247,7 +247,7 @@ describe('item-handling:drop_wielded_item action integration', () => {
       );
 
       expect(perceptibleEvent?.payload.locationId).toBe('saloon');
-      expect(perceptibleEvent?.payload.perceptionType).toBe('item_dropped');
+      expect(perceptibleEvent?.payload.perceptionType).toBe('item.drop');
       expect(perceptibleEvent?.payload.actorId).toBe('gunslinger');
       expect(perceptibleEvent?.payload.targetId).toBe('pistol');
     });

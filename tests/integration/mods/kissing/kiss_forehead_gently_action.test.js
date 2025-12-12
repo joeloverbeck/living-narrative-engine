@@ -188,7 +188,7 @@ describe('kissing:kiss_forehead_gently action integration', () => {
         locationId: 'garden',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 

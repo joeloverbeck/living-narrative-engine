@@ -261,7 +261,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -277,7 +277,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -296,7 +296,7 @@ describe('Physical Control Mod: Push Off Action Integration', () => {
       testFixture.assertPerceptibleEvent({
         descriptionText:
           'Alice pushes Bob off forcefully, breaking their closeness.',
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

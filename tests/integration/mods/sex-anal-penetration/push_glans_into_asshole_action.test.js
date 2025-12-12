@@ -91,7 +91,7 @@ describe('sex-anal-penetration:push_glans_into_asshole action integration', () =
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

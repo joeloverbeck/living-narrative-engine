@@ -18,7 +18,7 @@
  * 3. PERCEPTIBLE EVENTS: The rule dispatches DISPATCH_PERCEPTIBLE_EVENT in each
  *    outcome branch (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE) to broadcast
  *    the action result to other actors in the location. Uses perception_type
- *    "action_self_general" since it's a self-targeting action.
+ *    "physical.self_action" since it's a self-targeting action.
  *
  * Full outcome testing for CRITICAL_SUCCESS, FAILURE, and FUMBLE would require
  * infrastructure changes to allow mocking different outcome types.
@@ -323,7 +323,7 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
         a.parameters.variable_name === 'perceptionType'
     );
     expect(setPerceptionTypeOp).toBeDefined();
-    expect(setPerceptionTypeOp.parameters.value).toBe('action_self_general');
+    expect(setPerceptionTypeOp.parameters.value).toBe('physical.self_action');
   });
 
   it('targetId is set to actorId for self-action', () => {
@@ -358,7 +358,7 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
         );
         expect(dispatchPerceptibleOp.parameters).toHaveProperty('actor_id');
 
-        // Self-treatment should use action_self_general perception type
+        // Self-treatment should use physical.self_action perception type
         expect(dispatchPerceptibleOp.parameters.perception_type).toBe(
           '{context.perceptionType}'
         );
@@ -393,7 +393,7 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
 
       // Verify perception type for self-treatment
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'action_self_general'
+        'physical.self_action'
       );
 
       // Verify description contains expected content

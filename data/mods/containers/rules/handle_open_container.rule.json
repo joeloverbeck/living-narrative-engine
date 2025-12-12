@@ -21,7 +21,12 @@
       "comment": "Branch based on open result",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.openResult.success" }, false]
+          "==": [
+            {
+              "var": "context.openResult.success"
+            },
+            false
+          ]
         },
         "then_actions": [
           {
@@ -29,7 +34,12 @@
             "comment": "Check if failure was due to missing key",
             "parameters": {
               "condition": {
-                "==": [{ "var": "context.openResult.error" }, "missing_key"]
+                "==": [
+                  {
+                    "var": "context.openResult.error"
+                  },
+                  "missing_key"
+                ]
               },
               "then_actions": [
                 {
@@ -68,7 +78,7 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName} tries to open {context.containerName}, but it's locked.",
-                    "perception_type": "container_open_failed",
+                    "perception_type": "error.action_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
                     "contextual_data": {
@@ -148,7 +158,7 @@
             "comment": "Set perception type for macro",
             "parameters": {
               "variable_name": "perceptionType",
-              "value": "container_opened"
+              "value": "container.open"
             }
           },
           {

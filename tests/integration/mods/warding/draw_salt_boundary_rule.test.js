@@ -94,7 +94,7 @@ describe('handle_draw_salt_boundary rule', () => {
     expect(locationVar?.parameters.value).toBe(
       '{context.actorPosition.locationId}'
     );
-    expect(perceptionVar?.parameters.value).toBe('action_target_general');
+    expect(perceptionVar?.parameters.value).toBe('physical.target_action');
     expect(targetVar?.parameters.value).toBe('{event.payload.targetId}');
   });
 

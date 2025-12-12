@@ -78,7 +78,7 @@ describe('handle_cross_salt_boundary rule', () => {
     expect(dispatch?.parameters.location_id).toBe(
       '{context.actorPosition.locationId}'
     );
-    expect(dispatch?.parameters.perception_type).toBe('action_self_general');
+    expect(dispatch?.parameters.perception_type).toBe('magic.spell');
     expect(dispatch?.parameters.actor_id).toBe('{event.payload.actorId}');
   });
 
@@ -110,7 +110,7 @@ describe('handle_cross_salt_boundary rule', () => {
     expect(locationVar?.parameters.value).toBe(
       '{context.actorPosition.locationId}'
     );
-    expect(perceptionVar?.parameters.value).toBe('action_self_general');
+    expect(perceptionVar?.parameters.value).toBe('magic.spell');
   });
 
   it('uses success outcome macro to end turn', () => {

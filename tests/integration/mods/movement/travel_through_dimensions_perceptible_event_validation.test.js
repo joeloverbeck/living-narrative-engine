@@ -37,7 +37,7 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
       const departureEvent = fixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'character_exit'
+          e.payload.perceptionType === 'movement.departure'
       );
 
       expect(departureEvent).toBeDefined();
@@ -57,7 +57,7 @@ describe('travel_through_dimensions Perceptible Event Schema Validation', () => 
       const arrivalEvent = fixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'character_enter'
+          e.payload.perceptionType === 'movement.arrival'
       );
 
       expect(arrivalEvent).toBeDefined();

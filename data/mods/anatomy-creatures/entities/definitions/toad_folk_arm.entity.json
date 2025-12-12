@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:toad_folk_arm",
+  "description": "A stocky toad-folk arm with bumpy skin",
+  "components": {
+    "anatomy:part": {
+      "subType": "arm",
+      "hit_probability_weight": 8,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 25,
+      "maxHealth": 25,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wrist",
+          "allowedTypes": ["hand"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "arm"
+    },
+    "core:weight": {
+      "weight": 4
+    },
+    "descriptors:build": {
+      "build": "stocky"
+    },
+    "descriptors:texture": {
+      "texture": "bumpy"
+    }
+  }
+}

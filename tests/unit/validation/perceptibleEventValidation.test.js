@@ -199,7 +199,7 @@ describe('Perceptible Event Validation Regression Tests', () => {
         action.parameters?.variable_name === 'perceptionType'
     );
     expect(perceptionTypeAction).toBeDefined();
-    expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
+    expect(perceptionTypeAction.parameters.value).toBe('physical.self_action');
 
     // Find target ID setting
     const targetIdAction = actions.find(
@@ -227,7 +227,7 @@ describe('Perceptible Event Validation Regression Tests', () => {
         action.parameters?.variable_name === 'perceptionType'
     );
     expect(perceptionTypeAction).toBeDefined();
-    expect(perceptionTypeAction.parameters.value).toBe('action_target_general');
+    expect(perceptionTypeAction.parameters.value).toBe('physical.target_action');
   });
 
   it('demonstrates valid perceptible event payloads', () => {
@@ -237,7 +237,7 @@ describe('Perceptible Event Validation Regression Tests', () => {
       locationId: 'test:location',
       descriptionText: 'Actor performs a self action',
       timestamp: new Date().toISOString(),
-      perceptionType: 'action_self_general',
+      perceptionType: 'physical.self_action',
       actorId: 'test:actor',
       targetId: null,
       involvedEntities: [],
@@ -252,7 +252,7 @@ describe('Perceptible Event Validation Regression Tests', () => {
       locationId: 'test:location',
       descriptionText: 'Actor performs action on target',
       timestamp: new Date().toISOString(),
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: 'test:actor',
       targetId: 'test:target',
       involvedEntities: [],

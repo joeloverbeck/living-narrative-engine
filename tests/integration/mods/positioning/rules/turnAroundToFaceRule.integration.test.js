@@ -239,7 +239,7 @@ describe('Turn Around to Face Rule', () => {
       );
       expect(perceptibleEvent.payload.locationId).toBe('test-location');
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'action_target_general'
+        'physical.target_action'
       );
       expect(perceptibleEvent.payload.actorId).toBe('alice');
       expect(perceptibleEvent.payload.targetId).toBe('bob');

@@ -111,7 +111,7 @@ describe('Violence Mod: Squeeze Neck With Both Hands Action Integration', () => 
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -126,7 +126,7 @@ describe('Violence Mod: Squeeze Neck With Both Hands Action Integration', () => 
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -144,7 +144,7 @@ describe('Violence Mod: Squeeze Neck With Both Hands Action Integration', () => 
       testFixture.assertPerceptibleEvent({
         descriptionText:
           "Alice squeezes their hands around Bob's neck with murderous intentions, Alice's forearms trembling from the effort.",
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

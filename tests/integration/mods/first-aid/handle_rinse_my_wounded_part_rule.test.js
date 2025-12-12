@@ -103,7 +103,7 @@ describe('first-aid:handle_rinse_my_wounded_part rule', () => {
       locationId: ROOM_ID,
       actorId: medicId,
       targetId: medicId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
 
     fixture.assertComponentAdded(torsoId, 'first-aid:rinsed', {

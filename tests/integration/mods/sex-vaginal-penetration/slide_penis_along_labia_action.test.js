@@ -117,7 +117,7 @@ describe('sex-vaginal-penetration:slide_penis_along_labia action integration', (
       locationId: 'room1',
       actorId: 'alice',
       targetId: 'beth',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

@@ -146,7 +146,7 @@ describe('deference:stand_up perceptible event fix', () => {
     expect(validatePerceptibleEvent.errors).toBeNull();
 
     // Verify the corrected values
-    expect(perceptibleEvent.payload.perceptionType).toBe('action_self_general');
+    expect(perceptibleEvent.payload.perceptionType).toBe('physical.self_action');
     expect(perceptibleEvent.payload.targetId).toBe(null);
 
     // Verify that witness DOES receive the perceptible log entry
@@ -159,7 +159,7 @@ describe('deference:stand_up perceptible event fix', () => {
     expect(logEntries[0].descriptionText).toBe(
       'Alice stands up from their kneeling position.'
     );
-    expect(logEntries[0].perceptionType).toBe('action_self_general');
+    expect(logEntries[0].perceptionType).toBe('physical.self_action');
 
     // Validate action success
     ModAssertionHelpers.assertActionSuccess(
@@ -177,8 +177,8 @@ describe('deference:stand_up perceptible event fix', () => {
 
   it('validates perceptionType enum values from schema', () => {
     expect(perceptionTypeEnum).not.toContain('action_general'); // Invalid
-    expect(perceptionTypeEnum).toContain('action_self_general'); // Valid for self-actions
-    expect(perceptionTypeEnum).toContain('action_target_general'); // Valid for target-actions
+    expect(perceptionTypeEnum).toContain('physical.self_action'); // Valid for self-actions
+    expect(perceptionTypeEnum).toContain('physical.target_action'); // Valid for target-actions
   });
 
   it('demonstrates valid payload structure with corrected perceptionType', () => {
@@ -188,7 +188,7 @@ describe('deference:stand_up perceptible event fix', () => {
       locationId: 'throne_room',
       descriptionText: 'Alice stands up from their kneeling position.',
       timestamp: new Date().toISOString(),
-      perceptionType: 'action_self_general', // Corrected value
+      perceptionType: 'physical.self_action', // Corrected value
       actorId: 'test:actor1',
       targetId: null, // Using null instead of "none"
       involvedEntities: [],
@@ -203,7 +203,7 @@ describe('deference:stand_up perceptible event fix', () => {
 
     // This should pass with the corrected values
     expect(isValid).toBe(true);
-    expect(correctedPayload.perceptionType).toBe('action_self_general');
+    expect(correctedPayload.perceptionType).toBe('physical.self_action');
     expect(correctedPayload.targetId).toBe(null);
   });
 });

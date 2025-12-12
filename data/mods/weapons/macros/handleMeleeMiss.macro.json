@@ -8,7 +8,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.failureMessage}",
-        "perception_type": "action_target_general",
+        "perception_type": "combat.attack",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.secondaryId}"
       }

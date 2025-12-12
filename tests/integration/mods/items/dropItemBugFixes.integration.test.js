@@ -198,7 +198,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
       );
 
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
+      expect(perceptibleEvent.payload.perceptionType).toBe('item.drop');
       expect(perceptibleEvent.payload.locationId).toBe(
         'p_erotica:patient_room_instance'
       );
@@ -256,7 +256,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         (e) => e.eventType === 'core:perceptible_event'
       );
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
+      expect(perceptibleEvent.payload.perceptionType).toBe('item.drop');
     });
   });
 
@@ -326,7 +326,7 @@ describe('Drop Item - Bug Fixes from logs/127.0.0.1-1757518601476.log', () => {
         (e) => e.eventType === 'core:perceptible_event'
       );
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.perceptionType).toBe('item_dropped');
+      expect(perceptibleEvent.payload.perceptionType).toBe('item.drop');
 
       // 5. Turn ended successfully
       const turnEndedEvent = testFixture.events.find(

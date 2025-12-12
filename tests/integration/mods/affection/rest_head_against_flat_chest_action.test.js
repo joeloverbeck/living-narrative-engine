@@ -59,7 +59,7 @@ describe('affection:rest_head_against_flat_chest action integration', () => {
         'Devon'
       ),
       locationId: 'quiet_corner',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -103,7 +103,7 @@ describe('affection:rest_head_against_flat_chest action integration', () => {
       EXPECTED_MESSAGE.replace('{actor}', 'Maya').replace('{primary}', 'Rin')
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('library_nook');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

@@ -529,6 +529,180 @@ describe('AnatomyFormattingService', () => {
     });
   });
 
+  describe('getDescriptorFormatRules', () => {
+    it('merges descriptor format rules without replace strategy', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+          descriptorFormatRules: {
+            'descriptors:embellishment': { prefix: 'embellished with ' },
+            'descriptors:digit_count': { suffix: ' digits' },
+          },
+        },
+        {
+          _modId: 'modA',
+          descriptionOrder: ['torso'],
+          descriptorOrder: ['shape'],
+          descriptorFormatRules: {
+            'descriptors:shape_eye': { transform: 'underscore_to_hyphen' },
+            'descriptors:custom': { prefix: 'has ', suffix: ' feature' },
+          },
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const rules = service.getDescriptorFormatRules();
+      expect(rules).toEqual({
+        'descriptors:embellishment': { prefix: 'embellished with ' },
+        'descriptors:digit_count': { suffix: ' digits' },
+        'descriptors:shape_eye': { transform: 'underscore_to_hyphen' },
+        'descriptors:custom': { prefix: 'has ', suffix: ' feature' },
+      });
+    });
+
+    it('replaces descriptor format rules with replace strategy', () => {
+      registry = createMockRegistry(
+        [
+          {
+            _modId: 'core',
+            descriptionOrder: ['head'],
+            descriptorOrder: ['size'],
+            descriptorFormatRules: {
+              'descriptors:embellishment': { prefix: 'embellished with ' },
+              'descriptors:digit_count': { suffix: ' digits' },
+            },
+          },
+          {
+            _modId: 'modA',
+            descriptionOrder: ['torso'],
+            descriptorOrder: ['shape'],
+            descriptorFormatRules: {
+              'descriptors:custom': { prefix: 'custom: ' },
+            },
+            mergeStrategy: { replaceObjects: true },
+          },
+        ],
+        ['core', 'modA']
+      );
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const rules = service.getDescriptorFormatRules();
+      expect(rules).toEqual({
+        'descriptors:custom': { prefix: 'custom: ' },
+      });
+    });
+
+    it('returns empty object when none provided', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const rules = service.getDescriptorFormatRules();
+      expect(rules).toEqual({});
+    });
+
+    it('returns cloned object to prevent mutation', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+          descriptorFormatRules: {
+            'descriptors:test': { prefix: 'test: ' },
+          },
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const rules1 = service.getDescriptorFormatRules();
+      rules1['descriptors:mutated'] = { prefix: 'mutated: ' };
+
+      const rules2 = service.getDescriptorFormatRules();
+      expect(rules2).toEqual({
+        'descriptors:test': { prefix: 'test: ' },
+      });
+      expect(rules2).not.toBe(rules1);
+    });
+
+    it('later mod rules override earlier mod rules for same descriptor', () => {
+      registry = createMockRegistry([
+        {
+          _modId: 'core',
+          descriptionOrder: ['head'],
+          descriptorOrder: ['size'],
+          descriptorFormatRules: {
+            'descriptors:embellishment': { prefix: 'embellished with ' },
+          },
+        },
+        {
+          _modId: 'modA',
+          descriptionOrder: ['torso'],
+          descriptorOrder: ['shape'],
+          descriptorFormatRules: {
+            'descriptors:embellishment': { suffix: ' added' },
+          },
+        },
+      ]);
+      logger = createMockLogger();
+      safeEventDispatcher = createMockSafeEventDispatcher();
+
+      const service = new AnatomyFormattingService({
+        dataRegistry: registry,
+        logger,
+        safeEventDispatcher,
+      });
+
+      service.initialize();
+
+      const rules = service.getDescriptorFormatRules();
+      // Later mod (modA) should override the core rule
+      expect(rules['descriptors:embellishment']).toEqual({ suffix: ' added' });
+    });
+  });
+
   describe('getActivityIntegrationConfig', () => {
     it('should provide activity integration config with Phase 1 defaults', () => {
       registry = createMockRegistry([], ['core']);

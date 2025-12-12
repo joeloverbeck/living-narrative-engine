@@ -49,7 +49,7 @@
             "parameters": {
               "location_id": "{context.thinkerPositionComponent.locationId}",
               "description_text": "{context.thinkerNameComponent.text} is lost in thought.",
-              "perception_type": "thought_internal",
+              "perception_type": "communication.thought",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
               "involved_entities": [],
@@ -63,7 +63,9 @@
             "comment": "Skip UI bubble when suppressDisplay is true (e.g., preview already shown).",
             "parameters": {
               "condition": {
-                "not": { "var": "event.payload.suppressDisplay" }
+                "not": {
+                  "var": "event.payload.suppressDisplay"
+                }
               },
               "then_actions": [
                 {

@@ -51,7 +51,7 @@ describe('travel_through_dimensions Rule Execution', () => {
       const departureEvent = fixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'character_exit'
+          e.payload.perceptionType === 'movement.departure'
       );
       expect(departureEvent).toBeDefined();
       expect(departureEvent.payload.locationId).toBe(scenario.perimeterId);
@@ -70,7 +70,7 @@ describe('travel_through_dimensions Rule Execution', () => {
       const arrivalEvent = fixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'character_enter'
+          e.payload.perceptionType === 'movement.arrival'
       );
       expect(arrivalEvent).toBeDefined();
       expect(arrivalEvent.payload.locationId).toBe(scenario.dimensionId);

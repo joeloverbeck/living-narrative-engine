@@ -1,28 +1,28 @@
 {
     "$schema": "http://example.com/schemas/entity-definition.schema.json",
-    "id": "dredgers:mudsong_vane",
+    "id": "dredgers:jorren_weir",
     "components": {
         "core:name": {
-            "text": "Jory \"Mudsong\" Vane"
+            "text": "Jorren \"Mudsong\" Weir"
         },
         "core:gender": {
             "value": "male"
         },
         "core:portrait": {
-            "imagePath": "portraits/mudsong_vane.png",
-            "altText": "Jory \"Mudsong\" Vane - Dredgers crew leader"
+            "imagePath": "portraits/jorren_weir.png",
+            "altText": "Jorren \"Mudsong\" Weir - Dredgers crew leader"
         },
         "core:profile": {
-            "text": "Jory is a beaver-folk male. He's the leader of a crew of dredgers, professionals in charge of salvaging stuff, sometimes occult stuff, from the bottom of canals, but also from locations that sane people wouldn't want to get in. Jory's public mask is that of a tough provider, but inside, he's desperate to prove that salvage work is real labor, not \"river trash\". Jory has broad hands, and a flat tail used like a punctuation slap on planks. Physically, he's shorter than the vast majority of humans and even non-humans he deals with on a regular basis, which can get annoying."
+            "text": "Jorren is a beaver-folk male. He's the leader of a crew of dredgers, professionals in charge of salvaging stuff, sometimes occult stuff, from the bottom of canals, but also from locations that sane people wouldn't want to get in. Jorren's public mask is that of a tough provider, but inside, he's desperate to prove that salvage work is real labor, not \"river trash\". Jorren has broad hands, and a flat tail used like a punctuation slap on planks. Physically, he's shorter than the vast majority of humans and even non-humans he deals with on a regular basis, which can get annoying. His nickname, \"Mudsong\" was given to him by a former member of his crew; that's what she called the rhythm of Jorren's tail thumping planks while he thinks through flow and rigging."
         },
         "core:personality": {
-            "text": "His default stress tactic is procedural bluff (\"I know the rules\"), then explosive solidarity. Jory will never abandon a member of his crew; he will even sacrifice reputation, and his own future, to save them."
+            "text": "His default stress tactic is procedural bluff (\"I know the rules\"), then explosive solidarity. Jorren will never abandon a member of his crew; he will even sacrifice reputation, and his own future, to save them."
         },
         "core:strengths": {
             "text": "Logistics, rigging, reading people, improvising under pressure. Being beaver-folk makes him canal labor embodied. He has practical intelligence, and a natural obsession with flow, gates, and rights-of-way. He usually understands infrastructure better than the owners of the canals he works on."
         },
         "core:likes": {
-            "text": "Honestly. Being spoken to frankly."
+            "text": "Honesty. Being spoken to frankly."
         },
         "core:dislikes": {
             "text": "Being treated as disposable, illiterate, or \"born to stink\". He hates when someone associates his crew or him with the occult trash they dredge, and start considering them contaminated as well. He also hates when a client refuses to say terms out loud. It annoys him when people assume he's \"built for water\" so they push risk on him."
@@ -30,7 +30,7 @@
         "core:goals": {
             "goals": [
                 {
-                    "text": "On every job, Jory wants to secure salvage claim and keep the crew paid an uninjured."
+                    "text": "On every job, Jorren wants to secure salvage claim and keep the crew paid an uninjured."
                 }
             ]
         },

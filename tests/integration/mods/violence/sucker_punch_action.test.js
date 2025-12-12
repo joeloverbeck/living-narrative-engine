@@ -108,7 +108,7 @@ describe('Violence Mod: Sucker Punch Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -122,7 +122,7 @@ describe('Violence Mod: Sucker Punch Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -137,7 +137,7 @@ describe('Violence Mod: Sucker Punch Action Integration', () => {
       testFixture.assertActionSuccess('Alice sucker-punches Bob in the head.');
       testFixture.assertPerceptibleEvent({
         descriptionText: 'Alice sucker-punches Bob in the head.',
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

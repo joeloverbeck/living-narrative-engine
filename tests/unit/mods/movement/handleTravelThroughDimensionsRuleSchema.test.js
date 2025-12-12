@@ -124,10 +124,10 @@ describe('handle_travel_through_dimensions Rule Schema', () => {
 
       expect(setPerceptionTypeOperations.length).toBe(2);
       expect(setPerceptionTypeOperations[0].parameters.value).toBe(
-        'character_exit'
+        'movement.departure'
       );
       expect(setPerceptionTypeOperations[1].parameters.value).toBe(
-        'character_enter'
+        'movement.arrival'
       );
     });
 

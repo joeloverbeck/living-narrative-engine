@@ -114,7 +114,7 @@ describe('Seduction Mod: stroke_penis_to_draw_attention rule', () => {
         locationId: ROOM_ID,
         actorId: ACTOR_ID,
         targetId: null,
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
       });
     });
   });
@@ -145,7 +145,7 @@ describe('Seduction Mod: stroke_penis_to_draw_attention rule', () => {
       expect(logMessageAction.parameters.value).toBe(
         '{context.actorName} strokes their bare penis seductively, drawing attention to it.'
       );
-      expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
+      expect(perceptionTypeAction.parameters.value).toBe('physical.self_action');
       expect(locationAction.parameters.value).toBe(
         '{context.actorPosition.locationId}'
       );

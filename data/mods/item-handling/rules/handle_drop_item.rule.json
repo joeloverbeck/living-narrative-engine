@@ -72,7 +72,7 @@
       "comment": "Set perception type for macro",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "item_dropped"
+        "value": "item.drop"
       }
     },
     {

@@ -113,7 +113,7 @@ describe('Violence Mod: Slap Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -127,7 +127,7 @@ describe('Violence Mod: Slap Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -142,7 +142,7 @@ describe('Violence Mod: Slap Action Integration', () => {
       testFixture.assertActionSuccess('Alice slaps Bob across the face.');
       testFixture.assertPerceptibleEvent({
         descriptionText: 'Alice slaps Bob across the face.',
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

@@ -115,7 +115,7 @@ describe('PrepareActionContextHandler', () => {
       const result = await handler.execute(null, executionContext);
 
       expect(result.evaluationContext.context.perceptionType).toBe(
-        'action_target_general'
+        'physical.target_action'
       );
     });
   });
@@ -160,7 +160,7 @@ describe('PrepareActionContextHandler', () => {
       expect(context.targetName).toBe('Bob');
       expect(context.locationId).toBe('location-1');
       expect(context.targetId).toBe('target-1');
-      expect(context.perceptionType).toBe('action_target_general');
+      expect(context.perceptionType).toBe('physical.target_action');
     });
 
     it('should use custom perception_type when provided', async () => {

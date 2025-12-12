@@ -105,7 +105,7 @@ describe('items:drink_from action integration', () => {
       const publicEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'liquid_consumed' &&
+          e.payload.perceptionType === 'consumption.consume' &&
           (!e.payload.contextualData?.recipientIds ||
             e.payload.contextualData.recipientIds.length === 0)
       );
@@ -119,7 +119,7 @@ describe('items:drink_from action integration', () => {
       const privateEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'liquid_consumed' &&
+          e.payload.perceptionType === 'consumption.consume' &&
           e.payload.contextualData?.recipientIds?.length > 0
       );
       expect(privateEvent).toBeDefined();
@@ -247,7 +247,7 @@ describe('items:drink_from action integration', () => {
       const publicEvents = testFixture.events.filter(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'liquid_consumed' &&
+          e.payload.perceptionType === 'consumption.consume' &&
           (!e.payload.contextualData?.recipientIds ||
             e.payload.contextualData.recipientIds.length === 0)
       );
@@ -279,7 +279,7 @@ describe('items:drink_from action integration', () => {
       const publicEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'liquid_consumed' &&
+          e.payload.perceptionType === 'consumption.consume' &&
           (!e.payload.contextualData?.recipientIds ||
             e.payload.contextualData.recipientIds.length === 0)
       );
@@ -307,7 +307,7 @@ describe('items:drink_from action integration', () => {
       const privateEvents = testFixture.events.filter(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'liquid_consumed' &&
+          e.payload.perceptionType === 'consumption.consume' &&
           e.payload.contextualData?.recipientIds?.length > 0
       );
 

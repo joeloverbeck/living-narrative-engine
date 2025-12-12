@@ -135,6 +135,12 @@
     },
     "core:weight": {
       "weight": 35
+    },
+    "descriptors:build": {
+      "build": "stocky"
+    },
+    "descriptors:texture": {
+      "texture": "bumpy"
     }
   }
 }

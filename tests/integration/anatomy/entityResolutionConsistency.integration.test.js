@@ -30,9 +30,10 @@ const getSocketIds = (entity) =>
   entity.components?.[SOCKETS_COMPONENT]?.sockets?.map((socket) => socket.id) ||
   [];
 
-const hasSockets = (entity) =>
-  Array.isArray(entity.components?.[SOCKETS_COMPONENT]?.sockets) &&
-  entity.components[SOCKETS_COMPONENT].sockets.length > 0;
+const hasSockets = (entity) => {
+  const sockets = entity.components?.[SOCKETS_COMPONENT]?.sockets;
+  return Array.isArray(sockets) && sockets.length > 0;
+};
 
 const shuffleDeterministic = (items) => {
   const result = [...items];

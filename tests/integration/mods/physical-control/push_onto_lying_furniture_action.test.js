@@ -136,7 +136,7 @@ describe('Physical Control Mod: push_onto_lying_furniture action', () => {
     testFixture.assertActionSuccess(expectedMessage);
     testFixture.assertPerceptibleEvent({
       descriptionText: expectedMessage,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       locationId: ROOM_ID,
       actorId: ACTOR_ID,
       targetId: TARGET_ID,
