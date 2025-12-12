@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:waxed_oversmock_tar_black",
+  "description": "A tar-black waxed oversmock of heavy canvas and linen",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "waxed oversmock"
+    },
+    "core:description": {
+      "text": "A heavy oversmock of waxed linen and canvas, stained the tar-black of pitch-treated rope. The wax coating sheds rain and river spray, while the loose cut allows for the full range of motion needed when hauling nets or poling barges. The sleeves are long and full, the hem falls to mid-thigh, and the whole garment carries the faint smell of beeswax and tallow that marks a dredger's trade."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-black"
+    },
+    "descriptors:texture": {
+      "texture": "waxed"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.65
+    }
+  }
+}

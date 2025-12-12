@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:river_sole_work_shoes_iron_brown",
+  "description": "Iron-brown oiled leather work shoes with river-sole treads",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "river-sole work shoes"
+    },
+    "core:description": {
+      "text": "Low-cut work shoes of oiled leather in iron-brown, fitted with thick river-soles designed to grip wet planking and slick stone. The oiling keeps the leather supple and water-resistant, though the finish has gone patchy with use. The soles are scored in a crosshatch pattern for traction, and the stitching is doubled where foot meets sole—a cobbler's concession to the demands of dock labor."
+    },
+    "descriptors:color_extended": {
+      "color": "iron-brown"
+    },
+    "descriptors:texture": {
+      "texture": "oiled"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.85
+    }
+  }
+}

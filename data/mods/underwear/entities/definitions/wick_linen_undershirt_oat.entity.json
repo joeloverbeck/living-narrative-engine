@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:wick_linen_undershirt_oat",
+  "description": "A coarse wick-linen undershirt in oat color with short sleeves",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "wick-linen undershirt"
+    },
+    "core:description": {
+      "text": "A simple undershirt of coarse wick-linen in a dull oat color. The rough-woven fabric wicks moisture away from the skin, making it suitable for labor in damp conditions. Short sleeves end above the elbow, and the construction is plain but serviceable—the work of hands accustomed to making garments that last rather than impress."
+    },
+    "descriptors:color_extended": {
+      "color": "oat"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    }
+  }
+}

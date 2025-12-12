@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:deck_trousers_hemp_canvas_dark_umber",
+  "description": "Dark umber hemp canvas deck trousers with knee-sheen wear",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas"
+    },
+    "core:name": {
+      "text": "deck trousers"
+    },
+    "core:description": {
+      "text": "Heavy deck trousers of hemp canvas dyed the dark umber of river mud. The weave is tight and sturdy, built to withstand the abrasion of rope and timber. The knees show a characteristic sheen from countless hours of kneeling on wet planking, and the seat is reinforced with an extra layer of canvas. Wide through the leg for ease of movement, with a drawstring waist."
+    },
+    "descriptors:color_extended": {
+      "color": "dark-umber"
+    },
+    "descriptors:texture": {
+      "texture": "worn"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.52
+    }
+  }
+}

@@ -11,14 +11,21 @@
  * @see https://github.com/joeloverbeck/living-narrative-engine/issues/TBD
  */
 
-import { describe, it, expect, jest, beforeAll, afterAll } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '../../..');
-const scriptPath = path.join(projectRoot, 'scripts/validate-recipe.js');
 
 const chalkStub = {
   blue: (text) => text,
@@ -33,16 +40,13 @@ jest.mock('chalk', () => ({
   default: chalkStub,
 }));
 
-let runValidation;
-
 describe('validate-recipe batch state leakage bug', () => {
   let originalFetch;
+  let cachedContext;
+  let loadRecipeFile;
 
   beforeAll(async () => {
-    ({ runValidation } = await import(
-      '../../../scripts/validate-recipe-v2.js'
-    ));
-
+    // Set up fetch mock first - this is needed for context creation
     originalFetch = global.fetch;
     global.fetch = jest.fn((url) => {
       const filePath = url.replace(/^\.\//, '');
@@ -61,39 +65,69 @@ describe('validate-recipe batch state leakage bug', () => {
         );
       }
     });
+
+    // Import the validation functions
+    const validateRecipeModule = await import(
+      '../../../scripts/validate-recipe-v2.js'
+    );
+    loadRecipeFile = validateRecipeModule.loadRecipeFile;
+
+    // Create validation context ONCE for all tests
+    // This is the key optimization - context creation is expensive (~350ms)
+    // but can be safely reused since schemas and registry are immutable
+    cachedContext = await validateRecipeModule.createValidationContext({
+      verbose: false,
+      recipePaths: [],
+      inferredMods: ['anatomy', 'anatomy-creatures'],
+      runtimeOverrides: {},
+    });
   });
 
   afterAll(() => {
     global.fetch = originalFetch;
   });
 
+  beforeEach(() => {
+    // Clear blueprint cache BEFORE each test to prevent state leakage
+    // between recipes using different blueprint types (composed vs structure-template)
+    // This is the same clearing that happens in validate-recipe-v2.js line 230
+    cachedContext.anatomyBlueprintRepository?.clearCache?.();
+  });
+
   /**
-   * Helper to run validation and capture output
+   * Helper to run validation using cached context
+   * This is much faster than runValidation() which creates a new context each time
    *
    * @param {string[]} recipePaths - Recipe paths relative to project root
-   * @returns {Promise<{exitCode: number, output: string, results: Array}>}
+   * @returns {Promise<{exitCode: number, results: Array}>}
    */
   async function validateBatch(recipePaths) {
-    const capturedOutput = [];
-    const mockConsole = {
-      log: (...args) => capturedOutput.push(args.join(' ')),
-      error: (...args) => capturedOutput.push(args.join(' ')),
-      warn: (...args) => capturedOutput.push(args.join(' ')),
-    };
+    const results = [];
 
-    const result = await runValidation(
-      ['node', scriptPath, ...recipePaths],
-      {
-        exitOnCompletion: false,
-        console: mockConsole,
-        chalk: chalkStub,
+    for (const recipePath of recipePaths) {
+      try {
+        // Clear blueprint cache before each recipe validation
+        cachedContext.anatomyBlueprintRepository?.clearCache?.();
+
+        // Load and validate recipe
+        const recipeData = await loadRecipeFile(recipePath);
+        const report = await cachedContext.validator.validate(recipeData, {
+          recipePath,
+          failFast: false,
+        });
+        results.push(report);
+      } catch (error) {
+        results.push({
+          recipePath,
+          isValid: false,
+          errors: [{ type: 'LOAD_ERROR', message: error.message }],
+        });
       }
-    );
+    }
 
     return {
-      exitCode: result.exitCode,
-      output: capturedOutput.join('\n'),
-      results: result.results,
+      exitCode: results.every((r) => r?.isValid) ? 0 : 1,
+      results,
     };
   }
 

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:beaver_tail",
+  "description": "Beaver tail - flat, paddle-shaped, hairless, used for communication and balance",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail",
+      "hit_probability_weight": 5,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "flat beaver tail"
+    },
+    "core:weight": {
+      "weight": 1.5
+    },
+    "descriptors:flexibility": {
+      "flexibility": "rigid"
+    },
+    "descriptors:length_category": {
+      "length": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "leathery"
+    },
+    "descriptors:shape_general": {
+      "shape": "paddle-shaped"
+    }
+  }
+}

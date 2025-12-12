@@ -1,0 +1,16 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:concordance_salon_armchair_1_instance",
+    "definitionId": "furniture:upholstered_armchair_pale_gray",
+    "componentOverrides": {
+        "core:name": {
+            "text": "upholstered armchair #1"
+        },
+        "core:position": {
+            "locationId": "dredgers:concordance_salon_instance"
+        },
+        "furniture:near_furniture": {
+            "nearFurnitureIds": ["dredgers:concordance_salon_coffee_table_instance"]
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:half_finger_rope_gloves_smoke_gray",
+  "description": "Smoke-gray hide half-finger gloves for rope work",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "half-finger rope gloves"
+    },
+    "core:description": {
+      "text": "Work gloves of smoke-gray hide, cut off at the first knuckle to leave the fingertips bare for delicate work. The palms are double-layered and roughened for grip, ideal for hauling wet rope without losing purchase. Stitching is reinforced at all stress points, and the leather has been worked until supple enough not to restrict movement."
+    },
+    "descriptors:color_extended": {
+      "color": "smoke-gray"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    }
+  }
+}

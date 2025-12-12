@@ -278,9 +278,12 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       const speechMatch = text.match(/^([^:]+?)\s+says:\s*(.+)$/i);
       if (speechMatch) {
         const [, speaker, utterance] = speechMatch;
+        // Strip surrounding quotes if present to avoid double-quoting
+        // (entity_speech.rule.json adds quotes: "{name} says: \"{content}\"")
+        const strippedUtterance = utterance.replace(/^"(.*)"$/, '$1');
         innerFragments.push(
           `<span class="speaker-name">${this.#escapeHtml(speaker)}</span> says: `,
-          `<span class="dialogue">"${this.#escapeHtml(utterance)}"</span>`
+          `<span class="dialogue">"${this.#escapeHtml(strippedUtterance)}"</span>`
         );
       } else {
         innerFragments.push(this.#escapeHtml(text));

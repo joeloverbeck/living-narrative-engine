@@ -40,6 +40,14 @@
       "version": "^1.0.0"
     },
     {
+      "id": "underwear",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "furniture",
+      "version": "^1.0.0"
+    },
+    {
       "id": "fantasy",
       "version": "^1.0.0"
     }
@@ -55,13 +63,20 @@
         "concordance_salon.location.json",
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
-        "jorren_weir.json"
+        "jorren_weir.character.json",
+        "keyring.entity.json"
       ],
       "instances": [
         "canal_vestibule.location.json",
         "concordance_salon.location.json",
+        "concordance_salon_armchair_1.entity.json",
+        "concordance_salon_armchair_2.entity.json",
+        "concordance_salon_armchair_3.entity.json",
+        "concordance_salon_coffee_table.entity.json",
         "cress_siltwell.character.json",
-        "eira_quenreach.character.json"
+        "eira_quenreach.character.json",
+        "jorren_weir.character.json",
+        "keyring.entity.json"
       ]
     },
     "events": [],
@@ -70,13 +85,16 @@
     "blueprints": [],
     "parts": [],
     "recipes": [
+      "beaver_folk_male.recipe.json",
       "ermine_folk_female.recipe.json",
       "toad_folk_male.recipe.json"
     ],
     "portraits": [
       "canal_vestibule.png",
       "concordance_salon.png",
-      "eira_quenreach.png"
+      "cress_siltwell.png",
+      "eira_quenreach.png",
+      "jorren_weir.png"
     ],
     "worlds": [
       "dredgers.world.json"

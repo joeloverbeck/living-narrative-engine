@@ -30,6 +30,7 @@
     "entities": {
       "definitions": [
         "bar_stools.entity.json",
+        "coffee_table_rectangular_wood.entity.json",
         "four_poster_bed.entity.json",
         "living_room_sofa.entity.json",
         "lounge_sofa.entity.json",
@@ -43,6 +44,7 @@
         "single_bed.entity.json",
         "swivel_chair.entity.json",
         "throne.entity.json",
+        "upholstered_armchair_pale_gray.entity.json",
         "upholstered_king_bed.entity.json",
         "working_class_king_bed.entity.json"
       ],

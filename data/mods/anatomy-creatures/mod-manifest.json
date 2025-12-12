@@ -18,6 +18,7 @@
   ],
   "content": {
     "blueprints": [
+      "beaver_folk_male.blueprint.json",
       "cat_girl.blueprint.json",
       "centaur_warrior.blueprint.json",
       "ermine_folk_female.blueprint.json",
@@ -44,7 +45,8 @@
     "parts": [
       "amphibian_core.part.json",
       "feline_core.part.json",
-      "mustelid_core.part.json"
+      "mustelid_core.part.json",
+      "rodent_core.part.json"
     ],
     "structure-templates": [
       "structure_arachnid_8leg.structure-template.json",
@@ -57,6 +59,11 @@
     "entities": {
       "definitions": [
         "beak.entity.json",
+        "beaver_folk_male_torso.entity.json",
+        "beaver_folk_mouth.entity.json",
+        "beaver_folk_nose.entity.json",
+        "beaver_folk_teeth.entity.json",
+        "beaver_tail.entity.json",
         "cat_ear.entity.json",
         "cat_ear_decorated.entity.json",
         "cat_girl_torso.entity.json",

@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:stewards_waistcoat_moss_felted_wool",
+  "description": "A moss-colored felted wool steward's waistcoat",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "steward's waistcoat"
+    },
+    "core:description": {
+      "text": "A sleeveless waistcoat of felted wool dyed the dull green of marsh moss. The felting has rendered the fabric dense and water-resistant, ideal for those who work in mist and drizzle. Simple bone buttons secure the front, and small pockets at each hip hold the implements of a working steward—chalk for marking, twine for binding, a stub of pencil for tallying. The garment speaks of modest authority among laborers."
+    },
+    "descriptors:color_extended": {
+      "color": "moss"
+    },
+    "descriptors:texture": {
+      "texture": "felted"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.40
+    }
+  }
+}
