@@ -109,7 +109,7 @@ describe('items:jot_down_notes action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const jotNotesEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'notes_jotted'
+        (e) => e.payload.perceptionType === 'communication.notes'
       );
       expect(jotNotesEvent).toBeDefined();
       expect(jotNotesEvent.payload.descriptionText).toBe(
@@ -194,12 +194,12 @@ describe('items:jot_down_notes action integration', () => {
       );
 
       const jotNotesEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'notes_jotted'
+        (e) => e.payload.perceptionType === 'communication.notes'
       );
 
       // Verify all required fields
       expect(jotNotesEvent.payload.locationId).toBe('cabin');
-      expect(jotNotesEvent.payload.perceptionType).toBe('notes_jotted');
+      expect(jotNotesEvent.payload.perceptionType).toBe('communication.notes');
       expect(jotNotesEvent.payload.actorId).toBe('test:actor1');
       expect(jotNotesEvent.payload.targetId).toBe('notebook-1');
       expect(jotNotesEvent.payload.descriptionText).toContain('Charlie');
@@ -299,7 +299,7 @@ describe('items:jot_down_notes action integration', () => {
       const firstJotEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'notes_jotted'
+          e.payload.perceptionType === 'communication.notes'
       );
       expect(firstJotEvent).toBeDefined();
 
@@ -313,7 +313,7 @@ describe('items:jot_down_notes action integration', () => {
       const allJotEvents = testFixture.events.filter(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'notes_jotted'
+          event.payload.perceptionType === 'communication.notes'
       );
       expect(allJotEvents).toHaveLength(2);
 

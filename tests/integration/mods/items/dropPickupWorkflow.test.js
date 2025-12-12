@@ -203,7 +203,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
     const dropEvent = dropFixture.events.find(
       (e) =>
         e.eventType === 'core:perceptible_event' &&
-        e.payload.perceptionType === 'item_dropped'
+        e.payload.perceptionType === 'item.drop'
     );
     expect(dropEvent).toBeDefined();
     expect(dropEvent.payload.locationId).toBe('saloon1');
@@ -220,7 +220,7 @@ describe('Items - Drop and Pick Up Workflow', () => {
     const pickupEvent = pickupFixture.events.find(
       (e) =>
         e.eventType === 'core:perceptible_event' &&
-        e.payload.perceptionType === 'item_picked_up'
+        e.payload.perceptionType === 'item.pickup'
     );
     expect(pickupEvent).toBeDefined();
     expect(pickupEvent.payload.locationId).toBe('saloon1');

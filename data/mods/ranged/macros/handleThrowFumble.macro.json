@@ -30,7 +30,9 @@
           "{event.payload.secondaryId}",
           "{event.payload.primaryId}"
         ],
-        "require_components": ["core:actor"],
+        "require_components": [
+          "core:actor"
+        ],
         "result_variable": "fumbleVictim"
       }
     },
@@ -38,12 +40,18 @@
       "type": "IF",
       "comment": "If we found an actor entity to hit",
       "parameters": {
-        "condition": { "!!": { "var": "context.fumbleVictim" } },
+        "condition": {
+          "!!": {
+            "var": "context.fumbleVictim"
+          }
+        },
         "then_actions": [
           {
             "type": "GET_NAME",
             "parameters": {
-              "entity_ref": { "var": "context.fumbleVictim" },
+              "entity_ref": {
+                "var": "context.fumbleVictim"
+              },
               "result_variable": "fumbleVictimName"
             }
           },
@@ -52,7 +60,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} throws {context.throwableName} wildly at {context.targetName}, but the {context.throwableName} flies past the target and hits {context.fumbleVictimName} instead!",
-              "perception_type": "action_target_general",
+              "perception_type": "combat.attack",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.secondaryId}"
             }
@@ -74,14 +82,20 @@
                 {
                   "type": "APPLY_DAMAGE",
                   "parameters": {
-                    "entity_ref": { "var": "context.fumbleVictim" },
-                    "damage_entry": { "var": "context.dmgEntry" }
+                    "entity_ref": {
+                      "var": "context.fumbleVictim"
+                    },
+                    "damage_entry": {
+                      "var": "context.dmgEntry"
+                    }
                   }
                 },
                 {
                   "type": "REGENERATE_DESCRIPTION",
                   "parameters": {
-                    "entity_ref": { "var": "context.fumbleVictim" }
+                    "entity_ref": {
+                      "var": "context.fumbleVictim"
+                    }
                   }
                 }
               ]
@@ -95,7 +109,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} throws {context.throwableName} wildly at {context.targetName}, but the throw misses by a long shot!",
-              "perception_type": "action_target_general",
+              "perception_type": "combat.attack",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.secondaryId}"
             }

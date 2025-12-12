@@ -1,0 +1,89 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:toad_folk_head",
+  "description": "A broad toad-folk head with bumpy skin and a wide, flat face",
+  "components": {
+    "anatomy:damage_propagation": {
+      "rules": [
+        {
+          "childSocketId": "brain_socket",
+          "baseProbability": 0.4,
+          "damageFraction": 0.6,
+          "damageTypeModifiers": {
+            "piercing": 1.3,
+            "blunt": 0.6,
+            "slashing": 0.7
+          }
+        }
+      ]
+    },
+    "anatomy:part": {
+      "subType": "head",
+      "hit_probability_weight": 18,
+      "health_calculation_weight": 8
+    },
+    "anatomy:part_health": {
+      "currentHealth": 40,
+      "maxHealth": 40,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "left_eye",
+          "orientation": "left",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_eye",
+          "orientation": "right",
+          "allowedTypes": ["eye"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "left_ear",
+          "orientation": "left",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "right_ear",
+          "orientation": "right",
+          "allowedTypes": ["ear"],
+          "nameTpl": "{{orientation}} {{type}}"
+        },
+        {
+          "id": "nose",
+          "allowedTypes": ["nose"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "mouth",
+          "allowedTypes": ["mouth"],
+          "nameTpl": "{{type}}"
+        },
+        {
+          "id": "brain_socket",
+          "allowedTypes": ["brain"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "head"
+    },
+    "core:weight": {
+      "weight": 5
+    },
+    "descriptors:facial_aesthetic": {
+      "value": "plain"
+    },
+    "descriptors:texture": {
+      "texture": "bumpy"
+    },
+    "descriptors:shape_general": {
+      "shape": "broad"
+    }
+  }
+}

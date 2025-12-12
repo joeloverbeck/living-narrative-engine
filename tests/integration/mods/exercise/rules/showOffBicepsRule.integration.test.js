@@ -49,7 +49,7 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: null,
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
       });
     });
 
@@ -134,7 +134,7 @@ describe('Exercise Mod: Show Off Biceps Rule', () => {
       expect(perceptionTypeAction.parameters.variable_name).toBe(
         'perceptionType'
       );
-      expect(perceptionTypeAction.parameters.value).toBe('action_self_general');
+      expect(perceptionTypeAction.parameters.value).toBe('physical.self_action');
 
       // Check locationId variable
       const locationIdAction = actions[4];

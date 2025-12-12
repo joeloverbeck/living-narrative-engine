@@ -12,7 +12,7 @@
  * 2. PERCEPTIBLE EVENTS: The rule dispatches DISPATCH_PERCEPTIBLE_EVENT in each
  *    outcome branch (CRITICAL_SUCCESS, SUCCESS, FAILURE, FUMBLE) to broadcast
  *    the action result to other actors in the location. Uses perception_type
- *    "action_target_general" since it's treating another actor.
+ *    "physical.target_action" since it's treating another actor.
  *
  * Full outcome testing for CRITICAL_SUCCESS, FAILURE, and FUMBLE would require
  * infrastructure changes to allow mocking different outcome types, which is
@@ -258,7 +258,7 @@ describe('first-aid:handle_treat_wounded_part rule', () => {
         // Treating another actor should include target_id
         expect(dispatchPerceptibleOp.parameters).toHaveProperty('target_id');
 
-        // Target treatment should use action_target_general perception type
+        // Target treatment should use physical.target_action perception type
         expect(dispatchPerceptibleOp.parameters.perception_type).toBe(
           '{context.perceptionType}'
         );
@@ -297,7 +297,7 @@ describe('first-aid:handle_treat_wounded_part rule', () => {
 
       // Verify perception type for target treatment
       expect(perceptibleEvent.payload.perceptionType).toBe(
-        'action_target_general'
+        'physical.target_action'
       );
 
       // Verify description contains expected content

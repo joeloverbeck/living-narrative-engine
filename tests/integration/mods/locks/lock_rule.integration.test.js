@@ -127,7 +127,7 @@ describe('locks:lock_connection rule (integration)', () => {
     const perception = env.events.find(
       (e) =>
         e.eventType === 'core:perceptible_event' &&
-        e.payload.perceptionType === 'connection_locked'
+        e.payload.perceptionType === 'connection.lock'
     );
     expect(perception).toBeDefined();
     expect(perception.payload.descriptionText).toBe(

@@ -150,7 +150,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         locationId: 'castle_hall',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -200,7 +200,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
         locationId: 'crypt',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -226,7 +226,7 @@ describe('vampirism:lunge_bite_neck_violently - Rule Execution', () => {
       testFixture.assertActionSuccess(expectedMessage);
       testFixture.assertPerceptibleEvent({
         descriptionText: expectedMessage,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'abandoned_warehouse',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

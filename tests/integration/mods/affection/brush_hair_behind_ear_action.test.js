@@ -83,7 +83,7 @@ describe('affection:brush_hair_behind_ear action integration', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('library');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

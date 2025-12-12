@@ -4,6 +4,11 @@ import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../constants/componentIds.js';
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
 import createMessageElement from './helpers/createMessageElement.js';
+import {
+  getPerceptionTypeMetadata,
+  getCategoryMetadata,
+  getLegacyTypeMapping,
+} from '../perception/registries/perceptionTypeRegistry.js';
 
 // Maximum number of log entries to display in the UI
 const MAX_DISPLAY_ENTRIES = 10;
@@ -209,16 +214,18 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   }
 
   /**
-   * Renders a single perception-log entry with Parchment-Fantasy markup.
-   * Distinguishes three kinds of lines:
-   * – SPEECH: `<Name> says:` prefix
-   * – ACTION: whole line wrapped in *asterisks*
-   * – GENERIC: everything else
-   * Each gets a class so CSS can paint it pretty.
+   * Renders a single perception-log entry with perceptionType-based theming.
+   * Uses the perceptionType from the log entry as the PRIMARY styling mechanism.
+   * Falls back to text pattern detection for additional formatting (speaker extraction, etc.).
    *
-   * @param logEntry
-   * @param _itemIndex
-   * @param _listData
+   * Perception types use dotted notation (e.g., 'communication.speech', 'combat.attack').
+   * Legacy snake_case types are automatically mapped to new format.
+   *
+   * @param {LogEntryObject} logEntry - The log entry to render.
+   * @param {number} _itemIndex - The index of the item (unused).
+   * @param {LogEntryObject[]} _listData - The full list data (unused).
+   * @returns {HTMLLIElement | null} The rendered list item or null if malformed.
+   * @see specs/perceptionType-consolidation.md
    */
   _renderListItem(logEntry, _itemIndex, _listData) {
     if (
@@ -234,38 +241,63 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
     }
 
     const text = logEntry.descriptionText.trim();
-    let liClass = 'log-generic';
     let innerFragments = [];
 
-    // 1️⃣ Speech («Alice says: Hello»)
-    const speechMatch = text.match(/^([^:]+?)\s+says:\s*(.+)$/i);
-    if (speechMatch) {
-      liClass = 'log-speech';
-      const [_, speaker, utterance] = speechMatch;
-      innerFragments.push(
-        `<span class="speaker-cue">${speaker} says:</span> ${this.#escapeHtml(
-          utterance
-        )}`
-      );
+    // Get perceptionType and resolve legacy types
+    let perceptionType = logEntry.perceptionType || 'physical.target_action';
+    const legacyMapping = getLegacyTypeMapping(perceptionType);
+    if (legacyMapping) {
+      perceptionType = legacyMapping;
+    }
+
+    // Create the list item element
+    const li =
+      this.domElementFactory?.li?.() ?? this.documentContext.create('li');
+
+    // Apply perceptionType-based CSS classes (PRIMARY styling mechanism)
+    const typeMetadata = getPerceptionTypeMetadata(perceptionType);
+    if (typeMetadata) {
+      li.classList.add(typeMetadata.cssClass);
+
+      const categoryMetadata = getCategoryMetadata(typeMetadata.category);
+      if (categoryMetadata) {
+        li.classList.add(categoryMetadata.cssClassPrefix);
+      }
+    } else {
+      // Fallback for unknown types
+      li.classList.add('log-generic');
+    }
+
+    // Text pattern detection for content formatting
+    // This extracts speaker names, action text, etc. for structured display
+    if (
+      perceptionType === 'communication.speech' ||
+      perceptionType.startsWith('communication.')
+    ) {
+      // Speech handling - extract speaker name if present
+      const speechMatch = text.match(/^([^:]+?)\s+says:\s*(.+)$/i);
+      if (speechMatch) {
+        const [, speaker, utterance] = speechMatch;
+        innerFragments.push(
+          `<span class="speaker-name">${this.#escapeHtml(speaker)}</span> says: `,
+          `<span class="dialogue">"${this.#escapeHtml(utterance)}"</span>`
+        );
+      } else {
+        innerFragments.push(this.#escapeHtml(text));
+      }
     } else if (/^\*[^*]+\*$/.test(text)) {
-      // 2️⃣ Pure action line («*Draws sword*»)
-      liClass = 'log-action';
+      // Action text (surrounded by asterisks)
+      const actionText = text.slice(1, -1);
       innerFragments.push(
-        `<span class="action-text">${this.#escapeHtml(
-          text.replace(/^\*|\*$/g, '')
-        )}</span>`
+        `<span class="action-text">${this.#escapeHtml(actionText)}</span>`
       );
     } else {
-      // 3️⃣ Generic line («Jon has arrived at Tavern»)
+      // Generic text
       innerFragments.push(this.#escapeHtml(text));
     }
 
-    const li =
-      this.domElementFactory?.li?.(liClass) ??
-      this.documentContext.create('li');
-    li.classList.add(liClass);
     li.innerHTML = innerFragments.join('');
-    li.title = `Time: ${logEntry.timestamp}`;
+    li.title = `Time: ${logEntry.timestamp} | Type: ${perceptionType}`;
 
     return li;
   }

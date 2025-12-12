@@ -9,20 +9,22 @@
         "type": "string",
         "description": "The general shape",
         "enum": [
-          "flat",
           "angular",
+          "broad",
           "bulbous",
+          "circular",
           "conical",
           "curved",
-          "circular",
           "cylindrical",
           "domed",
           "elongated",
+          "flat",
           "hooked",
           "oval",
           "round",
           "square",
-          "tapered"
+          "tapered",
+          "wide"
         ],
         "default": "round"
       }

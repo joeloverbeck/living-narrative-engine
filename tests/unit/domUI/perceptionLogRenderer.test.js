@@ -304,19 +304,18 @@ describe('PerceptionLogRenderer', () => {
       const logEntry = {
         descriptionText: 'Test Log',
         timestamp: '12:00',
-        perceptionType: 'Sight',
+        perceptionType: 'Sight', // Unknown type - should fallback to log-generic
         actorId: 'npc:1',
         targetId: 'item:A',
       };
       const li = renderer._renderListItem(logEntry, 0, [logEntry]);
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
-        'log-generic'
-      );
+      // New implementation calls li() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
+      expect(li.classList.contains('log-generic')).toBe(true);
       expect(li.textContent).toBe('Test Log');
-      expect(li.setAttribute).toHaveBeenCalledWith(
-        'title',
-        expect.stringContaining('Time: 12:00')
-      );
+      // Title is now set via li.title property, not setAttribute
+      expect(li.title).toContain('Time: 12:00');
+      expect(li.title).toContain('Type: Sight');
     });
 
     it('should return null and log warning for malformed log entry', () => {
@@ -330,56 +329,61 @@ describe('PerceptionLogRenderer', () => {
       );
     });
 
-    it('should render speech entries with log-speech class and speaker-cue span', () => {
+    it('should render speech entries with log-type-speech class and speaker-name span', () => {
       const speechEntry = {
         descriptionText: 'Alice says: Hello, how are you?',
         timestamp: '14:30',
-        perceptionType: 'Speech',
+        perceptionType: 'communication.speech',
         actorId: 'npc:alice',
       };
       const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
-        'log-speech'
-      );
-      expect(li.classList.contains('log-speech')).toBe(true);
-      expect(li.innerHTML).toContain(
-        '<span class="speaker-cue">Alice says:</span> Hello, how are you?'
-      );
-      expect(li.title).toBe('Time: 14:30');
+      // New implementation calls li() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
+      expect(li.classList.contains('log-type-speech')).toBe(true);
+      expect(li.classList.contains('log-cat-communication')).toBe(true);
+      // New implementation uses speaker-name and dialogue classes
+      expect(li.innerHTML).toContain('<span class="speaker-name">Alice</span>');
+      expect(li.innerHTML).toContain('<span class="dialogue">');
+      expect(li.title).toContain('Time: 14:30');
+      expect(li.title).toContain('Type: communication.speech');
     });
 
     it('should render speech with different speaker names', () => {
       const speechEntry = {
         descriptionText: 'The Dark Lord says: You shall not pass!',
         timestamp: '15:00',
-        perceptionType: 'Speech',
+        perceptionType: 'communication.speech',
         actorId: 'npc:darklord',
       };
       const li = renderer._renderListItem(speechEntry, 0, [speechEntry]);
 
+      // New implementation uses speaker-name class for the speaker name only
       expect(li.innerHTML).toContain(
-        '<span class="speaker-cue">The Dark Lord says:</span> You shall not pass!'
+        '<span class="speaker-name">The Dark Lord</span>'
       );
+      expect(li.innerHTML).toContain('says:');
+      expect(li.innerHTML).toContain('You shall not pass!');
     });
 
-    it('should render action entries with log-action class and action-text span', () => {
+    it('should render action entries with perceptionType-based class and action-text span', () => {
       const actionEntry = {
         descriptionText: '*draws sword*',
         timestamp: '16:15',
-        perceptionType: 'Action',
+        perceptionType: 'physical.target_action', // Use a valid new perceptionType
         actorId: 'player:hero',
       };
       const li = renderer._renderListItem(actionEntry, 0, [actionEntry]);
 
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
-        'log-action'
-      );
-      expect(li.classList.contains('log-action')).toBe(true);
+      // New implementation calls li() with no args and adds classes via classList.add()
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
+      expect(li.classList.contains('log-type-target-action')).toBe(true);
+      expect(li.classList.contains('log-cat-physical')).toBe(true);
       expect(li.innerHTML).toContain(
         '<span class="action-text">draws sword</span>'
       );
-      expect(li.title).toBe('Time: 16:15');
+      expect(li.title).toContain('Time: 16:15');
+      expect(li.title).toContain('Type: physical.target_action');
     });
 
     it('should render complex action entries', () => {
@@ -445,17 +449,17 @@ describe('PerceptionLogRenderer', () => {
       const invalidActionEntry = {
         descriptionText: '*draws sword', // Missing closing asterisk
         timestamp: '19:30',
-        perceptionType: 'Action',
+        perceptionType: 'physical.target_action',
         actorId: 'player:hero',
       };
       const li = renderer._renderListItem(invalidActionEntry, 0, [
         invalidActionEntry,
       ]);
 
-      // Should be treated as generic, not action
-      expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
-        'log-generic'
-      );
+      // Even though text doesn't match action pattern, it still gets perceptionType-based classes
+      expect(mockDomElementFactoryInstance.li).toHaveBeenCalled();
+      // The perceptionType determines styling, not the text pattern
+      expect(li.classList.contains('log-type-target-action')).toBe(true);
       expect(li.innerHTML).toBe('*draws sword');
     });
   });

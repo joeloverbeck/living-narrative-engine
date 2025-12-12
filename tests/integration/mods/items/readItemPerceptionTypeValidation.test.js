@@ -1,7 +1,7 @@
 /**
- * @file Integration test verifying that 'item_read' perception type is properly validated.
+ * @file Integration test verifying that 'item.examine' perception type is properly validated.
  * @description Reproduces the validation error where DISPATCH_PERCEPTIBLE_EVENT operation
- * fails because 'item_read' is missing from the operation schema enum.
+ * fails because 'item.examine' is missing from the operation schema enum.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -67,14 +67,14 @@ describe('items:read_item perception type validation', () => {
       (event) => event.eventType === 'core:perceptible_event'
     );
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('item_read');
+    expect(perceptibleEvent.payload.perceptionType).toBe('item.examine');
 
     // Assert: Verify event payload structure is correct
     expect(perceptibleEvent.payload).toMatchObject({
       eventName: 'core:perceptible_event',
       locationId: 'test_room',
       descriptionText: expect.stringContaining('reads Test Letter'),
-      perceptionType: 'item_read',
+      perceptionType: 'item.examine',
       actorId: 'test:actor1',
       targetId: 'test_letter',
       involvedEntities: expect.any(Array),
@@ -174,10 +174,10 @@ describe('items:read_item perception type validation', () => {
     const perceptibleEvent = testFixture.events.find(
       (event) =>
         event.eventType === 'core:perceptible_event' &&
-        event.payload.perceptionType === 'item_read'
+        event.payload.perceptionType === 'item.examine'
     );
 
     expect(perceptibleEvent).toBeDefined();
-    expect(perceptibleEvent.payload.perceptionType).toBe('item_read');
+    expect(perceptibleEvent.payload.perceptionType).toBe('item.examine');
   });
 });

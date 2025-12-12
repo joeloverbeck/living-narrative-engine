@@ -182,7 +182,7 @@ describe('sex-penile-oral:suck_penis_slowly action integration', () => {
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

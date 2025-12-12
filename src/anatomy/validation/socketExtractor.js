@@ -47,6 +47,19 @@ export function setSocketExtractorLogger(logger) {
   socketExtractorLogger = logger || null;
 }
 
+function extractNamespaceFromId(id) {
+  if (typeof id !== 'string') {
+    return null;
+  }
+
+  const separatorIndex = id.indexOf(':');
+  if (separatorIndex <= 0) {
+    return null;
+  }
+
+  return id.slice(0, separatorIndex);
+}
+
 /**
  * Extracts hierarchical socket map from blueprint, structure template, and entity definitions.
  * Supports the hierarchical socket architecture where:
@@ -72,7 +85,7 @@ export async function extractHierarchicalSockets(
   // This prevents cross-mod contamination when validating recipes from different mods in batch
   // Note: We use blueprint.root (e.g., "anatomy:human_male_torso") instead of blueprint.id
   // because the id field may not include the namespace prefix after loading/processing
-  const blueprintNamespace = blueprint?.root?.split(':')[0] || null;
+  const blueprintNamespace = extractNamespaceFromId(blueprint?.root) || null;
 
   // 1. Extract root entity sockets (direct attachments)
   const rootSockets = extractSocketsFromEntity(rootEntity);
@@ -435,19 +448,33 @@ export async function resolveEntityId(partType, dataRegistry, preferredNamespace
     const aId = a.id || '';
     const bId = b.id || '';
 
-    // Rule 0 (NEW): Prefer entities from the preferred namespace
+    // Check for socket presence - critical for parent-child slot validation
+    const aSockets = a?.components?.['anatomy:sockets']?.sockets;
+    const bSockets = b?.components?.['anatomy:sockets']?.sockets;
+    const aHasSockets = Array.isArray(aSockets) && aSockets.length > 0;
+    const bHasSockets = Array.isArray(bSockets) && bSockets.length > 0;
+
+    // Rule 0: Prefer entities with sockets over entities without sockets (highest priority)
+    // This ensures entities with socket definitions (like humanoid_head) are preferred
+    // over entities without sockets (like kraken_head) for parent slot resolution.
+    // This takes precedence over namespace preference because socket availability is
+    // critical for validating parent-child slot relationships.
+    if (aHasSockets && !bHasSockets) return -1;
+    if (bHasSockets && !aHasSockets) return 1;
+
+    // Rule 1: Prefer entities from the preferred namespace (when both have same socket status)
     // This is critical for batch validation to prevent cross-mod contamination
     if (preferredNamespace) {
-      const aNamespace = aId.split(':')[0] || '';
-      const bNamespace = bId.split(':')[0] || '';
-      const aMatches = aNamespace === preferredNamespace;
-      const bMatches = bNamespace === preferredNamespace;
+      const aNamespace = extractNamespaceFromId(aId);
+      const bNamespace = extractNamespaceFromId(bId);
+      const aMatches = Boolean(aNamespace && aNamespace === preferredNamespace);
+      const bMatches = Boolean(bNamespace && bNamespace === preferredNamespace);
 
       if (aMatches && !bMatches) return -1;
       if (bMatches && !aMatches) return 1;
     }
 
-    // Rule 1: Fewer underscores = higher priority (base entities)
+    // Rule 2: Fewer underscores = higher priority (base entities)
     const aUnderscores = (aId.match(/_/g) || []).length;
     const bUnderscores = (bId.match(/_/g) || []).length;
 
@@ -455,13 +482,13 @@ export async function resolveEntityId(partType, dataRegistry, preferredNamespace
       return aUnderscores - bUnderscores;
     }
 
-    // Rule 2: Alphabetical for determinism and to prefer humanoid_head over kraken_head
+    // Rule 3: Alphabetical for determinism
     const alpha = aId.localeCompare(bId);
     if (alpha !== 0) {
       return alpha;
     }
 
-    // Rule 3: Shorter ID = higher priority (fallback)
+    // Rule 4: Shorter ID = higher priority (fallback)
     return aId.length - bId.length;
   });
 
@@ -469,7 +496,7 @@ export async function resolveEntityId(partType, dataRegistry, preferredNamespace
   const selectedId = candidates[0].id;
 
   logger?.debug?.(
-    `[socketExtractor] Multiple entities with subType "${partType}": ${candidateIds.join(', ')}. Selected "${selectedId}" (priority: ${preferredNamespace ? `namespace "${preferredNamespace}", ` : ''}fewest underscores, alphabetical, shortest ID).`
+    `[socketExtractor] Multiple entities with subType "${partType}": ${candidateIds.join(', ')}. Selected "${selectedId}" (priority: sockets present, ${preferredNamespace ? `namespace "${preferredNamespace}" (when applicable), ` : ''}fewest underscores, alphabetical, shortest ID).`
   );
 
   return candidates[0].id;

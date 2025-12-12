@@ -75,7 +75,7 @@ describe('distress:clutch_onto_upper_clothing rule execution', () => {
       locationId: 'sanctuary',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

@@ -179,7 +179,7 @@ describe('hugging:release_hug action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: expectedMessage,
       locationId: 'solarium',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });

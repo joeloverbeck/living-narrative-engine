@@ -71,7 +71,7 @@ describe('affection:touch_nose_tenderly action integration', () => {
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('conservatory');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);
@@ -92,7 +92,7 @@ describe('affection:touch_nose_tenderly action integration', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('library');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

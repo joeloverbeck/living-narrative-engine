@@ -127,7 +127,7 @@ describe('kissing:kiss_cheek action integration', () => {
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.descriptionText).toBe(
       "Elena leans in to kiss Marcus's cheek softly."

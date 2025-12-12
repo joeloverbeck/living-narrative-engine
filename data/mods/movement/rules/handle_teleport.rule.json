@@ -30,8 +30,12 @@
       "parameters": {
         "condition": {
           "and": [
-            { "var": "context.actorNameComponent" },
-            { "var": "context.actorPositionComponentPreTeleport" }
+            {
+              "var": "context.actorNameComponent"
+            },
+            {
+              "var": "context.actorPositionComponentPreTeleport"
+            }
           ]
         },
         "then_actions": [
@@ -91,7 +95,7 @@
                   "parameters": {
                     "location_id": "{context.actorPositionComponentPreTeleport.locationId}",
                     "description_text": "{context.actorNameComponent.text} vanishes from {context.originLocationNameComponent.text}, disappearing entirely.",
-                    "perception_type": "character_exit",
+                    "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
                     "involved_entities": []
@@ -128,7 +132,7 @@
                   "parameters": {
                     "location_id": "{context.resolvedTargetLocationId}",
                     "description_text": "{context.actorNameComponent.text} materializes suddenly, as if from nowhere.",
-                    "perception_type": "character_enter",
+                    "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
                     "involved_entities": []
@@ -142,7 +146,9 @@
                     "value": "{context.actorNameComponent.text} teleports to {context.destinationLocationNameComponent.text}."
                   }
                 },
-                { "macro": "core:displaySuccessAndEndTurn" }
+                {
+                  "macro": "core:displaySuccessAndEndTurn"
+                }
               ],
               "else_actions": [
                 {

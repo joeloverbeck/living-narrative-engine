@@ -62,7 +62,7 @@ describe('items:apply_lipstick rule execution', () => {
     expect(perceptibleEvent.payload.descriptionText).toBe(
       'Elena coats their lips evenly with red lipstick.'
     );
-    expect(perceptibleEvent.payload.perceptionType).toBe('item_use');
+    expect(perceptibleEvent.payload.perceptionType).toBe('item.use');
     expect(perceptibleEvent.payload.actorId).toBe('actor_lipstick_user');
     expect(perceptibleEvent.payload.targetId).toBe('lipstick1');
 

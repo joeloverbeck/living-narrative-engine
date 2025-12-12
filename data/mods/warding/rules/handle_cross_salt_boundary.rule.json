@@ -8,7 +8,10 @@
   "actions": [
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -27,14 +30,16 @@
     },
     {
       "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "actor" }
+      "parameters": {
+        "entity_ref": "actor"
+      }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} crosses the salt boundary, breaking it.",
-        "perception_type": "action_self_general",
+        "perception_type": "magic.spell",
         "actor_id": "{event.payload.actorId}"
       }
     },
@@ -49,7 +54,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_self_general"
+        "value": "magic.spell"
       }
     },
     {
@@ -59,6 +64,8 @@
         "value": "{context.actorName} crosses the salt boundary, breaking it."
       }
     },
-    { "macro": "core:logSuccessOutcomeAndEndTurn" }
+    {
+      "macro": "core:logSuccessOutcomeAndEndTurn"
+    }
   ]
 }

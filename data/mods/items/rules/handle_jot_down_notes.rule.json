@@ -46,7 +46,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actionMessage}",
-        "perception_type": "notes_jotted",
+        "perception_type": "communication.notes",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}"
       }

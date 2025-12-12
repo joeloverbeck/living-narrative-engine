@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:canal_vestibule_instance",
+    "definitionId": "dredgers:canal_vestibule"
+  }
+  

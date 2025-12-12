@@ -147,7 +147,7 @@ describe('Seduction Mod: squeeze_breasts_draw_attention rule', () => {
         actorId,
         targetId: null,
         locationId: ROOM_ID,
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
         descriptionText: expectedMessage,
       });
     });

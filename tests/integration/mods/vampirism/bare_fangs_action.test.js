@@ -129,7 +129,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -150,7 +150,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -171,7 +171,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -192,7 +192,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -233,7 +233,7 @@ describe('Vampirism Mod: Bare Fangs Action Integration', () => {
       testFixture.assertActionSuccess(expectedMessage);
       testFixture.assertPerceptibleEvent({
         descriptionText: expectedMessage,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

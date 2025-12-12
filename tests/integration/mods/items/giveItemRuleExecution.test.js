@@ -245,7 +245,7 @@ describe('item-transfer:give_item action integration', () => {
       );
 
       expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.perceptionType).toBe('item_transfer');
+      expect(perceptibleEvent.payload.perceptionType).toBe('item.transfer');
       expect(perceptibleEvent.payload.locationId).toBe(scenario.room.id);
       expect(perceptibleEvent.payload.descriptionText).toContain('gives');
       expect(perceptibleEvent.payload.descriptionText).toContain(

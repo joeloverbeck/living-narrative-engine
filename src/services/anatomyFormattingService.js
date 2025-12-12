@@ -107,6 +107,7 @@ export class AnatomyFormattingService {
       descriptorOrder: [],
       descriptorValueKeys: [],
       equipmentIntegration: null,
+      descriptorFormatRules: {},
     };
 
     // Process configs in mod load order
@@ -212,6 +213,19 @@ export class AnatomyFormattingService {
         merged.equipmentIntegration = {
           ...merged.equipmentIntegration,
           ...overlay.equipmentIntegration,
+        };
+      }
+    }
+
+    // Handle descriptorFormatRules configuration
+    if (overlay.descriptorFormatRules) {
+      if (mergeStrategy.replaceObjects) {
+        merged.descriptorFormatRules = { ...overlay.descriptorFormatRules };
+      } else {
+        // Deep merge - overlay rules override base rules
+        merged.descriptorFormatRules = {
+          ...merged.descriptorFormatRules,
+          ...overlay.descriptorFormatRules,
         };
       }
     }
@@ -356,6 +370,16 @@ export class AnatomyFormattingService {
       'getDescriptorValueKeys'
     );
     return [...descriptorValueKeys];
+  }
+
+  /**
+   * Get the descriptor format rules for special formatting
+   *
+   * @returns {Object.<string, {prefix?: string, suffix?: string, transform?: string}>} Mapping of descriptor IDs to format rules
+   */
+  getDescriptorFormatRules() {
+    this._ensureInitialized();
+    return { ...(this._mergedConfig.descriptorFormatRules || {}) };
   }
 
   /**

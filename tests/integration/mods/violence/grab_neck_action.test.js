@@ -105,7 +105,7 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -119,7 +119,7 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
   });
@@ -134,7 +134,7 @@ describe('Violence Mod: Grab Neck Action Integration', () => {
       testFixture.assertActionSuccess("Alice grabs Bob's neck.");
       testFixture.assertPerceptibleEvent({
         descriptionText: "Alice grabs Bob's neck.",
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

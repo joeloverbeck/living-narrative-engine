@@ -79,7 +79,7 @@ describe('sex-breastplay:suck_on_nipples action integration', () => {
       locationId: roomId,
       actorId: actorId,
       targetId: targetId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

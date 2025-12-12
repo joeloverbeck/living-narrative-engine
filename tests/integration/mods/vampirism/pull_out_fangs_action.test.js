@@ -206,7 +206,7 @@ describe('vampirism:pull_out_fangs - Rule Execution', () => {
         locationId: 'crypt',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
       testFixture.assertActionSuccess(expectedMessage);
     });

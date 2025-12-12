@@ -158,7 +158,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
               {
                 type: 'DISPATCH_PERCEPTIBLE_EVENT',
                 parameters: {
-                  perception_type: 'visual',
+                  perception_type: 'physical.self_action',
                   description_text: 'Show off those gains!',
                 },
               },
@@ -206,7 +206,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
       await handlers.DISPATCH_PERCEPTIBLE_EVENT.execute({
         location_id: 'test-location',
         description_text: 'Exercise activity started',
-        perception_type: 'visual',
+        perception_type: 'physical.self_action',
         actor_id: 'exercise-actor',
         contextual_data: {
           exercise: 'jogging',
@@ -220,7 +220,7 @@ describe('Category Pattern Validation (TSTAIMIG-002)', () => {
           actorId: 'exercise-actor',
           locationId: 'test-location',
           descriptionText: 'Exercise activity started',
-          perceptionType: 'visual',
+          perceptionType: 'physical.self_action',
           contextualData: expect.objectContaining({
             exercise: 'jogging',
             intensity: 'moderate',

@@ -56,7 +56,7 @@ describe('affection:place_hands_on_shoulders action integration', () => {
         'Bob'
       ),
       locationId: 'sunroom',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });

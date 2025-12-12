@@ -63,6 +63,22 @@ describe('DescriptorFormatter', () => {
       ).toBe('embellished with crystals');
     });
 
+    it('formats digit_count descriptors with "digits" suffix', () => {
+      const formatter = createFormatter();
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:digit_count',
+          value: '4',
+        })
+      ).toBe('4 digits');
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:digit_count',
+          value: '5',
+        })
+      ).toBe('5 digits');
+    });
+
     it('keeps hyphenated values intact', () => {
       const formatter = createFormatter();
       expect(
@@ -81,6 +97,114 @@ describe('DescriptorFormatter', () => {
           value: 'almond_shaped',
         })
       ).toBe('almond-shaped');
+    });
+
+    it('uses format rules from service when provided', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:custom_type': { prefix: 'has ', suffix: ' feature' },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:custom_type',
+          value: 'amazing',
+        })
+      ).toBe('has amazing feature');
+    });
+
+    it('service rules override default rules', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:embellishment': { suffix: ' added' },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      // Service rule overrides the default "embellished with " prefix
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:embellishment',
+          value: 'glitter',
+        })
+      ).toBe('glitter added');
+    });
+
+    it('applies transform before prefix/suffix', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:test': {
+            transform: 'underscore_to_hyphen',
+            prefix: '(',
+            suffix: ')',
+          },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:test',
+          value: 'some_test_value',
+        })
+      ).toBe('(some-test-value)');
+    });
+
+    it('handles rules with only prefix', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:only_prefix': { prefix: 'the ' },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:only_prefix',
+          value: 'value',
+        })
+      ).toBe('the value');
+    });
+
+    it('handles rules with only suffix', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:only_suffix': { suffix: '-ish' },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:only_suffix',
+          value: 'red',
+        })
+      ).toBe('red-ish');
+    });
+
+    it('handles rules with only transform', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({
+          'descriptors:only_transform': { transform: 'underscore_to_hyphen' },
+        }),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:only_transform',
+          value: 'a_b_c',
+        })
+      ).toBe('a-b-c');
+    });
+
+    it('falls back to default behavior when no rule matches', () => {
+      const mockService = {
+        getDescriptorFormatRules: () => ({}),
+      };
+      const formatter = createFormatter(mockService);
+      expect(
+        formatter.formatSingleDescriptor({
+          componentId: 'descriptors:unknown',
+          value: 'plain',
+        })
+      ).toBe('plain');
     });
   });
 

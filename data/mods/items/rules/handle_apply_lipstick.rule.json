@@ -45,7 +45,7 @@
       "comment": "Use the general item use perception type",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "item_use"
+        "value": "item.use"
       }
     },
     {

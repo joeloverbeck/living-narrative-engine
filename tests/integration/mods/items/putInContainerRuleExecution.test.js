@@ -180,7 +180,7 @@ describe('containers:put_in_container action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     const failedEvent = perceptibleEvents.find(
-      (e) => e.payload.perceptionType === 'put_in_container_failed'
+      (e) => e.payload.perceptionType === 'error.action_failed'
     );
     expect(failedEvent).toBeDefined();
 
@@ -270,7 +270,7 @@ describe('containers:put_in_container action integration', () => {
       (e) => e.eventType === 'core:perceptible_event'
     );
     const failedEvent = perceptibleEvents.find(
-      (e) => e.payload.perceptionType === 'put_in_container_failed'
+      (e) => e.payload.perceptionType === 'error.action_failed'
     );
     expect(failedEvent).toBeDefined();
 
@@ -369,7 +369,7 @@ describe('containers:put_in_container action integration', () => {
       (event) => event.eventType === 'core:perceptible_event'
     );
     const successEvents = perceptibleEvents.filter(
-      (event) => event.payload.perceptionType === 'item_put_in_container'
+      (event) => event.payload.perceptionType === 'container.put'
     );
     expect(successEvents).toHaveLength(3);
   });
@@ -403,7 +403,7 @@ describe('containers:put_in_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const putEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_put_in_container'
+        (e) => e.payload.perceptionType === 'container.put'
       );
       expect(putEvent).toBeDefined();
       expect(putEvent.payload.locationId).toBe('warehouse');
@@ -476,7 +476,7 @@ describe('containers:put_in_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const failedEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'put_in_container_failed'
+        (e) => e.payload.perceptionType === 'error.action_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');
@@ -514,7 +514,7 @@ describe('containers:put_in_container action integration', () => {
       const logEntries =
         actorEntity.components['core:perception_log'].logEntries;
       expect(logEntries).toHaveLength(1);
-      expect(logEntries[0].perceptionType).toBe('put_in_container_failed');
+      expect(logEntries[0].perceptionType).toBe('error.action_failed');
     });
   });
 

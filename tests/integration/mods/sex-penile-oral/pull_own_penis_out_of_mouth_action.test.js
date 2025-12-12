@@ -173,7 +173,7 @@ describe('sex-penile-oral:pull_own_penis_out_of_mouth - Rule Execution', () => {
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

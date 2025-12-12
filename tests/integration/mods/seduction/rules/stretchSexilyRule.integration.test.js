@@ -45,7 +45,7 @@ describe('Seduction Mod: Stretch Sexily Rule', () => {
         locationId: 'room1',
         actorId: scenario.actor.id,
         targetId: null,
-        perceptionType: 'action_self_general',
+        perceptionType: 'physical.self_action',
       });
     });
 
@@ -112,7 +112,7 @@ describe('Seduction Mod: Stretch Sexily Rule', () => {
       expect(messageAction.parameters.value).toBe(EXPECTED_MESSAGE);
 
       expect(perceptionType.parameters.variable_name).toBe('perceptionType');
-      expect(perceptionType.parameters.value).toBe('action_self_general');
+      expect(perceptionType.parameters.value).toBe('physical.self_action');
 
       expect(locationId.parameters.variable_name).toBe('locationId');
       expect(locationId.parameters.value).toBe(

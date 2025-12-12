@@ -52,7 +52,7 @@ class PrepareActionContextHandler extends BaseOperationHandler {
     const params = parameters || {};
 
     const {
-      perception_type = 'action_target_general',
+      perception_type = 'physical.target_action',
       include_secondary = false,
       secondary_name_variable = 'secondaryName',
     } = params;

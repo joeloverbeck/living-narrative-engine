@@ -21,7 +21,12 @@
       "comment": "Branch based on capacity validation",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.capacityCheck.valid" }, false]
+          "==": [
+            {
+              "var": "context.capacityCheck.valid"
+            },
+            false
+          ]
         },
         "then_actions": [
           {
@@ -71,10 +76,12 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.logMessage}",
-              "perception_type": "take_from_container_failed",
+              "perception_type": "error.action_failed",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
-              "involved_entities": ["{event.payload.secondaryId}"],
+              "involved_entities": [
+                "{event.payload.secondaryId}"
+              ],
               "contextual_data": {
                 "reason": "{context.capacityCheck.reason}"
               }
@@ -146,7 +153,7 @@
             "comment": "Set perception type for macro",
             "parameters": {
               "variable_name": "perceptionType",
-              "value": "item_taken_from_container"
+              "value": "container.take"
             }
           },
           {

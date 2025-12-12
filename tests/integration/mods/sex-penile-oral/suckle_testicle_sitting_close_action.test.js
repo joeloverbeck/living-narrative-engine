@@ -74,7 +74,7 @@ describe('sex-penile-oral:suckle_testicle_sitting_close action integration', () 
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

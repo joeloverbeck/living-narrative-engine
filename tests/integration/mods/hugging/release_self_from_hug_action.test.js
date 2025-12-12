@@ -187,7 +187,7 @@ describe('hugging:release_self_from_hug action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: expectedMessage,
       locationId: 'orchard',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });

@@ -211,7 +211,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       const putPerceptible = putFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item_put_in_container'
+          event.payload.perceptionType === 'container.put'
       );
       expect(putPerceptible).toBeDefined();
       expect(putPerceptible.payload.targetId).toBe('locked-chest-1');
@@ -423,7 +423,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       const openPerception = openFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'container_opened'
+          e.payload.perceptionType === 'container.open'
       );
       expect(openPerception).toBeDefined();
       expect(openPerception.payload.locationId).toBe('library');
@@ -448,7 +448,7 @@ describe('Containers - Complete Container Workflow (Phase 3)', () => {
       const takePerception = takeFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'item_taken_from_container'
+          e.payload.perceptionType === 'container.take'
       );
       expect(takePerception).toBeDefined();
       expect(takePerception.payload.locationId).toBe('library');

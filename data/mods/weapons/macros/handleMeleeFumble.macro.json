@@ -25,7 +25,7 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} {context.attackVerbPast} wildly and loses grip on their {context.weaponName}!",
-        "perception_type": "action_target_general",
+        "perception_type": "combat.attack",
         "actor_id": "{event.payload.actorId}"
       }
     },

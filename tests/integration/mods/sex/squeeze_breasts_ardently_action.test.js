@@ -80,7 +80,7 @@ describe('sex-breastplay:squeeze_breasts_ardently action integration', () => {
       locationId: roomId,
       actorId: actorId,
       targetId: targetId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

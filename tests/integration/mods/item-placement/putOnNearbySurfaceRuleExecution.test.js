@@ -209,7 +209,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
         (e) => e.eventType === 'core:perceptible_event'
       );
       const putEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_put_on_nearby_surface'
+        (e) => e.payload.perceptionType === 'container.put'
       );
       expect(putEvent).toBeDefined();
       expect(putEvent.payload.actorId).toBe('test:actor1');
@@ -493,7 +493,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const putEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_put_on_nearby_surface'
+        (e) => e.payload.perceptionType === 'container.put'
       );
       expect(putEvent).toBeDefined();
       expect(putEvent.payload.locationId).toBe('warehouse');
@@ -531,7 +531,7 @@ describe('item-placement:put_on_nearby_surface action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const failedEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'put_on_nearby_surface_failed'
+        (e) => e.payload.perceptionType === 'error.action_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('cellar');

@@ -46,7 +46,9 @@
       "type": "IF",
       "comment": "Ensure the readable component exists before proceeding",
       "parameters": {
-        "condition": { "var": "context.itemReadable" },
+        "condition": {
+          "var": "context.itemReadable"
+        },
         "then_actions": [
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
@@ -54,11 +56,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} reads {context.itemName}: {context.itemReadable.text}",
-              "perception_type": "item_read",
+              "perception_type": "item.examine",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.actorId}"]
+                "recipientIds": [
+                  "{event.payload.actorId}"
+                ]
               }
             }
           },

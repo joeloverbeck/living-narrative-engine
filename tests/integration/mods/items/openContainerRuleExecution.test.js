@@ -290,7 +290,7 @@ describe('containers:open_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const openEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'container_opened'
+        (e) => e.payload.perceptionType === 'container.open'
       );
       expect(openEvent).toBeDefined();
       expect(openEvent.payload.locationId).toBe('attic');
@@ -318,7 +318,7 @@ describe('containers:open_container action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const failedEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'container_open_failed'
+        (e) => e.payload.perceptionType === 'error.action_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('warehouse');

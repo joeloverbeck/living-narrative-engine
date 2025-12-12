@@ -15,7 +15,15 @@
  * - Error handling and tracing
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import {
+  describe,
+  beforeAll,
+  beforeEach,
+  afterAll,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
 import { AvailableActionsProvider } from '../../../src/data/providers/availableActionsProvider.js';
@@ -46,8 +54,16 @@ describe('Complete Action Discovery Workflow E2E', () => {
   let testWorld;
   let testActors;
 
-  beforeEach(async () => {
-    // Create real container and configure it
+  /**
+   * Clears all entities to ensure test isolation between tests
+   * @param {Object} entityMgr - The entity manager instance
+   */
+  function clearAllEntities(entityMgr) {
+    entityMgr.clearAll();
+  }
+
+  beforeAll(async () => {
+    // Create real container and configure it ONCE for all tests
     container = new AppContainer();
     await configureContainer(container, {
       outputDiv: document.createElement('div'),
@@ -56,15 +72,20 @@ describe('Complete Action Discovery Workflow E2E', () => {
       document,
     });
 
-    // Get real services from container
+    // Get real services from container ONCE
     entityManager = container.resolve(tokens.IEntityManager);
     actionDiscoveryService = container.resolve(tokens.IActionDiscoveryService);
     actionIndex = container.resolve(tokens.ActionIndex);
     availableActionsProvider = container.resolve(
       tokens.IAvailableActionsProvider
     );
+  });
 
-    // Set up test world and actors
+  beforeEach(async () => {
+    // Clear entities from previous test to ensure isolation
+    clearAllEntities(entityManager);
+
+    // Set up test world and actors (uses shared container)
     await setupTestWorld();
     testActors = await ActionTestUtilities.createTestActors({
       entityManager,
@@ -74,10 +95,12 @@ describe('Complete Action Discovery Workflow E2E', () => {
   });
 
   afterEach(async () => {
-    // Clean up resources
-    if (container) {
-      // Clean up any resources if needed
-    }
+    // Clean up resources if needed
+  });
+
+  afterAll(async () => {
+    // Clean up container resources
+    container = null;
   });
 
   /**
@@ -260,22 +283,27 @@ describe('Complete Action Discovery Workflow E2E', () => {
       ],
     };
 
-    // Create location definitions and instances
+    // Get registry once
+    const registry = container.resolve(tokens.IDataRegistry);
+
+    // Store definitions synchronously (fast)
     for (const location of testWorld.locations) {
       const definition = createEntityDefinition(
         location.id,
         location.components
       );
-      // Add the definition to the registry
-      const registry = container.resolve(tokens.IDataRegistry);
       registry.store('entityDefinitions', location.id, definition);
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(location.id, {
-        instanceId: location.id,
-        definitionId: location.id,
-      });
     }
+
+    // Create entity instances in parallel for better performance
+    await Promise.all(
+      testWorld.locations.map((location) =>
+        entityManager.createEntityInstance(location.id, {
+          instanceId: location.id,
+          definitionId: location.id,
+        })
+      )
+    );
   }
 
   /**

@@ -64,7 +64,7 @@ describe('sex-breastplay:latch_and_drink_milk action integration', () => {
       locationId: scenario.roomId,
       actorId: scenario.actorId,
       targetId: scenario.targetId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

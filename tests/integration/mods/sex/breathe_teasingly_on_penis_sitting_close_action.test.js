@@ -77,7 +77,7 @@ describe('sex-penile-oral:breathe_teasingly_on_penis_sitting_close action integr
       locationId: ROOM_ID,
       actorId: ACTOR_ID,
       targetId: PRIMARY_ID,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 });

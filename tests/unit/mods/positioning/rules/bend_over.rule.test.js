@@ -170,7 +170,7 @@ describe('positioning:bend_over rule', () => {
       const perceptionAction = rule.actions[8];
       expect(perceptionAction.type).toBe('SET_VARIABLE');
       expect(perceptionAction.parameters.variable_name).toBe('perceptionType');
-      expect(perceptionAction.parameters.value).toBe('action_self_general');
+      expect(perceptionAction.parameters.value).toBe('physical.self_action');
     });
 
     it('should capture location ID from actor position', () => {
@@ -375,7 +375,7 @@ describe('positioning:bend_over rule', () => {
         (action) => action.parameters?.variable_name === 'perceptionType'
       );
 
-      expect(perceptionAction.parameters.value).toBe('action_self_general');
+      expect(perceptionAction.parameters.value).toBe('physical.self_action');
     });
 
     it('should capture required context variables for logging', () => {

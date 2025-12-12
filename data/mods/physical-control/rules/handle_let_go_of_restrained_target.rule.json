@@ -8,11 +8,17 @@
   "actions": [
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -34,7 +40,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_target_general"
+        "value": "physical.target_action"
       }
     },
     {
@@ -77,18 +83,22 @@
     },
     {
       "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "actor" }
+      "parameters": {
+        "entity_ref": "actor"
+      }
     },
     {
       "type": "REGENERATE_DESCRIPTION",
-      "parameters": { "entity_ref": "target" }
+      "parameters": {
+        "entity_ref": "target"
+      }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} lets go of {context.targetName}, leaving them unrestrained.",
-        "perception_type": "action_target_general",
+        "perception_type": "physical.target_action",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}"
       }
@@ -100,6 +110,8 @@
         "value": "{context.actorName} lets go of {context.targetName}, leaving them unrestrained."
       }
     },
-    { "macro": "core:logSuccessOutcomeAndEndTurn" }
+    {
+      "macro": "core:logSuccessOutcomeAndEndTurn"
+    }
   ]
 }

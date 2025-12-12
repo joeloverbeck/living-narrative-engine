@@ -30,13 +30,22 @@ describe('Anatomy Entity Shape Validation', () => {
 
   describe('Valid shape values', () => {
     const validShapes = [
+      'angular',
+      'broad',
+      'bulbous',
+      'circular',
+      'conical',
+      'curved',
+      'cylindrical',
+      'domed',
+      'elongated',
+      'flat',
+      'hooked',
+      'oval',
       'round',
       'square',
-      'oval',
-      'elongated',
-      'angular',
-      'curved',
-      'circular',
+      'tapered',
+      'wide',
     ];
 
     validShapes.forEach((shape) => {
@@ -51,14 +60,7 @@ describe('Anatomy Entity Shape Validation', () => {
   });
 
   describe('Invalid shape values', () => {
-    const invalidShapes = [
-      'normal',
-      'wide',
-      '',
-      null,
-      undefined,
-      123,
-    ];
+    const invalidShapes = ['normal', '', null, undefined, 123];
 
     invalidShapes.forEach((shape) => {
       it(`should reject invalid shape value: ${shape}`, () => {

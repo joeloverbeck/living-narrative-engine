@@ -77,7 +77,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const params = {
       location_id: locationId,
       description_text: 'Alice briefly examines the ancient tome.',
-      perception_type: 'item_examined_brief',
+      perception_type: 'item.examine',
       actor_id: actorId,
       contextual_data: {
         excludedActorIds: [actorId], // Alice doesn't see her own brief examination
@@ -97,7 +97,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
         actorId,
         locationId,
         descriptionText: 'Alice briefly examines the ancient tome.',
-        perceptionType: 'item_examined_brief',
+        perceptionType: 'item.examine',
         contextualData: expect.objectContaining({
           recipientIds: [],
           excludedActorIds: [actorId],
@@ -153,7 +153,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       {
         location_id: locationId,
         description_text: 'Alice says hello.',
-        perception_type: 'speech',
+        perception_type: 'communication.speech',
         actor_id: 'npc:alice',
         contextual_data: { excludedActorIds: ['npc:alice'] },
         log_entry: true,
@@ -166,7 +166,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
       {
         location_id: locationId,
         description_text: 'Bob examines the map.',
-        perception_type: 'item_examined_brief',
+        perception_type: 'item.examine',
         actor_id: 'npc:bob',
         contextual_data: { excludedActorIds: ['npc:bob'] },
         log_entry: true,
@@ -230,7 +230,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const params = {
       location_id: locationId,
       description_text: 'A mysterious sound echoes.',
-      perception_type: 'ambient',
+      perception_type: 'state.observable_change',
       actor_id: 'npc:environment',
       // No contextual_data at all (backward compatible)
       log_entry: true,
@@ -264,7 +264,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const params = {
       location_id: 'loc:tavern',
       description_text: 'Test event.',
-      perception_type: 'test',
+      perception_type: 'physical.target_action',
       actor_id: 'npc:alice',
       contextual_data: {
         recipientIds: ['npc:bob'],
@@ -319,7 +319,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const params = {
       location_id: locationId,
       description_text: 'Alice examines the ancient tome in detail.',
-      perception_type: 'item_examined_detailed',
+      perception_type: 'item.examine',
       actor_id: 'npc:alice',
       contextual_data: {
         excludedActorIds: ['npc:alice'], // Exclude Alice
@@ -363,7 +363,7 @@ describe('Perceptible Event Actor Exclusion - Integration Tests', () => {
     const params = {
       location_id: locationId,
       description_text: 'Something happens.',
-      perception_type: 'ambient',
+      perception_type: 'state.observable_change',
       actor_id: 'npc:environment',
       contextual_data: {
         excludedActorIds: ['npc:alice', 'npc:bob'], // Exclude everyone

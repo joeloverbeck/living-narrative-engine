@@ -115,7 +115,7 @@ describe('sex-vaginal-penetration:insert_primary_penis_into_your_vagina action i
       locationId: 'room1',
       actorId: 'alana',
       targetId: 'dorian',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

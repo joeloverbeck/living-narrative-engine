@@ -51,7 +51,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_target_general"
+        "value": "physical.target_action"
       }
     },
     {
@@ -65,7 +65,12 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.gazeResult.outcome" }, "CRITICAL_SUCCESS"]
+          "==": [
+            {
+              "var": "context.gazeResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
         },
         "then_actions": [
           {
@@ -78,18 +83,22 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "primary" }
+            "parameters": {
+              "entity_ref": "primary"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -98,11 +107,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills you, accompanied by a burning smell and a ringing noise in your ears.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -113,7 +124,9 @@
               "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -121,7 +134,12 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.gazeResult.outcome" }, "SUCCESS"]
+          "==": [
+            {
+              "var": "context.gazeResult.outcome"
+            },
+            "SUCCESS"
+          ]
         },
         "then_actions": [
           {
@@ -134,18 +152,22 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "primary" }
+            "parameters": {
+              "entity_ref": "primary"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -154,11 +176,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness seeping into me. A sickly warmth starts filling me, accompanied by a burning smell.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -169,7 +193,9 @@
               "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -177,7 +203,12 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.gazeResult.outcome" }, "FAILURE"]
+          "==": [
+            {
+              "var": "context.gazeResult.outcome"
+            },
+            "FAILURE"
+          ]
         },
         "then_actions": [
           {
@@ -185,7 +216,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName} resists the spiritual attack.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}"
             }
@@ -197,7 +228,9 @@
               "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName} resists the spiritual attack."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -205,7 +238,12 @@
       "type": "IF",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.gazeResult.outcome" }, "FUMBLE"]
+          "==": [
+            {
+              "var": "context.gazeResult.outcome"
+            },
+            "FUMBLE"
+          ]
         },
         "then_actions": [
           {
@@ -218,14 +256,16 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "actor" }
+            "parameters": {
+              "entity_ref": "actor"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName}'s resolve shocks through {context.actorName}, making them fall to the ground.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}"
             }
@@ -237,7 +277,9 @@
               "value": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze, but {context.targetName}'s resolve shocks through {context.actorName}, making them fall to the ground."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     }

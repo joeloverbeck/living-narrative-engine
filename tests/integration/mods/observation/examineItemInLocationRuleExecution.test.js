@@ -94,7 +94,7 @@ describe('observation:examine_item_in_location rule execution', () => {
       );
 
       const examineEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_examined'
+        (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
       expect(examineEvent.payload.descriptionText).toBe(
@@ -128,7 +128,7 @@ describe('observation:examine_item_in_location rule execution', () => {
       );
 
       const examineEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_examined'
+        (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
       expect(examineEvent.payload.descriptionText).toBe(
@@ -165,7 +165,7 @@ describe('observation:examine_item_in_location rule execution', () => {
       );
 
       const examineEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_examined'
+        (e) => e.payload.perceptionType === 'item.examine'
       );
       expect(examineEvent).toBeDefined();
       expect(examineEvent.payload.descriptionText).toBe(
@@ -193,12 +193,12 @@ describe('observation:examine_item_in_location rule execution', () => {
       );
 
       const examineEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_examined'
+        (e) => e.payload.perceptionType === 'item.examine'
       );
 
       // Verify all required fields
       expect(examineEvent.payload.locationId).toBe('workshop');
-      expect(examineEvent.payload.perceptionType).toBe('item_examined');
+      expect(examineEvent.payload.perceptionType).toBe('item.examine');
       expect(examineEvent.payload.actorId).toBe('test:actor1');
       expect(examineEvent.payload.targetId).toBe('tool-1');
       expect(examineEvent.payload.descriptionText).toContain('Dave');
@@ -332,7 +332,7 @@ describe('observation:examine_item_in_location rule execution', () => {
       const examineEvents = testFixture.events.filter(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item_examined'
+          event.payload.perceptionType === 'item.examine'
       );
       expect(examineEvents).toHaveLength(2);
     });

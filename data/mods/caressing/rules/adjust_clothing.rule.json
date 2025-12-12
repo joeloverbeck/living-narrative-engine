@@ -36,11 +36,13 @@
       "parameters": {
         "location_id": "{context.locationId}",
         "description_text": "{context.perceptibleLogMessage}",
-        "perception_type": "action_target_general",
+        "perception_type": "social.affection",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{context.targetId}"
       }
     },
-    { "macro": "core:displaySuccessAndEndTurn" }
+    {
+      "macro": "core:displaySuccessAndEndTurn"
+    }
   ]
 }

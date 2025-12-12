@@ -83,21 +83,24 @@ export class ActionTestUtilities {
       ],
     };
 
-    // Create location definitions and instances
+    // Store location definitions synchronously (fast)
     for (const location of testWorld.locations) {
       const definition = createEntityDefinition(
         location.id,
         location.components
       );
-      // Add the definition to the registry
       registry.store('entityDefinitions', location.id, definition);
-
-      // Create the entity instance
-      await entityManager.createEntityInstance(location.id, {
-        instanceId: location.id,
-        definitionId: location.id,
-      });
     }
+
+    // Create entity instances in parallel for better performance
+    await Promise.all(
+      testWorld.locations.map((location) =>
+        entityManager.createEntityInstance(location.id, {
+          instanceId: location.id,
+          definitionId: location.id,
+        })
+      )
+    );
 
     // Add currentLocation property that tests expect
     testWorld.currentLocation =
@@ -171,16 +174,21 @@ export class ActionTestUtilities {
       },
     };
 
-    // Create actor definitions and instances
+    // Store actor definitions synchronously (fast)
     for (const [key, actor] of Object.entries(testActors)) {
       const definition = createEntityDefinition(actor.id, actor.components);
       registry.store('entityDefinitions', actor.id, definition);
-
-      await entityManager.createEntityInstance(actor.id, {
-        instanceId: actor.id,
-        definitionId: actor.id,
-      });
     }
+
+    // Create actor instances in parallel for better performance
+    await Promise.all(
+      Object.values(testActors).map((actor) =>
+        entityManager.createEntityInstance(actor.id, {
+          instanceId: actor.id,
+          definitionId: actor.id,
+        })
+      )
+    );
 
     return testActors;
   }

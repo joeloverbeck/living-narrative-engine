@@ -238,7 +238,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const pickupEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_picked_up'
+        (e) => e.payload.perceptionType === 'item.pickup'
       );
       expect(pickupEvent).toBeDefined();
       expect(pickupEvent.payload.locationId).toBe('saloon1');
@@ -263,7 +263,7 @@ describe('item-handling:pick_up_item action integration', () => {
 
       expect(perceptibleEvents.length).toBeGreaterThan(0);
       const failedEvent = perceptibleEvents.find(
-        (e) => e.payload.perceptionType === 'item_pickup_failed'
+        (e) => e.payload.perceptionType === 'error.action_failed'
       );
       expect(failedEvent).toBeDefined();
       expect(failedEvent.payload.locationId).toBe('room');

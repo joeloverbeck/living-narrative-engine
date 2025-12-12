@@ -277,7 +277,7 @@ describe('handle_peck_target rule definition', () => {
           op.parameters.variable_name === 'perceptionType'
       );
       expect(setVarOp).toBeDefined();
-      expect(setVarOp.parameters.value).toBe('action_target_general');
+      expect(setVarOp.parameters.value).toBe('physical.target_action');
     });
   });
 

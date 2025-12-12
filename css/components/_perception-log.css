@@ -111,3 +111,169 @@
     max-height: 120px;
   }
 }
+
+/* ============================================
+   PERCEPTION TYPE-BASED THEMING
+   ============================================
+   Colors are WCAG AA compliant on parchment background (#fff8e6)
+   See specs/perceptionType-consolidation.md for details
+   ============================================ */
+
+/* Root color variables for perception categories */
+:root {
+  --perception-communication: #6a1b9a; /* Purple */
+  --perception-movement: #1565c0; /* Blue */
+  --perception-combat: #c62828; /* Red */
+  --perception-item: #e65100; /* Amber */
+  --perception-container: #795548; /* Brown */
+  --perception-connection: #546e7a; /* Steel */
+  --perception-consumption: #2e7d32; /* Green */
+  --perception-state: #00838f; /* Cyan */
+  --perception-social: #ad1457; /* Pink */
+  --perception-physical: #8d6e63; /* Tan */
+  --perception-intimacy: #c2185b; /* Rose */
+  --perception-performance: #f9a825; /* Gold */
+  --perception-magic: #5c6bc0; /* Indigo */
+  --perception-error: #b71c1c; /* Dark Red */
+}
+
+/* Category Classes - Primary Color Theming */
+.log-cat-communication {
+  color: var(--perception-communication);
+}
+
+.log-cat-movement {
+  color: var(--perception-movement);
+}
+
+.log-cat-combat {
+  color: var(--perception-combat);
+  font-weight: 500;
+}
+
+.log-cat-item {
+  color: var(--perception-item);
+}
+
+.log-cat-container {
+  color: var(--perception-container);
+}
+
+.log-cat-connection {
+  color: var(--perception-connection);
+}
+
+.log-cat-consumption {
+  color: var(--perception-consumption);
+}
+
+.log-cat-state {
+  color: var(--perception-state);
+}
+
+.log-cat-social {
+  color: var(--perception-social);
+}
+
+.log-cat-physical {
+  color: var(--perception-physical);
+}
+
+.log-cat-intimacy {
+  color: var(--perception-intimacy);
+}
+
+.log-cat-performance {
+  color: var(--perception-performance);
+}
+
+.log-cat-magic {
+  color: var(--perception-magic);
+  font-style: italic;
+}
+
+.log-cat-error {
+  color: var(--perception-error);
+  font-weight: 600;
+}
+
+/* Type-Specific Refinements */
+
+/* Communication types */
+.log-type-speech .speaker-name {
+  font-weight: 600;
+  font-variant: small-caps;
+}
+
+.log-type-speech .dialogue {
+  font-style: normal;
+}
+
+.log-type-thought {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+.log-type-notes {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95em;
+}
+
+/* Combat types */
+.log-type-death {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.log-type-damage::before {
+  content: '\2694 '; /* Crossed swords */
+}
+
+.log-type-violence::before {
+  content: '\26A0 '; /* Warning sign */
+}
+
+/* Magic types */
+.log-type-spell::before {
+  content: '\2728 '; /* Sparkles */
+}
+
+.log-type-ritual::before {
+  content: '\1F52E '; /* Crystal ball */
+}
+
+/* Performance types */
+.log-type-music::before {
+  content: '\266B '; /* Music note */
+}
+
+.log-type-dance::before {
+  content: '\1F483 '; /* Dancer */
+}
+
+/* Error types */
+.log-type-action-failed {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.log-type-system-error {
+  background-color: rgba(183, 28, 28, 0.1);
+  padding: 0.25em 0.5em;
+  border-radius: 3px;
+}
+
+/* Movement types */
+.log-type-arrival::before {
+  content: '\2192 '; /* Right arrow */
+}
+
+.log-type-departure::before {
+  content: '\2190 '; /* Left arrow */
+}
+
+/* Action text (inside asterisks) */
+.action-text {
+  font-style: italic;
+}

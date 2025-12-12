@@ -70,7 +70,7 @@ describe('affection:place_hand_on_knee action integration', () => {
         'Bob'
       ),
       locationId: 'garden_patio',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });
@@ -97,7 +97,7 @@ describe('affection:place_hand_on_knee action integration', () => {
       )
     );
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('sunroom');
     expect(perceptibleEvent.payload.targetId).toBe(scenario.target.id);

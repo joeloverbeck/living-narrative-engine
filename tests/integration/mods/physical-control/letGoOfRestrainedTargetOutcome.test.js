@@ -171,7 +171,7 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: expectedMessage,
       locationId: 'room1',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: actor.id,
       targetId: target.id,
     });
@@ -199,7 +199,7 @@ describe('handle_let_go_of_restrained_target outcome behavior', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: expectedMessage,
       locationId: 'room1',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: actor.id,
       targetId: target.id,
     });

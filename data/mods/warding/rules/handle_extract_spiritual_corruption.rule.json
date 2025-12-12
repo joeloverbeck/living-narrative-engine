@@ -8,11 +8,17 @@
   "actions": [
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "primary", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "primary",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "GET_NAME",
@@ -54,7 +60,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_target_general"
+        "value": "physical.target_action"
       }
     },
     {
@@ -70,7 +76,9 @@
       "parameters": {
         "condition": {
           "==": [
-            { "var": "context.extractionResult.outcome" },
+            {
+              "var": "context.extractionResult.outcome"
+            },
             "CRITICAL_SUCCESS"
           ]
         },
@@ -84,18 +92,22 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "primary" }
+            "parameters": {
+              "entity_ref": "primary"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} extracts the corruption out of {context.targetName} swiftly using {context.anchorName}. Light returns to {context.targetName}'s eyes.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -104,11 +116,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly I feel like I'm being burned alive from the inside as something dark rushes out of me. Then it ends. My insides are cleaner, but I feel like I've suffered through a harrowing struggle.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -119,7 +133,9 @@
               "value": "{context.actorName} extracts the corruption out of {context.targetName} swiftly using {context.anchorName}. Light returns to {context.targetName}'s eyes."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -128,7 +144,12 @@
       "comment": "Handle SUCCESS outcome",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.extractionResult.outcome" }, "SUCCESS"]
+          "==": [
+            {
+              "var": "context.extractionResult.outcome"
+            },
+            "SUCCESS"
+          ]
         },
         "then_actions": [
           {
@@ -140,18 +161,22 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "primary" }
+            "parameters": {
+              "entity_ref": "primary"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "After a struggle, {context.actorName} extracts the corruption out of {context.targetName} using {context.anchorName}.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -160,11 +185,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} uses {context.anchorName} against me, and my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through the struggle, but in the end, the darkness is gone, and I feel cleaner.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -175,7 +202,9 @@
               "value": "After a struggle, {context.actorName} extracts the corruption out of {context.targetName} using {context.anchorName}."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -184,7 +213,12 @@
       "comment": "Handle FAILURE outcome",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.extractionResult.outcome" }, "FAILURE"]
+          "==": [
+            {
+              "var": "context.extractionResult.outcome"
+            },
+            "FAILURE"
+          ]
         },
         "then_actions": [
           {
@@ -192,11 +226,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "Despite a struggle, {context.actorName} fails to extract the corruption out of {context.targetName} using {context.anchorName}. Darkness lingers in {context.targetName}'s eyes.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -205,11 +241,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. The darkness refuses to leave my body.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -220,7 +258,9 @@
               "value": "Despite a struggle, {context.actorName} fails to extract the corruption out of {context.targetName} using {context.anchorName}. Darkness lingers in {context.targetName}'s eyes."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -229,7 +269,12 @@
       "comment": "Handle FUMBLE outcome",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.extractionResult.outcome" }, "FUMBLE"]
+          "==": [
+            {
+              "var": "context.extractionResult.outcome"
+            },
+            "FUMBLE"
+          ]
         },
         "then_actions": [
           {
@@ -249,18 +294,22 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "{event.payload.actorId}" }
+            "parameters": {
+              "entity_ref": "{event.payload.actorId}"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} attempts to extract the corruption out of {context.targetName} using {context.anchorName}, but during the struggle, the {context.anchorName} slips from {context.actorName}'s hands.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "excludedActorIds": ["{event.payload.primaryId}"]
+                "excludedActorIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -269,11 +318,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. With a spasm, the darkness, still anchored inside me, sends an echo that makes {context.anchorName} slip out of {context.actorName}'s hands.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
               "contextual_data": {
-                "recipientIds": ["{event.payload.primaryId}"]
+                "recipientIds": [
+                  "{event.payload.primaryId}"
+                ]
               }
             }
           },
@@ -284,7 +335,9 @@
               "value": "{context.actorName} attempts to extract the corruption out of {context.targetName} using {context.anchorName}, but during the struggle, the {context.anchorName} slips from {context.actorName}'s hands."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     }

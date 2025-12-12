@@ -112,7 +112,7 @@ describe('first-aid:handle_disinfect_wounded_part rule', () => {
       locationId: ROOM_ID,
       actorId: medicId,
       targetId: patientId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
 
     fixture.assertComponentAdded(torsoId, 'first-aid:disinfected', {

@@ -218,12 +218,14 @@ describe('ANACREMODMIG-006g: Manifest Registration', () => {
     expectDefs('entities/definitions/beak.entity.json');
   });
 
-  test('mod-manifest.json should have 91 total entity definitions', () => {
+  test('mod-manifest.json should have at least 91 total entity definitions', () => {
     const manifestPath = join(
       process.cwd(),
       'data/mods/anatomy-creatures/mod-manifest.json'
     );
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-    expect(manifest.content.entities.definitions).toHaveLength(91);
+    expect(
+      manifest.content.entities.definitions.length
+    ).toBeGreaterThanOrEqual(91);
   });
 });

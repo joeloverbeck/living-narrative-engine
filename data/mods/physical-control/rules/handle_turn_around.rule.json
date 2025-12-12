@@ -167,7 +167,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_target_general"
+        "value": "physical.target_action"
       }
     },
     {

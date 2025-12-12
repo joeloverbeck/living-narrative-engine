@@ -17,91 +17,27 @@
     },
     "head": {
       "partType": "head",
-      "preferId": "anatomy:humanoid_head"
-    },
-    "left_eye": {
-      "partType": "eye",
-      "preferId": "anatomy-creatures:toad_eye"
-    },
-    "right_eye": {
-      "partType": "eye",
-      "preferId": "anatomy-creatures:toad_eye"
-    },
-    "left_ear": {
-      "partType": "ear",
-      "preferId": "anatomy-creatures:toad_tympanum"
-    },
-    "right_ear": {
-      "partType": "ear",
-      "preferId": "anatomy-creatures:toad_tympanum"
+      "preferId": "anatomy-creatures:toad_folk_head"
     },
     "nose": {
       "partType": "nose",
-      "preferId": "anatomy:humanoid_nose"
+      "preferId": "anatomy-creatures:toad_nostril"
     },
     "mouth": {
       "partType": "mouth",
-      "preferId": "anatomy:humanoid_mouth"
+      "preferId": "anatomy-creatures:toad_mouth"
     },
     "teeth": {
       "partType": "teeth",
-      "preferId": "anatomy:humanoid_teeth"
-    },
-    "left_arm": {
-      "partType": "arm",
-      "preferId": "anatomy:humanoid_arm"
-    },
-    "right_arm": {
-      "partType": "arm",
-      "preferId": "anatomy:humanoid_arm"
-    },
-    "left_hand": {
-      "partType": "hand",
-      "preferId": "anatomy:human_hand"
-    },
-    "right_hand": {
-      "partType": "hand",
-      "preferId": "anatomy:human_hand"
-    },
-    "left_leg": {
-      "partType": "leg",
-      "preferId": "anatomy:human_leg"
-    },
-    "right_leg": {
-      "partType": "leg",
-      "preferId": "anatomy:human_leg"
-    },
-    "left_foot": {
-      "partType": "foot",
-      "preferId": "anatomy:human_foot"
-    },
-    "right_foot": {
-      "partType": "foot",
-      "preferId": "anatomy:human_foot"
+      "preferId": "anatomy-creatures:toad_teeth"
     },
     "penis": {
       "partType": "penis",
-      "preferId": "anatomy:human_penis"
-    },
-    "left_testicle": {
-      "partType": "testicle",
-      "preferId": "anatomy:human_testicle"
-    },
-    "right_testicle": {
-      "partType": "testicle",
-      "preferId": "anatomy:human_testicle"
+      "preferId": "anatomy-creatures:toad_folk_penis"
     },
     "asshole": {
       "partType": "asshole",
-      "preferId": "anatomy:human_asshole"
-    },
-    "left_ass": {
-      "partType": "ass_cheek",
-      "preferId": "anatomy:human_ass_cheek"
-    },
-    "right_ass": {
-      "partType": "ass_cheek",
-      "preferId": "anatomy:human_ass_cheek"
+      "preferId": "anatomy-creatures:toad_folk_cloaca"
     },
     "heart": {
       "partType": "heart",
@@ -115,5 +51,47 @@
       "partType": "brain",
       "preferId": "anatomy:human_brain"
     }
-  }
+  },
+  "patterns": [
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy-creatures:toad_eye"
+    },
+    {
+      "matches": ["left_ear", "right_ear"],
+      "partType": "ear",
+      "preferId": "anatomy-creatures:toad_tympanum"
+    },
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy-creatures:toad_folk_arm"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy-creatures:toad_folk_hand_webbed"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy-creatures:toad_folk_leg"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy-creatures:toad_folk_foot_webbed"
+    },
+    {
+      "matches": ["left_testicle", "right_testicle"],
+      "partType": "testicle",
+      "preferId": "anatomy-creatures:toad_folk_testicle"
+    },
+    {
+      "matches": ["left_ass", "right_ass"],
+      "partType": "ass_cheek",
+      "preferId": "anatomy-creatures:toad_folk_ass_cheek"
+    }
+  ]
 }

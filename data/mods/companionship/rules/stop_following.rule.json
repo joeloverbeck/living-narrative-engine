@@ -33,7 +33,9 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "actor" }
+            "parameters": {
+              "entity_ref": "actor"
+            }
           },
           {
             "type": "REGENERATE_DESCRIPTION",
@@ -94,7 +96,7 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName.text} is no longer following {context.oldLeaderName.text}.",
-                    "perception_type": "state_change_observable",
+                    "perception_type": "state.observable_change",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{context.oldFollowingData.leaderId}",
                     "involved_entities": []
@@ -111,7 +113,9 @@
               "value": "{context.actorName.text} stops following {context.oldLeaderName.text}."
             }
           },
-          { "macro": "core:displaySuccessAndEndTurn" }
+          {
+            "macro": "core:displaySuccessAndEndTurn"
+          }
         ],
         "else_actions": [
           {
@@ -121,7 +125,9 @@
               "value": "You are not following anyone."
             }
           },
-          { "macro": "core:logFailureAndEndTurn" }
+          {
+            "macro": "core:logFailureAndEndTurn"
+          }
         ]
       }
     }

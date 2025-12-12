@@ -79,7 +79,7 @@ describe('sex-vaginal-penetration:straddling_penis_milking action integration', 
       locationId: STRADDLING_MILKING_ROOM_ID,
       actorId: STRADDLING_MILKING_ACTOR_ID,
       targetId: STRADDLING_MILKING_PRIMARY_ID,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

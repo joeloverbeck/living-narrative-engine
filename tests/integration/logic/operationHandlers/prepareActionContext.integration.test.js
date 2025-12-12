@@ -72,7 +72,7 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       expect(context.targetName).toBe('Bob');
       expect(context.locationId).toBe('test-location');
       expect(context.targetId).toBe(target);
-      expect(context.perceptionType).toBe('action_target_general');
+      expect(context.perceptionType).toBe('physical.target_action');
     });
   });
 
@@ -135,7 +135,7 @@ describe('PREPARE_ACTION_CONTEXT Integration', () => {
       manualContext.targetName = 'Dana'; // Would come from GET_NAME
       manualContext.locationId = 'room-1'; // Would come from QUERY_COMPONENT + SET_VARIABLE
       manualContext.targetId = target; // Would come from SET_VARIABLE
-      manualContext.perceptionType = 'action_target_general'; // Would come from SET_VARIABLE
+      manualContext.perceptionType = 'physical.target_action'; // Would come from SET_VARIABLE
 
       // Verify equivalence
       expect(newContext.actorName).toBe(manualContext.actorName);

@@ -27,6 +27,13 @@
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import {
+  isValidPerceptionType,
+  isLegacyType,
+  getLegacyTypeMapping,
+  suggestNearestType,
+  getAllValidTypes,
+} from '../../perception/registries/perceptionTypeRegistry.js';
 
 const EVENT_ID = 'core:perceptible_event';
 
@@ -184,6 +191,35 @@ class DispatchPerceptibleEventHandler {
       );
       return;
     }
+
+    // Runtime validation of perception_type against registry
+    // See specs/perceptionType-consolidation.md for type taxonomy
+    let validatedPerceptionType = perception_type.trim();
+
+    if (!isValidPerceptionType(validatedPerceptionType)) {
+      const suggestion = suggestNearestType(validatedPerceptionType);
+      const sampleTypes = getAllValidTypes().slice(0, 8).join(', ');
+      safeDispatchError(
+        this.#dispatcher,
+        `DISPATCH_PERCEPTIBLE_EVENT: Invalid perception_type '${validatedPerceptionType}'. ` +
+          `${suggestion ? `Did you mean '${suggestion}'? ` : ''}` +
+          `Valid types include: ${sampleTypes}...`,
+        { perception_type: validatedPerceptionType, suggestion },
+        this.#logger
+      );
+      return;
+    }
+
+    // Handle legacy types with deprecation warning
+    if (isLegacyType(validatedPerceptionType)) {
+      const newType = getLegacyTypeMapping(validatedPerceptionType);
+      this.#logger.warn(
+        `DISPATCH_PERCEPTIBLE_EVENT: Deprecated perception_type '${validatedPerceptionType}' used. ` +
+          `Please migrate to '${newType}'. Legacy types will be removed in a future version.`
+      );
+      validatedPerceptionType = newType;
+    }
+
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -199,7 +235,7 @@ class DispatchPerceptibleEventHandler {
       locationId: location_id,
       descriptionText: description_text,
       timestamp: new Date().toISOString(),
-      perceptionType: perception_type,
+      perceptionType: validatedPerceptionType, // Use validated/normalized type
       actorId: actor_id,
       targetId: target_id ?? null,
       involvedEntities: Array.isArray(involved_entities)
@@ -222,7 +258,7 @@ class DispatchPerceptibleEventHandler {
         entry: {
           descriptionText: description_text,
           timestamp: payload.timestamp,
-          perceptionType: perception_type,
+          perceptionType: validatedPerceptionType, // Use validated/normalized type
           actorId: actor_id,
           targetId: target_id ?? null,
           involvedEntities: Array.isArray(involved_entities)

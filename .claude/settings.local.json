@@ -655,7 +655,9 @@
       "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/cat_girl_torso.entity.json )",
       "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_abyssal_black_glow.entity.json )",
       "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_ice_blue_slit.entity.json )",
-      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_amber_slit.entity.json)"
+      "Bash(/home/joeloverbeck/projects/living-narrative-engine/data/mods/anatomy/entities/definitions/feline_eye_amber_slit.entity.json)",
+      "Bash(do if ! grep -q \"descriptors:\" \"$file\")",
+      "Bash(then echo \"$file\")"
     ],
     "deny": [],
     "ask": []

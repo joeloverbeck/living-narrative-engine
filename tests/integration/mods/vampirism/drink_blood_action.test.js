@@ -151,7 +151,7 @@ describe('vampirism:drink_blood - Rule Execution', () => {
         locationId: 'ship_cabin',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -209,7 +209,7 @@ describe('vampirism:drink_blood - Rule Execution', () => {
         locationId: 'manor',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -239,7 +239,7 @@ describe('vampirism:drink_blood - Rule Execution', () => {
       testFixture.assertActionSuccess(expectedMessage);
       testFixture.assertPerceptibleEvent({
         descriptionText: expectedMessage,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'bedroom',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

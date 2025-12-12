@@ -112,7 +112,7 @@ describe('violence:handleBeakFumble macro', () => {
         (op) => op.type === 'DISPATCH_PERCEPTIBLE_EVENT'
       );
       expect(dispatchOp.parameters.perception_type).toBe(
-        'action_target_general'
+        'combat.violence'
       );
     });
   });

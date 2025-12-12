@@ -247,7 +247,7 @@ describe('sex-physical-control:pull_head_to_bare_penis action integration', () =
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

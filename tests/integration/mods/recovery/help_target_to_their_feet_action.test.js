@@ -147,7 +147,7 @@ describe('recovery:help_target_to_their_feet action integration', () => {
     expect(perceptibleEvent.payload.actorId).toBe(actorId);
     expect(perceptibleEvent.payload.targetId).toBe(targetId);
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
 
     expect(testFixture.events).toHaveActionSuccess(

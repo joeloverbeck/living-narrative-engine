@@ -265,6 +265,75 @@ describe('socketExtractor', () => {
 
     // Priority Rule Tests
 
+    it('prefers entities with sockets over namespace match when namespace entity lacks sockets', async () => {
+      const mockRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          {
+            id: 'creatures:head_plain',
+            components: { 'anatomy:part': { subType: 'head' } },
+          },
+          {
+            id: 'anatomy:head_with_sockets',
+            components: {
+              'anatomy:part': { subType: 'head' },
+              'anatomy:sockets': { sockets: [{ id: 'left_ear' }, { id: 'right_ear' }] },
+            },
+          },
+        ]),
+      };
+
+      const result = await resolveEntityId('head', mockRegistry, 'creatures');
+      expect(result).toBe('anatomy:head_with_sockets');
+    });
+
+    it('treats empty sockets array as no sockets for prioritization', async () => {
+      const mockRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          {
+            id: 'anatomy:head_empty_sockets',
+            components: {
+              'anatomy:part': { subType: 'head' },
+              'anatomy:sockets': { sockets: [] },
+            },
+          },
+          {
+            id: 'anatomy:head_with_sockets',
+            components: {
+              'anatomy:part': { subType: 'head' },
+              'anatomy:sockets': { sockets: [{ id: 'left_ear' }] },
+            },
+          },
+        ]),
+      };
+
+      const result = await resolveEntityId('head', mockRegistry);
+      expect(result).toBe('anatomy:head_with_sockets');
+    });
+
+    it('ignores namespace preference when entity ID lacks namespace prefix', async () => {
+      const mockRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          {
+            id: 'humanoid_head',
+            components: {
+              'anatomy:part': { subType: 'head' },
+              'anatomy:sockets': { sockets: [{ id: 'left_eye' }] },
+            },
+          },
+          {
+            id: 'anatomy:humanoid_head',
+            components: {
+              'anatomy:part': { subType: 'head' },
+              'anatomy:sockets': { sockets: [{ id: 'left_eye' }] },
+            },
+          },
+        ]),
+      };
+
+      const result = await resolveEntityId('head', mockRegistry, 'humanoid');
+      expect(result).toBe('anatomy:humanoid_head');
+    });
+
     it('prefers entity with fewer underscores (base entities)', async () => {
       const mockRegistry = {
         getAll: jest.fn().mockReturnValue([
@@ -489,9 +558,7 @@ describe('socketExtractor', () => {
         expect(message).toContain('subType "head"');
         expect(message).toContain('anatomy:humanoid_head_variant');
         expect(message).toContain('anatomy:humanoid_head');
-        expect(message).toContain(
-          'priority: fewest underscores, alphabetical, shortest ID'
-        );
+        expect(message).toContain('priority: sockets present');
       });
 
       it('does not log when only a single candidate exists', async () => {

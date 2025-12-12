@@ -132,7 +132,7 @@ describe('vampirism:bite_neck_carefully - Rule Execution', () => {
         locationId: 'crypt',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -176,7 +176,7 @@ describe('vampirism:bite_neck_carefully - Rule Execution', () => {
         locationId: 'theatre',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
       });
     });
 
@@ -199,7 +199,7 @@ describe('vampirism:bite_neck_carefully - Rule Execution', () => {
       testFixture.assertActionSuccess(expectedMessage);
       testFixture.assertPerceptibleEvent({
         descriptionText: expectedMessage,
-        perceptionType: 'action_target_general',
+        perceptionType: 'physical.target_action',
         locationId: 'tower',
         actorId: scenario.actor.id,
         targetId: scenario.target.id,

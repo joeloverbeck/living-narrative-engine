@@ -73,7 +73,7 @@ describe('caressing:caress_cheek_softly action integration', () => {
 
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe(
-      'action_target_general'
+      'physical.target_action'
     );
     expect(perceptibleEvent.payload.locationId).toBe('garden');
     expect(perceptibleEvent.payload.actorId).toBe(scenario.actor.id);

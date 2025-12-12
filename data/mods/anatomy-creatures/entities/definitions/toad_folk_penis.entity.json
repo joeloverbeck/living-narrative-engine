@@ -1,0 +1,33 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:toad_folk_penis",
+  "description": "A toad-folk male genital organ with smooth amphibian texture",
+  "components": {
+    "anatomy:part": {
+      "subType": "penis",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
+    "anatomy:visibility_rules": {
+      "clothingSlotId": "torso_lower",
+      "nonBlockingLayers": ["underwear", "accessories"]
+    },
+    "core:name": {
+      "text": "penis"
+    },
+    "core:weight": {
+      "weight": 0.1
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

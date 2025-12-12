@@ -37,7 +37,7 @@
       "comment": "Set the perception type for this self-targeting action.",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_self_general"
+        "value": "physical.self_action"
       }
     },
     {

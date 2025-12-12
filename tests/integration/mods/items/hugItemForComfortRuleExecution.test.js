@@ -62,7 +62,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
     expect(perceptibleEvent.payload.descriptionText).toBe(
       'Sam hugs soft teddy bear and feels calmer.'
     );
-    expect(perceptibleEvent.payload.perceptionType).toBe('item_use');
+    expect(perceptibleEvent.payload.perceptionType).toBe('item.use');
     expect(perceptibleEvent.payload.actorId).toBe('actor_hugger');
     expect(perceptibleEvent.payload.targetId).toBe('plush1');
 
@@ -182,7 +182,7 @@ describe('items:hug_item_for_comfort rule execution', () => {
     const perceptibleEvent = testFixture.events.find(
       (event) => event.eventType === 'core:perceptible_event'
     );
-    expect(perceptibleEvent.payload.perceptionType).toBe('item_use');
+    expect(perceptibleEvent.payload.perceptionType).toBe('item.use');
     expect(perceptibleEvent.payload.locationId).toBe('study');
     expect(perceptibleEvent.payload.actorId).toBe('actor_meta');
     expect(perceptibleEvent.payload.targetId).toBe('stuffed1');

@@ -194,7 +194,7 @@ describe('hand-holding:let_go_of_hand action integration', () => {
     testFixture.assertPerceptibleEvent({
       descriptionText: "Harper lets go of Indigo's hand.",
       locationId: 'garden',
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
       actorId: scenario.actor.id,
       targetId: scenario.target.id,
     });

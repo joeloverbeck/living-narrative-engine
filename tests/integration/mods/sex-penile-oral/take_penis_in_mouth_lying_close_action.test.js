@@ -75,7 +75,7 @@ describe('sex-penile-oral:take_penis_in_mouth_lying_close action execution', () 
       locationId: roomId,
       actorId,
       targetId: primaryId,
-      perceptionType: 'action_target_general',
+      perceptionType: 'physical.target_action',
     });
   });
 

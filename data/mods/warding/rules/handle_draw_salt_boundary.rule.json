@@ -8,11 +8,17 @@
   "actions": [
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
     },
     {
       "type": "GET_NAME",
-      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
     },
     {
       "type": "QUERY_COMPONENT",
@@ -45,7 +51,7 @@
       "type": "SET_VARIABLE",
       "parameters": {
         "variable_name": "perceptionType",
-        "value": "action_target_general"
+        "value": "physical.target_action"
       }
     },
     {
@@ -60,7 +66,12 @@
       "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.wardingResult.outcome" }, "CRITICAL_SUCCESS"]
+          "==": [
+            {
+              "var": "context.wardingResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
         },
         "then_actions": [
           {
@@ -76,7 +87,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} draws a perfect salt boundary around the corrupted target {context.targetName}.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}"
             }
@@ -88,7 +99,9 @@
               "value": "{context.actorName} draws a perfect salt boundary around the corrupted target {context.targetName}."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -97,7 +110,12 @@
       "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.wardingResult.outcome" }, "SUCCESS"]
+          "==": [
+            {
+              "var": "context.wardingResult.outcome"
+            },
+            "SUCCESS"
+          ]
         },
         "then_actions": [
           {
@@ -113,7 +131,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} draws a correct salt boundary around the corrupted target {context.targetName}.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}"
             }
@@ -125,7 +143,9 @@
               "value": "{context.actorName} draws a correct salt boundary around the corrupted target {context.targetName}."
             }
           },
-          { "macro": "core:logSuccessOutcomeAndEndTurn" }
+          {
+            "macro": "core:logSuccessOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -134,7 +154,12 @@
       "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.wardingResult.outcome" }, "FAILURE"]
+          "==": [
+            {
+              "var": "context.wardingResult.outcome"
+            },
+            "FAILURE"
+          ]
         },
         "then_actions": [
           {
@@ -142,7 +167,7 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} fails at drawing a salt boundary around the corrupted target {context.targetName}. The boundary will need to be redone.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}"
             }
@@ -154,7 +179,9 @@
               "value": "{context.actorName} fails at drawing a salt boundary around the corrupted target {context.targetName}. The boundary will need to be redone."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     },
@@ -163,7 +190,12 @@
       "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
       "parameters": {
         "condition": {
-          "==": [{ "var": "context.wardingResult.outcome" }, "FUMBLE"]
+          "==": [
+            {
+              "var": "context.wardingResult.outcome"
+            },
+            "FUMBLE"
+          ]
         },
         "then_actions": [
           {
@@ -176,14 +208,16 @@
           },
           {
             "type": "REGENERATE_DESCRIPTION",
-            "parameters": { "entity_ref": "actor" }
+            "parameters": {
+              "entity_ref": "actor"
+            }
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} tries to draw a salt boundary around the corrupted target {context.targetName} in a hurry, but slips and falls to the ground.",
-              "perception_type": "action_target_general",
+              "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.targetId}"
             }
@@ -195,7 +229,9 @@
               "value": "{context.actorName} tries to draw a salt boundary around the corrupted target {context.targetName} in a hurry, but slips and falls to the ground."
             }
           },
-          { "macro": "core:logFailureOutcomeAndEndTurn" }
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
         ]
       }
     }
