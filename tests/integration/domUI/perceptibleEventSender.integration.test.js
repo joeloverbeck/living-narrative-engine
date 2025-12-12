@@ -200,7 +200,7 @@ describe('PerceptibleEventSender Integration Tests', () => {
         'A loud crash echoes from nearby'
       );
       expect(operation.parameters.perception_type).toBe(
-        'state_change_observable'
+        'state.observable_change'
       );
       expect(operation.parameters.actor_id).toBe('system');
       expect(operation.parameters.log_entry).toBe(true);

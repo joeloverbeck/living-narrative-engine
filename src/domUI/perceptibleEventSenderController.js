@@ -477,7 +477,7 @@ class PerceptibleEventSenderController {
       parameters: {
         location_id: locationId,
         description_text: message,
-        perception_type: 'state_change_observable',
+        perception_type: 'state.observable_change',
         actor_id: 'system', // System token (no entity)
         contextual_data: contextualData,
         log_entry: true, // Always log for perception tracking

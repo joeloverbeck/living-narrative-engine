@@ -748,7 +748,7 @@ describe('PerceptibleEventSenderController', () => {
           parameters: expect.objectContaining({
             location_id: 'location:tavern',
             description_text: 'A loud crash echoes from nearby',
-            perception_type: 'state_change_observable',
+            perception_type: 'state.observable_change',
             actor_id: 'system',
             log_entry: true,
           }),
@@ -791,7 +791,7 @@ describe('PerceptibleEventSenderController', () => {
           parameters: expect.objectContaining({
             location_id: 'location:tavern',
             description_text: 'A loud crash echoes from nearby',
-            perception_type: 'state_change_observable',
+            perception_type: 'state.observable_change',
             actor_id: 'system',
             target_id: null,
             involved_entities: [],
