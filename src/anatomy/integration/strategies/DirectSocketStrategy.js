@@ -56,7 +56,7 @@ class DirectSocketStrategy {
       return [];
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `DirectSocketStrategy: Resolving for entity '${entityId}', sockets: ${JSON.stringify(mapping.anatomySockets)}`
     );
 
@@ -67,7 +67,7 @@ class DirectSocketStrategy {
     // Check body parts first (preferred over root entity)
     const bodyParts = bodyGraph.getAllPartIds();
 
-    this.#logger.info(
+    this.#logger.debug(
       `DirectSocketStrategy: Found ${bodyParts.length} body parts for entity '${entityId}'`
     );
 
@@ -78,7 +78,7 @@ class DirectSocketStrategy {
       );
 
       if (socketsComponent?.sockets) {
-        this.#logger.info(
+        this.#logger.debug(
           `DirectSocketStrategy: Part '${partId}' has ${socketsComponent.sockets.length} sockets: ${socketsComponent.sockets.map((s) => s.id).join(', ')}`
         );
         for (const socket of socketsComponent.sockets) {
@@ -90,19 +90,19 @@ class DirectSocketStrategy {
               orientation: socket.orientation || 'neutral',
             });
 
-            this.#logger.info(
+            this.#logger.debug(
               `DirectSocketStrategy: Found socket '${socket.id}' on part '${partId}'`
             );
           }
         }
       } else {
-        this.#logger.info(
+        this.#logger.debug(
           `DirectSocketStrategy: Part '${partId}' has NO anatomy:sockets component`
         );
       }
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `DirectSocketStrategy: After checking body parts, found ${attachmentPoints.length} attachment points`
     );
 
@@ -123,7 +123,7 @@ class DirectSocketStrategy {
               orientation: socket.orientation || 'neutral',
             });
 
-            this.#logger.info(
+            this.#logger.debug(
               `DirectSocketStrategy: Found socket '${socket.id}' on root entity '${entityId}'`
             );
           }
@@ -131,7 +131,7 @@ class DirectSocketStrategy {
       }
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `DirectSocketStrategy: Returning ${attachmentPoints.length} total attachment points for entity '${entityId}'`
     );
 

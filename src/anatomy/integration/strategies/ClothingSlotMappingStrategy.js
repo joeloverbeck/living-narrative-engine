@@ -74,7 +74,7 @@ class ClothingSlotMappingStrategy {
     const isNonEmpty = hasClothingSlotId && mapping.clothingSlotId.length > 0;
     const result = hasMapping && hasClothingSlotId && isNonEmpty;
 
-    this.#logger.info(
+    this.#logger.debug(
       `ClothingSlotMappingStrategy.canResolve: hasMapping=${hasMapping}, hasClothingSlotId=${hasClothingSlotId}, isNonEmpty=${isNonEmpty}, result=${result}. Mapping: ${JSON.stringify(mapping)}`
     );
 
