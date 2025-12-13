@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for discovering positioning:place_yourself_behind with posture restrictions.
+ * @file Integration tests for discovering maneuvering:place_yourself_behind with posture restrictions.
  * @description Ensures the action is not surfaced when the target is lying down.
  */
 
@@ -10,13 +10,13 @@ import {
   ModEntityScenarios,
 } from '../../../common/mods/ModEntityBuilder.js';
 
-describe('positioning:place_yourself_behind discovery posture validation', () => {
+describe('maneuvering:place_yourself_behind discovery posture validation', () => {
   let fixture;
 
   beforeEach(async () => {
     fixture = await ModTestFixture.forAction(
-      'positioning',
-      'positioning:place_yourself_behind'
+      'maneuvering',
+      'maneuvering:place_yourself_behind'
     );
   });
 

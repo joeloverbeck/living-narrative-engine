@@ -41,7 +41,7 @@ describe('DescriptionGenerationWorkflow', () => {
       expect(anatomyService.generateAllDescriptions).toHaveBeenCalledWith(
         entity
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           'Successfully generated descriptions for entity'
         )
@@ -94,7 +94,7 @@ describe('DescriptionGenerationWorkflow', () => {
         2,
         partB
       );
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Successfully generated descriptions for parts')
       );
     });

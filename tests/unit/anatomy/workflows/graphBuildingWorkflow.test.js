@@ -114,7 +114,7 @@ describe('GraphBuildingWorkflow', () => {
           `Building adjacency cache for root entity '${rootId}'`
         )
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
           `Successfully built adjacency cache for root entity '${rootId}'`
         )

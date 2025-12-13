@@ -64,7 +64,9 @@ describe('items:read_item perception type validation', () => {
 
     // Assert: Verify perceptible event was dispatched with correct perception type
     const perceptibleEvent = testFixture.events.find(
-      (event) => event.eventType === 'core:perceptible_event'
+      (event) =>
+        event.eventType === 'core:perceptible_event' &&
+        event.payload.contextualData?.recipientIds?.includes('test:actor1')
     );
     expect(perceptibleEvent).toBeDefined();
     expect(perceptibleEvent.payload.perceptionType).toBe('item.examine');

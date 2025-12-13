@@ -151,7 +151,7 @@ class SlotResolver {
     }
 
     // Find the first strategy that can handle this mapping
-    this.#logger.info(
+    this.#logger.debug(
       `SlotResolver: Attempting to resolve slot '${slotId}' for entity '${entityId}' with mapping: ${JSON.stringify(mapping)}`
     );
 
@@ -164,7 +164,7 @@ class SlotResolver {
       return [];
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `SlotResolver: Using strategy '${strategy.constructor.name}' for slot '${slotId}'`
     );
 

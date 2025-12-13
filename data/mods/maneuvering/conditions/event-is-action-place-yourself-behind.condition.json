@@ -1,0 +1,11 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "maneuvering:event-is-action-place-yourself-behind",
+  "description": "Checks if the triggering event is for the 'maneuvering:place_yourself_behind' action.",
+  "logic": {
+    "==": [
+      { "var": "event.payload.actionId" },
+      "maneuvering:place_yourself_behind"
+    ]
+  }
+}

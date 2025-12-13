@@ -62,7 +62,7 @@ describe('Cross-Mod References', () => {
     it('should have place_yourself_behind action with appropriate conditions', () => {
       const placeBehindPath = path.resolve(
         process.cwd(),
-        'data/mods/positioning/actions/place_yourself_behind.action.json'
+        'data/mods/maneuvering/actions/place_yourself_behind.action.json'
       );
       const placeBehindAction = JSON.parse(
         fs.readFileSync(placeBehindPath, 'utf8')

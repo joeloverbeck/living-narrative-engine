@@ -88,7 +88,7 @@ describe('AnatomyInitializationService test helper integration', () => {
     });
 
     expect(processed).toEqual(['entity-1', 'entity-2']);
-    expect(fixture.logger.info).toHaveBeenCalledWith(
+    expect(fixture.logger.debug).toHaveBeenCalledWith(
       "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
     );
     expect(fixture.service.hasPendingGenerations()).toBe(false);

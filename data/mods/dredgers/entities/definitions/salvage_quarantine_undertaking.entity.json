@@ -1,0 +1,20 @@
+{
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
+  "id": "dredgers:salvage_quarantine_undertaking",
+  "components": {
+    "core:name": {
+      "text": "Salvage & Quarantine Undertaking"
+    },
+    "core:description": {
+      "text": "A deliberately unremarkable document on plain paper, written in simple handwriting without seals, stamps, or signatures. The kind of thing that could be crumpled up and tossed into any canal without anyone thinking twice."
+    },
+    "items:item": {},
+    "core:weight": {
+      "weight": 0.01
+    },
+    "items:readable": {
+      "text": "Eira Quenreach's \"Salvage & Quarantine Undertaking\" is a one-sided contract designed to make the dredger crew legally and socially eat the risk of the job while keeping Eira's hands—and name—clean. It frames the artifact as a canal-network salvage find (not \"on Quenreach land\"), states that the dredgers are independent specialists who rely on their own judgment, and forces them to acknowledge that canal work is inherently deadly and unpredictable. The key trigger is first physical contact: the moment a dredger touches the artifact, custody, disposal authority, and responsibility shift to the dredgers, including responsibility for contamination, downstream spread, injuries/deaths, and any public hazard that follows. The document includes a broad release of Eira, her steward, and everyone connected to the estate, plus a heavy indemnity: if anyone sues, if inspectors investigate, if fines happen, if scandal erupts—the dredgers must defend and pay for the protected parties' losses. It also locks the dredgers into strict confidentiality and narrative control, forbidding them from naming House Quenreach, and imposes steep financial penalties for leaks. Operationally, it requires the dredgers to deliver logs and timelines to Eira's steward, accept witness-minimizing access controls, and take payment only through routed intermediaries—explicitly no signature or receipt from Eira herself. The overall implication: Eira is buying removal of the artifact plus a pre-written scapegoat structure—if anything goes wrong, the dredgers are positioned as the responsible actors and Eira can plausibly claim she was never a principal, never an owner, and never even \"in the chain\" of decisions."
+    },
+    "writing:signable": {}
+  }
+}

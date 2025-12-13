@@ -14,7 +14,7 @@ import goAction from '../../../data/mods/movement/actions/go.action.json' assert
 import followAction from '../../../data/mods/companionship/actions/follow.action.json' assert { type: 'json' };
 import giveItemAction from '../../../data/mods/item-transfer/actions/give_item.action.json' assert { type: 'json' };
 import pickUpItemAction from '../../../data/mods/item-handling/actions/pick_up_item.action.json' assert { type: 'json' };
-import placeYourselfBehindAction from '../../../data/mods/positioning/actions/place_yourself_behind.action.json' assert { type: 'json' };
+import placeYourselfBehindAction from '../../../data/mods/maneuvering/actions/place_yourself_behind.action.json' assert { type: 'json' };
 import stepBackAction from '../../../data/mods/positioning/actions/step_back.action.json' assert { type: 'json' };
 import turnAroundToFaceAction from '../../../data/mods/positioning/actions/turn_around_to_face.action.json' assert { type: 'json' };
 import fondleBreastsOverClothesAction from '../../../data/mods/sex-breastplay/actions/fondle_breasts_over_clothes.action.json' assert { type: 'json' };
@@ -243,7 +243,7 @@ describe('Bending Over - Forbidden Actions Bug', () => {
       const availableActions =
         testFixture.testEnv.getAvailableActions('test:actor');
       const placeActions = availableActions.filter(
-        (a) => a.id === 'positioning:place_yourself_behind'
+        (a) => a.id === 'maneuvering:place_yourself_behind'
       );
 
       // Currently FAILS - should be 0 but is > 0 (proving the bug)

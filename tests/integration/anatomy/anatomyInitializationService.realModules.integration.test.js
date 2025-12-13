@@ -164,7 +164,7 @@ describe('AnatomyInitializationService real module integration', () => {
     expect(anatomyComponent?.body?.root).toBeTruthy();
     expect(anatomyInitializationService.hasPendingGenerations()).toBe(false);
 
-    const generationInfoLog = logger.calls.info.find(([message]) =>
+    const generationInfoLog = logger.calls.debug.find(([message]) =>
       message.includes(`Generated anatomy for entity '${actor.id}'`)
     );
     expect(generationInfoLog).toBeDefined();
@@ -227,7 +227,7 @@ describe('AnatomyInitializationService real module integration', () => {
       processingLogs.some(([message]) => message.includes(secondActor.id))
     ).toBe(true);
 
-    const secondGenerationLog = logger.calls.info.find(([message]) =>
+    const secondGenerationLog = logger.calls.debug.find(([message]) =>
       message.includes(`Generated anatomy for entity '${secondActor.id}'`)
     );
     expect(secondGenerationLog).toBeDefined();

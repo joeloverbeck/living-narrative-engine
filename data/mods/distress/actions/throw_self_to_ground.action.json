@@ -10,7 +10,8 @@
       "positioning:fallen",
       "positioning:lying_down",
       "positioning:being_restrained",
-      "positioning:restraining"
+      "positioning:restraining",
+      "positioning:sitting_on"
     ]
   },
   "template": "throw yourself to the ground in grief",

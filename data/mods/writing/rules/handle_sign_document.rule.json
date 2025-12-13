@@ -1,0 +1,82 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_sign_document",
+  "comment": "Handles sign_document action with simple messaging",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "writing:event-is-action-sign-document"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get actor name",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get document name",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "documentName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "comment": "Get writing utensil name",
+      "parameters": {
+        "entity_ref": "{event.payload.secondaryId}",
+        "result_variable": "utensilName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get actor position for logging",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Prepare message for both perceptible and success events",
+      "parameters": {
+        "variable_name": "actionMessage",
+        "value": "{context.actorName} signs {context.documentName} using {context.utensilName}."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Public observation of signing",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actionMessage}",
+        "perception_type": "communication.notes",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "involved_entities": ["{event.payload.secondaryId}"]
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Display success message to UI",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actionMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "comment": "End turn after signing document",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

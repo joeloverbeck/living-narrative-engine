@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:place_yourself_behind rule.
+ * @file Integration tests for the maneuvering:place_yourself_behind rule.
  */
 
 import {
@@ -10,8 +10,8 @@ import {
   expect,
   jest,
 } from '@jest/globals';
-import placeYourselfBehindRule from '../../../../../data/mods/positioning/rules/place_yourself_behind.rule.json';
-import eventIsActionPlaceYourselfBehind from '../../../../../data/mods/positioning/conditions/event-is-action-place-yourself-behind.condition.json';
+import placeYourselfBehindRule from '../../../../../data/mods/maneuvering/rules/place_yourself_behind.rule.json';
+import eventIsActionPlaceYourselfBehind from '../../../../../data/mods/maneuvering/conditions/event-is-action-place-yourself-behind.condition.json';
 import logSuccessMacro from '../../../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -155,7 +155,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     const eventPayload = {
       eventType: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:place_yourself_behind',
+        actionId: 'maneuvering:place_yourself_behind',
         actorId,
         targetId,
       },
@@ -203,7 +203,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     const eventPayload = {
       eventType: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:place_yourself_behind',
+        actionId: 'maneuvering:place_yourself_behind',
         actorId,
         targetId,
       },
@@ -254,7 +254,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     const eventPayload = {
       eventType: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:place_yourself_behind',
+        actionId: 'maneuvering:place_yourself_behind',
         actorId,
         targetId,
       },
@@ -298,7 +298,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     const eventPayload = {
       eventType: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:place_yourself_behind',
+        actionId: 'maneuvering:place_yourself_behind',
         actorId,
         targetId,
       },
@@ -344,7 +344,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     const eventPayload = {
       eventType: ATTEMPT_ACTION_ID,
       payload: {
-        actionId: 'positioning:place_yourself_behind',
+        actionId: 'maneuvering:place_yourself_behind',
         actorId,
         targetId,
       },
@@ -356,7 +356,7 @@ describe('Place Yourself Behind Rule Integration Tests', () => {
     // Assert - Check that the custom event was dispatched
     expect(testEnv.handlers.DISPATCH_EVENT.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventType: 'positioning:actor_placed_behind',
+        eventType: 'maneuvering:actor_placed_behind',
         payload: {
           actor: actorId,
           target: targetId,

@@ -1,0 +1,56 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "writing",
+  "version": "1.0.0",
+  "name": "Writing",
+  "description": "Writing and documentation actions for creating notes, signing documents, and other written communication.",
+  "author": "Living Narrative Engine",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "items",
+      "version": "^1.0.0"
+    },
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "jot_down_notes.action.json",
+      "sign_document.action.json"
+    ],
+    "components": [
+      "allows_writing.component.json",
+      "signable.component.json"
+    ],
+    "conditions": [
+      "event-is-action-jot-down-notes.condition.json",
+      "event-is-action-sign-document.condition.json"
+    ],
+    "rules": [
+      "handle_jot_down_notes.rule.json",
+      "handle_sign_document.rule.json"
+    ],
+    "entities": {
+      "definitions": [
+        "pencil.entity.json",
+        "quill.entity.json"
+      ],
+      "instances": []
+    },
+    "events": [],
+    "macros": [],
+    "scopes": [],
+    "blueprints": [],
+    "parts": [],
+    "recipes": [],
+    "portraits": [],
+    "worlds": []
+  }
+}

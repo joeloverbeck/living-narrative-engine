@@ -97,7 +97,7 @@ export class DescriptionPersistenceService {
 
     // Early return if no valid component specs
     if (componentSpecs.length === 0) {
-      this.#logger.info(
+      this.#logger.debug(
         `DescriptionPersistenceService: Updated 0 descriptions, ${failed.length} failed`
       );
       return { successful: 0, failed };
@@ -115,7 +115,7 @@ export class DescriptionPersistenceService {
     const batchFailed = errors.map((e) => e.spec.instanceId);
     const allFailed = [...failed, ...batchFailed];
 
-    this.#logger.info(
+    this.#logger.debug(
       `DescriptionPersistenceService: Updated ${successful} descriptions, ${allFailed.length} failed`
     );
 

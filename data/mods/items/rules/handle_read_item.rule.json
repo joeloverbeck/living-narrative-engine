@@ -51,6 +51,30 @@
         },
         "then_actions": [
           {
+            "type": "SET_VARIABLE",
+            "comment": "Prepare public message (no content)",
+            "parameters": {
+              "variable_name": "publicMessage",
+              "value": "{context.actorName} reads {context.itemName}."
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Public message visible to all EXCEPT actor",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.publicMessage}",
+              "perception_type": "item.examine",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{event.payload.targetId}",
+              "contextual_data": {
+                "excludedActorIds": [
+                  "{event.payload.actorId}"
+                ]
+              }
+            }
+          },
+          {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
             "comment": "Send readable text as a private perception",
             "parameters": {

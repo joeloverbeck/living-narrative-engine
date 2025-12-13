@@ -161,7 +161,7 @@ describe('AnatomyInitializationService integration', () => {
     expect(await secondWaitPromise).toBe(false);
     expect(service.hasPendingGenerations()).toBe(false);
     expect(service.getPendingGenerationCount()).toBe(0);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining("Generated anatomy for entity 'entity-1'")
     );
   });
@@ -263,7 +263,7 @@ describe('AnatomyInitializationService integration', () => {
     generationService.queueImmediateResult(true);
     const success = await service.generateAnatomy('actor-1', 'blueprint-1');
     expect(success).toBe(true);
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         "Successfully generated anatomy for entity 'actor-1'"
       )

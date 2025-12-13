@@ -65,7 +65,7 @@ class BlueprintSlotStrategy {
     const isArray = hasBlueprintSlots && Array.isArray(mapping.blueprintSlots);
     const result = hasMapping && hasBlueprintSlots && isArray;
 
-    this.#logger.info(
+    this.#logger.debug(
       `BlueprintSlotStrategy.canResolve: hasMapping=${hasMapping}, hasBlueprintSlots=${hasBlueprintSlots}, isArray=${isArray}, result=${result}. Mapping: ${JSON.stringify(mapping)}`
     );
 
@@ -102,7 +102,7 @@ class BlueprintSlotStrategy {
       }
 
       // Try to find entity using complex slot path resolution first
-      this.#logger.info(
+      this.#logger.debug(
         `BlueprintSlotStrategy: Attempting complex path resolution for slot '${slotId}' on entity '${entityId}'`
       );
 
@@ -115,7 +115,7 @@ class BlueprintSlotStrategy {
       );
 
       if (socketEntity) {
-        this.#logger.info(
+        this.#logger.debug(
           `BlueprintSlotStrategy: Complex path resolution succeeded for slot '${slotId}', found entity '${socketEntity}'`
         );
       } else {
@@ -134,7 +134,7 @@ class BlueprintSlotStrategy {
           continue;
         }
 
-        this.#logger.info(
+        this.#logger.debug(
           `BlueprintSlotStrategy: Attempting socket index lookup for slot '${slotId}', socket '${socketId}' on entity '${entityId}'`
         );
 
@@ -148,7 +148,7 @@ class BlueprintSlotStrategy {
             `BlueprintSlotStrategy: Socket index returned null for socket '${socketId}' on entity '${entityId}' (slot: '${slotId}'). This may indicate the index is not yet populated or the socket doesn't exist.`
           );
         } else {
-          this.#logger.info(
+          this.#logger.debug(
             `BlueprintSlotStrategy: Socket index found entity '${socketEntity}' for socket '${socketId}'`
           );
         }

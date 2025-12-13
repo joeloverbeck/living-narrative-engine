@@ -18,7 +18,8 @@
       "positioning:bending_over",
       "positioning:being_restrained",
       "positioning:restraining",
-      "positioning:fallen"
+      "positioning:fallen",
+      "positioning:sitting_on"
     ]
   },
   "prerequisites": [

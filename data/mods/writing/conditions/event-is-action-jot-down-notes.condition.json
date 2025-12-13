@@ -1,8 +1,8 @@
 {
   "$schema": "schema://living-narrative-engine/condition.schema.json",
-  "id": "items:event-is-action-jot-down-notes",
+  "id": "writing:event-is-action-jot-down-notes",
   "description": "True when event is attempting the jot_down_notes action",
   "logic": {
-    "==": [{ "var": "event.payload.actionId" }, "items:jot_down_notes"]
+    "==": [{ "var": "event.payload.actionId" }, "writing:jot_down_notes"]
   }
 }

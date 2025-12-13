@@ -1,0 +1,36 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "writing:sign_document",
+  "name": "Sign Document",
+  "description": "Sign a document using a writing utensil.",
+  "targets": {
+    "primary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "document",
+      "description": "Document to sign"
+    },
+    "secondary": {
+      "scope": "items:actor_inventory_items",
+      "placeholder": "utensil",
+      "description": "Writing utensil to use"
+    }
+  },
+  "required_components": {
+    "primary": ["items:item", "writing:signable"],
+    "secondary": ["items:item", "writing:allows_writing"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:doing_complex_performance",
+      "positioning:restraining"
+    ]
+  },
+  "prerequisites": [],
+  "template": "sign {document} using {utensil}",
+  "visual": {
+    "backgroundColor": "#1c2833",
+    "textColor": "#f5ecd7",
+    "hoverBackgroundColor": "#273746",
+    "hoverTextColor": "#faf6eb"
+  }
+}

@@ -197,7 +197,7 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       });
 
       // Verify info logging (line 86-88)
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'DescriptionPersistenceService: Updated 3 descriptions, 0 failed'
       );
     });
@@ -214,7 +214,7 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       expect(result.successful).toBe(2);
       expect(result.failed).toEqual(['non-existent']);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'DescriptionPersistenceService: Updated 2 descriptions, 1 failed'
       );
     });
@@ -226,7 +226,7 @@ describe('DescriptionPersistenceService Integration Tests', () => {
       expect(result.successful).toBe(0);
       expect(result.failed).toEqual([]);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'DescriptionPersistenceService: Updated 0 descriptions, 0 failed'
       );
     });

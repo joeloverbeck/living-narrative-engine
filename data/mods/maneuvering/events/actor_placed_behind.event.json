@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "id": "positioning:actor_placed_behind",
+  "id": "maneuvering:actor_placed_behind",
   "description": "Dispatched when an actor successfully positions themselves behind another actor.",
   "payloadSchema": {
-    "title": "Positioning: Actor Placed Behind Payload",
-    "description": "Payload for the positioning:actor_placed_behind event.",
+    "title": "Maneuvering: Actor Placed Behind Payload",
+    "description": "Payload for the maneuvering:actor_placed_behind event.",
     "type": "object",
     "properties": {
       "actor": {

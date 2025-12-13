@@ -1,10 +1,10 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_place_yourself_behind",
-  "comment": "Handles the 'positioning:place_yourself_behind' action. Adds facing_away component to target, causing them to face away from the actor.",
+  "comment": "Handles the 'maneuvering:place_yourself_behind' action. Adds facing_away component to target, causing them to face away from the actor.",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "positioning:event-is-action-place-yourself-behind"
+    "condition_ref": "maneuvering:event-is-action-place-yourself-behind"
   },
   "actions": [
     {
@@ -102,7 +102,7 @@
     {
       "type": "DISPATCH_EVENT",
       "parameters": {
-        "eventType": "positioning:actor_placed_behind",
+        "eventType": "maneuvering:actor_placed_behind",
         "payload": {
           "actor": "{event.payload.actorId}",
           "target": "{event.payload.targetId}"

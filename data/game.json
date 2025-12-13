@@ -24,6 +24,7 @@
     "furniture",
     "gymnastics",
     "hand-holding",
+    "hexing",
     "hugging",
     "items",
     "item-handling",
@@ -33,6 +34,7 @@
     "observation",
     "kissing",
     "locks",
+    "maneuvering",
     "mechanisms",
     "movement",
     "music",
@@ -56,6 +58,7 @@
     "violence",
     "warding",
     "weapons",
+    "writing",
     "ranged"
   ],
   "startWorld": "dredgers:dredgers"

@@ -86,7 +86,7 @@ export class PartDescriptionGenerator {
       }
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `PartDescriptionGenerator: Generated ${descriptions.size} descriptions out of ${partIds.length} parts`
     );
 

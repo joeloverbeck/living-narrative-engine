@@ -245,7 +245,7 @@ describe('AnatomyInitializationService failure propagation integration', () => {
     ).resolves.toBe(true);
     await expect(recoveryDispatch).resolves.toBe(true);
     expect(
-      logger.calls.info.some(([message]) =>
+      logger.calls.debug.some(([message]) =>
         message.includes(`Generated anatomy for entity '${recoveryActor.id}'`)
       )
     ).toBe(true);

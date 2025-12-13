@@ -209,5 +209,27 @@ describe('physical-control:restrain_target action discovery', () => {
 
       expect(ids).not.toContain(ACTION_ID);
     });
+
+    it('is not available when actor is sitting on furniture', () => {
+      const { actor } = setupScenario(
+        {},
+        {
+          actorCustomizer: ({ actor }) => {
+            actor.components['positioning:sitting_on'] = {
+              furniture_id: 'test:couch',
+              spot_index: 0,
+            };
+          },
+        }
+      );
+      configureActionDiscovery();
+
+      const availableActions = testFixture.testEnv.getAvailableActions(
+        actor.id
+      );
+      const ids = availableActions.map((action) => action.id);
+
+      expect(ids).not.toContain(ACTION_ID);
+    });
   });
 });

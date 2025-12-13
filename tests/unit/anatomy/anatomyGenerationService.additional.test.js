@@ -132,7 +132,7 @@ describe('AnatomyGenerationService – additional', () => {
         'e4',
         'r1'
       );
-      expect(deps.logger.info).toHaveBeenCalledWith(
+      expect(deps.logger.debug).toHaveBeenCalledWith(
         "AnatomyGenerationService: Successfully generated anatomy for entity 'e4' with 2 parts"
       );
     });

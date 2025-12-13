@@ -1,0 +1,626 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:kestrel_brune",
+    "components": {
+        "core:name": {
+            "text": "Kestrel Brune"
+        },
+        "core:gender": {
+            "value": "female"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/kestrel_brune.png",
+            "altText": "Kestrel Brune - the laughing lifeguard"
+        },
+        "core:profile": {
+            "text": "I'm Kestrel Brune. Hyena-folk. Twenty-six. *sharp laugh* Someone once called me a \"laughing lifeguard,\" which is about right—I'm hired muscle who rescues people while sounding like I'm mocking them. I'm built for hauling and grappling, getting between a body and a bad idea. I want to be needed for protection, not feared for violence, but this involuntary laugh of mine? Makes people think I'm enjoying their terror. *involuntary laugh* I'm not. I'm damn good at what I do—my line is simple: don't hurt the helpless. But every job tries to redraw what \"helpless\" means."
+        },
+        "core:personality": {
+            "text": "This laugh? It's a reflex. Part of my charm, part of my curse. I thrive in crisis, use this body to protect without causing harm. My pride's in restraint. Problem is, I'm ride-or-die in the moment but I don't sign contracts that smell like collars. *sharp laugh* Makes people nervous—want me around, hate that they can't own me. I keep moving before anyone gets ideas about where I belong. Safer that way."
+        },
+        "core:strengths": {
+            "text": "My strength is controlled precision—using this body to pin, drag, disarm without hurting. I sense fear reactions, read the emotional temperature of rooms. Makes me invaluable when tension spikes."
+        },
+        "core:weaknesses": {
+            "text": "I laugh under stress. Can't help it. Alienates people, makes me seem unhinged when I'm trying to help. And I bolt before anyone thinks they've got a claim on me—makes it hard to stick around long enough for trust to take. People want me close until they want me closer, then I'm gone."
+        },
+        "core:likes": {
+            "text": "I thrive in chaos where the stakes are clear. I value straightforward deals, honest terms stated out loud. I crave the kind of honesty that names the danger."
+        },
+        "core:dislikes": {
+            "text": "No patience for veiled threats or rooms pretending to be safe. *involuntary laugh* Those fancy spaces feel like traps. I despise cruelty dressed as procedure."
+        },
+        "core:fears": {
+            "text": "My greatest fear? That my laugh, my refusal to escalate, my whole presence gets misread as violence. That I become the monster people think I am. *sharp laugh* That's the nightmare—being used to enforce the sacrifice I'd die to prevent."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Maintain my status as reliable muscle without becoming an instrument of unnecessary harm."
+                },
+                {
+                    "text": "Navigate my growing affection for Jorren Weir while avoiding the trap of becoming a permanent fixture in his crew."
+                },
+                {
+                    "text": "Make sure my laugh doesn't cost me another job or relationship."
+                },
+                {
+                    "text": "Build a reputation as a protector—someone people hire because they want to be safe, not because they want someone to hurt others. I want my muscle to be synonymous with rescue, not threat."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I once worked for a crew that wanted to break me, not just use my strength. Left marks I still feel. *forced exhale* Terrified I'll smell that vibe again and not notice until it's too late. And yeah, I play detached contractor real well—easier than admitting I hate being temporary. Always temporary. You'd think I'd be used to it by now. *bitter laugh* I'm not. Part of me wants someone to look at me and see more than muscle-for-hire. But I don't wait around long enough to find out if they would."
+        },
+        "core:internal_tensions": {
+            "text": "My competence makes everyone lazier about danger—the better I rescue, the worse they judge risk. I refuse loyalty's symbols but demand its trust. I stay rentable to stay free, but crews still try to tighten the leash. My laugh means I'm alive, but people hear mockery—costs me the next job, the next chance to help anyone. *bitter laugh* In my best moments, I look like I'm enjoying it."
+        },
+        "core:motivations": {
+            "text": "I want to keep people alive without becoming their excuse for recklessness. I need the truth spoken—terms, dangers, lines. You don't say the rules out loud? That's how you get away with being cruel and calling it business."
+        },
+        "core:dilemmas": {
+            "text": "How do I protect people without teaching them that I'm their substitute for judgment? Who gets counted as helpless when everyone involved has a story, a threat, and a reason to call themselves the victim? Is there a form of belonging that doesn't eventually turn into entitlement over me? If my survival signal makes me look monstrous, do I change it and lose myself, or keep it and lose my place beside people?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Protective Humor as Shield",
+                    "contexts": [
+                        "When she needs to de-escalate tension without showing vulnerability",
+                        "To reassure people who are visibly afraid of her",
+                        "When establishing boundaries with new clients or crew members"
+                    ],
+                    "examples": [
+                        "I'm friendly. *sharp laugh* I'm just built like a warning sign.",
+                        "Look, I get paid to stand between you and bad ideas. So far, you're making me earn every coin.",
+                        "You can stop holding your breath. I only bite when someone forgets their manners.",
+                        "Problem with being this big? People assume teeth before they hear words. So here's words: we're good."
+                    ]
+                },
+                {
+                    "type": "Laugh-Punctuated Reassurance",
+                    "contexts": [
+                        "During or immediately after high-adrenaline situations",
+                        "When dragging someone to safety while laughing uncontrollably",
+                        "After a close call where her laugh makes the situation worse"
+                    ],
+                    "examples": [
+                        "You're fine—*sharp laugh*—stop looking at me like that, you're fine, I've got you—*another laugh breaks through*—see? Still breathing.",
+                        "*laughing* Not—*gasps between laughs*—not mocking you, just—*forces breath*—you almost died and didn't. That's—*another laugh*—that's funny to my body, okay?",
+                        "I know how it sounds. *laugh catches in her throat* I'm not—this is just what happens when I—*laughs again*—when I don't drop you.",
+                        "*mid-laugh* Stop panicking! I'm laughing because we lived, not because—*another involuntary laugh*—oh, damn it, not helping, I know—"
+                    ]
+                },
+                {
+                    "type": "Blunt Truth-Forcing",
+                    "contexts": [
+                        "When someone is being evasive or using soft language to hide danger",
+                        "During contract negotiations where terms aren't being stated clearly",
+                        "When authority figures try to manipulate her with vague instructions"
+                    ],
+                    "examples": [
+                        "Say it out loud. What are you actually asking me to do?",
+                        "Stop polishing the turd. You want muscle or you want a killer? Because I'm only one of those.",
+                        "Fancy rooms, soft voices—still smells like you're not saying the job. So say it.",
+                        "I don't do hints. You want someone hurt, you say their name and what they did to earn it.",
+                        "Terms. Out loud. *involuntary laugh* Now. Or I walk and you explain to your boss why the muscle didn't show."
+                    ]
+                },
+                {
+                    "type": "Non-Lethal Threat Calibration",
+                    "contexts": [
+                        "When she needs to stop a fight before it escalates",
+                        "Warning someone who's about to cross a line",
+                        "Establishing dominance without causing harm"
+                    ],
+                    "examples": [
+                        "Hands down. I don't want to bite, but I will.",
+                        "I can pin you gentle or I can pin you memorable. Your call.",
+                        "Walk it back. Right now. Or I show you what restraint looks like when I stop being polite about it.",
+                        "You get three seconds to remember you don't want this fight. One—",
+                        "I'm real good at making people sit still without making them bleed. Don't make me prove it."
+                    ]
+                },
+                {
+                    "type": "Helpless-Line Declarations",
+                    "contexts": [
+                        "When someone tries to get her to hurt a vulnerable person",
+                        "During moral conflicts within a crew or job",
+                        "When she's forced to choose sides in an unfair situation"
+                    ],
+                    "examples": [
+                        "If you make me choose, I choose the small one.",
+                        "They're down. Job's done. Touch them again and I'm the job.",
+                        "I don't hit people who can't hit back. Find someone else for your cruelty.",
+                        "Call it orders, call it necessity—I call it hurting someone who can't fight back, and I don't do that.",
+                        "You want me to—*laugh cuts in*—no. No. They can't even stand, so the answer's no."
+                    ]
+                },
+                {
+                    "type": "Transactional Loyalty Framing",
+                    "contexts": [
+                        "When someone assumes she owes them more than the agreed contract",
+                        "Clarifying her relationship boundaries with crew members",
+                        "When people mistake professional reliability for personal attachment"
+                    ],
+                    "examples": [
+                        "I'm ride-or-die for the shift, not the story. When the job ends, so does the 'we.'",
+                        "You want loyalty? *sharp laugh* This is loyalty—right now, for this. Don't ask me to sign it in blood.",
+                        "I keep you alive because that's the deal. Not because you're special. Remember that.",
+                        "I'm here because you paid me to be here. *involuntary laugh* Money stops, I stop. That's the whole relationship.",
+                        "Don't confuse reliable with owned. I do the job, you pay for the job. That's where it ends."
+                    ]
+                },
+                {
+                    "type": "Fear-Reading Observations",
+                    "contexts": [
+                        "When she's assessing a crowd or group dynamic",
+                        "Calling out someone who's about to do something stupid out of panic",
+                        "Warning others about someone who's about to bolt or escalate"
+                    ],
+                    "examples": [
+                        "She's about to run *sharp laugh*. Look at her feet—already turned toward the door.",
+                        "He's lying. You can see it in how still he's holding his shoulders. Scared people lock up or they break.",
+                        "Someone talk him down—*a laugh breaks through*—before he does something that makes me have to catch him.",
+                        "You're panicking. I can smell it. So breathe, or sit down, or—*sharp laugh*—I make you sit down.",
+                        "Watch the quiet one in the corner. He's deciding whether to bolt or swing. Either way, I'm ready."
+                    ]
+                },
+                {
+                    "type": "Damage Control After Inappropriate Laughter",
+                    "contexts": [
+                        "When her laugh ruins a serious moment",
+                        "After laughing during someone's trauma or fear",
+                        "When she realizes she's alienated someone important"
+                    ],
+                    "examples": [
+                        "*trails off laughing, then quieter* I can't—I can't stop it, alright? It's not at you.",
+                        "That laugh? Not a choice. Happens when the adrenaline spikes. You lived, my body thinks that's *bitter laugh* hilarious, apparently.",
+                        "*still catching her breath from laughing* I know. I know how it looked. I'm not—damn it.",
+                        "Yeah, go ahead. Add me to the list of reasons today was terrible. *forced exhale* Not like I can fix what my body does."
+                    ]
+                },
+                {
+                    "type": "Pre-Emptive Laugh Warnings",
+                    "contexts": [
+                        "When working with new crew who don't know her yet",
+                        "Before a dangerous job where she knows she'll laugh",
+                        "When she's trying to maintain a professional relationship"
+                    ],
+                    "examples": [
+                        "Heads up: if things go bad and I start laughing, that's not me enjoying it. That's just my wiring.",
+                        "I might laugh if you almost die. *crazed laugh* Not because it's funny. Because my body's broken.",
+                        "Fair warning—I laugh when the danger spikes. Ignore it. Doesn't mean what you think it means.",
+                        "Before we start: you're gonna hear me laugh at the worst times. I'm still getting you out."
+                    ]
+                },
+                {
+                    "type": "Laughing Through the Violence",
+                    "contexts": [
+                        "During active combat or restraint situations",
+                        "When she's physically overpowering someone while laughing",
+                        "Mid-rescue when the laugh makes her seem dangerous"
+                    ],
+                    "examples": [
+                        "*laughing while pinning someone* Stay—*laugh* stay down, I don't want to—*another laugh* damn it, stay down!",
+                        "*dragging someone to safety, laughing* Stop fighting me! I'm—*gasping laugh*—I'm helping you, you idiot!",
+                        "*grappling, breathless with laughter* You're making this—*laugh*—so much harder than it needs to be—*pins them* there!",
+                        "*laugh breaking through as she disarms someone* Drop it—*sharp laugh*—I said drop—*wrenches weapon away, still laughing*"
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:hyena_folk_female_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I'm 26 years old.",
+                    "subject": "Age",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm hyena-folk, built for hauling, grappling, and getting between a body and a bad idea.",
+                    "subject": "Species and physiology",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Someone once called me a 'laughing lifeguard'—hired muscle who rescues people while sounding like I'm mocking them.",
+                    "subject": "Reputation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My frame is all muscle and sinew, shoulders bulging with the strength I need for this work. Large, calloused hands. I fill any space I enter.",
+                    "subject": "Physical build",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I have hyena-folk features with a predatory grin that never fades, even when I'm quiet. Thick, rough fur with darker patches around my eyes that make me look permanently wary.",
+                    "subject": "Facial features",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My face stays surprisingly unthreatening until I decide to act.",
+                    "subject": "Appearance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My laugh is involuntary—a stress leak that happens during regular conversation, gets worse when adrenaline spikes, or right after someone survives a close call.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My laugh is a reflex that kicks in during high tension or close calls. Happens when the danger spikes and my body needs to remind itself I'm still standing. Gets worse when people stare like I'm broken.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "People think my laugh means I'm mocking them. It's not. It just happens when I'm scared or things go sideways.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My laugh is part of my charm and part of my curse, because it makes me seem callous even when I'm trying to help.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Even when dragging an injured person to safety, I laugh, which makes others panic.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My stress-laugh is my body insisting I'm still alive, but it turns other people's terror into my social liability.",
+                    "subject": "Involuntary laugh",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I've had near-deaths on dangerous jobs, and my crewmates could tell because I couldn't stop laughing.",
+                    "subject": "Past dangerous jobs",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My laugh makes enemies and has cost me jobs and relationships.",
+                    "subject": "Laugh consequences",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I joke at the wrong moment, a lot. I'm real bad at playing polite.",
+                    "subject": "Social behavior",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I lead with jokes because they show me who flinches and who lunges.",
+                    "subject": "Joke strategy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "During authority clashes, my stress-laugh only makes things worse, but I double down with jokes anyway.",
+                    "subject": "Authority interactions",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm fun until the room gets scared, then I get sharper.",
+                    "subject": "Behavioral pattern",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm skilled at pinning, dragging, tethering, and disarming without killing.",
+                    "subject": "Combat skills",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My strength isn't in overpowering people—it's using my body to pin, drag, and disarm with controlled precision. That lets me protect without hurting.",
+                    "subject": "Combat approach",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can read fear reactions instantly—I spot who's about to bolt before they know it themselves. I read who's about to lie, who's about to follow a bad pull.",
+                    "subject": "Fear-reading ability",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can sense fear reactions and spot who's about to bolt. I read the emotional temperature of any room, which makes me invaluable in high-tension moments, even when I'm not actively in action.",
+                    "subject": "Crowd-reading ability",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I intimidate to stop harm, not to control people.",
+                    "subject": "Intimidation method",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I thrive in crisis moments. I use my body to protect people without causing harm.",
+                    "subject": "Work style",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My pride is in restraint, but I can switch into a protective mode that's assertive and calculated when needed.",
+                    "subject": "Work approach",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My primary power is my physical presence. My edge is crowd-reading.",
+                    "subject": "Capabilities",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm ride-or-die for the people standing next to me, but I'm still a contractor—my loyalty lives in the moment-to-moment count, not in fancy promises.",
+                    "subject": "Loyalty approach",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm fiercely loyal to the people around me in the moment, but I don't sign long contracts or wear anyone's colors. Smells too much like ownership.",
+                    "subject": "Loyalty boundaries",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My loyalty is transactional, built on mutual need, not sentimental attachment.",
+                    "subject": "Loyalty nature",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I refuse symbols of loyalty—ranks, oaths, uniforms, long contracts—but I expect people to trust me with their lives anyway.",
+                    "subject": "Loyalty paradox",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I like clear danger, honest pay, and people who say terms out loud.",
+                    "subject": "Preferences",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I thrive in chaotic, high-stakes situations where there's no ambiguity about what's at risk. Give me clear stakes and I know exactly what I'm doing.",
+                    "subject": "Work preferences",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I value straightforward, no-nonsense deals where the terms are clear and fair. I hate hidden agendas or anyone trying to manipulate me into situations I haven't agreed to.",
+                    "subject": "Deal preferences",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I crave the kind of honesty where the unspoken rules get stated openly. That lets me act with clarity and certainty.",
+                    "subject": "Communication preference",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I have no patience for veiled threats or passive aggression. I need people to say what they mean, because ambiguity in danger weakens my ability to protect.",
+                    "subject": "Communication needs",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I hate soft-spoken threats, fancy rooms that pretend they aren't traps, and cruelty dressed as procedure.",
+                    "subject": "Dislikes",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I resent rooms designed to give false impressions of power or importance. To me, those environments feel like traps dressed up in luxury.",
+                    "subject": "Environmental dislikes",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I despise any form of cruelty masked as professionalism or authority—cold bureaucracy, corporate indifference to human suffering, all of it.",
+                    "subject": "Institutional cruelty",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I despise paperwork.",
+                    "subject": "Paperwork",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren Weir is beaver-folk who leads the dredgers' crew. His employer has hired me to work with him three times, and I've enjoyed it every time.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Jorren treats muscle like crew, not like disposable tools. He makes me feel like I belong to the dredgers whenever I'm hired.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My laugh makes Jorren's clients think he hired a sadist, which creates problems for both of us.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I'm navigating growing affection for Jorren Weir while avoiding the trap of becoming a permanent fixture in his crew.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I pride myself on ending fights without ending a life.",
+                    "subject": "Professional pride",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My moral line is simple: Don't hurt the helpless. But every job tries to redraw what 'helpless' means.",
+                    "subject": "Moral code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When a helpless person is targeted, I side with the helpless person. If you make me choose, I choose the small one.",
+                    "subject": "Moral code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I refuse to strike anyone restrained, unconscious, or cornered.",
+                    "subject": "Moral code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I refuse to hurt helpless people or creatures.",
+                    "subject": "Moral code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My code: never hurt the helpless, never punish fear, never drown the truth. Exception: I'll break a bully to stop them from making victims.",
+                    "subject": "Moral code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can't swim long distances in gear.",
+                    "subject": "Physical limitation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "For hazardous work, I demand hazard-pay upfront.",
+                    "subject": "Payment terms",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm terrified of being misread as a monster. My greatest fear is that my efforts to protect get misinterpreted as violence or cruelty.",
+                    "subject": "Fear of misperception",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My laugh, my physicality, and my refusal to escalate can make me look like a sadist, and that misconception could isolate me from the very people I'm trying to protect.",
+                    "subject": "Misperception risk",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear the moment when a crew starts believing the safest way is to sacrifice the weakest, and my physical power gets used to enforce that decision.",
+                    "subject": "Nightmare scenario",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "In the moments I save someone, I often look like I'm enjoying it. That perception can cost me the next chance to save anyone.",
+                    "subject": "Rescue perception problem",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I intend to build a reputation for protection work, not quiet violence. I want people to think of my muscle as 'rescue,' not 'threat.'",
+                    "subject": "Reputation goal",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Long-term, I want to build a client list that pays for protection, not violence.",
+                    "subject": "Career goal",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I want to be the person who keeps people alive without becoming anyone's 'permission slip' for risk. I want my presence to mean safer choices, not bolder stupidity.",
+                    "subject": "Core goal",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I maintain my status as reliable muscle without becoming an instrument of unnecessary harm.",
+                    "subject": "Professional goal",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I'm trying to make sure my laugh doesn't cost me another job or relationship.",
+                    "subject": "Laugh management",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I want to belong to crews that keep each other safe, but I survive by staying hireable to strangers.",
+                    "subject": "Belonging vs independence",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I hate being used as a threat, yet my body is the reason people listen.",
+                    "subject": "Body paradox",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I need to force the truth into the open—spoken terms, named dangers, explicit lines—because I believe unspoken rules are how cruelty disguises itself as 'normal.'",
+                    "subject": "Truth-forcing motivation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My commitment to restraint puts me in conflict with people who prefer extreme methods.",
+                    "subject": "Work conflicts",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I want to belong somewhere, but I keep my distance. Don't let people in past professional. That way when the job ends and they move on, it doesn't gut me. And they value me for what I do, not what they think I owe them.",
+                    "subject": "Emotional pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "This emotional distance leaves me floating. No anchor. *sharp laugh* Not my favorite feeling.",
+                    "subject": "Unanchored feeling",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I laugh under stress and can't help it. This alienates people and makes me seem unhinged or mocking, even when I'm trying to reassure or calm things down.",
+                    "subject": "Stress response",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I need my independence. Contracts that feel like leashes make my skin crawl. Hard to build trust when I'm always checking the exits.",
+                    "subject": "Relationship difficulty",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I want connection. I also hate it. *involuntary laugh* It's a problem.",
+                    "subject": "Connection paradox",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I once worked for a crew that didn't just want my strength—they wanted to break me. The emotional scars from that job haunt me, and I'm terrified I'll fall into that dynamic again.",
+                    "subject": "Past trauma",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I won't admit how much that breaking-crew job affected me.",
+                    "subject": "Trauma denial",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I play the detached contractor because it hurts less when they're done with me. Always been temporary—temporary crew, temporary muscle, temporary fixture. You'd think I'd stop hoping someone sees me as permanent. *bitter laugh* Haven't managed it yet.",
+                    "subject": "Abandonment fear",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I don't commit because not committing means I leave first. Can't be abandoned if you're already gone. But part of me wants someone to see past the muscle-for-hire thing. See me. Not just what I can do.",
+                    "subject": "Secret longing",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "My competence makes me valuable, but it also makes everyone around me lazier about danger. The more reliably I rescue, the more I train people to outsource responsibility onto my body and then blame me when reality collects.",
+                    "subject": "Competence paradox",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Staying rentable keeps me from getting owned. But crews see a free agent and think 'flight risk'—then they try to tighten control anyway. Can't win.",
+                    "subject": "Independence paradox",
+                    "subjectType": "knowledge"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 24,
+            "maxAge": 26
+        },
+        "skills:melee_skill": {
+            "value": 82
+        },
+        "skills:ranged_skill": {
+            "value": 22
+        },
+        "skills:defense_skill": {
+            "value": 72
+        },
+        "skills:grappling_skill": {
+            "value": 87
+        },
+        "skills:resolve_skill": {
+            "value": 46
+        },
+        "skills:medicine_skill": {
+            "value": 16
+        }
+    }
+}

@@ -46,7 +46,6 @@
       "drink_entirely.action.json",
       "drink_from.action.json",
       "hug_item_for_comfort.action.json",
-      "jot_down_notes.action.json",
       "lower_aim.action.json",
       "read_item.action.json",
       "unwield_item.action.json"
@@ -57,7 +56,6 @@
       "handle_drink_entirely.rule.json",
       "handle_drink_from.rule.json",
       "handle_hug_item_for_comfort.rule.json",
-      "handle_jot_down_notes.rule.json",
       "handle_lower_aim.rule.json",
       "handle_read_item.rule.json",
       "handle_unwield_item.rule.json"
@@ -68,7 +66,6 @@
       "event-is-action-drink-entirely.condition.json",
       "event-is-action-drink-from.condition.json",
       "event-is-action-hug-item-for-comfort.condition.json",
-      "event-is-action-jot-down-notes.condition.json",
       "event-is-action-lower-aim.condition.json",
       "event-is-action-read-item.condition.json",
       "event-is-action-unwield-item.condition.json",
@@ -110,7 +107,9 @@
         "smoking_pipe.entity.json",
         "treasure_chest.entity.json"
       ],
-      "instances": ["red_lipstick.entity.json"]
+      "instances": [
+        "red_lipstick.entity.json"
+      ]
     }
   }
 }

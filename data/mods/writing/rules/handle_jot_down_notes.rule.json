@@ -4,7 +4,7 @@
   "comment": "Handles jot_down_notes action with simple messaging (no content modification)",
   "event_type": "core:attempt_action",
   "condition": {
-    "condition_ref": "items:event-is-action-jot-down-notes"
+    "condition_ref": "writing:event-is-action-jot-down-notes"
   },
   "actions": [
     {
@@ -24,6 +24,14 @@
       }
     },
     {
+      "type": "GET_NAME",
+      "comment": "Get writing utensil name",
+      "parameters": {
+        "entity_ref": "{event.payload.secondaryId}",
+        "result_variable": "utensilName"
+      }
+    },
+    {
       "type": "QUERY_COMPONENT",
       "comment": "Get actor position for logging",
       "parameters": {
@@ -37,7 +45,7 @@
       "comment": "Prepare message for both perceptible and success events",
       "parameters": {
         "variable_name": "actionMessage",
-        "value": "{context.actorName} jots down notes on {context.notebookName}."
+        "value": "{context.actorName} jots down notes on {context.notebookName} using {context.utensilName}."
       }
     },
     {
@@ -48,7 +56,8 @@
         "description_text": "{context.actionMessage}",
         "perception_type": "communication.notes",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}"
+        "target_id": "{event.payload.targetId}",
+        "involved_entities": ["{event.payload.secondaryId}"]
       }
     },
     {

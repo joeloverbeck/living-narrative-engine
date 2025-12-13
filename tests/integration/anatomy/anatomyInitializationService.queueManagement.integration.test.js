@@ -229,7 +229,7 @@ describe('AnatomyInitializationService queue orchestration', () => {
       logger.messages.warn.some((msg) => msg.includes('missing instanceId'))
     ).toBe(true);
     expect(
-      logger.messages.info.some((msg) =>
+      logger.messages.debug.some((msg) =>
         msg.includes(
           "AnatomyInitializationService: Generated anatomy for entity 'entity-1'"
         )
