@@ -194,12 +194,12 @@ describe('AnatomyInitializationService', () => {
 
     await service.waitForAllGenerationsToComplete();
 
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       "AnatomyInitializationService: Generated anatomy for entity 'entity-one'"
     );
     expect(
-      logger.info.mock.calls.some(([message]) =>
-        message.includes("entity 'entity-two'")
+      logger.debug.mock.calls.some(([message]) =>
+        message.includes("Generated anatomy for entity 'entity-two'")
       )
     ).toBe(false);
     expect(service.hasPendingGenerations()).toBe(false);
@@ -472,7 +472,7 @@ describe('AnatomyInitializationService', () => {
     await expect(service.generateAnatomy('entity-x', 'bp-1')).resolves.toBe(
       true
     );
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       "AnatomyInitializationService: Successfully generated anatomy for entity 'entity-x' with blueprint 'bp-1'"
     );
 
