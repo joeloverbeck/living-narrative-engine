@@ -217,7 +217,7 @@ export class ClothingInstantiationService extends BaseService {
       return result;
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `Starting clothing instantiation for actor '${actorId}' with ${recipe.clothingEntities.length} items`
     );
 
@@ -349,7 +349,7 @@ export class ClothingInstantiationService extends BaseService {
       });
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `Clothing instantiation completed for actor '${actorId}': ` +
         `${result.instantiated.length} created, ${result.equipped.length} equipped, ` +
         `${result.errors.length} errors`

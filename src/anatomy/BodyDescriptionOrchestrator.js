@@ -92,7 +92,7 @@ export class BodyDescriptionOrchestrator {
     // Generate the full body description
     const bodyDescription = await this.generateBodyDescription(bodyEntity);
 
-    this.#logger.info(
+    this.#logger.debug(
       `BodyDescriptionOrchestrator: Generated descriptions for body '${bodyEntity.id}' with ${partDescriptions.size} parts`
     );
 

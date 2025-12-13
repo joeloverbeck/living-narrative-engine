@@ -300,16 +300,15 @@ describe('AnatomyInitializationService resilience scenarios', () => {
       );
 
       await expect(
-        service.generateAnatomy('entity-success', 'blueprint-alpha')
-      ).resolves.toBe(true);
-      expect(
-        logger.calls.info.some(([message]) =>
-          message.includes('Successfully generated anatomy for entity')
-        )
-      ).toBe(true);
-
-      testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(
-        async () => {
+              service.generateAnatomy('entity-success', 'blueprint-alpha')
+            ).resolves.toBe(true);
+            expect(
+              logger.calls.debug.some(([message]) =>
+                message.includes('Successfully generated anatomy for entity')
+              )
+            ).toBe(true);
+        
+            testBed.anatomyGenerationService.generateAnatomyIfNeeded = jest.fn(        async () => {
           throw new Error('direct failure');
         }
       );

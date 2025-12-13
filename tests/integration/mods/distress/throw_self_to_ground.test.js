@@ -5,7 +5,6 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityScenarios } from '../../../common/mods/ModEntityBuilder.js';
-import throwSelfToGroundAction from '../../../../data/mods/distress/actions/throw_self_to_ground.action.json';
 import fallenComponent from '../../../../data/mods/positioning/components/fallen.component.json';
 
 const ACTION_ID = 'distress:throw_self_to_ground';
@@ -65,6 +64,22 @@ describe('distress:throw_self_to_ground', () => {
       const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
       scenario.actor.components['positioning:lying_down'] = {
         furniture_id: 'some_bed',
+      };
+
+      // Reset fixture with modified actor
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, null)
+      ).rejects.toThrow('forbidden component');
+    });
+
+    it('should be forbidden when actor has positioning:sitting_on', async () => {
+      const scenario = testFixture.createStandardActorTarget(['Ava', 'Marcus']);
+      scenario.actor.components['positioning:sitting_on'] = {
+        furniture_id: 'test:couch',
+        spot_index: 0,
       };
 
       // Reset fixture with modified actor

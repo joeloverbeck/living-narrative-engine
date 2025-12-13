@@ -7,7 +7,10 @@
             "locationId": "dredgers:canal_vestibule_instance"
         },
         "items:inventory": {
-            "items": [],
+            "items": [
+                "dredgers:pencil_instance",
+                "dredgers:plain_notebook_instance"
+            ],
             "capacity": {
                 "maxWeight": 50.0,
                 "maxItems": 20

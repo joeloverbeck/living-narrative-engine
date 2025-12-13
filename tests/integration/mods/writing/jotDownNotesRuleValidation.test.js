@@ -28,7 +28,7 @@ describe('jot_down_notes Rule Validation', () => {
     });
 
     // Load the actual rule file
-    const rulePath = './data/mods/items/rules/handle_jot_down_notes.rule.json';
+    const rulePath = './data/mods/writing/rules/handle_jot_down_notes.rule.json';
     const ruleContent = await fs.readFile(rulePath, 'utf-8');
     ruleData = JSON.parse(ruleContent);
   });

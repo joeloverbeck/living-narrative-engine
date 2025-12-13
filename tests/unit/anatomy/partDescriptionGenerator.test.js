@@ -195,7 +195,7 @@ describe('PartDescriptionGenerator', () => {
       expect(result.get('part1')).toBe(descriptions[0]);
       expect(result.get('part2')).toBe(descriptions[1]);
       expect(result.get('part3')).toBe(descriptions[2]);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PartDescriptionGenerator: Generated 3 descriptions out of 3 parts'
       );
     });
@@ -227,7 +227,7 @@ describe('PartDescriptionGenerator', () => {
       expect(result.get('valid2')).toBe('Description 2');
       expect(result.has('invalid')).toBe(false);
       expect(result.has('no-desc')).toBe(false);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PartDescriptionGenerator: Generated 2 descriptions out of 4 parts'
       );
     });
@@ -239,7 +239,7 @@ describe('PartDescriptionGenerator', () => {
 
       expect(result).toBeInstanceOf(Map);
       expect(result.size).toBe(0);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'PartDescriptionGenerator: Generated 0 descriptions out of 0 parts'
       );
     });

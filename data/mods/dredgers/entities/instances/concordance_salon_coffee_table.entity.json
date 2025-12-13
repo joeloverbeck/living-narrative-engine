@@ -5,6 +5,18 @@
     "componentOverrides": {
         "core:position": {
             "locationId": "dredgers:concordance_salon_instance"
+        },
+        "containers-core:container": {
+            "contents": [
+                "dredgers:salvage_quarantine_undertaking_instance",
+                "dredgers:quill_instance"
+            ],
+            "capacity": {
+                "maxWeight": 5.0,
+                "maxItems": 20
+            },
+            "isOpen": true,
+            "requiresKey": false
         }
     }
 }

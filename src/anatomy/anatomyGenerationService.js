@@ -165,7 +165,7 @@ export class AnatomyGenerationService {
       );
       const recipeId = anatomyBodyData.recipeId;
 
-      this.#logger.info(
+      this.#logger.debug(
         `AnatomyGenerationService: Generating anatomy for entity '${entityId}' using recipe '${recipeId}'`
       );
 
@@ -176,7 +176,7 @@ export class AnatomyGenerationService {
       );
 
       if (result.success) {
-        this.#logger.info(
+        this.#logger.debug(
           `AnatomyGenerationService: Successfully generated anatomy for entity '${entityId}' with ${result.entityCount} parts`
         );
         return true;

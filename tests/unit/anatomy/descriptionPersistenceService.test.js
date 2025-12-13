@@ -169,7 +169,7 @@ describe('DescriptionPersistenceService', () => {
         ]),
         true
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'DescriptionPersistenceService: Updated 3 descriptions, 0 failed'
       );
     });
@@ -233,7 +233,7 @@ describe('DescriptionPersistenceService', () => {
 
       expect(result.successful).toBe(1);
       expect(result.failed).toEqual(['entity2']);
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         'DescriptionPersistenceService: Updated 1 descriptions, 1 failed'
       );
     });

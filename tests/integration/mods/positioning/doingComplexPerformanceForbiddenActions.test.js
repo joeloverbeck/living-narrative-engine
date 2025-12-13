@@ -24,7 +24,7 @@ import stretchSexilyAction from '../../../../data/mods/seduction/actions/stretch
 import goAction from '../../../../data/mods/movement/actions/go.action.json';
 import getCloseAction from '../../../../data/mods/personal-space/actions/get_close.action.json';
 import kneelBeforeAction from '../../../../data/mods/deference/actions/kneel_before.action.json';
-import placeYourselfBehindAction from '../../../../data/mods/positioning/actions/place_yourself_behind.action.json';
+import placeYourselfBehindAction from '../../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
 import sitDownAction from '../../../../data/mods/positioning/actions/sit_down.action.json';
 import turnYourBackAction from '../../../../data/mods/positioning/actions/turn_your_back.action.json';
 
@@ -501,7 +501,7 @@ describe('actions forbidden when doing complex performance', () => {
           testFixture.testEnv.getAvailableActions('actor1');
         const ids = availableActions.map((action) => action.id);
 
-        expect(ids).not.toContain('positioning:place_yourself_behind');
+        expect(ids).not.toContain('maneuvering:place_yourself_behind');
       });
 
       it('sit_down is NOT available when actor is doing complex performance', () => {

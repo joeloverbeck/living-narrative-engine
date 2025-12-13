@@ -1,0 +1,8 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "writing:event-is-action-sign-document",
+  "description": "True when event is attempting the sign_document action",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "writing:sign_document"]
+  }
+}

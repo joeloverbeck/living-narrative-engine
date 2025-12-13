@@ -143,7 +143,7 @@ describe('AnatomyInitializationService skipped generation integration', () => {
   };
 
   const findGenerationLogs = (entityId) =>
-    logger.calls.info.filter(
+    logger.calls.debug.filter(
       ([message]) =>
         typeof message === 'string' &&
         message.includes(`Generated anatomy for entity '${entityId}'`)

@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the positioning:place_yourself_behind action and rule.
+ * @file Integration tests for the maneuvering:place_yourself_behind action and rule.
  * @description Tests the rule execution after the place_yourself_behind action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -234,7 +234,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'positioning',
+      'maneuvering',
       'place_yourself_behind'
     );
   });
@@ -270,7 +270,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
 
     // Verify proper event dispatch
     const placedBehindEvent = testFixture.events.find(
-      (e) => e.eventType === 'positioning:actor_placed_behind'
+      (e) => e.eventType === 'maneuvering:actor_placed_behind'
     );
     expect(placedBehindEvent.payload.actor).toBe('test:player');
     expect(placedBehindEvent.payload.target).toBe('test:npc');
@@ -288,7 +288,7 @@ describe('Place Yourself Behind Action Integration Tests', () => {
       (call) =>
         typeof call[0] === 'string' &&
         call[0].includes('EventDefinition not found') &&
-        call[0].includes('positioning:actor_placed_behind')
+        call[0].includes('maneuvering:actor_placed_behind')
     );
 
     if (validationWarnings.length > 0) {

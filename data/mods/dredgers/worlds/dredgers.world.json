@@ -14,6 +14,18 @@
             "instanceId": "dredgers:keyring_instance"
         },
         {
+            "instanceId": "dredgers:pencil_instance"
+        },
+        {
+            "instanceId": "dredgers:quill_instance"
+        },
+        {
+            "instanceId": "dredgers:plain_notebook_instance"
+        },
+        {
+            "instanceId": "dredgers:salvage_quarantine_undertaking_instance"
+        },
+        {
             "instanceId": "dredgers:concordance_salon_armchair_1_instance"
         },
         {

@@ -140,7 +140,7 @@ export class AnatomyInitializationService {
           );
 
         if (wasGenerated) {
-          this.#logger.info(
+          this.#logger.debug(
             `AnatomyInitializationService: Generated anatomy for entity '${instanceId}'`
           );
         }
@@ -187,7 +187,7 @@ export class AnatomyInitializationService {
         await this.#anatomyGenerationService.generateAnatomyIfNeeded(entityId);
 
       if (wasGenerated) {
-        this.#logger.info(
+        this.#logger.debug(
           `AnatomyInitializationService: Successfully generated anatomy for entity '${entityId}' with blueprint '${blueprintId}'`
         );
       }

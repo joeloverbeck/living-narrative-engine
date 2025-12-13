@@ -1,5 +1,5 @@
 /**
- * @file Integration tests for the items:jot_down_notes action and rule.
+ * @file Integration tests for the writing:jot_down_notes action and rule.
  * @description Tests the rule execution after the jot_down_notes action is performed.
  * Note: This test does not test action discovery or scope resolution - it assumes
  * the action is valid and dispatches it directly.
@@ -8,16 +8,16 @@
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
 import { ModTestFixture } from '../../../common/mods/ModTestFixture.js';
 import { ModEntityBuilder } from '../../../common/mods/ModEntityBuilder.js';
-import jotDownNotesRule from '../../../../data/mods/items/rules/handle_jot_down_notes.rule.json' assert { type: 'json' };
-import eventIsActionJotDownNotes from '../../../../data/mods/items/conditions/event-is-action-jot-down-notes.condition.json' assert { type: 'json' };
+import jotDownNotesRule from '../../../../data/mods/writing/rules/handle_jot_down_notes.rule.json' assert { type: 'json' };
+import eventIsActionJotDownNotes from '../../../../data/mods/writing/conditions/event-is-action-jot-down-notes.condition.json' assert { type: 'json' };
 
 /**
- * Creates a standardized jot down notes scenario with actor, location, and notebook.
+ * Creates a standardized jot down notes scenario with actor, location, notebook, and pencil.
  *
  * @param {string} actorName - Name for the actor
  * @param {string} locationId - Location for the scenario
  * @param {boolean} notebookInInventory - Whether notebook is in inventory
- * @returns {object} Object with room, actor, and notebook entities
+ * @returns {object} Object with room, actor, notebook, and pencil entities
  */
 function setupJotDownNotesScenario(
   actorName = 'Alice',
@@ -26,7 +26,9 @@ function setupJotDownNotesScenario(
 ) {
   const room = new ModEntityBuilder(locationId).asRoom('Office').build();
 
-  const inventoryItems = notebookInInventory ? ['notebook-1'] : [];
+  const inventoryItems = notebookInInventory
+    ? ['notebook-1', 'pencil-1']
+    : ['pencil-1'];
 
   const actor = new ModEntityBuilder('test:actor1')
     .withName(actorName)
@@ -53,7 +55,14 @@ function setupJotDownNotesScenario(
 
   const notebook = notebookBuilder.build();
 
-  return { room, actor, notebook };
+  const pencil = new ModEntityBuilder('pencil-1')
+    .withName('pencil')
+    .withComponent('items:item', {})
+    .withComponent('items:portable', {})
+    .withComponent('writing:allows_writing', {})
+    .build();
+
+  return { room, actor, notebook, pencil };
 }
 
 /**
@@ -71,13 +80,13 @@ function expectSuccessfulTurnEnd(events) {
   return turnEndedEvent;
 }
 
-describe('items:jot_down_notes action integration', () => {
+describe('writing:jot_down_notes action integration', () => {
   let testFixture;
 
   beforeEach(async () => {
     testFixture = await ModTestFixture.forAction(
-      'items',
-      'items:jot_down_notes',
+      'writing',
+      'writing:jot_down_notes',
       jotDownNotesRule,
       eventIsActionJotDownNotes
     );
@@ -89,9 +98,14 @@ describe('items:jot_down_notes action integration', () => {
 
   describe('successful jot down notes operations', () => {
     it('successfully executes jot down notes action', async () => {
-      // Arrange: Setup scenario with notebook in inventory
+      // Arrange: Setup scenario with notebook and pencil in inventory
       const scenario = setupJotDownNotesScenario('Alice', 'office1', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
       // Store initial notebook content
       const notebookBefore =
@@ -99,8 +113,10 @@ describe('items:jot_down_notes action integration', () => {
       const readableContentBefore =
         notebookBefore.components['items:readable'].text;
 
-      // Act: Jot down notes in notebook
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      // Act: Jot down notes in notebook using pencil
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       // Assert: Verify perceptible event with expected message
       const perceptibleEvents = testFixture.events.filter(
@@ -113,11 +129,12 @@ describe('items:jot_down_notes action integration', () => {
       );
       expect(jotNotesEvent).toBeDefined();
       expect(jotNotesEvent.payload.descriptionText).toBe(
-        'Alice jots down notes on Field Notebook.'
+        'Alice jots down notes on Field Notebook using pencil.'
       );
       expect(jotNotesEvent.payload.locationId).toBe('office1');
       expect(jotNotesEvent.payload.actorId).toBe('test:actor1');
       expect(jotNotesEvent.payload.targetId).toBe('notebook-1');
+      expect(jotNotesEvent.payload.involvedEntities).toContain('pencil-1');
 
       // Assert: Verify success message
       const successEvent = testFixture.events.find(
@@ -125,7 +142,7 @@ describe('items:jot_down_notes action integration', () => {
       );
       expect(successEvent).toBeDefined();
       expect(successEvent.payload.message).toBe(
-        'Alice jots down notes on Field Notebook.'
+        'Alice jots down notes on Field Notebook using pencil.'
       );
 
       // Assert: Verify turn ended successfully
@@ -138,13 +155,14 @@ describe('items:jot_down_notes action integration', () => {
         readableContentBefore
       );
 
-      // Assert: Verify notebook still in inventory
+      // Assert: Verify notebook and pencil still in inventory
       const actor = testFixture.entityManager.getEntityInstance('test:actor1');
       expect(actor.components['items:inventory'].items).toContain('notebook-1');
+      expect(actor.components['items:inventory'].items).toContain('pencil-1');
     });
 
-    it('works with any readable item', async () => {
-      // Arrange: Create a book (not specifically a notebook)
+    it('works with any readable item and writing utensil', async () => {
+      // Arrange: Create a book and quill (not specifically a notebook and pencil)
       const room = new ModEntityBuilder('library1').asRoom('Library').build();
 
       const actor = new ModEntityBuilder('test:actor1')
@@ -152,7 +170,7 @@ describe('items:jot_down_notes action integration', () => {
         .atLocation('library1')
         .asActor()
         .withComponent('items:inventory', {
-          items: ['book-1'],
+          items: ['book-1', 'quill-1'],
           capacity: { maxWeight: 50, maxItems: 10 },
         })
         .build();
@@ -164,10 +182,19 @@ describe('items:jot_down_notes action integration', () => {
         .withComponent('items:readable', { text: 'Old journal entries.' })
         .build();
 
-      testFixture.reset([room, actor, book]);
+      const quill = new ModEntityBuilder('quill-1')
+        .withName('quill')
+        .withComponent('items:item', {})
+        .withComponent('items:portable', {})
+        .withComponent('writing:allows_writing', {})
+        .build();
 
-      // Act: Jot down notes in the journal (works on any readable item)
-      await testFixture.executeAction('test:actor1', 'book-1');
+      testFixture.reset([room, actor, book, quill]);
+
+      // Act: Jot down notes in the journal using quill
+      await testFixture.executeAction('test:actor1', 'book-1', {
+        additionalPayload: { secondaryId: 'quill-1' },
+      });
 
       // Assert: Action succeeds
       const successEvent = testFixture.events.find(
@@ -175,7 +202,7 @@ describe('items:jot_down_notes action integration', () => {
       );
       expect(successEvent).toBeDefined();
       expect(successEvent.payload.message).toBe(
-        'Bob jots down notes on Old Journal.'
+        'Bob jots down notes on Old Journal using quill.'
       );
 
       expectSuccessfulTurnEnd(testFixture.events);
@@ -185,9 +212,16 @@ describe('items:jot_down_notes action integration', () => {
   describe('event structure validation', () => {
     it('includes all required perceptible event fields', async () => {
       const scenario = setupJotDownNotesScenario('Charlie', 'cabin', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       const perceptibleEvents = testFixture.events.filter(
         (e) => e.eventType === 'core:perceptible_event'
@@ -204,15 +238,24 @@ describe('items:jot_down_notes action integration', () => {
       expect(jotNotesEvent.payload.targetId).toBe('notebook-1');
       expect(jotNotesEvent.payload.descriptionText).toContain('Charlie');
       expect(jotNotesEvent.payload.descriptionText).toContain('Field Notebook');
+      expect(jotNotesEvent.payload.descriptionText).toContain('pencil');
+      expect(jotNotesEvent.payload.involvedEntities).toContain('pencil-1');
 
       expectSuccessfulTurnEnd(testFixture.events);
     });
 
     it('only dispatches expected events (no unexpected side effects)', async () => {
       const scenario = setupJotDownNotesScenario('Dave', 'station', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       // Count event types
       const eventTypes = testFixture.events.map((e) => e.eventType);
@@ -235,7 +278,12 @@ describe('items:jot_down_notes action integration', () => {
   describe('no state changes', () => {
     it('does not modify notebook content', async () => {
       const scenario = setupJotDownNotesScenario('Eve', 'tent', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
       // Get initial notebook state
       const notebookBefore =
@@ -244,7 +292,9 @@ describe('items:jot_down_notes action integration', () => {
         JSON.stringify(notebookBefore.components['items:readable'])
       );
 
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       // Get notebook state after jotting
       const notebookAfter =
@@ -260,7 +310,12 @@ describe('items:jot_down_notes action integration', () => {
 
     it('does not modify inventory', async () => {
       const scenario = setupJotDownNotesScenario('Frank', 'bunker', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
       // Get initial inventory state
       const actorBefore =
@@ -269,7 +324,9 @@ describe('items:jot_down_notes action integration', () => {
         ...actorBefore.components['items:inventory'].items,
       ];
 
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       // Get inventory after jotting
       const actorAfter =
@@ -287,11 +344,18 @@ describe('items:jot_down_notes action integration', () => {
   describe('multiple jotting scenarios', () => {
     it('can jot down notes multiple times sequentially', async () => {
       const scenario = setupJotDownNotesScenario('Grace', 'outpost', true);
-      testFixture.reset([scenario.room, scenario.actor, scenario.notebook]);
+      testFixture.reset([
+        scenario.room,
+        scenario.actor,
+        scenario.notebook,
+        scenario.pencil,
+      ]);
 
       // First jotting
       const firstActionStart = testFixture.events.length;
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       const firstActionEvents = testFixture.events.slice(firstActionStart);
       expectSuccessfulTurnEnd(firstActionEvents);
@@ -305,7 +369,9 @@ describe('items:jot_down_notes action integration', () => {
 
       // Second jotting
       const secondActionStart = testFixture.events.length;
-      await testFixture.executeAction('test:actor1', 'notebook-1');
+      await testFixture.executeAction('test:actor1', 'notebook-1', {
+        additionalPayload: { secondaryId: 'pencil-1' },
+      });
 
       const secondActionEvents = testFixture.events.slice(secondActionStart);
       expectSuccessfulTurnEnd(secondActionEvents);

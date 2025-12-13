@@ -50,6 +50,10 @@
     {
       "id": "fantasy",
       "version": "^1.0.0"
+    },
+    {
+      "id": "writing",
+      "version": "^1.0.0"
     }
   ],
   "content": {
@@ -64,7 +68,10 @@
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
         "jorren_weir.character.json",
-        "keyring.entity.json"
+        "kestrel_brune.character.json",
+        "keyring.entity.json",
+        "plain_notebook.entity.json",
+        "salvage_quarantine_undertaking.entity.json"
       ],
       "instances": [
         "canal_vestibule.location.json",
@@ -76,7 +83,11 @@
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
         "jorren_weir.character.json",
-        "keyring.entity.json"
+        "keyring.entity.json",
+        "pencil.entity.json",
+        "plain_notebook.entity.json",
+        "quill.entity.json",
+        "salvage_quarantine_undertaking.entity.json"
       ]
     },
     "events": [],

@@ -1,0 +1,19 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:plain_notebook",
+    "components": {
+      "core:name": {
+        "text": "plain notebook"
+      },
+      "core:description": {
+        "text": "A plain notebook with dog-eared corners and hints of water-damage on the pages."
+      },
+      "items:item": {},
+      "core:weight": {
+        "weight": 0.01
+      },
+      "items:readable": {
+        "text": "Contains personal notes taken by Jorren Weir about the jobs he's undertaken as a dredger leader."
+      }
+    }
+  }

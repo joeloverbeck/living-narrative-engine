@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "writing:pencil",
+  "description": "A simple graphite pencil",
+  "components": {
+    "core:name": {
+      "text": "pencil"
+    },
+    "core:description": {
+      "text": "A slender wooden pencil with a graphite core, sharpened to a fine point. The end is worn smooth from use."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "writing:allows_writing": {},
+    "core:weight": {
+      "weight": 0.02
+    }
+  }
+}

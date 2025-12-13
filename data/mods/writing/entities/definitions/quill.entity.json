@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "writing:quill",
+  "description": "A feather quill for writing",
+  "components": {
+    "core:name": {
+      "text": "quill"
+    },
+    "core:description": {
+      "text": "A large goose feather trimmed into a writing quill. Its tip has been carefully cut at an angle and shows traces of dried ink."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "writing:allows_writing": {},
+    "core:weight": {
+      "weight": 0.01
+    }
+  }
+}

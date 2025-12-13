@@ -261,7 +261,7 @@ describe('AnatomyInitializationService resilience integration', () => {
     ).resolves.toBe(true);
 
     expect(
-      logger.calls.info.some(
+      logger.calls.debug.some(
         ([message]) =>
           typeof message === 'string' &&
           message.includes(

@@ -14,8 +14,8 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 ## Current Status
 
-**Total Schemes**: 53 defined color combinations
-**In Use**: 39 schemes actively implemented across mods
+**Total Schemes**: 54 defined color combinations
+**In Use**: 40 schemes actively implemented across mods
 **Available**: 14 schemes ready for future mods
 
 ## Quick Reference: Mod Assignments
@@ -36,6 +36,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Hugging                 | Warm Embrace        | 3.4     | `#7d2a50`        | Active |
 | Hexing                  | Hexed Nightshade    | 16.1    | `#1f0d2a`        | Active |
 | Items                   | Aurora Depths       | 11.1    | `#004d61`        | Active |
+| Maneuvering             | Midnight Green      | 7.3     | `#004d40`        | Active |
 | Containers              | Depot Olive         | 18.3    | `#354230`        | Active |
 | Kissing                 | Rose Pink           | 3.2     | `#ad1457`        | Active |
 | Movement                | Explorer Cyan       | 9.3     | `#006064`        | Active |
@@ -56,6 +57,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 | Violence                | Dark Crimson        | 2.2     | `#8b0000`        | Active |
 | Warding                 | Cool Grey Modern    | 10.3    | `#424242`        | Active |
 | Weapons                 | Arctic Steel        | 11.8    | `#112a46`        | Active |
+| Writing                 | Scribe's Ink        | 19.1    | `#1c2833`        | Active |
 | Item-Transfer           | Trade Amber         | 13.1    | `#7d5a00`        | Active |
 | Personal-Space          | Molten Copper       | 11.6    | `#7c2d12`        | Active |
 | Ranged                  | Archer's Focus      | 15.1    | `#2a4a3f`        | Active |
@@ -87,7 +89,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 ### Dark Theme Optimized
 
 - **Deep Blue** (7.1) - Primary actions in dark themes
-- **Midnight Green** (7.3) - Success actions in dark themes
+- **Midnight Green** (7.3) - Maneuvering, tactical advantage
 
 ### High Contrast
 
@@ -435,7 +437,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 - **Use Cases**: Sensual touch actions, premium special abilities in dark themes
 - **Theme**: Premium, special, unique
 
-#### 7.3 Midnight Green 🟢 AVAILABLE
+#### 7.3 Midnight Green ✅ IN USE: Maneuvering
 
 ```json
 {
@@ -448,7 +450,7 @@ This document provides the complete collection of WCAG 2.1 AA compliant color sc
 
 - **Normal Contrast**: 10.12:1 🌟 AAA
 - **Hover Contrast**: 10.42:1 🌟 AAA
-- **Use Cases**: Success actions in dark themes
+- **Use Cases**: Maneuvering, tactical advantage
 - **Theme**: Success, achievement, progress
 
 ### 8. High Contrast Options
@@ -1147,8 +1149,27 @@ When modifying schemes:
 - **Use Cases**: Storage and logistics interactions, container management actions
 - **Theme**: Depot-inspired olive tones conveying sturdy storage and organized shelving
 
+### 19. Literary/Scholarly Colors
+
+#### 19.1 Scribe's Ink ✅ IN USE: Writing
+
+```json
+{
+  "backgroundColor": "#1c2833",
+  "textColor": "#f5ecd7",
+  "hoverBackgroundColor": "#273746",
+  "hoverTextColor": "#faf6eb"
+}
+```
+
+- **Normal Contrast**: 11.8:1 🌟 AAA
+- **Hover Contrast**: 10.2:1 🌟 AAA
+- **Use Cases**: Writing actions, note-taking, document signing, scholarly activities
+- **Theme**: Deep ink blue-black with warm parchment text, evoking manuscripts, quills, and scholarly work
+
 ## Version History
 
+- **2025-12**: Added Scribe's Ink (19.1) for Writing mod
 - **2026-03**: Added Depot Olive (18.3) for Containers mod
 - **2025-12**: Added Foundation Earth (18.2) for Item-Placement mod
 - **2025-12**: Added Section 18 (Physical/Interaction Colors) with Tactile Brown (18.1) for Item-Handling mod

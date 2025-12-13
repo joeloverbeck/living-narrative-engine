@@ -230,7 +230,7 @@ describe('AnatomyInitializationService additional integration coverage', () => {
       )
     ).toBe(true);
     expect(
-      logger.calls.info.some(([message]) =>
+      logger.calls.debug.some(([message]) =>
         message.includes(
           `Successfully generated anatomy for entity '${actor.id}'`
         )
@@ -246,7 +246,7 @@ describe('AnatomyInitializationService additional integration coverage', () => {
     );
     expect(notGenerated).toBe(false);
     expect(
-      logger.calls.info.filter(([message]) =>
+      logger.calls.debug.filter(([message]) =>
         message.includes(
           `Successfully generated anatomy for entity '${actor.id}'`
         )

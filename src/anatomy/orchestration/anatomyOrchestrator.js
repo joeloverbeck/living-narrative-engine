@@ -87,7 +87,7 @@ export class AnatomyOrchestrator extends BaseService {
    * @throws {Error} If generation fails
    */
   async orchestrateGeneration(entityId, recipeId) {
-    this.#logger.info(
+    this.#logger.debug(
       `AnatomyOrchestrator: Starting anatomy generation for entity '${entityId}' with recipe '${recipeId}'`
     );
 
@@ -134,7 +134,7 @@ export class AnatomyOrchestrator extends BaseService {
       // Success - commit the unit of work
       await unitOfWork.commit();
 
-      this.#logger.info(
+      this.#logger.debug(
         `AnatomyOrchestrator: Successfully completed anatomy generation for entity '${entityId}' with ${graphResult.entities.length} parts`
       );
 

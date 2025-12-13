@@ -68,7 +68,7 @@ export class GraphBuildingWorkflow extends BaseService {
       // Build the adjacency cache
       await this.#bodyGraphService.buildAdjacencyCache(rootId);
 
-      this.#logger.info(
+      this.#logger.debug(
         `GraphBuildingWorkflow: Successfully built adjacency cache for root entity '${rootId}'`
       );
     } catch (error) {

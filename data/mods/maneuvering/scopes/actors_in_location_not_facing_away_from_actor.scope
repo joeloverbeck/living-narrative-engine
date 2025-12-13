@@ -1,7 +1,7 @@
 // Scope for actors in the same location who are NOT facing away from the current actor
 // Used by actions where the actor wants to position themselves relative to targets
 // This scope filters out any actors who are facing away from the current actor
-positioning:actors_in_location_not_facing_away_from_actor := entities(core:position)[][{
+maneuvering:actors_in_location_not_facing_away_from_actor := entities(core:position)[][{
   "and": [
     { "condition_ref": "core:entity-at-location" },
     { "condition_ref": "core:entity-is-not-current-actor" },

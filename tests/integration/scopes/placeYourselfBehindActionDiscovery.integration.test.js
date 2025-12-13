@@ -34,7 +34,7 @@ import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { createMockActionErrorContextBuilder } from '../../common/mockFactories/actions.js';
 
 // Import the action we're testing
-import placeYourselfBehindAction from '../../../data/mods/positioning/actions/place_yourself_behind.action.json';
+import placeYourselfBehindAction from '../../../data/mods/maneuvering/actions/place_yourself_behind.action.json';
 
 // Unmock the real singleton to ensure the test and SUT use the same instance
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
@@ -63,7 +63,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     const actorsInLocationFacingScopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/positioning/scopes/actors_in_location_not_facing_away_from_actor.scope'
+        '../../../data/mods/maneuvering/scopes/actors_in_location_not_facing_away_from_actor.scope'
       ),
       'utf8'
     );
@@ -163,7 +163,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     });
 
     const scopeResult = unifiedScopeResolver.resolve(
-      'positioning:actors_in_location_not_facing_away_from_actor',
+      'maneuvering:actors_in_location_not_facing_away_from_actor',
       {
         actor: actorEntity,
         actorLocation: locationId,
@@ -211,7 +211,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     });
 
     const scopeResult = unifiedScopeResolver.resolve(
-      'positioning:actors_in_location_not_facing_away_from_actor',
+      'maneuvering:actors_in_location_not_facing_away_from_actor',
       {
         actor: actorEntity,
         actorLocation: locationId,
@@ -272,7 +272,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     });
 
     const scopeResult = unifiedScopeResolver.resolve(
-      'positioning:actors_in_location_not_facing_away_from_actor',
+      'maneuvering:actors_in_location_not_facing_away_from_actor',
       {
         actor: actorEntity,
         actorLocation: actorLocationId,
@@ -332,7 +332,7 @@ describe('Place Yourself Behind Action Scope Integration Tests', () => {
     });
 
     const scopeResult = unifiedScopeResolver.resolve(
-      'positioning:actors_in_location_not_facing_away_from_actor',
+      'maneuvering:actors_in_location_not_facing_away_from_actor',
       {
         actor: actorEntity,
         actorLocation: locationId,

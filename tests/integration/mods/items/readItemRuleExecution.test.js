@@ -91,10 +91,12 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'journal-entry-1');
 
+      // Find the private event directed at the actor
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.perceptionType === 'item.examine'
+          event.payload.perceptionType === 'item.examine' &&
+          event.payload.contextualData?.recipientIds?.includes('test:actor1')
       );
 
       expect(perceptibleEvent).toBeDefined();
@@ -140,10 +142,12 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'notice-board');
 
+      // Find the private event directed at the actor
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.targetId === 'notice-board'
+          event.payload.targetId === 'notice-board' &&
+          event.payload.contextualData?.recipientIds?.includes('test:actor1')
       );
 
       expect(perceptibleEvent).toBeDefined();
@@ -169,10 +173,12 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'ancient-scroll');
 
+      // Find the private event directed at the actor
       const perceptibleEvent = testFixture.events.find(
         (event) =>
           event.eventType === 'core:perceptible_event' &&
-          event.payload.targetId === 'ancient-scroll'
+          event.payload.targetId === 'ancient-scroll' &&
+          event.payload.contextualData?.recipientIds?.includes('test:actor1')
       );
       expect(perceptibleEvent).toBeDefined();
       expect(perceptibleEvent.payload.descriptionText).toBe(
@@ -180,7 +186,7 @@ describe('items:read_item action integration', () => {
       );
     });
 
-    it('restricts perception log entries to the acting actor', async () => {
+    it('delivers private text only to acting actor and public text to observers', async () => {
       const scenario = setupReadItemScenario('Darius', 'archives', [
         {
           id: 'sealed-letter',
@@ -226,15 +232,10 @@ describe('items:read_item action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'sealed-letter');
 
-      const perceptibleEvent = testFixture.events.find(
-        (event) =>
-          event.eventType === 'core:perceptible_event' &&
-          event.payload.actorId === 'test:actor1'
+      // Find all perceptible events
+      const perceptibleEvents = testFixture.events.filter(
+        (event) => event.eventType === 'core:perceptible_event'
       );
-      expect(perceptibleEvent).toBeDefined();
-      expect(perceptibleEvent.payload.contextualData?.recipientIds).toEqual([
-        'test:actor1',
-      ]);
 
       const perceptionLogHandler = new AddPerceptionLogEntryHandler({
         entityManager: testFixture.entityManager,
@@ -242,25 +243,44 @@ describe('items:read_item action integration', () => {
         safeEventDispatcher: { dispatch: () => {} },
       });
 
-      await perceptionLogHandler.execute({
-        location_id: perceptibleEvent.payload.locationId,
-        entry: {
-          descriptionText: perceptibleEvent.payload.descriptionText,
-          timestamp: perceptibleEvent.payload.timestamp,
-          perceptionType: perceptibleEvent.payload.perceptionType,
-          actorId: perceptibleEvent.payload.actorId,
-          targetId: perceptibleEvent.payload.targetId,
-          involvedEntities: perceptibleEvent.payload.involvedEntities,
-        },
-        originating_actor_id: perceptibleEvent.payload.actorId,
-        recipient_ids: perceptibleEvent.payload.contextualData?.recipientIds,
-      });
+      // Simulate event processing for logs
+      for (const event of perceptibleEvents) {
+        await perceptionLogHandler.execute({
+          location_id: event.payload.locationId,
+          entry: {
+            descriptionText: event.payload.descriptionText,
+            timestamp: event.payload.timestamp,
+            perceptionType: event.payload.perceptionType,
+            actorId: event.payload.actorId,
+            targetId: event.payload.targetId,
+            involvedEntities: event.payload.involvedEntities,
+          },
+          originating_actor_id: event.payload.actorId,
+          recipient_ids: event.payload.contextualData?.recipientIds,
+          excluded_actor_ids: event.payload.contextualData?.excludedActorIds,
+        });
+      }
 
+      // Verify OBSERVER Log (Should see public message only)
       const observerEntity =
         testFixture.entityManager.getEntityInstance('observer-1');
       const observerLog =
         observerEntity.components['core:perception_log'].logEntries;
-      expect(observerLog).toHaveLength(0);
+      
+      expect(observerLog).toHaveLength(1);
+      expect(observerLog[0].descriptionText).toBe('Darius reads sealed-letter.');
+      // Should NOT see the private content
+      expect(observerLog[0].descriptionText).not.toContain('midnight');
+
+      // Verify ACTOR Log (Should see private message)
+      // Note: Actor might see public message IF not excluded, but our rule excludes them.
+      const actorEntity =
+        testFixture.entityManager.getEntityInstance('test:actor1');
+      const actorLog =
+        actorEntity.components['core:perception_log'].logEntries;
+      
+      expect(actorLog).toHaveLength(1);
+      expect(actorLog[0].descriptionText).toContain('midnight');
     });
   });
 

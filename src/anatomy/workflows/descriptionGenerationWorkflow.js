@@ -69,7 +69,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
       // Generate descriptions for all body parts and the body itself
       await this.#anatomyDescriptionService.generateAllDescriptions(bodyEntity);
 
-      this.#logger.info(
+      this.#logger.debug(
         `DescriptionGenerationWorkflow: Successfully generated descriptions for entity '${entityId}'`
       );
     } catch (error) {
@@ -137,7 +137,7 @@ export class DescriptionGenerationWorkflow extends BaseService {
       );
     }
 
-    this.#logger.info(
+    this.#logger.debug(
       `DescriptionGenerationWorkflow: Successfully generated descriptions for parts of entity '${entityId}'`
     );
   }

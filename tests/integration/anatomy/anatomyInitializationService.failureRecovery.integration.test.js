@@ -208,7 +208,7 @@ describe('AnatomyInitializationService failure recovery integration', () => {
 
     expect(generationCalls).toEqual([successId, failingId, skippedId]);
 
-    const successLog = logger.calls.info.find(([message]) =>
+    const successLog = logger.calls.debug.find(([message]) =>
       message.includes(`Generated anatomy for entity '${successId}'`)
     );
     expect(successLog).toBeDefined();
@@ -273,7 +273,7 @@ describe('AnatomyInitializationService failure recovery integration', () => {
     await expect(
       service.generateAnatomy('direct-success', 'blueprint-A')
     ).resolves.toBe(true);
-    const directSuccessLog = logger.calls.info.find(([message]) =>
+    const directSuccessLog = logger.calls.debug.find(([message]) =>
       message.includes(
         "Successfully generated anatomy for entity 'direct-success' with blueprint 'blueprint-A'"
       )

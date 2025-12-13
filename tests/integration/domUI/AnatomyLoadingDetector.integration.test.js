@@ -302,7 +302,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       // Use the detector with a short timeout
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
         entityInstance.id,
-        { timeout: 500, retryInterval: 100 } // 0.5 second timeout
+        { timeout: 100, retryInterval: 25 } // 0.1 second timeout - sufficient to test timeout behavior
       );
 
       expect(isReady).toBe(false);
@@ -333,7 +333,7 @@ describe('AnatomyLoadingDetector Integration Tests', () => {
       // Use the detector with a short timeout
       const isReady = await anatomyLoadingDetector.waitForEntityWithAnatomy(
         actorInstance.id,
-        { timeout: 500, retryInterval: 100 } // 0.5 second timeout
+        { timeout: 100, retryInterval: 25 } // 0.1 second timeout - sufficient to test timeout behavior
       );
 
       expect(isReady).toBe(false);

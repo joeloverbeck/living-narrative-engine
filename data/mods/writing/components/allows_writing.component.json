@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "writing:allows_writing",
+  "description": "Marker component identifying items that can be used as writing utensils (pens, pencils, quills, etc.).",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

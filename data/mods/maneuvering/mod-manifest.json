@@ -1,0 +1,29 @@
+{
+  "id": "maneuvering",
+  "name": "Maneuvering",
+  "description": "Actions related to gaining a positional advantage, such as flanking.",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "id": "positioning",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "actions": [
+      "place_yourself_behind.action.json"
+    ],
+    "rules": [
+      "place_yourself_behind.rule.json"
+    ],
+    "conditions": [
+      "event-is-action-place-yourself-behind.condition.json"
+    ],
+    "scopes": [
+      "actors_in_location_not_facing_away_from_actor.scope"
+    ],
+    "events": [
+      "actor_placed_behind.event.json"
+    ]
+  }
+}

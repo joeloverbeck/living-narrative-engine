@@ -68,6 +68,27 @@ describe('Violence Mod: Slap Action Integration', () => {
       });
     });
 
+    it('rejects the action when the actor is sitting', async () => {
+      const scenario = testFixture.createStandardActorTarget(
+        ['Quentin', 'Rachel'],
+        {
+          includeRoom: false,
+        }
+      );
+
+      scenario.actor.components['positioning:sitting_on'] = {
+        furniture_id: 'test:couch',
+        spot_index: 0,
+      };
+
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+      testFixture.reset([room, scenario.actor, scenario.target]);
+
+      await expect(
+        testFixture.executeAction(scenario.actor.id, scenario.target.id)
+      ).rejects.toThrow(/forbidden component/i);
+    });
+
     it('does not fire rule for different action', async () => {
       const scenario = testFixture.createStandardActorTarget(['Alice', 'Bob']);
 
