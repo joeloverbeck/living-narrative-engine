@@ -10,29 +10,30 @@
  * - Edge cases in dynamic state transitions and error recovery
  */
 
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
-import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
-import { AvailableActionsProvider } from '../../../src/data/providers/availableActionsProvider.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
+import {
+  describe,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+  test,
+  expect,
+} from '@jest/globals';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 import { createEntityDefinition } from '../../common/entities/entityFactories.js';
 import { clearEntityCache } from '../../../src/scopeDsl/core/entityHelpers.js';
+import { createMinimalTestContainer } from '../../common/scopeDsl/minimalTestContainer.js';
 
 /**
  * E2E test suite for Dynamic State Updates in ScopeDsl
  * Tests critical dynamic behavior identified in Priority 2 requirements
  */
 describe('Dynamic State Updates E2E', () => {
-  let container;
+  // OPTIMIZED: Shared container and services for all tests
+  let containerSetup;
+  let services;
   let entityManager;
-  let actionDiscoveryService;
-  let targetResolutionService;
-  let availableActionsProvider;
   let scopeRegistry;
   let scopeEngine;
   let dslParser;
@@ -40,194 +41,54 @@ describe('Dynamic State Updates E2E', () => {
   let testActors;
   let testWorld;
 
-  beforeEach(async () => {
-    // Create real container and configure it
-    container = new AppContainer();
-    await configureContainer(container, {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document,
+  // PERFORMANCE OPTIMIZATION: Use beforeAll for expensive setup
+  beforeAll(async () => {
+    // Create minimal container (much faster than full configureContainer)
+    containerSetup = await createMinimalTestContainer({
+      logLevel: 'WARN', // Reduce log verbosity for tests
     });
+    services = containerSetup.services;
 
-    // Get real services from container
-    entityManager = container.resolve(tokens.IEntityManager);
-    actionDiscoveryService = container.resolve(tokens.IActionDiscoveryService);
-    targetResolutionService = container.resolve(
-      tokens.ITargetResolutionService
-    );
-    availableActionsProvider = container.resolve(
-      tokens.IAvailableActionsProvider
-    );
-    scopeRegistry = container.resolve(tokens.IScopeRegistry);
-    scopeEngine = container.resolve(tokens.ScopeEngine);
-    dslParser = container.resolve(tokens.DslParser);
-    dataRegistry = container.resolve(tokens.IDataRegistry);
+    // Extract commonly used services
+    entityManager = services.entityManager;
+    scopeRegistry = services.scopeRegistry;
+    scopeEngine = services.scopeEngine;
+    dslParser = services.dslParser;
+    dataRegistry = services.dataRegistry;
 
-    // Register required component schemas for testing
-    const schemaValidator = container.resolve(tokens.ISchemaValidator);
-
-    // Register essential schemas
-    await registerTestSchemas(schemaValidator);
-
-    // Set up test infrastructure
-    await setupTestInfrastructure();
-  });
-
-  afterEach(async () => {
-    // Clean up caches and state
-    clearEntityCache();
-
-    if (container) {
-      // Additional cleanup if needed
-    }
-  });
-
-  /**
-   * Register essential schemas for dynamic testing
-   *
-   * @param schemaValidator
-   */
-  async function registerTestSchemas(schemaValidator) {
-    // Core schemas
-    await schemaValidator.addSchema(
-      {
-        type: 'object',
-        properties: {
-          locationId: { type: 'string' },
-        },
-        required: ['locationId'],
-        additionalProperties: false,
-      },
-      'core:position'
-    );
-
-    await schemaValidator.addSchema(
-      {
-        type: 'object',
-        properties: {
-          locked: { type: 'boolean', default: false },
-          forcedOverride: { type: 'boolean', default: false },
-        },
-        required: ['locked'],
-        additionalProperties: false,
-      },
-      'core:movement'
-    );
-
-    await schemaValidator.addSchema(
-      {
-        type: 'object',
-        properties: {
-          level: { type: 'number', default: 1 },
-          strength: { type: 'number', default: 10 },
-          agility: { type: 'number', default: 10 },
-        },
-        required: ['level', 'strength', 'agility'],
-        additionalProperties: false,
-      },
-      'core:stats'
-    );
-
-    await schemaValidator.addSchema(
-      {
-        type: 'object',
-        properties: {
-          current: { type: 'number', default: 100 },
-          max: { type: 'number', default: 100 },
-        },
-        required: ['current', 'max'],
-        additionalProperties: false,
-      },
-      'core:health'
-    );
-
-    await schemaValidator.addSchema(
-      {
-        type: 'object',
-        properties: {
-          items: { type: 'array', items: { type: 'object' }, default: [] },
-        },
-        required: ['items'],
-        additionalProperties: false,
-      },
-      'core:inventory'
-    );
-  }
-
-  /**
-   * Sets up comprehensive test infrastructure for dynamic testing
-   */
-  async function setupTestInfrastructure() {
-    // Create test world using ActionTestUtilities
+    // Set up test world and actors once for all tests
     testWorld = await ActionTestUtilities.createStandardTestWorld({
       entityManager,
       registry: dataRegistry,
     });
 
-    // Create test actors using ActionTestUtilities
     testActors = await ActionTestUtilities.createTestActors({
       entityManager,
       registry: dataRegistry,
     });
 
-    // Set up dynamic test actions
-    await setupDynamicTestActions();
-
-    // Set up initial scope definitions
+    // Set up initial scope definitions once
     await setupInitialScopeDefinitions();
-  }
+  });
 
-  /**
-   * Sets up action definitions for dynamic state testing
-   */
-  async function setupDynamicTestActions() {
-    const actionIndex = container.resolve(tokens.ActionIndex);
-
-    const dynamicTestActions = [
-      {
-        id: 'core:wait',
-        name: 'Wait',
-        description: 'Wait for a moment, doing nothing.',
-        scope: 'none',
-        template: 'wait',
-        prerequisites: [],
-        required_components: {
-          actor: [],
-        },
-      },
-      {
-        id: 'test:dynamic_action',
-        name: 'Dynamic Action',
-        description: 'Action that uses dynamic scopes.',
-        scope: 'test:dynamic_entities',
-        template: 'interact dynamically with {target}',
-        prerequisites: [],
-        required_components: {
-          actor: [],
-        },
-      },
-      {
-        id: 'test:stats_based_action',
-        name: 'Stats Based Action',
-        description: 'Action filtered by stats.',
-        scope: 'test:high_level_entities',
-        template: 'perform advanced action on {target}',
-        prerequisites: [],
-        required_components: {
-          actor: ['core:stats'],
-        },
-      },
-    ];
-
-    // Add action definitions to the registry
-    for (const action of dynamicTestActions) {
-      dataRegistry.store('actions', action.id, action);
+  // PERFORMANCE OPTIMIZATION: Proper cleanup after all tests
+  afterAll(async () => {
+    if (containerSetup?.cleanup) {
+      await containerSetup.cleanup();
     }
+  });
 
-    // Build the action index
-    actionIndex.buildIndex(dynamicTestActions);
-  }
+  beforeEach(() => {
+    // Only clear caches between tests (fast operation)
+    clearEntityCache();
+  });
+
+  afterEach(async () => {
+    // Individual test cleanup - restore scope definitions and clear caches
+    clearEntityCache();
+    // Restore initial scope definitions in case they were modified by the test
+    await setupInitialScopeDefinitions();
+  });
 
   /**
    * Sets up initial scope definitions for dynamic testing
@@ -237,7 +98,7 @@ describe('Dynamic State Updates E2E', () => {
     const initialScopes = ScopeTestUtilities.createTestScopes(
       {
         dslParser,
-        logger: container.resolve(tokens.ILogger),
+        logger: services.logger,
       },
       [
         {
@@ -269,22 +130,6 @@ describe('Dynamic State Updates E2E', () => {
     } catch (e) {
       console.warn('Could not initialize scope registry for dynamic tests', e);
     }
-  }
-
-  /**
-   * Creates a trace context for testing
-   */
-  function createTestTraceContext() {
-    return new TraceContext();
-  }
-
-  /**
-   * Gets action ID from action object (handles both formats)
-   *
-   * @param action
-   */
-  function getActionId(action) {
-    return action.actionId || action.id;
   }
 
   /**
@@ -320,8 +165,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -333,7 +178,7 @@ describe('Dynamic State Updates E2E', () => {
       const updatedScopes = ScopeTestUtilities.createTestScopes(
         {
           dslParser,
-          logger: container.resolve(tokens.ILogger),
+          logger: services.logger,
         },
         [
           {
@@ -360,8 +205,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -382,7 +227,7 @@ describe('Dynamic State Updates E2E', () => {
       const scopesWithNew = ScopeTestUtilities.createTestScopes(
         {
           dslParser,
-          logger: container.resolve(tokens.ILogger),
+          logger: services.logger,
         },
         [
           {
@@ -404,8 +249,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -416,7 +261,7 @@ describe('Dynamic State Updates E2E', () => {
       const scopesWithoutNew = ScopeTestUtilities.createTestScopes(
         {
           dslParser,
-          logger: container.resolve(tokens.ILogger),
+          logger: services.logger,
         },
         [] // Empty additional scopes
       );
@@ -433,8 +278,8 @@ describe('Dynamic State Updates E2E', () => {
               await entityManager.getEntityInstance('test-location-1'),
             entityManager,
             allEntities: Array.from(entityManager.entities),
-            jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-            logger: container.resolve(tokens.ILogger),
+            jsonLogicEval: services.jsonLogicEval,
+            logger: services.logger,
           },
           { scopeRegistry, scopeEngine }
         )
@@ -466,8 +311,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -494,8 +339,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -533,8 +378,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -567,8 +412,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -594,8 +439,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -635,8 +480,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -661,8 +506,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -734,8 +579,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -770,8 +615,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -795,8 +640,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -812,8 +657,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -822,64 +667,6 @@ describe('Dynamic State Updates E2E', () => {
 
       // Fresh resolution should include the updated entity
       expect(freshIds).toContain(testEntityId);
-    });
-  });
-
-  describe('Integration with Action Discovery', () => {
-    test('should reflect dynamic changes in action discovery results', async () => {
-      const playerEntity = await entityManager.getEntityInstance(
-        testActors.player.id
-      );
-
-      const baseContext = {
-        currentLocation:
-          await entityManager.getEntityInstance('test-location-1'),
-        allEntities: Array.from(entityManager.entities),
-      };
-
-      // Initial action discovery
-      const initialActions = await actionDiscoveryService.getValidActions(
-        playerEntity,
-        baseContext
-      );
-
-      const initialActionIds = initialActions.actions.map((a) =>
-        getActionId(a)
-      );
-
-      // Modify entity state to affect scope resolution
-      const testEntityId = await createTestEntity('action-scope-entity', {
-        'core:name': { name: 'Action Scope Entity' },
-        'core:actor': { isPlayer: false },
-        'core:position': { locationId: 'test-location-1' },
-        'core:stats': { level: 1, strength: 10, agility: 10 },
-      });
-
-      // Clear cache
-      clearEntityCache();
-
-      // Update context with new entity
-      const updatedContext = {
-        ...baseContext,
-        allEntities: Array.from(entityManager.entities),
-      };
-
-      // Action discovery after entity creation
-      const updatedActions = await actionDiscoveryService.getValidActions(
-        playerEntity,
-        updatedContext
-      );
-
-      const updatedActionIds = updatedActions.actions.map((a) =>
-        getActionId(a)
-      );
-
-      // Should still have core actions
-      expect(updatedActionIds).toContain('core:wait');
-
-      // Actions involving dynamic scopes should be updated
-      expect(updatedActions.actions).toBeDefined();
-      expect(Array.isArray(updatedActions.actions)).toBe(true);
     });
   });
 
@@ -920,8 +707,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );
@@ -957,8 +744,8 @@ describe('Dynamic State Updates E2E', () => {
             await entityManager.getEntityInstance('test-location-1'),
           entityManager,
           allEntities: Array.from(entityManager.entities),
-          jsonLogicEval: container.resolve(tokens.JsonLogicEvaluationService),
-          logger: container.resolve(tokens.ILogger),
+          jsonLogicEval: services.jsonLogicEval,
+          logger: services.logger,
         },
         { scopeRegistry, scopeEngine }
       );

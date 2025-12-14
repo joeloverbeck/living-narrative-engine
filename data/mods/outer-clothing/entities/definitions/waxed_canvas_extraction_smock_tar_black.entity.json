@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:waxed_canvas_extraction_smock_tar_black",
+  "description": "A heavy waxed canvas extraction smock in tar-black",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "extraction smock"
+    },
+    "core:description": {
+      "text": "A heavy smock of waxed canvas, treated until it gleams tar-black in the murky light of the extraction pits. The thick fabric sheds water, slime, and the unspeakable fluids that seep from salvaged machinery. The sleeves are full and long, the hem falls to mid-thigh, and the whole garment reeks of the beeswax, tallow, and coal tar used to maintain its protective coating. A professional's garment for professional work."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-black"
+    },
+    "descriptors:texture": {
+      "texture": "waxed"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "outer"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.72
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:sweat_wicking_linen_undershirt_bone_white",
+  "description": "A sweat-wicking linen undershirt in bone-white, stained from hard labor",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "sweat-wicking undershirt"
+    },
+    "core:description": {
+      "text": "An undershirt of tight-weave linen, originally bone-white but now bearing the permanent stains of honest extraction work. The weave is engineered to wick moisture away from the body, keeping the wearer cooler during grueling labor in the dredging pits. Salt rings mark the collar and underarms, testament to countless shifts hauling salvage from murky depths."
+    },
+    "descriptors:color_extended": {
+      "color": "bone-white"
+    },
+    "descriptors:texture": {
+      "texture": "sweat-stained"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    }
+  }
+}

@@ -131,12 +131,19 @@ describe('Hit Probability Weight Data Validation', () => {
 
   describe('Internal organs protection', () => {
     it('internal organs should have weight = 0', () => {
+      // Creature-specific teeth that are prominently exposed and targetable
+      const EXPOSED_TEETH_EXCLUSIONS = ['hyena_teeth.entity.json'];
+
       const violations = [];
 
       for (const { filename, partComponent } of anatomyPartEntities) {
         const subType = partComponent.subType;
 
         if (INTERNAL_ORGAN_SUBTYPES.includes(subType)) {
+          // Skip creature teeth that are intentionally exposed/targetable
+          if (subType === 'teeth' && EXPOSED_TEETH_EXCLUSIONS.includes(filename)) {
+            continue;
+          }
           const weight = partComponent.hit_probability_weight;
           if (weight !== 0) {
             violations.push({
@@ -242,6 +249,7 @@ describe('Hit Probability Weight Data Validation', () => {
           eye: 2,
           eldritch_baleful_eye: 3,
           eldritch_compound_eye_stalk: 3,
+          nose: 2, // Large creature muzzles (hyena, etc.)
         };
         const cap = capMap[partComponent.subType] ?? 1;
         expect(weight).toBeLessThanOrEqual(cap);

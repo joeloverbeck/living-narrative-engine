@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:hyena_tail",
+  "description": "Hyena tail - short, bushy, with darker tip",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "hyena tail"
+    },
+    "core:weight": {
+      "weight": 0.3
+    },
+    "descriptors:flexibility": {
+      "flexibility": "average"
+    },
+    "descriptors:length_category": {
+      "length": "short"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    }
+  }
+}

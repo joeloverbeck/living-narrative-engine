@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:quilted_impact_vest_silt_olive",
+  "description": "A quilted impact vest in silt-olive with scarred quilting from hard use",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "quilted impact vest"
+    },
+    "core:description": {
+      "text": "A padded vest of quilted linen dyed the dull silt-olive of riverbed mud. The arms are left free for unrestricted movement during extraction work. The quilting is dense and well-stuffed, designed to absorb the shock of falling debris and glancing blows from swinging cargo. Deep scars cross the fabric where sharp edges have torn through, each one a close call remembered."
+    },
+    "descriptors:color_extended": {
+      "color": "silt-olive"
+    },
+    "descriptors:texture": {
+      "texture": "quilted"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    }
+  }
+}

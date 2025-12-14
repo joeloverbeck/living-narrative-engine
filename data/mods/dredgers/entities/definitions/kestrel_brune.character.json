@@ -219,7 +219,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "human"
+            "type": "llm"
         },
         "core:notes": {
             "notes": [
@@ -597,6 +597,26 @@
                     "text": "Staying rentable keeps me from getting owned. But crews see a free agent and think 'flight risk'—then they try to tighten control anyway. Can't win.",
                     "subject": "Independence paradox",
                     "subjectType": "knowledge"
+                },
+                {
+                    "text": "Last night I worked security at a bar in Brinewick. Kept the drunks from getting stupid, dragged a couple people outside before fists flew. Stuck around after to drink with the other security folks—*sharp laugh*—which was a mistake, because I went home more than a little tipsy and barely got my boots off before passing out.",
+                    "subject": "Bar security work in Brinewick",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Got woken up by a courier pounding on my door—dredgers' company that's hired me before. High-profile client out in the countryside near Brinewick, some noble Lady. Situation's bad enough they're sending Jorren Weir's team out before dawn to extract an artifact or something. Jorren's boss asked for me specifically. Said the job might need muscle, but they didn't sound sure. *involuntary laugh* Love getting hired for a 'maybe.'",
+                    "subject": "Dredgers' emergency job offer",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I feel like hell. Not enough sleep, still half-drunk when the courier showed up, and now I'm supposed to be sharp for a job that's got 'dangerous' written all over it. The suddenness of it's got me off-balance—don't like going into situations when I can't read the room properly, and my head's not clear. *bitter laugh* Great conditions for keeping people alive.",
+                    "subject": "Current physical and mental state",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm taking the job anyway. Jorren's good people, treats muscle like crew instead of disposable tools. Can't leave him walking into something dangerous without backup, especially when his boss thought to ask for me. I like him. *forced exhale* More than I should for someone I keep telling myself I'm just contracting with. So yeah, I'll show up half-dead and hope my body doesn't get anyone killed because I'm too tired to move fast enough.",
+                    "subject": "Decision to take the dredgers' job",
+                    "subjectType": "plan"
                 }
             ]
         },

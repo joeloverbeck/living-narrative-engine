@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:hyena_mouth",
+  "description": "Hyena mouth - powerful jaws with distinctive grin",
+  "components": {
+    "anatomy:part": {
+      "subType": "mouth",
+      "hit_probability_weight": 2,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "teeth",
+          "allowedTypes": ["teeth"],
+          "nameTpl": "{{type}}"
+        }
+      ]
+    },
+    "core:mouth_engagement": {
+      "locked": false,
+      "forcedOverride": false
+    },
+    "core:name": {
+      "text": "hyena mouth"
+    },
+    "core:weight": {
+      "weight": 0.1
+    },
+    "descriptors:shape_general": {
+      "shape": "wide"
+    }
+  }
+}

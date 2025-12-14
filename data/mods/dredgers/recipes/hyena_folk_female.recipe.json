@@ -1,0 +1,136 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:hyena_folk_female_standard",
+  "blueprintId": "anatomy-creatures:hyena_folk_female",
+  "bodyDescriptors": {
+    "build": "muscular",
+    "composition": "lean",
+    "skinColor": "tawny",
+    "hairDensity": "furred",
+    "height": "tall",
+    "smell": "musky"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy-creatures:hyena_folk_female_torso",
+      "properties": {
+        "descriptors:build": {
+          "build": "muscular"
+        }
+      }
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy-creatures:hyena_folk_head"
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy-creatures:hyena_muzzle"
+    },
+    "mouth": {
+      "partType": "mouth",
+      "preferId": "anatomy-creatures:hyena_mouth"
+    },
+    "teeth": {
+      "partType": "teeth",
+      "preferId": "anatomy-creatures:hyena_teeth"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    },
+    "left_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:hyena_ear",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        }
+      }
+    },
+    "right_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:hyena_ear",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        }
+      }
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy-creatures:hyena_tail",
+      "properties": {
+        "descriptors:texture": {
+          "texture": "fuzzy"
+        },
+        "descriptors:length_category": {
+          "length": "short"
+        }
+      }
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_firm"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast_c_cup_firm"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy-creatures:hyena_eye"
+    },
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_muscular"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg_muscular"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy:human_hand"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["left_ass", "right_ass"],
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm_muscular_shelf"
+    }
+  ],
+  "clothingEntities": [
+    { "entityId": "underwear:sweat_wicking_linen_undershirt_bone_white", "equip": true },
+    { "entityId": "base-clothing:quilted_impact_vest_silt_olive", "equip": true },
+    { "entityId": "outer-clothing:waxed_canvas_extraction_smock_tar_black", "equip": true },
+    { "entityId": "accessories:extraction_harness_rope_tan", "equip": true },
+    { "entityId": "base-clothing:double_knee_canvas_trousers_dock_brown", "equip": true },
+    { "entityId": "base-clothing:full_waders_waxed_canvas_near_black", "equip": true },
+    { "entityId": "base-clothing:gauntlet_rope_gloves_smoke_black", "equip": true },
+    { "entityId": "accessories:splash_goggles_smoke_black", "equip": true }
+  ]
+}

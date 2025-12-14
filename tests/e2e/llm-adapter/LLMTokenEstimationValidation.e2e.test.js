@@ -17,8 +17,9 @@
 
 import {
   describe,
+  beforeAll,
+  afterAll,
   beforeEach,
-  afterEach,
   test,
   expect,
   jest,
@@ -38,22 +39,34 @@ import {
 describe('E2E: Token Estimation and Limits', () => {
   let testBed;
 
-  beforeEach(async () => {
-    // Initialize test bed
-    testBed = new LLMAdapterTestBed();
+  beforeAll(async () => {
+    // Initialize test bed once with performance optimizations
+    testBed = new LLMAdapterTestBed({
+      lightweight: true, // Skip file system operations
+      skipSchemaLoading: false, // Keep schema loading as LLM adapter needs schemas
+      networkDelay: 0, // No artificial network delays
+    });
     await testBed.initialize();
+  });
 
-    // Clear any events from initialization
+  afterAll(async () => {
+    // Clean up test bed once at the end
+    await testBed.cleanup();
+  });
+
+  beforeEach(async () => {
+    // Clean up any leftover spies from previous tests
+    jest.restoreAllMocks();
+
+    // Reset test bed state between tests (much faster than full reinit)
+    await testBed.reset();
+
+    // Clear any events from previous tests
     testBed.clearRecordedEvents();
 
     // Ensure consistent starting configuration for all tests
     // Tests that need a different configuration should explicitly switch
     await testBed.switchLLMConfig('test-llm-toolcalling');
-  });
-
-  afterEach(async () => {
-    // Clean up test bed
-    await testBed.cleanup();
   });
 
   /**

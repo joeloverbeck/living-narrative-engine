@@ -20,25 +20,34 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { ActionTestUtilities } from '../../common/actions/actionTestUtilities.js';
 import { ScopeTestUtilities } from '../../common/scopeDsl/scopeTestUtilities.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
 /**
  * E2E test suite for union operator workflows
  * Tests the complete pipeline from union expressions to resolved entity sets
+ *
+ * Performance optimization: Container setup moved to beforeAll to avoid
+ * re-initializing the entire DI container for each test (~1.1s per test).
+ * Entity creation remains in beforeEach for test isolation.
  */
 describe('Union Operator Workflows E2E', () => {
+  // Shared services - initialized once in beforeAll
   let container;
   let entityManager;
   let scopeRegistry;
   let scopeEngine;
   let dslParser;
   let logger;
-  let testWorld;
-  let testActors;
   let componentRegistry;
 
-  beforeEach(async () => {
-    // Create real container and configure it
+  // Per-test data - created fresh in beforeEach
+  let testWorld;
+  let testActors;
+
+  // Track entity IDs created during tests for cleanup
+  const createdEntityIds = new Set();
+
+  beforeAll(async () => {
+    // Create real container and configure it ONCE
     container = new AppContainer();
     await configureContainer(container, {
       outputDiv: document.createElement('div'),
@@ -54,8 +63,21 @@ describe('Union Operator Workflows E2E', () => {
     dslParser = container.resolve(tokens.DslParser);
     logger = container.resolve(tokens.ILogger);
     componentRegistry = container.resolve(tokens.IDataRegistry);
+  });
 
-    // Set up test world and actors
+  beforeEach(async () => {
+    // Reset circuit breakers to prevent cascade failures from XMLHttpRequest errors
+    // during config loading. The MonitoringCoordinator is created internally by
+    // createDefaultServicesWithConfig.js and accessible via EntityManager.
+    const monitoringCoordinator = entityManager.getMonitoringCoordinator();
+    if (monitoringCoordinator) {
+      monitoringCoordinator.reset();
+    }
+
+    // Track current entity count before creating test entities
+    const existingIds = new Set(entityManager.getEntityIds());
+
+    // Set up test world and actors for each test
     testWorld = await ActionTestUtilities.createStandardTestWorld({
       entityManager,
       registry: componentRegistry,
@@ -65,6 +87,13 @@ describe('Union Operator Workflows E2E', () => {
       entityManager,
       registry: componentRegistry,
     });
+
+    // Track newly created entity IDs for cleanup
+    for (const id of entityManager.getEntityIds()) {
+      if (!existingIds.has(id)) {
+        createdEntityIds.add(id);
+      }
+    }
 
     // Set up test conditions and scope definitions
     ScopeTestUtilities.setupScopeTestConditions(componentRegistry);
@@ -80,11 +109,23 @@ describe('Union Operator Workflows E2E', () => {
   });
 
   afterEach(async () => {
-    // Clean up resources if needed
+    // Clean up test entities to ensure test isolation
+    for (const entityId of createdEntityIds) {
+      try {
+        if (entityManager.hasEntity(entityId)) {
+          entityManager.removeEntityInstance(entityId);
+        }
+      } catch {
+        // Ignore cleanup errors - entity may already be removed
+      }
+    }
+    createdEntityIds.clear();
   });
 
   /**
    * Creates union-specific test scope definitions
+   *
+   * @returns {Array<object>} Array of scope definitions for union testing
    */
   function createUnionTestScopes() {
     return [
@@ -128,16 +169,10 @@ describe('Union Operator Workflows E2E', () => {
   }
 
   /**
-   * Creates a trace context for scope resolution testing
-   */
-  function createTraceContext() {
-    return new TraceContext();
-  }
-
-  /**
    * Creates game context for scope resolution
    *
-   * @param actor
+   * @param {object} actor - The actor entity for context
+   * @returns {object} Game context for scope resolution
    */
   function createGameContext(actor) {
     const jsonLogicEval = container.resolve(tokens.JsonLogicEvaluationService);
@@ -165,7 +200,6 @@ describe('Union Operator Workflows E2E', () => {
       // Arrange
       const actor = testActors.player;
       const gameContext = createGameContext(actor);
-      const trace = createTraceContext();
 
       // Act
       const result = await ScopeTestUtilities.resolveScopeE2E(
@@ -239,7 +273,6 @@ describe('Union Operator Workflows E2E', () => {
       // Arrange
       const actor = testActors.player;
       const gameContext = createGameContext(actor);
-      const trace = createTraceContext();
 
       // Act - simple union: actor + entities(core:actor)
       const result = await ScopeTestUtilities.resolveScopeE2E(
@@ -280,7 +313,8 @@ describe('Union Operator Workflows E2E', () => {
       // Assert
       expect(result).toBeInstanceOf(Set);
 
-      // Should include entities with level > 5 OR level < 4
+      // Collect entities with stats to verify level filtering
+      const entitiesWithLevels = [];
       for (const entityId of result) {
         const entity = entityManager.getEntityInstance(entityId);
         if (
@@ -290,10 +324,18 @@ describe('Union Operator Workflows E2E', () => {
         ) {
           const stats = entity.getComponent('core:stats');
           if (stats && stats.level !== undefined) {
-            expect(stats.level > 5 || stats.level < 4).toBe(true);
+            entitiesWithLevels.push({
+              id: entityId,
+              level: stats.level,
+              matchesFilter: stats.level > 5 || stats.level < 4,
+            });
           }
         }
       }
+
+      // All entities with levels should match the filter criteria
+      const allMatch = entitiesWithLevels.every((e) => e.matchesFilter);
+      expect(allMatch).toBe(true);
     });
 
     test('should handle union of different entity types', async () => {
@@ -312,18 +354,11 @@ describe('Union Operator Workflows E2E', () => {
       // Assert
       expect(result).toBeInstanceOf(Set);
 
-      // Should include both actor and item entities
+      // Check for actor entities in the result
       const hasActors = [...result].some((entityId) => {
         const entity = entityManager.getEntityInstance(entityId);
         return (
           entity && entity.hasComponent && entity.hasComponent('core:actor')
-        );
-      });
-
-      const hasItems = [...result].some((entityId) => {
-        const entity = entityManager.getEntityInstance(entityId);
-        return (
-          entity && entity.hasComponent && entity.hasComponent('core:item')
         );
       });
 
@@ -333,25 +368,9 @@ describe('Union Operator Workflows E2E', () => {
   });
 
   describe('Performance and Edge Cases', () => {
-    test('should handle union of single elements correctly', async () => {
-      // Arrange
-      const actor = testActors.player;
-      const gameContext = createGameContext(actor);
-
-      // Act
-      const result = await ScopeTestUtilities.resolveScopeE2E(
-        'test:union_plus', // actor + location
-        actor,
-        gameContext,
-        { scopeRegistry, scopeEngine }
-      );
-
-      // Assert
-      expect(result).toBeInstanceOf(Set);
-      expect(result.size).toBe(2); // actor + location
-      expect(result.has(actor.id)).toBe(true);
-      expect(result.has(testWorld.currentLocation.id)).toBe(true);
-    });
+    // Note: "should handle union of single elements correctly" was removed as
+    // it was identical to "should resolve + operator unions correctly" in
+    // Basic Union Operations - both tested the same test:union_plus scope.
 
     test('should maintain referential integrity across unions', async () => {
       // Arrange

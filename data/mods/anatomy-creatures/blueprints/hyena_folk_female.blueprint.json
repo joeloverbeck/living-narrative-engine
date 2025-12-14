@@ -1,0 +1,99 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.blueprint.schema.json",
+  "id": "anatomy-creatures:hyena_folk_female",
+  "root": "anatomy-creatures:hyena_folk_female_torso",
+  "compose": [
+    {
+      "part": "anatomy-creatures:hyena_core",
+      "include": ["slots", "clothingSlotMappings"]
+    }
+  ],
+  "slots": {
+    "left_ear": {
+      "socket": "left_ear",
+      "requirements": {
+        "partType": "ear",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_ear": {
+      "socket": "right_ear",
+      "requirements": {
+        "partType": "ear",
+        "components": ["anatomy:part"]
+      }
+    },
+    "tail": {
+      "socket": "lower_back",
+      "requirements": {
+        "partType": "tail",
+        "components": ["anatomy:part"]
+      }
+    },
+    "left_breast": {
+      "socket": "left_chest",
+      "requirements": {
+        "partType": "breast",
+        "components": ["anatomy:part"]
+      }
+    },
+    "right_breast": {
+      "socket": "right_chest",
+      "requirements": {
+        "partType": "breast",
+        "components": ["anatomy:part"]
+      }
+    },
+    "vagina": {
+      "socket": "vagina",
+      "requirements": {
+        "partType": "vagina",
+        "components": ["anatomy:part"]
+      }
+    }
+  },
+  "clothingSlotMappings": {
+    "back_accessory": {
+      "anatomySockets": ["lower_back", "tail"],
+      "allowedLayers": ["accessories", "armor"]
+    },
+    "tail_accessory": {
+      "anatomySockets": ["tail"],
+      "allowedLayers": ["accessories"]
+    },
+    "torso_lower": {
+      "anatomySockets": [
+        "left_hip",
+        "right_hip",
+        "pubic_hair",
+        "vagina",
+        "asshole",
+        "left_ass",
+        "right_ass"
+      ],
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "full_body": {
+      "blueprintSlots": [
+        "head",
+        "left_arm",
+        "right_arm",
+        "left_leg",
+        "right_leg",
+        "left_breast",
+        "right_breast",
+        "tail"
+      ],
+      "allowedLayers": ["outer"]
+    },
+    "torso_upper": {
+      "anatomySockets": [
+        "left_chest",
+        "right_chest",
+        "left_shoulder",
+        "right_shoulder"
+      ],
+      "allowedLayers": ["underwear", "base", "outer", "armor"]
+    }
+  }
+}

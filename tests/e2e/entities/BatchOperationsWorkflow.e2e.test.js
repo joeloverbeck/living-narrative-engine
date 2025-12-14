@@ -10,20 +10,33 @@
  * E2E test coverage analysis for batch operations performance.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import EntityWorkflowTestBed from './common/entityWorkflowTestBed.js';
 
 describe('Batch Operations E2E Workflow', () => {
   let testBed;
 
-  beforeEach(async () => {
+  // Share container across tests for performance (container init is expensive ~500ms)
+  beforeAll(async () => {
     testBed = new EntityWorkflowTestBed({
       monitorComponentEvents: true, // Required for component operation tests
     });
     await testBed.initialize();
   });
 
-  afterEach(async () => {
+  // Clean up entities between tests for isolation (fast ~50ms)
+  beforeEach(async () => {
+    await testBed.cleanupEntities();
+  });
+
+  afterAll(async () => {
     if (testBed) {
       await testBed.cleanup();
     }
@@ -82,8 +95,8 @@ describe('Batch Operations E2E Workflow', () => {
       );
       expect(entityCreatedEvents).toHaveLength(batchSize);
 
-      // Assert repository consistency
-      await testBed.assertRepositoryConsistency();
+      // Assert repository consistency (quick check - full validation in scalability tests)
+      await testBed.assertRepositoryConsistency({ quickCheck: true });
     });
 
     it('should handle partial failures in batch creation gracefully', async () => {
@@ -152,8 +165,8 @@ describe('Batch Operations E2E Workflow', () => {
         expect(failure.item.definitionId).toBe(invalidDefinitionId);
       });
 
-      // Assert repository remains consistent
-      await testBed.assertRepositoryConsistency();
+      // Assert repository remains consistent (quick check - full validation in scalability tests)
+      await testBed.assertRepositoryConsistency({ quickCheck: true });
     });
 
     it('should provide accurate batch operation metrics', async () => {
@@ -257,8 +270,8 @@ describe('Batch Operations E2E Workflow', () => {
       );
       expect(componentAddedEvents.length).toBeGreaterThanOrEqual(entityCount);
 
-      // Assert repository consistency
-      await testBed.assertRepositoryConsistency();
+      // Assert repository consistency (quick check - full validation in scalability tests)
+      await testBed.assertRepositoryConsistency({ quickCheck: true });
     });
 
     it('should handle mixed success/failure scenarios in component operations', async () => {
@@ -330,8 +343,8 @@ describe('Batch Operations E2E Workflow', () => {
       expect(failedResults).toHaveLength(1);
       expect(failedResults[0].error).toBeInstanceOf(Error);
 
-      // Assert repository remains consistent
-      await testBed.assertRepositoryConsistency();
+      // Assert repository remains consistent (quick check - full validation in scalability tests)
+      await testBed.assertRepositoryConsistency({ quickCheck: true });
     });
   });
 
@@ -384,8 +397,8 @@ describe('Batch Operations E2E Workflow', () => {
       expect(componentAvgTimePerOperation).toBeLessThan(50); // Relaxed target for sequential operations
       expect(componentTotalTime).toBeLessThan(3000); // Relaxed time limit for sequential operations
 
-      // Assert repository consistency maintained at scale
-      await testBed.assertRepositoryConsistency();
+      // Assert repository consistency maintained at scale (full validation - critical test)
+      await testBed.assertRepositoryConsistency({ forceFullValidation: true });
     });
 
     it('should handle large batch sizes without memory issues', async () => {
@@ -435,8 +448,8 @@ describe('Batch Operations E2E Workflow', () => {
       const entityCount = testBed.entityManager.getEntityIds().length;
       expect(entityCount).toBeGreaterThanOrEqual(largeBatchSize);
 
-      // Assert repository consistency maintained
-      await testBed.assertRepositoryConsistency();
+      // Assert repository consistency maintained (full validation - critical test)
+      await testBed.assertRepositoryConsistency({ forceFullValidation: true });
 
       // Clean up large batch to prevent test interference (sequential removal)
       for (const entity of result.successes) {

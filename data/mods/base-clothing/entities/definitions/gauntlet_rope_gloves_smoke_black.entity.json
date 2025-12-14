@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:gauntlet_rope_gloves_smoke_black",
+  "description": "Gauntlet-style rope gloves in smoke-black leather",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "gauntlet rope gloves"
+    },
+    "core:description": {
+      "text": "Heavy leather gloves in smoke-black, extending past the wrist in a protective gauntlet style. The palms are double-layered and roughened for gripping wet rope without slipping, while the backs are reinforced against scrapes and impacts. The thick hide has been worked until supple enough not to restrict movement, but rugged enough to turn an edge. A rope worker's hands are their livelihood—these gloves keep them intact."
+    },
+    "descriptors:color_extended": {
+      "color": "smoke-black"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.18
+    }
+  }
+}

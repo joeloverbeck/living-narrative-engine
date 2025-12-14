@@ -71,6 +71,7 @@
         "kestrel_brune.character.json",
         "keyring.entity.json",
         "plain_notebook.entity.json",
+        "saffi_two_tides.character.json",
         "salvage_quarantine_undertaking.entity.json"
       ],
       "instances": [
@@ -83,6 +84,7 @@
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
         "jorren_weir.character.json",
+        "kestrel_brune.character.json",
         "keyring.entity.json",
         "pencil.entity.json",
         "plain_notebook.entity.json",
@@ -98,6 +100,7 @@
     "recipes": [
       "beaver_folk_male.recipe.json",
       "ermine_folk_female.recipe.json",
+      "hyena_folk_female.recipe.json",
       "toad_folk_male.recipe.json"
     ],
     "portraits": [
@@ -105,7 +108,8 @@
       "concordance_salon.png",
       "cress_siltwell.png",
       "eira_quenreach.png",
-      "jorren_weir.png"
+      "jorren_weir.png",
+      "kestrel_brune.png"
     ],
     "worlds": [
       "dredgers.world.json"

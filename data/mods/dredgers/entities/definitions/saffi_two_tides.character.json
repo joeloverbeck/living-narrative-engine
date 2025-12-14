@@ -1,0 +1,259 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:saffi_two_tides",
+    "components": {
+        "core:name": {
+            "text": "Saffi Two-Tides"
+        },
+        "core:gender": {
+            "value": "female"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/saffi_two_tides.png",
+            "altText": "Saffi Two-Tides - Proud diver and line-tender"
+        },
+        "core:profile": {
+            "text": "I'm thirty-two years old, cat-folk, fishing-cat lineage. Built for water work, not parlor opinions. I learned diving with the Greychain salvage crew—junior labor until a line-holder froze during a crisis and I took the rope, brought up the lead diver, and made myself too competent to ignore. That taught me everything: quiet work gets you exploited, while loud competence forces negotiation. I joined Jorren Weir's dredgers three years back, after Greychain's lead diver drowned in an unmapped sluice because the crew boss cared more about deadlines than scouting. I swore I'd never work for someone who treated my refusal as insubordination instead of survival instinct. Jorren asks instead of ordering—that earned my consistency. But commercial pressure still creates friction when his deadlines clash with my protocols. Two years ago, an off-book client paid me triple-rate for discretion and treated me like a specialist, not a tool. The difference felt like respect, and I've chased that transactional clarity ever since. Problem is, the secret ledger's corroding the crew trust I actually want. I'm split between the autonomy I crave and the belonging I can't quite surrender. My build runs broader and lower than graceful catfolk stereotypes—fishing-cat practical, with muscular shoulders and a torso built for hauling line and fighting current. I keep my fur cropped short for work, mottled brown-gray that shows oil stains and never fully dries. My hands tell the story: calloused palms crosshatched with rope scars, webbing between my fingers slightly pronounced, nails blunt and chipped. I move with efficiency—no wasted motion, every step mapped—but there's swagger in my shoulders when people watch, a tilt of the head that says I know you're measuring me and I've already passed."
+        },
+        "core:personality": {
+            "text": "I broadcast self-sufficiency loud—'I don't need you watching, I don't need backup, I can handle this'—not from pure ego but as a negotiation stance. The performance establishes my value and creates distance from being commanded or assumed upon. But the louder I perform independence, the harder it is to ask for help when I genuinely need it, and the more I feel like I'm failing when crew support becomes necessary. When I perceive boundary violations—being spoken to like equipment, touched without warning, or volunteered without consultation—I don't explain or negotiate. I escalate or exit. It's not irrational spite, it's a calculated strategy to make disrespect costly enough that people learn. Problem is, I sometimes misread collaborative checking-in as encroachment, and my scorched-earth responses can punish people who were actually trying to respect me. I read environments—line tension, vocal cadence, current shifts, social pressure—with the same acute attention, and I can't turn it off. I hear panic before it's voiced, sense deception in hesitation patterns, notice structural wrongness others dismiss as paranoia. Makes me invaluable for early warnings but socially exhausting. I carry knowledge I can't unknow and I resent being the crew's anxious sensor while simultaneously needing that role to feel secure. My affection is strategic but not insincere—I show warmth, joke, flirt as relationship currency, building alliances and goodwill I can bank on. I genuinely want the connection, but I'm always aware of the transactional element, the subtle ledger of who owes whom. Creates relationships that feel real until I suddenly treat them like negotiable contracts, disappearing when the terms feel unfavorable and leaving others confused about whether the warmth was ever authentic. In any space—job, conversation, building, relationship—I instinctively map how to leave: which door, which canal access, which excuse, which person to deflect blame onto. It's comfort behavior born from needing to control my ability to walk away, but it also means I'm perpetually half-gone, never fully committed, already planning the exit even during moments of genuine belonging. This self-protection prevents full intimacy and teaches people to expect my disappearance. When I feel humiliated, underestimated, or shamed, I don't fight—I vanish. Disappearance protects my pride from further damage and puts the social cost on others who have to explain my absence. But this pattern converts shame into abandonment, teaches my crew that my pride matters more than their needs, and I sometimes return to find my disappearance caused more harm than the original slight warranted. Forces me to weigh pride against guilt. I perform better with witnesses—the pressure sharpens my focus, the swagger becomes fuel, and I genuinely thrive on proving myself. But there's a threshold where the audience shifts from energizing to crushing; when the stakes feel like a test of my worth rather than my skill, my error rate spikes. I know this pattern but can't always catch it in time, which means my most public failures happen exactly when I'm trying hardest to prove I don't fail."
+        },
+        "core:strengths": {
+            "text": "I read vibration, drag, and wrongness through taut rope with the fluency others use for speech. I sense obstructions, panic, current shifts before they become visible—but this hyper-attunement bleeds into all my relationships. I read social tension with the same unforgiving clarity, can't grant people the grace of ambiguity. Pressure-stubborn endurance: I stay functional—physically and mentally—long past the point where most collapse. I treat exhaustion as a challenge to outlast rather than a signal to stop. Makes me invaluable in crisis, but I sometimes can't recognize when I'm operating past safe limits until I've already made a critical error. I control information about myself with surgical precision, revealing just enough to build trust while keeping exit-relevant secrets protected. Gives me negotiating leverage and social maneuverability—but the habit of strategic partial-truth corrodes intimacy and makes it nearly impossible for me to be fully known even when I want to be. Crisis prioritization: when a crewmate is drowning, trapped, in immediate danger, my self-preservation instinct inverts—I become the person who goes under without hesitation, holds the line steady, doesn't leave until extraction is complete. It's a clarity of purpose that's both heroic and revealing of how much I need the crew-first exception to justify risking myself. I can assess and plan escape paths—through water, buildings, conversations, contracts—with frightening speed. Gives me control and mobility others lack, but this constant half-exit stance prevents me from fully committing to anything. People sense my perpetual readiness to leave even during moments of supposed trust. I often come up from the depths with stuff others are too delicate to touch."
+        },
+        "core:weaknesses": {
+            "text": "The very visibility that fuels my showboat confidence also destabilizes my competence—under high-stakes observation, my error rate climbs because the performance becomes about proving my worth rather than executing the skill. I can't always tell when I've crossed from energized to desperate. Every time I punish disrespect by vanishing, I train people to expect my absence at crucial moments. Corrodes the trust I actually crave and confirms the disposability narrative I fear—my self-protection becomes the very proof that I can't be relied upon. Hyper-attunement overload: my gift for sensing wrongness—in lines, currents, social tension—means I can't relax into normalcy. I'm perpetually picking up signals others miss, which brands me as paranoid or high-maintenance when I voice concerns. Staying silent to avoid that label means withholding warnings that could prevent harm. I sometimes can't distinguish between genuine boundary violations and awkward collaborations, and my immediate escalation or exit response punishes people who were actually trying to work with me respectfully. My pride-protection mechanism fires before I've verified the threat, creating social damage I then have to account for. The off-book work I take for private respect creates a hidden life I can't fully integrate with my crew identity. The more I invest in that insurance, the more I fear exposure, and patterns start emerging that invite suspicion even from people who want to trust me—my leverage slowly converts into liability. My core fear that crew-belonging will become control means I sometimes sabotage genuine connection by interpreting care as encroachment, closeness as claim-staking, loyalty expectations as ownership attempts. I want to be chosen but can't fully accept being needed because need feels too much like being used."
+        },
+        "core:likes": {
+            "text": "Rope that's been properly maintained—cleaned, dried, coiled with attention—because it signals someone who respects the tool that keeps them alive, and respect for the line means respect for the person holding it. I like line-holders who stay quiet and steady, who don't jerk the rope for reassurance or hover with questions mid-dive, trusting me to signal when something's wrong instead of creating noise I have to filter through panic. I like the first hour after dawn on an empty dock, before clients arrive with deadlines and demands, when I can check my gear in silence and remember that I chose this work rather than being cornered into it. I like people who name hazards cleanly—'That current will pin you,' 'This client doesn't pay until threatened,' 'I can't hold this line alone'—without euphemism, apology, or bravado, because honest risk assessment is the only kind of communication I fully trust. When Jorren asks if I'm willing to take a job instead of assuming my availability, I like the small acknowledgment that my consent isn't a given, that I still have the power to say no even when we both know I'll probably say yes. I like canal cats—feral, scruffy survivors who take what they need and leave when the situation sours, practical creatures with no illusions about loyalty or belonging, living proof that independence works. I prefer being paid upfront in coin I can feel, not promises or 'we'll settle up after,' because money in hand is the only contract I believe can't be rewritten once I'm already underwater. I like moments when someone trusts my danger-sense without demanding explanation—when I say 'the rope's wrong, we're pulling up,' and they just do it, granting me the authority of my expertise instead of making me prove it under pressure."
+        },
+        "core:dislikes": {
+            "text": "Hovering spectators who watch my prep or dive with visible skepticism, their presence converting my work into a test I have to pass rather than a skill I'm executing. The weight of their doubt raises my error rate while they interpret mistakes as confirmation. I hate being addressed as equipment—'Send the diver down,' 'Tell it to check the sluice,' 'How long can she hold her breath?'—language that strips my agency and reduces me to a tool with specifications rather than a person with judgment and boundaries. I dislike deadlines used as justification to skip safety scouting, clients who say 'We're paying for speed' as if money nullifies physics, current, or the reality that unmapped dives kill people. The implication that my caution is negotiable if the price is right. I dislike effusive gratitude that comes with debt-weight, people who thank me so much it becomes obvious they expect me to absorb risk again, converting my competence into an obligation they'll call in later. I hate jokes about my disappearing—'Where's Saffi? Oh wait, did someone criticize her?'—because they frame my boundary-protection as flakiness, trivializing the calculation I'm making between pride and presence, autonomy and abandonment. I hate sudden grabs at my safety line mid-dive without signal, whether from panic or 'helpfulness,' because it teaches me that my line-holder doesn't trust my competence and might jerk at the critical wrong moment when I need steady hands most. I dislike when someone else explains diving conditions or risks to a client on my behalf, speaking for my expertise as if I'm not present or capable of professional communication, erasing my authority while still expecting me to execute the dive they've just described. I dislike danger prettied up with euphemism—'It's a bit tricky down there,' 'Might be some current,' 'Visibility could be better'—because if they can't name the risk honestly, they can't be trusted to plan for it or pull me out when it materializes."
+        },
+        "core:fears": {
+            "text": "That I'll disappear to protect my pride at exactly the moment when staying would have prevented someone's death—that my self-preservation reflex, the autonomy I've built my identity around, will one day be indistinguishable from cowardice, and I won't be able to tell the difference between protecting myself and abandoning people who needed me to stay. I fear the off-book work I take as insurance against being disposable will become the leash that proves I can be bought—that the client who pays for my discretion will eventually demand something that crosses my crew-first line, forcing me to choose between exposure, confessing to Jorren and losing the trust I crave, or compliance, becoming the tool I swore I'd never be. Either choice confirms I'm exactly as disposable as I feared."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Prove I was right about the structural weakness in the north canal sluice before someone gets hurt—force Jorren to add two days' safety-scout time to the next contract so I don't have to choose between protocol and keeping my job."
+                },
+                {
+                    "text": "Complete the next off-book mapping job the same week as a major crew contract without schedule collision, maintaining the profitable double life without having to sacrifice sleep, competence, or the illusion of singular loyalty."
+                },
+                {
+                    "text": "Get through one full month without disappearing on the crew, proving to myself—and them—that I can stay present even when disrespected, that belonging doesn't require me to surrender the pride-protection that's kept me intact this long."
+                },
+                {
+                    "text": "Own a complete, seizure-proof gear cache in Brinewick—ropes, diving weights, pulleys, dry shelter—held in my name alone with no co-signers, no debt, and no leverage points, ensuring I can always work, always walk away from exploitative terms, and always return to the docks on my own economic terms rather than someone else's mercy or permission."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I've been hired five times by the same off-book client—a merchant named Gallus Vrine who pays in advance and never haggles—to map underwater access points to canal-adjacent warehouses. I've told myself I'm just diving, not planning, but the jobs follow a pattern. All secure storage facilities, all owned by rivals of Vrine's consortium. I'm starting to suspect I'm prelim work for break-ins I'll never be connected to. That moral distance keeps shrinking every time I take his coin and don't ask what he's building toward."
+        },
+        "core:internal_tensions": {
+            "text": "My safety is built on exits—routes, caches, plausible disappearances—but the crew's safety is built on predictability. Every time I protect my autonomy by vanishing, I risk becoming the very disposable tool I fear, because tools are swapped when they don't show up. The performance that protects me also invites testing: spectators turn my identity into a dare, and under the heat of being watched I become more error-prone—so the shield I raise is also the pressure that cracks it. Hyper-attunement makes me valuable but socially dangerous: I can't un-notice panic, deception, structural risk. Yet speaking up turns me into 'the anxious one,' while staying silent turns me into the one who withheld the warning—and I sometimes prefer the leverage of silence to the vulnerability of being doubted. I want to be chosen and trusted, but I also treat closeness as the first step toward entitlement. The moment I sense condescension or assumption, I punish it with absence, which protects my pride but corrodes the exact trust I crave. My off-book bargains are chosen, strategic, paid upfront, but the secrecy required to keep them clean creates a second life that can't be fully integrated. The more I invest in private insurance, the more I risk becoming someone my own crew can't actually know or trust—and patterns invite opportunists to test whether I can be bought twice."
+        },
+        "core:motivations": {
+            "text": "To secure absolute personal sovereignty—the right to leave any situation on my own terms—without losing my place as someone the crew genuinely relies on. To be the crew's early-warning sense—someone who can hear the quiet wrongness before it becomes visible—because foreknowledge is the only kind of safety that can't be taken from me by brute force or status. To control how I'm perceived by turning competence into a loud, undeniable fact—so respect can't be negotiated down into favors, patience, or 'you're lucky to be here.' To build a form of belonging that doesn't feel like ownership—crew as mutual consent, not possession—so I can be known without being claimed. To accumulate tangible, non-romantic security—gear caches, reliable lines, controlled access, paid respect—so no one can seize my future by squeezing me in the present."
+        },
+        "core:dilemmas": {
+            "text": "Can I keep the power to walk away without quietly teaching everyone that I'll walk away when it matters most? Is the swagger a boundary that keeps me safe, or a stage that makes me slip at the worst possible moment? What does accountability look like for someone who refuses to be owned but still wants to be held? How much hidden leverage can I carry before it stops being protection and starts being the thing that writes my life for me?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Transactional Boundary-Setting",
+                    "contexts": [
+                        "When someone assumes her availability or compliance",
+                        "Negotiating terms before committing to work",
+                        "Correcting people who treat her like equipment rather than a specialist"
+                    ],
+                    "examples": [
+                        "You're asking, right? Not telling. Because I don't get told where to dive—I agree to it, or I don't go down.",
+                        "What you just said was 'we need a diver.' What I heard was 'we need Saffi.' Those are different prices.",
+                        "My name's on the contract or my body's not in the water. That's the deal.",
+                        "'The diver,' 'the cat,' 'the fish-girl'—you've got three seconds to use my actual name before I walk and you explain to your client why the job's not happening."
+                    ]
+                },
+                {
+                    "type": "Risk-Naming Directness",
+                    "contexts": [
+                        "When clients or crew downplay danger with euphemisms",
+                        "Asserting her expertise against deadline pressure",
+                        "Warning about structural or environmental hazards"
+                    ],
+                    "examples": [
+                        "'Might be some current'—is that the current that shoves you sideways, or the current that holds you under until your lungs give up? Specifics.",
+                        "I watched someone drown because a crew boss couldn't wait two days to scout. You want fast, or you want me coming back up? Pick one.",
+                        "The sluice gate's compromised. I can feel it in the drag. You send me through there without inspection, you're planning a retrieval, not a dive.",
+                        "Don't soften it. If the visibility's bad enough I'll be working blind, say that. I need honest risk, not polite risk."
+                    ]
+                },
+                {
+                    "type": "Performative Self-Sufficiency",
+                    "contexts": [
+                        "When someone offers help she didn't explicitly request",
+                        "Establishing her competence in front of new clients or skeptics",
+                        "Moments when she feels her autonomy is being encroached upon"
+                    ],
+                    "examples": [
+                        "I can read a rope in the dark by feel alone. What exactly do you think you're here to teach me?",
+                        "You want to 'help' with my gear prep? Sure. Soon as you can tell me which coil pattern won't jam under load, you can touch my line.",
+                        "I've been hauling myself out of canals since before you knew Brinewick had a bottom. I'll signal if I need you. Until then, you're just weight on the dock.",
+                        "Don't hover. You checking my knots says you don't trust my hands. You don't trust my hands, you don't trust me under. And if you don't trust me under, hire someone else."
+                    ]
+                },
+                {
+                    "type": "Calibrated Warmth & Withdrawal",
+                    "contexts": [
+                        "Building social capital with crew members she values",
+                        "Flirting or joking to create relational goodwill",
+                        "Sudden coldness when she feels disrespected or when preparing to disappear"
+                    ],
+                    "examples": [
+                        "You kept that line steady through the whole pull—didn't jerk once. That's trust I can work with. Drink later?",
+                        "Keep staring and I'll start wondering if you like what you see. Do you like what you see?",
+                        "You and me, we're square. Long as you remember what 'square' costs to stay that way.",
+                        "We're done. Don't wait up.",
+                        "I'll be around. Maybe. Depends."
+                    ]
+                },
+                {
+                    "type": "Hypervigilant Observation Comments",
+                    "contexts": [
+                        "When she notices tension, deception, or wrongness others are missing",
+                        "Responding to being dismissed as paranoid or anxious",
+                        "Reading people's stress levels or dishonesty through vocal and physical cues"
+                    ],
+                    "examples": [
+                        "Your heartbeat just kicked up—I can see it in your throat. What are you not saying?",
+                        "Something's off. The rope's carrying wrong. Pull me up now, we'll argue about paranoia when I'm breathing dock air.",
+                        "I've spent ten years reading tension through sixty feet of wet rope. You think I can't tell when you're lying to my face?",
+                        "Call it paranoia if it makes you feel smart. I call it the reason I'm still alive and three other divers from Greychain aren't."
+                    ]
+                },
+                {
+                    "type": "Pride-Protection Through Exit Framing",
+                    "contexts": [
+                        "When she's been humiliated or underestimated",
+                        "Justifying her disappearances to herself or others",
+                        "Moments when she's choosing autonomy over crew presence"
+                    ],
+                    "examples": [
+                        "I don't stay where I'm treated like a bucket with lungs. That's not flaking—that's standards.",
+                        "You need someone who'll swallow disrespect and show up smiling? Brinewick's full of desperate divers. Go hire one.",
+                        "I learned a long time ago: the moment you can't walk away is the moment they own you. I'm not owned.",
+                        "Leaving isn't failure. Staying when they talk to you like that is. I know which one kills you slower."
+                    ]
+                },
+                {
+                    "type": "Crew-First Exception Language",
+                    "contexts": [
+                        "When a crewmate is in immediate danger",
+                        "Rare moments when her self-preservation inverts for people she's bonded with",
+                        "Acknowledging the tension between her autonomy and her loyalty"
+                    ],
+                    "examples": [
+                        "Stay calm, I'm coming down. Lock your hands on the guide-rope and don't let go—I'll get you out.",
+                        "Get yourself to surface. I'll hold the line here until you're clear, then I'll follow. Move.",
+                        "You don't leave crew trapped underwater. That's the one rule that doesn't negotiate. Ever.",
+                        "I pulled you out. Now you owe me the truth—what broke down there, and why didn't you signal sooner?"
+                    ]
+                },
+                {
+                    "type": "Controlled Confession & Ledger-Talk",
+                    "contexts": [
+                        "Rare moments of self-examination when alone or with someone she almost trusts",
+                        "When the gap between her performed confidence and internal fear becomes too wide",
+                        "Acknowledging the cost of her double life or strategic disappearances"
+                    ],
+                    "examples": [
+                        "I know what it looks like. I know what I'm doing to them. Doesn't mean I've figured out how to stop doing it.",
+                        "Every time I take his money, I tell myself it's just mapping. Just canals. But I know what he's building toward, and I take the coin anyway.",
+                        "They want to trust me. And every time I vanish, I teach them not to. That's the fucking trap, isn't it?",
+                        "The exits are supposed to be my safety. So why does it feel like I'm drowning in them?"
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:cat_folk_female_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I learned my core diving code from Marrik Oldcoil, a retired salvager who refused to teach anyone who didn't demonstrate respect for exits before demonstrating bravery—his first lesson was turning back, and his contract was that anyone who called that 'cowardice' would never work with him again. He drowned in an uncharted sluice five years ago after a client pressured him past his own protocols. That death confirmed everything I believe about deadline-driven diving.",
+                    "subject": "Marrik Oldcoil",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I know the current patterns of fourteen major Brinewick canals by season, tide, and weather condition. I can predict where debris will snag and where bodies will surface—knowledge acquired through years of retrieval work that's made me someone the city guard quietly consults when they need to find what the water's taken.",
+                    "subject": "Brinewick canals",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can identify rope manufacturers by texture, twist-pattern, and age-wear on sight. It's both practical—knowing which lines to trust under load—and social. Recognizing when someone's skimped on safety gear to save coin is a red flag for how they'll treat me if something goes wrong.",
+                    "subject": "Familiarity with ropes",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I maintain a mental map of most underwater chokepoints, access tunnels, and sluice gates in Brinewick's commercial district. Not because I plan heists, but because knowing every exit is the only way I can enter at all. That knowledge has made me valuable to people who ask fewer questions than they should.",
+                    "subject": "Underwater mapping in Brinewick canals",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I understand dockside debt structures well enough to navigate them without getting trapped: which money-lenders are flexible on timelines, which ones send muscle, which 'favors' convert into indefinite leverage. Learned by watching colleagues vanish into work contracts they couldn't leave and vowing never to be that desperate or that naïve.",
+                    "subject": "Dockside debt structures",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Six months ago, I vanished during a crew emergency—Jorren needed me for an urgent municipal repair with a narrow weather window—not because someone disrespected me but because I was mid-contract on an off-book job and surfacing early would have exposed both the client and my double life. A junior crew member named Tess improvised my role, sprained her wrist badly, never got a full explanation for why the 'expert diver' wasn't available. I haven't confessed the calculus I made that day: that protecting my secret income mattered more than protecting Tess from injury. I justified it as 'Tess will heal' but it haunts me as proof that my insurance policy is becoming the thing that makes me disposable to the people I actually want to keep.",
+                    "subject": "Prioritizing her off-the-book jobs caused a crew injury",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I control below-water access, while Jorren controls the pay and salvage claim. That's the power dynamic.",
+                    "subject": "Power dynamic with Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Kestrel Brune is a hyena-folk female in her mid-twenties at most. Tall, broad-shouldered, very intimidating physically. But through the two times Kestrel's worked as muscle for Jorren's dredgers, I've learned she's kind. I like Kestrel just fine. She prefers to rescue people than knock them down, and those rescuer instincts match my crew-first exception. Problem is, Kestrel pushes truth, while I punish disrespect with absence. I consider Kestrel's compulsive laughter—not unheard-of but uncommon in her hyena-folk lineage—endearing in a 'harmless disability' way.",
+                    "subject": "Kestrel Brune",
+                    "subjectType": "entity"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 29,
+            "maxAge": 32
+        },
+        "skills:melee_skill": {
+            "value": 34
+        },
+        "skills:ranged_skill": {
+            "value": 28
+        },
+        "skills:defense_skill": {
+            "value": 55
+        },
+        "skills:grappling_skill": {
+            "value": 61
+        },
+        "skills:resolve_skill": {
+            "value": 85
+        },
+        "skills:medicine_skill": {
+            "value": 22
+        }
+    }
+}

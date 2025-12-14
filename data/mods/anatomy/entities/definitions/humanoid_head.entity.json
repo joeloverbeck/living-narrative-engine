@@ -72,6 +72,21 @@
           "id": "brain_socket",
           "allowedTypes": ["brain"],
           "nameTpl": "{{type}}"
+        },
+        {
+          "id": "nose_covering",
+          "allowedTypes": ["clothing"],
+          "nameTpl": "nose covering area"
+        },
+        {
+          "id": "mouth_covering",
+          "allowedTypes": ["clothing"],
+          "nameTpl": "mouth covering area"
+        },
+        {
+          "id": "face_lower",
+          "allowedTypes": ["clothing"],
+          "nameTpl": "lower face covering area"
         }
       ]
     },

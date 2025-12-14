@@ -40,6 +40,7 @@
           "rugged",
           "scaled",
           "scarred",
+          "scuffed",
           "serrated-edges",
           "silky",
           "slick",
@@ -57,6 +58,7 @@
           "velvety",
           "waxed",
           "webbed-clawed",
+          "webbing",
           "worn"
         ],
         "default": "smooth"

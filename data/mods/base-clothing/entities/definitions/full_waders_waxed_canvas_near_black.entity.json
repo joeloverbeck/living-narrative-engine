@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:full_waders_waxed_canvas_near_black",
+  "description": "Full waders of waxed canvas in near-black, heavily scuffed from use",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "extraction waders"
+    },
+    "core:description": {
+      "text": "Thigh-high waders of heavily waxed canvas, dyed a near-black that has gone gray and scuffed with hard use. The soles are thick vulcanized rubber scored deep for grip on slick surfaces, and the uppers rise high enough to keep out the foul water of the extraction pits. Every surface shows the scrapes, scuffs, and gouges of a working life—these boots have waded through things no one wants to remember."
+    },
+    "descriptors:color_extended": {
+      "color": "near-black"
+    },
+    "descriptors:texture": {
+      "texture": "scuffed"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.65
+    }
+  }
+}

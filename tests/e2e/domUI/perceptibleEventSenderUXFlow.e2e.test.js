@@ -2,6 +2,9 @@
  * @file E2E test for Perceptible Event Sender UX flow
  * Tests the user experience when accessing the perceptible event sender
  * before and after game initialization.
+ *
+ * Performance-optimized: JSDOM and container are created once per suite,
+ * with state reset between tests.
  */
 
 process.env.NODE_ENV = 'test';
@@ -12,6 +15,8 @@ import {
   expect,
   beforeEach,
   afterEach,
+  beforeAll,
+  afterAll,
   jest,
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
@@ -19,27 +24,33 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ENGINE_READY_UI } from '../../../src/constants/eventIds.js';
-import { EXITS_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { PerceptibleEventTestBed } from './common/perceptibleEventTestBed.js';
 
 describe('Perceptible Event Sender - UX Flow E2E', () => {
+  // Shared across all tests (expensive to create)
   let container;
   let dom;
   let document;
   let window;
-  let controller;
   let eventBus;
   let entityManager;
   let testBed;
 
-  // DOM elements
+  // Reset per test (cheap)
+  let controller;
   let locationSelect;
   let sendButton;
   let messageTextarea;
   let statusDiv;
 
-  beforeEach(async () => {
-    // Create minimal DOM matching game.html structure
+  /**
+   * Helper to flush pending microtasks
+   * @returns {Promise<void>}
+   */
+  const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+  beforeAll(async () => {
+    // ONE-TIME: Create JSDOM matching game.html structure
     dom = new JSDOM(`
       <!DOCTYPE html>
       <html>
@@ -70,13 +81,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
     global.document = document;
     global.window = window;
 
-    // Get references to DOM elements
-    locationSelect = document.getElementById('perceptible-event-location');
-    sendButton = document.getElementById('send-perceptible-event-button');
-    messageTextarea = document.getElementById('perceptible-event-message');
-    statusDiv = document.getElementById('perceptible-event-status');
-
-    // Setup DI container with real implementations
+    // ONE-TIME: Setup DI container with real implementations
     container = new AppContainer();
 
     // Create mock UI elements required by configureContainer
@@ -89,12 +94,11 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
 
     await configureContainer(container, mockUiElements);
 
-    // Resolve required services
+    // ONE-TIME: Resolve shared services
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
     entityManager = container.resolve(tokens.IEntityManager);
-    controller = container.resolve(tokens.PerceptibleEventSenderController);
 
-    // Create test bed helper
+    // ONE-TIME: Create test bed helper and register schemas
     const registry = container.resolve(tokens.IDataRegistry);
     const validator = container.resolve(tokens.ISchemaValidator);
     const logger = container.resolve(tokens.ILogger);
@@ -106,20 +110,39 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       logger,
     });
 
-    // Register component schemas
+    // ONE-TIME: Register component schemas
     await testBed.registerComponentSchemas();
   });
 
-  afterEach(() => {
-    if (testBed) {
-      testBed.cleanup();
-    }
-    if (controller && typeof controller.cleanup === 'function') {
-      controller.cleanup();
-    }
+  afterAll(() => {
     dom.window.close();
     delete global.document;
     delete global.window;
+  });
+
+  beforeEach(() => {
+    // EACH TEST: Get DOM element references
+    locationSelect = document.getElementById('perceptible-event-location');
+    sendButton = document.getElementById('send-perceptible-event-button');
+    messageTextarea = document.getElementById('perceptible-event-message');
+    statusDiv = document.getElementById('perceptible-event-status');
+
+    // EACH TEST: Reset DOM to initial state
+    locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+    locationSelect.disabled = false;
+    sendButton.disabled = true;
+    messageTextarea.value = '';
+    statusDiv.textContent = '';
+
+    // EACH TEST: Get fresh controller instance
+    controller = container.resolve(tokens.PerceptibleEventSenderController);
+  });
+
+  afterEach(async () => {
+    if (controller && typeof controller.cleanup === 'function') {
+      controller.cleanup();
+    }
+    await testBed.reset();
     jest.clearAllMocks();
   });
 
@@ -131,7 +154,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       controller.initialize();
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Selector should only have placeholder option
       expect(locationSelect.options.length).toBe(1);
@@ -146,7 +169,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       controller.initialize();
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Send button should be disabled
       expect(sendButton.disabled).toBe(true);
@@ -157,7 +180,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       controller.initialize();
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: User should understand why they can't send events
       // This test currently FAILS because the UI doesn't communicate the state clearly
@@ -183,8 +206,9 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       expect(locationSelect.options.length).toBe(1);
 
       // Arrange: Create test locations AFTER initialization
-      await testBed.createLocation('test_loc_1', 'Tavern');
-      await testBed.createLocation('test_loc_2', 'Market Square');
+      // Note: Using unique IDs (populate_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('populate_loc_1', 'Tavern');
+      await testBed.createLocation('populate_loc_2', 'Market Square');
 
       // Act: Dispatch ENGINE_READY_UI event
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -193,19 +217,20 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       });
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Locations should now be populated
       expect(locationSelect.options.length).toBe(3); // placeholder + 2 locations
-      expect(locationSelect.options[1].value).toBe('test_loc_1');
+      expect(locationSelect.options[1].value).toBe('populate_loc_1');
       expect(locationSelect.options[1].textContent).toBe('Tavern');
-      expect(locationSelect.options[2].value).toBe('test_loc_2');
+      expect(locationSelect.options[2].value).toBe('populate_loc_2');
       expect(locationSelect.options[2].textContent).toBe('Market Square');
     });
 
     it('should enable controls after locations are loaded', async () => {
       // Arrange: Create location
-      await testBed.createLocation('test_loc_1', 'Tavern');
+      // Note: Using unique ID (enable_*) to avoid definition cache collisions
+      await testBed.createLocation('enable_loc_1', 'Tavern');
 
       // Initialize controller
       controller.initialize();
@@ -217,7 +242,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       });
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Location selector should be enabled (if it was disabled)
       // This is part of the UX improvement
@@ -228,7 +253,8 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
 
     it('should allow event sending after location selection', async () => {
       // Arrange: Create location
-      await testBed.createLocation('test_loc_1', 'Tavern');
+      // Note: Using unique ID (allow_*) to avoid definition cache collisions
+      await testBed.createLocation('allow_loc_1', 'Tavern');
 
       // Initialize controller
       controller.initialize();
@@ -240,11 +266,11 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       });
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Act: User enters message and selects location
       messageTextarea.value = 'A loud crash echoes';
-      locationSelect.value = 'test_loc_1';
+      locationSelect.value = 'allow_loc_1';
 
       // Trigger change event
       const changeEvent = new window.Event('change');
@@ -258,7 +284,8 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
   describe('Edge Cases', () => {
     it('should handle multiple ENGINE_READY_UI events (e.g., loading saves)', async () => {
       // Arrange: Create first location
-      await testBed.createLocation('test_loc_1', 'Tavern');
+      // Note: Using unique IDs (reload_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('reload_loc_1', 'Tavern');
 
       controller.initialize();
 
@@ -268,13 +295,13 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
       expect(locationSelect.options.length).toBe(2); // placeholder + 1 location
 
       // Act: Simulate loading a save (different locations)
-      await entityManager.removeEntityInstance('test_loc_1');
+      await entityManager.removeEntityInstance('reload_loc_1');
 
-      await testBed.createLocation('test_loc_2', 'Castle');
+      await testBed.createLocation('reload_loc_2', 'Castle');
 
       // Second ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -282,11 +309,11 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
         message: 'Game reloaded',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Should refresh with new locations
       expect(locationSelect.options.length).toBe(2); // placeholder + 1 new location
-      expect(locationSelect.options[1].value).toBe('test_loc_2');
+      expect(locationSelect.options[1].value).toBe('reload_loc_2');
       expect(locationSelect.options[1].textContent).toBe('Castle');
     });
 
@@ -300,7 +327,7 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Should only have placeholder
       expect(locationSelect.options.length).toBe(1);
@@ -316,29 +343,30 @@ describe('Perceptible Event Sender - UX Flow E2E', () => {
       // Step 1: Page loads (no game started)
       controller.initialize();
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // User sees empty selector - should understand why
       expect(locationSelect.options.length).toBe(1);
       expect(sendButton.disabled).toBe(true);
 
       // Step 2: Game starts (ENGINE_READY_UI fires)
-      await testBed.createLocation('test_loc_1', 'Tavern');
-      await testBed.createActor('test_actor_1', 'Hero', 'test_loc_1');
+      // Note: Using unique IDs (flow_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('flow_loc_1', 'Tavern');
+      await testBed.createActor('flow_actor_1', 'Hero', 'flow_loc_1');
 
       await eventBus.dispatch(ENGINE_READY_UI, {
         activeWorld: 'test_world',
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // User sees locations are now available
       expect(locationSelect.options.length).toBe(2);
 
       // Step 3: User fills in form
       messageTextarea.value = 'A mysterious figure appears';
-      locationSelect.value = 'test_loc_1';
+      locationSelect.value = 'flow_loc_1';
       locationSelect.dispatchEvent(new window.Event('change'));
 
       // Send button becomes enabled

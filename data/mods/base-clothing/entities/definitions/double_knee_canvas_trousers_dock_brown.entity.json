@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:double_knee_canvas_trousers_dock_brown",
+  "description": "Double-knee canvas trousers in dock-brown with patched repairs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas"
+    },
+    "core:name": {
+      "text": "double-knee trousers"
+    },
+    "core:description": {
+      "text": "Heavy canvas trousers dyed the dock-brown of weathered timber, built to survive the brutal demands of extraction work. The knees are double-layered with reinforced panels, already showing the pale scuffing of countless hours spent kneeling on rough surfaces. Patches of mismatched canvas mark where the original fabric gave way, each repair a badge of continued service. Wide through the thigh for ease of climbing and crouching."
+    },
+    "descriptors:color_extended": {
+      "color": "dock-brown"
+    },
+    "descriptors:texture": {
+      "texture": "patched"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.58
+    }
+  }
+}
