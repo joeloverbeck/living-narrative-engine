@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:extraction_harness_rope_tan",
+  "description": "A wide-webbing extraction harness in rope-tan",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "core:material": {
+      "material": "nylon"
+    },
+    "core:name": {
+      "text": "extraction harness"
+    },
+    "core:description": {
+      "text": "A heavy-duty harness of wide webbing straps in faded rope-tan, designed for the brutal demands of extraction work. Multiple D-rings provide attachment points for winch lines, tool clips, and emergency rescue cables. The shoulder straps are padded where they cross the chest, and quick-release buckles allow rapid escape if a load goes wrong. Every extraction worker knows this harness is the difference between being pulled to safety and being dragged into the depths."
+    },
+    "descriptors:color_extended": {
+      "color": "rope-tan"
+    },
+    "descriptors:texture": {
+      "texture": "webbing"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.55
+    }
+  }
+}

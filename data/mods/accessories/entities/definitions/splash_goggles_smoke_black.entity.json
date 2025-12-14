@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:splash_goggles_smoke_black",
+  "description": "Splash goggles with smoke-black leather frame and clear lenses",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "splash goggles"
+    },
+    "core:description": {
+      "text": "Protective goggles with a smoke-black leather frame fitted tight against the face, sealing out the caustic splashes and flying debris of extraction work. The lenses are thick clear glass, scratched from use but still functional, secured in brass bezels that can be replaced when they finally crack. A wide elastic strap holds them snug, leaving narrow vents to prevent fogging during heavy labor. Essential equipment for anyone working in the pits."
+    },
+    "descriptors:color_extended": {
+      "color": "smoke-black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["head_gear"],
+      "coveragePriority": "accessories"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.12
+    }
+  }
+}

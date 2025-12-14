@@ -1,0 +1,17 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:kestrel_brune_instance",
+    "definitionId": "dredgers:kestrel_brune",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "dredgers:canal_vestibule_instance"
+        },
+        "items:inventory": {
+            "items": [],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

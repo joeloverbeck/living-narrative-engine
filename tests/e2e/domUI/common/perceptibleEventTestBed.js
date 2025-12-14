@@ -40,8 +40,9 @@ export class PerceptibleEventTestBed {
     this.validator = validator;
     this.logger = logger;
 
-    // Track created entities for cleanup
+    // Track created entities and definitions for cleanup
     this.createdEntityIds = new Set();
+    this.createdDefinitionIds = new Set();
   }
 
   /**
@@ -120,20 +121,12 @@ export class PerceptibleEventTestBed {
   _ensureDefinitionExists(definitionId, components = {}) {
     assertNonBlankString(definitionId, 'definitionId');
 
-    // Check if definition already exists
-    try {
-      const existingDef = this.registry.get('entityDefinitions', definitionId);
-      if (existingDef) {
-        return;
-      }
-    } catch (error) {
-      // Definition doesn't exist, we'll create it
-    }
-
-    // Create entity definition
+    // Always overwrite definition to support tests that reuse IDs with different data
+    // This is safe in test context where we control all entity creation
     const definition = createEntityDefinition(definitionId, components);
     this.registry.store('entityDefinitions', definitionId, definition);
-    this.logger.debug(`Created entity definition: ${definitionId}`);
+    this.createdDefinitionIds.add(definitionId);
+    this.logger.debug(`Created/updated entity definition: ${definitionId}`);
   }
 
   /**
@@ -228,6 +221,36 @@ export class PerceptibleEventTestBed {
     });
 
     this.logger.debug(`Added exits to location: ${locationId}`);
+  }
+
+  /**
+   * Reset test bed state - removes all created entities
+   * Used between tests to maintain isolation when sharing container
+   *
+   * @returns {Promise<void>}
+   */
+  async reset() {
+    // Remove entity instances
+    for (const entityId of this.createdEntityIds) {
+      try {
+        await this.entityManager.removeEntityInstance(entityId);
+      } catch (err) {
+        // Entity may already be removed, ignore
+      }
+    }
+    this.createdEntityIds.clear();
+
+    // Clear entity definitions from registry to avoid stale data
+    // Registry uses this.data Map with two-level keys: data.get(type).get(id)
+    const entityDefsMap = this.registry.data?.get('entityDefinitions');
+    if (entityDefsMap) {
+      for (const definitionId of this.createdDefinitionIds) {
+        entityDefsMap.delete(definitionId);
+      }
+    }
+    this.createdDefinitionIds.clear();
+
+    this.logger.debug('Perceptible event test bed reset complete');
   }
 
   /**

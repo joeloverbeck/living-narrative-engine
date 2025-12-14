@@ -144,6 +144,17 @@ export class EntityManagerAdapter extends IEntityManager {
     return this.#entityManager.hasBatchSupport();
   }
 
+
+  /**
+   * Returns the monitoring coordinator from the underlying EntityManager.
+   * Used for resetting circuit breakers in test scenarios.
+   *
+   * @returns {import('./monitoring/MonitoringCoordinator.js').MonitoringCoordinator | null} The monitoring coordinator or null
+   */
+  getMonitoringCoordinator() {
+    return this.#entityManager.getMonitoringCoordinator();
+  }
+
   /** @inheritdoc */
   async batchCreateEntities(entitySpecs, options = {}) {
     return await this.#entityManager.batchCreateEntities(entitySpecs, options);

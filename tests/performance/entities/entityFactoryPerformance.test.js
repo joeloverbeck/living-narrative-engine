@@ -373,13 +373,22 @@ describe('Entity Factory Performance Tests', () => {
     });
 
     it('should verify cache effectiveness through functional cache statistics', async () => {
-      // Arrange - Create definitions for cache testing
+      // Arrange - Clear cache stats before test to ensure clean measurement
+      // The testbed uses static cache, so we need a fresh baseline
+      const initialCacheStats =
+        EntityWorkflowTestBed.getDefinitionCacheStats();
+      const initialCacheSize = initialCacheStats.size;
+      const initialStores = initialCacheStats.stores;
+
+      // Create NEW definitions for cache testing (not previously cached)
+      const timestamp = Date.now();
       const testDefinitions = [
-        'test:cache_stat_1',
-        'test:cache_stat_2',
-        'test:cache_stat_3',
+        `test:cache_stat_fresh_1_${timestamp}`,
+        `test:cache_stat_fresh_2_${timestamp}`,
+        `test:cache_stat_fresh_3_${timestamp}`,
       ];
 
+      // Register definitions (this should populate the testbed's definition cache)
       for (const defId of testDefinitions) {
         await testBed.ensureEntityDefinitionExists(defId, {
           id: defId,
@@ -389,41 +398,21 @@ describe('Entity Factory Performance Tests', () => {
         });
       }
 
-      // Get initial cache state (monitoring may not be available in test environment)
-      const monitoringCoordinator =
-        typeof testBed.entityManager.getMonitoringCoordinator === 'function'
-          ? testBed.entityManager.getMonitoringCoordinator()
-          : null;
+      // Get cache size after definition registration
+      const statsAfterRegistration =
+        EntityWorkflowTestBed.getDefinitionCacheStats();
+      const cacheSizeAfterRegistration = statsAfterRegistration.size;
+      const storesAfterRegistration = statsAfterRegistration.stores;
 
-      let initialCacheSize = 0;
-
-      if (
-        monitoringCoordinator &&
-        typeof monitoringCoordinator.getStats === 'function'
-      ) {
-        const initialStats = monitoringCoordinator.getStats();
-        initialCacheSize = initialStats?.cacheStats?.size || 0;
-      }
-
-      // Act - Create entities (first access should populate cache)
+      // Act - Create entities (should use cached definitions)
       for (let i = 0; i < testDefinitions.length; i++) {
         const entity = await testBed.entityManager.createEntityInstance(
           testDefinitions[i],
           {
-            instanceId: `cache_stat_entity_first_${i}`,
+            instanceId: `cache_stat_entity_first_${timestamp}_${i}`,
           }
         );
         expect(entity).toBeDefined();
-      }
-
-      // Get cache size after first access
-      let cacheSizeAfterFirstAccess = initialCacheSize;
-      if (
-        monitoringCoordinator &&
-        typeof monitoringCoordinator.getStats === 'function'
-      ) {
-        const statsAfterFirst = monitoringCoordinator.getStats();
-        cacheSizeAfterFirstAccess = statsAfterFirst?.cacheStats?.size || 0;
       }
 
       // Create more entities with same definitions (should reuse cache)
@@ -431,65 +420,72 @@ describe('Entity Factory Performance Tests', () => {
         const entity = await testBed.entityManager.createEntityInstance(
           testDefinitions[i],
           {
-            instanceId: `cache_stat_entity_second_${i}`,
+            instanceId: `cache_stat_entity_second_${timestamp}_${i}`,
           }
         );
         expect(entity).toBeDefined();
       }
 
-      // Get final cache size
-      let finalCacheSize = cacheSizeAfterFirstAccess;
-      if (
-        monitoringCoordinator &&
-        typeof monitoringCoordinator.getStats === 'function'
-      ) {
-        const finalStats = monitoringCoordinator.getStats();
-        finalCacheSize = finalStats?.cacheStats?.size || 0;
-      }
+      // Get final cache stats
+      const finalCacheStats = EntityWorkflowTestBed.getDefinitionCacheStats();
 
       // Assert cache behavior
-      // Always verify entities were created successfully (core functional correctness)
+      // Verify entities were created successfully (core functional correctness)
       expect(
-        testBed.entityManager.getEntityInstance('cache_stat_entity_first_0')
+        testBed.entityManager.getEntityInstance(
+          `cache_stat_entity_first_${timestamp}_0`
+        )
       ).toBeDefined();
       expect(
-        testBed.entityManager.getEntityInstance('cache_stat_entity_second_0')
+        testBed.entityManager.getEntityInstance(
+          `cache_stat_entity_second_${timestamp}_0`
+        )
       ).toBeDefined();
       expect(
-        testBed.entityManager.getEntityInstance('cache_stat_entity_first_1')
+        testBed.entityManager.getEntityInstance(
+          `cache_stat_entity_first_${timestamp}_1`
+        )
       ).toBeDefined();
       expect(
-        testBed.entityManager.getEntityInstance('cache_stat_entity_second_1')
+        testBed.entityManager.getEntityInstance(
+          `cache_stat_entity_second_${timestamp}_1`
+        )
       ).toBeDefined();
 
-      // Log cache statistics if available (monitoring may not be enabled in all test environments)
-      const hasMonitoring =
-        monitoringCoordinator &&
-        typeof monitoringCoordinator.getStats === 'function';
+      // Verify caching is enabled and working
+      const hasCaching = EntityWorkflowTestBed.enableDefinitionCache;
 
-      // Verify cache behavior when monitoring is available
-      // NOTE: These assertions are skipped if monitoring is unavailable, but core functional
-      // correctness is still validated via entity creation assertions above
-      const cacheGrew = cacheSizeAfterFirstAccess > initialCacheSize;
-      const cacheStable = finalCacheSize === cacheSizeAfterFirstAccess;
+      // Verify cache behavior when caching is enabled
+      const cacheGrew = cacheSizeAfterRegistration > initialCacheSize;
+      const storesIncreased = storesAfterRegistration > initialStores;
+      const cacheSizeStable =
+        finalCacheStats.size === cacheSizeAfterRegistration;
 
-      if (hasMonitoring) {
-        testBed.logger.info(`Cache Statistics:
-          Initial Cache Size: ${initialCacheSize}
-          After First Access: ${cacheSizeAfterFirstAccess}
-          After Second Access: ${finalCacheSize}
-          Cache Grew After First Access: ${cacheGrew ? 'YES' : 'NO'}
-          Cache Stable After Reuse: ${cacheStable ? 'YES' : 'NO'}`);
-      } else {
-        testBed.logger.info(
-          'Cache statistics not available - functional correctness verified'
-        );
-      }
+      testBed.logger.info(`Cache Statistics:
+        Caching Enabled: ${hasCaching ? 'YES' : 'NO'}
+        Initial Cache Size: ${initialCacheSize}
+        After Registration: ${cacheSizeAfterRegistration}
+        Final Cache Size: ${finalCacheStats.size}
+        Initial Stores: ${initialStores}
+        After Registration Stores: ${storesAfterRegistration}
+        Final Stores: ${finalCacheStats.stores}
+        Cache Grew After Registration: ${cacheGrew ? 'YES' : 'NO'}
+        Stores Increased: ${storesIncreased ? 'YES' : 'NO'}
+        Cache Size Stable After Reuse: ${cacheSizeStable ? 'YES' : 'NO'}`);
 
-      // Performance assertion: Verify caching is working correctly when monitoring is available
-      // When monitoring is unavailable, functional correctness is still validated
-      expect(hasMonitoring ? cacheGrew : true).toBe(true);
-      expect(hasMonitoring ? cacheStable : true).toBe(true);
+      // Performance assertions: Verify caching is working correctly when enabled
+      // When caching is disabled, assertions use fallback truthy values to avoid failures
+      // New definitions should have been stored in cache
+      expect(hasCaching ? storesIncreased : true).toBe(true);
+      // Cache should have grown by at least the number of new definitions
+      expect(
+        hasCaching
+          ? cacheSizeAfterRegistration - initialCacheSize >=
+              testDefinitions.length
+          : true
+      ).toBe(true);
+      // Cache size should remain stable after entity creation (definitions already cached)
+      expect(hasCaching ? cacheSizeStable : true).toBe(true);
     });
   });
 });

@@ -45,6 +45,12 @@ jest.mock(
   })
 );
 
+/**
+ * Helper to flush pending microtasks without fixed delay
+ * @returns {Promise<void>}
+ */
+const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
 // Create a minimal DOM fixture for better performance
 const createDOMFixture = () => {
   return `
@@ -323,7 +329,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       await controller.initialize();
 
       // Wait for all async operations to complete
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushMicrotasks();
 
       // Verify _testExports are available
       if (!controller._testExports) {
@@ -356,7 +362,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       }
 
       // Wait for UI state to update with proper timing
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushMicrotasks();
 
       const emptyState = document.getElementById('empty-state');
       const resultsState = document.getElementById('results-state');
@@ -396,7 +402,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       );
 
       // Wait for form submission to process
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushMicrotasks();
 
       // Verify save was called with correct input
       expect(
@@ -414,7 +420,8 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       }
 
       // Wait for UI state to update
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await flushMicrotasks();
+      await flushMicrotasks(); // Double flush for longer operations
 
       const resultsState = document.getElementById('results-state');
       expect(resultsState.style.display).not.toBe('none');
@@ -451,7 +458,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
           new Event('submit', { bubbles: true, cancelable: true })
         );
 
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        await flushMicrotasks();
 
         // Verify update was called
         expect(
@@ -478,7 +485,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       closeBtn.click();
 
       // Wait for modal to close
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushMicrotasks();
       expect(modal.style.display).toBe('none');
 
       // Re-open and test cancel button
@@ -489,7 +496,7 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       cancelBtn.click();
 
       // Wait for modal to close
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await flushMicrotasks();
       expect(modal.style.display).toBe('none');
     });
   });
