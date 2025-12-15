@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:cat_tail_mottled_brown_gray",
+  "description": "Feline tail - long, flexible, covered in mottled brown-gray fur",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail",
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 12,
+      "maxHealth": 12,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "cat tail"
+    },
+    "core:weight": {
+      "weight": 0.15
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "descriptors:pattern": {
+      "pattern": "mottled"
+    },
+    "descriptors:color_extended": {
+      "color": "mottled-brown-gray"
+    }
+  }
+}

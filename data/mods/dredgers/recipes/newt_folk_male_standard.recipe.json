@@ -1,0 +1,101 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:newt_folk_male_standard",
+  "blueprintId": "anatomy-creatures:newt_folk_male",
+  "bodyDescriptors": {
+    "height": "average",
+    "skinColor": "murky-green",
+    "build": "lissom",
+    "composition": "lean",
+    "hairDensity": "hairless"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy-creatures:newt_folk_male_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy-creatures:newt_folk_head"
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy-creatures:newt_nostril"
+    },
+    "mouth": {
+      "partType": "mouth",
+      "preferId": "anatomy-creatures:newt_mouth"
+    },
+    "teeth": {
+      "partType": "teeth",
+      "preferId": "anatomy-creatures:newt_teeth"
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy-creatures:newt_tail"
+    },
+    "penis": {
+      "partType": "penis",
+      "preferId": "anatomy-creatures:newt_folk_penis"
+    },
+    "asshole": {
+      "partType": "asshole",
+      "preferId": "anatomy-creatures:newt_folk_cloaca"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy-creatures:newt_eye"
+    },
+    {
+      "matches": ["left_ear", "right_ear"],
+      "partType": "ear",
+      "preferId": "anatomy-creatures:newt_tympanum"
+    },
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy-creatures:newt_folk_arm"
+    },
+    {
+      "matches": ["left_hand", "right_hand"],
+      "partType": "hand",
+      "preferId": "anatomy-creatures:newt_folk_hand_webbed"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy-creatures:newt_folk_leg"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy-creatures:newt_folk_foot_webbed"
+    },
+    {
+      "matches": ["left_testicle", "right_testicle"],
+      "partType": "testicle",
+      "preferId": "anatomy-creatures:newt_folk_testicle"
+    },
+    {
+      "matches": ["left_ass", "right_ass"],
+      "partType": "ass_cheek",
+      "preferId": "anatomy-creatures:newt_folk_ass_cheek"
+    }
+  ],
+  "clothingEntities": []
+}

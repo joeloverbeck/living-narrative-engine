@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_folk_foot_webbed",
+  "description": "A webbed newt-folk foot with long toes",
+  "components": {
+    "anatomy:part": {
+      "subType": "foot",
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 12,
+      "maxHealth": 12,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "foot"
+    },
+    "core:weight": {
+      "weight": 1.0
+    },
+    "descriptors:texture": {
+      "texture": "webbing"
+    },
+    "descriptors:digit_count": {
+      "count": "5"
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:oilskin_shell_coat_tar_black",
+  "description": "Heavy oilskin shell coat in tar-black with glossy finish",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "outer"
+    },
+    "core:material": {
+      "material": "oilskin",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "shell coat"
+    },
+    "core:description": {
+      "text": "A tar-black shell coat of heavily oiled canvas, its surface gleaming with a slick sheen that catches what little light penetrates underground work sites. The coat is cut long and loose to fit over layers of padding beneath, with a high collar that can be drawn up to protect the neck from dripping water and falling grit. The seams are sealed with wax and tar, and the whole garment has the stiff, heavy feel of canvas that has been treated until it's nearly waterproof. The glossy finish makes it easy to wipe clean, which matters when you're crawling through spaces where the walls weep strange fluids and the ceiling rains debris."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-black"
+    },
+    "descriptors:texture": {
+      "texture": "glossy-oiled"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.4
+    }
+  }
+}

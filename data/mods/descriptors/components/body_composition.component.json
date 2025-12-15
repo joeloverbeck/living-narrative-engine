@@ -11,8 +11,10 @@
         "enum": [
           "underweight",
           "lean",
+          "dense",
           "average",
           "soft",
+          "bumpy",
           "chubby",
           "overweight",
           "obese",

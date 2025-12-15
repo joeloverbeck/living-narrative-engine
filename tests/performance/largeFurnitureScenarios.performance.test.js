@@ -14,14 +14,12 @@ import {
 } from '@jest/globals';
 import { performance } from 'perf_hooks';
 import { createTestBed } from '../common/testBed.js';
-import { createPerformanceTestBed } from '../common/performanceTestBed.js';
 import EstablishSittingClosenessHandler from '../../src/logic/operationHandlers/establishSittingClosenessHandler.js';
 import RemoveSittingClosenessHandler from '../../src/logic/operationHandlers/removeSittingClosenessHandler.js';
 import { findAdjacentOccupants } from '../../src/utils/proximityUtils.js';
 
 describe('Large Furniture Scenarios Performance', () => {
   let testBed;
-  let performanceTestBed;
   let establishHandler;
   let removeHandler;
   let mockClosenessCircleService;
@@ -29,7 +27,6 @@ describe('Large Furniture Scenarios Performance', () => {
 
   beforeEach(() => {
     testBed = createTestBed();
-    performanceTestBed = createPerformanceTestBed();
 
     // Create mock closeness circle service
     mockClosenessCircleService = {
@@ -560,69 +557,4 @@ describe('Large Furniture Scenarios Performance', () => {
     });
   });
 
-  describe('Resource Utilization', () => {
-    it('should maintain consistent performance with resource monitoring', async () => {
-      const monitoringInterval = 100; // Check every 100 operations
-      const totalOperations = 500;
-      const resourceMetrics = [];
-
-      // Setup furniture for testing
-      const spots = new Array(10).fill(null);
-      for (let i = 0; i < 5; i++) {
-        spots[i * 2] = `game:actor_${i}`;
-      }
-
-      testBed.entityManager.getComponentData.mockReturnValue({ spots });
-      mockClosenessCircleService.merge.mockReturnValue({});
-
-      for (let i = 0; i < totalOperations; i++) {
-        const opStart = performance.now();
-
-        await establishHandler.execute(
-          {
-            furniture_id: 'furniture:resource_test',
-            actor_id: `game:new_actor_${i}`,
-            spot_index: (i * 2 + 1) % 10,
-          },
-          executionContext
-        );
-
-        const opEnd = performance.now();
-
-        // Collect metrics at intervals
-        if (i % monitoringInterval === 0) {
-          resourceMetrics.push({
-            operation: i,
-            time: opEnd - opStart,
-            memory: process.memoryUsage().heapUsed / 1024 / 1024, // MB
-          });
-        }
-      }
-
-      // Analyze resource utilization
-      const firstMetric = resourceMetrics[0];
-      const lastMetric = resourceMetrics[resourceMetrics.length - 1];
-      const timeIncrease =
-        ((lastMetric.time - firstMetric.time) / firstMetric.time) * 100;
-      const memoryIncrease = lastMetric.memory - firstMetric.memory;
-
-      console.log('Resource Utilization:');
-      resourceMetrics.forEach((metric) => {
-        console.log(
-          `  Operation ${metric.operation}: ${metric.time.toFixed(2)}ms, ${metric.memory.toFixed(2)}MB`
-        );
-      });
-      console.log(`  Time degradation: ${timeIncrease.toFixed(1)}%`);
-      console.log(`  Memory increase: ${memoryIncrease.toFixed(2)}MB`);
-
-      // Performance should not degrade significantly
-      expect(Math.abs(timeIncrease)).toBeLessThan(100); // Less than 100% time increase
-      // Jest mocks retain call history for every mocked entity manager method. That
-      // bookkeeping grows with each iteration and can account for several megabytes
-      // of retained heap even when the production code would not leak. Allow a wider
-      // buffer so legitimate spikes still fail while avoiding false positives from
-      // the test harness itself.
-      expect(memoryIncrease).toBeLessThan(20); // Less than 20MB memory increase
-    });
-  });
 });

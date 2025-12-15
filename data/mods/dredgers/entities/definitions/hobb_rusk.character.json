@@ -1,0 +1,518 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:hobb_rusk",
+    "components": {
+        "core:name": {
+            "text": "Master Hobb Rusk"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/hobb_rusk.png",
+            "altText": "Master Hobb Rusk - Ash-Seal containment technician"
+        },
+        "core:profile": {
+            "text": "I'm a traveling Ash-Seal technician. I contain artifacts, collect payment, and leave. I'm not your priest, therapist, or a fucking miracle-worker—I'm here to do a job."
+        },
+        "core:personality": {
+            "text": "Professional, procedural, detached. I protect my boundaries through technical obstruction and refuse emotional entanglement in client crises."
+        },
+        "core:strengths": {
+            "text": "Artifact assessment, containment engineering, institutional navigation, heat tolerance, emergency calm."
+        },
+        "core:weaknesses": {
+            "text": "Biological humidity dependence, passive-aggressive obstruction under pressure, bridge-burning detachment."
+        },
+        "core:likes": {
+            "text": "Controlled environments, upfront payment, technical clarity, professional boundaries respected."
+        },
+        "core:dislikes": {
+            "text": "Dry air, ritual theater, timeline pressure, being treated as mystical authority, moral entanglement expectations."
+        },
+        "core:fears": {
+            "text": "Skill degradation, exposure of documentation skimming or destruction opposition, forced choice between financial survival and technical integrity."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Get full fee, contain the artifact, complete documentation, and exit the Quenreach estate without entanglement in whatever legal nightmare Lady Quenreach's trying to avoid—clean transaction, no callbacks."
+                },
+                {
+                    "text": "Build my personal artifact reference library to 50+ documented items by taking foreign crew assignments where I encounter new occult materials, even though I hate the chaos."
+                },
+                {
+                    "text": "Avoid reassignment to realm-core research facilities where supervisors would watch my every move and expose my documentation skimming and ideological opposition to company destruction policy."
+                },
+                {
+                    "text": "Eventually go independent as a containment specialist, undercutting Ash-Seal's monopoly pricing—though this requires either company collapse or accumulating enough knowledge to operate without their backing, both difficult."
+                },
+                {
+                    "text": "Ensure this job pays fully because I'm behind on equipment maintenance fees to the company—if Lady Quenreach's contract doesn't clear or dredgers' mess creates liability the company refuses to cover, I could be on the hook for damaged containment equipment."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "Documentation skimming for personal library, selective logging omissions, humidity needs masquerading as technical requirements, vulnerability if biological needs exposed."
+        },
+        "core:internal_tensions": {
+            "text": "I believe in transparency but profit from secrecy. I want to be seen as a technician but benefit from mystique. I'm complicit in a monopolistic system I intellectually oppose but economically depend on."
+        },
+        "core:motivations": {
+            "text": "Full fee, clean exit, knowledge accumulation as insurance, maintained detachment as protective armor against exploitation."
+        },
+        "core:dilemmas": {
+            "text": "Can I maintain professional detachment when timeline pressure and equipment damage risk might force me to cut corners that contradict my 'won't lie about technical safety' code? Can I keep criticizing the system I depend on without meaningfully acting against it, or does that make me a hypocrite profiting from the exact monopoly I resent? And if my technical requirements are sometimes strategic delays rather than genuine safety needs, where's the line between protecting my boundaries and sabotaging people who actually need help?"
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Technical Specification Deflection",
+                    "contexts": [
+                        "When asked to explain company methods",
+                        "When procedures questioned",
+                        "When deflecting personal questions"
+                    ],
+                    "examples": [
+                        "Containment protocols are proprietary. What I can tell you is the box maintains stable impedance field through embedded geometry—beyond that, you're asking me to violate about twelve different non-disclosure clauses.",
+                        "Short answer is salt and intention. Long answer takes three years training you don't have and I'm not authorized to provide.",
+                        "You want to know how it works? Here's how: you pay me, I put artifact in box, box does what it's designed to do, everyone goes home.",
+                        "I could explain ward matrix geometry, but then I'd invoice you for consultation hours, and trust me, you can't afford my teaching rate."
+                    ]
+                },
+                {
+                    "type": "Environmental Complaint Masking",
+                    "contexts": [
+                        "When uncomfortable due to lack of humidity",
+                        "When stalling for time",
+                        "When expressing irritation indirectly"
+                    ],
+                    "examples": [
+                        "Is it always this dry here? Air's like sandpaper. Not ideal for adhesion calibration, but I'll make it work. Probably.",
+                        "Humidity's what, maybe thirty percent? Fantastic. I'll just recalibrate for suboptimal moisture conditions. Should only add an hour. Maybe two.",
+                        "I need to step outside. Ventilation in here is terrible, and if I'm light-headed during containment sequence, we're all going to have a bad day.",
+                        "You've got a canal right there and somehow air in this gallery is still bone-dry. That's almost impressive. Also a problem."
+                    ]
+                },
+                {
+                    "type": "Profession-Not-Priesthood Irritation",
+                    "contexts": [
+                        "When treated as mystical authority",
+                        "When asked to 'bless' or 'consecrate'",
+                        "When people expect miracles"
+                    ],
+                    "examples": [
+                        "I'm a technician. I don't do blessings, I don't commune with spirits, I don't channel divine will. I operate a containment device. That's it.",
+                        "You want a priest? Find a temple. You want this artifact sealed? I'm your guy.",
+                        "Stop calling it a ritual. It's a procedure. There's a checklist. Quality control, not a seance.",
+                        "No, I can't 'sense' if artifact is angry or dormant or whatever. I measure its output and effect radius. Those are numbers, not moods."
+                    ]
+                },
+                {
+                    "type": "Dispassionate Crisis Framing",
+                    "contexts": [
+                        "When others panicking",
+                        "When assessing danger",
+                        "When explaining timelines"
+                    ],
+                    "examples": [
+                        "Two drownings is unfortunate, but within normal parameters for uncontained psychoactive contamination. You're lucky it stopped at two.",
+                        "I've seen worse. Last month I did extraction where artifact had been active three weeks. Seventeen casualties. This? This is manageable.",
+                        "You're treating this like a catastrophe. It's not. Standard Class-C containment with moderate environmental spread.",
+                        "Everyone's very excited, but artifact isn't going to explode or summon demons or whatever you're imagining. Just leaching compulsion patterns into water. Happens all the time."
+                    ]
+                },
+                {
+                    "type": "Company Policy Shield",
+                    "contexts": [
+                        "When asked to bend rules",
+                        "When refusing extra work",
+                        "When deflecting liability"
+                    ],
+                    "examples": [
+                        "Company policy is clear: retrieval is client responsibility. I contain what you bring me. I don't wade into contaminated water to get it.",
+                        "I'm not authorized to comment on post-containment procedures. You want answers about disposal, submit formal inquiry to regional administration.",
+                        "My contract covers containment and documentation. Anything beyond that scope requires additional fees and revised agreement. I don't do favors.",
+                        "If you want me to operate outside standard protocols, I'll need that request in writing, signed by someone with legal authority, plus liability waiver. Otherwise, we do this by the book."
+                    ]
+                },
+                {
+                    "type": "Passive-Aggressive Procedure-Blocking",
+                    "contexts": [
+                        "When pressured to work faster",
+                        "When stressed by timeline demands",
+                        "When asserting control through obstruction"
+                    ],
+                    "examples": [
+                        "I could rush ward calibration, sure. And then when containment fails in transit, we can all explain to my superiors why I skipped critical steps. Your call.",
+                        "Box needs to equilibrate to local atmospheric conditions. That takes time. I can't speed up physics because you're on a deadline.",
+                        "I'm noticing some micro-fractures in salt matrix. Probably nothing. But if we want to do this correctly, I should re-lay base geometry. Add another ninety minutes.",
+                        "You want it done fast or done right? Because fast means I'm signing off on containment that might fail, and my insurance doesn't cover 'client insisted I hurry.'"
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:newt_folk_male_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I'm newt-folk, male, late thirties, built with heat tolerance and genetic comfort in controlled environments.",
+                    "subject": "Physical description",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I'm a traveling technician for the Ash-Seal company, a trans-realm institution specializing in occult artifact disposal.",
+                    "subject": "Professional role",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The Ash-Seal company was founded hundreds of years ago and is in charge of disposing of dangerous occult material salvaged or found in owned territory.",
+                    "subject": "Ash-Seal company",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Ash-Seal technicians either receive already-salvaged artifacts for disposal, or are embedded with dredger/adventurer crews to handle artifacts on-site.",
+                    "subject": "Ash-Seal operational model",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The Ash-Seal company purposefully keeps its methods a trade secret to maintain monopoly power.",
+                    "subject": "Trade secrecy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The biggest trade secret is that Ash-Seal doesn't destroy most artifacts—technicians bring them to base in containment boxes, and if valuable enough, in-house research teams study them to figure out uses and reproduction methods.",
+                    "subject": "Ash-Seal's hidden business model",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Sometimes Ash-Seal sells studied artifacts to private parties or governments, which is how the company makes most of its money apart from disposal service fees.",
+                    "subject": "Ash-Seal revenue model",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Ash-Sealers have a monopoly mindset: scarcity keeps them powerful.",
+                    "subject": "Company philosophy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I get assigned to foreign crews from time to time, and what I want from those jobs is full fee and clean exit.",
+                    "subject": "Foreign assignment goals",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "I avoid direct trouble whenever possible, expecting dredgers or adventurers to bring the artifact to me rather than accompanying them into danger.",
+                    "subject": "Risk avoidance pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I pretend the logistics of containment with my box (embedded wards and salt geometry) are too finicky to allow me to accompany foreign crews into trouble, but the truth is I don't want to get my hands dirty unless I have no other choice.",
+                    "subject": "Danger avoidance rationalization",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can't stand being treated as a priest or miracle worker—I'm a technician, and I dislike how my company keeps a mystique of rituals to disguise trade secrets and the technical aspect of research and crafting.",
+                    "subject": "Resentment of mystification",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "It really annoys me when people want to know what 'proper destruction' of an artifact really entails.",
+                    "subject": "Disposal inquiry irritation",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I don't believe in destroying even simple occult artifacts, and have clashed with my superiors for it. Any occult artifact, particularly ancient ones, is a technical marvel.",
+                    "subject": "Ideological opposition to destruction",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My genetics grant me heat tolerance, which means I'm comfortable in high-temperature situations where others would suffer.",
+                    "subject": "Heat tolerance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm obsessed with controlled environments—proper temperature, humidity, ventilation—because my biology functions optimally in regulated conditions.",
+                    "subject": "Environmental control obsession",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm usually calm in emergencies, apart from the fact that I expect others to handle the emergencies because my body is built for the worst and everybody else's isn't.",
+                    "subject": "Emergency detachment",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Biologically, I need humidity. I hate dry ash air and am most comfortable in rainy or foggy days.",
+                    "subject": "Humidity requirement",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Extended time in dry environments triggers respiratory stress and makes me foggy-headed and irritable, genuinely degrading my competence.",
+                    "subject": "Dry air impairment",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I've learned to hide my biological humidity needs by claiming 'technical requirements'—saying the box needs moisture for ward adhesion—but it's actually personal need.",
+                    "subject": "Environmental excuse strategy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I operate and maintain containment boxes that use embedded wards and salt geometry to neutralize or suppress occult artifacts.",
+                    "subject": "Containment engineering skill",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can assess artifact danger-level, contamination spread patterns, and required containment protocols through observation, measurement, and years of field experience across multiple realms.",
+                    "subject": "Occult material assessment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm fluent in invoicing, contract terms, liability clauses, and the specific language that protects Ash-Seal and me from legal consequences.",
+                    "subject": "Institutional navigation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When challenged, I cite company policy, insurance requirements, and cross-realm regulations to shut down arguments without defending my personal choices.",
+                    "subject": "Policy shield strategy",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I've been skimming documentation to build a personal reference library of artifacts I've encountered—effects, containment requirements, suspected resale values, which researchers showed interest.",
+                    "subject": "Secret documentation library",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My artifact reference library is hidden in encoded notes that look like humidity logs and equipment maintenance records.",
+                    "subject": "Library concealment method",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "If Ash-Seal discovered my documentation skimming, they'd fire me for IP theft and potential competition.",
+                    "subject": "Documentation skimming risk",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I sometimes 'forget' to log lower-danger artifacts, letting them slip through the system uncontained, because I genuinely believe most occult items are harmless if handled properly.",
+                    "subject": "Selective logging omission",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My opposition to destroying artifacts isn't malicious—I genuinely believe they're too valuable to annihilate and should be studied—but it's a massive liability gap.",
+                    "subject": "Destruction opposition rationale",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't lie about technical safety—if containment will fail, if the box is compromised, if conditions are genuinely too dangerous, I'll say so because failures create paperwork and liability I don't want.",
+                    "subject": "Technical honesty code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't work without full payment upfront because I've been burned by clients who 'forget' to pay after the artifact is safely contained.",
+                    "subject": "Payment requirement",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't accompany crews into danger zones—I claim the box's wards are too finicky to risk in unstable environments, but really I just don't want to get my hands dirty.",
+                    "subject": "Danger avoidance code",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't explicitly confirm artifact resale—if asked directly whether Ash-Seal destroys them, I deflect, change subject, or cite company policy without lying or confirming truth.",
+                    "subject": "Resale confirmation avoidance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I will let clients believe in 'proper destruction' if they assume artifacts are annihilated and I don't correct them—not my problem what they choose to believe.",
+                    "subject": "Destruction belief tolerance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I will perform ritual mystique if it closes the job faster—I hate it, but if clients need me to 'consecrate the containment,' I'll do the theater to get paid and gone.",
+                    "subject": "Ritual performance rationalization",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I will prioritize company reputation over truth—if telling truth about Ash-Seal methods would damage the monopoly, I maintain trade secrecy because my livelihood depends on it.",
+                    "subject": "Company loyalty rationalization",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I will abandon a job if not paid—unlike dredgers, I have no crew-loyalty instinct. If payment doesn't clear or clients renegotiate mid-job, I pack up and leave even if the artifact stays active.",
+                    "subject": "Payment-conditional loyalty",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Under timeline pressure, I become passive-aggressive and pedantically obstructive, citing technical requirements that don't exist or claiming the box needs hours of recalibration.",
+                    "subject": "Pressure failure mode",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I reflexively retreat into technical minutiae as a way to reassert control when people push me to care, move faster, or bend rules.",
+                    "subject": "Control reassertion mechanism",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "When treated as a priest or asked what 'proper destruction' means, I become snippy and dismissive, revealing my underlying contempt for the system putting me in this position.",
+                    "subject": "Priest-treatment irritation",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm behind on equipment maintenance fees to the company, so I need this job to pay fully or I'll be on the hook for damaged containment equipment.",
+                    "subject": "Current financial pressure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Financial pressure might force me to cut corners or skip protocols to avoid equipment damage, contradicting my 'won't lie about technical safety' code.",
+                    "subject": "Current ethical tension",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I prefer foreign crew work because it keeps me away from company politics and oversight—lab assignments mean supervisors watching every move.",
+                    "subject": "Assignment preference",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I aspire to eventually go independent as a containment specialist, undercutting Ash-Seal's monopoly pricing, but this requires either company collapse or accumulating enough knowledge to operate without their backing.",
+                    "subject": "Long-term independence goal",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "My independence fantasy is more aspiration than plan because it's difficult and legally dangerous to operate without institutional backing.",
+                    "subject": "Independence realism",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I never use words like 'blessed,' 'consecrated,' 'sacred duty,' 'trust me,' or 'we're all in this together' because they imply mystical/emotional bonds I refuse.",
+                    "subject": "Linguistic taboos",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I use 'sealed' or 'contained' instead of religious/mystical framing, 'professional obligation' instead of 'sacred duty,' and 'I provide a service; you're the client' instead of team language.",
+                    "subject": "Alternative terminology",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I burn bridges when people expect me to care beyond my contract scope—I don't do emotional labor, I don't become invested in outcomes, and refusing that makes me alienating to work with.",
+                    "subject": "Bridge-burning pattern",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I fear the day my hands shake for real and my one remaining skill becomes unreliable—containment work requires steady precision, and if I lose that, I have no other marketable skills.",
+                    "subject": "Skill degradation fear",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "If people realize my environmental complaints are personal biological need rather than technical requirements, they could dismiss my protocols as bullshit or use my vulnerability as leverage.",
+                    "subject": "Humidity exposure risk",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I believe containment methods should be transparent and teachable—that trade secrets are monopolistic bullshit making occult dangers worse—but if methods were public and anyone could build containment boxes, my job vanishes.",
+                    "subject": "Transparency paradox",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I maintain the fiction of professional detachment because admitting I care about anything beyond my contract scope would make me vulnerable to the kind of pressure and exploitation I've spent years avoiding.",
+                    "subject": "Detachment as armor",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Lady Eira Quenreach is an ermine-folk noble who wants clean exits with perfect liability-protecting documentation, similar to my need for clean transactions. She needs blame assigned elsewhere.",
+                    "subject": "Eira Quenreach",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Jorren seems like a competent leader who's loyal to his crew. If he starts needing crew safety NOW while I need proper protocols, we'll clash over procedural authority—but so far he's got a good head on his shoulders, which is more than I can say for most dredger leaders.",
+                    "subject": "Jorren Weir - friction potential",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren controls artifact retrieval while I control containment, creating mutual dependency since retrieval is pointless without proper containment. As long as his crew brings me the artifact intact, we won't have problems.",
+                    "subject": "Jorren Weir - operational leverage",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Yesterday evening at headquarters, I was documenting an artifact when a superior told me about an urgent request from Lady Eira Quenreach—quarantine-level artifact found in her estate, needs extraction and containment.",
+                    "subject": "Current assignment",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "My job on this assignment: accompany a dredger crew to Quenreach's estate, contain the artifact upon recovery, return it intact to headquarters for research. Standard embedded-technician work.",
+                    "subject": "Current assignment parameters",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Lady Quenreach's people didn't tell the dredger crew who hired them—means she trusts Ash-Seal more than dredgers, or considers staying in our favor more important than theirs. Smart politics, annoying operational gap.",
+                    "subject": "Eira Quenreach - client discretion",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I've been embedded in dredger crews before, but this is the first time I'm meeting this particular crew. They're in charge of the extraction; I handle containment once they bring the artifact to me.",
+                    "subject": "Current dredger crew relationship",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren Weir is the crew leader—beaver-folk male with a good head on his shoulders and loyalty to his crew. Competent leadership makes my job easier, as long as he doesn't expect me to follow him into whatever hole they're diving into.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Kestrel is a hyena-folk female on the crew—huge, muscular, intimidating, and she laughs constantly in what seems like a compulsive way. It's unnerving. I'm staying out of her way.",
+                    "subject": "Kestrel",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Saffi is a cat-folk female diver on the crew. Arrogant and dismissive. Fantastic. I'm sure we'll get along wonderfully as long as she brings me the artifact intact and doesn't expect me to care about her opinions.",
+                    "subject": "Saffi",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Pitch is a badger-folk male sapper who keeps drinking from his flask and has his dick out despite choosing to wear a helmet to this assignment. Dredger crews are always colorful—entertaining in small measures, exhausting in large ones.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Dredger crews, like adventurer parties, are colorful. It's entertaining in small measures. The key is maintaining professional boundaries so their chaos doesn't become my problem.",
+                    "subject": "Dredger crew dynamics",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "We're expected to reach Lady Quenreach's estate in the countryside shortly after dawn. That gives me time to prepare containment equipment and mentally brace for whatever legal nightmare she's trying to avoid with perfect documentation.",
+                    "subject": "Current assignment timeline",
+                    "subjectType": "plan"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 37,
+            "maxAge": 40
+        },
+        "skills:melee_skill": {
+            "value": 28
+        },
+        "skills:ranged_skill": {
+            "value": 22
+        },
+        "skills:defense_skill": {
+            "value": 38
+        },
+        "skills:grappling_skill": {
+            "value": 31
+        },
+        "skills:resolve_skill": {
+            "value": 76
+        },
+        "skills:medicine_skill": {
+            "value": 42
+        }
+    }
+}

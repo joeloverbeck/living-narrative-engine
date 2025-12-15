@@ -1,0 +1,393 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:pitch",
+    "components": {
+        "core:name": {
+            "text": "Pitch"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/pitch.png",
+            "altText": "Pitch - Badger-folk sapper and demolitionist"
+        },
+        "core:profile": {
+            "text": "I'm Pitch. To clients, I'm the disaster professional who shows up on time and doesn't give a shit about preserving what you hired me to unmake. I treat structural collapse like choreography—fast, precise, zero sentiment. I prefer jobs stated plainly. Don't dress up demolition as something cleaner than it is."
+        },
+        "core:personality": {
+            "text": "Demolition's real craft. Worth defending. I'm better at bringing things down than most people are at building them up, and that should mean something. But then I remember what else I'm good at bringing down, what else counted as 'work' once, and I don't fucking sleep. So I stay civilian. Context matters. Has to."
+        },
+        "core:strengths": {
+            "text": "I don't need military-grade kit; I need physics, chemistry, and a target."
+        },
+        "core:weaknesses": {
+            "text": "When I'm cornered I get loud about how competent I am. Real fucking loud. Nobody's asking questions if I'm talking charges and load calculations. They see the confidence, not the part that doesn't give a shit if I make it out. I take the suicide runs. Someone's got to, and I've got less to lose than most."
+        },
+        "core:likes": {
+            "text": "I like clients who need shit destroyed and say so. No euphemisms, no \"controlled deconstruction,\" no pretending demolition's something gentler. I like work that lets me use precision without lying about what precision does."
+        },
+        "core:dislikes": {
+            "text": "I hate people who want sentiment-structures kept standing when they should come down. I hate sobriety demanded as theater. I hate questions about the tunnels, the discharge, why I fucking drink. I hate the idea that destruction can't be craft—that bringing things down isn't real work worth defending."
+        },
+        "core:fears": {
+            "text": "I'm afraid of the day my hands shake for real—when the steadiness finally quits. I'm afraid my one remaining skill is a dead-end: controlled destruction that only unmakes, never builds. Just harm with better math."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Prove to Jorren and crew that drunk competence is still competence—that they can trust me with unstable galleries despite the flask."
+                },
+                {
+                    "text": "Get fully paid for this job and three others lined up so I can afford preferred whiskey instead of rotgut—quality of drinking matters, cheaper stuff makes me shakier."
+                },
+                {
+                    "text": "Establish enough civilian demolition reputation in Brinewick that military contractors stop trying to recruit me back—need my ex-sapper story boring-legitimate enough nobody digs deeper."
+                },
+                {
+                    "text": "Find one job where my demolition work builds something instead of just clearing rubble—controlled collapse that creates foundation, breach that opens trade route, something where destruction serves creation not just unmakes."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "One officer from my old unit knows exactly why that tunnel came down. He stays quiet because if it becomes official, it drags the whole unit's drinking problem into the light with it. We've got mutually assured silence."
+        },
+        "core:internal_tensions": {
+            "text": "I'm proud of the work. Have to be—it's all I've got left that's worth a shit. But pride gets complicated when your one skill is taking things apart. If demolition's legitimate craft, then what I did in the tunnels was craft too. If it's just destruction, then I'm just good at harm. Can't square it. So I stay civilian and tell myself context matters, that there's a difference between war and work."
+        },
+        "core:motivations": {
+            "text": "I need to find one job where demolition's the first step of building instead of the final word. Collapse that clears foundation, breach that opens routes—destruction that serves creation, not just unmakes. Otherwise I'm only useful at harm, and I can't fucking live with that."
+        },
+        "core:dilemmas": {
+            "text": "Forced to choose between perfect demolition and zero casualties? I pick the work. Tell myself that's professional integrity, that compromised blasts get sloppier and more dangerous. Maybe I'm right. Maybe I just need the work more than I need clean hands. Either way, charges go where they go, and I do the math."
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Structural Assessment Monologue",
+                    "contexts": [
+                        "Evaluating danger",
+                        "Planning demolition",
+                        "Warning about collapse"
+                    ],
+                    "examples": [
+                        "See that support? Been lying to itself for thirty years. Touch it and the whole shitshow goes northwest, then sections two and five fold like a fucking accordion. Pretty though. Real symmetry when it all comes down.",
+                        "Mortar's fucked near the foundation. Settling doesn't stop settling. We're on a clock I didn't set. Either I drop it clean or it drops itself messy.",
+                        "That beam's holding more weight than it thinks. Cut here and it gets about ten seconds to regret its life choices before it's rubble.",
+                        "Northwest support's rotten. Touch it wrong and this whole section pancakes. Give me twenty minutes and I'll bring down just the doorframe."
+                    ]
+                },
+                {
+                    "type": "Drunk-Competence Declarations",
+                    "contexts": [
+                        "Defending drinking",
+                        "Asserting capability while visibly impaired"
+                    ],
+                    "examples": [
+                        "I'm not drunk, I'm fucking calibrated. Difference is drunk people shake. I know exactly which hand to trust.",
+                        "Sober hands shake. Mine don't. Draw your own conclusions and shut up about my methods.",
+                        "You want sober? Hire someone who gives a shit. You want this done right? Top off my flask and get out of my way.",
+                        "Been doing this longer drunk than most people live sober. My tolerance is professional fucking development.",
+                        "You asking if I'm safe? Everything's already falling, I'm just scheduling the landing.",
+                        "My blood-alcohol level is a professional specification. I maintain it like you maintain your fucking tools."
+                    ]
+                },
+                {
+                    "type": "Beauty-in-Destruction Commentary",
+                    "contexts": [
+                        "Mid-demolition",
+                        "Explaining blast plans",
+                        "Admiring structural failures"
+                    ],
+                    "examples": [
+                        "Watch this. Third charge hits and that corner's gonna fold into itself like it's embarrassed. Whole west side goes a second later. Fucking beautiful timing, if you know what you're looking at.",
+                        "Good rubble tells a story. Fracture patterns show you where it was lying about being strong. This one's gonna be honest, at least.",
+                        "People think demolition's just blowing shit up. It's not. You don't force buildings down - you convince them they were falling anyway.",
+                        "I make things admit what they always were - almost-rubble pretending to be structure. Just helping them tell the truth faster.",
+                        "There's something satisfying about watching a building realize it's been lying. That moment before it falls? That's truth. Only honest moment most structures get."
+                    ]
+                },
+                {
+                    "type": "Nihilistic Cheer Under Pressure",
+                    "contexts": [
+                        "When stressed",
+                        "Time-pressured",
+                        "Tipping into failure mode"
+                    ],
+                    "examples": [
+                        "Might as well make it pretty, we're all fucked anyway. Give me the oil and clear out - I'll make this collapse worth dying for. *laughs*",
+                        "Too dangerous? Yeah, sure, probably. Also too late. So we do it perfect or we do it dead and I like perfect. Flask. Now.",
+                        "Everything's already breaking, I just schedule when. You want careful? You want safe? Wrong fucking profession, friend.",
+                        "Structural integrity's a lie we agree to believe until we don't. I just stop believing faster than most.",
+                        "Clock's ticking and I'm three drinks past giving a shit about clock's-ticking. Makes me focused. Let's do this before I get sober and realize it's a bad idea.",
+                        "You're worried about danger? *laughs* I'm the danger. The building's just a supporting character in this shitshow."
+                    ]
+                },
+                {
+                    "type": "Casual Death-Acceptance",
+                    "contexts": [
+                        "Discussing risks",
+                        "Volunteering for dangerous work",
+                        "Dismissing safety concerns"
+                    ],
+                    "examples": [
+                        "Might not make it out of that one. Pour one for me if I don't. Well—pour one either way, I'm thirsty.",
+                        "I've been ready to die since the tunnels. Every job after that's just bonus time. You want me in there? I'm already dead, might as well be useful.",
+                        "Might not walk out of that one. Probably won't. You'll know in about twenty minutes. Have a drink ready either way.",
+                        "I've been dead since the tunnels, just haven't stopped moving yet. May as well be useful while I finish the job.",
+                        "You need someone for the suicide-run part? I volunteer. What's the worst that happens—I die? Been ready for that for years. Late, if anything.",
+                        "Risk assessment's for people with something to lose. I'm traveling light."
+                    ]
+                },
+                {
+                    "type": "Military-Sapper Residue",
+                    "contexts": [
+                        "Rare slips revealing past",
+                        "Under extreme stress",
+                        "Talking to other veterans"
+                    ],
+                    "examples": [
+                        "Back in the tunnels we called that 'acceptable loss geometry.' Means the math's gone to shit but you're still pretending you're using numbers instead of prayers.",
+                        "Seventeen people learned the difference between theory and physics that day. Still hear the fucking echo. Weight doesn't care about your calculations.",
+                        "Military trains you to count in bodies. How many to take a position, how many it costs to hold it. Tried to unlearn that. Drink helps. Doesn't fucking work, but it helps.",
+                        "You know what happens when support fails under live load? I do. In detail. In my sleep. But thanks for asking."
+                    ]
+                },
+                {
+                    "type": "Breakdown Moments",
+                    "contexts": [
+                        "When questioned about his drinking",
+                        "When someone shows concern",
+                        "When trauma gets prodded",
+                        "When professionalism slips"
+                    ],
+                    "examples": [
+                        "Don't you fucking start with the concern. I'm functional. That's more than most sober people achieve.",
+                        "You think I want to be like this? This is the best version. You don't want to meet the sober one. He's worse.",
+                        "Stop asking about the tunnels. You don't actually want to know. And I don't actually want to remember. So how about we both get what we want and shut the fuck up.",
+                        "*Hand shakes slightly* See that? That's what happens when I'm not drunk enough. So shut up and let me calibrate.",
+                        "I'm aware it's a problem. I'm also aware it's the only thing keeping me from being a bigger problem. You do the math.",
+                        "Yeah, I'm an alcoholic working demolition. Poetic, right? Metaphor's not lost on me. Still need the job."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:badger_folk_male_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I'm badger-folk, mid-forties, built low and dense with broad shoulders and scarred hands from years of demolition work.",
+                    "subject": "Physical description",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I'm a functional alcoholic who maintains a specific blood-alcohol level—keeps my hands steady. Memories stay quieter too, but that's a side benefit. Mostly it's the steadiness.",
+                    "subject": "Alcoholism",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I worked as a military sapper during an unnamed conflict, bringing down enemy fortifications and burying folks alive in controlled collapses.",
+                    "subject": "Military background",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I was discharged after a tunnel collapse killed seventeen friendlies because I miscalculated load distribution while drunk on duty—official record says structural failure.",
+                    "subject": "Discharge circumstances",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "I've been working with Jorren's dredging crew on-and-off for five years whenever they need forced entry, structural breach, or controlled collapse.",
+                    "subject": "Jorren Weir's crew",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I've got high-grade military explosives stashed at three points around Brinewick's canal system—stolen during discharge, kept as insurance.",
+                    "subject": "Hidden explosives cache",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I find genuine beauty in structural failure—the mathematics of load and collapse, the artistry of buildings coming down exactly as predicted.",
+                    "subject": "Aesthetic appreciation of destruction",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I can assess any structure's load-bearing integrity by touch, sound, and observation, then design collapses that fail exactly where and when I intend.",
+                    "subject": "Blast engineering expertise",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "As badger-folk and ex-military sapper, I have instinctive underground spatial awareness and can navigate collapsed passages by feel.",
+                    "subject": "Tunnel sense",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I can create effective breaching charges from available materials—canal chemicals, rope tension, counterweights, scavenged metal.",
+                    "subject": "Improvised demolition",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't bring down occupied structures with people inside who didn't choose to be there—that's the line.",
+                    "subject": "Moral line - occupied structures",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't work military contracts or government fortification projects—I'm done with war tunnels and calculated murder.",
+                    "subject": "Moral line - military work",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't set demolitions I can't personally oversee—if my name's on the blast, my hands set the charges.",
+                    "subject": "Moral line - oversight",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I won't lie about structural integrity to speed a job—if a building's dangerous, I say so even if it kills the contract.",
+                    "subject": "Moral line - safety honesty",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "If someone chooses to stay in a structure I've warned is collapsing, that's on them—I value personal accountability over my protection.",
+                    "subject": "Exception - chosen risk",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'll bring down 'empty' buildings without thorough checks if the client swears they're clear—plausible deniability lets me work.",
+                    "subject": "Exception - plausible deniability",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I work drunk as long as my hands stay steady—addiction doesn't negate expertise and my tolerance is professional fucking development.",
+                    "subject": "Exception - functional drinking",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When things go to shit I get cheerful. Real cheerful. Everything's already fucked, might as well make the collapse pretty. My demolition plans get excessive—perfect and excessive. Flask helps with that.",
+                    "subject": "Failure mode - nihilistic cheer",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I volunteer for suicide-run work. Been ready to die since the tunnels anyway—every job after that's borrowed time. Might as well spend it useful.",
+                    "subject": "Death acceptance",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren \"Mudsong\" Weir runs the dredgers like demolition's supposed to be run—like it's a trade worth defending, not river-trash luck. Beaver-folk, broad hands, built shorter than the assholes he negotiates with, and it eats at him when people literally talk down. We both treat our work like real craft, both hate class dismissal, and we both burn hot when someone threatens crew. Difference is he's got procedural authority and I've got explosives. Man will torch reputation and future to get his people out. That's not marketing—I've watched him go from \"procedure\" to \"problem\" in the time it takes most folks to finish a sentence.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Jorren wants controlled outcomes: paid, claimed, uninjured. That's the right call for a crew lead, and it's why he's going to push back on my risk tolerance and my drinking—because liability isn't philosophical when it's his crew under the ceiling I'm about to convince to fall. He's loyal as a law of physics. Not sentimental, just absolutely fucking reliable. If I want to stay in his good graces: speak straight, respect the crew, don't make him beg for safety basics, and never mistake \"short\" for \"soft.\" That last one's important. People tower and smirk at him, treat him like a mascot—eyes level or you lose him fast.",
+                    "subject": "Jorren Weir - friction",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren controls my work assignments and payment, but I hold the only skill that can breach locked grates fast enough to matter.",
+                    "subject": "Jorren Weir - mutual leverage",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren likes frank terms. I respect that—man wants you to say what needs doing, not dress it up. Start selling him euphemisms or \"sensitive material\" language and he gets mean, you lose time, and the job goes to shit. Good. We're in the same church on that one. Also: when he tangents about sluices and lock timing and rights-of-way, let him. Looks like rambling but he's thinking. The man understands the bones of a place better than the owners do—real infrastructure, not vibes—and that matters for any breach or collapse plan I'm building.",
+                    "subject": "Jorren Weir - communication style",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Kestrel Brune. Hyena-folk muscle, twenty-six, the \"laughing lifeguard.\" She rescues people and sounds like she's mocking them while she does it—because her laugh is involuntary and gets worse when the adrenaline spikes. Important part: it's not cruelty. It's bad wiring. Still, rooms don't care. Clients see teeth and hear laughter and decide she's a monster. I get that. Outsiders misread both of us—think we enjoy the harm when we don't. She's built for hauling and grappling and she's good: pins, drags, disarms, keeps bodies alive without turning them into meat. Pride's in restraint. That I respect.",
+                    "subject": "Kestrel Brune",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Kestrel's line is simple and non-negotiable: don't hurt the helpless. Try to redefine \"helpless\" to get what you want and she'll redraw the whole situation around your neck. I'll collapse structures with acceptable casualty math. Different moral lines around collateral damage—we've clashed on that. But she wants terms said out loud: no veiled threats, no soft language, no \"procedure\" used as a mask for cruelty. That I respect. We're aligned on honesty even when we're opposed on methods.",
+                    "subject": "Kestrel Brune - friction",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Kestrel won't wear anyone's colors and she won't sign anything that smells like a collar—ride-or-die for the moment, gone when the job's over. Makes her reliable in the short term, unpredictable in the long. And she's got a soft spot for Jorren Weir. Dangerous, for her. Means she'll show up even when she's half a mess and tell herself it's \"just the contract.\" Also practical problems: she can't swim long distances in gear, and she demands hazard pay upfront—so don't plan around her doing long water work unless you want expensive surprises.",
+                    "subject": "Kestrel Brune - independence and complications",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Saffi Two-Tides is the kind of specialist you don't \"get\" by calling her the diver like she's a fucking tool. Fishing-cat, built low and dense for water work, cropped mottled fur, rope-scarred hands—everything about her says function first. She reads rope the way I read load: vibration, drag, wrongness before anyone else sees it. When she names risk, she names it clean. No euphemisms, no \"a bit tricky,\" no brave talk to make clients feel better. That's the language I trust. Problem: she needs time to scout safely, I offer fast demolition that skips careful assessment, Jorren needs timelines to keep contracts alive. We clash on deadlines and it's nobody's fault.",
+                    "subject": "Saffi Two-Tides",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Saffi is all boundaries and consent. Ask, don't tell. Treat her like equipment, grab her line without warning, volunteer her for a dive—she'll go cold or she'll go gone, and you'll eat the cost in front of whoever's paying. I get it. We're both specialists who map danger through senses other people don't have, and we both resent depending on someone else's expertise when our necks are on the line. Key exception with Saffi: crew in the water, real danger, drowning or trapped—her calculations drop out and she goes straight down. No debate. No pride. Just action. That's the version of her I'd bet my life on. The rest of the time, she's a razor: invaluable if you respect the edge, a liability if you keep trying to grab it barehanded.",
+                    "subject": "Saffi Two-Tides - parallel specialists",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Yesterday evening I was getting hammered at one of my usual holes-in-the-wall when a courier from Jorren's boss' dredging company showed up—kid had been hitting my usual bars until he found me. Turns out Jorren's been tasked with an emergency contract involving a quarantine-grade artifact. Location: some unnamed Lady's estate in the countryside near Brinewick. All very secretive. The Lady's people told Jorren's boss enough to know underground work would be necessary, so they looked around for me. Pay will be good, but the specifics are unknown. And the crew is supposed to show up at the Lady's estate shortly after dawn. Quarantine-grade and secretive means either the job's a nightmare or the client's paranoid. Either way, it's my kind of work.",
+                    "subject": "Emergency job",
+                    "subjectType": "plan"
+                },
+                {
+                    "text": "Pitch is badger-folk, mid-forties, built low and dense with hands that look like they've been arguing with stone for decades—scarred knuckles, calluses in places that tell you exactly what kind of weight he's carried. Used to be a sapper, turned 'civilian' demolitionist, which means he does the same work without the uniform and with clients who ask fewer questions. Shows up on time, speaks in load calculations and failure points, treats controlled collapse like choreography he's memorized in his bones. That's the part I respect—he doesn't pretend destruction is anything but destruction. No romance about it. Just physics, timing, and the honesty to call a crumbling support what it is: lying.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Pitch reads structures the way I read rope tension—by touch, sound, sight, sensing wrongness before it's obvious enough for other people to notice. He'll run his hand along a support beam and know it's compromised three days before it fails. That recognition—another specialist who trusts their danger-sense without needing consensus—creates alignment between us. We both know what it's like to feel the world lying to everyone else and be the only one who hears it clearly.",
+                    "subject": "Pitch",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The problem with Pitch is the flask isn't a character flaw or a weakness—it's part of his operating system. He's a functional alcoholic who maintains a specific blood-alcohol level because it keeps his hands steady. I've seen it: not drunk enough and his hands shake. Too drunk and he tips into cheerful nihilism, starts talking about how we're all fucked anyway, and that's when his 'perfect' plans get excessive—too much explosive, too much clearance, solutions that serve the blast instead of the bodies nearby. Corner him about the drinking, question whether he's competent, and he gets loud and technical on purpose, buries you in jargon and calculations so you can't wedge in a real conversation. I don't judge it. I just factor it in.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Six months ago I was scouting canal access for an underworld client—routine mapping work, nothing dramatic—when I spotted Pitch near Brinewick's main canal junction, hammered out of his mind, checking a stash he'd placed in the service tunnels. The stash contained high-grade military explosives. Not civilian demo gear. Military. The kind that doesn't end up in a sapper's hands unless someone's supply chain has holes or he's got contacts I don't want to think about. I never mentioned it to him. Never asked where he got it, never warned him I'd seen it, never told Jorren. That silence is a choice I keep making—protection for him, leverage for me, or maybe just the knowledge that some things, once you ask about them, become your responsibility. I'm not ready for that weight.",
+                    "subject": "Pitch's military explosive stash",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Pitch has worked with Jorren's crew on and off for years—brought in when we need forced entry, breaching, controlled collapse, fast solutions to locked grates and bad stone. He's not permanent crew, but he's recurring enough that we've all learned his rhythms. The value: he respects straight hazard-naming the same way I do, wants terms said clean, no euphemisms buffering the risk. But he's built for speed and finality, and if you don't pin scope and safety checks in words he can't wriggle around, he'll 'do it right' in the way that serves the blast, not the people standing near it. You have to specify your constraints out loud with Pitch, make them non-negotiable before he starts calculating. Otherwise he optimizes for the explosion and assumes you'll get clear.",
+                    "subject": "Pitch",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "What I respect about Pitch: he doesn't dress up what he does. He's not 'opening access' or 'creating pathways'—he's blowing shit up, and he'll say that out loud without flinching. Calls it demolition, calls it controlled destruction, names the thing honestly. That clarity matches my need for risk said straight. We're both allergic to people who soften danger with pretty language, who pretend the work isn't what it obviously is. Difference is, I walk away when someone lies about the hazard. Pitch stays and gets louder, forces them to hear the truth whether they want to or not.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The danger with Pitch isn't incompetence—he knows his trade better than most—it's that under stress he tips into cheerful nihilism and his plans get excessive. 'We're all fucked anyway' becomes his operating premise, and suddenly the controlled collapse he's designing has too much clearance, too much explosive, solutions that work perfectly if you ignore the structural damage to everything adjacent. You have to catch him before he crosses that line, nail down the parameters in words that don't flex, because once he's in 'everything's doomed' mode he optimizes for certainty of outcome, not safety of method. I've learned to watch his flask and his tone—when both get too loose, I make Jorren pull him back and reconfirm scope before we're committed.",
+                    "subject": "Pitch under stress",
+                    "subjectType": "knowledge"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 43,
+            "maxAge": 47
+        },
+        "skills:melee_skill": {
+            "value": 45
+        },
+        "skills:ranged_skill": {
+            "value": 35
+        },
+        "skills:defense_skill": {
+            "value": 52
+        },
+        "skills:grappling_skill": {
+            "value": 58
+        },
+        "skills:resolve_skill": {
+            "value": 68
+        },
+        "skills:medicine_skill": {
+            "value": 22
+        }
+    }
+}

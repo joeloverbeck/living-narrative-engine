@@ -44,17 +44,15 @@ global.memoryTestUtils = {
    */
   async forceGCAndWait() {
     if (global.gc) {
-      // Optimized GC cycling - reduced from 4 to 2 cycles
-      for (let i = 0; i < 2; i++) {
-        global.gc();
-        // Reduced progressive delays: 20ms, 30ms (was 50-125ms)
-        await new Promise((resolve) => setTimeout(resolve, 20 + i * 10));
-      }
-      // Reduced stabilization period from 100ms to 30ms
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      // Further optimized: 2 GC calls with minimal delays (~30ms total vs ~80ms)
+      global.gc();
+      await new Promise((resolve) => setTimeout(resolve, 15));
+      // Second GC catches objects freed by first GC
+      global.gc();
+      await new Promise((resolve) => setTimeout(resolve, 15));
     } else {
-      // Reduced fallback delay from 200ms to 80ms
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      // Reduced fallback delay from 80ms to 40ms
+      await new Promise((resolve) => setTimeout(resolve, 40));
     }
   },
 

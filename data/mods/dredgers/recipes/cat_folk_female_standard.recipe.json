@@ -1,0 +1,126 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:cat_folk_female_standard",
+  "blueprintId": "anatomy-creatures:cat_girl",
+  "bodyDescriptors": {
+    "height": "short",
+    "build": "stocky",
+    "composition": "lean",
+    "skinColor": "mottled-brown-gray",
+    "hairDensity": "furred"
+  },
+  "clothingEntities": [
+    { "entityId": "base-clothing:chafe_base_wrap_linen_dirty_bone", "equip": true },
+    { "entityId": "outer-clothing:oilskin_dive_jacket_near_black", "equip": true },
+    { "entityId": "base-clothing:oilskin_dive_trousers_near_black", "equip": true },
+    { "entityId": "accessories:quick_release_weight_belt_tar_brown", "equip": true },
+    { "entityId": "accessories:diving_goggles_dull_brass", "equip": true },
+    { "entityId": "accessories:line_tender_harness_hemp_tan", "equip": true },
+    { "entityId": "base-clothing:heavy_grip_gloves_near_black", "equip": true },
+    { "entityId": "base-clothing:high_calf_waders_oiled_leather_near_black", "equip": true }
+  ],
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy-creatures:cat_girl_torso_working_strength"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    },
+    "left_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:cat_ear_mottled_brown_gray"
+    },
+    "right_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:cat_ear_mottled_brown_gray"
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy-creatures:cat_tail_mottled_brown_gray"
+    },
+    "left_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast"
+    },
+    "right_breast": {
+      "partType": "breast",
+      "preferId": "anatomy:human_breast"
+    },
+    "vagina": {
+      "partType": "vagina",
+      "preferId": "anatomy:human_vagina"
+    },
+    "left_hand": {
+      "partType": "hand",
+      "preferId": "anatomy:humanoid_hand_diver"
+    },
+    "right_hand": {
+      "partType": "hand",
+      "preferId": "anatomy:humanoid_hand_diver"
+    },
+    "left_eye": {
+      "partType": "eye",
+      "preferId": "anatomy-creatures:feline_eye_gold_slit"
+    },
+    "right_eye": {
+      "partType": "eye",
+      "preferId": "anatomy-creatures:feline_eye_gold_slit"
+    },
+    "teeth": {
+      "partType": "teeth",
+      "preferId": "anatomy-creatures:cat_folk_teeth"
+    },
+    "nose": {
+      "partType": "nose",
+      "preferId": "anatomy-creatures:cat_folk_nose"
+    }
+  },
+  "patterns": [
+    {
+      "matches": [
+        "left_arm",
+        "right_arm"
+      ],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_muscular"
+    },
+    {
+      "matches": [
+        "left_leg",
+        "right_leg"
+      ],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": [
+        "left_foot",
+        "right_foot"
+      ],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": [
+        "left_ass",
+        "right_ass"
+      ],
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek_firm_athletic_shelf"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:cat_folk_teeth",
+  "description": "Feline teeth with pronounced sharp canines characteristic of cat-folk",
+  "components": {
+    "anatomy:part": {
+      "subType": "teeth",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 6,
+      "maxHealth": 6,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "teeth"
+    },
+    "core:weight": {
+      "weight": 0.04
+    },
+    "descriptors:size_category": {
+      "size": "medium"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:color_extended": {
+      "color": "ivory"
+    }
+  }
+}

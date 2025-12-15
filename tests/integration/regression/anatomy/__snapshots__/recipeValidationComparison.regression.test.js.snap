@@ -4,30 +4,251 @@ exports[`Recipe Validation Comparison Regression Suite CLI vs RecipeValidationRu
 {
   "errors": [
     {
-      "blueprintId": "anatomy-creatures:giant_spider",
-      "fix": "Create blueprint at data/mods/*/blueprints/giant_spider.blueprint.json",
-      "message": "Blueprint 'anatomy-creatures:giant_spider' does not exist",
+      "details": {
+        "partType": "mystery_appendage",
+        "requiredProperties": [],
+        "requiredTags": [],
+      },
+      "location": {
+        "index": 0,
+        "type": "pattern",
+      },
+      "message": "No entity definitions found for pattern 0",
       "severity": "error",
-      "type": "BLUEPRINT_NOT_FOUND",
+      "type": "PART_UNAVAILABLE",
+    },
+    {
+      "details": {
+        "partType": "wing",
+        "requiredProperties": [],
+        "requiredTags": [],
+      },
+      "location": {
+        "name": "phantom_socket",
+        "type": "slot",
+      },
+      "message": "No entity definitions found for slot 'phantom_socket'",
+      "severity": "error",
+      "type": "PART_UNAVAILABLE",
     },
   ],
   "isValid": false,
   "metadata": undefined,
   "passed": [
     {
+      "blueprint": {
+        "id": "giant_spider",
+        "root": "anatomy-creatures:spider_cephalothorax",
+        "structureTemplate": "anatomy-creatures:structure_arachnid_8leg",
+      },
+      "check": "blueprint_exists",
+      "message": "Blueprint 'anatomy-creatures:giant_spider' found",
+    },
+    {
+      "check": "body_descriptors",
+      "message": "All 2 body descriptor(s) valid",
+    },
+    {
       "check": "component_existence",
       "message": "All 0 component references exist",
+    },
+    {
+      "check": "generated_slot_part_availability",
+      "message": "All 0 generated slot(s) from patterns have matching entity definitions",
+    },
+    {
+      "check": "initial_damage_slot_resolution",
+      "message": "No initialDamage entries to validate",
+    },
+    {
+      "check": "preferred_part_sockets",
+      "message": "No preferred parts with child socket requirements to validate",
     },
     {
       "check": "property_schemas",
       "message": "All 0 property objects valid",
     },
+    {
+      "check": "SLOT_KEY_UNIQUENESS_SKIP",
+      "message": "V1 blueprint or no structure template - slot key uniqueness not applicable",
+    },
+    {
+      "check": "socket_slot_compatibility",
+      "message": "All 2 slot socket references valid",
+    },
   ],
   "recipeId": "tests:broken_patterns",
   "recipePath": "tests/common/anatomy/fixtures/validation/broken_patterns.recipe.json",
-  "suggestions": [],
+  "suggestions": [
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "left_arm",
+        "type": "slot",
+      },
+      "message": "Slot 'left_arm' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:invalid_arm' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "phantom_socket",
+        "type": "slot",
+      },
+      "message": "Slot 'phantom_socket' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:phantom_wing' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+    {
+      "check": "descriptor_coverage",
+      "impact": "Part will be excluded from anatomy description",
+      "location": {
+        "name": "spinnerets",
+        "type": "slot",
+      },
+      "message": "Slot 'spinnerets' may not appear in descriptions",
+      "reason": "No descriptor components in slot properties, and preferred entity 'tests:missing_spinneret' has no descriptors",
+      "suggestion": "Add descriptor components (descriptors:size_category, descriptors:texture, etc.)",
+      "type": "MISSING_DESCRIPTORS",
+    },
+  ],
   "timestamp": "<redacted>",
-  "warnings": [],
+  "warnings": [
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Update matches array to use existing slot keys. Available: leg_1, leg_2, leg_3, leg_4, leg_5...",
+      "location": {
+        "description": "explicit matches [tail_cluster]",
+        "index": 1,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "v1_explicit",
+        "value": [
+          "tail_cluster",
+        ],
+      },
+      "message": "Pattern explicit matches [tail_cluster] has no matching slots",
+      "pattern": {
+        "matches": [
+          "tail_cluster",
+        ],
+        "partType": "tail",
+        "preferId": "tests:tail_that_does_not_exist",
+      },
+      "reason": "None of the explicit slot keys undefined exist in blueprint",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Adjust property filter criteria or add slots to blueprint that match the filter",
+      "location": {
+        "description": "matchesAll {"slotType":"leg","orientation":"*_front"}",
+        "index": 2,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "matchesAll",
+        "value": {
+          "orientation": "*_front",
+          "slotType": "leg",
+        },
+      },
+      "message": "Pattern matchesAll {"slotType":"leg","orientation":"*_front"} has no matching slots",
+      "pattern": {
+        "matchesAll": {
+          "orientation": "*_front",
+          "slotType": "leg",
+        },
+        "partType": "spider_leg",
+        "preferId": "tests:missing_front_leg",
+      },
+      "reason": "Property filter {"slotType":"leg","orientation":"*_front"} does not match any blueprint slots",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "availableSlots": [
+        "leg_1",
+        "leg_2",
+        "leg_3",
+        "leg_4",
+        "leg_5",
+        "leg_6",
+        "leg_7",
+        "leg_8",
+        "pedipalp_1",
+        "pedipalp_2",
+        "posterior_torso",
+        "venom_gland",
+        "spinnerets",
+      ],
+      "fix": "Add appendage with type 'unknown_group' to structure template 'anatomy-creatures:structure_arachnid_8leg' topology, or use a different slot group",
+      "location": {
+        "description": "matchesGroup 'appendage:unknown_group'",
+        "index": 0,
+        "type": "pattern",
+      },
+      "matcher": {
+        "type": "matchesGroup",
+        "value": "appendage:unknown_group",
+      },
+      "message": "Pattern matchesGroup 'appendage:unknown_group' has no matching slots",
+      "pattern": {
+        "matchesGroup": "appendage:unknown_group",
+        "partType": "mystery_appendage",
+        "preferId": "tests:mystery_appendage",
+      },
+      "reason": "Slot group 'appendage:unknown_group' not found in structure template 'anatomy-creatures:structure_arachnid_8leg' or produced 0 slots",
+      "severity": "warning",
+      "type": "NO_MATCHING_SLOTS",
+    },
+    {
+      "check": "recipe_usage",
+      "details": {
+        "hint": "Entity definitions should have: "anatomy:body": { "recipeId": "tests:broken_patterns" }",
+        "recipeId": "tests:broken_patterns",
+      },
+      "message": "Recipe 'tests:broken_patterns' is not referenced by any entity definitions",
+      "severity": "warning",
+      "suggestion": "Verify that the recipeId matches what entity definitions expect",
+      "type": "RECIPE_UNUSED",
+    },
+  ],
 }
 `;
 

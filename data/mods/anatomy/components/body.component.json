@@ -90,6 +90,7 @@
                 "enum": [
                   "underweight",
                   "lean",
+                  "dense",
                   "average",
                   "soft",
                   "bumpy",

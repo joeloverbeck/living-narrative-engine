@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:tinned_iron_bump_cap_iron_gray",
+  "description": "A tinned iron bump cap in iron-gray with dented surface and chin strap",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["head_gear"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "iron"
+    },
+    "core:name": {
+      "text": "bump cap"
+    },
+    "core:description": {
+      "text": "A dome-shaped bump cap of tinned iron, its surface a mottled iron-gray where the tin coating has worn thin and begun to show the darker iron beneath. Deep dents and scrapes mark the crown where it has met low-hanging beams, falling rocks, and the sharp edges of narrow passages. A leather chin strap, darkened by sweat and grime, holds the cap snug against the head—because losing your head protection in a tunnel collapse is the difference between a headache and a funeral. The interior is lined with a padded leather cap that has molded itself to its wearer's skull, and the brim at the back extends slightly to protect the vulnerable neck. It's not pretty work, wearing iron on your head, but it beats having your thoughts scrambled by the next thing that falls from above."
+    },
+    "descriptors:color_extended": {
+      "color": "iron-gray"
+    },
+    "descriptors:texture": {
+      "texture": "dented"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.55
+    }
+  }
+}

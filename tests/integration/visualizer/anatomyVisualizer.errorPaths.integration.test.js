@@ -1,5 +1,10 @@
 /**
  * @file Integration tests covering error and edge branches for anatomy-visualizer.js.
+ *
+ * Performance Optimization Notes:
+ * - jest.resetModules() is required per-test because anatomy-visualizer.js uses static imports
+ * - Spies must be set AFTER resetModules and BEFORE importing anatomy-visualizer.js
+ * - Shared fetch mock to avoid repeated file I/O
  */
 
 import {
@@ -28,6 +33,9 @@ const VISUALIZER_HTML = `
   </div>
 `;
 
+// Pre-create fetch mock once (file I/O is expensive)
+const sharedFetchMock = createFileFetchMock();
+
 describe('anatomy-visualizer entrypoint error handling', () => {
   let readyStateValue;
 
@@ -43,6 +51,9 @@ describe('anatomy-visualizer entrypoint error handling', () => {
 
     document.body.innerHTML = VISUALIZER_HTML;
     global.alert = jest.fn();
+    // Use pre-created fetch mock
+    global.fetch = sharedFetchMock;
+    window.fetch = sharedFetchMock;
   });
 
   afterEach(() => {
@@ -58,10 +69,7 @@ describe('anatomy-visualizer entrypoint error handling', () => {
   it(
     'logs a warning when ClothingManagementService is unavailable',
     async () => {
-      const fetchMock = createFileFetchMock();
-      global.fetch = fetchMock;
-      window.fetch = fetchMock;
-
+      // Import AFTER resetModules so spies are on the same instances anatomy-visualizer.js will use
       const tokensModule = await import(
         '../../../src/dependencyInjection/tokens.js'
       );
@@ -135,10 +143,6 @@ describe('anatomy-visualizer entrypoint error handling', () => {
       const backButton = document.getElementById('back-button');
       backButton?.remove();
 
-      const fetchMock = createFileFetchMock();
-      global.fetch = fetchMock;
-      window.fetch = fetchMock;
-
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
       );
@@ -159,10 +163,6 @@ describe('anatomy-visualizer entrypoint error handling', () => {
   it(
     'propagates initialization failures through the fatal error handler',
     async () => {
-      const fetchMock = createFileFetchMock();
-      global.fetch = fetchMock;
-      window.fetch = fetchMock;
-
       const { default: AnatomyVisualizerUI } = await import(
         '../../../src/domUI/AnatomyVisualizerUI.js'
       );

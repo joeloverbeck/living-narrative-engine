@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:line_tender_harness_hemp_tan",
+  "description": "Line-tender harness in hemp-tan with leather reinforcement",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "accessories"
+    },
+    "core:material": {
+      "material": "hemp"
+    },
+    "core:name": {
+      "text": "line-tender harness"
+    },
+    "core:description": {
+      "text": "A working harness of wide hemp webbing in natural tan, reinforced at stress points with strips of oiled leather. The straps cross the chest and loop around the shoulders, meeting at a brass ring in the center of the back where the tender line attaches. Multiple smaller D-rings are sewn along the front for tool clips, signal flags, and the short safety line that connects to a partner. When a diver descends, this harness is their lifeline—the tender above keeps tension on the rope, reading its movements for signals: one tug for more slack, two for pull up, three sharp jerks for emergency ascent. The hemp has gone dark at the edges from oil and sweat, the leather patches showing the deep grooves where rope has run."
+    },
+    "descriptors:color_extended": {
+      "color": "hemp-tan"
+    },
+    "descriptors:texture": {
+      "texture": "webbing"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.45
+    }
+  }
+}

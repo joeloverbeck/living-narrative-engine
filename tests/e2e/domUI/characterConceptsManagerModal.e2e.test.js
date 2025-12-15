@@ -19,6 +19,10 @@ import { configureContainer } from '../../../src/dependencyInjection/containerCo
 import { registerCharacterBuilder } from '../../../src/dependencyInjection/registrations/characterBuilderRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { CharacterConceptsManagerController } from '../../../src/domUI/characterConceptsManagerController.js';
+// Direct imports for per-test instantiation (bypass singleton caching)
+import { DOMElementManager } from '../../../src/characterBuilder/services/domElementManager.js';
+import { EventListenerRegistry } from '../../../src/characterBuilder/services/eventListenerRegistry.js';
+import { ControllerLifecycleOrchestrator } from '../../../src/characterBuilder/services/controllerLifecycleOrchestrator.js';
 
 // Mock FormValidationHelper to avoid DOM issues in tests
 jest.mock(
@@ -153,10 +157,13 @@ const createDOMFixture = () => {
 };
 
 describe('Character Concepts Manager Modal - E2E Tests', () => {
-  let container;
+  // PERFORMANCE OPTIMIZATION: Container setup moved to beforeAll (runs once)
+  // This saves ~700-900ms per test by avoiding repeated container initialization
+  let sharedContainer;
+  let sharedServices;
+
+  // Test-specific state (reset per test)
   let controller;
-  let logger;
-  let eventBus;
   let characterBuilderService;
 
   // Mock IndexedDB for jsdom environment - use simpler synchronous mocks
@@ -190,48 +197,11 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
     close: jest.fn(),
   };
 
-  beforeEach(async () => {
-    // Set up IndexedDB mock with immediate callback execution
-    mockRequest.result = mockDbInstance;
-    global.indexedDB = {
-      open: jest.fn().mockImplementation(() => {
-        // Execute success callback immediately instead of using setTimeout
-        Promise.resolve().then(() => {
-          if (mockRequest.onsuccess) {
-            mockRequest.onsuccess();
-          }
-        });
-        return mockRequest;
-      }),
-    };
-    global.IDBKeyRange = {
-      only: jest.fn().mockImplementation((value) => ({ value, type: 'only' })),
-    };
-
-    // Create container
-    container = new AppContainer();
-
-    // Setup DOM using minimal fixture
-    document.body.innerHTML = createDOMFixture();
-
-    // Configure container
-    const mockUiElements = {
-      outputDiv: document.createElement('div'),
-      inputElement: document.createElement('input'),
-      titleElement: document.createElement('h1'),
-      document: document,
-    };
-
-    await configureContainer(container, mockUiElements);
-
-    // Register character builder services
-    registerCharacterBuilder(container);
-
-    // Get services
-    logger = container.resolve(tokens.ILogger);
-    eventBus = container.resolve(tokens.ISafeEventDispatcher);
-
-    // Create a complete mock of CharacterBuilderService with ALL required methods
+  /**
+   * Creates a fresh mock CharacterBuilderService for each test
+   * @returns {Object} Mock service with all required methods
+   */
+  const createMockCharacterBuilderService = () => {
     const mockConcepts = [
       {
         id: 'e2e-test-1',
@@ -248,11 +218,8 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
       },
     ];
 
-    const mockCharacterBuilderService = {
-      // Required method that was missing
+    return {
       initialize: jest.fn().mockResolvedValue(undefined),
-
-      // Existing mocked methods
       getAllCharacterConcepts: jest.fn().mockResolvedValue(mockConcepts),
       getThematicDirections: jest.fn().mockImplementation(async (conceptId) => {
         if (conceptId === 'e2e-test-1') {
@@ -275,63 +242,120 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
           updated: Date.now(),
         })),
       deleteCharacterConcept: jest.fn().mockResolvedValue(true),
-
-      // Additional required methods that were missing
       getCharacterConcept: jest.fn().mockImplementation(async (id) => {
         return mockConcepts.find((c) => c.id === id) || null;
       }),
       generateThematicDirections: jest.fn().mockResolvedValue([]),
     };
+  };
 
-    // Register the mock in the container BEFORE creating the controller
-    container.register(
+  // ONE-TIME: Expensive container setup (runs once for all tests)
+  beforeAll(async () => {
+    // Set up IndexedDB mock
+    mockRequest.result = mockDbInstance;
+    global.indexedDB = {
+      open: jest.fn().mockImplementation(() => {
+        Promise.resolve().then(() => {
+          if (mockRequest.onsuccess) {
+            mockRequest.onsuccess();
+          }
+        });
+        return mockRequest;
+      }),
+    };
+    global.IDBKeyRange = {
+      only: jest.fn().mockImplementation((value) => ({ value, type: 'only' })),
+    };
+
+    // Create and configure container once
+    sharedContainer = new AppContainer();
+
+    const mockUiElements = {
+      outputDiv: document.createElement('div'),
+      inputElement: document.createElement('input'),
+      titleElement: document.createElement('h1'),
+      document: document,
+    };
+
+    await configureContainer(sharedContainer, mockUiElements);
+    registerCharacterBuilder(sharedContainer);
+
+    // Resolve shared services that are stateless and reusable across tests
+    // Note: ControllerLifecycleOrchestrator is NOT shared - it tracks per-controller state
+    // Note: DOMElementManager and EventListenerRegistry are resolved per-test (DOM-dependent)
+    sharedServices = {
+      logger: sharedContainer.resolve(tokens.ILogger),
+      eventBus: sharedContainer.resolve(tokens.ISafeEventDispatcher),
+      schemaValidator: sharedContainer.resolve(tokens.ISchemaValidator),
+      asyncUtilitiesToolkit: sharedContainer.resolve(
+        tokens.AsyncUtilitiesToolkit
+      ),
+      performanceMonitor: sharedContainer.resolve(tokens.PerformanceMonitor),
+      memoryManager: sharedContainer.resolve(tokens.MemoryManager),
+      errorHandlingStrategy: sharedContainer.resolve(
+        tokens.ErrorHandlingStrategy
+      ),
+      validationService: sharedContainer.resolve(tokens.ValidationService),
+    };
+  });
+
+  // PER-TEST: Lightweight setup for test isolation
+  beforeEach(async () => {
+    // Reset DOM (cheap operation)
+    document.body.innerHTML = createDOMFixture();
+
+    // Create fresh mock service for this test (cheap - just object creation)
+    characterBuilderService = createMockCharacterBuilderService();
+
+    // Register fresh mock in container
+    sharedContainer.register(
       tokens.CharacterBuilderService,
-      mockCharacterBuilderService
+      characterBuilderService
     );
-    characterBuilderService = mockCharacterBuilderService;
 
-    // Get required services from container for BaseCharacterBuilderController
-    const controllerLifecycleOrchestrator = container.resolve(
-      tokens.ControllerLifecycleOrchestrator
-    );
-    const domElementManager = container.resolve(tokens.DOMElementManager);
-    const eventListenerRegistry = container.resolve(
-      tokens.EventListenerRegistry
-    );
-    const asyncUtilitiesToolkit = container.resolve(
-      tokens.AsyncUtilitiesToolkit
-    );
-    const performanceMonitor = container.resolve(tokens.PerformanceMonitor);
-    const memoryManager = container.resolve(tokens.MemoryManager);
-    const errorHandlingStrategy = container.resolve(
-      tokens.ErrorHandlingStrategy
-    );
-    const validationService = container.resolve(tokens.ValidationService);
-    const schemaValidator = container.resolve(tokens.ISchemaValidator);
+    // Create FRESH instances of stateful services (bypass singleton caching)
+    // These services have per-controller or per-DOM state that must be reset:
+    // - DOMElementManager: caches DOM element references
+    // - EventListenerRegistry: tracks DOM event listeners
+    // - ControllerLifecycleOrchestrator: tracks controller initialization state
+    const domElementManager = new DOMElementManager({
+      logger: sharedServices.logger,
+      documentRef: document,
+      performanceRef: performance,
+      contextName: 'TestDOMElementManager',
+    });
 
-    // Create and initialize controller with all required dependencies
+    const eventListenerRegistry = new EventListenerRegistry({
+      logger: sharedServices.logger,
+      asyncUtilities: sharedServices.asyncUtilitiesToolkit,
+      contextName: 'TestEventListenerRegistry',
+    });
+
+    const controllerLifecycleOrchestrator = new ControllerLifecycleOrchestrator({
+      logger: sharedServices.logger,
+      eventBus: sharedServices.eventBus,
+    });
+
+    // Create new controller with fresh per-test services (required for test isolation)
     controller = new CharacterConceptsManagerController({
-      logger,
+      logger: sharedServices.logger,
       characterBuilderService,
-      eventBus,
-      schemaValidator,
+      eventBus: sharedServices.eventBus,
+      schemaValidator: sharedServices.schemaValidator,
       controllerLifecycleOrchestrator,
       domElementManager,
       eventListenerRegistry,
-      asyncUtilitiesToolkit,
-      performanceMonitor,
-      memoryManager,
-      errorHandlingStrategy,
-      validationService,
+      asyncUtilitiesToolkit: sharedServices.asyncUtilitiesToolkit,
+      performanceMonitor: sharedServices.performanceMonitor,
+      memoryManager: sharedServices.memoryManager,
+      errorHandlingStrategy: sharedServices.errorHandlingStrategy,
+      validationService: sharedServices.validationService,
     });
 
     try {
       await controller.initialize();
-
-      // Wait for all async operations to complete
       await flushMicrotasks();
 
-      // Verify _testExports are available
       if (!controller._testExports) {
         throw new Error(
           '_testExports not available - NODE_ENV may not be set correctly'
@@ -344,11 +368,16 @@ describe('Character Concepts Manager Modal - E2E Tests', () => {
   });
 
   afterEach(() => {
-    // Clean up
     document.body.innerHTML = '';
     jest.clearAllMocks();
+  });
+
+  afterAll(() => {
+    // Clean up globals set in beforeAll
     delete global.indexedDB;
     delete global.IDBKeyRange;
+    sharedContainer = null;
+    sharedServices = null;
   });
 
   describe('Complete User Workflow - Create Concept', () => {

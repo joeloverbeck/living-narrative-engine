@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_tympanum",
+  "description": "A small, circular tympanum typical of newt-folk",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear",
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 3,
+      "maxHealth": 3,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "tympanum"
+    },
+    "core:weight": {
+      "weight": 0.004
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:shape_general": {
+      "shape": "circular"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

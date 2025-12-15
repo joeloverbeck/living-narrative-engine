@@ -180,6 +180,7 @@ describe('bodyDescriptorConstants - Registry Derivation', () => {
       const expectedComposition = [
         'underweight',
         'lean',
+        'dense',
         'average',
         'soft',
         'bumpy',

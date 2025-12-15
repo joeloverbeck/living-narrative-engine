@@ -9,6 +9,7 @@
         "type": "string",
         "description": "The length of the nails",
         "enum": [
+          "blunt",
           "short",
           "trimmed",
           "medium",

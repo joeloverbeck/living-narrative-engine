@@ -1,0 +1,100 @@
+{
+  "$schema": "schema://living-narrative-engine/anatomy.recipe.schema.json",
+  "recipeId": "dredgers:badger_folk_male_standard",
+  "blueprintId": "anatomy-creatures:badger_folk_male",
+  "bodyDescriptors": {
+    "height": "short",
+    "build": "stocky",
+    "composition": "dense",
+    "skinColor": "brown",
+    "hairDensity": "furred"
+  },
+  "slots": {
+    "torso": {
+      "partType": "torso",
+      "preferId": "anatomy-creatures:badger_folk_male_torso"
+    },
+    "head": {
+      "partType": "head",
+      "preferId": "anatomy:humanoid_head"
+    },
+    "heart": {
+      "partType": "heart",
+      "preferId": "anatomy:human_heart"
+    },
+    "spine": {
+      "partType": "spine",
+      "preferId": "anatomy:human_spine"
+    },
+    "brain": {
+      "partType": "brain",
+      "preferId": "anatomy:human_brain"
+    },
+    "left_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:badger_ear"
+    },
+    "right_ear": {
+      "partType": "ear",
+      "preferId": "anatomy-creatures:badger_ear"
+    },
+    "tail": {
+      "partType": "tail",
+      "preferId": "anatomy-creatures:badger_tail"
+    },
+    "left_hand": {
+      "partType": "hand",
+      "preferId": "anatomy-creatures:badger_hand_demolition_scarred"
+    },
+    "right_hand": {
+      "partType": "hand",
+      "preferId": "anatomy-creatures:badger_hand_demolition_scarred"
+    },
+    "penis": {
+      "partType": "penis",
+      "preferId": "anatomy:human_penis"
+    }
+  },
+  "patterns": [
+    {
+      "matches": ["left_eye", "right_eye"],
+      "partType": "eye",
+      "preferId": "anatomy:human_eye_brown"
+    },
+    {
+      "matches": ["left_arm", "right_arm"],
+      "partType": "arm",
+      "preferId": "anatomy:humanoid_arm_muscular"
+    },
+    {
+      "matches": ["left_leg", "right_leg"],
+      "partType": "leg",
+      "preferId": "anatomy:human_leg"
+    },
+    {
+      "matches": ["left_foot", "right_foot"],
+      "partType": "foot",
+      "preferId": "anatomy:human_foot"
+    },
+    {
+      "matches": ["left_testicle", "right_testicle"],
+      "partType": "testicle",
+      "preferId": "anatomy:human_testicle"
+    },
+    {
+      "matches": ["left_ass", "right_ass"],
+      "partType": "ass_cheek",
+      "preferId": "anatomy:human_ass_cheek"
+    }
+  ],
+  "clothingEntities": [
+    { "entityId": "underwear:linen_undershirt_off_white", "equip": true },
+    { "entityId": "base-clothing:padded_crawl_jacket_dark_stone_gray", "equip": true },
+    { "entityId": "outer-clothing:oilskin_shell_coat_tar_black", "equip": true },
+    { "entityId": "base-clothing:tinned_iron_bump_cap_iron_gray", "equip": true },
+    { "entityId": "accessories:diving_goggles_dull_brass", "equip": true },
+    { "entityId": "accessories:waxed_canvas_blast_bib_gray_black", "equip": true },
+    { "entityId": "base-clothing:canvas_tunnel_gloves_gray_brown", "equip": true },
+    { "entityId": "base-clothing:waxed_canvas_gaiters_tar_black", "equip": true }
+  ]
+}

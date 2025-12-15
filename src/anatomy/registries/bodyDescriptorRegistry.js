@@ -113,6 +113,7 @@ export const BODY_DESCRIPTOR_REGISTRY = {
     validValues: [
       'underweight',
       'lean',
+      'dense',
       'average',
       'soft',
       'bumpy',

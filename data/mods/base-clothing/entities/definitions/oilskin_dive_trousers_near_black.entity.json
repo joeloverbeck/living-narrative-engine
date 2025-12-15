@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:oilskin_dive_trousers_near_black",
+  "description": "Waxed canvas dive trousers in near-black",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "legs"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "oilskin dive trousers"
+    },
+    "core:description": {
+      "text": "Loose-cut trousers of heavily waxed canvas in near-black, designed to be cinched at the waist by a weight belt and tucked into high waders. The fabric is stiff with waterproofing, crackling faintly with each step until body heat softens it. Reinforced patches cover the knees and seat where a diver spends most of their time—kneeling on slick stone, crouching in flooded passages, or dragging themselves through spaces too tight to stand. The waistband is wide and sturdy, built to anchor the belt that keeps a diver from floating when they need to sink."
+    },
+    "descriptors:color_extended": {
+      "color": "near-black"
+    },
+    "descriptors:texture": {
+      "texture": "waxed"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.85
+    }
+  }
+}

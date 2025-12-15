@@ -9,6 +9,7 @@
         "type": "string",
         "description": "The primary material composition",
         "enum": [
+          "brass",
           "brocade",
           "calfskin",
           "canvas",
@@ -21,6 +22,7 @@
           "glass",
           "goatskin",
           "gold",
+          "hemp",
           "iron",
           "lace",
           "leather",
@@ -29,6 +31,7 @@
           "metal",
           "microfiber",
           "nylon",
+          "oilskin",
           "organic",
           "pearl",
           "plastic",

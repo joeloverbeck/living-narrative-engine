@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:waxed_canvas_gaiters_tar_black",
+  "description": "Waxed canvas gaiters in tar-black with mud-caked finish",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "tunnel gaiters"
+    },
+    "core:description": {
+      "text": "Tall gaiters of waxed canvas in tar-black, designed to protect the lower legs from the ankle to just below the knee. The outer surface is roughened by constant contact with stone and debris, the wax coating worn thin in patches and built up in others where hasty field repairs have been applied. Brass buckles secure them over boot tops, and a leather strap runs under each foot to keep the gaiters from riding up. The inside is lined with oiled leather to prevent chafing, though the lining has long since conformed to the shape of the legs that wear them daily. Practical footwear for someone who spends their working hours in places where the floor might suddenly become the ceiling."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-black"
+    },
+    "descriptors:texture": {
+      "texture": "mud-caked"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.35
+    }
+  }
+}

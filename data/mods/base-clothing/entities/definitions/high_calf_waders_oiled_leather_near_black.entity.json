@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:high_calf_waders_oiled_leather_near_black",
+  "description": "High calf waders in oiled near-black leather",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "high calf waders"
+    },
+    "core:description": {
+      "text": "Tall waders of heavy oiled leather in near-black, rising to mid-calf where they can be cinched tight against the dive trousers. The leather gleams with a fresh application of fish oil and beeswax, the waterproofing treatment that keeps feet dry until the seams finally give out. The soles are thick and studded with brass nails for grip on slick stone and algae-covered surfaces, worn down smooth in places from countless hours of underwater work. The interior is lined with oiled wool to wick moisture and prevent the blisters that plague divers who spend too long in standing water. These boots have walked through places no boot should go, and they smell of it."
+    },
+    "descriptors:color_extended": {
+      "color": "near-black"
+    },
+    "descriptors:texture": {
+      "texture": "oiled"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.4
+    }
+  }
+}

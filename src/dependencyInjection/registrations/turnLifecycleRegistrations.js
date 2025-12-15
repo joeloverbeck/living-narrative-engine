@@ -8,6 +8,7 @@
 import TurnManager from '../../turns/turnManager.js';
 import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 import { TurnOrderService } from '../../turns/order/turnOrderService.js';
+import { TurnOrderShuffleService } from '../../turns/services/turnOrderShuffleService.js';
 import PromptCoordinator from '../../turns/prompting/promptCoordinator.js';
 import ActionContextBuilder from '../../turns/prompting/actionContextBuilder.js';
 import ValidatedEventDispatcherAdapter from '../../turns/prompting/validatedEventDispatcherAdapter.js';
@@ -36,8 +37,17 @@ export function registerTurnLifecycle(container) {
 
   // ───────────────────── Core singletons ─────────────────────
   registrar.singletonFactory(
+    tokens.ITurnOrderShuffleService,
+    (c) => new TurnOrderShuffleService({ logger: c.resolve(tokens.ILogger) })
+  );
+
+  registrar.singletonFactory(
     tokens.ITurnOrderService,
-    (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
+    (c) =>
+      new TurnOrderService({
+        logger: c.resolve(tokens.ILogger),
+        shuffleService: c.resolve(tokens.ITurnOrderShuffleService),
+      })
   );
   registrar.singletonFactory(
     tokens.ITurnStateFactory,

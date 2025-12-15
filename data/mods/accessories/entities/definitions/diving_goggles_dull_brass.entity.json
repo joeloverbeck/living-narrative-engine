@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:diving_goggles_dull_brass",
+  "description": "Diving goggles with dull brass frame",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "head_gear"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["head_gear"],
+      "coveragePriority": "accessories"
+    },
+    "core:material": {
+      "material": "brass"
+    },
+    "core:name": {
+      "text": "diving goggles"
+    },
+    "core:description": {
+      "text": "Heavy goggles with thick glass lenses set in frames of dull brass, the metal gone dark and mottled from repeated exposure to salt and worse. The rims are fitted with padded leather gaskets that press tight against the eye sockets, sealing out water and whatever else might be floating in it. A wide strap of woven hemp holds them snug against the head. The lenses are scratched from use, clouding vision at the edges, but the center remains clear enough to spot a salvage gleam in murky depths—or the shape of something moving where nothing should be."
+    },
+    "descriptors:color_extended": {
+      "color": "dull-brass"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.15
+    }
+  }
+}

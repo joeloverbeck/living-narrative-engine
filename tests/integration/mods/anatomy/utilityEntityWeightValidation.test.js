@@ -241,7 +241,7 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
   });
 
   describe('Coverage Completeness', () => {
-    it('should have all utility body parts with weight (37 files total)', () => {
+    it('should have all utility body parts with weight', () => {
       // Get all files NOT matching human_, chicken_, centaur_, dragon_, eldritch_, cat_, feline_, horse_
       // Note: Creature files (cephalopods, spiders, tortoises) moved to anatomy-creatures mod
       const allFiles = fs
@@ -266,8 +266,10 @@ describe('DISBODPARSPA-015: Utility Entity Weight Validation', () => {
         return getWeight(entity) !== undefined;
       });
 
-      expect(bodyParts.length).toBe(37);
-      expect(bodyPartsWithWeight.length).toBe(37);
+      // Minimum threshold to catch accidental mass deletions
+      expect(bodyParts.length).toBeGreaterThanOrEqual(37);
+      // Critical invariant: ALL body parts must have weight
+      expect(bodyPartsWithWeight.length).toBe(bodyParts.length);
     });
 
     it('should have all weights as positive numbers', () => {
