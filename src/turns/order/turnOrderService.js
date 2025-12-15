@@ -15,6 +15,7 @@ import { freeze } from '../../utils/cloneUtils.js'; // Added import
 /** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */
 /** @typedef {import('../interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */ // Assuming ILogger path
+/** @typedef {import('../interfaces/ITurnOrderShuffleService.js').ITurnOrderShuffleService} ITurnOrderShuffleService */
 
 /**
  * @class TurnOrderService
@@ -47,6 +48,14 @@ export class TurnOrderService extends ITurnOrderService {
    */
   #logger;
 
+  /**
+   * The shuffle service for randomizing non-human actor positions.
+   *
+   * @private
+   * @type {ITurnOrderShuffleService | null}
+   */
+  #shuffleService = null;
+
   // --- Constructor ---
 
   /**
@@ -54,9 +63,10 @@ export class TurnOrderService extends ITurnOrderService {
    *
    * @param {object} dependencies - The dependencies for the service.
    * @param {ILogger} dependencies.logger - The logging service instance.
+   * @param {ITurnOrderShuffleService} [dependencies.shuffleService] - Optional shuffle service for randomizing non-human actor positions.
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ logger }) {
+  constructor({ logger, shuffleService = null }) {
     super(); // Call base class constructor
 
     if (
@@ -87,11 +97,16 @@ export class TurnOrderService extends ITurnOrderService {
       error: bindOr('error', noop),
     };
 
+    // Store shuffle service if provided
+    this.#shuffleService = shuffleService;
+
     // Initialize state
     this.#currentQueue = null;
     this.#currentStrategy = null;
 
-    this.#logger.debug('TurnOrderService initialized.');
+    this.#logger.debug(
+      `TurnOrderService initialized${shuffleService ? ' with shuffle service' : ''}.`
+    );
   }
 
   // --- Basic Methods (Implemented in TASK-TURN-ORDER-001.4) ---
@@ -229,6 +244,18 @@ export class TurnOrderService extends ITurnOrderService {
           this.#logger.debug(
             'TurnOrderService: Initialized SimpleRoundRobinQueue.'
           );
+
+          // Apply position-preserving shuffle if shuffle service is available
+          if (this.#shuffleService) {
+            this.#logger.debug(
+              'TurnOrderService: Applying position-preserving shuffle to non-human actors.'
+            );
+            this.#shuffleService.shuffleWithHumanPositionPreservation(
+              entities,
+              strategy
+            );
+          }
+
           for (const entity of entities) {
             this.#currentQueue.add(entity); // Priority is ignored by SimpleRoundRobinQueue
           }

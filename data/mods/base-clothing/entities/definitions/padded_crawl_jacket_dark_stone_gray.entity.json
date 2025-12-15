@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:padded_crawl_jacket_dark_stone_gray",
+  "description": "A quilted wool crawl jacket in dark-stone-gray with stitch repairs",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "padded crawl jacket"
+    },
+    "core:description": {
+      "text": "A heavy quilted jacket of dark stone-gray wool, its dense padding designed to absorb the constant scraping and impacts of crawling through tight tunnels. The surface is a patchwork of repairs—squares of mismatched fabric stitched over tears, burns, and the gouges left by sharp debris. The quilting pattern is tight and regular where original, but the repair work is practical rather than pretty, done by rough hands that valued function over form. Padded panels at elbows and shoulders have been reinforced multiple times, and the whole garment carries the ground-in scent of stone dust and honest sweat. This is a jacket that has seen hundreds of hours underground, and it shows every one."
+    },
+    "descriptors:color_extended": {
+      "color": "dark-stone-gray"
+    },
+    "descriptors:texture": {
+      "texture": "stitch-repaired"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.65
+    }
+  }
+}

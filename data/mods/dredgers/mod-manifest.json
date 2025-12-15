@@ -48,10 +48,6 @@
       "version": "^1.0.0"
     },
     {
-      "id": "fantasy",
-      "version": "^1.0.0"
-    },
-    {
       "id": "writing",
       "version": "^1.0.0"
     }
@@ -67,9 +63,12 @@
         "concordance_salon.location.json",
         "cress_siltwell.character.json",
         "eira_quenreach.character.json",
+        "grit_wheathook.character.json",
+        "hobb_rusk.character.json",
         "jorren_weir.character.json",
         "kestrel_brune.character.json",
         "keyring.entity.json",
+        "pitch.character.json",
         "plain_notebook.entity.json",
         "saffi_two_tides.character.json",
         "salvage_quarantine_undertaking.entity.json"
@@ -98,9 +97,12 @@
     "blueprints": [],
     "parts": [],
     "recipes": [
+      "badger_folk_male_standard.recipe.json",
       "beaver_folk_male.recipe.json",
+      "cat_folk_female_standard.recipe.json",
       "ermine_folk_female.recipe.json",
       "hyena_folk_female.recipe.json",
+      "newt_folk_male_standard.recipe.json",
       "toad_folk_male.recipe.json"
     ],
     "portraits": [
@@ -109,7 +111,9 @@
       "cress_siltwell.png",
       "eira_quenreach.png",
       "jorren_weir.png",
-      "kestrel_brune.png"
+      "kestrel_brune.png",
+      "pitch.png",
+      "saffi_two_tides.png"
     ],
     "worlds": [
       "dredgers.world.json"

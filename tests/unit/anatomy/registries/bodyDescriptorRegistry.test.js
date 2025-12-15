@@ -204,6 +204,7 @@ describe('bodyDescriptorRegistry', () => {
         expect(composition.validValues).toEqual([
           'underweight',
           'lean',
+          'dense',
           'average',
           'soft',
           'bumpy',
@@ -568,8 +569,10 @@ describe('bodyDescriptorRegistry', () => {
         const validCompositions = [
           'underweight',
           'lean',
+          'dense',
           'average',
           'soft',
+          'bumpy',
           'chubby',
           'overweight',
           'obese',

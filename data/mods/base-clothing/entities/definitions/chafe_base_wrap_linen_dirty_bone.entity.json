@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:chafe_base_wrap_linen_dirty_bone",
+  "description": "Tight linen base wrap in dirty-bone, dark with absorbed sweat",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "chafe base wrap"
+    },
+    "core:description": {
+      "text": "A tightly wound linen wrap in dirty-bone white, now darkened in patches by salt and sweat absorbed through countless hours of labor. The fabric is thin but sturdy, meant to lie flat against the skin and prevent the heavy oilskin jacket from chafing during long dives. Where the wrap winds across the ribs and shoulders, the weave has gone gray-brown with use, the original color only visible at the edges where it tucks in. A diver's first layer—unseen, unglamorous, essential."
+    },
+    "descriptors:color_extended": {
+      "color": "dirty-bone"
+    },
+    "descriptors:texture": {
+      "texture": "sweat-dark"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.15
+    }
+  }
+}

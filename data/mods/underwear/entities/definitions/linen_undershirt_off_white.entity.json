@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "underwear:linen_undershirt_off_white",
+  "description": "A simple linen undershirt in off-white for layering",
+  "components": {
+    "clothing:wearable": {
+      "layer": "underwear",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear"]
+    },
+    "core:material": {
+      "material": "linen"
+    },
+    "core:name": {
+      "text": "undershirt"
+    },
+    "core:description": {
+      "text": "A loose-fitting undershirt of coarse linen, its off-white color faded to an honest ecru from years of washing and sweat. The sleeves reach past the elbow, and the wide neckline allows air to circulate beneath heavier layers. This is the foundation garment of a working badger—worn against the fur to absorb the day's exertion before it soaks into better clothes. The seams are plain but sturdy, reinforced at the shoulder where the fabric takes the most strain from digging and hauling."
+    },
+    "descriptors:color_extended": {
+      "color": "off-white"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.15
+    }
+  }
+}

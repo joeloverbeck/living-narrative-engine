@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:canvas_tunnel_gloves_gray_brown",
+  "description": "Heavy canvas work gloves in gray-brown for tunnel work",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "canvas"
+    },
+    "core:name": {
+      "text": "tunnel gloves"
+    },
+    "core:description": {
+      "text": "Thick canvas gloves in a muddy gray-brown that tells of countless hours gripping stone and digging through rubble. The palms are reinforced with additional layers of canvas and leather patches, each repair a testament to the glove's continued usefulness despite constant abuse. The fingertips are stained darker from handling unknown substances, and the wrists extend past the jacket cuffs to prevent debris from working its way inside. These are a tunneler's hands-by-proxy—rough, expendable, and always in need of mending."
+    },
+    "descriptors:color_extended": {
+      "color": "gray-brown"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.18
+    }
+  }
+}

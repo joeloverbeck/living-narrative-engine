@@ -1,0 +1,43 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy:humanoid_hand_diver",
+  "description": "A calloused, rope-scarred hand typical of professional divers with blunt chipped nails",
+  "components": {
+    "anatomy:can_grab": {
+      "gripStrength": 1,
+      "heldItemId": null,
+      "locked": false
+    },
+    "anatomy:part": {
+      "subType": "hand",
+      "hit_probability_weight": 3,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "hand"
+    },
+    "core:weight": {
+      "weight": 0.4
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
+    },
+    "descriptors:skin_condition": {
+      "conditions": ["callused", "work-worn", "oil-stained"]
+    },
+    "descriptors:nail_condition": {
+      "length": "blunt",
+      "condition": "chipped",
+      "cleanliness": "stained"
+    },
+    "descriptors:professional_markers": {
+      "profession": "diver",
+      "markers": ["rope-calluses"]
+    }
+  }
+}

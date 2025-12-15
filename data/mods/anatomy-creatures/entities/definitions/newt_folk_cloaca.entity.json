@@ -1,0 +1,30 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_folk_cloaca",
+  "description": "A small newt-folk cloaca with smooth membrane",
+  "components": {
+    "anatomy:embedded": {},
+    "anatomy:part": {
+      "subType": "asshole",
+      "hit_probability_weight": 1,
+      "health_calculation_weight": 0.2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "cloaca"
+    },
+    "core:weight": {
+      "weight": 0.02
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

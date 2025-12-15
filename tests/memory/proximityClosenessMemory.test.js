@@ -670,4 +670,81 @@ describe('Proximity Closeness Memory Tests', () => {
       });
     });
   });
+
+  describe('Large Furniture Resource Utilization', () => {
+    it('should maintain stable memory during high-volume furniture operations', async () => {
+      const monitoringInterval = 100; // Check every 100 operations
+      const totalOperations = 500;
+      const resourceMetrics = [];
+
+      // Setup furniture for testing
+      const spots = new Array(10).fill(null);
+      for (let i = 0; i < 5; i++) {
+        spots[i * 2] = `game:actor_${i}`;
+      }
+
+      testBed.entityManager.getComponentData.mockReturnValue({ spots });
+      mockClosenessCircleService.merge.mockReturnValue({});
+
+      // Force initial GC
+      if (global.gc) {
+        global.gc();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      for (let i = 0; i < totalOperations; i++) {
+        await establishHandler.execute(
+          {
+            furniture_id: 'furniture:resource_test',
+            actor_id: `game:new_actor_${i}`,
+            spot_index: (i * 2 + 1) % 10,
+          },
+          executionContext
+        );
+
+        // Collect metrics at intervals
+        if (i % monitoringInterval === 0) {
+          // Force GC before measurement for accurate readings
+          if (global.gc) {
+            global.gc();
+            await new Promise((resolve) => setTimeout(resolve, 10));
+          }
+          resourceMetrics.push({
+            operation: i,
+            memory: process.memoryUsage().heapUsed / 1024 / 1024, // MB
+          });
+        }
+      }
+
+      // Final GC and measurement
+      if (global.gc) {
+        global.gc();
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      resourceMetrics.push({
+        operation: totalOperations,
+        memory: process.memoryUsage().heapUsed / 1024 / 1024,
+      });
+
+      // Analyze resource utilization
+      const firstMetric = resourceMetrics[0];
+      const lastMetric = resourceMetrics[resourceMetrics.length - 1];
+      const memoryIncrease = lastMetric.memory - firstMetric.memory;
+
+      console.log('Large Furniture Resource Utilization:');
+      resourceMetrics.forEach((metric) => {
+        console.log(
+          `  Operation ${metric.operation}: ${metric.memory.toFixed(2)}MB`
+        );
+      });
+      console.log(`  Memory increase: ${memoryIncrease.toFixed(2)}MB`);
+
+      // Jest mocks retain call history for every mocked entity manager method. That
+      // bookkeeping grows with each iteration and can account for several megabytes
+      // of retained heap even when the production code would not leak. Allow a wider
+      // buffer so legitimate spikes still fail while avoiding false positives from
+      // the test harness itself.
+      expect(memoryIncrease).toBeLessThan(20); // Less than 20MB memory increase
+    });
+  });
 });

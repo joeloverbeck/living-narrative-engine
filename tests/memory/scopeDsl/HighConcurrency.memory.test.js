@@ -812,8 +812,8 @@ describe('High Concurrency Memory Management', () => {
           memoryGrowthMB,
         });
 
-        // Reduced delay between rounds (Phase 1 optimization)
-        await new Promise((resolve) => setTimeout(resolve, 15));
+        // Further reduced delay between rounds (Phase 2 optimization)
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
 
       // Analyze for memory leaks
@@ -905,10 +905,10 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const postOperationsMemory = measureMemoryUsage();
 
-      // Test memory cleanup effectiveness over time (Phase 2 optimized - 2 phases)
+      // Test memory cleanup effectiveness over time (Phase 3 optimized - reduced delays)
       const cleanupPhases = [
+        { delay: 5, description: '5ms cleanup' },
         { delay: 10, description: '10ms cleanup' },
-        { delay: 20, description: '20ms cleanup' },
       ];
 
       const cleanupResults = [];
@@ -1279,10 +1279,10 @@ describe('High Concurrency Memory Management', () => {
       const results = await Promise.all(promises);
       const peakMemory = measureMemoryUsage();
 
-      // Monitor memory recovery over time (Phase 2 optimized - 2 phases)
+      // Monitor memory recovery over time (Phase 3 optimized - reduced delays)
       const recoveryPhases = [
-        { delay: 20, target: 'initial' },
-        { delay: 40, target: 'final' },
+        { delay: 10, target: 'initial' },
+        { delay: 20, target: 'final' },
       ];
 
       const recoveryResults = [];
@@ -1517,9 +1517,9 @@ describe('High Concurrency Memory Management', () => {
         memoryGrowth: spikeEndMemory.heapUsed - spikeStartMemory.heapUsed,
       });
 
-      // Allow brief recovery period (Phase 1 optimized - reduced delay)
+      // Allow brief recovery period (Phase 2 optimized - minimal delay)
       await global.memoryTestUtils.forceGCAndWait();
-      await new Promise((resolve) => setTimeout(resolve, 25));
+      await new Promise((resolve) => setTimeout(resolve, 10));
       const postSpikeRecoveryMemory = measureMemoryUsage();
 
       // Phase 2: Normal operations after spike to test recovery

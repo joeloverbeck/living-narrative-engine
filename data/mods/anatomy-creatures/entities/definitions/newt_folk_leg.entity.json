@@ -1,0 +1,42 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_folk_leg",
+  "description": "A slender newt-folk leg with smooth, moist skin",
+  "components": {
+    "anatomy:part": {
+      "subType": "leg",
+      "hit_probability_weight": 10,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 28,
+      "maxHealth": 28,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "ankle",
+          "allowedTypes": ["foot"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:movement": {
+      "locked": false,
+      "forcedOverride": false
+    },
+    "core:name": {
+      "text": "leg"
+    },
+    "core:weight": {
+      "weight": 10
+    },
+    "descriptors:build": {
+      "build": "slim"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_tail",
+  "description": "A long, flattened newt tail with smooth skin, used for swimming",
+  "components": {
+    "anatomy:part": {
+      "subType": "tail",
+      "hit_probability_weight": 4,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 15,
+      "maxHealth": 15,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "newt tail"
+    },
+    "core:weight": {
+      "weight": 0.8
+    },
+    "descriptors:flexibility": {
+      "flexibility": "highly-flexible"
+    },
+    "descriptors:length_category": {
+      "length": "long"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "descriptors:shape_general": {
+      "shape": "flat"
+    }
+  }
+}

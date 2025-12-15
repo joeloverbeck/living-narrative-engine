@@ -1,0 +1,35 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:cat_folk_nose",
+  "description": "Feline nose - small button-shaped with soft leathery pad characteristic of cat-folk",
+  "components": {
+    "anatomy:part": {
+      "subType": "nose",
+      "hit_probability_weight": 0.6,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "nose"
+    },
+    "core:weight": {
+      "weight": 0.03
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:shape_general": {
+      "shape": "button"
+    },
+    "descriptors:texture": {
+      "texture": "soft"
+    },
+    "descriptors:color_extended": {
+      "color": "dark-umber"
+    }
+  }
+}

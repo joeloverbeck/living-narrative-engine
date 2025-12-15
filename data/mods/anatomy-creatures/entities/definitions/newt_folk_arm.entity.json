@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_folk_arm",
+  "description": "A slender newt-folk arm with smooth, moist skin",
+  "components": {
+    "anatomy:part": {
+      "subType": "arm",
+      "hit_probability_weight": 8,
+      "health_calculation_weight": 3
+    },
+    "anatomy:part_health": {
+      "currentHealth": 22,
+      "maxHealth": 22,
+      "state": "healthy"
+    },
+    "anatomy:sockets": {
+      "sockets": [
+        {
+          "id": "wrist",
+          "allowedTypes": ["hand"],
+          "nameTpl": "{{effective_orientation}} {{type}}"
+        }
+      ]
+    },
+    "core:name": {
+      "text": "arm"
+    },
+    "core:weight": {
+      "weight": 3
+    },
+    "descriptors:build": {
+      "build": "slim"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

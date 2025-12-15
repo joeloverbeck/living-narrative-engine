@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:newt_teeth",
+  "description": "Small, pointed newt teeth",
+  "components": {
+    "anatomy:part": {
+      "subType": "teeth",
+      "hit_probability_weight": 0,
+      "health_calculation_weight": 0.5
+    },
+    "anatomy:part_health": {
+      "currentHealth": 5,
+      "maxHealth": 5,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "teeth"
+    },
+    "core:weight": {
+      "weight": 0.03
+    },
+    "descriptors:size_category": {
+      "size": "small"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    }
+  }
+}

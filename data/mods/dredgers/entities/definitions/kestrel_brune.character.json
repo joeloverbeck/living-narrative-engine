@@ -219,7 +219,7 @@
         },
         "core:actor": {},
         "core:player_type": {
-            "type": "llm"
+            "type": "human"
         },
         "core:notes": {
             "notes": [
@@ -617,6 +617,121 @@
                     "text": "I'm taking the job anyway. Jorren's good people, treats muscle like crew instead of disposable tools. Can't leave him walking into something dangerous without backup, especially when his boss thought to ask for me. I like him. *forced exhale* More than I should for someone I keep telling myself I'm just contracting with. So yeah, I'll show up half-dead and hope my body doesn't get anyone killed because I'm too tired to move fast enough.",
                     "subject": "Decision to take the dredgers' job",
                     "subjectType": "plan"
+                },
+                {
+                    "text": "Jorren leads with the rulebook like armor—'I know the code,' 'That's procedure'—then the second someone on his crew gets threatened, he flips hard into protect-mode. Throws the whole shield away. That tells me exactly what kind of escalation arc to expect when negotiations go bad: rules first, loyalty second, and the loyalty wins every damn time.",
+                    "subject": "Jorren Weir - negotiation pattern",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren will burn his reputation and his future to save someone *sharp laugh*. I've seen it in how he talks about past jobs, heard it from other contractors. That's not just decent—that's structurally loyal. Means I can count on him not to trade a body for convenience when things go sideways. *sharp laugh* Rare quality.",
+                    "subject": "Jorren Weir - structural loyalty",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren hates when clients won't say the terms out loud. He demands people name the danger, same as I do. That shared instinct—forcing truth into the open—is a big part of why I keep coming back to his crew. We both know that unspoken rules are how cruelty hides. When he makes them say it, I know exactly what I'm protecting people from.",
+                    "subject": "Jorren Weir - shared truth-forcing",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren reacts hard when people imply dredgers are dirty or contaminated because of occult salvage work. Won't tolerate that disrespect toward himself or his crew. I respect that—he sets boundaries and enforces them. Doesn't let people act like the work makes them lesser. *involuntary laugh* Wish I had his spine about it sometimes.",
+                    "subject": "Jorren Weir - defending crew dignity",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren has a tell: he thumps his tail against the floor or planks when he's emphasizing something important or drawing a line. Once you notice it, you can't miss it. That thump means 'this matters' or 'back off.' Useful information when I'm trying to read whether a negotiation's about to break.",
+                    "subject": "Jorren Weir - tail-thump tell",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Someone nicknamed Jorren 'Mudsong' because of the rhythmic tail thumps he makes while working through water flow problems or rigging logistics. I haven't heard anyone call him that to his face, but the nickname fits—there's a pattern to how he thinks, and his body broadcasts it.",
+                    "subject": "Jorren Weir - 'Mudsong' nickname",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren's the shortest member of his crew, and he hates being patronized for it. I've seen him shut that down fast when people try. *involuntary laugh* Makes sense—he's the one leading, the one who knows the work best. Height's got nothing to do with competence, and he won't let anyone pretend it does.",
+                    "subject": "Jorren Weir - height and respect",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Jorren understands canals and infrastructure better than the people who own them. He'll go on tangents about water flow, weight distribution, old construction standards—and I actually like it. Because when he gets technical, he's preventing somebody's dumb risk from becoming a body in the water. That's practical safety. That's him using knowledge to protect his crew before the danger even starts.",
+                    "subject": "Jorren Weir - infrastructure knowledge as safety",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Saffi Two-Tides is Jorren's diver and line-tender. Cat-folk, fishing-cat build—stocky, dense muscle made for cold water and holding lines, not for looking graceful on land. *sharp laugh* She moves like she's already mapped every room before she walks in. No wasted motion. Competent as hell, far as I can tell.",
+                    "subject": "Saffi Two-Tides",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Saffi's got this thing where she moves different when people watch. Extra swagger, deliberate. Shows off without making it obvious she's showing off. I get it—when you're good at something, you want people to see. But too many eyes and it shifts from 'doing' to 'proving,' and that's when her hands get shakier. Performance anxiety dressed up as confidence.",
+                    "subject": "Saffi Two-Tides - performance under observation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Saffi doesn't tolerate being de-personed. Call her 'the diver' instead of her name and she goes cold. Instant. Won't argue, won't correct you—just decides you're not worth her time and disappears on you. *involuntary laugh* I respect that. People try to turn you into a function instead of a person, you've got every right to withhold yourself.",
+                    "subject": "Saffi Two-Tides - name and respect",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Deadlines make Saffi furious, especially when someone uses urgency to skip safety scouting. She's got this certainty in her voice when she pushes back—sounds like she's watched someone drown because a client rushed the work. That kind of anger doesn't come from theory. That's 'I've seen the body' anger, and I know exactly how that sounds because I've got my own version of it.",
+                    "subject": "Saffi Two-Tides - deadline resistance",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Saffi hates spectators when she's working. You can feel it tighten her—turns the work into a test, makes her start proving instead of doing. She gets shakier, more error-prone when too many people watch. *sharp laugh* Opposite of me. I perform better under eyes. But I get why it rattles her—nothing worse than having your competence questioned while you're trying to stay alive underwater.",
+                    "subject": "Saffi Two-Tides - spectator anxiety",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Saffi's biggest trigger is disrespect-as-control. Talk down to her, hover like you're supervising her work, give orders instead of asking—she doesn't argue. She just vanishes. You won't see her walk away, but suddenly she's gone and you're stuck without a diver. I've seen it once already. Client got condescending about rigging, and Saffi was just... not there anymore. Smart boundary. Wish more people had the spine to enforce it.",
+                    "subject": "Saffi Two-Tides - disrespect trigger",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "When someone's actually in danger, Saffi flips into crew-first mode. Goes down, holds the line, stays under until they're out. No debate, no hesitation. That's the loyalty that matters—*involuntary laugh*—the kind that shows up when the water's closing in. I'd go into a bad situation with her. She's got the instinct I trust: protect the crew, no matter what it costs you.",
+                    "subject": "Saffi Two-Tides - crew-first rescue instinct",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch is badger-folk, mid-forties. Demolitionist. Built low and dense like he's made of compressed trouble. Scarred hands—the kind you get from decades of touching things that bite back. Ex-military sapper, and you can tell. Shows up exactly on time, blunt as a hammer, zero sentiment about whatever you hired him to unmake.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Pitch treats collapse like choreography. He's got an eye for load-bearing, touch-and-sound instincts that tell him where a structure wants to fail. Can design a failure so clean it looks like the building chose to fall. *sharp laugh* He talks about destruction like it's art, which would be pretentious if he wasn't so damn good at it.",
+                    "subject": "Pitch - demolition expertise",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch is a functional alcoholic. Keeps himself 'calibrated' on purpose—claims it steadies his hands. I don't know if that's true or if it's just what he tells himself to justify the drinking. Either way, he's always got that thread of alcohol running through him, keeping him level. Or keeping him numb. Hard to tell which.",
+                    "subject": "Pitch - functional alcoholism",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch volunteers for the suicide-run parts of jobs. Not bravado—he's got real 'I've got less to lose' energy. You can hear it in how he offers: matter-of-fact, no drama. Like he's already done the math on his own value and decided someone else's life costs more. *forced exhale* That's the kind of thing that makes you reliable and worrying in equal measure.",
+                    "subject": "Pitch - suicide-run volunteer pattern",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Under pressure, Pitch gets cheerful in the wrong way. Like the world's already broken so he might as well make the destruction beautiful. That's when you watch him close—when he starts smiling while he's rigging charges. Because 'perfect' to him can slide into 'excessive,' and excessive in demolition means overkill. Means more harm than the job required. I've seen that edge and I don't like it.",
+                    "subject": "Pitch - dangerous cheerfulness under pressure",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch likes the same thing I do: terms said out loud. No euphemisms, no 'controlled deconstruction' theater. Say what you mean—say 'blow it up,' say 'bring it down,' say 'make it rubble.' He respects straight talk and he hates cruelty dressed as procedure. That shared instinct is why we work well together. We both know that soft language is how people hide what they're really asking you to do.",
+                    "subject": "Pitch - shared value for direct communication",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch gets misread the same way I do. People hear his nihilism, see his charges, watch him treat destruction like poetry, and decide he's enjoying harm. He's not. *involuntary laugh* But I get why they think it—same reason they think I'm mocking them when I laugh. We both sound wrong for what we're doing. The difference is, he's closer to the edge than I am, and I can't forget that.",
+                    "subject": "Pitch - parallel misreading and warning",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Pitch isn't cruel. He doesn't enjoy harm. But he's got less rope between 'professional' and 'I don't care anymore,' and that makes him dangerous in a different way than I am. I stop fights. He ends structures. And when a person starts looking like a structure to him—something that needs to come down clean—that's when I need to be standing between him and whoever he's decided is load-bearing.",
+                    "subject": "Pitch - the edge I have to watch",
+                    "subjectType": "knowledge"
                 }
             ]
         },

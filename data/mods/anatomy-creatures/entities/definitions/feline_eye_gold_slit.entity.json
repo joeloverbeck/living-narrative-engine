@@ -1,0 +1,32 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:feline_eye_gold_slit",
+  "description": "Feline eye with gold iris and vertical slit pupil",
+  "components": {
+    "anatomy:part": {
+      "subType": "eye",
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "eye"
+    },
+    "core:weight": {
+      "weight": 0.008
+    },
+    "descriptors:color_extended": {
+      "color": "gold"
+    },
+    "descriptors:pupil_shape": {
+      "shape": "slit-vertical"
+    },
+    "descriptors:shape_eye": {
+      "shape": "hooded"
+    }
+  }
+}

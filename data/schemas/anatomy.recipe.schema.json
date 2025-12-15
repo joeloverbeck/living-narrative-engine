@@ -142,7 +142,10 @@
           "entityId": {
             "$ref": "./common.schema.json#/definitions/namespacedId",
             "description": "The clothing entity definition to instantiate",
-            "examples": ["clothing:simple_shirt", "apparel:leather_boots"]
+            "examples": [
+              "clothing:simple_shirt",
+              "apparel:leather_boots"
+            ]
           },
           "equip": {
             "type": "boolean",
@@ -152,11 +155,21 @@
           "targetSlot": {
             "type": "string",
             "description": "Specific clothing slot to equip to (uses entity's default if not specified)",
-            "examples": ["torso_upper", "feet", "head"]
+            "examples": [
+              "torso_upper",
+              "feet",
+              "head"
+            ]
           },
           "layer": {
             "type": "string",
-            "enum": ["underwear", "base", "outer", "accessories", "armor"],
+            "enum": [
+              "underwear",
+              "base",
+              "outer",
+              "accessories",
+              "armor"
+            ],
             "description": "Layer override (highest precedence - overrides entity and blueprint defaults)"
           },
           "properties": {
@@ -164,8 +177,14 @@
             "description": "Property overrides for the instantiated entity",
             "additionalProperties": true,
             "examples": [
-              { "color": "blue", "size": "medium" },
-              { "condition": 0.8, "quality": "fine" }
+              {
+                "color": "blue",
+                "size": "medium"
+              },
+              {
+                "condition": 0.8,
+                "quality": "fine"
+              }
             ]
           },
           "skipValidation": {
@@ -174,7 +193,9 @@
             "description": "Skip slot compatibility validation (use with caution)"
           }
         },
-        "required": ["entityId"],
+        "required": [
+          "entityId"
+        ],
         "additionalProperties": false
       }
     },
@@ -225,6 +246,7 @@
           "enum": [
             "underweight",
             "lean",
+            "dense",
             "average",
             "soft",
             "bumpy",
@@ -268,14 +290,22 @@
       "additionalProperties": false
     }
   },
-  "required": ["recipeId", "blueprintId", "slots"],
+  "required": [
+    "recipeId",
+    "blueprintId",
+    "slots"
+  ],
   "additionalProperties": false,
   "definitions": {
     "initialDamageEntry": {
       "description": "Seeded damage configuration for a single slot",
       "oneOf": [
-        { "$ref": "#/definitions/damageEntriesWrapper" },
-        { "$ref": "#/definitions/damageShorthandEntry" }
+        {
+          "$ref": "#/definitions/damageEntriesWrapper"
+        },
+        {
+          "$ref": "#/definitions/damageShorthandEntry"
+        }
       ]
     },
     "damageEntriesWrapper": {
@@ -291,7 +321,9 @@
           "minItems": 1
         }
       },
-      "required": ["damage_entries"],
+      "required": [
+        "damage_entries"
+      ],
       "additionalProperties": false
     },
     "positiveDamageCapabilityEntry": {
@@ -330,8 +362,18 @@
         }
       },
       "oneOf": [
-        { "required": ["amount", "name"] },
-        { "required": ["amount", "damage_type"] }
+        {
+          "required": [
+            "amount",
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "amount",
+            "damage_type"
+          ]
+        }
       ],
       "additionalProperties": false
     },
@@ -367,14 +409,20 @@
           "additionalProperties": true
         }
       },
-      "required": ["partType"],
+      "required": [
+        "partType"
+      ],
       "additionalProperties": false
     },
     "patternDefinition": {
       "description": "Pattern-based slot configuration supporting v1 (explicit matches) and v2 (enhanced matchers)",
       "oneOf": [
-        { "$ref": "#/definitions/v1PatternDefinition" },
-        { "$ref": "#/definitions/enhancedPatternDefinition" }
+        {
+          "$ref": "#/definitions/v1PatternDefinition"
+        },
+        {
+          "$ref": "#/definitions/enhancedPatternDefinition"
+        }
       ]
     },
     "v1PatternDefinition": {
@@ -417,7 +465,10 @@
           "additionalProperties": true
         }
       },
-      "required": ["matches", "partType"],
+      "required": [
+        "matches",
+        "partType"
+      ],
       "additionalProperties": false
     },
     "enhancedPatternDefinition": {
@@ -498,7 +549,9 @@
               "type": "object",
               "description": "Property-based exclusion criteria. Must be a valid object with slot property filters.",
               "additionalProperties": true,
-              "not": { "type": "null" }
+              "not": {
+                "type": "null"
+              }
             }
           },
           "additionalProperties": false,
@@ -506,9 +559,24 @@
         }
       },
       "oneOf": [
-        { "required": ["matchesGroup", "partType"] },
-        { "required": ["matchesPattern", "partType"] },
-        { "required": ["matchesAll", "partType"] }
+        {
+          "required": [
+            "matchesGroup",
+            "partType"
+          ]
+        },
+        {
+          "required": [
+            "matchesPattern",
+            "partType"
+          ]
+        },
+        {
+          "required": [
+            "matchesAll",
+            "partType"
+          ]
+        }
       ],
       "additionalProperties": false
     }

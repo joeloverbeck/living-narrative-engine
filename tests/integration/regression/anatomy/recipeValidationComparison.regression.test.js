@@ -1,7 +1,10 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeAll, afterAll } from '@jest/globals';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { executeRecipeValidation } from '../../../../scripts/validate-recipe-v2.js';
+import {
+  executeRecipeValidation,
+  createValidationContext,
+} from '../../../../scripts/validate-recipe-v2.js';
 import RecipeValidationRunner from '../../../../src/anatomy/validation/RecipeValidationRunner.js';
 import AnatomyIntegrationTestBed from '../../../common/anatomy/anatomyIntegrationTestBed.js';
 
@@ -33,7 +36,110 @@ const FIXTURE_PATHS = {
     'tests/common/anatomy/fixtures/validation/unused_human_clone.recipe.json',
 };
 
+// Shared state for performance optimization - loaded once, reused across tests
+let sharedContainer = null;
+let sharedLoadFailures = {};
+const sharedRecipes = new Map();
+
+/**
+ * Creates runtime overrides that reuse the shared container and skip expensive mod loading.
+ * This dramatically reduces test time by avoiding repeated mod loading.
+ * @param {object} [additionalOverrides] - Additional runtime overrides to merge
+ * @returns {object} Runtime overrides with shared container factory
+ */
+function createSharedRuntimeOverrides(additionalOverrides = {}) {
+  if (!sharedContainer) {
+    throw new Error(
+      'Shared container not initialized. Ensure beforeAll has completed.'
+    );
+  }
+
+  return {
+    console: createSilentConsole(),
+    // Return the shared container - already has mods loaded
+    createContainer: async () => sharedContainer,
+    // Skip container configuration - already done
+    configureContainer: async () => {},
+    // Skip fetcher registration - already done
+    registerFetchers: async () => {},
+    // Skip mod loading - already done; return cached load failures
+    loadMods: async () => ({
+      loadFailures: sharedLoadFailures,
+    }),
+    ...additionalOverrides,
+  };
+}
+
 describe('Recipe Validation Comparison Regression Suite', () => {
+  // Setup shared validation context once for all tests
+  beforeAll(async () => {
+    const allRecipePaths = [
+      ...Object.values(RECIPE_PATHS),
+      ...Object.values(FIXTURE_PATHS),
+    ];
+
+    // Run executeRecipeValidation once to bootstrap the container and load mods
+    // We capture the container and load failures through runtime overrides
+    // IMPORTANT: Pass ALL recipe paths so all necessary mods get loaded
+    let capturedContainer = null;
+    let capturedLoadFailures = {};
+
+    await executeRecipeValidation(allRecipePaths, { verbose: false }, {
+      console: createSilentConsole(),
+      createContainer: async () => {
+        // Import AppContainer lazily to avoid circular dependencies
+        const { default: AppContainer } = await import(
+          '../../../../src/dependencyInjection/appContainer.js'
+        );
+        capturedContainer = new AppContainer();
+        return capturedContainer;
+      },
+      loadMods: async ({ container, requestedMods }) => {
+        // Use the default mod loading, but capture the result
+        const { createLoadContext } = await import(
+          '../../../../src/loaders/LoadContext.js'
+        );
+        const { tokens } = await import(
+          '../../../../src/dependencyInjection/tokens.js'
+        );
+
+        const dataRegistry = container.resolve(tokens.IDataRegistry);
+        const loadContext = createLoadContext({
+          worldName: 'recipe-validation',
+          requestedMods,
+          registry: dataRegistry,
+        });
+
+        const schemaPhase = container.resolve(tokens.SchemaPhase);
+        const manifestPhase = container.resolve(tokens.ManifestPhase);
+        const contentPhase = container.resolve(tokens.ContentPhase);
+
+        let context = await schemaPhase.execute(loadContext);
+        context = await manifestPhase.execute(context);
+        context = await contentPhase.execute(context);
+
+        capturedLoadFailures = context?.totals ?? {};
+        return { loadFailures: capturedLoadFailures };
+      },
+    });
+
+    // Store the captured container and load failures for reuse
+    sharedContainer = capturedContainer;
+    sharedLoadFailures = capturedLoadFailures;
+
+    // Pre-load all recipe files into cache
+    for (const recipePath of allRecipePaths) {
+      const recipeData = await loadRecipe(recipePath);
+      sharedRecipes.set(recipePath, recipeData);
+    }
+  });
+
+  afterAll(() => {
+    sharedContainer = null;
+    sharedLoadFailures = {};
+    sharedRecipes.clear();
+  });
+
   describe('CLI vs RecipeValidationRunner parity', () => {
     it('maintains parity for the human male recipe', async () => {
       const { cliReport, validatorReport } = await performComparison(
@@ -42,6 +148,13 @@ describe('Recipe Validation Comparison Regression Suite', () => {
 
       const normalizedCli = normalizeReport(cliReport);
       const normalizedValidator = normalizeReport(validatorReport);
+
+      // DEBUG: Show what we got
+      console.log('CLI Report passed count:', cliReport?.passed?.length);
+      console.log('CLI Report errors count:', cliReport?.errors?.length);
+      console.log('CLI Report first error:', JSON.stringify(cliReport?.errors?.[0], null, 2));
+      console.log('Validator Report passed count:', validatorReport?.passed?.length);
+      console.log('Validator Report errors count:', validatorReport?.errors?.length);
 
       expect(normalizedCli).toEqual(normalizedValidator);
       const checkNames = normalizedCli.passed
@@ -203,18 +316,39 @@ describe('Recipe usage detection', () => {
 });
 
 /**
+ * Performs a comparison between CLI and validator outputs.
+ * Uses shared context by default for performance, unless options.useSharedContext is false
+ * or transformValidatorDeps is provided (which requires fresh context).
  *
- * @param recipePath
- * @param options
+ * @param {string} recipePath - Path to the recipe file
+ * @param {object} [options] - Comparison options
+ * @param {boolean} [options.useSharedContext=true] - Whether to use shared context
+ * @param {Function} [options.transformValidatorDeps] - Transform validator dependencies (forces fresh context)
+ * @param {object} [options.cliOptions] - CLI options to pass
+ * @param {object} [options.runtimeOverrides] - Additional runtime overrides
+ * @param {object} [options.recipeData] - Pre-loaded recipe data
  */
 async function performComparison(recipePath, options = {}) {
   let capturedValidator = null;
   const transformValidatorDeps = options.transformValidatorDeps;
 
-  const runtimeOverrides = {
-    console: createSilentConsole(),
-    ...(options.runtimeOverrides || {}),
-  };
+  // Use shared context unless transformValidatorDeps is provided or explicitly disabled
+  const useSharedContext =
+    options.useSharedContext !== false && !transformValidatorDeps;
+
+  let runtimeOverrides;
+  if (useSharedContext && sharedContainer) {
+    // Fast path: reuse shared context's container and mods
+    runtimeOverrides = createSharedRuntimeOverrides(
+      options.runtimeOverrides || {}
+    );
+  } else {
+    // Slow path: fresh context for tests that modify dependencies
+    runtimeOverrides = {
+      console: createSilentConsole(),
+      ...(options.runtimeOverrides || {}),
+    };
+  }
 
   runtimeOverrides.createValidator = (deps) => {
     const finalDeps = transformValidatorDeps
@@ -232,10 +366,22 @@ async function performComparison(recipePath, options = {}) {
   );
 
   if (!capturedValidator) {
-    throw new Error('Validator was not initialized by executeRecipeValidation');
+    // Provide more diagnostic info including any error messages from the CLI result
+    const errorDetails = cliResult?.exitResult
+      ? JSON.stringify(cliResult.exitResult, null, 2)
+      : 'no exit result';
+    throw new Error(
+      `Validator was not initialized by executeRecipeValidation. ` +
+        `useSharedContext=${useSharedContext}, hasSharedContainer=${!!sharedContainer}, ` +
+        `exitCode=${cliResult?.exitCode}, exitResult=${errorDetails}`
+    );
   }
 
-  const recipeData = options.recipeData || (await loadRecipe(recipePath));
+  // Use cached recipe data if available
+  const recipeData =
+    options.recipeData ||
+    sharedRecipes.get(recipePath) ||
+    (await loadRecipe(recipePath));
   const validatorReport = await capturedValidator.validate(recipeData, {
     recipePath,
     failFast: cliOptions.failFast || false,

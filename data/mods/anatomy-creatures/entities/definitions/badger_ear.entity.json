@@ -1,0 +1,29 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "anatomy-creatures:badger_ear",
+  "description": "Badger ear - small, rounded, covered in short dense fur",
+  "components": {
+    "anatomy:part": {
+      "subType": "ear",
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 1
+    },
+    "anatomy:part_health": {
+      "currentHealth": 8,
+      "maxHealth": 8,
+      "state": "healthy"
+    },
+    "core:name": {
+      "text": "badger ear"
+    },
+    "core:weight": {
+      "weight": 0.012
+    },
+    "descriptors:texture": {
+      "texture": "fuzzy"
+    },
+    "descriptors:shape_general": {
+      "shape": "round"
+    }
+  }
+}

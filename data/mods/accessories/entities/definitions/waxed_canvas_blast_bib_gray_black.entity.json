@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:waxed_canvas_blast_bib_gray_black",
+  "description": "A heavy waxed canvas blast bib in gray-black for demolition work",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_upper"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "accessories"
+    },
+    "core:material": {
+      "material": "canvas"
+    },
+    "core:name": {
+      "text": "blast bib"
+    },
+    "core:description": {
+      "text": "A heavy apron of waxed canvas in gray-black, worn over other clothing to protect against flying debris during demolition work. The bib hangs from the neck by a thick leather strap and wraps around to tie at the back, covering the chest and belly down to mid-thigh. The waxed surface is pitted and scarred from impacts, and darker stains mark where hot fragments have scorched the fabric without burning through. Multiple loops along the sides hold small tools and charges within easy reach. This is the garment of someone who works with things that explode, and who has learned the hard way that soft tissue fares poorly against shrapnel."
+    },
+    "descriptors:color_extended": {
+      "color": "gray-black"
+    },
+    "descriptors:texture": {
+      "texture": "waxed"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.75
+    }
+  }
+}

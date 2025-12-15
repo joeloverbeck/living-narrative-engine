@@ -1,0 +1,44 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:quick_release_weight_belt_tar_brown",
+  "description": "Quick-release weight belt in tar-brown leather, heavily scarred",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:blocks_removal": {
+      "blockedSlots": [
+        {
+          "slot": "legs",
+          "layers": ["base", "outer"],
+          "blockType": "must_remove_first",
+          "reason": "Weight belt secures dive trousers at waist"
+        }
+      ]
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "quick-release weight belt"
+    },
+    "core:description": {
+      "text": "A wide belt of thick leather in tar-brown, scarred from years of hard use and harder lessons. Lead weights are threaded onto loops along its length, their surfaces dull and pitted from immersion in foul water. The buckle is brass—heavy, simple, and designed for one purpose: a single slap releases the whole assembly, sending belt and weights plummeting away when a diver needs to rise fast. Every scar on this leather is a story of a job gone wrong, a line fouled, a current that shifted. Divers who survive long enough learn to wear their weight belt loose enough to shed in a heartbeat."
+    },
+    "descriptors:color_extended": {
+      "color": "tar-brown"
+    },
+    "descriptors:texture": {
+      "texture": "scarred"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.8
+    }
+  }
+}

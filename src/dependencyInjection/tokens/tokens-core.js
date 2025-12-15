@@ -181,6 +181,7 @@ export const coreTokens = freeze({
   ITargetRequiredComponentsValidator: 'ITargetRequiredComponentsValidator',
   IInputHandler: 'IInputHandler',
   ITurnOrderService: 'ITurnOrderService',
+  ITurnOrderShuffleService: 'ITurnOrderShuffleService',
   ITurnManager: 'ITurnManager',
   ITurnContext: 'ITurnContext',
   IPromptOutputPort: 'IPromptOutputPort',

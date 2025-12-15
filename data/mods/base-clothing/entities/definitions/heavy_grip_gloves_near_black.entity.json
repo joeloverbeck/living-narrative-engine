@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:heavy_grip_gloves_near_black",
+  "description": "Heavy leather grip gloves in near-black",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "base"
+    },
+    "core:material": {
+      "material": "leather"
+    },
+    "core:name": {
+      "text": "heavy grip gloves"
+    },
+    "core:description": {
+      "text": "Thick leather gloves in near-black, cut short at the wrist but heavily reinforced across the palms and fingers. The leather has been worked until supple enough to allow grip while remaining tough enough to protect against rope burn, sharp edges, and the unseen things that lurk in underwater debris. The palms are textured with tiny ridges that catch on wet surfaces, and the fingertips are double-layered where they take the most abuse. A diver's hands are their primary tools—these gloves keep them functional through hours of gripping, prying, and hauling in conditions that would shred bare skin in minutes."
+    },
+    "descriptors:color_extended": {
+      "color": "near-black"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.22
+    }
+  }
+}

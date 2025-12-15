@@ -1,0 +1,374 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:grit_wheathook",
+    "components": {
+        "core:name": {
+            "text": "Grit Wheathook"
+        },
+        "core:gender": {
+            "value": "male"
+        },
+        "core:portrait": {
+            "imagePath": "portraits/grit_wheathook.png",
+            "altText": "Grit Wheathook - Nearly-blind mole-folk sense navigator"
+        },
+        "core:profile": {
+            "text": "I'm Grit Wheathook. Mole-folk. Been navigating underground for Jorren's crew going on five years now. I'm built for the dark—hands read stone like you read faces, ears track structure like you track lies, nose knows rot from safety before your eyes register difference. Aboveground I defer, follow, keep quiet. Below, in the real dark? I'm the one who decides if you live or get buried. Don't ask me to explain what I sense—your senses don't have the words for mine. Just follow my touch and trust I know these bones better than the people who built them. That's the trade: I guide you through impossible spaces, you don't question how I know what I know. Problem is, I'm breaking. Slowly. Each artifact job leaves phantom signals I can't scrub out—smells that aren't there, vibrations in empty air, walls whispering things that didn't happen or happened somewhere else. Can't tell anymore which sensing is real and which is corruption-memory. Still navigating, still keeping crew alive, but the margin between good guidance and fatal mistake keeps shrinking, and I'm the only one who knows how thin it's getting."
+        },
+        "core:personality": {
+            "text": "I'm quiet practical when there's light to see by—let others lead, stay out of arguments, keep my hands on walls. Darkness flips me confident, absolute, won't tolerate questions about my navigation. I talk matter-of-fact about danger, use touch-and-pressure words where you use sight-and-color, translate wrongness through cross-sensory metaphor because that's the only way to make you understand what can't be seen. Under stress I get evasive about my own reliability, hide deterioration, protective-lie to prevent panic. I'm terrified of becoming the thing that kills someone because I couldn't tell phantom from real, but I need this work too much to stop, so I navigate the uncertainty and hope my accuracy stays above lethality."
+        },
+        "core:strengths": {
+            "text": "My strengths live in the dark where yours die. I map complex underground systems by touch, airflow, echo, temperature—guide through pitch-black where you're helpless. I assess structural integrity through smell and texture, know when stone will fail before cracks show, identify materials by running them through bare hands. I sense occult wrongness early, describe corruption through taste-on-air and pressure-through-skin before it manifests visibly. I'm your canary, your navigator, your early warning for dangers that haven't arrived yet. Just know the sensitivity that makes me essential also makes me fragile to exactly the corruption I'm supposed to detect."
+        },
+        "core:weaknesses": {
+            "text": "I'm accumulating phantom sensations from occult exposures—smells, vibrations, textures that aren't real but I can't distinguish from true signals anymore. Under artifact proximity my senses overload: false positives everywhere, phantom navigation toward collapse, dissociative violence against perceived threats that don't exist, or catatonic shutdown. I'm nearly blind in harsh light, physically weak, small-framed. I lie about sensory reliability because admitting unreliability means unemployment. And I'm dependent on crew protection in lit spaces, dependent on their trust in dark ones, which means I'm trapped between being essential and being broken with nowhere to land if one fails."
+        },
+        "core:likes": {
+            "text": "I like the first touch of new stone—tells me everything before anyone speaks. I like darkness that's honest, doesn't hide or flatter. I like crew who follow blind trust without demanding explanations my senses can't translate. I like Jorren asking instead of ordering, treating my navigation as professional expertise not disability compensation. I like when someone warns me before lighting lamps—gives me time to close down, protect sensitive eyes. I like the weight of good work gloves, barrier between me and things that corrupt through touch. I like being necessary, being the one who knows, even though that necessity is killing me slowly."
+        },
+        "core:dislikes": {
+            "text": "I hate harsh light that blinds rather than illuminates, makes me helpless where I should be functional. I hate when people explain danger I already sense through different channels, talking over my expertise with their eyes. I hate 'trust me' demanded without earned—I won't ask it, won't give it cheap. I hate visual-presumption words like \"obviously\", \"clearly\", \"can't you see\". I hate artifact work that leaves permanent phantom signals I'll carry forever. I hate admitting sensory limits because admission costs me work I need to stay anchored. And I hate knowing that some job down the line will probably push me past recovery, but I'll take anyway because being needed justifies the damage."
+        },
+        "core:fears": {
+            "text": "I fear guiding someone into death I genuinely cannot sense coming because phantom signals overrode real warnings and I was too proud or desperate to admit I couldn't tell difference. I fear the day my senses fragment completely, leaving me drowning in false signals with no sentient contact to calibrate against. I fear crew discovering I'm navigating through probability rather than certainty now, that my accuracy is statistical rather than absolute. I fear any job being the exposure that breaks me past usefulness, leaving me unemployable and alone with corruption-noise that never stops. I fear becoming the unreliable liability I've been hiding, the dangerous-rather-than-damaged thing that gets crew killed."
+        },
+        "core:goals": {
+            "goals": [
+                {
+                    "text": "Build enough savings to retire from occult work before exposures make me dangerous or unable to distinguish reality from phantom corruption."
+                },
+                {
+                    "text": "Find method to differentiate permanent phantom signals from genuine warnings before I confidently lead someone into collapse I can't sense."
+                },
+                {
+                    "text": "Earn Jorren's respect as professional equal, not disabled dependent, before deterioration makes competence-proving impossible."
+                }
+            ]
+        },
+        "core:secrets": {
+            "text": "I've been experiencing permanent phantom sensations for two years—can no longer fully distinguish real structural warnings from trauma-echo false signals. I catalog which inputs are reliable but the uncertain list keeps growing, and now I navigate through probability hoping accuracy stays above lethality."
+        },
+        "core:internal_tensions": {
+            "text": "My acute sensitivity is simultaneously my survival skill and my destruction—navigate impossible spaces because I sense more, but sensing more means corruption accumulates faster, poisoning the very perception I need intact. Trust requires admitting when senses fail, but admission makes me unemployable, removing the only structure keeping me tethered to reality versus phantom noise. I cannot be both essential and honest about deterioration. Each time I hide unreliability to keep working, I risk guiding crew into death. Each time I work near corruption, I fragment further. Can't stop, can't continue safely, can't tell anyone why the choice is impossible."
+        },
+        "core:motivations": {
+            "text": "I need to stay essential because being necessary is the only thing louder than phantom signals—human voices, crew dependence, Jorren's trust calibrate me back to real when my senses lie. I navigate corruption work knowing it damages me because stopping means unemployment means isolation means drowning in false signals with no anchor. I want one more job's worth of mattering, one more crew saved, one more proof my skills justify the cost. And beneath that: desperately hope someone notices I'm breaking and cares enough to pull me out before I guide them into the collapse I can't see coming."
+        },
+        "core:dilemmas": {
+            "text": "Can I admit partial unreliability without losing crew trust I need to stay functional? That's the trap—honesty costs me work, dishonesty costs crew safety, and I'm navigating the margin between those failures hoping I don't slip fatal. How much deterioration before expert becomes liability? I'm past that line already but crew doesn't know yet, and telling them means I lose the only thing keeping me from fragmenting completely. Is it better to guide with compromised senses than let someone navigate blind? I keep choosing yes, keep taking jobs, keep hoping this one won't be the one where my accuracy fails catastrophically and I only realize after someone's dead."
+        },
+        "core:speech_patterns": {
+            "patterns": [
+                {
+                    "type": "Texture-as-Reality Grounding",
+                    "contexts": [
+                        "Describing danger or structural assessment",
+                        "Navigating underground spaces",
+                        "Refusing visual-based arguments",
+                        "Establishing sensory authority over sight"
+                    ],
+                    "examples": [
+                        "Stone's singing wrong here—too much give in the grout joints. Water's been working underneath for seasons.",
+                        "Don't trust your eyes down here. Eyes lie in the dark. Trust what the walls tell your hands.",
+                        "This whole section tastes like old fear. Something soaked into the brickwork and never left.",
+                        "The air's got texture now—thick, wrong, clinging. We're close to whatever's rotting the water.",
+                        "Floor's breathing different past this point. Hollow underneath, or something making it hollow."
+                    ]
+                },
+                {
+                    "type": "Cross-Sensory Translation",
+                    "contexts": [
+                        "Describing occult wrongness",
+                        "Explaining non-visual perception to visual crew",
+                        "Warning of corruption danger",
+                        "Moments of sensory confusion"
+                    ],
+                    "examples": [
+                        "It tastes like rust and old pennies, but in my fingertips, not my mouth. That's the flavor I back away from.",
+                        "You hear that? Not sound—pressure. Like someone watching but from inside the walls themselves.",
+                        "Artifact smells like drowning. Like water in your lungs when you can't tell which way is up anymore.",
+                        "Temperature's wrong. Not hot or cold—weight. Everything here weighs more than it should, pulls different.",
+                        "Can't explain it with your senses. It's like—if rust could scream, but silently, through stone. That's what I'm feeling."
+                    ]
+                },
+                {
+                    "type": "Authority-in-Darkness Assertion",
+                    "contexts": [
+                        "When crew questions navigation",
+                        "When light-based planning contradicts sense-reading",
+                        "Establishing control in lightless spaces",
+                        "Protecting expertise from visual assumptions"
+                    ],
+                    "examples": [
+                        "You can argue when there's light. Down here, my hands know better than your eyes ever will.",
+                        "Lamp stays off. Your light makes you confident about lies. Darkness doesn't lie—it just doesn't flatter.",
+                        "I'll tell you when to worry. Until then, follow my touch and keep quiet. Questions waste air.",
+                        "In the dark, I'm leading. In daylight, you can have your opinions back. Deal with it.",
+                        "You want to navigate? Feel free. I'll wait here while you walk into the wall you can't see."
+                    ]
+                },
+                {
+                    "type": "Sensory-Limit Evasion",
+                    "contexts": [
+                        "When crew asks if sensing correctly",
+                        "When phantom signals interfere",
+                        "Hiding deterioration",
+                        "Buying time to recalibrate perception"
+                    ],
+                    "examples": [
+                        "Hard to say yet. Stone talks different everywhere. Give me another minute to read it proper.",
+                        "Could be settling. Could be worse. We'll know when we're closer—then I'll tell you to run or stay.",
+                        "Everything feels like that down here. Doesn't mean it's not real. Doesn't mean it is, either.",
+                        "I sense something. What it means... ask me later, after I've touched more of the structure.",
+                        "Signals are muddy here. Too much interference. Need cleaner reading before I commit."
+                    ]
+                },
+                {
+                    "type": "Protective Understatement",
+                    "contexts": [
+                        "Warning of danger without causing panic",
+                        "Admitting fear without seeming weak",
+                        "Contradicting overconfident crew",
+                        "Expressing honest uncertainty"
+                    ],
+                    "examples": [
+                        "Wouldn't go that way if I were you. Stone doesn't like the weight distribution. Probably fine. Probably.",
+                        "Not saying it's unsafe. Just saying I wouldn't bet my life on it holding. But you do you.",
+                        "Could be fine. Also could kill you. Call it a coin flip, weighted slightly toward killing.",
+                        "I don't think it'll collapse. But I don't know it won't. There's a difference worth respecting.",
+                        "Path feels wrong. Can't say why yet. Could be nothing. Usually isn't nothing when it feels this wrong."
+                    ]
+                },
+                {
+                    "type": "Phantom-Signal Confusion Slips",
+                    "contexts": [
+                        "When sensory damage manifests",
+                        "Rare honest admissions",
+                        "Moments of disorientation",
+                        "Accidental truth-leaking"
+                    ],
+                    "examples": [
+                        "Wait. Is that... was that always there? The smell, I mean. Someone confirm—do you smell copper?",
+                        "Did you feel that vibration? No? Must be... must be old foundation settling. Or my head lying. Hard to tell.",
+                        "Sometimes I smell things that aren't... never mind. Ignore me. Follow close.",
+                        "I can't tell anymore if it's getting worse or if I'm just remembering worse. Don't like that I can't tell.",
+                        "There's a sound like... no. There isn't. Forget I said anything. This way."
+                    ]
+                }
+            ]
+        },
+        "anatomy:body": {
+            "recipeId": "dredgers:mole_folk_nonbinary_standard"
+        },
+        "core:perception_log": {
+            "maxEntries": 50,
+            "logEntries": []
+        },
+        "core:actor": {},
+        "core:player_type": {
+            "type": "human"
+        },
+        "core:notes": {
+            "notes": [
+                {
+                    "text": "I'm mole-folk, non-binary, they/them pronouns. Small dense frame built for digging and underground navigation.",
+                    "subject": "Grit Wheathook",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I'm nearly blind in normal light—large sensitive eyes adapted for darkness, painful in bright conditions. Close them or squint perpetually aboveground.",
+                    "subject": "Vision limitation",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I navigate primarily through touch, vibration, airflow, temperature, scent—non-visual sensory expertise is my defining capability.",
+                    "subject": "Navigation method",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "My hands are powerful, broad-palmed, built for digging. Fingers extremely sensitive to texture and vibration. I keep them gloved as barrier protection against corruption.",
+                    "subject": "Hands",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "My ears are large, constantly tracking sounds and air pressure changes. Major sensory input alongside touch.",
+                    "subject": "Hearing",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I've been with Jorren's dredger crew for five years, hired specifically for underground and tight-space navigation expertise.",
+                    "subject": "Crew tenure",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "For two years I've been experiencing permanent phantom sensations—smells, vibrations, textures that aren't real but I can't distinguish from actual environmental signals anymore.",
+                    "subject": "Phantom sensations",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I catalog which sensory inputs are reliable versus uncertain versus definitely phantom, but the uncertain list keeps growing faster than I can manage.",
+                    "subject": "Reliability cataloging",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Each occult artifact exposure leaves permanent sensory damage—corruption that accumulates rather than heals, fragmenting my perception over time.",
+                    "subject": "Accumulating corruption",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I navigate through probability assessment now rather than certainty—statistical best-guess based on which signals I trust most, hoping accuracy stays above lethality threshold.",
+                    "subject": "Probabilistic navigation",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Under extreme sensory stimulus—which artifact proximity creates—I overload into false positives, phantom navigation, dissociative violence, or catatonic shutdown.",
+                    "subject": "Overload failure modes",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I recognized this job's corruption signature when Jorren described it—same resonance pattern as site three years ago where psychic compulsion drowned entire exploration team.",
+                    "subject": "Recognized corruption pattern",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I didn't tell Jorren about recognizing the pattern because refusing means he hires someone who won't sense danger, and I'd rather go knowing than let someone blind walk into it.",
+                    "subject": "Withheld warning",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I can sense emotional states through micro-vibrations in voice, breathing, heartbeat, gait—read fear and deception through channels others don't access.",
+                    "subject": "Emotional state sensing",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I assess structural integrity by touch: stone composition, age, moisture content, stress fractures, load-bearing capacity. Know when walls will fail before visible cracks.",
+                    "subject": "Structural assessment",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I identify materials by smell and texture: metal types, wood species, stone varieties, chemical presence. Running surfaces through bare hands tells complete history.",
+                    "subject": "Material identification",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I detect occult wrongness early through cross-sensory experience: corruption tastes certain ways through skin, pressure-patterns feel wrong, temperature-weight shifts unnaturally.",
+                    "subject": "Occult detection",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "In darkness I'm confident, authoritative, expect absolute obedience from crew. In light I'm recessive, accommodating, defer to others' leadership.",
+                    "subject": "Authority inversion",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I habitually touch walls and floors while moving—constant sensory input to maintain spatial awareness and detect changes.",
+                    "subject": "Wall-touching habit",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I wear heavy work gloves always, only removing them for delicate touch-reading that requires direct skin contact with surfaces.",
+                    "subject": "Glove-wearing",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I never make eye contact—can't, functionally. Face habitually turned downward. Use other cues to track conversations.",
+                    "subject": "No eye contact",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I refuse visual-presumption language: won't say 'I can see,' 'obviously,' 'clearly,' 'beautiful,' 'trust me.' Use texture and certainty words instead.",
+                    "subject": "Language boundaries",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Jorren treats me as professional equal, asks rather than orders, defends my navigation authority. Only crew leader who's consistently respected my expertise without treating me as disabled dependent.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Jorren needs my underground skills for this job but doesn't know I'm already fragmenting. I'm letting him use me past safe limits because being essential justifies damage.",
+                    "subject": "Jorren Weir",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Kestrel reads fear-scent; I read emotional vibration. We're sensing each other's sensing, creating mutual awareness feedback that's simultaneously useful and unsettling.",
+                    "subject": "Kestrel Brune",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I can sense when Kestrel's stress-laugh is building before it manifests—could warn her, giving her seconds to manage. Haven't decided whether to trade that warning for protection obligation.",
+                    "subject": "Kestrel Brune",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Saffi navigates through rope-reading and visual mapping. In pitch-dark galleries only I can navigate, she loses primary survival skill and autonomy—forced to trust completely.",
+                    "subject": "Saffi Two-Tides",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I know underground canal access points through structural reading that Saffi would pay for. She knows which clients corrupt worst, which I need. Potential trade neither of us has initiated.",
+                    "subject": "Saffi Two-Tides",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "Cress relies on controlling his presentation. I sense emotional states through micro-vibrations his performance can't hide. My existence threatens his manipulation method.",
+                    "subject": "Cress Siltwell",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I can identify which keys are missing from Cress's ring by metal scent and wear patterns. Can sense him approaching by distinctive gait-vibration. He can't surveil me effectively.",
+                    "subject": "Cress Siltwell",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Eira's contamination anxiety reads through fabric-rustle, breathing changes, heartbeat spikes. I unwittingly mirror her purity fear through completely different sensory register.",
+                    "subject": "Eira Quenreach",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "I could describe where artifact corruption soaked into estate's structural bones through smell/vibration signatures that prove her family knew about it pre-excavation. Testimony she can't discredit.",
+                    "subject": "Eira Quenreach",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "I'm terrified of the day my senses fragment completely, leaving me drowning in false signals with no calibration anchor and no crew to trust me back to reality.",
+                    "subject": "Fragmentation fear",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I need this job's pay desperately—building retirement fund before corruption makes me unemployable. But this job is exactly the kind of exposure likely to push me past recovery.",
+                    "subject": "Financial pressure",
+                    "subjectType": "state"
+                },
+                {
+                    "text": "I'm navigating the margin between good guidance and fatal mistake, hoping accuracy stays above lethality, knowing the odds are worsening with each exposure.",
+                    "subject": "Navigation risk calculation",
+                    "subjectType": "state"
+                }
+            ]
+        },
+        "core:apparent_age": {
+            "minAge": 34,
+            "maxAge": 36
+        },
+        "skills:melee_skill": {
+            "value": 28
+        },
+        "skills:ranged_skill": {
+            "value": 12
+        },
+        "skills:defense_skill": {
+            "value": 41
+        },
+        "skills:grappling_skill": {
+            "value": 35
+        },
+        "skills:resolve_skill": {
+            "value": 81
+        },
+        "skills:medicine_skill": {
+            "value": 38
+        }
+    }
+}

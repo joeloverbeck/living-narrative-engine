@@ -1,6 +1,9 @@
 /**
  * @file End-to-end tests for Perceptible Event Sender location loading
  * Tests the complete bootstrap → game start → location loading workflow
+ *
+ * Performance-optimized: JSDOM and container are created once per suite,
+ * with state reset between tests.
  */
 
 process.env.NODE_ENV = 'test';
@@ -11,6 +14,8 @@ import {
   expect,
   beforeEach,
   afterEach,
+  beforeAll,
+  afterAll,
   jest,
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
@@ -18,21 +23,31 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureContainer } from '../../../src/dependencyInjection/containerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { ENGINE_READY_UI } from '../../../src/constants/eventIds.js';
-import { EXITS_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { PerceptibleEventTestBed } from './common/perceptibleEventTestBed.js';
 
 describe('PerceptibleEventSender E2E - Location Loading', () => {
+  // Shared across all tests (expensive to create)
   let container;
   let dom;
   let document;
   let window;
-  let controller;
   let eventBus;
   let entityManager;
   let testBed;
 
-  beforeEach(async () => {
-    // Create minimal DOM for perceptible event sender
+  // Reset per test (cheap)
+  let controller;
+  let locationSelect;
+
+  /**
+   * Helper to flush pending microtasks.
+   *
+   * @returns {Promise<void>}
+   */
+  const flushMicrotasks = () => new Promise((resolve) => setImmediate(resolve));
+
+  beforeAll(async () => {
+    // ONE-TIME: Create JSDOM for perceptible event sender
     dom = new JSDOM(`
       <!DOCTYPE html>
       <html>
@@ -63,7 +78,7 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
     global.document = document;
     global.window = window;
 
-    // Setup DI container with real implementations
+    // ONE-TIME: Setup DI container with real implementations
     container = new AppContainer();
 
     // Create mock UI elements required by configureContainer
@@ -76,12 +91,11 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
 
     await configureContainer(container, mockUiElements);
 
-    // Resolve required services
+    // ONE-TIME: Resolve shared services
     eventBus = container.resolve(tokens.ISafeEventDispatcher);
     entityManager = container.resolve(tokens.IEntityManager);
-    controller = container.resolve(tokens.PerceptibleEventSenderController);
 
-    // Create test bed helper
+    // ONE-TIME: Create test bed helper and register schemas
     const registry = container.resolve(tokens.IDataRegistry);
     const validator = container.resolve(tokens.ISchemaValidator);
     const logger = container.resolve(tokens.ILogger);
@@ -93,20 +107,32 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       logger,
     });
 
-    // Register component schemas
+    // ONE-TIME: Register component schemas
     await testBed.registerComponentSchemas();
   });
 
-  afterEach(() => {
-    if (testBed) {
-      testBed.cleanup();
-    }
-    if (controller && typeof controller.cleanup === 'function') {
-      controller.cleanup();
-    }
+  afterAll(() => {
     dom.window.close();
     delete global.document;
     delete global.window;
+  });
+
+  beforeEach(() => {
+    // EACH TEST: Get DOM element reference
+    locationSelect = document.getElementById('perceptible-event-location');
+
+    // EACH TEST: Reset DOM to initial state
+    locationSelect.innerHTML = '<option value="">-- Select Location --</option>';
+
+    // EACH TEST: Get fresh controller instance
+    controller = container.resolve(tokens.PerceptibleEventSenderController);
+  });
+
+  afterEach(async () => {
+    if (controller && typeof controller.cleanup === 'function') {
+      controller.cleanup();
+    }
+    await testBed.reset();
     jest.clearAllMocks();
   });
 
@@ -114,11 +140,6 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
     it('should load locations when ENGINE_READY_UI event is dispatched', async () => {
       // Initialize controller (subscribes to ENGINE_READY_UI)
       controller.initialize();
-
-      // Get the location selector
-      const locationSelect = document.getElementById(
-        'perceptible-event-location'
-      );
 
       // Verify selector starts with only placeholder (before locations created)
       expect(locationSelect.options.length).toBe(1);
@@ -128,8 +149,9 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       );
 
       // Arrange: Create test locations AFTER initialization
-      await testBed.createLocation('test_location_1', 'Test Tavern');
-      await testBed.createLocation('test_location_2', 'Test Market');
+      // Note: Using unique IDs (load_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('load_location_1', 'Test Tavern');
+      await testBed.createLocation('load_location_2', 'Test Market');
 
       // Act: Simulate game start by dispatching ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -138,7 +160,7 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       });
 
       // Allow microtasks to complete
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Locations should now be loaded
       expect(locationSelect.options.length).toBe(3); // placeholder + 2 locations
@@ -146,9 +168,9 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       expect(locationSelect.options[0].textContent).toBe(
         '-- Select Location --'
       );
-      expect(locationSelect.options[1].value).toBe('test_location_1');
+      expect(locationSelect.options[1].value).toBe('load_location_1');
       expect(locationSelect.options[1].textContent).toBe('Test Tavern');
-      expect(locationSelect.options[2].value).toBe('test_location_2');
+      expect(locationSelect.options[2].value).toBe('load_location_2');
       expect(locationSelect.options[2].textContent).toBe('Test Market');
     });
 
@@ -156,17 +178,13 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       // Arrange: No locations created
       controller.initialize();
 
-      const locationSelect = document.getElementById(
-        'perceptible-event-location'
-      );
-
       // Act: Dispatch ENGINE_READY_UI with no locations
       await eventBus.dispatch(ENGINE_READY_UI, {
         activeWorld: 'test_world',
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Only placeholder option should exist
       expect(locationSelect.options.length).toBe(1);
@@ -178,13 +196,10 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
 
     it('should reload locations when ENGINE_READY_UI fires multiple times', async () => {
       // Arrange: Create initial location
-      await testBed.createLocation('test_location_1', 'Initial Location');
+      // Note: Using unique IDs (reload_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('reload_location_1', 'Initial Location');
 
       controller.initialize();
-
-      const locationSelect = document.getElementById(
-        'perceptible-event-location'
-      );
 
       // Act: First ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -192,13 +207,13 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Should have 1 location
       expect(locationSelect.options.length).toBe(2); // placeholder + 1 location
 
       // Arrange: Add another location
-      await testBed.createLocation('test_location_2', 'New Location');
+      await testBed.createLocation('reload_location_2', 'New Location');
 
       // Act: Second ENGINE_READY_UI (e.g., after loading a save)
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -206,7 +221,7 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
         message: 'Game loaded',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Should have 2 locations now
       expect(locationSelect.options.length).toBe(3); // placeholder + 2 locations
@@ -217,18 +232,15 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
     it('should use entity ID as fallback when location has no name component', async () => {
       // Arrange: Create location without name component
       // Use the testBed but override to create location with only exits (no name)
+      // Note: Using unique ID (fallback_*) to avoid definition cache collisions with other tests
       await testBed.createLocation(
-        'test_location_no_name',
-        'test_location_no_name'
+        'fallback_location_no_name',
+        'fallback_location_no_name'
       );
       // Remove the name component to test fallback behavior
-      await entityManager.removeComponent('test_location_no_name', 'core:name');
+      await entityManager.removeComponent('fallback_location_no_name', 'core:name');
 
       controller.initialize();
-
-      const locationSelect = document.getElementById(
-        'perceptible-event-location'
-      );
 
       // Act: Dispatch ENGINE_READY_UI
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -236,13 +248,13 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Assert: Should use entity ID as text
       expect(locationSelect.options.length).toBe(2);
-      expect(locationSelect.options[1].value).toBe('test_location_no_name');
+      expect(locationSelect.options[1].value).toBe('fallback_location_no_name');
       expect(locationSelect.options[1].textContent).toBe(
-        'test_location_no_name'
+        'fallback_location_no_name'
       );
     });
   });
@@ -253,7 +265,8 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
       // The controller should still load locations when initialized
 
       // Arrange: Create location
-      await testBed.createLocation('test_location_1', 'Test Location');
+      // Note: Using unique ID (timing_*) to avoid definition cache collisions with other tests
+      await testBed.createLocation('timing_location_1', 'Test Location');
 
       // Act: Dispatch ENGINE_READY_UI BEFORE controller initializes
       await eventBus.dispatch(ENGINE_READY_UI, {
@@ -261,14 +274,10 @@ describe('PerceptibleEventSender E2E - Location Loading', () => {
         message: 'Game ready',
       });
 
-      await new Promise((resolve) => setImmediate(resolve));
+      await flushMicrotasks();
 
       // Now initialize controller
       controller.initialize();
-
-      const locationSelect = document.getElementById(
-        'perceptible-event-location'
-      );
 
       // Assert: Locations should still load (either via event or defensive loading)
       // This test documents the expected behavior - the controller should handle

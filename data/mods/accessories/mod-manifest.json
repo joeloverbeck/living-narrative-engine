@@ -32,6 +32,7 @@
         "black_leather_collar_silver_bell.entity.json",
         "black_tactical_work_belt.entity.json",
         "dark_brown_leather_belt.entity.json",
+        "diving_goggles_dull_brass.entity.json",
         "extraction_harness_rope_tan.entity.json",
         "goatskin_fingerless_gloves.entity.json",
         "goatskin_grip_gloves.entity.json",
@@ -40,8 +41,10 @@
         "layered_pearl_choker.entity.json",
         "leather_baldric.entity.json",
         "leather_belt_iron_buckle.entity.json",
+        "line_tender_harness_hemp_tan.entity.json",
         "mikimoto_delicate_pearl_strand.entity.json",
         "platinum_necklace.entity.json",
+        "quick_release_weight_belt_tar_brown.entity.json",
         "silver_chain_pendant_necklace.entity.json",
         "slate_nylon_baseball_cap.entity.json",
         "small_steel_huggie_hoops.entity.json",
@@ -50,6 +53,7 @@
         "splash_goggles_smoke_black.entity.json",
         "twine_hair_tie.entity.json",
         "twisted_black_metal_crown_blood_red_gems.entity.json",
+        "waxed_canvas_blast_bib_gray_black.entity.json",
         "wide_dark_leather_belt.entity.json"
       ],
       "instances": []
