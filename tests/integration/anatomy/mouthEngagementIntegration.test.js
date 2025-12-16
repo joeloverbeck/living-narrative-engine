@@ -29,6 +29,7 @@ describe('Mouth Engagement - Anatomy Integration', () => {
   let jsonLogicService;
   let logger;
   let mockBodyGraphService;
+  let mockLightingStateService;
 
   beforeEach(() => {
     // Initialize core components
@@ -71,6 +72,10 @@ describe('Mouth Engagement - Anatomy Integration', () => {
       buildAdjacencyCache: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicService = new JsonLogicEvaluationService({
       logger,
     });
@@ -79,6 +84,7 @@ describe('Mouth Engagement - Anatomy Integration', () => {
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     customOperators.registerOperators(jsonLogicService);

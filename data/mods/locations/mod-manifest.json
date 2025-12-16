@@ -14,9 +14,9 @@
   ],
   "content": {
     "components": [
-      "naturally_dark.component.json",
+      "description_in_darkness.component.json",
       "light_sources.component.json",
-      "description_in_darkness.component.json"
+      "naturally_dark.component.json"
     ],
     "conditions": [],
     "entities": {

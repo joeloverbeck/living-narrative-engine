@@ -323,56 +323,25 @@ describe('Anatomy Error Event Flow Integration', () => {
 
   describe('Error scenarios that should be caught', () => {
     it('should detect if event object is passed as first parameter', async () => {
-      // Create a wrapper that incorrectly calls the dispatcher
-      const incorrectDispatcher = {
-        dispatch: async (eventIdOrObject, payload) => {
-          // Simulate the bug - passing object as first param
-          if (
-            typeof eventIdOrObject === 'string' &&
-            eventIdOrObject === SYSTEM_ERROR_OCCURRED_ID
-          ) {
-            // Transform to incorrect format
-            const eventObject = { type: eventIdOrObject, payload };
-            return safeEventDispatcher.dispatch(eventObject); // WRONG!
-          }
-          return safeEventDispatcher.dispatch(eventIdOrObject, payload);
-        },
-      };
-
-      // Create orchestrator with incorrect dispatcher
-      const buggyOrchestrator = new BodyDescriptionOrchestrator({
-        logger,
-        bodyDescriptionComposer: mockBodyDescriptionComposer,
-        bodyGraphService: mockBodyGraphService,
-        eventDispatcher: incorrectDispatcher,
-        entityManager: mockEntityManager,
-        partDescriptionGenerator: mockPartDescriptionGenerator,
-      });
-
-      // Spy on logger to catch warnings
-      const warnSpy = jest.spyOn(logger, 'warn');
+      // SafeEventDispatcher now has fail-fast validation that throws an error
+      // when an object is passed as the first parameter instead of a string eventName
       const errorSpy = jest.spyOn(logger, 'error');
 
-      eventBus.subscribe(SYSTEM_ERROR_OCCURRED_ID, eventListener);
+      // Test that passing object directly to SafeEventDispatcher throws
+      const eventObject = { type: SYSTEM_ERROR_OCCURRED_ID, payload: {} };
 
-      const entity = createTestEntity();
-      mockBodyDescriptionComposer.composeDescription.mockReturnValue('');
-
-      buggyOrchestrator.generateBodyDescription(entity);
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // The event should NOT reach the listener due to validation failure
-      expect(capturedEvents).toHaveLength(0);
-
-      // Should see warnings about invalid event ID
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('EventDefinition not found')
+      await expect(async () => {
+        await safeEventDispatcher.dispatch(eventObject);
+      }).rejects.toThrow(
+        /SafeEventDispatcher.dispatch\(\) requires \(eventName, payload\) signature/
       );
 
-      // EventBus should log error about invalid event name
+      // Should log error about incorrect usage
       expect(errorSpy).toHaveBeenCalledWith(
-        'EventBus: Invalid event name provided.',
-        expect.objectContaining({ type: SYSTEM_ERROR_OCCURRED_ID })
+        expect.stringContaining(
+          'SafeEventDispatcher.dispatch() requires (eventName, payload) signature'
+        ),
+        expect.any(Object)
       );
     });
 

@@ -314,6 +314,7 @@ export function registerAIGameStateProviders(registrar, logger) {
       entityManager: c.resolve(tokens.IEntityManager),
       summaryProvider: c.resolve(tokens.IEntitySummaryProvider),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      lightingStateService: c.resolve(tokens.ILightingStateService),
     });
   });
 

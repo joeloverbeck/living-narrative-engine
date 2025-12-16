@@ -98,10 +98,16 @@ describe('writing:jot_down_notes action definition', () => {
     ]);
   });
 
-  it('should have empty prerequisites array', () => {
+  it('should have lighting prerequisites', () => {
     expect(jotDownNotesAction.prerequisites).toBeDefined();
     expect(Array.isArray(jotDownNotesAction.prerequisites)).toBe(true);
-    expect(jotDownNotesAction.prerequisites).toEqual([]);
+    expect(jotDownNotesAction.prerequisites).toHaveLength(1);
+    expect(jotDownNotesAction.prerequisites[0].logic).toEqual({
+      isActorLocationLit: ['actor'],
+    });
+    expect(jotDownNotesAction.prerequisites[0].failure_message).toBe(
+      'It is too dark to write.'
+    );
   });
 
   it('should have correct visual styling (Scribe\'s Ink scheme)', () => {

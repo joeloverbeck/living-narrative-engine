@@ -1,0 +1,441 @@
+{
+  "$schema": "schema://living-narrative-engine/rule.schema.json",
+  "rule_id": "handle_feel_your_way_to_an_exit",
+  "comment": "Handles the 'movement:feel_your_way_to_an_exit' action. A chance-based action for navigating in dark locations.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "condition_ref": "movement:event-is-action-feel-your-way-to-an-exit"
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get the current location's name for messaging.",
+      "parameters": {
+        "entity_ref": {
+          "entityId": "{context.actorPosition.locationId}"
+        },
+        "component_type": "core:name",
+        "result_variable": "currentLocationName"
+      }
+    },
+    {
+      "type": "RESOLVE_OUTCOME",
+      "comment": "Fixed difficulty contest using awareness_skill vs difficulty 50",
+      "parameters": {
+        "actor_skill_component": "skills:awareness_skill",
+        "actor_skill_default": 0,
+        "difficulty_modifier": 50,
+        "formula": "linear",
+        "result_variable": "navigationResult"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Set common variables needed by the end-turn macros",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "error.action_failed"
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle CRITICAL_SUCCESS outcome - flat structure (1 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.navigationResult.outcome"
+            },
+            "CRITICAL_SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "PICK_RANDOM_ARRAY_ELEMENT",
+            "comment": "Pick a random exit from the location's exits array",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.actorPosition.locationId}"
+              },
+              "component_type": "movement:exits",
+                            "result_variable": "selectedExit"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Only proceed if we found a valid exit",
+            "parameters": {
+              "condition": {
+                "!=": [
+                  {
+                    "var": "context.selectedExit"
+                  },
+                  null
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get the destination location's name",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.selectedExit.target}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "destinationLocationName"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor leaving current location.",
+                  "parameters": {
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName} confidently feels their way through the darkness and finds an exit.",
+                    "perception_type": "movement.departure",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Update the actor's locationId to the new target location.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:position",
+                    "field": "locationId",
+                    "mode": "set",
+                    "value": "{context.selectedExit.target}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch the primary 'entity_moved' event for other systems.",
+                  "parameters": {
+                    "eventType": "core:entity_moved",
+                    "payload": {
+                      "eventName": "core:entity_moved",
+                      "entityId": "{event.payload.actorId}",
+                      "previousLocationId": "{context.actorPosition.locationId}",
+                      "currentLocationId": "{context.selectedExit.target}",
+                      "originalCommand": "{event.payload.originalInput}"
+                    }
+                  }
+                },
+                {
+                  "type": "AUTO_MOVE_FOLLOWERS",
+                  "comment": "Move any followers along with the actor.",
+                  "parameters": {
+                    "leader_id": "{event.payload.actorId}",
+                    "destination_id": "{context.selectedExit.target}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor entering new location.",
+                  "parameters": {
+                    "location_id": "{context.selectedExit.target}",
+                    "description_text": "{context.actorName} emerges from the darkness with confidence, arriving from {context.currentLocationName.text}.",
+                    "perception_type": "movement.arrival",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "parameters": {
+                    "variable_name": "logMessage",
+                    "value": "{context.actorName} confidently navigates through the darkness and arrives at {context.destinationLocationName.text}."
+                  }
+                },
+                {
+                  "macro": "core:logSuccessOutcomeAndEndTurn"
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Edge case: no exit found despite prerequisite - should not happen but ensures turn ends",
+                  "parameters": {
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName} cannot find any way out of this place.",
+                    "perception_type": "physical.self_action",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "parameters": {
+                    "variable_name": "logMessage",
+                    "value": "{context.actorName} cannot find any way out of this place."
+                  }
+                },
+                {
+                  "macro": "core:logFailureOutcomeAndEndTurn"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle SUCCESS outcome - flat structure (2 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.navigationResult.outcome"
+            },
+            "SUCCESS"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "PICK_RANDOM_ARRAY_ELEMENT",
+            "comment": "Pick a random exit from the location's exits array",
+            "parameters": {
+              "entity_ref": {
+                "entityId": "{context.actorPosition.locationId}"
+              },
+              "component_type": "movement:exits",
+                            "result_variable": "selectedExit"
+            }
+          },
+          {
+            "type": "IF",
+            "comment": "Only proceed if we found a valid exit",
+            "parameters": {
+              "condition": {
+                "!=": [
+                  {
+                    "var": "context.selectedExit"
+                  },
+                  null
+                ]
+              },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get the destination location's name",
+                  "parameters": {
+                    "entity_ref": {
+                      "entityId": "{context.selectedExit.target}"
+                    },
+                    "component_type": "core:name",
+                    "result_variable": "destinationLocationName"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor leaving current location.",
+                  "parameters": {
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName} carefully feels their way along the walls and finds an exit.",
+                    "perception_type": "movement.departure",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "MODIFY_COMPONENT",
+                  "comment": "Update the actor's locationId to the new target location.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:position",
+                    "field": "locationId",
+                    "mode": "set",
+                    "value": "{context.selectedExit.target}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_EVENT",
+                  "comment": "Dispatch the primary 'entity_moved' event for other systems.",
+                  "parameters": {
+                    "eventType": "core:entity_moved",
+                    "payload": {
+                      "eventName": "core:entity_moved",
+                      "entityId": "{event.payload.actorId}",
+                      "previousLocationId": "{context.actorPosition.locationId}",
+                      "currentLocationId": "{context.selectedExit.target}",
+                      "originalCommand": "{event.payload.originalInput}"
+                    }
+                  }
+                },
+                {
+                  "type": "AUTO_MOVE_FOLLOWERS",
+                  "comment": "Move any followers along with the actor.",
+                  "parameters": {
+                    "leader_id": "{event.payload.actorId}",
+                    "destination_id": "{context.selectedExit.target}"
+                  }
+                },
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Dispatch perceptible event for actor entering new location.",
+                  "parameters": {
+                    "location_id": "{context.selectedExit.target}",
+                    "description_text": "{context.actorName} stumbles out of the darkness, arriving from {context.currentLocationName.text}.",
+                    "perception_type": "movement.arrival",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "parameters": {
+                    "variable_name": "logMessage",
+                    "value": "{context.actorName} carefully navigates through the darkness and arrives at {context.destinationLocationName.text}."
+                  }
+                },
+                {
+                  "macro": "core:logSuccessOutcomeAndEndTurn"
+                }
+              ],
+              "else_actions": [
+                {
+                  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+                  "comment": "Edge case: no exit found despite prerequisite - should not happen but ensures turn ends",
+                  "parameters": {
+                    "location_id": "{context.actorPosition.locationId}",
+                    "description_text": "{context.actorName} cannot find any way out of this place.",
+                    "perception_type": "physical.self_action",
+                    "actor_id": "{event.payload.actorId}",
+                    "target_id": null,
+                    "involved_entities": []
+                  }
+                },
+                {
+                  "type": "SET_VARIABLE",
+                  "parameters": {
+                    "variable_name": "logMessage",
+                    "value": "{context.actorName} cannot find any way out of this place."
+                  }
+                },
+                {
+                  "macro": "core:logFailureOutcomeAndEndTurn"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FAILURE outcome - flat structure (3 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.navigationResult.outcome"
+            },
+            "FAILURE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} fumbles around in the darkness but cannot find an exit.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "involved_entities": []
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} fumbles around in the darkness but cannot find an exit."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    },
+    {
+      "type": "IF",
+      "comment": "Handle FUMBLE outcome - flat structure (4 of 4)",
+      "parameters": {
+        "condition": {
+          "==": [
+            {
+              "var": "context.navigationResult.outcome"
+            },
+            "FUMBLE"
+          ]
+        },
+        "then_actions": [
+          {
+            "type": "ADD_COMPONENT",
+            "parameters": {
+              "entity_ref": "actor",
+              "component_type": "positioning:fallen",
+              "value": {}
+            }
+          },
+          {
+            "type": "REGENERATE_DESCRIPTION",
+            "parameters": {
+              "entity_ref": "actor"
+            }
+          },
+          {
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "parameters": {
+              "location_id": "{context.actorPosition.locationId}",
+              "description_text": "{context.actorName} stumbles in the darkness, trips over something, and falls to the ground.",
+              "perception_type": "physical.self_action",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": null,
+              "involved_entities": []
+            }
+          },
+          {
+            "type": "SET_VARIABLE",
+            "parameters": {
+              "variable_name": "logMessage",
+              "value": "{context.actorName} stumbles in the darkness, trips over something, and falls to the ground."
+            }
+          },
+          {
+            "macro": "core:logFailureOutcomeAndEndTurn"
+          }
+        ]
+      }
+    }
+  ]
+}

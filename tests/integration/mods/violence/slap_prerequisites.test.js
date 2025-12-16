@@ -81,6 +81,10 @@ describe('violence:slap prerequisites', () => {
       }
     );
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create services with custom operators
     jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
@@ -91,6 +95,7 @@ describe('violence:slap prerequisites', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     // Register custom operators (includes hasFreeGrabbingAppendages)

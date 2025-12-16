@@ -38,11 +38,17 @@ describe('JsonLogicCustomOperators Integration Tests', () => {
       entityManager,
       eventDispatcher,
     });
+    // Create mock lighting state service
+    const lightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicEvaluationService = new JsonLogicEvaluationService({ logger });
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService,
       entityManager,
+      lightingStateService,
     });
 
     // Register the custom operators

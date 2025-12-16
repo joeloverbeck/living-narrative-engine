@@ -1400,7 +1400,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
     expect(mockActorQueue.children[0].dataset.entityId).toBe('actor-1');
     expect(mockActorQueue.children[1].dataset.entityId).toBe('actor-2');
     expect(mockActorQueue.children[2].dataset.entityId).toBe('actor-3');
-    expect(mockLogger.info).toHaveBeenCalledWith('Rendering turn order queue', {
+    expect(mockLogger.debug).toHaveBeenCalledWith('Rendering turn order queue', {
       actorCount: 3,
       actorIds: ['actor-1', 'actor-2', 'actor-3'],
     });
@@ -1549,7 +1549,7 @@ describe('TurnOrderTickerRenderer - Render Method', () => {
 
     renderer.render(actors);
 
-    expect(mockLogger.info).toHaveBeenCalledWith('Rendering turn order queue', {
+    expect(mockLogger.debug).toHaveBeenCalledWith('Rendering turn order queue', {
       actorCount: 2,
       actorIds: ['actor-1', 'actor-2'],
     });

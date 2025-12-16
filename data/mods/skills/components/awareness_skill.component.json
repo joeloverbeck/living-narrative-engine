@@ -1,0 +1,19 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "skills:awareness_skill",
+  "description": "Perceptual awareness skill for navigating and sensing surroundings.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100,
+        "default": 0,
+        "description": "Skill level from 0 (untrained) to 100 (expert)."
+      }
+    },
+    "required": ["value"],
+    "additionalProperties": false
+  }
+}

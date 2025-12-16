@@ -144,10 +144,15 @@ describe('Turn Around and Kneel Before Interaction - Multiple Actors', () => {
       getAllParts: jest.fn().mockReturnValue([]),
     };
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     const customOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
       logger,
+      lightingStateService: mockLightingStateService,
     });
     customOperators.registerOperators(jsonLogicService);
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();

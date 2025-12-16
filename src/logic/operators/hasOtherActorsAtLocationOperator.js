@@ -7,6 +7,10 @@ import {
   resolveEntityPath,
   hasValidEntityId,
 } from '../utils/entityPathResolver.js';
+import {
+  POSITION_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -61,11 +65,12 @@ export class HasOtherActorsAtLocationOperator {
 
       const [entityPath] = params;
 
-      // Store the entity path for logging
-      context._currentPath = entityPath;
+      // Clone context to avoid mutating the shared context object
+      const localContext = { ...context };
+      localContext._currentPath = entityPath;
 
       // Resolve entity from path
-      const { entity, isValid } = resolveEntityPath(context, entityPath);
+      const { entity, isValid } = resolveEntityPath(localContext, entityPath);
 
       if (!isValid) {
         this.#logger.warn(
@@ -138,7 +143,7 @@ export class HasOtherActorsAtLocationOperator {
     // Get actor's position component
     const actorPosition = this.#entityManager.getComponentData(
       actorId,
-      'core:position'
+      POSITION_COMPONENT_ID
     );
 
     if (!actorPosition || !actorPosition.locationId) {
@@ -161,7 +166,7 @@ export class HasOtherActorsAtLocationOperator {
     const entitiesAtLocation = allEntities.filter((entity) => {
       const position = this.#entityManager.getComponentData(
         entity.id,
-        'core:position'
+        POSITION_COMPONENT_ID
       );
       return position && position.locationId === locationId;
     });
@@ -172,7 +177,7 @@ export class HasOtherActorsAtLocationOperator {
 
     // Filter to actors only (entities with core:actor component)
     const actorsAtLocation = entitiesAtLocation.filter((entity) =>
-      this.#entityManager.hasComponent(entity.id, 'core:actor')
+      this.#entityManager.hasComponent(entity.id, ACTOR_COMPONENT_ID)
     );
 
     this.#logger.debug(

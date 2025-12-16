@@ -1,0 +1,13 @@
+{
+  "$schema": "schema://living-narrative-engine/condition.schema.json",
+  "id": "movement:event-is-action-feel-your-way-to-an-exit",
+  "description": "Checks if the triggering event is for the 'movement:feel_your_way_to_an_exit' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "movement:feel_your_way_to_an_exit"
+    ]
+  }
+}

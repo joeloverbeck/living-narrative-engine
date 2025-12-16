@@ -71,10 +71,17 @@ describe('First-Aid body part scopes', () => {
         getConditionDefinition: (id) => dataRegistry.get('conditions', id),
       },
     });
+
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 

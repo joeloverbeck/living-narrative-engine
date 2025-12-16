@@ -668,12 +668,14 @@ describe('aiRegistrations', () => {
           [tokens.IEntityManager]: { entityManager: true },
           [tokens.IEntitySummaryProvider]: { summary: true },
           [tokens.ISafeEventDispatcher]: { dispatcher: true },
+          [tokens.ILightingStateService]: { lightingState: true },
         })
       );
       expect(LocationSummaryProviderMock).toHaveBeenCalledWith({
         entityManager: { entityManager: true },
         summaryProvider: { summary: true },
         safeEventDispatcher: { dispatcher: true },
+        lightingStateService: { lightingState: true },
       });
 
       const aiGameStateCall = container.register.mock.calls.find(

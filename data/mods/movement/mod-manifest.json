@@ -20,22 +20,29 @@
     {
       "id": "mechanisms",
       "version": "^1.0.0"
+    },
+    {
+      "id": "skills",
+      "version": "^1.0.0"
     }
   ],
   "content": {
     "actions": [
+      "feel_your_way_to_an_exit.action.json",
       "go.action.json",
       "teleport.action.json",
       "travel_through_dimensions.action.json"
     ],
     "rules": [
       "go.rule.json",
+      "handle_feel_your_way_to_an_exit.rule.json",
       "handle_teleport.rule.json",
       "handle_travel_through_dimensions.rule.json"
     ],
     "conditions": [
       "actor-can-move.condition.json",
       "blocker-is-dimensional-portal.condition.json",
+      "event-is-action-feel-your-way-to-an-exit.condition.json",
       "event-is-action-go.condition.json",
       "event-is-action-teleport.condition.json",
       "event-is-action-travel-through-dimensions.condition.json",

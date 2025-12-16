@@ -204,10 +204,15 @@ describe('Shoulder and Hair Actions with Kneeling Position', () => {
     });
 
     // Register custom operators for anatomy-related conditions
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     const customOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
       logger,
+      lightingStateService: mockLightingStateService,
     });
     customOperators.registerOperators(jsonLogicService);
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();

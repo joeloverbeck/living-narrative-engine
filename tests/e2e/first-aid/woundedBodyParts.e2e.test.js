@@ -86,10 +86,20 @@ describe('First-aid scopes after APPLY_DAMAGE', () => {
         getConditionDefinition: (id) => dataRegistry.get('conditions', id),
       },
     });
+    // Create mock lightingStateService for JsonLogicCustomOperators
+    const mockLightingStateService = {
+      getLocationLightingState: jest.fn((locationId) => ({
+        isLit: true,
+        lightSources: [],
+      })),
+      isLocationLit: jest.fn((locationId) => true),
+    };
+
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 

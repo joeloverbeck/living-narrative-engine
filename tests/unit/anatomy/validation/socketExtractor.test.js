@@ -409,31 +409,11 @@ describe('socketExtractor', () => {
     });
 
     it('returns consistent result regardless of input order', async () => {
-      const entities = [
-        {
-          id: 'anatomy:humanoid_face_bearded', // 2 underscores
-          components: { 'anatomy:part': { subType: 'head' } },
-        },
-        {
-          id: 'anatomy:humanoid_head', // 1 underscore - WINNER
-          components: { 'anatomy:part': { subType: 'head' } },
-        },
-        {
-          id: 'anatomy:humanoid_face', // 1 underscore, but alphabetically after 'humanoid_face' < 'humanoid_head'?
-          // anatomy:humanoid_face (length 21)
-          // anatomy:humanoid_head (length 21)
-          // 'f' < 'h', so 'humanoid_face' would win alphabetically if rule 1 & 2 tied.
-          // Both have 1 underscore.
-          // Both have length 21.
-          // Alphabetical: face comes before head.
-        },
-      ];
-
-      // Wait, let's test specific scenario from the ticket
+      // Test specific scenario: fewer underscores wins
       // anatomy:humanoid_face_bearded_full_trimmed (4 underscores)
       // anatomy:humanoid_head (1 underscore)
 
-      const entities2 = [
+      const entities = [
         {
           id: 'anatomy:humanoid_face_bearded_full_trimmed',
           components: { 'anatomy:part': { subType: 'head' } },
@@ -445,11 +425,11 @@ describe('socketExtractor', () => {
       ];
 
       const mockRegistryForward = {
-        getAll: jest.fn().mockReturnValue([...entities2]),
+        getAll: jest.fn().mockReturnValue([...entities]),
       };
 
       const mockRegistryReverse = {
-        getAll: jest.fn().mockReturnValue([...entities2].reverse()),
+        getAll: jest.fn().mockReturnValue([...entities].reverse()),
       };
 
       const result1 = await resolveEntityId('head', mockRegistryForward);

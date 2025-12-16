@@ -14,6 +14,21 @@ import {
   createTestEntity,
 } from '../../../common/mockFactories/index.js';
 
+/**
+ * Creates a mock LightingStateService for testing.
+ *
+ * @param {object} options - Configuration options
+ * @param {boolean} [options.isLit] - Whether location is lit
+ * @param {string[]} [options.lightSources] - Light source entity IDs
+ * @returns {object} Mock lighting state service
+ */
+function createMockLightingStateService({ isLit = true, lightSources = [] } = {}) {
+  return {
+    getLocationLightingState: jest.fn().mockReturnValue({ isLit, lightSources }),
+    isLocationLit: jest.fn().mockReturnValue(isLit),
+  };
+}
+
 describe('LocationSummaryProvider', () => {
   it('throws if dispatcher lacks dispatch', () => {
     const entityManager = {
@@ -21,12 +36,14 @@ describe('LocationSummaryProvider', () => {
       getEntitiesInLocation: jest.fn(),
     };
     const summaryProvider = { getSummary: jest.fn() };
+    const lightingStateService = createMockLightingStateService();
     expect(
       () =>
         new LocationSummaryProvider({
           entityManager,
           summaryProvider,
           safeEventDispatcher: {},
+          lightingStateService,
         })
     ).toThrow('LocationSummaryProvider requires a valid ISafeEventDispatcher.');
   });
@@ -38,10 +55,12 @@ describe('LocationSummaryProvider', () => {
     };
     const summaryProvider = { getSummary: jest.fn() };
     const safeEventDispatcher = createMockSafeEventDispatcher();
+    const lightingStateService = createMockLightingStateService();
     const provider = new LocationSummaryProvider({
       entityManager,
       summaryProvider,
       safeEventDispatcher,
+      lightingStateService,
     });
     const logger = createMockLogger();
 
@@ -102,6 +121,8 @@ describe('LocationSummaryProvider', () => {
         },
       ],
       characters: [{ id: 'npc1', name: 'Npc', description: 'npc desc' }],
+      isLit: true,
+      descriptionInDarkness: null,
     });
 
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
@@ -121,10 +142,12 @@ describe('LocationSummaryProvider', () => {
     };
     const summaryProvider = { getSummary: jest.fn() };
     const safeEventDispatcher = createMockSafeEventDispatcher();
+    const lightingStateService = createMockLightingStateService();
     const provider = new LocationSummaryProvider({
       entityManager,
       summaryProvider,
       safeEventDispatcher,
+      lightingStateService,
     });
     const logger = createMockLogger();
 
@@ -140,5 +163,130 @@ describe('LocationSummaryProvider', () => {
         message: expect.stringContaining('Critical error'),
       })
     );
+  });
+
+  describe('lighting state integration', () => {
+    it('includes isLit=false when location is dark', async () => {
+      const entityManager = {
+        getEntityInstance: jest.fn(),
+        getEntitiesInLocation: jest.fn().mockResolvedValue(new Set()),
+      };
+      const summaryProvider = { getSummary: jest.fn() };
+      const safeEventDispatcher = createMockSafeEventDispatcher();
+      const lightingStateService = createMockLightingStateService({ isLit: false });
+      const provider = new LocationSummaryProvider({
+        entityManager,
+        summaryProvider,
+        safeEventDispatcher,
+        lightingStateService,
+      });
+      const logger = createMockLogger();
+
+      const actor = createTestEntity('actor1', {
+        [POSITION_COMPONENT_ID]: { locationId: 'dark_room' },
+      });
+
+      const locationEntity = createTestEntity('dark_room', {
+        [NAME_COMPONENT_ID]: { text: 'Dark Room' },
+        [DESCRIPTION_COMPONENT_ID]: { text: 'A dark room.' },
+        [EXITS_COMPONENT_ID]: [],
+        'locations:naturally_dark': {},
+        'locations:description_in_darkness': { text: 'You cannot see anything.' },
+      });
+
+      entityManager.getEntityInstance.mockResolvedValue(locationEntity);
+      summaryProvider.getSummary.mockReturnValue({
+        id: 'dark_room',
+        name: 'Dark Room',
+        description: 'A dark room.',
+      });
+
+      const result = await provider.build(actor, logger);
+
+      expect(result.isLit).toBe(false);
+      expect(result.descriptionInDarkness).toBe('You cannot see anything.');
+      expect(lightingStateService.getLocationLightingState).toHaveBeenCalledWith('dark_room');
+    });
+
+    it('includes descriptionInDarkness when component is present', async () => {
+      const entityManager = {
+        getEntityInstance: jest.fn(),
+        getEntitiesInLocation: jest.fn().mockResolvedValue(new Set()),
+      };
+      const summaryProvider = { getSummary: jest.fn() };
+      const safeEventDispatcher = createMockSafeEventDispatcher();
+      const lightingStateService = createMockLightingStateService({ isLit: false });
+      const provider = new LocationSummaryProvider({
+        entityManager,
+        summaryProvider,
+        safeEventDispatcher,
+        lightingStateService,
+      });
+      const logger = createMockLogger();
+
+      const sensoryDescription = 'The air is cold and musty.';
+
+      const actor = createTestEntity('actor1', {
+        [POSITION_COMPONENT_ID]: { locationId: 'cellar' },
+      });
+
+      const locationEntity = createTestEntity('cellar', {
+        [NAME_COMPONENT_ID]: { text: 'Cellar' },
+        [DESCRIPTION_COMPONENT_ID]: { text: 'An old cellar.' },
+        [EXITS_COMPONENT_ID]: [],
+        'locations:description_in_darkness': { text: sensoryDescription },
+      });
+
+      entityManager.getEntityInstance.mockResolvedValue(locationEntity);
+      summaryProvider.getSummary.mockReturnValue({
+        id: 'cellar',
+        name: 'Cellar',
+        description: 'An old cellar.',
+      });
+
+      const result = await provider.build(actor, logger);
+
+      expect(result.descriptionInDarkness).toBe(sensoryDescription);
+    });
+
+    it('sets descriptionInDarkness to null when component is missing', async () => {
+      const entityManager = {
+        getEntityInstance: jest.fn(),
+        getEntitiesInLocation: jest.fn().mockResolvedValue(new Set()),
+      };
+      const summaryProvider = { getSummary: jest.fn() };
+      const safeEventDispatcher = createMockSafeEventDispatcher();
+      const lightingStateService = createMockLightingStateService({ isLit: true });
+      const provider = new LocationSummaryProvider({
+        entityManager,
+        summaryProvider,
+        safeEventDispatcher,
+        lightingStateService,
+      });
+      const logger = createMockLogger();
+
+      const actor = createTestEntity('actor1', {
+        [POSITION_COMPONENT_ID]: { locationId: 'lit_room' },
+      });
+
+      const locationEntity = createTestEntity('lit_room', {
+        [NAME_COMPONENT_ID]: { text: 'Lit Room' },
+        [DESCRIPTION_COMPONENT_ID]: { text: 'A bright room.' },
+        [EXITS_COMPONENT_ID]: [],
+        // No description_in_darkness component
+      });
+
+      entityManager.getEntityInstance.mockResolvedValue(locationEntity);
+      summaryProvider.getSummary.mockReturnValue({
+        id: 'lit_room',
+        name: 'Lit Room',
+        description: 'A bright room.',
+      });
+
+      const result = await provider.build(actor, logger);
+
+      expect(result.isLit).toBe(true);
+      expect(result.descriptionInDarkness).toBeNull();
+    });
   });
 });

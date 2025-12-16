@@ -128,13 +128,18 @@ describe('BaseBodyPartOperator', () => {
 
       const result = operator.evaluate(['actor', 'test-value'], mockContext);
 
-      expect(resolveEntityPath).toHaveBeenCalledWith(mockContext, 'actor');
+      // Verify resolveEntityPath was called with a context containing _currentPath
+      expect(resolveEntityPath).toHaveBeenCalledWith(
+        expect.objectContaining({ _currentPath: 'actor' }),
+        'actor'
+      );
       expect(getBodyComponent).toHaveBeenCalledWith(
         mockDependencies.entityManager,
         'actor123'
       );
       expect(extractRootId).toHaveBeenCalledWith(mockBodyComponent);
-      expect(mockContext._currentPath).toBe('actor');
+      // Original context should NOT be mutated (context isolation)
+      expect(mockContext._currentPath).toBeUndefined();
       expect(result).toBe(true);
     });
 
@@ -190,7 +195,11 @@ describe('BaseBodyPartOperator', () => {
 
       const result = operator.evaluate(['.', 'test-value'], mockContext);
 
-      expect(resolveEntityPath).toHaveBeenCalledWith(mockContext, '.');
+      // Verify resolveEntityPath was called with a context containing _currentPath
+      expect(resolveEntityPath).toHaveBeenCalledWith(
+        expect.objectContaining({ _currentPath: '.' }),
+        '.'
+      );
       expect(result).toBe(true);
     });
 
@@ -245,7 +254,8 @@ describe('BaseBodyPartOperator', () => {
       expect(mockDependencies.logger.warn).toHaveBeenCalledWith(
         'testBodyPartOperator: No entity found at path nonexistent'
       );
-      expect(mockContext._currentPath).toBe('nonexistent');
+      // Original context should NOT be mutated (context isolation)
+      expect(mockContext._currentPath).toBeUndefined();
     });
 
     test('should return false when resolved entity is null', () => {
@@ -475,14 +485,37 @@ describe('BaseBodyPartOperator', () => {
         mockContext
       );
 
+      // evaluateInternal is called with localContext (clone with _currentPath set)
       expect(testOperator).toHaveBeenCalledWith(
         'actor123',
         'root123',
         ['param1', 'param2'],
-        mockContext,
+        expect.objectContaining({ _currentPath: 'actor' }),
         mockBodyComponent
       );
       expect(result).toBe(true);
+    });
+  });
+
+  describe('context isolation', () => {
+    test('should not mutate the original context object', () => {
+      const originalContext = { actor: { id: 'actor123' }, existingProp: 'value' };
+      const contextSnapshot = JSON.stringify(originalContext);
+      const mockBodyComponent = { root: 'root123' };
+
+      resolveEntityPath.mockReturnValue({
+        entity: originalContext.actor,
+        isValid: true,
+      });
+      getBodyComponent.mockReturnValue(mockBodyComponent);
+      extractRootId.mockReturnValue('root123');
+
+      operator.evaluate(['actor', 'test-value'], originalContext);
+
+      // Original context should NOT have _currentPath
+      expect(originalContext._currentPath).toBeUndefined();
+      // Original context should be completely unchanged
+      expect(JSON.stringify(originalContext)).toBe(contextSnapshot);
     });
   });
 

@@ -66,11 +66,12 @@ export class BaseBodyPartOperator {
 
       const [entityPath, ...operatorParams] = params;
 
-      // Store the entity path for logging
-      context._currentPath = entityPath;
+      // Clone context to avoid mutating the shared context object
+      const localContext = { ...context };
+      localContext._currentPath = entityPath;
 
       // Resolve entity from path
-      const { entity, isValid } = resolveEntityPath(context, entityPath);
+      const { entity, isValid } = resolveEntityPath(localContext, entityPath);
 
       if (!isValid) {
         this.logger.warn(
@@ -108,7 +109,7 @@ export class BaseBodyPartOperator {
         entityId,
         rootId,
         operatorParams,
-        context,
+        localContext,
         bodyComponent
       );
     } catch (error) {

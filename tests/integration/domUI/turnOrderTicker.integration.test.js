@@ -181,7 +181,7 @@ describe('TurnOrderTickerRenderer - Integration: Render Workflow', () => {
     expect(mockRoundNumber.textContent).toBe('ROUND 1');
 
     // Verify logging
-    expect(mockLogger.info).toHaveBeenCalledWith(
+    expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Round started'),
       expect.objectContaining({
         roundNumber: 1,

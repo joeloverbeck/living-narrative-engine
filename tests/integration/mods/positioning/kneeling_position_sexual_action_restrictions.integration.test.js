@@ -175,11 +175,16 @@ describe('Kneeling Position Sexual Action Restrictions', () => {
       gameDataRepository,
     });
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Register custom operators for anatomy-related conditions
     const customOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
       logger,
+      lightingStateService: mockLightingStateService,
     });
     customOperators.registerOperators(jsonLogicService);
     const actionErrorContextBuilder = createMockActionErrorContextBuilder();

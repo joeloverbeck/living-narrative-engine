@@ -789,6 +789,9 @@
         },
         "skills:medicine_skill": {
             "value": 22
+        },
+        "skills:awareness_skill": {
+            "value": 77
         }
     }
 }

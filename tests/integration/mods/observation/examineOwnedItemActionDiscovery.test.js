@@ -72,10 +72,16 @@ describe('observation:examine_owned_item action definition', () => {
       ]);
     });
 
-    it('should have empty prerequisites array', () => {
+    it('should have lighting prerequisites', () => {
       expect(examineOwnedItemAction.prerequisites).toBeDefined();
       expect(Array.isArray(examineOwnedItemAction.prerequisites)).toBe(true);
-      expect(examineOwnedItemAction.prerequisites).toEqual([]);
+      expect(examineOwnedItemAction.prerequisites).toHaveLength(1);
+      expect(examineOwnedItemAction.prerequisites[0].logic).toEqual({
+        isActorLocationLit: ['actor'],
+      });
+      expect(examineOwnedItemAction.prerequisites[0].failure_message).toBe(
+        'It is too dark to examine anything.'
+      );
     });
   });
 

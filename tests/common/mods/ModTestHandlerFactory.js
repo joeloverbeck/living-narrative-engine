@@ -67,6 +67,8 @@ import ResolveOutcomeHandler from '../../../src/logic/operationHandlers/resolveO
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
 import EquipClothingHandler from '../../../src/logic/operationHandlers/equipClothingHandler.js';
 import ModifyPartHealthHandler from '../../../src/logic/operationHandlers/modifyPartHealthHandler.js';
+import PickRandomArrayElementHandler from '../../../src/logic/operationHandlers/pickRandomArrayElementHandler.js';
+import AutoMoveFollowersHandler from '../../../src/logic/operationHandlers/autoMoveFollowersHandler.js';
 import { EquipmentOrchestrator } from '../../../src/clothing/orchestration/equipmentOrchestrator.js';
 import { LayerCompatibilityService } from '../../../src/clothing/validation/layerCompatibilityService.js';
 
@@ -1627,6 +1629,16 @@ export class ModTestHandlerFactory {
       PICK_RANDOM_ENTITY: {
         execute: jest.fn().mockResolvedValue(undefined),
       },
+      PICK_RANDOM_ARRAY_ELEMENT: new PickRandomArrayElementHandler({
+        entityManager,
+        logger,
+      }),
+      AUTO_MOVE_FOLLOWERS: new AutoMoveFollowersHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeDispatcher,
+        moveEntityHandler: systemMoveEntityHandler,
+      }),
     };
   }
 }

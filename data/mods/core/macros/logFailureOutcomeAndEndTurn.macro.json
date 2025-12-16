@@ -16,7 +16,7 @@
       "type": "END_TURN",
       "parameters": {
         "entityId": "{event.payload.actorId}",
-        "success": false
+        "success": true
       }
     }
   ]

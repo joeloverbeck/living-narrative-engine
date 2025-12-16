@@ -269,6 +269,7 @@ export const coreTokens = freeze({
   TransferItemHandler: 'TransferItemHandler',
   ValidateInventoryCapacityHandler: 'ValidateInventoryCapacityHandler',
   DropItemAtLocationHandler: 'DropItemAtLocationHandler',
+  PickRandomArrayElementHandler: 'PickRandomArrayElementHandler',
   PickRandomEntityHandler: 'PickRandomEntityHandler',
   PickUpItemFromLocationHandler: 'PickUpItemFromLocationHandler',
   PrepareActionContextHandler: 'PrepareActionContextHandler',

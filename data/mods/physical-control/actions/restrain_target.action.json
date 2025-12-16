@@ -18,6 +18,12 @@
         "condition_ref": "anatomy:actor-has-two-free-grabbing-appendages"
       },
       "failure_message": "You need two free grabbing appendages to restrain someone."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to restrain anyone."
     }
   ],
   "targets": {

@@ -12,6 +12,7 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
   let jsonLogicService;
 
   beforeEach(() => {
@@ -37,10 +38,15 @@ describe('JsonLogicCustomOperators - Whitelist Validation', () => {
       getComponentData: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     jsonLogicService = new JsonLogicEvaluationService({

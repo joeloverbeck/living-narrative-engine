@@ -1,0 +1,66 @@
+{
+  "$schema": "schema://living-narrative-engine/action.schema.json",
+  "id": "movement:feel_your_way_to_an_exit",
+  "name": "Feel Your Way to an Exit",
+  "description": "Attempt to navigate in darkness by feeling for exits using awareness and spatial perception.",
+  "template": "feel your way to an exit ({chance}% chance)",
+  "generateCombinations": false,
+  "required_components": {
+    "actor": ["skills:awareness_skill"]
+  },
+  "forbidden_components": {
+    "actor": [
+      "positioning:bending_over",
+      "positioning:doing_complex_performance",
+      "positioning:being_restrained",
+      "positioning:restraining",
+      "positioning:fallen"
+    ]
+  },
+  "targets": "none",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "movement:actor-can-move"
+      },
+      "failure_message": "You cannot move without functioning legs."
+    },
+    {
+      "logic": {
+        "!": [{ "isActorLocationLit": ["actor"] }]
+      },
+      "failure_message": "There is enough light to see normally."
+    },
+    {
+      "logic": {
+        "locationHasExits": ["actor"]
+      },
+      "failure_message": "There are no exits from this location."
+    }
+  ],
+  "chanceBased": {
+    "enabled": true,
+    "contestType": "fixed_difficulty",
+    "fixedDifficulty": 50,
+    "formula": "linear",
+    "actorSkill": {
+      "component": "skills:awareness_skill",
+      "property": "value",
+      "default": 0
+    },
+    "bounds": {
+      "min": 5,
+      "max": 95
+    },
+    "outcomes": {
+      "criticalSuccessThreshold": 5,
+      "criticalFailureThreshold": 95
+    }
+  },
+  "visual": {
+    "backgroundColor": "#006064",
+    "textColor": "#e0f7fa",
+    "hoverBackgroundColor": "#00838f",
+    "hoverTextColor": "#ffffff"
+  }
+}

@@ -92,10 +92,15 @@ describe('exercise:show_off_biceps prerequisites', () => {
       gameDataRepository: mockGameDataRepository,
     });
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     // Register custom operators

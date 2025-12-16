@@ -29,6 +29,12 @@
         }
       },
       "failure_message": "You cannot follow that target right now."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to follow anyone."
     }
   ],
   "visual": {

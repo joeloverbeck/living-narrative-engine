@@ -66,11 +66,16 @@ describe('Actors Sitting With Space To Right - Integration Test', () => {
       },
     };
 
+    const mockLightingStateService = {
+      isLocationLit: () => true,
+    };
+
     // Register custom operators including hasSittingSpaceToRight
     const customOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManagerForOperators,
+      lightingStateService: mockLightingStateService,
     });
 
     customOperators.registerOperators(jsonLogicEval);

@@ -114,10 +114,14 @@ describe('AIGameStateProvider Integration Tests', () => {
     perceptionLogProvider = new PerceptionLogProvider();
     entitySummaryProvider = new EntitySummaryProvider();
     safeEventDispatcher = { dispatch: jest.fn() };
+    const mockLightingStateService = {
+      getLocationLightingState: jest.fn().mockReturnValue({ isLit: true }),
+    };
     locationSummaryProvider = new LocationSummaryProvider({
       entityManager: deps.entityManager,
       summaryProvider: entitySummaryProvider,
       safeEventDispatcher,
+      lightingStateService: mockLightingStateService,
     });
 
     return new AIGameStateProvider({

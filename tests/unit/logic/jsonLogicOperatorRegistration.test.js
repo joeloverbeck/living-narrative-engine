@@ -10,6 +10,7 @@ describe('JSON Logic Operator Registration', () => {
   let logger;
   let entityManager;
   let bodyGraphService;
+  let lightingStateService;
   let gameDataRepository;
   let customOperators;
   let evaluationService;
@@ -37,6 +38,10 @@ describe('JSON Logic Operator Registration', () => {
       hasPartWithStatusEffect: jest.fn(),
     };
 
+    lightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     gameDataRepository = {
       getConditionDefinition: jest.fn(() => null),
     };
@@ -48,6 +53,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({
@@ -69,6 +75,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({
@@ -91,6 +98,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({
@@ -112,6 +120,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({
@@ -156,6 +165,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({
@@ -299,6 +309,7 @@ describe('JSON Logic Operator Registration', () => {
         logger,
         bodyGraphService,
         entityManager,
+        lightingStateService,
       });
 
       evaluationService = new JsonLogicEvaluationService({

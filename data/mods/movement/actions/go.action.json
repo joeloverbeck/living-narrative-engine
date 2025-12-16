@@ -26,6 +26,12 @@
         "condition_ref": "movement:actor-can-move"
       },
       "failure_message": "You cannot move without functioning legs."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to see where you are going."
     }
   ],
   "visual": {

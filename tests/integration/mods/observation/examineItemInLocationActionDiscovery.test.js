@@ -85,12 +85,18 @@ describe('observation:examine_item_in_location action definition', () => {
       ]);
     });
 
-    it('should have empty prerequisites array', () => {
+    it('should have lighting prerequisites', () => {
       expect(examineItemInLocationAction.prerequisites).toBeDefined();
       expect(Array.isArray(examineItemInLocationAction.prerequisites)).toBe(
         true
       );
-      expect(examineItemInLocationAction.prerequisites).toEqual([]);
+      expect(examineItemInLocationAction.prerequisites).toHaveLength(1);
+      expect(examineItemInLocationAction.prerequisites[0].logic).toEqual({
+        isActorLocationLit: ['actor'],
+      });
+      expect(examineItemInLocationAction.prerequisites[0].failure_message).toBe(
+        'It is too dark to examine anything.'
+      );
     });
   });
 

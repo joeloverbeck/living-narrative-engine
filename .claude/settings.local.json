@@ -659,7 +659,9 @@
       "Bash(do if ! grep -q \"descriptors:\" \"$file\")",
       "Bash(then echo \"$file\")",
       "Bash(do if grep -q '\"\"\"\"sitting_on\"\"\"\"' \"$file\")",
-      "Bash(then basename \"$file\" grep -A 10 '\"\"\"\"forbidden_components\"\"\"\"' \"$file\")"
+      "Bash(then basename \"$file\" grep -A 10 '\"\"\"\"forbidden_components\"\"\"\"' \"$file\")",
+      "Bash(do echo '=== $item ===')",
+      "Bash(time npm run test:memory:*)"
     ],
     "deny": [],
     "ask": []

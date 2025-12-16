@@ -447,11 +447,17 @@ describe('Rub Vagina Over Clothes Action Discovery Integration Tests', () => {
       }
     });
 
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create new operators with current mock state
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
   }

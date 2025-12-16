@@ -26,6 +26,7 @@ import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import JsonLogicCustomOperators from '../../../src/logic/jsonLogicCustomOperators.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import DefaultDslParser from '../../../src/scopeDsl/parser/defaultDslParser.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
@@ -216,6 +217,33 @@ describe('Action Target Resolution Workflow E2E', () => {
 
     // Set up test world and actors
     await setupTestWorld();
+
+    // Create mock bodyGraphService for JsonLogicCustomOperators
+    const mockBodyGraphService = {
+      hasPartWithComponentValue: jest.fn().mockReturnValue(false),
+      findPartsByType: jest.fn().mockReturnValue([]),
+      getAllParts: jest.fn().mockReturnValue([]),
+      buildAdjacencyCache: jest.fn(),
+    };
+
+    // Create mock lightingStateService for JsonLogicCustomOperators
+    const mockLightingStateService = {
+      getLocationLightingState: jest.fn((locationId) => ({
+        isLit: true,
+        lightSources: [],
+      })),
+      isLocationLit: jest.fn((locationId) => true),
+    };
+
+    // Register custom operators so isActorLocationLit is available for prerequisites
+    const jsonLogicCustomOperators = new JsonLogicCustomOperators({
+      logger,
+      entityManager,
+      bodyGraphService: mockBodyGraphService,
+      lightingStateService: mockLightingStateService,
+    });
+    jsonLogicCustomOperators.registerOperators(jsonLogicEval);
+
     await setupCoreActions();
   });
 

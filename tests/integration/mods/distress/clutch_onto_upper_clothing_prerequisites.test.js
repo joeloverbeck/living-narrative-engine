@@ -87,10 +87,15 @@ describe('distress:clutch_onto_upper_clothing prerequisites', () => {
       gameDataRepository: mockGameDataRepository,
     });
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     // Register custom operators (includes hasFreeGrabbingAppendages)

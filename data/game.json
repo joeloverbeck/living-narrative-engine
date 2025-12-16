@@ -20,6 +20,7 @@
     "anatomy-creatures",
     "exercise",
     "dredgers",
+    "p_erotica_irun",
     "first-aid",
     "furniture",
     "gymnastics",
@@ -61,5 +62,5 @@
     "writing",
     "ranged"
   ],
-  "startWorld": "dredgers:dredgers"
+  "startWorld": "p_erotica_irun:irun"
 }

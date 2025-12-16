@@ -45,17 +45,18 @@ describe('SocketExposureOperator', () => {
     );
 
     expect(result).toBe(true);
+    // evaluateInternal is called with localContext (clone with _currentPath set)
     expect(mockIsSocketCovered.evaluateInternal).toHaveBeenNthCalledWith(
       1,
       'actor-1',
       ['left_socket'],
-      context
+      expect.objectContaining({ _currentPath: 'actor' })
     );
     expect(mockIsSocketCovered.evaluateInternal).toHaveBeenNthCalledWith(
       2,
       'actor-1',
       ['right_socket'],
-      context
+      expect.objectContaining({ _currentPath: 'actor' })
     );
   });
 

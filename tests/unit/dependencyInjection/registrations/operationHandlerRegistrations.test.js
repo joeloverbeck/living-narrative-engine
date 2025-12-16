@@ -157,6 +157,10 @@ const handlerModuleDefinitions = [
   ],
   ['PickRandomEntityHandler', `${handlerBasePath}/pickRandomEntityHandler.js`],
   [
+    'PickRandomArrayElementHandler',
+    `${handlerBasePath}/pickRandomArrayElementHandler.js`,
+  ],
+  [
     'PickUpItemFromLocationHandler',
     `${handlerBasePath}/pickUpItemFromLocationHandler.js`,
   ],
@@ -913,6 +917,14 @@ beforeAll(async () => {
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+      ],
+    },
+    {
+      token: tokens.PickRandomArrayElementHandler,
+      handlerName: 'PickRandomArrayElementHandler',
+      dependencies: [
+        { property: 'entityManager', token: IEntityManager },
+        { property: 'logger', token: ILogger },
       ],
     },
     {

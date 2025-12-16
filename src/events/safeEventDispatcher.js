@@ -231,6 +231,39 @@ export class SafeEventDispatcher extends ISafeEventDispatcher {
    * (due to validation failure, dispatch error, or exception).
    */
   async dispatch(eventName, payload, options = {}) {
+    // FAIL-FAST: Detect incorrect legacy object pattern
+    // Developers sometimes mistakenly call dispatch({ type: "X", payload: Y })
+    // instead of the correct dispatch("X", Y) signature
+    if (typeof eventName === 'object' && eventName !== null) {
+      const hasTypeProperty = 'type' in eventName;
+      const hasPayloadProperty = 'payload' in eventName;
+
+      if (hasTypeProperty || hasPayloadProperty) {
+        const detectedProps = [
+          hasTypeProperty ? '"type"' : null,
+          hasPayloadProperty ? '"payload"' : null,
+        ]
+          .filter(Boolean)
+          .join(' and ');
+
+        const errorMsg =
+          `SafeEventDispatcher.dispatch() requires (eventName, payload) signature. ` +
+          `Received object with ${detectedProps} properties. ` +
+          `Change: dispatch({ type: "X", payload: Y }) → dispatch("X", Y)`;
+
+        this.#logger.error(errorMsg, { receivedObject: eventName });
+        throw new Error(errorMsg);
+      }
+
+      // Generic object without type/payload - also wrong
+      const errorMsg =
+        `SafeEventDispatcher.dispatch() requires string eventName as first parameter. ` +
+        `Received: ${typeof eventName} (object). Expected: dispatch("eventName", payload)`;
+
+      this.#logger.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
     const dispatchResult = await this.#executeSafely(
       `dispatching event '${eventName}'`,
       () => this.#validatedDispatcher.dispatch(eventName, payload, options),

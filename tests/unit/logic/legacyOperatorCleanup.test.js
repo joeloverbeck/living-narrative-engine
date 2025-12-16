@@ -13,6 +13,7 @@ describe('Legacy Operator Cleanup', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
 
   beforeEach(() => {
     mockLogger = {
@@ -33,6 +34,10 @@ describe('Legacy Operator Cleanup', () => {
       getComponentData: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     evaluationService = new JsonLogicEvaluationService({
       logger: mockLogger,
       gameDataRepository: null,
@@ -42,6 +47,7 @@ describe('Legacy Operator Cleanup', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
   });
 

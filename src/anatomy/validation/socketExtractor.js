@@ -482,14 +482,10 @@ export async function resolveEntityId(partType, dataRegistry, preferredNamespace
       return aUnderscores - bUnderscores;
     }
 
-    // Rule 3: Alphabetical for determinism
-    const alpha = aId.localeCompare(bId);
-    if (alpha !== 0) {
-      return alpha;
-    }
-
-    // Rule 4: Shorter ID = higher priority (fallback)
-    return aId.length - bId.length;
+    // Rule 3: Alphabetical for determinism (final tiebreaker)
+    // Note: localeCompare always returns non-zero for different strings,
+    // so no additional fallback is needed
+    return aId.localeCompare(bId);
   });
 
   const candidateIds = candidates.map((entity) => entity.id).filter(Boolean);
@@ -641,10 +637,6 @@ async function extractComposedSlots(
     let library = null;
     if (part.library) {
       library = await getSlotLibrary(dataRegistry, part.library);
-      // DEBUG: Log library loading
-      console.log(
-        `[DEBUG socketExtractor] Library ${part.library}: ${library ? 'LOADED' : 'NOT FOUND'}`
-      );
     }
 
     // First pass: collect all resolved slots and register them as valid parents
