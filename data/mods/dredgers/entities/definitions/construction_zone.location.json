@@ -1,0 +1,35 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:construction_zone",
+    "components": {
+        "core:name": {
+            "text": "construction zone"
+        },
+        "core:description": {
+            "text": "A carved-open bite taken out of the lower galleries where the renovation work has punched through: timber shoring frames, scaffold braces, stacked rubble, and raw earth exposed where finished stone used to be. The ceiling is higher here, but it’s a cluttered height—beams and supports crossing like a rough cage. Chalk marks and measuring strings lace the walls; a few abandoned tools sit where workers dropped them and never came back. The lighting is practical and ugly: lanterns on hooks, soot-stained glass, shadows in every corner. There’s a sharp mix of smells—wet stone, fresh-split timber, and the sour hint of canal rot seeping in from somewhere deeper. You can see where the culvert line was uncovered: a section of old channel wall exposed like bone, with mud and silt packed hard around it."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/construction_zone.png",
+            "altText": "A carved-open bite taken out of the lower galleries where the renovation work has punched through"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the lower gallery",
+                "target": "dredgers:lower_gallery_instance",
+                "blocker": null
+            },
+            {
+                "direction": "into the access point",
+                "target": "dredgers:access_point_segment_a_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "The space opens around you—you sense it in the changed echo and the way the air moves. Dust particles tickle your throat with each breath. Somewhere, timbers creak under settling weight. The ground is treacherous: loose gravel, abandoned tools, unseen drops. The smell of disturbed earth and old iron hangs heavy."
+        }
+    }
+}

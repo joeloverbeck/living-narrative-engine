@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:flooded_approach_instance",
+    "definitionId": "dredgers:flooded_approach"
+  }
+  

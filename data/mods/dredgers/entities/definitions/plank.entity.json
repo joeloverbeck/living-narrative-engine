@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:plank",
+  "description": "A sturdy wooden plank for laying stable walking strips over suction mud",
+  "components": {
+    "core:name": {
+      "text": "plank"
+    },
+    "core:description": {
+      "text": "A length of dock timber, worn smooth on top and rough on the underside for grip. Dredgers lay these across suction mud, the kind of black mire that'll pull a boot off your foot and swallow it before you can curse. The wood is dense and heavy, tarred at the ends to keep the rot from creeping in, and scarred from being thrown down and hauled up more times than the grain can remember. Three of these laid end to end will get you across a bad patch—assuming you trust your balance and the plank-layer's eye for solid edges."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 8.0
+    },
+    "core:material": {
+      "material": "wood",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "dock-brown"
+    },
+    "descriptors:texture": {
+      "texture": "rough"
+    }
+  }
+}

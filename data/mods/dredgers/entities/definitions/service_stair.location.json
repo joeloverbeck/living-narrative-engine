@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:service_stair",
+    "components": {
+        "core:name": {
+            "text": "service stair"
+        },
+        "core:description": {
+            "text": "A narrow, staff-only stairwell tucked into the east wing—stone steps worn into a shallow dish from decades of boots and buckets. The walls are close and sweat-cold, plaster over brick with dark timber trim that’s been scuffed by carried crates. A handrail runs along one side, smooth where hands have polished it; on the other, iron hooks hold a few spare lanterns and coil ends of rope that no one remembers claiming. The air changes as you descend: upstairs polish and fabric gives way to damp lime and old stone. Sound carries weirdly—voices above turn into muffled thumps, while anything below echoes up like it’s coming from a deeper throat."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/service_stair.png",
+            "altText": "A narrow, staff-only stairwell"
+        },
+        "movement:exits": [
+            {
+                "direction": "down to the lower gallery",
+                "target": "dredgers:lower_gallery_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

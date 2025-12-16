@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "accessories:seal_ring_iron_kiln_black",
+  "description": "A seal ring in iron, kiln-black color",
+  "components": {
+    "clothing:wearable": {
+      "layer": "accessories",
+      "equipmentSlots": {
+        "primary": "hands"
+      },
+      "allowedLayers": ["accessories"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["hands"],
+      "coveragePriority": "accessories"
+    },
+    "core:material": {
+      "material": "iron"
+    },
+    "core:name": {
+      "text": "seal ring"
+    },
+    "core:description": {
+      "text": "A heavy ring of kiln-blackened iron, its face bearing an engraved seal for pressing into wax. The band is thick and unadorned, practical rather than decorative. The seal itself shows a geometric pattern—perhaps a guild mark or house sigil, rendered in the simple lines that transfer cleanly to soft wax. Iron rather than silver or gold: the choice of someone who values function and durability over display, or who serves an institution that prizes such virtues. The black finish speaks of careful treatment, the metal sealed against rust and wear."
+    },
+    "descriptors:color_extended": {
+      "color": "kiln-black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.05
+    }
+  }
+}

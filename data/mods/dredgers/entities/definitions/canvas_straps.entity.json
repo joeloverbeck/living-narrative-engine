@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:canvas_straps",
+  "description": "Heavy canvas webbing straps for slinging objects from underneath during lifting",
+  "components": {
+    "core:name": {
+      "text": "canvas straps"
+    },
+    "core:description": {
+      "text": "A bundle of heavy canvas webbing, the kind that can take weight without cutting into whatever it's holding. The straps are wide and flat, reinforced at the ends with brass grommets for threading rope or hooking to tackle. When trenching exposes the base of something buried, these go underneath—slipped through the mud, worked around corners, cinched tight before the lift begins. The canvas has gone dark from use, stained with the particular gray-brown of tunnel silt, but the weave holds strong. It's the difference between a controlled recovery and a dropped load that breaks what you're trying to save."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.0
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["flexible"]
+    },
+    "descriptors:color_extended": {
+      "color": "hemp-tan"
+    },
+    "descriptors:texture": {
+      "texture": "rugged"
+    }
+  }
+}

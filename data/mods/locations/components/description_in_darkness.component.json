@@ -1,0 +1,16 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "locations:description_in_darkness",
+  "description": "Alternative description shown when location is in darkness. Should focus on non-visual senses.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "description": "Description emphasizing sounds, smells, textures, and atmosphere in darkness"
+      }
+    },
+    "required": ["text"],
+    "additionalProperties": false
+  }
+}

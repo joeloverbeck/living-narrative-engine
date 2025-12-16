@@ -1,0 +1,35 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:access_point_segment_a",
+    "components": {
+        "core:name": {
+            "text": "access point (segment A)"
+        },
+        "core:description": {
+            "text": "A choke-throat opening where “estate tunnels” stop and the canal-run begins: a low arched mouth framed in ancient stone, edges slick with condensation and blackened hand-smears from workers testing their courage. Immediately past it, the space divides into two parallel truths: a narrow muddied path pressed against one wall, and beside it an actual channel of stagnant, tar-dark water—wrong-looking even when it’s still. The air changes fast here—colder, heavier, and carrying that sour-metal rot in a way you can taste. The ceiling drops; lantern light has to fight to reach the far wall. This is where rope gets clipped, roles get assigned, and everyone starts watching everyone else’s eyes."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/access_point_segment_a.png",
+            "altText": "A choke-throat opening where \"estate tunnels\" stop and the canal-run begins."
+        },
+        "movement:exits": [
+            {
+                "direction": "to the construction zone",
+                "target": "dredgers:construction_zone_instance",
+                "blocker": null
+            },
+            {
+                "direction": "to segment B",
+                "target": "dredgers:segment_b_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "The tunnel swallows all light. Your hand finds damp brick when you reach out—rough mortar gaps where fingers catch. The air is stale and close, with an undertone of something organic and old. Each sound you make returns to you distorted, stretched by the passage's length."
+        }
+    }
+}

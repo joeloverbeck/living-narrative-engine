@@ -41,6 +41,8 @@
  * @property {AILocationExitDTO[]} exits - An array of available exits.
  * @property {AICharacterInLocationDTO[]} characters - An array of other characters in the location.
  * @property {string[]} [items] - Optional. Summary of notable items. (Future consideration)
+ * @property {boolean} [isLit] - Whether location is lit (undefined = lit for backward compat).
+ * @property {string} [descriptionInDarkness] - Optional sensory description for darkness.
  */
 
 /**

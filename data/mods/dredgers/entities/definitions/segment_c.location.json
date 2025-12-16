@@ -1,0 +1,35 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:segment_c",
+    "components": {
+        "core:name": {
+            "text": "segment C"
+        },
+        "core:description": {
+            "text": "The run grows more unstable: the ceiling dips and humps, timber braces appear intermittently like someone tried to argue with gravity and only half won. The footpath is more slurry than ground—mud kneaded by boots into a slick paste over uneven stone. The water channel presses close and looks more “alive” in the worst way, with slow folds and lazy eddies that shouldn’t exist without a current. There are more places where you can’t see the bottom—even in the shallows—because the water is opaque and the silt hangs in it like smoke. The sense of being pulled toward it becomes harder to ignore, like the space itself is politely suggesting you step in and stop resisting."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/segment_c.png",
+            "altText": "An unstable segment of the run."
+        },
+        "movement:exits": [
+            {
+                "direction": "to segment B",
+                "target": "dredgers:segment_b_instance",
+                "blocker": null
+            },
+            {
+                "direction": "to the flooded approach",
+                "target": "dredgers:flooded_approach_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "The dark here feels heavier, older. Water trickles nearby—not dripping but flowing, a thin stream somewhere below floor level. The walls vibrate faintly with some distant mechanical thrumming. The air tastes of copper and wet stone."
+        }
+    }
+}

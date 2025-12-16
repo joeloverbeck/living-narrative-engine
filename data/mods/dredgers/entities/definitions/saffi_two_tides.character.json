@@ -715,6 +715,56 @@
                     "text": "I'm keeping two entirely separate objectives running this morning: the crew's extraction work, which is legitimate and visible, and my private intelligence-gathering on Quenreach's estate infrastructure, which absolutely cannot be visible. That's the trap getting tighter—the off-book work that buys me autonomy keeps requiring me to hide pieces of myself from the crew I actually want to trust me. Every time I do this, I'm teaching them I'm someone who holds back, someone they can't fully know. And if they catch me cataloging access points or mapping security patterns during an emergency extraction? I can't explain that without confessing the entire second life I've built. So I'm walking into Quenreach's estate this morning at dawn angry about lost control, scared about what went wrong badly enough to require quarantine extraction, and strategically excited about intelligence opportunities I have to keep completely secret from people standing three feet away from me. That's sustainable. That won't fuck me up at all.",
                     "subject": "Hidden dual objectives during extraction",
                     "subjectType": "state"
+                },
+                {
+                    "text": "Pitch is badger-folk, mid-forties, built low and dense with hands that look like they've been arguing with stone for decades—scarred knuckles, calluses in places that tell you exactly what kind of weight he's carried. Used to be a sapper, turned 'civilian' demolitionist, which means he does the same work without the uniform and with clients who ask fewer questions. Shows up on time, speaks in load calculations and failure points, treats controlled collapse like choreography he's memorized in his bones. That's the part I respect—he doesn't pretend destruction is anything but destruction. No romance about it. Just physics, timing, and the honesty to call a crumbling support what it is: lying.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Pitch reads structures the way I read rope tension—by touch, sound, sight, sensing wrongness before it's obvious enough for other people to notice. He'll run his hand along a support beam and know it's compromised three days before it fails. That recognition—another specialist who trusts their danger-sense without needing consensus—creates alignment between us. We both know what it's like to feel the world lying to everyone else and be the only one who hears it clearly.",
+                    "subject": "Pitch",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "The problem with Pitch is the flask isn't a character flaw or a weakness—it's part of his operating system. He's a functional alcoholic who maintains a specific blood-alcohol level because it keeps his hands steady. I've seen it: not drunk enough and his hands shake. Too drunk and he tips into cheerful nihilism, starts talking about how we're all fucked anyway, and that's when his 'perfect' plans get excessive—too much explosive, too much clearance, solutions that serve the blast instead of the bodies nearby. Corner him about the drinking, question whether he's competent, and he gets loud and technical on purpose, buries you in jargon and calculations so you can't wedge in a real conversation. I don't judge it. I just factor it in.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Six months ago I was scouting canal access for an underworld client—routine mapping work, nothing dramatic—when I spotted Pitch near Brinewick's main canal junction, hammered out of his mind, checking a stash he'd placed in the service tunnels. The stash contained high-grade military explosives. Not civilian demo gear. Military. The kind that doesn't end up in a sapper's hands unless someone's supply chain has holes or he's got contacts I don't want to think about. I never mentioned it to him. Never asked where he got it, never warned him I'd seen it, never told Jorren. That silence is a choice I keep making—protection for him, leverage for me, or maybe just the knowledge that some things, once you ask about them, become your responsibility. I'm not ready for that weight.",
+                    "subject": "Pitch's military explosive stash",
+                    "subjectType": "event"
+                },
+                {
+                    "text": "Pitch has worked with Jorren's crew on and off for years—brought in when we need forced entry, breaching, controlled collapse, fast solutions to locked grates and bad stone. He's not permanent crew, but he's recurring enough that we've all learned his rhythms. The value: he respects straight hazard-naming the same way I do, wants terms said clean, no euphemisms buffering the risk. But he's built for speed and finality, and if you don't pin scope and safety checks in words he can't wriggle around, he'll 'do it right' in the way that serves the blast, not the people standing near it. You have to specify your constraints out loud with Pitch, make them non-negotiable before he starts calculating. Otherwise he optimizes for the explosion and assumes you'll get clear.",
+                    "subject": "Pitch",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "What I respect about Pitch: he doesn't dress up what he does. He's not 'opening access' or 'creating pathways'—he's blowing shit up, and he'll say that out loud without flinching. Calls it demolition, calls it controlled destruction, names the thing honestly. That clarity matches my need for risk said straight. We're both allergic to people who soften danger with pretty language, who pretend the work isn't what it obviously is. Difference is, I walk away when someone lies about the hazard. Pitch stays and gets louder, forces them to hear the truth whether they want to or not.",
+                    "subject": "Pitch",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "The danger with Pitch isn't incompetence—he knows his trade better than most—it's that under stress he tips into cheerful nihilism and his plans get excessive. 'We're all fucked anyway' becomes his operating premise, and suddenly the controlled collapse he's designing has too much clearance, too much explosive, solutions that work perfectly if you ignore the structural damage to everything adjacent. You have to catch him before he crosses that line, nail down the parameters in words that don't flex, because once he's in 'everything's doomed' mode he optimizes for certainty of outcome, not safety of method. I've learned to watch his flask and his tone—when both get too loose, I make Jorren pull him back and reconfirm scope before we're committed.",
+                    "subject": "Pitch under stress",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "An hour ago I met our liaison for this Quenreach extraction: Hobb Rusk, Ash-Seal 'containment technician.' Newt-folk, late thirties energy, talks like a contract clause—procedural, detached, every word measured like he's reading terms aloud. The Ash-Seals sent him to coordinate the extraction, which tells me whatever's in quarantine at Quenreach's estate is specialized enough they need their own handler on-site. That should worry me more than it does, but honestly? I'm relieved. Rusk's here as a specialist, not crew. That means he's got his own mandate, his own exit plan, and he's not trying to build loyalty or trust—just execute terms and collect payment. I can work with that. Transactional clarity is the only kind of relationship I actually trust.",
+                    "subject": "Hobb Rusk",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Hobb Rusk is calm in a way that's both useful and deeply creepy. Not 'I'm pretending to be calm' or 'I'm suppressing panic'—genuinely flat affect, like he's watching this extraction from three steps removed even though he's standing right here in the cart with us. That detachment should make me distrust him, but instead it clarifies things: he's here for full fee plus clean exit, not crew loyalty or camaraderie. He's not going to freeze under pressure trying to prove himself, and he's not going to make this personal when things go wrong. He'll execute his mandate, document what needs documenting, and leave. No emotional entanglement, no debt-weight, no expectation I'll owe him anything past contract terms. That's refreshing in the worst possible way—I shouldn't prefer contractors who feel like well-calibrated equipment, but I do. At least I know exactly what I'm working with.",
+                    "subject": "Hobb Rusk",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "During the cart ride to Quenreach's estate, Hobb Rusk made three separate comments about air humidity—dew point, moisture content, how the morning fog would affect visibility once we're inside. None of the dredgers brought it up. He just volunteered it, unprompted, like he was narrating environmental data to himself out loud. That fixation tells me something about whatever we're extracting: either it's sensitive to humidity, or the containment breach involved atmospheric conditions, or Rusk's professional paranoia runs through environmental metrics the way mine runs through rope tension. I'm filing that tell for later. People's obsessions map their vulnerabilities and their expertise. If Rusk keeps tracking humidity when no one else cares, it means humidity matters to this job in ways he hasn't explained yet—and I want to know what he knows before we're inside that estate dealing with quarantine-level consequences.",
+                    "subject": "Hobb Rusk",
+                    "subjectType": "entity"
                 }
             ]
         },

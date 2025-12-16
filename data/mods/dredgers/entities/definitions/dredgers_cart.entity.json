@@ -1,0 +1,24 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:dredgers_cart",
+  "description": "A low, stubborn work cart with bench seating and tool storage, built for dredgers who value function over form",
+  "components": {
+    "core:name": {
+      "text": "dredgers' cart"
+    },
+    "core:description": {
+      "text": "The dredgers' cart sits low and stubborn on its axles, built less like a gentleman's conveyance and more like a moving worksite. Its bed is long enough for five bodies to ride without stacking knees—two narrow bench-planks bolted along the sides, a third cross-plank at the front for the driver, all of them worn smooth where wet trousers and tool-belts have rubbed the grain for years. The wood is dark from river weather, tarred in places, patched in others, and bound with iron straps that don't pretend to match—whatever was on hand, whatever kept it from splitting when the road turns to ruts. A shallow canopy frame rises over the rear half, not for comfort but for keeping gear from drowning in rain. Oilcloth is lashed over it in a blunt, functional drape—creased, stained, and secured with knotted cord that's been tightened and retightened until it looks like part of the cart. Under that cover, the tool load is packed by habit: heavy items low and forward to keep the tongue steady, lighter bundles tied high and back. Everything about the cart says the same thing: it carries people because it must, and it carries tools because tools are the reason it's here."
+    },
+    "items:item": {},
+    "items:openable": {},
+    "positioning:allows_sitting": {
+      "spots": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "locations:light_sources",
+  "description": "Array of active light source entity IDs providing illumination at this location.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "sources": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Entity IDs of active light sources"
+      }
+    },
+    "required": ["sources"],
+    "additionalProperties": false
+  }
+}

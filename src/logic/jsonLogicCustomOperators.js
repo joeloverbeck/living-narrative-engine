@@ -616,11 +616,9 @@ export class JsonLogicCustomOperators extends BaseService {
   clearCaches() {
     this.#logger.debug('Clearing custom operator caches');
 
-    // socketExposureOp delegates to isSocketCoveredOp, so prefer it to avoid double clearing
+    // socketExposureOp delegates to isSocketCoveredOp internally
     if (this.socketExposureOp) {
       this.socketExposureOp.clearCache();
-    } else if (this.isSocketCoveredOp) {
-      this.isSocketCoveredOp.clearCache();
     }
   }
 }

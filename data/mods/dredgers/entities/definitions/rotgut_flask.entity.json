@@ -1,0 +1,26 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:rotgut_flask",
+  "components": {
+    "core:conspicuous": {},
+    "core:name": {
+      "text": "battered tin flask"
+    },
+    "core:description": {
+      "text": "A dented tin flask with tarnished brass hinges and a leather wrap worn smooth by years of nervous handling. The cap is attached by a fine chain, and the metal is etched with old guild markings long since scratched over. It reeks faintly of harsh spirits."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.4
+    },
+    "items:drinkable": {},
+    "containers-core:liquid_container": {
+      "currentVolumeMilliliters": 250,
+      "maxCapacityMilliliters": 250,
+      "servingSizeMilliliters": 30,
+      "isRefillable": true,
+      "flavorText": "The rotgut hits like liquid fire, searing down your throat and settling in your gut with a spreading warmth that borders on pain. It tastes of burnt grain and regret, but it does the job—steadies the hands, quiets the memories."
+    }
+  }
+}

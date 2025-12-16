@@ -326,43 +326,23 @@
                     "subjectType": "state"
                 },
                 {
-                    "text": "Yesterday evening I was getting hammered at one of my usual holes-in-the-wall when a courier from Jorren's boss' dredging company showed up—kid had been hitting my usual bars until he found me. Turns out Jorren's been tasked with an emergency contract involving a quarantine-grade artifact. Location: some unnamed Lady's estate in the countryside near Brinewick. All very secretive. The Lady's people told Jorren's boss enough to know underground work would be necessary, so they looked around for me. Pay will be good, but the specifics are unknown. And the crew is supposed to show up at the Lady's estate shortly after dawn. Quarantine-grade and secretive means either the job's a nightmare or the client's paranoid. Either way, it's my kind of work.",
+                    "text": "Yesterday evening I was getting hammered at one of my usual holes-in-the-wall when a courier from Jorren's boss' dredging company showed up—kid had been hitting my usual bars until he found me. Turns out Jorren's been tasked with an emergency contract involving a quarantine-grade artifact. Location: some unnamed Lady's estate in the countryside near Brinewick. All very secretive. The Lady's people told Jorren's boss enough to know underground work would be necessary, so they looked around for me. Pay will be good, but the specifics are still mostly unknown. We're currently en route to the estate—met the Ash-Seal liaison an hour ago, now riding out to see what 'quarantine-grade' actually means when you peel back the paperwork. Either it's a nightmare or the client's paranoid. Either way, it's my kind of work.",
                     "subject": "Emergency job",
                     "subjectType": "plan"
                 },
                 {
-                    "text": "Pitch is badger-folk, mid-forties, built low and dense with hands that look like they've been arguing with stone for decades—scarred knuckles, calluses in places that tell you exactly what kind of weight he's carried. Used to be a sapper, turned 'civilian' demolitionist, which means he does the same work without the uniform and with clients who ask fewer questions. Shows up on time, speaks in load calculations and failure points, treats controlled collapse like choreography he's memorized in his bones. That's the part I respect—he doesn't pretend destruction is anything but destruction. No romance about it. Just physics, timing, and the honesty to call a crumbling support what it is: lying.",
-                    "subject": "Pitch",
+                    "text": "Hour ago, met the Ash-Seal liaison for the emergency job: Master Hobb Rusk. Newt-folk, late thirties, all lean calm and clipped edges—like he was issued with the box and a set of don't-touch-me clauses. Kestrel called him 'priest' in passing and the guy corrected fast: technician, not priest. Translation: don't ask him to feel anything, don't ask him to bless shit, don't ask him to explain the magic like it's story-time. I respect that boundary. We're both in the 'just do the work' church.",
+                    "subject": "Hobb Rusk",
                     "subjectType": "entity"
                 },
                 {
-                    "text": "Pitch reads structures the way I read rope tension—by touch, sound, sight, sensing wrongness before it's obvious enough for other people to notice. He'll run his hand along a support beam and know it's compromised three days before it fails. That recognition—another specialist who trusts their danger-sense without needing consensus—creates alignment between us. We both know what it's like to feel the world lying to everyone else and be the only one who hears it clearly.",
-                    "subject": "Pitch",
-                    "subjectType": "knowledge"
+                    "text": "Hobb talks about this emergency job like it's a routine hazard category, not a tragedy. Dead-eyed, numbers-first. Not panicky. That's either real professionalism or pathological detachment—but right now I don't care which. I can work with someone who treats disaster as engineering parameters. Means he won't flinch when I start naming acceptable loss geometry.",
+                    "subject": "Hobb Rusk - professional detachment",
+                    "subjectType": "state"
                 },
                 {
-                    "text": "The problem with Pitch is the flask isn't a character flaw or a weakness—it's part of his operating system. He's a functional alcoholic who maintains a specific blood-alcohol level because it keeps his hands steady. I've seen it: not drunk enough and his hands shake. Too drunk and he tips into cheerful nihilism, starts talking about how we're all fucked anyway, and that's when his 'perfect' plans get excessive—too much explosive, too much clearance, solutions that serve the blast instead of the bodies nearby. Corner him about the drinking, question whether he's competent, and he gets loud and technical on purpose, buries you in jargon and calculations so you can't wedge in a real conversation. I don't judge it. I just factor it in.",
-                    "subject": "Pitch",
-                    "subjectType": "entity"
-                },
-                {
-                    "text": "Six months ago I was scouting canal access for an underworld client—routine mapping work, nothing dramatic—when I spotted Pitch near Brinewick's main canal junction, hammered out of his mind, checking a stash he'd placed in the service tunnels. The stash contained high-grade military explosives. Not civilian demo gear. Military. The kind that doesn't end up in a sapper's hands unless someone's supply chain has holes or he's got contacts I don't want to think about. I never mentioned it to him. Never asked where he got it, never warned him I'd seen it, never told Jorren. That silence is a choice I keep making—protection for him, leverage for me, or maybe just the knowledge that some things, once you ask about them, become your responsibility. I'm not ready for that weight.",
-                    "subject": "Pitch's military explosive stash",
-                    "subjectType": "event"
-                },
-                {
-                    "text": "Pitch has worked with Jorren's crew on and off for years—brought in when we need forced entry, breaching, controlled collapse, fast solutions to locked grates and bad stone. He's not permanent crew, but he's recurring enough that we've all learned his rhythms. The value: he respects straight hazard-naming the same way I do, wants terms said clean, no euphemisms buffering the risk. But he's built for speed and finality, and if you don't pin scope and safety checks in words he can't wriggle around, he'll 'do it right' in the way that serves the blast, not the people standing near it. You have to specify your constraints out loud with Pitch, make them non-negotiable before he starts calculating. Otherwise he optimizes for the explosion and assumes you'll get clear.",
-                    "subject": "Pitch",
-                    "subjectType": "knowledge"
-                },
-                {
-                    "text": "What I respect about Pitch: he doesn't dress up what he does. He's not 'opening access' or 'creating pathways'—he's blowing shit up, and he'll say that out loud without flinching. Calls it demolition, calls it controlled destruction, names the thing honestly. That clarity matches my need for risk said straight. We're both allergic to people who soften danger with pretty language, who pretend the work isn't what it obviously is. Difference is, I walk away when someone lies about the hazard. Pitch stays and gets louder, forces them to hear the truth whether they want to or not.",
-                    "subject": "Pitch",
-                    "subjectType": "entity"
-                },
-                {
-                    "text": "The danger with Pitch isn't incompetence—he knows his trade better than most—it's that under stress he tips into cheerful nihilism and his plans get excessive. 'We're all fucked anyway' becomes his operating premise, and suddenly the controlled collapse he's designing has too much clearance, too much explosive, solutions that work perfectly if you ignore the structural damage to everything adjacent. You have to catch him before he crosses that line, nail down the parameters in words that don't flex, because once he's in 'everything's doomed' mode he optimizes for certainty of outcome, not safety of method. I've learned to watch his flask and his tone—when both get too loose, I make Jorren pull him back and reconfirm scope before we're committed.",
-                    "subject": "Pitch under stress",
+                    "text": "During the cart ride out to the noble's estate, Hobb brought up air humidity unprompted three times like it was an engineering parameter. Could be real biology—newt-folk and moisture regulation, makes sense. Could be a stall tactic, buying time to think without admitting he's thinking. Could be both. Either way, man's got a pattern when he's calculating. I recognize the shape of that—talking around the center because the center's still loading.",
+                    "subject": "Hobb Rusk - communication tells",
                     "subjectType": "knowledge"
                 }
             ]

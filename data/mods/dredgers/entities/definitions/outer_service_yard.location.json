@@ -1,0 +1,23 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:outer_service_yard",
+    "components": {
+        "core:name": {
+            "text": "outer service yard"
+        },
+        "core:description": {
+            "text": "The dredgers' cart sits in the estate's outer service yard, a wedge of hard-used ground caught between the mansion's east wing and the boundary fence. The place isn't landscaped so much as managed: packed gravel hammered into ruts by delivery wagons, a strip of slick stone set as a walkway, and a shallow runnel cut along the yard's edge to shunt rainwater toward a drain. Everything here is built to take mud and keep moving. A tall iron fence runs the perimeter—spear-tipped bars set into a low stone wall—broken by a service gate wide enough for carts. Beyond it, the fog eats the street and the canal landing, turning distance into a damp blank. Nearer, a line of trimmed hedge tries to pretend the yard belongs to the estate's elegance, but the illusion fails where the ground is churned dark by boots and wheels. The canal is close enough that its presence presses into the yard. It runs just beyond the fence line, parallel to it, separated by a narrow towpath and a strip of stonework that's sweating moisture. The water below is wrong—tar-black and sluggish, filmed with a dull sheen that catches lamplight in greasy swirls. The smell reaches the yard in waves: sour rot and something metallic under it, like wet iron left too long in a bucket."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/outer_service_yard.png",
+            "altText": "Eira Quenreach's estate's outer service yard"
+        },
+        "movement:exits": [
+            {
+                "direction": "into the mansion",
+                "target": "dredgers:canal_vestibule_instance",
+                "blocker": null
+            }
+        ]
+    }
+}

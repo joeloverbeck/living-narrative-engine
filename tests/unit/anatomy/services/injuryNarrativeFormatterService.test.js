@@ -1922,6 +1922,453 @@ describe('InjuryNarrativeFormatterService', () => {
 
       expect(result).toBe('Torso is bruised.');
     });
+
+    it('should include burning effects for non-vital parts', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        burningParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Left arm is burning');
+    });
+
+    it('should include poisoned effects for non-vital parts', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        poisonedParts: [
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Right leg is poisoned');
+    });
+
+    it('should filter out burning parts that are vital organs', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        burningParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            isVitalOrgan: true,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Left arm is burning');
+      expect(result).not.toContain('heart');
+    });
+
+    it('should filter out poisoned parts that are vital organs', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        poisonedParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'liver-1',
+            partType: 'liver',
+            orientation: null,
+            isVitalOrgan: true,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Torso is poisoned');
+      expect(result).not.toContain('liver');
+    });
+
+    it('should filter out burning parts that have been dismembered', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        burningParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'finger-1',
+            partType: 'finger',
+            orientation: 'right',
+            isVitalOrgan: false,
+          },
+        ],
+        dismemberedParts: [
+          {
+            partEntityId: 'finger-1',
+            partType: 'finger',
+            orientation: 'right',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Left arm is burning');
+      // The finger should not appear as burning since it was dismembered
+      // The dismemberment would be reported separately
+    });
+
+    it('should include both burning and poisoned effects when present', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        burningParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            isVitalOrgan: false,
+          },
+        ],
+        poisonedParts: [
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toContain('Left arm is burning');
+      expect(result).toContain('Right leg is poisoned');
+    });
+
+    it('should handle multiple destroyed parts with pluralization', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'destroyed',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'arm-2',
+            partType: 'arm',
+            orientation: 'right',
+            state: 'destroyed',
+            isVitalOrgan: false,
+          },
+        ],
+        destroyedParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'destroyed',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'arm-2',
+            partType: 'arm',
+            orientation: 'right',
+            state: 'destroyed',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // With multiple destroyed parts, should use plural "have been destroyed"
+      expect(result).toContain('have been destroyed');
+    });
+
+    it('should format list with exactly two items using "and"', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // Two wounded items should be formatted as "X and Y"
+      expect(result).toMatch(/left arm and right leg|right leg and left arm/i);
+    });
+
+    it('should format list with three or more items using Oxford comma', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // Three items should use Oxford comma: "X, Y, and Z"
+      expect(result).toMatch(/, and /);
+    });
+
+    it('should filter cosmetic damage parts that are vital organs', () => {
+      const summary = createBaseSummary({
+        injuredParts: [],
+        cosmeticDamageParts: [
+          {
+            partEntityId: 'skin-1',
+            partType: 'skin',
+            orientation: null,
+            isVitalOrgan: false,
+          },
+          {
+            partEntityId: 'heart-1',
+            partType: 'heart',
+            orientation: null,
+            isVitalOrgan: true,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // Only cosmetic parts visible, vital organs filtered
+      expect(result).toBe('Cosmetic scuffs.');
+    });
+
+    it('should return Cosmetic scuffs when only cosmetic damage parts exist', () => {
+      const summary = createBaseSummary({
+        injuredParts: [],
+        destroyedParts: [],
+        dismemberedParts: [],
+        bleedingParts: [],
+        burningParts: [],
+        poisonedParts: [],
+        fracturedParts: [],
+        surfaceDamageParts: [],
+        cosmeticDamageParts: [
+          {
+            partEntityId: 'skin-1',
+            partType: 'skin',
+            orientation: null,
+            isVitalOrgan: false,
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // When only cosmetic damage parts exist but no other narrative, return "Cosmetic scuffs."
+      expect(result).toBe('Cosmetic scuffs.');
+    });
+
+    it('should return Perfect health when no visible data exists', () => {
+      // Create summary with all arrays empty or undefined
+      const summary = createBaseSummary({
+        injuredParts: [],
+        destroyedParts: [],
+        dismemberedParts: [],
+        bleedingParts: [],
+        burningParts: [],
+        poisonedParts: [],
+        fracturedParts: [],
+        surfaceDamageParts: [],
+        cosmeticDamageParts: [],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      expect(result).toBe('Perfect health.');
+    });
+
+    it('should include surface damage in visible narrative', () => {
+      const summary = createBaseSummary({
+        injuredParts: [],
+        destroyedParts: [],
+        dismemberedParts: [],
+        bleedingParts: [],
+        burningParts: [],
+        poisonedParts: [],
+        fracturedParts: [],
+        cosmeticDamageParts: [],
+        surfaceDamageParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'healthy',
+            isVitalOrgan: false,
+            damageSeverity: 'standard',
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // Surface damage is added to visibleNarrative, returned via join
+      expect(result).toBe('Torso is bruised.');
+    });
+
+    it('should exclude surface damage parts that duplicate cosmetic damage parts', () => {
+      const summary = createBaseSummary({
+        injuredParts: [
+          {
+            partEntityId: 'arm-1',
+            partType: 'arm',
+            orientation: 'left',
+            state: 'wounded',
+            isVitalOrgan: false,
+          },
+        ],
+        cosmeticDamageParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            isVitalOrgan: false,
+          },
+        ],
+        surfaceDamageParts: [
+          {
+            partEntityId: 'torso-1',
+            partType: 'torso',
+            orientation: null,
+            state: 'healthy',
+            isVitalOrgan: false,
+            damageSeverity: 'standard',
+          },
+          {
+            partEntityId: 'leg-1',
+            partType: 'leg',
+            orientation: 'right',
+            state: 'healthy',
+            isVitalOrgan: false,
+            damageSeverity: 'standard',
+          },
+        ],
+      });
+
+      const result = service.formatThirdPersonVisible(summary);
+
+      // Should include arm injury and leg surface damage, but not torso (duplicate)
+      expect(result).toContain('Left arm');
+      expect(result).toContain('Right leg is bruised');
+    });
   });
 
   describe('formatDamageEvent', () => {
@@ -1935,6 +2382,87 @@ describe('InjuryNarrativeFormatterService', () => {
       it('should return empty string for undefined data', () => {
         const result = service.formatDamageEvent(undefined);
         expect(result).toBe('');
+      });
+
+      it('should log warning for incomplete data with missing entityName', () => {
+        const damageEventData = {
+          entityName: null,
+          entityPronoun: 'she',
+          partType: 'arm',
+          orientation: 'left',
+          damageType: 'slashing',
+          damageAmount: 15,
+          previousState: 'healthy',
+          newState: 'wounded',
+          effectsTriggered: [],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+
+        // Should use fallback "An entity" and log warning
+        expect(result).toContain("An entity's left arm suffers slashing damage");
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'InjuryNarrativeFormatterService: formatDamageEvent received incomplete data',
+          expect.objectContaining({
+            hasEntityName: false,
+            hasPartType: true,
+            hasDamageType: true,
+          })
+        );
+      });
+
+      it('should log warning for incomplete data with missing partType', () => {
+        const damageEventData = {
+          entityName: 'Vespera',
+          entityPronoun: 'she',
+          partType: null,
+          orientation: null,
+          damageType: 'slashing',
+          damageAmount: 15,
+          previousState: 'healthy',
+          newState: 'wounded',
+          effectsTriggered: [],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+
+        // Should use fallback "body part" and log warning
+        expect(result).toContain("Vespera's body part suffers slashing damage");
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'InjuryNarrativeFormatterService: formatDamageEvent received incomplete data',
+          expect.objectContaining({
+            hasEntityName: true,
+            hasPartType: false,
+            hasDamageType: true,
+          })
+        );
+      });
+
+      it('should log warning for incomplete data with missing damageType', () => {
+        const damageEventData = {
+          entityName: 'Vespera',
+          entityPronoun: 'she',
+          partType: 'arm',
+          orientation: 'left',
+          damageType: null,
+          damageAmount: 15,
+          previousState: 'healthy',
+          newState: 'wounded',
+          effectsTriggered: [],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+
+        // Should use fallback "damage" and log warning
+        expect(result).toContain("Vespera's left arm suffers damage");
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'InjuryNarrativeFormatterService: formatDamageEvent received incomplete data',
+          expect.objectContaining({
+            hasEntityName: true,
+            hasPartType: true,
+            hasDamageType: false,
+          })
+        );
       });
     });
 
@@ -2143,6 +2671,158 @@ describe('InjuryNarrativeFormatterService', () => {
         const result = service.formatDamageEvent(damageEventData);
         expect(result).toContain('heart');
         expect(result).toContain('lung');
+      });
+
+      it('should include effects triggered on propagated damage parts', () => {
+        const damageEventData = {
+          entityName: 'Vespera',
+          entityPronoun: 'she',
+          partType: 'torso',
+          orientation: null,
+          damageType: 'piercing',
+          damageAmount: 40,
+          previousState: 'healthy',
+          newState: 'wounded',
+          effectsTriggered: [],
+          propagatedDamage: [
+            {
+              childPartId: 'lung-1',
+              childPartType: 'lung',
+              orientation: 'left',
+              damageApplied: 20,
+              previousState: 'healthy',
+              newState: 'wounded',
+              effectsTriggered: ['bleeding'],
+            },
+          ],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+        expect(result).toContain('left lung');
+        expect(result).toContain('is bleeding');
+      });
+
+      it('should include multiple effects triggered on propagated damage', () => {
+        const damageEventData = {
+          entityName: 'Vespera',
+          entityPronoun: 'she',
+          partType: 'torso',
+          orientation: null,
+          damageType: 'fire',
+          damageAmount: 50,
+          previousState: 'healthy',
+          newState: 'critical',
+          effectsTriggered: [],
+          propagatedDamage: [
+            {
+              childPartId: 'lung-1',
+              childPartType: 'lung',
+              orientation: 'left',
+              damageApplied: 25,
+              previousState: 'healthy',
+              newState: 'wounded',
+              effectsTriggered: ['bleeding', 'burning'],
+            },
+          ],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+        expect(result).toContain('left lung');
+        expect(result).toContain('is bleeding');
+        expect(result).toContain('is burning');
+      });
+
+      it('should filter out unknown effects on propagated damage', () => {
+        const damageEventData = {
+          entityName: 'Test',
+          entityPronoun: 'he',
+          partType: 'torso',
+          orientation: null,
+          damageType: 'slashing',
+          damageAmount: 30,
+          previousState: 'healthy',
+          newState: 'wounded',
+          effectsTriggered: [],
+          propagatedDamage: [
+            {
+              childPartId: 'organ-1',
+              childPartType: 'intestine',
+              orientation: null,
+              damageApplied: 15,
+              previousState: 'healthy',
+              newState: 'scratched',
+              effectsTriggered: ['unknown_effect', 'bleeding', 'not_a_real_effect'],
+            },
+          ],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+        expect(result).toContain('intestine');
+        expect(result).toContain('is bleeding');
+        expect(result).not.toContain('unknown_effect');
+        expect(result).not.toContain('not_a_real_effect');
+      });
+
+      it('should handle propagated damage with empty effectsTriggered array', () => {
+        const damageEventData = {
+          entityName: 'Test',
+          entityPronoun: 'they',
+          partType: 'torso',
+          orientation: null,
+          damageType: 'blunt',
+          damageAmount: 20,
+          previousState: 'healthy',
+          newState: 'scratched',
+          effectsTriggered: [],
+          propagatedDamage: [
+            {
+              childPartId: 'organ-1',
+              childPartType: 'kidney',
+              orientation: 'left',
+              damageApplied: 10,
+              previousState: 'healthy',
+              newState: 'scratched',
+              effectsTriggered: [],
+            },
+          ],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+        expect(result).toContain('left kidney');
+        expect(result).not.toContain('is bleeding');
+        expect(result).not.toContain('is burning');
+      });
+
+      it('should include all valid effects: bleeding, burning, poisoned, fractured', () => {
+        const damageEventData = {
+          entityName: 'Rill',
+          entityPronoun: 'she',
+          partType: 'torso',
+          orientation: null,
+          damageType: 'acid',
+          damageAmount: 60,
+          previousState: 'healthy',
+          newState: 'critical',
+          effectsTriggered: [],
+          propagatedDamage: [
+            {
+              childPartId: 'bone-1',
+              childPartType: 'rib',
+              orientation: 'left',
+              damageApplied: 30,
+              previousState: 'healthy',
+              newState: 'wounded',
+              effectsTriggered: ['bleeding', 'burning', 'poisoned', 'fractured'],
+            },
+          ],
+        };
+
+        const result = service.formatDamageEvent(damageEventData);
+        expect(result).toContain('left rib');
+        expect(result).toContain('is bleeding');
+        expect(result).toContain('is burning');
+        expect(result).toContain('is poisoned');
+        expect(result).toContain('is fractured');
       });
     });
   });

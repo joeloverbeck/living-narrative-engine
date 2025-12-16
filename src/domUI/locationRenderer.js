@@ -13,6 +13,8 @@ import {} from // POSITION_COMPONENT_ID, // No longer directly used for current 
 '../constants/componentIds.js';
 
 import { buildLocationDisplayPayload } from './location/buildLocationDisplayPayload.js';
+import { buildDarknessPayload } from './location/buildDarknessPayload.js';
+import { getPresenceMessage } from './location/presenceMessageBuilder.js';
 import { renderPortraitElements } from './location/renderPortraitElements.js';
 import { renderLocationLists } from './location/renderLocationLists.js';
 import { renderCharacterListItem } from './location/renderCharacterListItem.js';
@@ -27,6 +29,7 @@ import { LocationNotFoundError } from '../errors/locationNotFoundError.js';
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
  * @typedef {import('../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
+ * @typedef {import('../locations/services/lightingStateService.js').LightingStateService} LightingStateService
  */
 
 /**
@@ -61,6 +64,8 @@ export class LocationRenderer extends BoundDomRendererBase {
   dataRegistry;
   locationDataService;
   safeEventDispatcher;
+  /** @type {LightingStateService} */
+  #lightingStateService;
 
   _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
 
@@ -73,6 +78,7 @@ export class LocationRenderer extends BoundDomRendererBase {
     entityDisplayDataProvider,
     dataRegistry,
     containerElement,
+    lightingStateService,
   }) {
     const elementsConfig = {
       nameDisplay: { selector: '#location-name-display', required: true },
@@ -146,6 +152,11 @@ export class LocationRenderer extends BoundDomRendererBase {
         `${this._logPrefix} 'dataRegistry' dependency is missing.`
       );
     }
+
+    validateDependency(lightingStateService, 'lightingStateService', logger, {
+      requiredMethods: ['getLocationLightingState'],
+    });
+    this.#lightingStateService = lightingStateService;
 
     if (!containerElement || containerElement.nodeType !== 1) {
       const errMsg = `${this._logPrefix} 'containerElement' dependency is missing or not a valid DOM element.`;
@@ -261,6 +272,13 @@ export class LocationRenderer extends BoundDomRendererBase {
    * @returns {LocationDisplayPayload} Structured payload for rendering.
    */
   #buildDisplayPayload(locationId, actorId) {
+    // Check lighting state first
+    const { isLit } = this.#lightingStateService.getLocationLightingState(locationId);
+
+    if (!isLit) {
+      return this.#buildDarknessPayload(locationId, actorId);
+    }
+
     const locationDetails =
       this.entityDisplayDataProvider.getLocationDetails(locationId);
 
@@ -275,6 +293,33 @@ export class LocationRenderer extends BoundDomRendererBase {
       portraitData,
       charactersInLocation
     );
+  }
+
+  /**
+   * Build a darkness-specific payload when the location is not lit.
+   *
+   * @private
+   * @param {string} locationId - Location entity ID.
+   * @param {import('../interfaces/CommonTypes').NamespacedId} actorId - Actor entity ID (excluded from presence count).
+   * @returns {LocationDisplayPayload} Payload with darkness-specific values.
+   */
+  #buildDarknessPayload(locationId, actorId) {
+    const locationDetails =
+      this.entityDisplayDataProvider.getLocationDetails(locationId);
+
+    const darknessDescData = this.entityManager.getComponentData(
+      locationId,
+      'locations:description_in_darkness'
+    );
+
+    const charactersInLocation =
+      this.locationDataService.gatherLocationCharacters(locationId, actorId);
+
+    return buildDarknessPayload({
+      locationName: locationDetails.name,
+      darknessDescription: darknessDescData?.text || null,
+      otherActorCount: charactersInLocation.length,
+    });
   }
 
   /**
@@ -473,6 +518,7 @@ export class LocationRenderer extends BoundDomRendererBase {
 
   /**
    * Render the location description.
+   * When the location is dark, also renders the presence message.
    *
    * @param {LocationDisplayPayload} locationDto - Details for the current location.
    * @returns {void}
@@ -480,8 +526,8 @@ export class LocationRenderer extends BoundDomRendererBase {
   renderDescription(locationDto) {
     DomUtils.clearElement(this.elements.descriptionDisplay);
 
-    // Only show inline description if no portrait exists
-    if (!locationDto.portraitPath) {
+    // Only show inline description if no portrait exists (or if in darkness)
+    if (!locationDto.portraitPath || locationDto.isDark) {
       const pDesc = this.domElementFactory.p(
         undefined,
         locationDto.description || DEFAULT_LOCATION_DESCRIPTION
@@ -491,6 +537,18 @@ export class LocationRenderer extends BoundDomRendererBase {
       } else {
         this.elements.descriptionDisplay.textContent =
           locationDto.description || DEFAULT_LOCATION_DESCRIPTION;
+      }
+    }
+
+    // Render presence message when in darkness
+    if (locationDto.isDark && typeof locationDto.otherActorCount === 'number') {
+      const presenceMsg = getPresenceMessage(locationDto.otherActorCount);
+      const presenceElement = this.domElementFactory.p(
+        'darkness-presence',
+        presenceMsg
+      );
+      if (presenceElement) {
+        this.elements.descriptionDisplay.appendChild(presenceElement);
       }
     }
   }

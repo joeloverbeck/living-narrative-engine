@@ -233,13 +233,7 @@ class DamageTypeEffectsService extends BaseService {
     );
 
     const componentId = registryDef.componentId ?? fallback?.componentId;
-    if (!componentId && fallback?.componentId) {
-      this.#warnOnce(
-        this.#missingDefinitionWarnings,
-        `${effectType}:componentId`,
-        `DamageTypeEffectsService: Missing componentId for ${effectType}, using fallback ${fallback.componentId}.`
-      );
-    }
+    // Note: Warning for missing componentId removed - unreachable due to nullish coalescing
 
     return {
       ...fallback,
@@ -573,17 +567,6 @@ class DamageTypeEffectsService extends BaseService {
         damageSession.entries
           .find((e) => e.partId === partId)
           ?.effectsTriggered?.push('dismembered');
-        // Also check parent entry if this is propagated damage
-        if (!damageSession.entries.find((e) => e.partId === partId)) {
-          // Effect applies to a propagated part - find it by iterating all entries
-          for (const entry of damageSession.entries) {
-            if (entry.partId === partId) {
-              entry.effectsTriggered = entry.effectsTriggered || [];
-              entry.effectsTriggered.push('dismembered');
-              break;
-            }
-          }
-        }
         // Queue event for backwards compatibility dispatch
         damageSession.pendingEvents.push({
           eventType: startedEventId,
@@ -726,9 +709,7 @@ class DamageTypeEffectsService extends BaseService {
     effectDefinition,
   }) {
     const bleedConfig = damageEntry.bleed;
-    if (!bleedConfig?.enabled) {
-      return;
-    }
+    // Note: enabled check is performed by caller in applyEffectsForDamage
 
     const severity = bleedConfig.severity ?? 'minor';
     const baseDuration =
@@ -802,9 +783,7 @@ class DamageTypeEffectsService extends BaseService {
     effectDefinition,
   }) {
     const burnConfig = damageEntry.burn;
-    if (!burnConfig?.enabled) {
-      return;
-    }
+    // Note: enabled check is performed by caller in applyEffectsForDamage
 
     const dps = burnConfig.dps ?? effectDefinition?.defaults?.tickDamage ?? 1;
     const durationTurns =
@@ -896,9 +875,7 @@ class DamageTypeEffectsService extends BaseService {
     effectDefinition,
   }) {
     const poisonConfig = damageEntry.poison;
-    if (!poisonConfig?.enabled) {
-      return;
-    }
+    // Note: enabled check is performed by caller in applyEffectsForDamage
 
     const tick = poisonConfig.tick ?? effectDefinition?.defaults?.tickDamage ?? 1;
     const durationTurns =

@@ -11,6 +11,30 @@
             "instanceId": "dredgers:concordance_salon_instance"
         },
         {
+            "instanceId": "dredgers:outer_service_yard_instance"
+        },
+        {
+            "instanceId": "dredgers:service_stair_instance"
+        },
+        {
+            "instanceId": "dredgers:lower_gallery_instance"
+        },
+        {
+            "instanceId": "dredgers:construction_zone_instance"
+        },
+        {
+            "instanceId": "dredgers:access_point_segment_a_instance"
+        },
+        {
+            "instanceId": "dredgers:segment_b_instance"
+        },
+        {
+            "instanceId": "dredgers:segment_c_instance"
+        },
+        {
+            "instanceId": "dredgers:flooded_approach_instance"
+        },
+        {
             "instanceId": "dredgers:keyring_instance"
         },
         {
@@ -21,6 +45,78 @@
         },
         {
             "instanceId": "dredgers:plain_notebook_instance"
+        },
+        {
+            "instanceId": "dredgers:dredgers_cart_instance"
+        },
+        {
+            "instanceId": "dredgers:block_and_tackle_instance"
+        },
+        {
+            "instanceId": "dredgers:bolt_cutters_instance"
+        },
+        {
+            "instanceId": "dredgers:bucket_instance"
+        },
+        {
+            "instanceId": "dredgers:canvas_straps_instance"
+        },
+        {
+            "instanceId": "dredgers:hacksaw_instance"
+        },
+        {
+            "instanceId": "dredgers:hand_dredge_scoop_instance"
+        },
+        {
+            "instanceId": "dredgers:hooded_oil_lantern_instance_1"
+        },
+        {
+            "instanceId": "dredgers:hooded_oil_lantern_instance_2"
+        },
+        {
+            "instanceId": "dredgers:hooded_oil_lantern_instance_3"
+        },
+        {
+            "instanceId": "dredgers:long_rope_instance_1"
+        },
+        {
+            "instanceId": "dredgers:long_rope_instance_2"
+        },
+        {
+            "instanceId": "dredgers:mattock_instance"
+        },
+        {
+            "instanceId": "dredgers:plank_instance_1"
+        },
+        {
+            "instanceId": "dredgers:plank_instance_2"
+        },
+        {
+            "instanceId": "dredgers:plank_instance_3"
+        },
+        {
+            "instanceId": "dredgers:probe_rod_instance_1"
+        },
+        {
+            "instanceId": "dredgers:probe_rod_instance_2"
+        },
+        {
+            "instanceId": "dredgers:scrub_kit_instance_1"
+        },
+        {
+            "instanceId": "dredgers:scrub_kit_instance_2"
+        },
+        {
+            "instanceId": "dredgers:scrub_kit_instance_3"
+        },
+        {
+            "instanceId": "dredgers:throw_line_instance"
+        },
+        {
+            "instanceId": "dredgers:trenching_shovel_instance_1"
+        },
+        {
+            "instanceId": "dredgers:trenching_shovel_instance_2"
         },
         {
             "instanceId": "dredgers:salvage_quarantine_undertaking_instance"
@@ -38,16 +134,25 @@
             "instanceId": "dredgers:concordance_salon_coffee_table_instance"
         },
         {
+            "instanceId": "dredgers:rotgut_flask_instance"
+        },
+        {
             "instanceId": "dredgers:jorren_weir_instance"
         },
         {
             "instanceId": "dredgers:kestrel_brune_instance"
         },
         {
-            "instanceId": "dredgers:eira_quenreach_instance"
+            "instanceId": "dredgers:cress_siltwell_instance"
         },
         {
-            "instanceId": "dredgers:cress_siltwell_instance"
+            "instanceId": "dredgers:saffi_two_tides_instance"
+        },
+        {
+            "instanceId": "dredgers:pitch_instance"
+        },
+        {
+            "instanceId": "dredgers:hobb_rusk_instance"
         }
     ]
 }

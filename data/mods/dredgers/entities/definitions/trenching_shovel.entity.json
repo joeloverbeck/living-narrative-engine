@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:trenching_shovel",
+  "description": "A narrow-bladed trenching shovel for excavation work in confined spaces",
+  "components": {
+    "core:name": {
+      "text": "trenching shovel"
+    },
+    "core:description": {
+      "text": "A shovel built for tight work, its blade narrow and slightly curved to bite into packed silt and lift it clear without scraping tunnel walls. The handle is short—you can't swing wide in a culvert anyway—and the wood has been replaced more than once, the current ash shaft showing the marks of hard use. The iron head is caked with dried mud that no amount of scraping fully removes, a permanent stain from years in the tunnels. When you need to trench around a buried object without disturbing what's beside it, this is the tool that makes the difference between careful recovery and collapse."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 2.0
+    },
+    "core:material": {
+      "material": "iron",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "iron-brown"
+    },
+    "descriptors:texture": {
+      "texture": "mud-caked"
+    }
+  }
+}

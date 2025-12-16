@@ -1,0 +1,38 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:straight_cut_trousers_worsted_wool_kiln_black",
+  "description": "Straight-cut trousers in worsted wool, kiln-black color",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_lower"
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "wool"
+    },
+    "core:name": {
+      "text": "straight-cut trousers"
+    },
+    "core:description": {
+      "text": "Trousers of worsted wool in a deep kiln-black, cut straight from hip to ankle with no taper or flare. The wool has the smooth, hard finish of proper worsted—spun tight and woven close, resistant to wrinkles and showing wear slowly. A single pleat at each hip provides ease of movement without excess fabric. The color is the black of things fired in kilns: not the soft black of dye, but the carbon-deep black of transformation by heat. Professional trousers for someone who stands while others sit."
+    },
+    "descriptors:color_extended": {
+      "color": "kiln-black"
+    },
+    "descriptors:texture": {
+      "texture": "smooth"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_lower"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.42
+    }
+  }
+}

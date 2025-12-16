@@ -1,0 +1,35 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:segment_b",
+    "components": {
+        "core:name": {
+            "text": "segment B"
+        },
+        "core:description": {
+            "text": "Past the first breached barrier, the run tightens into a meaner shape—same parallel layout (muddied footpath beside the water channel), but with more places to stumble: broken stone lips, slick algae smears, and low overhangs that force you to hunch. The walls show old iron stains and hairline cracks, as if the estate’s underbelly has been flexing for a long time. The water doesn’t just sit here; it drags slowly, thick as syrup, catching lantern glare in greasy swirls. Sound gets treacherous—every drip feels like a footstep, every soft splash like someone moving when they shouldn’t. If Segment A is the threshold, Segment B feels like commitment."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/segment_b.png",
+            "altText": "Past the first breached barrier, the run tightens into a meaner shape."
+        },
+        "movement:exits": [
+            {
+                "direction": "to the access point (segment A)",
+                "target": "dredgers:access_point_segment_a_instance",
+                "blocker": null
+            },
+            {
+                "direction": "to segment C",
+                "target": "dredgers:segment_c_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "Complete blackness. The passage narrows—you can feel it in how the echoes shorten. Your breathing sounds too loud. Something scuttles ahead, then silence. The floor is slick with a film you'd rather not identify. The temperature drops noticeably."
+        }
+    }
+}

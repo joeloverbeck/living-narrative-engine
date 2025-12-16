@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:bolt_cutters",
+  "description": "Heavy-jawed bolt cutters for cutting padlocks, chain links, and thin iron bars",
+  "components": {
+    "core:name": {
+      "text": "bolt cutters"
+    },
+    "core:description": {
+      "text": "A brutal pair of bolt cutters, handles long enough to give a man leverage and jaws that could bite through a padlock shank without ceremony. The iron has gone gray from use, nicked along the cutting edges where it's met chain links and hasps that didn't want to give. Rust has been scraped off more than once, and a thin film of oil keeps the pivot working smooth. When you need through a gate that's been chained shut for years, or when corroded bars block a passage that should be open, these are what come out of the cart. No finesse, just force applied precisely."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 4.0
+    },
+    "core:material": {
+      "material": "iron",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "iron-gray"
+    },
+    "descriptors:texture": {
+      "texture": "scuffed"
+    }
+  }
+}

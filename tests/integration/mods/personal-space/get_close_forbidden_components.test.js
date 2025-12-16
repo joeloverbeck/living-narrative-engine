@@ -1,6 +1,6 @@
 /**
  * @file Integration tests for personal-space:get_close forbidden components validation.
- * @description Tests that get_close should NOT be available when actor has wielding component.
+ * @description Tests that get_close should NOT be available when actor has wielding or sitting_on component.
  */
 
 import { describe, it, beforeEach, afterEach, expect } from '@jest/globals';
@@ -50,6 +50,12 @@ describe('personal-space:get_close - Forbidden components validation', () => {
         'positioning:doing_complex_performance'
       );
     });
+
+    it('should include positioning:sitting_on in forbidden list', () => {
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:sitting_on'
+      );
+    });
   });
 
   describe('positioning:wielding forbidden component', () => {
@@ -92,6 +98,57 @@ describe('personal-space:get_close - Forbidden components validation', () => {
       // The blocking behavior is verified in the negative test above
       expect(getCloseAction.forbidden_components.actor).toContain(
         'positioning:wielding'
+      );
+    });
+  });
+
+  describe('positioning:sitting_on forbidden component', () => {
+    it('should NOT appear when actor is sitting on furniture', () => {
+      const room = ModEntityScenarios.createRoom('room1', 'Test Room');
+
+      // Create furniture entity
+      const furniture = new ModEntityBuilder('chair1')
+        .withName('Chair')
+        .atLocation('room1')
+        .withComponent('positioning:allows_sitting', {
+          spots: [null],
+        })
+        .build();
+
+      // Create actor sitting on furniture - this should block get_close
+      // because get_close involves walking up to someone
+      const actor = new ModEntityBuilder('actor1')
+        .withName('Alice')
+        .atLocation('room1')
+        .asActor()
+        .withComponent('positioning:sitting_on', {
+          furniture_id: 'chair1',
+          spot_index: 0,
+        })
+        .build();
+
+      // Create target actor in same location
+      const target = new ModEntityBuilder('actor2')
+        .withName('Bob')
+        .atLocation('room1')
+        .asActor()
+        .build();
+
+      testFixture.reset([room, furniture, actor, target]);
+      testFixture.testEnv.actionIndex.buildIndex([getCloseAction]);
+
+      const actions = testFixture.testEnv.getAvailableActions('actor1');
+      const actionIds = actions.map((action) => action.id);
+
+      // Action should NOT appear when actor is sitting
+      expect(actionIds).not.toContain('personal-space:get_close');
+    });
+
+    it('should have sitting_on in forbidden list - validates blocking configuration is correct', () => {
+      // This test confirms the forbidden_components are configured correctly
+      // The blocking behavior is verified in the negative test above
+      expect(getCloseAction.forbidden_components.actor).toContain(
+        'positioning:sitting_on'
       );
     });
   });

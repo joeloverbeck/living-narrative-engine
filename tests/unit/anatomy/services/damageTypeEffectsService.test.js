@@ -963,6 +963,198 @@ describe('DamageTypeEffectsService', () => {
       );
     });
 
+    describe('damageSession integration', () => {
+      const createMockDamageSession = (partId) => ({
+        entries: [
+          {
+            partId,
+            effectsTriggered: [],
+          },
+        ],
+        pendingEvents: [],
+      });
+
+      it('should queue dismembered event to session instead of dispatching immediately', async () => {
+        const damageSession = createMockDamageSession('part:arm');
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 85,
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+          },
+          damageSession,
+        });
+
+        // Should NOT dispatch directly
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+
+        // Should queue event to session
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:dismembered'
+        );
+        expect(damageSession.pendingEvents[0].payload).toMatchObject({
+          entityId: 'entity:player',
+          partId: 'part:arm',
+          damageTypeId: 'slashing',
+        });
+
+        // Should record effect in entry
+        expect(damageSession.entries[0].effectsTriggered).toContain(
+          'dismembered'
+        );
+      });
+
+      it('should queue fractured event to session instead of dispatching immediately', async () => {
+        const damageSession = createMockDamageSession('part:arm');
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'blunt',
+            amount: 55,
+            fracture: { enabled: true, thresholdFraction: 0.5 },
+          },
+          damageSession,
+        });
+
+        // Should NOT dispatch directly
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+
+        // Should queue event to session
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:fractured'
+        );
+        expect(damageSession.pendingEvents[0].payload).toMatchObject({
+          entityId: 'entity:player',
+          partId: 'part:arm',
+          damageTypeId: 'blunt',
+        });
+
+        // Should record effect in entry
+        expect(damageSession.entries[0].effectsTriggered).toContain('fractured');
+      });
+
+      it('should queue bleeding_started event to session instead of dispatching immediately', async () => {
+        const damageSession = createMockDamageSession('part:arm');
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 30,
+            bleed: { enabled: true, severity: 'moderate' },
+          },
+          damageSession,
+        });
+
+        // Should NOT dispatch directly
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+
+        // Should queue event to session
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:bleeding_started'
+        );
+        expect(damageSession.pendingEvents[0].payload).toMatchObject({
+          entityId: 'entity:player',
+          partId: 'part:arm',
+          severity: 'moderate',
+        });
+
+        // Should record effect in entry
+        expect(damageSession.entries[0].effectsTriggered).toContain('bleeding');
+      });
+
+      it('should queue burning_started event to session instead of dispatching immediately', async () => {
+        const damageSession = createMockDamageSession('part:arm');
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'fire',
+            amount: 30,
+            burn: { enabled: true, dps: 5, durationTurns: 4 },
+          },
+          damageSession,
+        });
+
+        // Should NOT dispatch directly
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+
+        // Should queue event to session
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:burning_started'
+        );
+        expect(damageSession.pendingEvents[0].payload).toMatchObject({
+          entityId: 'entity:player',
+          partId: 'part:arm',
+          stackedCount: 1,
+        });
+
+        // Should record effect in entry
+        expect(damageSession.entries[0].effectsTriggered).toContain('burning');
+      });
+
+      it('should queue poisoned_started event to session instead of dispatching immediately', async () => {
+        const damageSession = createMockDamageSession('part:arm');
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'venom',
+            amount: 30,
+            poison: { enabled: true, tick: 2, durationTurns: 5 },
+          },
+          damageSession,
+        });
+
+        // Should NOT dispatch directly
+        expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+
+        // Should queue event to session
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:poisoned_started'
+        );
+        expect(damageSession.pendingEvents[0].payload).toMatchObject({
+          entityId: 'entity:player',
+          scope: 'part',
+        });
+
+        // Should record effect in entry
+        expect(damageSession.entries[0].effectsTriggered).toContain('poisoned');
+      });
+
+      it('should handle session with entry not found gracefully for dismemberment', async () => {
+        // Session with different partId (entry not found scenario)
+        const damageSession = {
+          entries: [{ partId: 'part:other', effectsTriggered: [] }],
+          pendingEvents: [],
+        };
+
+        await service.applyEffectsForDamage({
+          ...baseParams,
+          damageEntry: {
+            name: 'slashing',
+            amount: 85,
+            dismember: { enabled: true, thresholdFraction: 0.8 },
+          },
+          damageSession,
+        });
+
+        // Should still queue the event
+        expect(damageSession.pendingEvents).toHaveLength(1);
+        expect(damageSession.pendingEvents[0].eventType).toBe(
+          'anatomy:dismembered'
+        );
+      });
+    });
+
     describe('registry signaling', () => {
       it('warns and falls back when registry is empty', async () => {
         const emptyRegistry = {
@@ -1111,6 +1303,114 @@ describe('DamageTypeEffectsService', () => {
           'anatomy:bleeding',
           expect.anything()
         );
+      });
+    });
+  });
+
+  describe('edge cases and warning suppression', () => {
+    it('should suppress duplicate warnings for same key', async () => {
+      // Setup: Create service with statusEffectRegistry that has unknown IDs in applyOrder
+      const mockStatusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          { effectType: 'bleed', componentId: 'anatomy:bleeding' },
+        ]),
+        getApplyOrder: jest.fn().mockReturnValue(['unknown_id_1', 'bleed']),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        rngProvider: mockRngProvider,
+        statusEffectRegistry: mockStatusEffectRegistry,
+      });
+
+      // Call twice with same unknown ID - warning should only appear once
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      // Warning for unknown_id_1 should only be called once (duplicate suppression)
+      const unknownIdWarnings = mockLogger.warn.mock.calls.filter((call) =>
+        call[0].includes('unknown_id_1')
+      );
+      expect(unknownIdWarnings).toHaveLength(1);
+    });
+
+    it('should warn for unknown status-effect ids in registry applyOrder', async () => {
+      const mockStatusEffectRegistry = {
+        getAll: jest.fn().mockReturnValue([
+          { effectType: 'bleed', componentId: 'anatomy:bleeding' },
+        ]),
+        getApplyOrder: jest
+          .fn()
+          .mockReturnValue(['unknown_effect_id', 'bleed']),
+      };
+
+      const serviceWithRegistry = new DamageTypeEffectsService({
+        logger: mockLogger,
+        entityManager: mockEntityManager,
+        safeEventDispatcher: mockDispatcher,
+        rngProvider: mockRngProvider,
+        statusEffectRegistry: mockStatusEffectRegistry,
+      });
+
+      await serviceWithRegistry.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+      });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown status-effect id in registry applyOrder: unknown_effect_id')
+      );
+    });
+
+    it('should add trace entries when executionContext has trace array', async () => {
+      const executionContext = {
+        trace: [],
+      };
+
+      await service.applyEffectsForDamage({
+        entityId: 'entity:test',
+        partId: 'part:arm',
+        partName: 'Arm',
+        damageEntry: {
+          name: 'SLASH',
+          bleed: { enabled: true },
+        },
+        executionContext,
+      });
+
+      expect(executionContext.trace.length).toBeGreaterThan(0);
+      expect(executionContext.trace[0]).toMatchObject({
+        phase: expect.any(String),
+        message: expect.any(String),
+        context: expect.objectContaining({
+          entityId: 'entity:test',
+          partId: 'part:arm',
+          service: 'DamageTypeEffectsService',
+        }),
       });
     });
   });

@@ -149,6 +149,12 @@ const createMockEntityDisplayDataProvider = () => ({
   getLocationPortraitData: jest.fn(), // <<< --- ADDED THIS LINE ---
 });
 
+/** @returns {import('../../../src/locations/services/lightingStateService.js').LightingStateService} */
+const createMockLightingStateService = () => ({
+  getLocationLightingState: jest.fn(() => ({ isLit: true, lightSources: [] })),
+  isLocationLit: jest.fn(() => true),
+});
+
 describe('LocationRenderer', () => {
   let mockLogger;
   let mockDocumentContext;
@@ -157,6 +163,7 @@ describe('LocationRenderer', () => {
   let mockEntityManager;
   let mockEntityDisplayDataProvider;
   let mockDataRegistry;
+  let mockLightingStateService;
   let mockContainerElement;
   let mockNameDisplay,
     mockDescriptionDisplay,
@@ -181,6 +188,7 @@ describe('LocationRenderer', () => {
     mockEntityManager = createMockEntityManager();
     mockEntityDisplayDataProvider = createMockEntityDisplayDataProvider();
     mockDataRegistry = createMockDataRegistry();
+    mockLightingStateService = createMockLightingStateService();
 
     mockContainerElement = document.createElement('div');
     mockContainerElement.id = 'location-info-container';
@@ -235,6 +243,7 @@ describe('LocationRenderer', () => {
       entityDisplayDataProvider: mockEntityDisplayDataProvider,
       dataRegistry: mockDataRegistry,
       containerElement: mockContainerElement,
+      lightingStateService: mockLightingStateService,
     };
 
     turnStartedCallback = undefined;
@@ -1451,6 +1460,380 @@ describe('LocationRenderer', () => {
       expect(mockDescriptionDisplay.textContent).toBe(
         'You see nothing remarkable.'
       );
+    });
+  });
+
+  describe('Darkness Handling', () => {
+    let renderer;
+    let darknessTurnStartedCallback;
+
+    beforeEach(() => {
+      mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
+        MOCK_LOCATION_ID
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Dark Cave',
+        description: 'A damp cave.',
+        exits: [{ description: 'North', id: 'exit:1', target: 'loc:2' }],
+      });
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue({
+        imagePath: '/path/to/cave.png',
+        altText: 'A dark cave',
+      });
+      mockEntityManager.getEntitiesInLocation.mockReturnValue(new Set());
+
+      // Need to capture the new callback for this renderer instance
+      darknessTurnStartedCallback = undefined;
+      mockSafeEventDispatcher.subscribe.mockImplementation(
+        (eventType, callback) => {
+          if (eventType === 'core:turn_started') {
+            darknessTurnStartedCallback = callback;
+          }
+          return jest.fn();
+        }
+      );
+      renderer = new LocationRenderer(rendererDeps);
+    });
+
+    describe('Constructor validation', () => {
+      it('should throw if lightingStateService is missing', () => {
+        const depsWithoutLighting = { ...rendererDeps };
+        delete depsWithoutLighting.lightingStateService;
+        expect(() => new LocationRenderer(depsWithoutLighting)).toThrow(
+          'Missing required dependency: lightingStateService.'
+        );
+      });
+
+      it('should throw if lightingStateService is missing getLocationLightingState method', () => {
+        const depsWithBadLighting = {
+          ...rendererDeps,
+          lightingStateService: { isLocationLit: jest.fn() }, // Missing getLocationLightingState
+        };
+        expect(() => new LocationRenderer(depsWithBadLighting)).toThrow(
+          "Invalid or missing method 'getLocationLightingState' on dependency 'lightingStateService'."
+        );
+      });
+    });
+
+    describe('Dark location rendering', () => {
+      const simulateTurnStarted = (entityId = MOCK_PLAYER_ID) => {
+        const event = {
+          type: 'core:turn_started',
+          payload: { entityId, entityType: 'player' },
+        };
+        if (darknessTurnStartedCallback) {
+          darknessTurnStartedCallback(event);
+        } else {
+          throw new Error('darknessTurnStartedCallback was not captured.');
+        }
+      };
+
+      it('should render darkness payload when location is not lit', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+        mockEntityManager.getComponentData = jest.fn(() => null);
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(
+          mockLightingStateService.getLocationLightingState
+        ).toHaveBeenCalledWith(MOCK_LOCATION_ID);
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isDark: true,
+            exits: [],
+            characters: [],
+            portraitPath: null,
+            portraitAltText: null,
+          })
+        );
+      });
+
+      it('should render standard payload when location is lit', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: true,
+          lightSources: ['torch'],
+        });
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            name: 'Dark Cave',
+            exits: [{ description: 'North', id: 'exit:1', target: 'loc:2' }],
+            portraitPath: '/path/to/cave.png',
+          })
+        );
+        expect(renderer.render).not.toHaveBeenCalledWith(
+          expect.objectContaining({ isDark: true })
+        );
+      });
+
+      it('should include otherActorCount in darkness payload', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+        mockEntityManager.getComponentData = jest.fn(() => null);
+        // Add 3 other actors to the location
+        const npc1 = 'npc:1';
+        const npc2 = 'npc:2';
+        const npc3 = 'npc:3';
+        mockEntityManager.getEntitiesInLocation.mockReturnValue(
+          new Set([MOCK_PLAYER_ID, npc1, npc2, npc3])
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === MOCK_PLAYER_ID) return { id, hasComponent: () => false };
+          return { id, hasComponent: (c) => c === ACTOR_COMPONENT_ID };
+        });
+        mockEntityDisplayDataProvider.getCharacterDisplayInfo.mockImplementation(
+          (id) => ({
+            id,
+            name: `NPC ${id}`,
+            description: 'An NPC',
+            portraitPath: null,
+          })
+        );
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isDark: true,
+            otherActorCount: 3,
+          })
+        );
+      });
+
+      it('should use custom darkness description when available', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+        mockEntityManager.getComponentData = jest.fn((entityId, componentId) => {
+          if (componentId === 'locations:description_in_darkness') {
+            return { text: 'Water drips in the darkness. You hear scratching.' };
+          }
+          return null;
+        });
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isDark: true,
+            description: 'Water drips in the darkness. You hear scratching.',
+          })
+        );
+      });
+
+      it('should use default darkness description when no custom description', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+        mockEntityManager.getComponentData = jest.fn(() => null);
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isDark: true,
+            description: "You're in pitch darkness.",
+          })
+        );
+      });
+
+      it('should preserve location name in darkness payload', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+        mockEntityManager.getComponentData = jest.fn(() => null);
+
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({
+            isDark: true,
+            name: 'Dark Cave',
+          })
+        );
+      });
+    });
+
+    describe('Presence message rendering', () => {
+      beforeEach(() => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+      });
+
+      it('should render NONE presence message when no other actors', () => {
+        mockEntityManager.getEntitiesInLocation.mockReturnValue(
+          new Set([MOCK_PLAYER_ID])
+        );
+        mockEntityManager.getComponentData = jest.fn(() => null);
+
+        const darkLocationDto = {
+          name: 'Dark Room',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          otherActorCount: 0,
+        };
+
+        renderer.renderDescription(darkLocationDto);
+
+        // Check that presence message is rendered
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).not.toBeNull();
+        expect(presenceElement.textContent).toBe(
+          "You can't see anything in the dark, but you sense no other presence here."
+        );
+      });
+
+      it('should render ONE presence message when one other actor', () => {
+        const darkLocationDto = {
+          name: 'Dark Room',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          otherActorCount: 1,
+        };
+
+        renderer.renderDescription(darkLocationDto);
+
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).not.toBeNull();
+        expect(presenceElement.textContent).toBe(
+          "You can't see anything in the dark, but you sense a presence here."
+        );
+      });
+
+      it('should render FEW presence message when 2-3 other actors', () => {
+        const darkLocationDto = {
+          name: 'Dark Room',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          otherActorCount: 3,
+        };
+
+        renderer.renderDescription(darkLocationDto);
+
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).not.toBeNull();
+        expect(presenceElement.textContent).toBe(
+          "You can't see anything in the dark, but you sense a few presences here."
+        );
+      });
+
+      it('should render SEVERAL presence message when 4+ other actors', () => {
+        const darkLocationDto = {
+          name: 'Dark Room',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          otherActorCount: 5,
+        };
+
+        renderer.renderDescription(darkLocationDto);
+
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).not.toBeNull();
+        expect(presenceElement.textContent).toBe(
+          "You can't see anything in the dark, but you sense several presences here."
+        );
+      });
+
+      it('should not render presence message when location is lit', () => {
+        const litLocationDto = {
+          name: 'Bright Room',
+          description: 'A well-lit room.',
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          // isDark is not set (falsy)
+          otherActorCount: 3,
+        };
+
+        renderer.renderDescription(litLocationDto);
+
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).toBeNull();
+      });
+
+      it('should not render presence message when otherActorCount is not a number', () => {
+        const darkLocationDto = {
+          name: 'Dark Room',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          // otherActorCount is missing
+        };
+
+        renderer.renderDescription(darkLocationDto);
+
+        const presenceElement =
+          mockDescriptionDisplay.querySelector('.darkness-presence');
+        expect(presenceElement).toBeNull();
+      });
+    });
+
+    describe('Portrait hiding in darkness', () => {
+      it('should hide portrait elements when in darkness', () => {
+        mockLightingStateService.getLocationLightingState.mockReturnValue({
+          isLit: false,
+          lightSources: [],
+        });
+
+        const darkLocationDto = {
+          name: 'Dark Cave',
+          description: "You're in pitch darkness.",
+          portraitPath: null,
+          portraitAltText: null,
+          exits: [],
+          characters: [],
+          isDark: true,
+          otherActorCount: 0,
+        };
+
+        renderer.render(darkLocationDto);
+
+        expect(mockLocationPortraitVisualsElement.style.display).toBe('none');
+        expect(mockLocationPortraitImageElement.style.display).toBe('none');
+      });
     });
   });
 });

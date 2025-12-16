@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:bucket",
+  "description": "A heavy-duty riveted bucket with rope handle for sludge collection",
+  "components": {
+    "core:name": {
+      "text": "bucket"
+    },
+    "core:description": {
+      "text": "A working bucket, sides riveted from sheet iron and bottom reinforced where the weight sits heaviest. The rim is dented from being knocked against stone, and the whole thing has gone a rusty brown that no amount of scrubbing will lift. A rope handle threads through iron loops on either side, knotted thick enough to grip with wet gloves. This is where the sludge goes—scoop by scoop, lifted from the muck and hauled to wherever it needs dumping. It's not glamorous work, but every tunnel cleared starts with filling buckets and ends with emptying them."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.5
+    },
+    "core:material": {
+      "material": "iron",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "iron-brown"
+    },
+    "descriptors:texture": {
+      "texture": "dented"
+    }
+  }
+}

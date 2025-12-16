@@ -4,7 +4,7 @@
     "definitionId": "dredgers:cress_siltwell",
     "componentOverrides": {
         "core:position": {
-            "locationId": "dredgers:concordance_salon_instance"
+            "locationId": "dredgers:service_stair_instance"
         },
         "items:inventory": {
             "items": ["dredgers:keyring_instance"],

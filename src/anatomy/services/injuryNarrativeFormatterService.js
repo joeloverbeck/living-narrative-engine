@@ -250,9 +250,10 @@ class InjuryNarrativeFormatterService extends BaseService {
       return 'Cosmetic scuffs.';
     }
 
-    if (visibleNarrative.length === 0 && surfaceDamageNarrative) {
-      return surfaceDamageNarrative;
-    }
+    // Note: The condition "visibleNarrative.length === 0 && surfaceDamageNarrative"
+    // was removed as dead code. If surfaceDamageNarrative exists, it's pushed to
+    // visibleNarrative at line ~246, so visibleNarrative.length can never be 0
+    // when surfaceDamageNarrative is truthy.
 
     return visibleNarrative.join(' ') || 'Perfect health.';
   }
@@ -750,12 +751,10 @@ class InjuryNarrativeFormatterService extends BaseService {
       return description.replace('is ', 'are ');
     }
 
+    // Note: "has " check handles both "has been X" and "has X" patterns
+    // since "has been X" starts with "has "
     if (description.startsWith('has ')) {
       return description.replace('has ', 'have ');
-    }
-
-    if (description.startsWith('has been ')) {
-      return description.replace('has been ', 'have been ');
     }
 
     return description;
