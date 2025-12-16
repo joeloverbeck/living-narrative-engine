@@ -220,7 +220,7 @@ class ActivityMetadataCollectionSystem {
         activityMetadata &&
         activityMetadata?.shouldDescribeInActivity !== false
       ) {
-        this.#logger.info('Found activity metadata in component', {
+        this.#logger.debug('Found activity metadata in component', {
           componentId,
           hasTemplate: !!activityMetadata?.template,
           hasPriority: !!activityMetadata?.priority,
@@ -235,7 +235,7 @@ class ActivityMetadataCollectionSystem {
             activityMetadata
           );
           if (activity) {
-            this.#logger.info('Successfully parsed inline metadata', {
+            this.#logger.debug('Successfully parsed inline metadata', {
               componentId,
               activityPriority: activity.priority,
             });

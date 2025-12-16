@@ -117,6 +117,9 @@ describe('ranged:throwable_items scope', () => {
         getAllParts: jest.fn(),
         buildAdjacencyCache: jest.fn(),
       },
+      lightingStateService: {
+        isLocationLit: jest.fn().mockReturnValue(true),
+      },
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 

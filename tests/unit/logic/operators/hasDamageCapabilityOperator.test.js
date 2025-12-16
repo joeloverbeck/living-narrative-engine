@@ -302,5 +302,140 @@ describe('HasDamageCapabilityOperator', () => {
         'damage-types:damage_capabilities'
       );
     });
+
+    // Coverage tests for lines 86-88: entity object passed directly
+    it('should handle entity object passed directly as entityPath', () => {
+      const entityObject = { id: 'direct-entity-1' };
+      const context = {};
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: [{ name: 'slashing', amount: 10 }],
+      });
+
+      const result = operator.evaluate([entityObject, 'slashing'], context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Received entity object directly')
+      );
+    });
+
+    // Coverage tests for lines 125-128: non-context string as entity ID
+    it('should treat non-context-path string as entity ID when path resolution fails', () => {
+      const context = {}; // no matching key
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: [{ name: 'fire', amount: 5 }],
+      });
+
+      const result = operator.evaluate(['some-entity-id', 'fire'], context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('treating as entity ID')
+      );
+    });
+
+    // Coverage tests for lines 136-139: resolved object without id
+    it('should treat path as entity ID when resolved object has no valid id', () => {
+      const context = { myPath: { foo: 'bar' } }; // object without id property
+
+      mockEntityManager.getComponentData.mockReturnValue({
+        entries: [{ name: 'cold', amount: 3 }],
+      });
+
+      const result = operator.evaluate(['myPath', 'cold'], context);
+
+      expect(result).toBe(true);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('treating original path as entity ID')
+      );
+    });
+
+    // Coverage tests for lines 145-148: invalid entityPath types
+    it('should return false when entityPath is a number', () => {
+      const result = operator.evaluate([42, 'slashing'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entityPath type: number')
+      );
+    });
+
+    it('should return false when entityPath is a boolean', () => {
+      const result = operator.evaluate([true, 'slashing'], {});
+
+      expect(result).toBe(false);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Invalid entityPath type: boolean')
+      );
+    });
+
+    // Coverage tests for lines 217-220: #resolveEntityId fails for non-resolvable entity
+    it('should return false when entity resolves to an array', () => {
+      const context = { entity: ['not', 'valid'] };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      // Array resolves as object without id, so path is treated as entity ID
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('treating original path as entity ID')
+      );
+    });
+
+    it('should return false when entity resolves to a boolean', () => {
+      const context = { entity: true };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      expect(result).toBe(false);
+    });
+
+    // Coverage tests for lines 229-232: invalid entity ID values
+    it('should return false when entity has undefined id', () => {
+      const context = { entity: { id: undefined } };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      // Entity with undefined id is treated as object without valid id
+      expect(result).toBe(false);
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('treating original path as entity ID')
+      );
+    });
+
+    it('should return false when entity has null id', () => {
+      const context = { entity: { id: null } };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when entity has empty string id', () => {
+      const context = { entity: { id: '' } };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when entity has NaN id', () => {
+      const context = { entity: { id: NaN } };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      expect(result).toBe(false);
+    });
+
+    // Coverage test for line 155: entity is a function
+    it('should return false when entity is a function', () => {
+      const context = { entity: () => {} };
+
+      const result = operator.evaluate(['entity', 'slashing'], context);
+
+      expect(result).toBe(false);
+    });
   });
 });

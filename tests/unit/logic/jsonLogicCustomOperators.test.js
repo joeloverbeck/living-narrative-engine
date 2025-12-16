@@ -31,6 +31,7 @@ describe('JsonLogicCustomOperators', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
   let jsonLogicService;
 
   beforeEach(() => {
@@ -56,10 +57,15 @@ describe('JsonLogicCustomOperators', () => {
       getComponentData: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     jsonLogicService = new JsonLogicEvaluationService({
@@ -295,6 +301,7 @@ describe('JsonLogicCustomOperators', () => {
         logger: mockLogger,
         bodyGraphService: mockBodyGraphService,
         entityManager: mockEntityManager,
+        lightingStateService: mockLightingStateService,
       });
 
       const registeredOps = freshOperators.getRegisteredOperators();
@@ -333,6 +340,20 @@ describe('JsonLogicCustomOperators', () => {
       expect(clearCacheSpy).toHaveBeenCalledTimes(1);
 
       clearCacheSpy.mockRestore();
+    });
+
+    test('handles operators without clearCache method gracefully', () => {
+      customOperators.registerOperators(jsonLogicService);
+
+      // Temporarily replace clearCache with undefined to simulate an operator without cache
+      const originalClearCache = customOperators.isSocketCoveredOp.clearCache;
+      customOperators.isSocketCoveredOp.clearCache = undefined;
+
+      // Should not throw
+      expect(() => customOperators.clearCaches()).not.toThrow();
+
+      // Restore
+      customOperators.isSocketCoveredOp.clearCache = originalClearCache;
     });
   });
 

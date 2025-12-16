@@ -32,11 +32,6 @@ export class IsBodyPartWoundedOperator extends BaseBodyPartOperator {
    * @returns {boolean}
    */
   evaluateInternal(entityId, rootId, params, context, bodyComponent) {
-    if (!params || params.length < 1) {
-      this.logger.warn(`${this.operatorName}: Invalid parameters`);
-      return false;
-    }
-
     const [partEntityRef, options] = params;
     const partEntityId = this.#resolvePartEntityId(partEntityRef);
 
@@ -85,15 +80,8 @@ export class IsBodyPartWoundedOperator extends BaseBodyPartOperator {
 
     if (partEntityRef && typeof partEntityRef === 'object') {
       if (typeof partEntityRef.getComponentData === 'function') {
-        // eslint-disable-next-line no-underscore-dangle
+         
         return partEntityRef.id ?? partEntityRef._id ?? null;
-      }
-
-      if (
-        typeof partEntityRef.id === 'string' ||
-        typeof partEntityRef.id === 'number'
-      ) {
-        return partEntityRef.id;
       }
     }
 

@@ -33,6 +33,7 @@ describe('Sex Action Discovery Integration Tests', () => {
   let scopeEngine;
   let scopeRegistry;
   let jsonLogicEval;
+  let mockLightingStateService;
 
   beforeEach(() => {
     // Create minimal mocks for external dependencies only
@@ -54,6 +55,10 @@ describe('Sex Action Discovery Integration Tests', () => {
       buildAdjacencyCache: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create real data registry and register actions
     dataRegistry = new InMemoryDataRegistry({ logger });
     dataRegistry.store(
@@ -68,6 +73,7 @@ describe('Sex Action Discovery Integration Tests', () => {
       bodyGraphService: mockBodyGraphService,
       logger,
       dataRegistry,
+      lightingStateService: mockLightingStateService,
     });
 
     jsonLogicEval = new JsonLogicEvaluationService({

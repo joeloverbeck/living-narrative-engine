@@ -67,11 +67,17 @@ describe('has_component Operator - Integration', () => {
       gameDataRepository: repository,
     });
 
+    // Create mock lighting state service
+    const lightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create and register custom operators
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService,
       entityManager,
+      lightingStateService,
     });
 
     jsonLogicCustomOperators.registerOperators(jsonLogicEvaluationService);

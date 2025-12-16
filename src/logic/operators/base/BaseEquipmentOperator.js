@@ -57,11 +57,12 @@ export class BaseEquipmentOperator {
 
       const [entityPath, ...operatorParams] = params;
 
-      // Store the entity path for logging
-      context._currentPath = entityPath;
+      // Clone context to avoid mutating the shared context object
+      const localContext = { ...context };
+      localContext._currentPath = entityPath;
 
       // Resolve entity from path
-      const { entity, isValid } = resolveEntityPath(context, entityPath);
+      const { entity, isValid } = resolveEntityPath(localContext, entityPath);
 
       if (!isValid) {
         this.logger.warn(
@@ -77,7 +78,7 @@ export class BaseEquipmentOperator {
       }
 
       // Delegate to subclass implementation
-      return this.evaluateInternal(entityId, operatorParams, context);
+      return this.evaluateInternal(entityId, operatorParams, localContext);
     } catch (error) {
       this.logger.error(`${this.operatorName}: Error during evaluation`, error);
       return false;

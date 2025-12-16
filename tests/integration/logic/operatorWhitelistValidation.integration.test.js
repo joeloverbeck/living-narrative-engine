@@ -15,6 +15,7 @@ describe('Operator Whitelist Validation - Integration', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
 
   beforeEach(() => {
     testBed = createTestBed();
@@ -33,6 +34,11 @@ describe('Operator Whitelist Validation - Integration', () => {
       getComponentData: jest.fn(),
     };
 
+    // Create mock lighting state service
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create evaluation service
     evaluationService = new JsonLogicEvaluationService({
       logger: mockLogger,
@@ -44,6 +50,7 @@ describe('Operator Whitelist Validation - Integration', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
   });
 

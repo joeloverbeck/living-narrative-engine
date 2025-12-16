@@ -140,6 +140,12 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.IRecipePatternResolver, () => ({
       resolve: jest.fn().mockReturnValue([]),
     }));
+
+    // Register ILightingStateService (required by JsonLogicCustomOperators)
+    container.register(tokens.ILightingStateService, () => ({
+      isLocationLit: jest.fn().mockReturnValue(true),
+      getLightLevel: jest.fn().mockReturnValue(1.0),
+    }));
   });
 
   afterEach(() => {

@@ -517,10 +517,20 @@ export function createBaseRuleEnvironment({
       clearCache: jest.fn(),
     };
 
+    // Create mock lightingStateService for JsonLogicCustomOperators
+    const mockLightingStateService = {
+      getLocationLightingState: jest.fn((locationId) => ({
+        isLit: true,
+        lightSources: [],
+      })),
+      isLocationLit: jest.fn((locationId) => true),
+    };
+
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger: testLogger,
       entityManager,
       bodyGraphService: mockBodyGraphService,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogic);
 

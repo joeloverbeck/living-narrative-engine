@@ -53,12 +53,18 @@ describe('Go Action Multi-Target Schema Validation', () => {
       'Moves your character to the specified location.'
     );
     expect(goActionMigrated.prerequisites).toBeDefined();
-    expect(goActionMigrated.prerequisites).toHaveLength(1);
+    expect(goActionMigrated.prerequisites).toHaveLength(2);
     expect(goActionMigrated.prerequisites[0].logic.condition_ref).toBe(
       'movement:actor-can-move'
     );
     expect(goActionMigrated.prerequisites[0].failure_message).toBe(
       'You cannot move without functioning legs.'
+    );
+    expect(goActionMigrated.prerequisites[1].logic.isActorLocationLit).toEqual([
+      'actor',
+    ]);
+    expect(goActionMigrated.prerequisites[1].failure_message).toBe(
+      'It is too dark to see where you are going.'
     );
   });
 });

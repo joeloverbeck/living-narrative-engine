@@ -185,7 +185,7 @@ export class TurnOrderTickerRenderer {
 
       // Log rendering activity
       const actorIds = actors.map((actor) => actor?.id).filter(Boolean);
-      this.#logger.info('Rendering turn order queue', {
+      this.#logger.debug('Rendering turn order queue', {
         actorCount: actors.length,
         actorIds,
       });
@@ -1206,7 +1206,7 @@ export class TurnOrderTickerRenderer {
         return;
       }
 
-      this.#logger.info('Round started', {
+      this.#logger.debug('Round started', {
         roundNumber,
         actorCount: actors.length,
         strategy,

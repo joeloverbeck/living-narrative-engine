@@ -20,6 +20,7 @@ describe('Anatomy Conditions Integration', () => {
   let mockEntityManager;
   let mockGameDataRepository;
   let mockComponentAccessService;
+  let mockLightingStateService;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -45,6 +46,10 @@ describe('Anatomy Conditions Integration', () => {
 
     mockComponentAccessService = {
       getComponentForEntity: jest.fn(),
+    };
+
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
     };
 
     mockGameDataRepository = {
@@ -94,6 +99,7 @@ describe('Anatomy Conditions Integration', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     // Register custom operators

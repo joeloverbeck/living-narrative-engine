@@ -69,11 +69,17 @@ describe('Turn Around Action - Architectural Fix Validation', () => {
       gameDataRepository: mockGameDataRepository,
     });
 
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create and register custom operators
     customOperators = new JsonLogicCustomOperators({
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
     customOperators.registerOperators(jsonLogicService);
 

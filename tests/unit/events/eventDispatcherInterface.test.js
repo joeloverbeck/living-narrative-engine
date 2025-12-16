@@ -115,24 +115,16 @@ describe('Event Dispatcher Interface Verification', () => {
         payload: { message: 'Test' },
       };
 
-      // This should fail validation in gameDataRepository
-      mockGameDataRepository.getEventDefinition.mockImplementation((id) => {
-        if (typeof id !== 'string') {
-          // Log the error that would appear in real scenario
-          mockLogger.warn(
-            `GameDataRepository: getEventDefinition called with invalid ID: ${id}`
-          );
-          return null;
-        }
-        return { id: 'core:test_event', payloadSchema: { type: 'object' } };
-      });
+      // With fail-fast validation, SafeEventDispatcher now throws immediately
+      // when an object with type/payload properties is passed as first argument
+      await expect(safeDispatcher.dispatch(eventObject, {})).rejects.toThrow(
+        'SafeEventDispatcher.dispatch() requires (eventName, payload) signature'
+      );
 
-      // Try to dispatch with incorrect parameters
-      await safeDispatcher.dispatch(eventObject, {});
-
-      // Verify the warning was logged
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('getEventDefinition called with invalid ID:')
+      // Verify the error was logged before throwing
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Received object with "type" and "payload"'),
+        expect.objectContaining({ receivedObject: eventObject })
       );
     });
 
@@ -247,26 +239,26 @@ describe('Event Dispatcher Interface Verification', () => {
         logger: mockLogger,
       });
 
-      // Create a mock that simulates the incorrect dispatch call
-      const incorrectDispatch = async (dispatcher) => {
-        // This simulates code that incorrectly passes an event object
-        const eventObject = {
-          type: 'core:system_error_occurred',
-          payload: { message: 'Error occurred' },
-        };
-
-        // Incorrect: passing the whole object as first parameter
-        await dispatcher.dispatch(eventObject);
+      // This simulates code that incorrectly passes an event object
+      const eventObject = {
+        type: 'core:system_error_occurred',
+        payload: { message: 'Error occurred' },
       };
 
-      await incorrectDispatch(safeDispatcher);
-
-      // Verify the error was caught and logged
-      expect(mockGameDataRepository.getEventDefinition).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'core:system_error_occurred' })
+      // With fail-fast validation, SafeEventDispatcher now throws immediately
+      // when an object with type/payload properties is passed as first argument
+      await expect(safeDispatcher.dispatch(eventObject)).rejects.toThrow(
+        'SafeEventDispatcher.dispatch() requires (eventName, payload) signature'
       );
-      // Multiple warnings should have been logged
-      expect(mockLogger.warn).toHaveBeenCalled();
+
+      // Verify the error was logged before throwing
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Received object with "type" and "payload"'),
+        expect.objectContaining({ receivedObject: eventObject })
+      );
+
+      // The underlying dispatcher should NOT have been called due to fail-fast
+      expect(mockGameDataRepository.getEventDefinition).not.toHaveBeenCalled();
     });
 
     it('should verify SafeEventDispatcher executeSafely preserves parameters', async () => {

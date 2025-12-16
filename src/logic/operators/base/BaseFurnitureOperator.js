@@ -59,12 +59,13 @@ export class BaseFurnitureOperator {
 
       const [entityPath, targetPath, ...operatorParams] = params;
 
-      // Store the entity path for logging
-      context._currentPath = entityPath;
+      // Clone context to avoid mutating the shared context object
+      const localContext = { ...context };
+      localContext._currentPath = entityPath;
 
       // Resolve entity from path
       const { entity, isValid: entityValid } = resolveEntityPath(
-        context,
+        localContext,
         entityPath
       );
 
@@ -83,7 +84,7 @@ export class BaseFurnitureOperator {
 
       // Resolve target from path
       const { entity: target, isValid: targetValid } = resolveEntityPath(
-        context,
+        localContext,
         targetPath
       );
 
@@ -101,7 +102,7 @@ export class BaseFurnitureOperator {
       }
 
       // Delegate to subclass implementation
-      return this.evaluateInternal(entityId, targetId, operatorParams, context);
+      return this.evaluateInternal(entityId, targetId, operatorParams, localContext);
     } catch (error) {
       this.logger.error(`${this.operatorName}: Error during evaluation`, error);
       return false;

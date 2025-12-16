@@ -100,10 +100,16 @@ describe('Fondle Breasts Scope Evaluation Integration Tests', () => {
       },
     });
 
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     // Register custom operators

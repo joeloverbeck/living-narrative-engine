@@ -173,10 +173,17 @@ describe('Clothing TopMost Torso Lower No Accessories Scope Integration Tests', 
       logger,
       gameDataRepository,
     });
+
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 

@@ -41,6 +41,12 @@
         "condition_ref": "core:actor-mouth-available"
       },
       "failure_message": "You cannot do that while your mouth is engaged."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to kneel before anyone."
     }
   ],
   "visual": {

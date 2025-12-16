@@ -70,7 +70,8 @@ describe('BaseEquipmentOperator', () => {
       const result = operator.evaluate(['actor', 'test-value'], mockContext);
 
       expect(result).toBe(true);
-      expect(mockContext._currentPath).toBe('actor');
+      // Original context should NOT be mutated (context isolation)
+      expect(mockContext._currentPath).toBeUndefined();
     });
 
     test('should evaluate successfully when entity ID is zero', () => {
@@ -87,7 +88,8 @@ describe('BaseEquipmentOperator', () => {
       const result = operator.evaluate(['.', 'test-value'], mockContext);
 
       expect(result).toBe(true);
-      expect(mockContext._currentPath).toBe('.');
+      // Original context should NOT be mutated (context isolation)
+      expect(mockContext._currentPath).toBeUndefined();
     });
 
     test('should evaluate successfully with direct entity ID', () => {

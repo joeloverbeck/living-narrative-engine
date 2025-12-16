@@ -21,6 +21,7 @@ describe('actor-has-free-grabbing-appendage conditions', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
   let customOperators;
 
   beforeEach(() => {
@@ -44,6 +45,10 @@ describe('actor-has-free-grabbing-appendage conditions', () => {
       getComponentData: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
     });
@@ -52,6 +57,7 @@ describe('actor-has-free-grabbing-appendage conditions', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     customOperators.registerOperators(jsonLogicService);

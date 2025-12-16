@@ -219,6 +219,9 @@
           "$ref": "./operations/dropItemAtLocation.schema.json"
         },
         {
+          "$ref": "./operations/pickRandomArrayElement.schema.json"
+        },
+        {
           "$ref": "./operations/pickRandomEntity.schema.json"
         },
         {

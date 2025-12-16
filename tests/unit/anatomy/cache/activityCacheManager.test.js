@@ -450,7 +450,7 @@ describe('ActivityCacheManager', () => {
       // We've already advanced 61s, so advance to next 30s mark (which would be at 90s total)
       jest.advanceTimersByTime(29000);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Cache cleanup: removed 2 expired entries')
       );
     });
@@ -465,7 +465,7 @@ describe('ActivityCacheManager', () => {
       jest.advanceTimersByTime(29000);
 
       // Should have cleaned up at least once
-      const cleanupCalls = mockLogger.info.mock.calls.filter((call) =>
+      const cleanupCalls = mockLogger.debug.mock.calls.filter((call) =>
         call[0].includes('Cache cleanup:')
       );
       expect(cleanupCalls.length).toBeGreaterThanOrEqual(1);
@@ -620,7 +620,7 @@ describe('ActivityCacheManager', () => {
       // Trigger cleanup
       jest.advanceTimersByTime(30000);
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
+      expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Cache cleanup: removed')
       );
     });

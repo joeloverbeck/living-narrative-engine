@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://living-narrative-engine/operations/pickRandomArrayElement.schema.json",
+  "title": "PICK_RANDOM_ARRAY_ELEMENT Operation",
+  "description": "Picks a random element from an array field in a component",
+  "allOf": [
+    { "$ref": "../base-operation.schema.json" },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "PICK_RANDOM_ARRAY_ELEMENT"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "entity_ref": {
+              "description": "Reference to the entity containing the component (supports 'actor', 'target', {entityId: ...}, or context references)",
+              "oneOf": [{ "type": "string" }, { "type": "object" }]
+            },
+            "component_type": {
+              "description": "The component type ID containing the array (e.g., 'movement:exits')",
+              "type": "string"
+            },
+            "array_field": {
+              "description": "Optional property path to the array within the component. If omitted, assumes the component data itself is the array or has an 'exits' field for movement:exits.",
+              "type": "string"
+            },
+            "result_variable": {
+              "description": "Variable name to store the selected element (or null if array is empty/missing)",
+              "type": "string"
+            }
+          },
+          "required": ["entity_ref", "component_type", "result_variable"],
+          "additionalProperties": false
+        }
+      }
+    }
+  ]
+}

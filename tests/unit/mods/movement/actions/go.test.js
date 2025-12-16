@@ -39,7 +39,7 @@ describe('Movement Go Action', () => {
 
   it('should have prerequisites as array', () => {
     expect(Array.isArray(action.prerequisites)).toBe(true);
-    expect(action.prerequisites).toHaveLength(1);
+    expect(action.prerequisites).toHaveLength(2);
   });
 
   it('should reference movement:actor-can-move condition in prerequisites', () => {

@@ -74,9 +74,10 @@ describe('BaseFurnitureOperator', () => {
         entityId: 'entity-123',
         targetId: 'chair-456',
         params: ['extra-param'],
-        context: mockContext,
+        context: expect.objectContaining({ _currentPath: 'entity' }),
       });
-      expect(mockContext._currentPath).toBe('entity');
+      // Original context should NOT be mutated (context isolation)
+      expect(mockContext._currentPath).toBeUndefined();
     });
 
     test('passes through string entity and target identifiers', () => {

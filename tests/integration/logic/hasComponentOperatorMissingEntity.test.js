@@ -39,6 +39,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
   let jsonLogicCustomOperators;
   let entityManager;
   let bodyGraphService;
+  let lightingStateService;
 
   beforeEach(() => {
     logger = createTestLogger();
@@ -68,6 +69,11 @@ describe('has_component Operator - Missing Entity Warning', () => {
       buildAdjacencyCache: jest.fn(),
     };
 
+    // Create mock lighting state service
+    lightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create JSON Logic evaluation service
     jsonLogicEvaluationService = new JsonLogicEvaluationService({
       logger,
@@ -79,6 +85,7 @@ describe('has_component Operator - Missing Entity Warning', () => {
       logger,
       bodyGraphService,
       entityManager,
+      lightingStateService,
     });
 
     jsonLogicCustomOperators.registerOperators(jsonLogicEvaluationService);

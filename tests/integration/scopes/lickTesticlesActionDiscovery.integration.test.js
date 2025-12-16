@@ -100,10 +100,16 @@ describe('Lick Testicles Sensually Action Discovery Integration Tests', () => {
         getConditionDefinition: (id) => dataRegistry.get('conditions', id),
       },
     });
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicCustomOperators = new JsonLogicCustomOperators({
       logger,
       bodyGraphService: mockBodyGraphService,
       entityManager,
+      lightingStateService: mockLightingStateService,
     });
     jsonLogicCustomOperators.registerOperators(jsonLogicEval);
 

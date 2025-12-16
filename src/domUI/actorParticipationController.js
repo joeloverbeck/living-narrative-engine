@@ -268,7 +268,7 @@ class ActorParticipationController {
       );
 
       if (success) {
-        this.#logger.info(
+        this.#logger.debug(
           `[ActorParticipation] Updated participation for actor ${actorId} to ${participating}`
         );
         return true;

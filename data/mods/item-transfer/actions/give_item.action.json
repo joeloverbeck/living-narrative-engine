@@ -22,6 +22,12 @@
         "condition_ref": "anatomy:actor-has-free-grabbing-appendage"
       },
       "failure_message": "You need a free hand to give an item."
+    },
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to give an item."
     }
   ],
   "targets": {

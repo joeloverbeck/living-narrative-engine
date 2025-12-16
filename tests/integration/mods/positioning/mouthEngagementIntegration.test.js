@@ -66,6 +66,10 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
       getAllParts: jest.fn(),
     };
 
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     mockGameDataRepository = {
       getConditionDefinition: jest.fn(),
     };
@@ -81,6 +85,7 @@ describe('Positioning Actions - Mouth Engagement Integration', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
     customOperators.registerOperators(jsonLogicService);
 

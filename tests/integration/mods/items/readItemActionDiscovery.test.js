@@ -64,9 +64,15 @@ describe('items:read_item action definition', () => {
     ]);
   });
 
-  it('should have empty prerequisites array', () => {
+  it('should have lighting prerequisites', () => {
     expect(Array.isArray(readItemAction.prerequisites)).toBe(true);
-    expect(readItemAction.prerequisites).toHaveLength(0);
+    expect(readItemAction.prerequisites).toHaveLength(1);
+    expect(readItemAction.prerequisites[0].logic).toEqual({
+      isActorLocationLit: ['actor'],
+    });
+    expect(readItemAction.prerequisites[0].failure_message).toBe(
+      'It is too dark to read anything.'
+    );
   });
 
   describe('Action discovery behavior', () => {

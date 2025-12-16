@@ -76,7 +76,7 @@
         "magic.ritual",
         "error.action_failed",
         "error.system_error",
-
+        "movement.navigation",
         "action_self_general",
         "action_target_general",
         "character_enter",

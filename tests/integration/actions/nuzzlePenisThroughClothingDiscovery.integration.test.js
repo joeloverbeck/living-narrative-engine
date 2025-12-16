@@ -65,12 +65,18 @@ describe('Nuzzle Penis Through Clothing Action Discovery Integration Tests', () 
       nuzzlePenisThroughClothingAction
     );
 
+    // Create mock lighting state service
+    const mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     // Create real JSON Logic operators and evaluation service
     const jsonLogicCustomOperators = new JsonLogicCustomOperators({
       entityManager,
       bodyGraphService: mockBodyGraphService,
       logger,
       dataRegistry,
+      lightingStateService: mockLightingStateService,
     });
 
     jsonLogicEval = new JsonLogicEvaluationService({

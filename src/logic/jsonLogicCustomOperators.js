@@ -1,37 +1,14 @@
 // src/logic/jsonLogicCustomOperators.js
 
 import { BaseService } from '../utils/serviceBase.js';
-import { HasPartWithComponentValueOperator } from './operators/hasPartWithComponentValueOperator.js';
-import { HasPartOfTypeOperator } from './operators/hasPartOfTypeOperator.js';
-import { HasPartOfTypeWithComponentValueOperator } from './operators/hasPartOfTypeWithComponentValueOperator.js';
-import { HasPartWithStatusEffectOperator } from './operators/hasPartWithStatusEffectOperator.js';
-import { HasWoundedPartOperator } from './operators/hasWoundedPartOperator.js';
-import { IsBodyPartWoundedOperator } from './operators/isBodyPartWoundedOperator.js';
-import { IsSlotExposedOperator } from './operators/isSlotExposedOperator.js';
-import { IsSocketCoveredOperator } from './operators/isSocketCoveredOperator.js';
-import { SocketExposureOperator } from './operators/socketExposureOperator.js';
-import { IsBodyPartAccessibleOperator } from './operators/isBodyPartAccessibleOperator.js';
-import { HasSittingSpaceToRightOperator } from './operators/hasSittingSpaceToRightOperator.js';
-import { CanScootCloserOperator } from './operators/canScootCloserOperator.js';
-import { IsClosestLeftOccupantOperator } from './operators/isClosestLeftOccupantOperator.js';
-import { IsClosestRightOccupantOperator } from './operators/isClosestRightOccupantOperator.js';
-import { IsNearbyFurnitureOperator } from './operators/isNearbyFurnitureOperator.js';
-import { HasOtherActorsAtLocationOperator } from './operators/hasOtherActorsAtLocationOperator.js';
-import { IsRemovalBlockedOperator } from './operators/isRemovalBlockedOperator.js';
-import { HasComponentOperator } from './operators/hasComponentOperator.js';
-import { HasFreeGrabbingAppendagesOperator } from './operators/hasFreeGrabbingAppendagesOperator.js';
-import { CanActorGrabItemOperator } from './operators/canActorGrabItemOperator.js';
-import { IsItemBeingGrabbedOperator } from './operators/isItemBeingGrabbedOperator.js';
-import { GetSkillValueOperator } from './operators/getSkillValueOperator.js';
-import { HasDamageCapabilityOperator } from './operators/hasDamageCapabilityOperator.js';
-import { HasPartSubTypeContainingOperator } from './operators/hasPartSubTypeContainingOperator.js';
+import { OperatorRegistryFactory } from './operatorRegistryFactory.js';
 import { validateOperatorWhitelist } from './operatorRegistrationValidator.js';
-import { hasValidEntityId } from './utils/entityPathResolver.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 /** @typedef {import('../anatomy/bodyGraphService.js').BodyGraphService} BodyGraphService */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../locations/services/lightingStateService.js').LightingStateService} LightingStateService */
 
 /**
  * @class JsonLogicCustomOperators
@@ -44,8 +21,12 @@ export class JsonLogicCustomOperators extends BaseService {
   #bodyGraphService;
   /** @private @type {IEntityManager} */
   #entityManager;
+  /** @private @type {LightingStateService} */
+  #lightingStateService;
   /** @private @type {Set<string>} Track registered operators */
   #registeredOperators = new Set();
+  /** @private @type {Array<{clearCache?: Function}>} Track operators with caches for clearing */
+  #operatorsWithCaches = [];
 
   /**
    * Creates an instance of JsonLogicCustomOperators
@@ -54,8 +35,9 @@ export class JsonLogicCustomOperators extends BaseService {
    * @param {ILogger} dependencies.logger
    * @param {BodyGraphService} dependencies.bodyGraphService
    * @param {IEntityManager} dependencies.entityManager
+   * @param {LightingStateService} dependencies.lightingStateService
    */
-  constructor({ logger, bodyGraphService, entityManager }) {
+  constructor({ logger, bodyGraphService, entityManager, lightingStateService }) {
     super();
     this.#logger = this._init('JsonLogicCustomOperators', logger, {
       bodyGraphService: {
@@ -71,10 +53,15 @@ export class JsonLogicCustomOperators extends BaseService {
         value: entityManager,
         requiredMethods: ['getComponentData'],
       },
+      lightingStateService: {
+        value: lightingStateService,
+        requiredMethods: ['isLocationLit'],
+      },
     });
 
     this.#bodyGraphService = bodyGraphService;
     this.#entityManager = entityManager;
+    this.#lightingStateService = lightingStateService;
 
     this.#logger.debug('JsonLogicCustomOperators initialized');
   }
@@ -93,6 +80,19 @@ export class JsonLogicCustomOperators extends BaseService {
   }
 
   /**
+   * Creates a wrapper function for class-based operators.
+   * @private
+   * @param {Object} operator - Operator instance with evaluate method
+   * @returns {Function} Wrapper function for JSON Logic
+   */
+  #createOperatorWrapper(operator) {
+    return function (...args) {
+      // 'this' is the evaluation context
+      return operator.evaluate(args, this);
+    };
+  }
+
+  /**
    * Registers all custom operators with the JsonLogicEvaluationService
    *
    * @param {JsonLogicEvaluationService} jsonLogicEvaluationService
@@ -102,490 +102,40 @@ export class JsonLogicCustomOperators extends BaseService {
 
     // Clear previous registrations
     this.#registeredOperators.clear();
+    this.#operatorsWithCaches = [];
 
-    // Register hasPartWithComponentValue operator
-    // This operator checks if an entity has a body part with a specific component value
-    // Usage: {"hasPartWithComponentValue": ["actor", "descriptors:build", "build", "muscular"]}
-
-    // Create operator instances
-    const hasPartWithComponentValueOp = new HasPartWithComponentValueOperator({
+    // Create all operators using the factory
+    const factory = new OperatorRegistryFactory({
       entityManager: this.#entityManager,
       bodyGraphService: this.#bodyGraphService,
       logger: this.#logger,
+      lightingStateService: this.#lightingStateService,
     });
 
-    const hasWoundedPartOp = new HasWoundedPartOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
+    const { operators, isSocketCoveredOp, socketExposureOp, operatorsWithCaches } =
+      factory.createOperators();
 
-    const isBodyPartWoundedOp = new IsBodyPartWoundedOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
+    // Store operators that need external access (for backward compatibility)
+    this.isSocketCoveredOp = isSocketCoveredOp;
+    this.socketExposureOp = socketExposureOp;
 
-    const hasPartWithStatusEffectOp = new HasPartWithStatusEffectOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
+    // Track operators with caches
+    this.#operatorsWithCaches = operatorsWithCaches;
 
-    const hasPartOfTypeOp = new HasPartOfTypeOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
-
-    const hasPartOfTypeWithComponentValueOp =
-      new HasPartOfTypeWithComponentValueOperator({
-        entityManager: this.#entityManager,
-        bodyGraphService: this.#bodyGraphService,
-        logger: this.#logger,
-      });
-
-    const isSlotExposedOp = new IsSlotExposedOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    this.isSocketCoveredOp = new IsSocketCoveredOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    this.socketExposureOp = new SocketExposureOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-      isSocketCoveredOperator: this.isSocketCoveredOp,
-    });
-
-    const isBodyPartAccessibleOp = new IsBodyPartAccessibleOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-      isSlotExposedOperator: isSlotExposedOp,
-      socketExposureOperator: this.socketExposureOp,
-    });
-
-    const hasSittingSpaceToRightOp = new HasSittingSpaceToRightOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const canScootCloserOp = new CanScootCloserOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const isClosestLeftOccupantOp = new IsClosestLeftOccupantOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const isClosestRightOccupantOp = new IsClosestRightOccupantOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const isNearbyFurnitureOp = new IsNearbyFurnitureOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const hasOtherActorsAtLocationOp = new HasOtherActorsAtLocationOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const isRemovalBlockedOp = new IsRemovalBlockedOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const hasComponentOp = new HasComponentOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const getComponentValueOp = (
-      entityRef,
-      componentId,
-      propertyPath = null
-    ) => {
-      let entityId = null;
-
-      if (hasValidEntityId(entityRef)) {
-        entityId = entityRef.id;
-      } else if (
-        typeof entityRef === 'string' ||
-        typeof entityRef === 'number'
-      ) {
-        entityId = entityRef;
+    // Register all operators
+    for (const [name, operator] of operators) {
+      if (typeof operator === 'function') {
+        // Inline function operator (get_component_value)
+        this.#registerOperator(name, operator, jsonLogicEvaluationService);
+      } else {
+        // Class-based operator
+        this.#registerOperator(
+          name,
+          this.#createOperatorWrapper(operator),
+          jsonLogicEvaluationService
+        );
       }
-
-      if (entityId === null || entityId === undefined) {
-        return null;
-      }
-
-      const componentData = this.#entityManager.getComponentData(
-        entityId,
-        componentId
-      );
-
-      if (!componentData || typeof componentData !== 'object') {
-        return null;
-      }
-
-      if (!propertyPath || typeof propertyPath !== 'string') {
-        return componentData;
-      }
-
-      return propertyPath
-        .split('.')
-        .reduce(
-          (value, key) =>
-            value && Object.prototype.hasOwnProperty.call(value, key)
-              ? value[key]
-              : null,
-          componentData
-        );
-    };
-
-    const hasFreeGrabbingAppendagesOp = new HasFreeGrabbingAppendagesOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const canActorGrabItemOp = new CanActorGrabItemOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const isItemBeingGrabbedOp = new IsItemBeingGrabbedOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const getSkillValueOp = new GetSkillValueOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const hasDamageCapabilityOp = new HasDamageCapabilityOperator({
-      entityManager: this.#entityManager,
-      logger: this.#logger,
-    });
-
-    const hasPartSubTypeContainingOp = new HasPartSubTypeContainingOperator({
-      entityManager: this.#entityManager,
-      bodyGraphService: this.#bodyGraphService,
-      logger: this.#logger,
-    });
-
-    // Register hasPartWithComponentValue operator
-    this.#registerOperator(
-      'hasPartWithComponentValue',
-      function (entityPath, componentId, propertyPath, expectedValue) {
-        // 'this' is the evaluation context
-        return hasPartWithComponentValueOp.evaluate(
-          [entityPath, componentId, propertyPath, expectedValue],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasPartOfType operator
-    this.#registerOperator(
-      'hasPartOfType',
-      function (entityPath, partType) {
-        // 'this' is the evaluation context
-        return hasPartOfTypeOp.evaluate([entityPath, partType], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasPartOfTypeWithComponentValue operator
-    this.#registerOperator(
-      'hasPartOfTypeWithComponentValue',
-      function (
-        entityPath,
-        partType,
-        componentId,
-        propertyPath,
-        expectedValue
-      ) {
-        // 'this' is the evaluation context
-        return hasPartOfTypeWithComponentValueOp.evaluate(
-          [entityPath, partType, componentId, propertyPath, expectedValue],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isSlotExposed operator
-    this.#registerOperator(
-      'isSlotExposed',
-      function (entityPath, slotName, options) {
-        // 'this' is the evaluation context
-        return isSlotExposedOp.evaluate(
-          [entityPath, slotName, options],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isSocketCovered operator
-    const self = this;
-    this.#registerOperator(
-      'isSocketCovered',
-      function (entityPath, socketId) {
-        // 'this' is the evaluation context
-        return self.isSocketCoveredOp.evaluate([entityPath, socketId], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    this.#registerOperator(
-      'socketExposure',
-      function (
-        entityPath,
-        sockets,
-        mode = 'any',
-        invert = false,
-        treatMissingAsExposed = true
-      ) {
-        return self.socketExposureOp.evaluate(
-          [
-            entityPath,
-            sockets,
-            mode,
-            invert,
-            treatMissingAsExposed,
-          ],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    this.#registerOperator(
-      'isBodyPartAccessible',
-      function (entityPath, partEntityRef, options) {
-        return isBodyPartAccessibleOp.evaluate(
-          [entityPath, partEntityRef, options],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasSittingSpaceToRight operator
-    this.#registerOperator(
-      'hasSittingSpaceToRight',
-      function (entityPath, targetPath, minSpaces) {
-        // 'this' is the evaluation context
-        return hasSittingSpaceToRightOp.evaluate(
-          [entityPath, targetPath, minSpaces],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register canScootCloser operator
-    this.#registerOperator(
-      'canScootCloser',
-      function (entityPath, targetPath) {
-        // 'this' is the evaluation context
-        return canScootCloserOp.evaluate([entityPath, targetPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isClosestLeftOccupant operator
-    this.#registerOperator(
-      'isClosestLeftOccupant',
-      function (entityPath, targetPath, actorPath) {
-        // 'this' is the evaluation context
-        return isClosestLeftOccupantOp.evaluate(
-          [entityPath, targetPath, actorPath],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isClosestRightOccupant operator
-    this.#registerOperator(
-      'isClosestRightOccupant',
-      function (entityPath, targetPath, actorPath) {
-        return isClosestRightOccupantOp.evaluate(
-          [entityPath, targetPath, actorPath],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isNearbyFurniture operator
-    this.#registerOperator(
-      'isNearbyFurniture',
-      function (entityId) {
-        // 'this' is the evaluation context
-        return isNearbyFurnitureOp.evaluate([entityId], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasOtherActorsAtLocation operator
-    this.#registerOperator(
-      'hasOtherActorsAtLocation',
-      function (entityPath) {
-        // 'this' is the evaluation context
-        return hasOtherActorsAtLocationOp.evaluate([entityPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isRemovalBlocked operator
-    this.#registerOperator(
-      'isRemovalBlocked',
-      function (actorPath, targetItemPath) {
-        // 'this' is the evaluation context
-        return isRemovalBlockedOp.evaluate([actorPath, targetItemPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register has_component operator
-    this.#registerOperator(
-      'has_component',
-      function (entityPath, componentId) {
-        // 'this' is the evaluation context
-        return hasComponentOp.evaluate([entityPath, componentId], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register get_component_value operator
-    this.#registerOperator(
-      'get_component_value',
-      function (entityPath, componentId, propertyPath = null) {
-        return getComponentValueOp(entityPath, componentId, propertyPath);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasFreeGrabbingAppendages operator
-    this.#registerOperator(
-      'hasFreeGrabbingAppendages',
-      function (entityPath, requiredCount) {
-        // 'this' is the evaluation context
-        return hasFreeGrabbingAppendagesOp.evaluate(
-          [entityPath, requiredCount],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register canActorGrabItem operator
-    this.#registerOperator(
-      'canActorGrabItem',
-      function (actorPath, itemPath) {
-        // 'this' is the evaluation context
-        return canActorGrabItemOp.evaluate([actorPath, itemPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register isItemBeingGrabbed operator
-    this.#registerOperator(
-      'isItemBeingGrabbed',
-      function (actorPath, itemPath) {
-        // 'this' is the evaluation context
-        return isItemBeingGrabbedOp.evaluate([actorPath, itemPath], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register getSkillValue operator
-    this.#registerOperator(
-      'getSkillValue',
-      function (entityPath, componentId, propertyPath, defaultValue) {
-        // 'this' is the evaluation context
-        return getSkillValueOp.evaluate(
-          [entityPath, componentId, propertyPath, defaultValue],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register has_damage_capability operator
-    this.#registerOperator(
-      'has_damage_capability',
-      function (entityPath, damageTypeName) {
-        // 'this' is the evaluation context
-        return hasDamageCapabilityOp.evaluate(
-          [entityPath, damageTypeName],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasWoundedPart operator
-    this.#registerOperator(
-      'hasWoundedPart',
-      function (entityPath, options) {
-        // 'this' is the evaluation context
-        return hasWoundedPartOp.evaluate([entityPath, options], this);
-      },
-      jsonLogicEvaluationService
-    );
-
-    this.#registerOperator(
-      'isBodyPartWounded',
-      function (entityPath, partEntityRef, options) {
-        return isBodyPartWoundedOp.evaluate(
-          [entityPath, partEntityRef, options],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasPartWithStatusEffect operator
-    this.#registerOperator(
-      'hasPartWithStatusEffect',
-      function (entityPath, componentId, propertyPath, predicate) {
-        // 'this' is the evaluation context
-        return hasPartWithStatusEffectOp.evaluate(
-          [entityPath, componentId, propertyPath, predicate],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
-
-    // Register hasPartSubTypeContaining operator
-    this.#registerOperator(
-      'hasPartSubTypeContaining',
-      function (entityPath, substring, options) {
-        // 'this' is the evaluation context
-        return hasPartSubTypeContainingOp.evaluate(
-          [entityPath, substring, options],
-          this
-        );
-      },
-      jsonLogicEvaluationService
-    );
+    }
 
     // VALIDATION: Ensure all registered operators are whitelisted
     const allowedOps = jsonLogicEvaluationService.getAllowedOperations();
@@ -616,9 +166,10 @@ export class JsonLogicCustomOperators extends BaseService {
   clearCaches() {
     this.#logger.debug('Clearing custom operator caches');
 
-    // socketExposureOp delegates to isSocketCoveredOp internally
-    if (this.socketExposureOp) {
-      this.socketExposureOp.clearCache();
+    for (const operator of this.#operatorsWithCaches) {
+      if (typeof operator.clearCache === 'function') {
+        operator.clearCache();
+      }
     }
   }
 }

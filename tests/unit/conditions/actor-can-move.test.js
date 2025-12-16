@@ -11,6 +11,7 @@ describe('actor-can-move condition', () => {
   let mockLogger;
   let mockBodyGraphService;
   let mockEntityManager;
+  let mockLightingStateService;
   let customOperators;
 
   beforeEach(() => {
@@ -34,6 +35,10 @@ describe('actor-can-move condition', () => {
       getComponentData: jest.fn(),
     };
 
+    mockLightingStateService = {
+      isLocationLit: jest.fn().mockReturnValue(true),
+    };
+
     jsonLogicService = new JsonLogicEvaluationService({
       logger: mockLogger,
     });
@@ -42,6 +47,7 @@ describe('actor-can-move condition', () => {
       logger: mockLogger,
       bodyGraphService: mockBodyGraphService,
       entityManager: mockEntityManager,
+      lightingStateService: mockLightingStateService,
     });
 
     customOperators.registerOperators(jsonLogicService);

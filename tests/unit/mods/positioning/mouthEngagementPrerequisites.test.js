@@ -75,7 +75,8 @@ describe('Positioning Actions - Mouth Engagement Prerequisites', () => {
         it('should have well-formed prerequisite structure', () => {
           action.prerequisites.forEach((prereq) => {
             expect(prereq).toHaveProperty('logic');
-            expect(prereq.logic).toHaveProperty('condition_ref');
+            // Prerequisites can use either condition_ref or custom operators like isActorLocationLit
+            expect(prereq.logic).toBeInstanceOf(Object);
             expect(prereq).toHaveProperty('failure_message');
             expect(typeof prereq.failure_message).toBe('string');
             expect(prereq.failure_message.length).toBeGreaterThan(0);

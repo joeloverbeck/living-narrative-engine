@@ -21,6 +21,10 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AICharacterInLocationDTO} AICharacterInLocationDTO */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IEntitySummaryProvider.js').IEntitySummaryProvider} IEntitySummaryProvider */
+/** @typedef {import('../../locations/services/lightingStateService.js').LightingStateService} ILightingStateService */
+
+/** Component ID for darkness description */
+const DESCRIPTION_IN_DARKNESS_COMPONENT_ID = 'locations:description_in_darkness';
 
 export class LocationSummaryProvider extends ILocationSummaryProvider {
   /** @type {IEntityManager} */
@@ -29,6 +33,8 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
   #summaryProvider;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #dispatcher;
+  /** @type {ILightingStateService} */
+  #lightingStateService;
 
   /**
    * Creates the provider.
@@ -37,8 +43,14 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
    * @param {IEntityManager} dependencies.entityManager - Provides entity lookups.
    * @param {IEntitySummaryProvider} dependencies.summaryProvider - Supplies summary data for entities.
    * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher for error events.
+   * @param {ILightingStateService} dependencies.lightingStateService - Service for querying location lighting state.
    */
-  constructor({ entityManager, summaryProvider, safeEventDispatcher }) {
+  constructor({
+    entityManager,
+    summaryProvider,
+    safeEventDispatcher,
+    lightingStateService,
+  }) {
     super();
     if (!safeEventDispatcher?.dispatch) {
       throw new Error(
@@ -49,6 +61,7 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
     this.#summaryProvider = summaryProvider;
     /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
     this.#dispatcher = safeEventDispatcher;
+    this.#lightingStateService = lightingStateService;
   }
 
   async #buildExitDTOs(locationEntity) {
@@ -148,12 +161,25 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
         logger
       );
 
+      // Get lighting state from the lighting state service
+      const { isLit } = this.#lightingStateService.getLocationLightingState(
+        locationEntity.id
+      );
+
+      // Get darkness description if the component is present
+      const darknessDescData = locationEntity.getComponentData(
+        DESCRIPTION_IN_DARKNESS_COMPONENT_ID
+      );
+      const descriptionInDarkness = darknessDescData?.text || null;
+
       /** @type {AILocationSummaryDTO} */
       return {
         name: locationSummary.name || DEFAULT_FALLBACK_LOCATION_NAME,
         description: locationSummary.description,
         exits,
         characters,
+        isLit,
+        descriptionInDarkness,
       };
     } catch (err) {
       safeDispatchError(

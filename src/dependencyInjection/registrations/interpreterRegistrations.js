@@ -239,6 +239,10 @@ export function registerInterpreters(container) {
       bind(tokens.DropItemAtLocationHandler)
     );
     registry.register(
+      'PICK_RANDOM_ARRAY_ELEMENT',
+      bind(tokens.PickRandomArrayElementHandler)
+    );
+    registry.register(
       'PICK_RANDOM_ENTITY',
       bind(tokens.PickRandomEntityHandler)
     );

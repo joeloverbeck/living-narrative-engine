@@ -104,12 +104,13 @@ describe('IsBodyPartAccessibleOperator', () => {
     );
 
     expect(result).toBe(true);
+    // evaluateInternal is called with localContext (clone with _currentPath set)
     expect(
       mockDependencies.isSlotExposedOperator.evaluateInternal
     ).toHaveBeenCalledWith(
       'actor-1',
       ['torso', { layers: ['base', 'outer', 'accessories'] }],
-      context
+      expect.objectContaining({ _currentPath: 'actor' })
     );
   });
 
@@ -136,12 +137,13 @@ describe('IsBodyPartAccessibleOperator', () => {
       context
     );
 
+    // evaluateInternal is called with localContext (clone with _currentPath set)
     expect(
       mockDependencies.socketExposureOperator.evaluateInternal
     ).toHaveBeenCalledWith(
       'actor-1',
       [['left', 'right'], 'all', true, false],
-      context
+      expect.objectContaining({ _currentPath: 'actor' })
     );
     expect(result).toBe(false);
   });

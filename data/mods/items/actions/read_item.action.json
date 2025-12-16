@@ -13,7 +13,14 @@
   "required_components": {
     "primary": ["items:item", "items:readable"]
   },
-  "prerequisites": [],
+  "prerequisites": [
+    {
+      "logic": {
+        "isActorLocationLit": ["actor"]
+      },
+      "failure_message": "It is too dark to read anything."
+    }
+  ],
   "template": "read {item}",
   "visual": {
     "backgroundColor": "#004d61",

@@ -1,20 +1,36 @@
 /**
  * @file Memory tests for ActionCategorizationService
  * @description Tests memory usage patterns of action categorization operations
+ *
+ * OPTIMIZATION NOTE: This test uses direct service instantiation instead of
+ * the full DI container (configureBaseContainer). The service only needs a
+ * logger, and the full container setup adds ~2.5s of overhead with 58+ service
+ * registrations that are not needed for memory leak testing.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
-import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { Registrar } from '../../../src/utils/registrarHelpers.js';
-import ConsoleLogger, { LogLevel } from '../../../src/logging/consoleLogger.js';
+import ActionCategorizationService from '../../../src/entities/utils/ActionCategorizationService.js';
+
+/**
+ * Creates a minimal mock logger for testing.
+ * The ActionCategorizationService only requires a logger with info/warn/error/debug.
+ *
+ * @returns {object} Mock logger object
+ */
+function createMinimalMockLogger() {
+  return {
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
+  };
+}
 
 describe('ActionCategorizationService - Memory Tests', () => {
   jest.setTimeout(120000); // 2 minutes for memory stabilization
 
-  let container;
   let categorizationService;
+  let mockLogger;
 
   beforeAll(async () => {
     // Validate memory test utilities are available
@@ -24,58 +40,13 @@ describe('ActionCategorizationService - Memory Tests', () => {
       );
     }
 
-    // Set up container and service ONCE for all tests
-    container = new AppContainer();
-    const registrar = new Registrar(container);
-
-    // Register logger first (required by action categorization service)
-    const appLogger = new ConsoleLogger(LogLevel.ERROR);
-    registrar.instance(tokens.ILogger, appLogger);
-
-    // Register required event dispatchers with more comprehensive mocks
-    const mockSafeEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-    };
-
-    const mockValidatedEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-      validateAndDispatch: jest.fn().mockResolvedValue(undefined),
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-    };
-
-    container.register(tokens.ISafeEventDispatcher, mockSafeEventDispatcher, {
-      lifecycle: 'singleton',
+    // Direct instantiation - ActionCategorizationService only needs a logger
+    // This avoids the ~2.5s overhead of configureBaseContainer which registers
+    // 58+ services not needed for memory leak testing
+    mockLogger = createMinimalMockLogger();
+    categorizationService = new ActionCategorizationService({
+      logger: mockLogger,
     });
-
-    container.register(
-      tokens.IValidatedEventDispatcher,
-      mockValidatedEventDispatcher,
-      { lifecycle: 'singleton' }
-    );
-
-    // Configure base container which includes action categorization
-    // Use minimal configuration to avoid unnecessary overhead
-    await configureBaseContainer(container, {
-      includeGameSystems: false,
-      includeUI: false,
-      includeCharacterBuilder: false,
-      logger: appLogger, // Pass logger for better debugging
-    });
-
-    // Resolve service after full container configuration
-    categorizationService = container.resolve(
-      tokens.IActionCategorizationService
-    );
-
-    // Validate service was properly resolved
-    if (!categorizationService) {
-      throw new Error(
-        'ActionCategorizationService could not be resolved from container'
-      );
-    }
   });
 
   beforeEach(async () => {
@@ -91,7 +62,7 @@ describe('ActionCategorizationService - Memory Tests', () => {
   afterAll(async () => {
     // Clean up references after all tests
     categorizationService = null;
-    container = null;
+    mockLogger = null;
 
     // Final garbage collection
     await global.memoryTestUtils.forceGCAndWait();

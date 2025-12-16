@@ -134,6 +134,9 @@ class JsonLogicEvaluationService extends BaseService {
       'has_damage_capability',
       // Body part substring matching operators
       'hasPartSubTypeContaining',
+      // Location operators
+      'isActorLocationLit',
+      'locationHasExits',
     ]);
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---

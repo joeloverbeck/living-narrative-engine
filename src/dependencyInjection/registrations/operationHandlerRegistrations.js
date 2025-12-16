@@ -91,6 +91,7 @@ import SequenceHandler from '../../logic/operationHandlers/sequenceHandler.js';
 import TransferItemHandler from '../../logic/operationHandlers/transferItemHandler.js';
 import ValidateInventoryCapacityHandler from '../../logic/operationHandlers/validateInventoryCapacityHandler.js';
 import DropItemAtLocationHandler from '../../logic/operationHandlers/dropItemAtLocationHandler.js';
+import PickRandomArrayElementHandler from '../../logic/operationHandlers/pickRandomArrayElementHandler.js';
 import PickRandomEntityHandler from '../../logic/operationHandlers/pickRandomEntityHandler.js';
 import PickUpItemFromLocationHandler from '../../logic/operationHandlers/pickUpItemFromLocationHandler.js';
 import PrepareActionContextHandler from '../../logic/operationHandlers/prepareActionContextHandler.js';
@@ -773,6 +774,15 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.PickRandomArrayElementHandler,
+      PickRandomArrayElementHandler,
+      (c, Handler) =>
+        new Handler({
+          entityManager: c.resolve(tokens.IEntityManager),
+          logger: c.resolve(tokens.ILogger),
         }),
     ],
     [

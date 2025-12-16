@@ -410,6 +410,7 @@ export function registerWorldAndEntity(container) {
       logger: c.resolve(tokens.ILogger),
       bodyGraphService: c.resolve(tokens.BodyGraphService),
       entityManager: c.resolve(tokens.IEntityManager),
+      lightingStateService: c.resolve(tokens.ILightingStateService),
     });
   });
   logger.debug(
