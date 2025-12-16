@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:block_and_tackle",
+  "description": "A pulley system for applying steady, incremental lift to heavy objects",
+  "components": {
+    "core:name": {
+      "text": "block and tackle"
+    },
+    "core:description": {
+      "text": "A set of wooden blocks threaded with rope through iron pulleys, the kind of simple machine that turns one man's strength into three. The blocks are scarred from use, the pulleys oiled to spin smooth, and the rope has been replaced recently—you can tell by the lighter color where it hasn't yet absorbed the tunnel grime. When something heavy needs lifting without the brute force that might snap a rope or collapse a weakened edge, this is what comes out. You rig it to whatever's solid overhead, run the line down to what needs moving, and then you pull. Slow and steady, inch by inch, until what was buried becomes what's recovered."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 3.0
+    },
+    "core:material": {
+      "material": "iron",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "rope-tan"
+    },
+    "descriptors:texture": {
+      "texture": "oiled"
+    }
+  }
+}

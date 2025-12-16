@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:mattock",
+  "description": "A mattock for breaking compacted silt, clay, and loosening collapsed culvert fill",
+  "components": {
+    "core:name": {
+      "text": "mattock"
+    },
+    "core:description": {
+      "text": "A mattock with a pick on one side and an adze on the other, the kind of double-headed tool that earns its keep in hard ground. The pick point is dulled from striking brick and stone, and the adze blade is nicked where it's pried out chunks of compacted clay. The handle is oak, fire-hardened at the head socket, and it's been reseated at least once where the wood split under impact. When collapsed culvert fill needs loosening, when brick chunks need prying from walls of silted earth, when nothing else will bite—this is what comes off the cart. It's brutal work, but someone has to break what time has packed solid."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 3.0
+    },
+    "core:material": {
+      "material": "iron",
+      "properties": ["rigid"]
+    },
+    "descriptors:color_extended": {
+      "color": "iron-gray"
+    },
+    "descriptors:texture": {
+      "texture": "scuffed"
+    }
+  }
+}

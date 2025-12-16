@@ -1,0 +1,6 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:segment_c_instance",
+    "definitionId": "dredgers:segment_c"
+  }
+  

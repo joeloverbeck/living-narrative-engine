@@ -918,6 +918,141 @@ describe('AIPromptContentProvider', () => {
       });
     });
 
+    describe('getWorldContextContent - darkness handling', () => {
+      test('should use darkness builder when currentLocation.isLit === false', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: 'Dark Cave',
+            description: 'A damp cave.',
+            isLit: false,
+            descriptionInDarkness: 'You hear water dripping.',
+            exits: [{ direction: 'north', targetLocationName: 'Exit' }],
+            characters: [{ name: 'Hidden Guard', description: 'Armed.' }],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        // Should contain darkness-specific content
+        expect(result).toContain('## Current Situation');
+        expect(result).toContain('### Location');
+        expect(result).toContain('Dark Cave');
+        expect(result).toContain('**Pitch darkness.** You cannot see anything.');
+        expect(result).toContain('### Sensory Impressions');
+        expect(result).toContain('You hear water dripping.');
+        expect(result).toContain('You cannot see any exits in the darkness.');
+
+        // Should NOT contain lit-location content
+        expect(result).not.toContain('A damp cave.');
+        expect(result).not.toContain('leads to Exit');
+        expect(result).not.toContain('Hidden Guard');
+        expect(result).not.toContain('Armed.');
+
+        expect(mockLoggerInstance.debug).toHaveBeenCalledWith(
+          'AIPromptContentProvider: Location is in darkness, using darkness world context builder.'
+        );
+      });
+
+      test('should use standard builder when currentLocation.isLit === true', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: 'Lit Room',
+            description: 'A bright room.',
+            isLit: true,
+            exits: [{ direction: 'south', targetLocationName: 'Hall' }],
+            characters: [{ name: 'Visible Guard', description: 'Standing.' }],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        // Should contain lit-location content
+        expect(result).toContain('A bright room.');
+        expect(result).toContain('leads to Hall');
+        expect(result).toContain('Visible Guard');
+
+        // Should NOT contain darkness-specific content
+        expect(result).not.toContain('Pitch darkness');
+        expect(result).not.toContain('cannot see any exits');
+      });
+
+      test('should use standard builder when currentLocation.isLit is undefined (backward compat)', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: 'Old Room',
+            description: 'An old room without isLit property.',
+            // isLit is not defined - should default to lit for backward compatibility
+            exits: [{ direction: 'east', targetLocationName: 'Garden' }],
+            characters: [],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        // Should use standard lit behavior
+        expect(result).toContain('An old room without isLit property.');
+        expect(result).toContain('leads to Garden');
+        expect(result).not.toContain('Pitch darkness');
+        expect(result).not.toContain('cannot see any exits');
+      });
+
+      test('should pass correct character count to darkness builder', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: 'Crowded Dark Room',
+            description: 'Ignored.',
+            isLit: false,
+            exits: [],
+            characters: [
+              { name: 'Person 1', description: 'Desc 1' },
+              { name: 'Person 2', description: 'Desc 2' },
+              { name: 'Person 3', description: 'Desc 3' },
+            ],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        // Should indicate "a few presences" for 3 characters
+        expect(result).toContain(
+          "You can't see anything in the dark, but you sense a few presences here."
+        );
+      });
+
+      test('should use fallback location name in darkness when name is missing', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: null,
+            description: 'Ignored.',
+            isLit: false,
+            exits: [],
+            characters: [],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        expect(result).toContain(DEFAULT_FALLBACK_LOCATION_NAME);
+      });
+
+      test('should omit sensory section when descriptionInDarkness is null', () => {
+        const dto = {
+          ...minimalGameStateDto,
+          currentLocation: {
+            name: 'Silent Cave',
+            description: 'Ignored.',
+            isLit: false,
+            descriptionInDarkness: null,
+            exits: [],
+            characters: [],
+          },
+        };
+        const result = provider.getWorldContextContent(dto);
+
+        expect(result).not.toContain('### Sensory Impressions');
+      });
+    });
+
     describe('getAvailableActionsInfoContent', () => {
       test('should list available actions with all details', () => {
         const dto = {

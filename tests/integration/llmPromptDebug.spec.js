@@ -175,6 +175,12 @@ describe('Integration: LLM Prompt Debug Panel', () => {
     ensureInstance(tokens.InjuryAggregationService, {
       aggregateInjuries: jest.fn(),
     });
+    ensureInstance(tokens.ILightingStateService, {
+      getLocationLightingState: jest.fn().mockReturnValue({
+        isLit: true,
+        lightSources: [],
+      }),
+    }); // LocationRenderer
     ensureInstance(tokens.OperationInterpreter, {}); // PerceptibleEventSenderController
 
     // Resolve components

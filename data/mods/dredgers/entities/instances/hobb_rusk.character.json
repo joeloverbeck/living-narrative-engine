@@ -1,0 +1,17 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:hobb_rusk_instance",
+    "definitionId": "dredgers:hobb_rusk",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "dredgers:outer_service_yard_instance"
+        },
+        "items:inventory": {
+            "items": [],
+            "capacity": {
+                "maxWeight": 50.0,
+                "maxItems": 20
+            }
+        }
+    }
+}

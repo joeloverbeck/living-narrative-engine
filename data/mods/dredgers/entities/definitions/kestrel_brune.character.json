@@ -732,6 +732,26 @@
                     "text": "Pitch isn't cruel. He doesn't enjoy harm. But he's got less rope between 'professional' and 'I don't care anymore,' and that makes him dangerous in a different way than I am. I stop fights. He ends structures. And when a person starts looking like a structure to him—something that needs to come down clean—that's when I need to be standing between him and whoever he's decided is load-bearing.",
                     "subject": "Pitch - the edge I have to watch",
                     "subjectType": "knowledge"
+                },
+                {
+                    "text": "Hobb Rusk is the Ash-Seal liaison for this emergency job. Newt-folk. Late thirties, probably. Ash-Seal tech, not crew—pure contractor energy. You can tell: he's here to contain the problem, invoice for it, and leave. No attachment, no curiosity beyond the technical specs. *sharp laugh* I recognize the approach because it's what I do, except he's colder about it than I've ever managed.",
+                    "subject": "Hobb Rusk",
+                    "subjectType": "entity"
+                },
+                {
+                    "text": "Met Hobb Rusk an hour ago when we all loaded onto the cart for the job site. While the rest of us dredgers are antsy—me from the hangover and lack of sleep, the others from the weirdness of a pre-dawn emergency call—Hobb's calm in this cold, clinical way. Not reassuring-calm. Wrong-calm. Like he's watching an experiment, not joining a crisis. *involuntary laugh* Creepy as hell, honestly.",
+                    "subject": "Hobb Rusk - creepy calm demeanor",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "Hobb Rusk is weirdly obsessed with air humidity. Made a few comments about it during the cart ride—not idle chatter, more like he's monitoring it. Keeps noting the moisture levels, the way the air feels. Don't know if that's an Ash-Seal thing, a newt-folk thing, or a Hobb thing, but it's strange enough that I'm noticing it. When people get fixated on environmental details like that, they're either paranoid or they know something I don't. *forced exhale* Neither option makes me feel great about this job.",
+                    "subject": "Hobb Rusk - humidity obsession",
+                    "subjectType": "knowledge"
+                },
+                {
+                    "text": "An hour ago, we all met on the cart heading to the job site—me, Jorren's crew, and Hobb Rusk from Ash-Seal. Ride's tense. Everyone's antsy about the emergency call except Hobb, who's acting like he's consulting on a technical problem instead of whatever the hell this turns out to be. I'm reading the crew's fear reactions and they're all spiking differently—Jorren's in lead-mode tension, Saffi's tight and watchful, Pitch is doing that calibrated calm he gets. And Hobb's just... there. Watching. Taking notes in his head. *sharp laugh* I don't like it.",
+                    "subject": "Cart ride to emergency job site",
+                    "subjectType": "event"
                 }
             ]
         },

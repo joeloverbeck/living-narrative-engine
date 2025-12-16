@@ -4,7 +4,7 @@
     "definitionId": "dredgers:jorren_weir",
     "componentOverrides": {
         "core:position": {
-            "locationId": "dredgers:canal_vestibule_instance"
+            "locationId": "dredgers:service_stair_instance"
         },
         "items:inventory": {
             "items": [

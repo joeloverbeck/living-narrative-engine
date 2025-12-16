@@ -1,0 +1,39 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:city_boots_polished_leather_kiln_black",
+  "description": "City boots in polished leather, kiln-black color",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "feet"
+      },
+      "allowedLayers": ["base", "outer"]
+    },
+    "core:material": {
+      "material": "leather",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "city boots"
+    },
+    "core:description": {
+      "text": "Boots of polished leather in kiln-black, made for walking city streets and standing in formal halls. The leather has been worked to a high shine, catching light like dark water. They rise to mid-calf, lacing neatly up the front with black cord. The soles are thick but quiet, designed for paved surfaces and polished floors. These are not boots for mud or rough ground—they are boots for someone whose work keeps them indoors, among people who notice such things. Maintained with evident care, showing the disciplined attention of their wearer."
+    },
+    "descriptors:color_extended": {
+      "color": "kiln-black"
+    },
+    "descriptors:texture": {
+      "texture": "polished"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["feet"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.1
+    }
+  }
+}

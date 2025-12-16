@@ -1,0 +1,30 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:flooded_approach",
+    "components": {
+        "core:name": {
+            "text": "flooded approach"
+        },
+        "core:description": {
+            "text": "Beyond the last grate, the “path” stops pretending—it becomes a wading route through two feet of contaminated water over broken rubble. The walls pinch into a rough basin where the canal-run meets a damaged culvert line: ancient masonry half-collapsed, silt packed into every seam, and a sagging void where the channel was meant to carry flow cleanly. Moving is slow and punishing: each step risks a turned ankle on submerged stone, and any disturbance clouds the water into thicker blindness. The air is worse here—stale, wet, and sour, with a metallic undertone that clings to your tongue. Lanterns don’t help much; the light dies in the sludge, leaving only nearby outlines and the sense of depth you can’t verify. The collapsed culvert pocket is an open working space in the sense that nothing “blocks” you—but everything about it resists work: tight angles, unstable stone, silt that doesn’t want to let go, and that central wrongness lodged down in the muck where the artifact sits entombed."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/flooded_approach.png",
+            "altText": "A wading route through two feet of contaminated water over broken rubble"
+        },
+        "movement:exits": [
+            {
+                "direction": "to segment C",
+                "target": "dredgers:segment_c_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "Water. You hear it before you feel it—gentle lapping against stone, the hollow sound of an enclosed space with liquid below. When you step forward, cold water floods over your boot. The air is thick with moisture and the smell of stagnant canal water. Something floats past your ankle."
+        }
+    }
+}

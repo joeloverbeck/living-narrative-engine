@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:throw_line",
+  "description": "A lighter rescue line for quick deployment when someone slips into danger",
+  "components": {
+    "core:name": {
+      "text": "throw line"
+    },
+    "core:description": {
+      "text": "A lighter line than the working ropes, coiled small and kept within arm's reach. One end is weighted with a monkey's fist knot, the other looped for a wrist or belt—when someone slips into a deeper pocket or loses footing on slick stone, this is what flies out before words do. The hemp is newer, less tarred, meant for hands to grab without burning through cloth gloves. Every dredger knows the weight of this coil, knows how it feels leaving the palm. It's the kind of tool you hope you never need, and check twice before every descent."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 1.0
+    },
+    "core:material": {
+      "material": "hemp",
+      "properties": ["flexible"]
+    },
+    "descriptors:color_extended": {
+      "color": "rope-tan"
+    },
+    "descriptors:texture": {
+      "texture": "coarse"
+    }
+  }
+}

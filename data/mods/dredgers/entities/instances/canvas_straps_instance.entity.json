@@ -1,0 +1,5 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "dredgers:canvas_straps_instance",
+  "definitionId": "dredgers:canvas_straps"
+}

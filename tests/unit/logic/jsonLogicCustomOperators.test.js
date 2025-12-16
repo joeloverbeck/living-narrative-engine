@@ -16,6 +16,15 @@ import { IsRemovalBlockedOperator } from '../../../src/logic/operators/isRemoval
 import { HasComponentOperator } from '../../../src/logic/operators/hasComponentOperator.js';
 import { HasWoundedPartOperator } from '../../../src/logic/operators/hasWoundedPartOperator.js';
 import { HasPartWithStatusEffectOperator } from '../../../src/logic/operators/hasPartWithStatusEffectOperator.js';
+import { IsBodyPartAccessibleOperator } from '../../../src/logic/operators/isBodyPartAccessibleOperator.js';
+import { IsNearbyFurnitureOperator } from '../../../src/logic/operators/isNearbyFurnitureOperator.js';
+import { CanActorGrabItemOperator } from '../../../src/logic/operators/canActorGrabItemOperator.js';
+import { IsItemBeingGrabbedOperator } from '../../../src/logic/operators/isItemBeingGrabbedOperator.js';
+import { GetSkillValueOperator } from '../../../src/logic/operators/getSkillValueOperator.js';
+import { HasDamageCapabilityOperator } from '../../../src/logic/operators/hasDamageCapabilityOperator.js';
+import { IsBodyPartWoundedOperator } from '../../../src/logic/operators/isBodyPartWoundedOperator.js';
+import { HasPartSubTypeContainingOperator } from '../../../src/logic/operators/hasPartSubTypeContainingOperator.js';
+import { HasFreeGrabbingAppendagesOperator } from '../../../src/logic/operators/hasFreeGrabbingAppendagesOperator.js';
 
 describe('JsonLogicCustomOperators', () => {
   let customOperators;
@@ -185,6 +194,60 @@ describe('JsonLogicCustomOperators', () => {
           { op: '===', value: 'moderate' },
         ],
       },
+      {
+        operatorName: 'isBodyPartAccessible',
+        operatorClass: IsBodyPartAccessibleOperator,
+        invocationArgs: ['actor.path', 'part-entity-ref', { checkSlots: true }],
+        expectedParams: ['actor.path', 'part-entity-ref', { checkSlots: true }],
+      },
+      {
+        operatorName: 'isNearbyFurniture',
+        operatorClass: IsNearbyFurnitureOperator,
+        invocationArgs: ['entity-id'],
+        expectedParams: ['entity-id'],
+      },
+      {
+        operatorName: 'canActorGrabItem',
+        operatorClass: CanActorGrabItemOperator,
+        invocationArgs: ['actor.path', 'item.path'],
+        expectedParams: ['actor.path', 'item.path'],
+      },
+      {
+        operatorName: 'isItemBeingGrabbed',
+        operatorClass: IsItemBeingGrabbedOperator,
+        invocationArgs: ['actor.path', 'item.path'],
+        expectedParams: ['actor.path', 'item.path'],
+      },
+      {
+        operatorName: 'getSkillValue',
+        operatorClass: GetSkillValueOperator,
+        invocationArgs: ['actor.path', 'skills:combat', 'melee', 0],
+        expectedParams: ['actor.path', 'skills:combat', 'melee', 0],
+      },
+      {
+        operatorName: 'has_damage_capability',
+        operatorClass: HasDamageCapabilityOperator,
+        invocationArgs: ['entity.path', 'slashing'],
+        expectedParams: ['entity.path', 'slashing'],
+      },
+      {
+        operatorName: 'isBodyPartWounded',
+        operatorClass: IsBodyPartWoundedOperator,
+        invocationArgs: ['actor.path', 'part-ref', { minSeverity: 'moderate' }],
+        expectedParams: ['actor.path', 'part-ref', { minSeverity: 'moderate' }],
+      },
+      {
+        operatorName: 'hasPartSubTypeContaining',
+        operatorClass: HasPartSubTypeContainingOperator,
+        invocationArgs: ['actor.path', 'humanoid', { caseSensitive: false }],
+        expectedParams: ['actor.path', 'humanoid', { caseSensitive: false }],
+      },
+      {
+        operatorName: 'hasFreeGrabbingAppendages',
+        operatorClass: HasFreeGrabbingAppendagesOperator,
+        invocationArgs: ['actor.path', 2],
+        expectedParams: ['actor.path', 2],
+      },
     ])(
       'delegates %s evaluation to operator instance',
       ({ operatorName, operatorClass, invocationArgs, expectedParams }) => {
@@ -210,6 +273,35 @@ describe('JsonLogicCustomOperators', () => {
         expect(evaluateSpy).toHaveBeenCalledWith(expectedParams, context);
       }
     );
+  });
+
+  describe('getRegisteredOperators', () => {
+    test('should return a set of registered operator names after registerOperators is called', () => {
+      customOperators.registerOperators(jsonLogicService);
+
+      const registeredOps = customOperators.getRegisteredOperators();
+
+      expect(registeredOps).toBeInstanceOf(Set);
+      expect(registeredOps.size).toBeGreaterThan(0);
+      // Verify some expected operators are registered
+      expect(registeredOps.has('hasPartWithComponentValue')).toBe(true);
+      expect(registeredOps.has('has_component')).toBe(true);
+      expect(registeredOps.has('get_component_value')).toBe(true);
+    });
+
+    test('should return empty set before registerOperators is called', () => {
+      // Create fresh instance without calling registerOperators
+      const freshOperators = new JsonLogicCustomOperators({
+        logger: mockLogger,
+        bodyGraphService: mockBodyGraphService,
+        entityManager: mockEntityManager,
+      });
+
+      const registeredOps = freshOperators.getRegisteredOperators();
+
+      expect(registeredOps).toBeInstanceOf(Set);
+      expect(registeredOps.size).toBe(0);
+    });
   });
 
   describe('clearCaches', () => {
@@ -1266,6 +1358,309 @@ describe('JsonLogicCustomOperators', () => {
       const result = jsonLogicService.evaluate(rule, context);
 
       expect(result).toBe(true);
+    });
+  });
+
+  describe('get_component_value operator', () => {
+    beforeEach(() => {
+      customOperators.registerOperators(jsonLogicService);
+    });
+
+    test('should return component data when entity has id property', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+          components: {},
+        },
+      };
+
+      const componentData = { health: 100, mana: 50 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      // Use { var: 'actor' } to resolve the entity object from context
+      const rule = {
+        get_component_value: [{ var: 'actor' }, 'stats:health'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'player123',
+        'stats:health'
+      );
+    });
+
+    test('should return component data when entity is a string ID', () => {
+      const context = {
+        entityId: 'npc456',
+      };
+
+      const componentData = { name: 'Test NPC' };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: [{ var: 'entityId' }, 'core:identity'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        'npc456',
+        'core:identity'
+      );
+    });
+
+    test('should return component data when entity is a number ID', () => {
+      const context = {
+        entityId: 12345,
+      };
+
+      const componentData = { value: 42 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: [{ var: 'entityId' }, 'core:data'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+      expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
+        12345,
+        'core:data'
+      );
+    });
+
+    test('should return null when entity has null ID', () => {
+      const context = {
+        actor: {
+          id: null,
+        },
+      };
+
+      // Use { var: 'actor' } to resolve the entity object from context
+      const rule = {
+        get_component_value: [{ var: 'actor' }, 'stats:health'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+    });
+
+    test('should return null when entity has undefined ID', () => {
+      const context = {
+        actor: {
+          id: undefined,
+        },
+      };
+
+      // Use { var: 'actor' } to resolve the entity object from context
+      const rule = {
+        get_component_value: [{ var: 'actor' }, 'stats:health'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+      expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
+    });
+
+    test('should return null when component data is null', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      const rule = {
+        get_component_value: ['actor', 'nonexistent:component'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null when component data is not an object (primitive)', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      mockEntityManager.getComponentData.mockReturnValue('string-value');
+
+      const rule = {
+        get_component_value: ['actor', 'some:component'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return full component data when no property path provided', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = { health: 100, mana: 50, stamina: 75 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'stats:attributes'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+    });
+
+    test('should return full component data when property path is null', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = { value: 42 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'core:data', null],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+    });
+
+    test('should return full component data when property path is not a string', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = { value: 42 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'core:data', 123],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toEqual(componentData);
+    });
+
+    test('should resolve simple property path', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = { health: 100, mana: 50 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'stats:attributes', 'health'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(100);
+    });
+
+    test('should resolve nested property path', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = {
+        stats: {
+          combat: {
+            attack: 25,
+            defense: 15,
+          },
+        },
+      };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'game:stats', 'stats.combat.attack'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBe(25);
+    });
+
+    test('should return null for non-existent property path', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = { health: 100 };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'stats:attributes', 'nonexistent'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null for non-existent nested property path', () => {
+      const context = {
+        actor: {
+          id: 'player123',
+        },
+      };
+
+      const componentData = {
+        stats: {
+          health: 100,
+        },
+      };
+      mockEntityManager.getComponentData.mockReturnValue(componentData);
+
+      const rule = {
+        get_component_value: ['actor', 'game:stats', 'stats.combat.attack'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null when entity path resolves to null', () => {
+      const context = {
+        actor: null,
+      };
+
+      const rule = {
+        get_component_value: ['actor', 'stats:health'],
+      };
+
+      const result = jsonLogicService.evaluate(rule, context);
+
+      expect(result).toBeNull();
     });
   });
 });

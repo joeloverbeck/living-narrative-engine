@@ -31,6 +31,7 @@ import FacadeFactory from '../../shared/facades/FacadeFactory.js';
 import FacadeRegistry from '../../shared/facades/FacadeRegistry.js';
 import IClothingSystemFacade from '../../clothing/facades/IClothingSystemFacade.js';
 import IAnatomySystemFacade from '../../anatomy/facades/IAnatomySystemFacade.js';
+import { LightingStateService } from '../../locations/services/lightingStateService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -525,6 +526,18 @@ export function registerInfrastructure(container) {
 
     safeDebug('Facade configurations registered in factory and registry.');
   });
+
+  // ─── Location Services ─────────────────────────────
+  container.register(
+    tokens.ILightingStateService,
+    (c) =>
+      new LightingStateService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.ILightingStateService)}.`);
 
   safeDebug('Infrastructure Registration: complete.');
 }

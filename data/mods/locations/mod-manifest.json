@@ -1,0 +1,31 @@
+{
+  "$schema": "schema://living-narrative-engine/mod-manifest.schema.json",
+  "id": "locations",
+  "version": "1.0.0",
+  "name": "Locations",
+  "description": "Location-specific mechanics including lighting states and environmental conditions.",
+  "author": "joeloverbeck",
+  "gameVersion": ">=0.0.1",
+  "dependencies": [
+    {
+      "id": "core",
+      "version": "^1.0.0"
+    }
+  ],
+  "content": {
+    "components": [
+      "naturally_dark.component.json",
+      "light_sources.component.json",
+      "description_in_darkness.component.json"
+    ],
+    "conditions": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
+    "events": [],
+    "rules": [],
+    "scopes": [],
+    "actions": []
+  }
+}

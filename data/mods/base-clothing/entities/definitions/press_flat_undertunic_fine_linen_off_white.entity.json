@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "base-clothing:press_flat_undertunic_fine_linen_off_white",
+  "description": "A press-flat undertunic in fine linen, off-white color, meticulous condition",
+  "components": {
+    "clothing:wearable": {
+      "layer": "base",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "core:material": {
+      "material": "linen",
+      "properties": ["breathable"]
+    },
+    "core:name": {
+      "text": "press-flat undertunic"
+    },
+    "core:description": {
+      "text": "A finely woven linen undertunic in a pale off-white, pressed flat with evident care. The fabric lies smooth against the body, its weave tight and even, speaking to quality manufacture. Every seam is precise, the stitching invisible to casual inspection. This is not working wear—it is the foundation garment of someone who attends to their presentation with methodical attention. The linen has been laundered and pressed until it holds a crisp edge, ready to lie unseen beneath more formal layers while maintaining its owner's standard of meticulous cleanliness."
+    },
+    "descriptors:color_extended": {
+      "color": "off-white"
+    },
+    "descriptors:texture": {
+      "texture": "meticulous"
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "base"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.18
+    }
+  }
+}

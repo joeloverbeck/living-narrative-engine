@@ -1,0 +1,43 @@
+{
+    "$schema": "http://example.com/schemas/entity-instance.schema.json",
+    "instanceId": "dredgers:dredgers_cart_instance",
+    "definitionId": "dredgers:dredgers_cart",
+    "componentOverrides": {
+        "core:position": {
+            "locationId": "dredgers:outer_service_yard_instance"
+        },
+        "containers-core:container": {
+            "contents": [
+                "dredgers:hooded_oil_lantern_instance_1",
+                "dredgers:hooded_oil_lantern_instance_2",
+                "dredgers:hooded_oil_lantern_instance_3",
+                "dredgers:long_rope_instance_1",
+                "dredgers:long_rope_instance_2",
+                "dredgers:throw_line_instance",
+                "dredgers:bolt_cutters_instance",
+                "dredgers:hacksaw_instance",
+                "dredgers:plank_instance_1",
+                "dredgers:plank_instance_2",
+                "dredgers:plank_instance_3",
+                "dredgers:trenching_shovel_instance_1",
+                "dredgers:trenching_shovel_instance_2",
+                "dredgers:mattock_instance",
+                "dredgers:bucket_instance",
+                "dredgers:hand_dredge_scoop_instance",
+                "dredgers:probe_rod_instance_1",
+                "dredgers:probe_rod_instance_2",
+                "dredgers:block_and_tackle_instance",
+                "dredgers:canvas_straps_instance",
+                "dredgers:scrub_kit_instance_1",
+                "dredgers:scrub_kit_instance_2",
+                "dredgers:scrub_kit_instance_3"
+            ],
+            "capacity": {
+                "maxWeight": 200,
+                "maxItems": 30
+            },
+            "isOpen": true,
+            "requiresKey": false
+        }
+    }
+}

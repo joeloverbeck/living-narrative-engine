@@ -1,0 +1,35 @@
+{
+    "$schema": "http://example.com/schemas/entity-definition.schema.json",
+    "id": "dredgers:lower_gallery",
+    "components": {
+        "core:name": {
+            "text": "lower gallery"
+        },
+        "core:description": {
+            "text": "A long subterranean corridor built as utility access for the estate’s older underworks: rough stone walls, sweating mortar, occasional timber props where the masonry has shifted over the years. The floor is uneven flagstone patched with gravel in low spots; a shallow gutter runs along one side to shepherd seepage toward drains that may or may not still work. Every so often the gallery widens into a small bay with a recessed door (storage, old service closets, maybe sealed-off annexes) and a rusted bracket where a lantern used to hang. The air is cold and mineral, with that faint chalk-dust bite that comes from disturbed masonry. It’s not the “bad place” yet—but it feels like the hallway leading to one."
+        },
+        "core:portrait": {
+            "imagePath": "portraits/lower_gallery.png",
+            "altText": "A long subterranean corridor built as utility access"
+        },
+        "movement:exits": [
+            {
+                "direction": "to the service stair",
+                "target": "dredgers:service_stair_instance",
+                "blocker": null
+            },
+            {
+                "direction": "into the construction zone",
+                "target": "dredgers:construction_zone_instance",
+                "blocker": null
+            }
+        ],
+        "locations:naturally_dark": {},
+        "locations:light_sources": {
+            "sources": []
+        },
+        "locations:description_in_darkness": {
+            "text": "The darkness presses close. Your boots scrape on uneven flagstone, each step echoing off stone walls that seem too near. The air is cold and mineral, with a chalk-dust bite in your nose. Water drips somewhere ahead—a slow, arrhythmic plinking. The walls sweat with condensation you can feel but not see, and the floor slopes unpredictably underfoot."
+        }
+    }
+}

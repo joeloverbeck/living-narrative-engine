@@ -1,0 +1,5 @@
+{
+  "$schema": "http://example.com/schemas/entity-instance.schema.json",
+  "instanceId": "dredgers:bolt_cutters_instance",
+  "definitionId": "dredgers:bolt_cutters"
+}

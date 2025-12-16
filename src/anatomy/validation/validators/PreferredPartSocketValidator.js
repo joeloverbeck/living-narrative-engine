@@ -115,6 +115,9 @@ function getEntityDefinition(dataRegistry, entityId) {
     return dataRegistry.get('entityDefinitions', entityId);
   }
 
+  // This branch is unreachable: the constructor validates that dataRegistry
+  // has either getEntityDefinition() or get(). If we're here, one exists.
+  // istanbul ignore next
   return undefined;
 }
 
@@ -195,6 +198,9 @@ export class PreferredPartSocketValidator extends BaseValidator {
         logger: this.#logger,
       });
 
+      // Defensive check: ensureBlueprintProcessed only returns null if input is falsy,
+      // but we already checked rawBlueprint above. This protects against future changes.
+      // istanbul ignore next
       if (!blueprint) {
         this.#logger.warn(
           `PreferredPartSocketValidator: Processed blueprint is null for '${blueprintId}', skipping`

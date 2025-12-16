@@ -175,6 +175,13 @@ function setupRenderer({
     getAll: jest.fn().mockReturnValue([]),
   };
 
+  const lightingStateService = {
+    getLocationLightingState: jest.fn().mockReturnValue({
+      isLit: true,
+      lightSources: [],
+    }),
+  };
+
   const renderer = new LocationRenderer({
     logger: testBed.logger,
     documentContext,
@@ -183,6 +190,7 @@ function setupRenderer({
     entityManager,
     entityDisplayDataProvider,
     dataRegistry,
+    lightingStateService,
     containerElement: domElements.container,
   });
 

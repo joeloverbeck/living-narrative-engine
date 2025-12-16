@@ -1,0 +1,10 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "locations:naturally_dark",
+  "description": "Marks a location as having no natural light source. Requires active light sources to see.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  }
+}

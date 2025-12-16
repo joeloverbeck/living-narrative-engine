@@ -32,6 +32,7 @@ import { SHORT_TERM_MEMORY_COMPONENT_ID } from '../constants/componentIds.js';
 import { validateDependencies } from '../utils/dependencyUtils.js';
 import { AgeUtils } from '../utils/ageUtils.js';
 import { tokens } from '../dependencyInjection/tokens.js';
+import { buildDarknessWorldContext } from './helpers/darknessWorldContextBuilder.js';
 
 /**
  * @class AIPromptContentProvider
@@ -571,7 +572,21 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
       return PROMPT_FALLBACK_UNKNOWN_LOCATION;
     }
 
-    // Build markdown-structured content
+    // Check lighting state from DTO (undefined = lit for backward compat)
+    const isLit = currentLocation.isLit !== false;
+
+    if (!isLit) {
+      this.#logger.debug(
+        'AIPromptContentProvider: Location is in darkness, using darkness world context builder.'
+      );
+      return buildDarknessWorldContext({
+        locationName: currentLocation.name || DEFAULT_FALLBACK_LOCATION_NAME,
+        darknessDescription: currentLocation.descriptionInDarkness || null,
+        characterCount: currentLocation.characters?.length || 0,
+      });
+    }
+
+    // Build markdown-structured content for lit locations
     const segments = [];
 
     // Main header

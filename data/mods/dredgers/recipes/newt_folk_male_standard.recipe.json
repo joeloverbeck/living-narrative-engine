@@ -97,5 +97,11 @@
       "preferId": "anatomy-creatures:newt_folk_ass_cheek"
     }
   ],
-  "clothingEntities": []
+  "clothingEntities": [
+    { "entityId": "base-clothing:press_flat_undertunic_fine_linen_off_white", "equip": true },
+    { "entityId": "base-clothing:straight_cut_trousers_worsted_wool_kiln_black", "equip": true },
+    { "entityId": "base-clothing:city_boots_polished_leather_kiln_black", "equip": true },
+    { "entityId": "outer-clothing:collar_high_service_coat_waxed_linen_ash_gray", "equip": true },
+    { "entityId": "accessories:seal_ring_iron_kiln_black", "equip": true }
+  ]
 }

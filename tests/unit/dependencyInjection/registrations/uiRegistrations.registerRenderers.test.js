@@ -157,6 +157,7 @@ describe('registerRenderers', () => {
             [tokens.IEntityManager]: { getEntity: jest.fn() },
             [tokens.EntityDisplayDataProvider]: { getDisplayData: jest.fn() },
             [tokens.IDataRegistry]: { getData: jest.fn() },
+            [tokens.ILightingStateService]: { getState: jest.fn() },
           };
           return mocks[token] || jest.fn();
         }),
@@ -193,6 +194,7 @@ describe('registerRenderers', () => {
             [tokens.IEntityManager]: { getEntity: jest.fn() },
             [tokens.EntityDisplayDataProvider]: { getDisplayData: jest.fn() },
             [tokens.IDataRegistry]: { getData: jest.fn() },
+            [tokens.ILightingStateService]: { getState: jest.fn() },
           };
           return mocks[token] || jest.fn();
         }),
@@ -212,6 +214,7 @@ describe('registerRenderers', () => {
         entityDisplayDataProvider: expect.any(Object),
         dataRegistry: expect.any(Object),
         containerElement: mockLocationContainer,
+        lightingStateService: expect.any(Object),
       });
     });
   });

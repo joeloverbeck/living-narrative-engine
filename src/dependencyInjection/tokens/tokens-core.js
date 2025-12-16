@@ -394,6 +394,8 @@ export const coreTokens = freeze({
   IGoapController: 'IGoapController',
   // GOAP Knowledge Manager (GOAPIMPL-023-02)
   IKnowledgeManager: 'IKnowledgeManager',
+  // Lighting System
+  ILightingStateService: 'ILightingStateService',
   // GOAP Debug Tools (GOAPIMPL-025-06)
   IPlanInspector: 'IPlanInspector',
   IStateDiffViewer: 'IStateDiffViewer',

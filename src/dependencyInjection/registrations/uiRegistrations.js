@@ -191,6 +191,7 @@ export function registerRenderers(registrar, logger) {
         entityDisplayDataProvider: c.resolve(tokens.EntityDisplayDataProvider),
         dataRegistry: c.resolve(tokens.IDataRegistry),
         containerElement: locationContainer,
+        lightingStateService: c.resolve(tokens.ILightingStateService),
       });
     },
     { lifecycle: 'singletonFactory' },

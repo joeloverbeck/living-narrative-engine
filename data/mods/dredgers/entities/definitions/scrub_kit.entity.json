@@ -1,0 +1,28 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "dredgers:scrub_kit",
+  "description": "A hygiene kit containing clean water, soap, vinegar, and rags for washing after tunnel work",
+  "components": {
+    "core:name": {
+      "text": "scrub kit"
+    },
+    "core:description": {
+      "text": "A canvas roll tied with leather thongs, containing the small mercies that keep tunnel work from becoming a slow poisoning. Inside: a stoppered bottle of clean water, a cake of harsh lye soap that strips skin as well as filth, a smaller bottle of vinegar or spirits for cuts and scrapes, and a bundle of rags that started white and now stay gray no matter how often they're boiled. Every dredger knows the drill—before you touch your face, before you eat, before you do anything that puts tunnel muck near your mouth or eyes, you scrub. Hands, forearms, boots. The vinegar stings the cuts you didn't know you had, and the soap leaves your skin feeling raw, but that's better than the sickness that comes from carrying the tunnels home with you."
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 2.0
+    },
+    "core:material": {
+      "material": "canvas",
+      "properties": ["flexible"]
+    },
+    "descriptors:color_extended": {
+      "color": "oat"
+    },
+    "descriptors:texture": {
+      "texture": "worn"
+    }
+  }
+}

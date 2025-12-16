@@ -1,0 +1,40 @@
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "outer-clothing:collar_high_service_coat_waxed_linen_ash_gray",
+  "description": "A collar-high service coat in waxed linen, ash-gray color",
+  "components": {
+    "clothing:wearable": {
+      "layer": "outer",
+      "equipmentSlots": {
+        "primary": "torso_upper",
+        "secondary": ["left_arm_clothing", "right_arm_clothing"]
+      },
+      "allowedLayers": ["underwear", "base", "outer"]
+    },
+    "clothing:coverage_mapping": {
+      "covers": ["torso_upper"],
+      "coveragePriority": "outer"
+    },
+    "core:material": {
+      "material": "linen",
+      "properties": ["waterproof"]
+    },
+    "core:name": {
+      "text": "collar-high service coat"
+    },
+    "core:description": {
+      "text": "A formal service coat of waxed linen in muted ash-gray, its high collar standing stiff enough to brush the jawline. The wax treatment gives the fabric a subtle sheen and protection against damp, while the cut speaks to professional purpose—fitted through the torso, with sleeves that allow full range of motion. Brass buttons run in a double row down the front, each bearing a simple geometric pattern. This is the coat of someone who serves in an official capacity, designed to project quiet authority while remaining practical enough for actual work."
+    },
+    "descriptors:color_extended": {
+      "color": "ash-gray"
+    },
+    "descriptors:texture": {
+      "texture": "waxed"
+    },
+    "items:item": {},
+    "items:portable": {},
+    "core:weight": {
+      "weight": 0.85
+    }
+  }
+}

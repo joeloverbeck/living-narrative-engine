@@ -16,6 +16,8 @@
  * @property {string|null} [portraitAltText] - Alt text for the portrait image.
  * @property {Array<ProcessedExit>} exits - Exits leading away from the location.
  * @property {Array<CharacterDisplayData>} characters - Characters present in the location.
+ * @property {boolean} [isDark] - Whether the location is in darkness.
+ * @property {number} [otherActorCount] - Count of other actors (for presence sensing in darkness).
  */
 
 /**

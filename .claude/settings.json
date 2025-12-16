@@ -1,0 +1,11 @@
+{
+  "enabledPlugins": {
+    "feature-dev@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "greptile@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "github@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  }
+}

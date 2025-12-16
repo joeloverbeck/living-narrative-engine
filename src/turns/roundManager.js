@@ -122,17 +122,19 @@ export default class RoundManager {
       throw new Error(errorMsg);
     }
 
-    const actorIds = actors.map((a) => a.id);
     this.#logger.debug(
-      `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`
+      `Found ${actors.length} actors to start the round: ${actors.map((a) => a.id).join(', ')}`
     );
 
-    // Start the new round in the service
+    // Start the new round in the service (this shuffles the actors array in place)
     await this.#turnOrderService.startNewRound(
       actors,
       strategy,
       initiativeData
     );
+
+    // Extract actor IDs AFTER shuffle so the event reflects the actual turn order
+    const actorIds = actors.map((a) => a.id);
 
     // Reset success flag only after the round starts successfully
     this.#hadSuccess = false;
