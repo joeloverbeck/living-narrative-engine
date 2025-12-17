@@ -130,9 +130,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} restrains {context.targetName}, preventing them from moving freely.",
+              "actor_description": "I restrain {context.targetName}, preventing them from moving freely.",
+              "target_description": "{context.actorName} restrains me, preventing me from moving freely.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sounds of a struggle nearby.",
+                "tactile": "I feel the vibrations of scuffling nearby."
+              }
             }
           },
           {
@@ -216,9 +222,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} restrains {context.targetName}, preventing them from moving freely.",
+              "actor_description": "I restrain {context.targetName}, preventing them from moving freely.",
+              "target_description": "{context.actorName} restrains me, preventing me from moving freely.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sounds of a struggle nearby.",
+                "tactile": "I feel the vibrations of scuffling nearby."
+              }
             }
           },
           {
@@ -252,9 +264,14 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} attempts to restrain {context.targetName}, but {context.targetName} resists, remaining free to move.",
+              "actor_description": "I try to restrain {context.targetName}, but they resist and stay free to move.",
+              "target_description": "{context.actorName} tries to restrain me, but I resist and remain free to move.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the sounds of a struggle nearby."
+              }
             }
           },
           {
@@ -296,9 +313,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} attempts to restrain {context.targetName}, but during the struggle, {context.actorName} falls to the ground.",
+              "actor_description": "I try to restrain {context.targetName}, but lose my balance and fall to the ground.",
+              "target_description": "{context.actorName} lunges to restrain me, but loses their balance and falls to the ground.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear someone stumble and hit the ground nearby.",
+                "tactile": "I feel the thump of someone falling nearby."
+              }
             }
           },
           {

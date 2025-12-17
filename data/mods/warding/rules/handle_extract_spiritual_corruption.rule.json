@@ -101,28 +101,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} extracts the corruption out of {context.targetName} swiftly using {context.anchorName}. Light returns to {context.targetName}'s eyes.",
+              "actor_description": "I swiftly extract the corruption from {context.targetName} using {context.anchorName}. The darkness flees as light returns to their eyes.",
+              "target_description": "{context.actorName} uses {context.anchorName} against me. I feel a burning sensation as something dark rushes out. Then it ends, and I feel completely cleansed.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly I feel like I'm being burned alive from the inside as something dark rushes out of me. Then it ends. My insides are cleaner, but I feel like I've suffered through a harrowing struggle.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "alternate_descriptions": {
+                "auditory": "I hear a struggle and unnatural screeches nearby as dark energy is expelled."
               }
             }
           },
@@ -170,28 +155,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "After a struggle, {context.actorName} extracts the corruption out of {context.targetName} using {context.anchorName}.",
+              "actor_description": "After a struggle, I manage to draw out the corruption from {context.targetName} using {context.anchorName}.",
+              "target_description": "{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws inside trying to resist. I suffer through the struggle, but the darkness is finally gone.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} uses {context.anchorName} against me, and my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through the struggle, but in the end, the darkness is gone, and I feel cleaner.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "alternate_descriptions": {
+                "auditory": "I hear a prolonged struggle and unnatural screeches nearby."
               }
             }
           },
@@ -226,28 +196,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "Despite a struggle, {context.actorName} fails to extract the corruption out of {context.targetName} using {context.anchorName}. Darkness lingers in {context.targetName}'s eyes.",
+              "actor_description": "I try to extract the corruption from {context.targetName} using {context.anchorName}, but despite the struggle, the darkness resists my efforts.",
+              "target_description": "{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws at my flesh. I suffer through a harrowing struggle, but the darkness refuses to leave.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. The darkness refuses to leave my body.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "alternate_descriptions": {
+                "auditory": "I hear a struggle and unnatural screeches nearby, but they don't fade."
               }
             }
           },
@@ -303,28 +258,13 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} attempts to extract the corruption out of {context.targetName} using {context.anchorName}, but during the struggle, the {context.anchorName} slips from {context.actorName}'s hands.",
+              "actor_description": "I attempt to extract the corruption from {context.targetName} using {context.anchorName}, but during the struggle, the {context.anchorName} slips from my hands.",
+              "target_description": "{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws inside. With a spasm, the darkness sends a shock that makes {context.anchorName} slip from {context.actorName}'s hands.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. With a spasm, the darkness, still anchored inside me, sends an echo that makes {context.anchorName} slip out of {context.actorName}'s hands.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "alternate_descriptions": {
+                "auditory": "I hear a struggle, then something clattering to the ground."
               }
             }
           },

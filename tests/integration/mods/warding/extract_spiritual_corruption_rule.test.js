@@ -140,22 +140,21 @@ describe('handle_extract_spiritual_corruption rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
 
-    expect(dispatches).toHaveLength(2);
-    const generalDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.excludedActorIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
-    const targetDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.recipientIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
+    // New perspective system consolidates into single DISPATCH_PERCEPTIBLE_EVENT with actor/target descriptions
+    expect(dispatches).toHaveLength(1);
+    const dispatch = dispatches[0];
 
-    expect(generalDispatch?.parameters.description_text).toBe(expectedMessage);
-    expect(targetDispatch?.parameters.description_text).toBe(
-      "{context.actorName} uses {context.anchorName} against me, and suddenly I feel like I'm being burned alive from the inside as something dark rushes out of me. Then it ends. My insides are cleaner, but I feel like I've suffered through a harrowing struggle."
+    expect(dispatch.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch.parameters.actor_description).toBe(
+      'I swiftly extract the corruption from {context.targetName} using {context.anchorName}. The darkness flees as light returns to their eyes.'
     );
+    expect(dispatch.parameters.target_description).toBe(
+      '{context.actorName} uses {context.anchorName} against me. I feel a burning sensation as something dark rushes out. Then it ends, and I feel completely cleansed.'
+    );
+    expect(dispatch.parameters.alternate_descriptions).toEqual({
+      auditory:
+        'I hear a struggle and unnatural screeches nearby as dark energy is expelled.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
     expect(
       actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
@@ -187,22 +186,20 @@ describe('handle_extract_spiritual_corruption rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
 
-    expect(dispatches).toHaveLength(2);
-    const generalDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.excludedActorIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
-    const targetDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.recipientIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
+    // New perspective system consolidates into single DISPATCH_PERCEPTIBLE_EVENT with actor/target descriptions
+    expect(dispatches).toHaveLength(1);
+    const dispatch = dispatches[0];
 
-    expect(generalDispatch?.parameters.description_text).toBe(expectedMessage);
-    expect(targetDispatch?.parameters.description_text).toBe(
-      '{context.actorName} uses {context.anchorName} against me, and my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through the struggle, but in the end, the darkness is gone, and I feel cleaner.'
+    expect(dispatch.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch.parameters.actor_description).toBe(
+      'After a struggle, I manage to draw out the corruption from {context.targetName} using {context.anchorName}.'
     );
+    expect(dispatch.parameters.target_description).toBe(
+      '{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws inside trying to resist. I suffer through the struggle, but the darkness is finally gone.'
+    );
+    expect(dispatch.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear a prolonged struggle and unnatural screeches nearby.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
     expect(
       actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
@@ -226,22 +223,21 @@ describe('handle_extract_spiritual_corruption rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
 
-    expect(dispatches).toHaveLength(2);
-    const generalDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.excludedActorIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
-    const targetDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.recipientIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
+    // New perspective system consolidates into single DISPATCH_PERCEPTIBLE_EVENT with actor/target descriptions
+    expect(dispatches).toHaveLength(1);
+    const dispatch = dispatches[0];
 
-    expect(generalDispatch?.parameters.description_text).toBe(expectedMessage);
-    expect(targetDispatch?.parameters.description_text).toBe(
-      '{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. The darkness refuses to leave my body.'
+    expect(dispatch.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch.parameters.actor_description).toBe(
+      'I try to extract the corruption from {context.targetName} using {context.anchorName}, but despite the struggle, the darkness resists my efforts.'
     );
+    expect(dispatch.parameters.target_description).toBe(
+      '{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws at my flesh. I suffer through a harrowing struggle, but the darkness refuses to leave.'
+    );
+    expect(dispatch.parameters.alternate_descriptions).toEqual({
+      auditory:
+        "I hear a struggle and unnatural screeches nearby, but they don't fade.",
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
     expect(
       actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')
@@ -278,22 +274,20 @@ describe('handle_extract_spiritual_corruption rule', () => {
         op.parameters.variable_name === 'logMessage'
     );
 
-    expect(dispatches).toHaveLength(2);
-    const generalDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.excludedActorIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
-    const targetDispatch = dispatches.find((op) =>
-      op.parameters.contextual_data?.recipientIds?.includes(
-        '{event.payload.primaryId}'
-      )
-    );
+    // New perspective system consolidates into single DISPATCH_PERCEPTIBLE_EVENT with actor/target descriptions
+    expect(dispatches).toHaveLength(1);
+    const dispatch = dispatches[0];
 
-    expect(generalDispatch?.parameters.description_text).toBe(expectedMessage);
-    expect(targetDispatch?.parameters.description_text).toBe(
-      "{context.actorName} uses {context.anchorName} against me, and suddenly my insides feel on fire as something claws at my flesh trying to avoid getting sucked out. I suffer through a harrowing struggle. With a spasm, the darkness, still anchored inside me, sends an echo that makes {context.anchorName} slip out of {context.actorName}'s hands."
+    expect(dispatch.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch.parameters.actor_description).toBe(
+      'I attempt to extract the corruption from {context.targetName} using {context.anchorName}, but during the struggle, the {context.anchorName} slips from my hands.'
     );
+    expect(dispatch.parameters.target_description).toBe(
+      "{context.actorName} uses {context.anchorName} against me. My insides feel on fire as something claws inside. With a spasm, the darkness sends a shock that makes {context.anchorName} slip from {context.actorName}'s hands."
+    );
+    expect(dispatch.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear a struggle, then something clattering to the ground.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
     expect(
       actions.some((op) => op.macro === 'core:logFailureOutcomeAndEndTurn')

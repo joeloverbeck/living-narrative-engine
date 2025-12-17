@@ -130,7 +130,16 @@ describe('handle_let_go_of_restrained_target rule', () => {
       '{context.actorName} lets go of {context.targetName}, leaving them unrestrained.';
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch?.parameters.actor_description).toBe(
+      'I let go of {context.targetName}, releasing my hold on them.'
+    );
+    expect(dispatch?.parameters.target_description).toBe(
+      '{context.actorName} lets go of me, leaving me unrestrained.'
+    );
     expect(dispatch?.parameters.target_id).toBe('{event.payload.targetId}');
+    expect(dispatch?.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear movement as someone is released nearby.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
     const hasSuccessMacro = handleLetGoRule.actions.some(

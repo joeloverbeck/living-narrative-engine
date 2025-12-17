@@ -131,9 +131,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} breaks free from {context.targetName}'s grip, and during the struggle, {context.targetName} falls to the ground.",
+              "actor_description": "I break free from {context.targetName}'s grip; in the struggle, they fall to the ground.",
+              "target_description": "{context.actorName} breaks free from my grip; in the struggle, I fall to the ground.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear a sudden struggle and someone breaking free nearby.",
+                "tactile": "I feel a sudden jolt and release of tension nearby."
+              }
             }
           },
           {
@@ -210,9 +216,14 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} breaks free from {context.targetName}'s grip.",
+              "actor_description": "I break free from {context.targetName}'s grip.",
+              "target_description": "{context.actorName} breaks free from my grip.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear struggling and someone breaking free nearby."
+              }
             }
           },
           {
@@ -246,9 +257,14 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves.",
+              "actor_description": "I struggle against {context.targetName}'s grip, but can't break free.",
+              "target_description": "{context.actorName} struggles against my grip, but I keep them restrained.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear someone struggling nearby."
+              }
             }
           },
           {
@@ -282,9 +298,14 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} tries to break free from {context.targetName}'s grip, but fails to release themselves.",
+              "actor_description": "I struggle against {context.targetName}'s grip, but can't break free.",
+              "target_description": "{context.actorName} struggles against my grip, but I keep them restrained.",
               "perception_type": "physical.target_action",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear someone struggling nearby."
+              }
             }
           },
           {

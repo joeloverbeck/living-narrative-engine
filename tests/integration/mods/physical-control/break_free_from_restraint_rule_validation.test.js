@@ -197,7 +197,28 @@ describe('handle_break_free_from_restraint rule', () => {
       const expectedMessage =
         outcome === 'SUCCESS' ? successMessage : criticalMessage;
       expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+      expect(dispatch?.parameters.actor_description).toBe(
+        outcome === 'SUCCESS'
+          ? "I break free from {context.targetName}'s grip."
+          : "I break free from {context.targetName}'s grip; in the struggle, they fall to the ground."
+      );
+      expect(dispatch?.parameters.target_description).toBe(
+        outcome === 'SUCCESS'
+          ? '{context.actorName} breaks free from my grip.'
+          : '{context.actorName} breaks free from my grip; in the struggle, I fall to the ground.'
+      );
       expect(logMessage?.parameters.value).toBe(expectedMessage);
+
+      expect(dispatch?.parameters.alternate_descriptions).toEqual(
+        outcome === 'SUCCESS'
+          ? {
+              auditory: 'I hear struggling and someone breaking free nearby.',
+            }
+          : {
+              auditory: 'I hear a sudden struggle and someone breaking free nearby.',
+              tactile: 'I feel a sudden jolt and release of tension nearby.',
+            }
+      );
 
       expect(
         actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
@@ -241,6 +262,15 @@ describe('handle_break_free_from_restraint rule', () => {
       );
 
       expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+      expect(dispatch?.parameters.actor_description).toBe(
+        "I struggle against {context.targetName}'s grip, but can't break free."
+      );
+      expect(dispatch?.parameters.target_description).toBe(
+        '{context.actorName} struggles against my grip, but I keep them restrained.'
+      );
+      expect(dispatch?.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear someone struggling nearby.',
+      });
       expect(logMessage?.parameters.value).toBe(expectedMessage);
 
       expect(
