@@ -98,9 +98,14 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} lets go of {context.targetName}, leaving them unrestrained.",
+        "actor_description": "I let go of {context.targetName}, releasing my hold on them.",
+        "target_description": "{context.actorName} lets go of me, leaving me unrestrained.",
         "perception_type": "physical.target_action",
         "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}"
+        "target_id": "{event.payload.targetId}",
+        "alternate_descriptions": {
+          "auditory": "I hear movement as someone is released nearby."
+        }
       }
     },
     {

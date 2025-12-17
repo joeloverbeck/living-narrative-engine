@@ -42,7 +42,14 @@
           <p class="category-description">
             Start playing or continue your adventure
           </p>
-          <div class="button-grid button-grid--2col">
+          <div class="button-grid button-grid--3col">
+            <button
+              id="mod-manager-button"
+              class="menu-button nav-button nav-button--game"
+            >
+              <span class="button-icon" aria-hidden="true">📦</span>
+              <span class="button-text">Mod Manager</span>
+            </button>
             <button
               id="start-button"
               class="menu-button nav-button nav-button--game"
@@ -223,6 +230,11 @@
 
     <script type="module" src="./index-llm-selector.js"></script>
     <script>
+      document
+        .getElementById('mod-manager-button')
+        .addEventListener('click', () => {
+          window.location.href = 'mod-manager.html';
+        });
       document.getElementById('start-button').addEventListener('click', () => {
         window.location.href = 'game.html';
       });

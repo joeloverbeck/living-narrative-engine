@@ -401,4 +401,126 @@ describe('first-aid:handle_treat_my_wounded_part rule', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('torso');
     });
   });
+
+  describe('Alternate Descriptions (Sensory Fallbacks)', () => {
+    it('all outcome branches have alternate_descriptions for sensory fallback', () => {
+      const ifOps = treatMyRule.actions.filter((action) => action.type === 'IF');
+      expect(ifOps.length).toBe(4);
+
+      ifOps.forEach((ifOp) => {
+        const thenActions = ifOp.parameters.then_actions;
+
+        const dispatchOp = thenActions.find(
+          (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+        );
+        expect(dispatchOp).toBeDefined();
+        expect(dispatchOp.parameters).toHaveProperty('alternate_descriptions');
+
+        // All branches should have auditory fallback for self-treatment
+        expect(dispatchOp.parameters.alternate_descriptions).toHaveProperty(
+          'auditory'
+        );
+        expect(
+          dispatchOp.parameters.alternate_descriptions.auditory
+        ).toBeTruthy();
+      });
+    });
+
+    it('CRITICAL_SUCCESS has auditory-only alternate description (simpler for self-action)', () => {
+      const critSuccessIf = treatMyRule.actions.find(
+        (a) =>
+          a.type === 'IF' &&
+          a.parameters.condition?.['==']?.[1] === 'CRITICAL_SUCCESS'
+      );
+      expect(critSuccessIf).toBeDefined();
+
+      const dispatchOp = critSuccessIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear the rustle of medical self-treatment nearby.',
+      });
+    });
+
+    it('SUCCESS has auditory alternate description', () => {
+      const successIf = treatMyRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'SUCCESS'
+      );
+      expect(successIf).toBeDefined();
+
+      const dispatchOp = successIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear the rustle of medical treatment nearby.',
+      });
+    });
+
+    it('FAILURE has auditory alternate description', () => {
+      const failureIf = treatMyRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'FAILURE'
+      );
+      expect(failureIf).toBeDefined();
+
+      const dispatchOp = failureIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear frustrated sounds of failed medical treatment.',
+      });
+    });
+
+    it('FUMBLE has auditory alternate description', () => {
+      const fumbleIf = treatMyRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'FUMBLE'
+      );
+      expect(fumbleIf).toBeDefined();
+
+      const dispatchOp = fumbleIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory:
+          'I hear the rustle of medical treatment, then a pained sound.',
+      });
+    });
+
+    it('should dispatch perceptible event with correct payload structure for self-action (SUCCESS path)', async () => {
+      const { actorId, torsoId } = loadScenario();
+
+      await fixture.executeAction(actorId, torsoId, {
+        additionalPayload: {
+          primaryId: torsoId,
+          targets: {
+            primary: torsoId,
+          },
+        },
+      });
+
+      const perceptibleEvent = fixture.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+      expect(perceptibleEvent).toBeDefined();
+
+      // Check required payload fields
+      expect(perceptibleEvent.payload).toHaveProperty('eventName');
+      expect(perceptibleEvent.payload).toHaveProperty('locationId');
+      expect(perceptibleEvent.payload).toHaveProperty('descriptionText');
+      expect(perceptibleEvent.payload).toHaveProperty('timestamp');
+      expect(perceptibleEvent.payload).toHaveProperty('perceptionType');
+      expect(perceptibleEvent.payload).toHaveProperty('actorId');
+
+      // Self-treatment should use physical.self_action perception type
+      expect(perceptibleEvent.payload.perceptionType).toBe(
+        'physical.self_action'
+      );
+
+      // Verify description contains expected content
+      expect(perceptibleEvent.payload.descriptionText).toContain('Self-Medic');
+      expect(perceptibleEvent.payload.descriptionText).toContain('torso');
+    });
+  });
 });

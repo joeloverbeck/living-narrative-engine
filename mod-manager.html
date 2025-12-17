@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Mod Manager - Living Narrative Engine" />
+    <title>Mod Manager - Living Narrative Engine</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/mod-manager.css" />
+  </head>
+  <body>
+    <div id="mod-manager-root" class="mod-manager-container">
+      <!-- Header -->
+      <header class="mod-manager-header">
+        <h1>Mod Manager</h1>
+        <button type="button" id="back-button" class="menu-button">Back to Menu</button>
+        <button type="button" id="save-config-btn" class="save-button" disabled>
+          Save Configuration
+        </button>
+      </header>
+
+      <!-- Main Content -->
+      <main class="mod-manager-main">
+        <!-- Left Panel: Mod List -->
+        <section class="mod-list-panel" aria-labelledby="mods-heading">
+          <div class="panel-header">
+            <h2 id="mods-heading">📦 Available Mods</h2>
+            <div class="search-container">
+              <input
+                type="search"
+                id="mod-search"
+                placeholder="Search mods..."
+                aria-label="Search mods"
+              />
+            </div>
+          </div>
+          <div id="mod-list" class="mod-list" role="list" aria-live="polite">
+            <!-- Mod cards injected here by JavaScript -->
+            <div class="loading-indicator" aria-busy="true">Loading mods...</div>
+          </div>
+        </section>
+
+        <!-- Right Panel: World Selection & Summary -->
+        <aside class="side-panel">
+          <!-- World Selection -->
+          <section class="world-panel" aria-labelledby="worlds-heading">
+            <h2 id="worlds-heading">🌍 Available Worlds</h2>
+            <div
+              id="world-list"
+              class="world-list"
+              role="listbox"
+              aria-live="polite"
+            >
+              <!-- World options injected here by JavaScript -->
+              <div class="loading-indicator" aria-busy="true">
+                Loading worlds...
+              </div>
+            </div>
+          </section>
+
+          <!-- Summary Panel -->
+          <section class="summary-panel" aria-labelledby="summary-heading">
+            <h2 id="summary-heading">📊 Load Summary</h2>
+            <dl id="summary-content" class="summary-content">
+              <dt>Active Mods:</dt>
+              <dd id="active-mod-count">0</dd>
+              <dt>Explicit:</dt>
+              <dd id="explicit-mod-count">0</dd>
+              <dt>Dependencies:</dt>
+              <dd id="dependency-mod-count">0</dd>
+              <dt>Conflicts:</dt>
+              <dd id="conflict-count">0</dd>
+              <dt>Selected World:</dt>
+              <dd id="selected-world">None</dd>
+            </dl>
+          </section>
+        </aside>
+      </main>
+
+      <!-- Status Bar -->
+      <footer class="mod-manager-footer">
+        <div id="status-message" class="status-message" aria-live="polite"></div>
+      </footer>
+    </div>
+
+    <!-- Error Modal -->
+    <div
+      id="error-modal"
+      class="modal-overlay"
+      role="dialog"
+      aria-labelledby="error-title"
+      aria-modal="true"
+      style="display: none"
+    >
+      <div class="modal-content">
+        <h2 id="error-title">Error</h2>
+        <p id="error-message"></p>
+        <div class="modal-actions">
+          <button type="button" id="error-close-btn" class="button-secondary">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="mod-manager.js"></script>
+  </body>
+</html>

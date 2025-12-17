@@ -92,7 +92,10 @@
               "location_id": "{context.locationId}",
               "description_text": "{context.logMessage}",
               "perception_type": "{context.perceptionType}",
-              "actor_id": "{event.payload.actorId}"
+              "actor_id": "{event.payload.actorId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the rustle of medical self-treatment nearby."
+              }
             }
           },
           { "macro": "core:logSuccessOutcomeAndEndTurn" }
@@ -136,7 +139,10 @@
               "location_id": "{context.locationId}",
               "description_text": "{context.logMessage}",
               "perception_type": "{context.perceptionType}",
-              "actor_id": "{event.payload.actorId}"
+              "actor_id": "{event.payload.actorId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the rustle of medical treatment nearby."
+              }
             }
           },
           { "macro": "core:logSuccessOutcomeAndEndTurn" }
@@ -164,7 +170,10 @@
               "location_id": "{context.locationId}",
               "description_text": "{context.logMessage}",
               "perception_type": "{context.perceptionType}",
-              "actor_id": "{event.payload.actorId}"
+              "actor_id": "{event.payload.actorId}",
+              "alternate_descriptions": {
+                "auditory": "I hear frustrated sounds of failed medical treatment."
+              }
             }
           },
           { "macro": "core:logFailureOutcomeAndEndTurn" }
@@ -211,7 +220,10 @@
               "location_id": "{context.locationId}",
               "description_text": "{context.logMessage}",
               "perception_type": "{context.perceptionType}",
-              "actor_id": "{event.payload.actorId}"
+              "actor_id": "{event.payload.actorId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the rustle of medical treatment, then a pained sound."
+              }
             }
           },
           { "macro": "core:logFailureOutcomeAndEndTurn" }

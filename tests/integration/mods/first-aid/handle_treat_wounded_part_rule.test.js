@@ -306,4 +306,138 @@ describe('first-aid:handle_treat_wounded_part rule', () => {
       expect(perceptibleEvent.payload.descriptionText).toContain('torso');
     });
   });
+
+  describe('Alternate Descriptions (Sensory Fallbacks)', () => {
+    it('all outcome branches have alternate_descriptions for sensory fallback', () => {
+      const ifOps = treatRule.actions.filter((action) => action.type === 'IF');
+      expect(ifOps.length).toBe(4);
+
+      ifOps.forEach((ifOp) => {
+        const outcomeValue = ifOp.parameters.condition?.['==']?.[1];
+        const thenActions = ifOp.parameters.then_actions;
+
+        const dispatchOp = thenActions.find(
+          (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+        );
+        expect(dispatchOp).toBeDefined();
+        expect(dispatchOp.parameters).toHaveProperty('alternate_descriptions');
+
+        // All branches should have auditory fallback
+        expect(dispatchOp.parameters.alternate_descriptions).toHaveProperty(
+          'auditory'
+        );
+        expect(
+          dispatchOp.parameters.alternate_descriptions.auditory
+        ).toBeTruthy();
+
+        // Log which outcome has tactile (optional, for coverage)
+        if (dispatchOp.parameters.alternate_descriptions.tactile) {
+          expect(['CRITICAL_SUCCESS', 'FUMBLE']).toContain(outcomeValue);
+        }
+      });
+    });
+
+    it('CRITICAL_SUCCESS has both auditory and tactile alternate descriptions', () => {
+      const critSuccessIf = treatRule.actions.find(
+        (a) =>
+          a.type === 'IF' &&
+          a.parameters.condition?.['==']?.[1] === 'CRITICAL_SUCCESS'
+      );
+      expect(critSuccessIf).toBeDefined();
+
+      const dispatchOp = critSuccessIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory:
+          'I hear the sounds of medical treatment being administered with exceptional skill.',
+        tactile:
+          'I sense careful, deliberate movements of someone providing expert care.',
+      });
+    });
+
+    it('FUMBLE has both auditory and tactile alternate descriptions', () => {
+      const fumbleIf = treatRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'FUMBLE'
+      );
+      expect(fumbleIf).toBeDefined();
+
+      const dispatchOp = fumbleIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      expect(dispatchOp.parameters.alternate_descriptions).toEqual({
+        auditory:
+          'I hear the rustle of medical treatment nearby, then a pained cry.',
+        tactile: 'I sense sudden distress nearby.',
+      });
+    });
+
+    it('SUCCESS and FAILURE have auditory-only alternate descriptions', () => {
+      const successIf = treatRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'SUCCESS'
+      );
+      const failureIf = treatRule.actions.find(
+        (a) =>
+          a.type === 'IF' && a.parameters.condition?.['==']?.[1] === 'FAILURE'
+      );
+
+      const successDispatch = successIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+      const failureDispatch = failureIf.parameters.then_actions.find(
+        (a) => a.type === 'DISPATCH_PERCEPTIBLE_EVENT'
+      );
+
+      // Should have auditory only
+      expect(successDispatch.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear the rustle of bandages and sounds of treatment nearby.',
+      });
+      expect(failureDispatch.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear frustrated attempts at medical treatment nearby.',
+      });
+    });
+
+    it('should dispatch perceptible event with correct payload structure including targetId (SUCCESS path)', async () => {
+      const { medicId, patientId, torsoId } = loadScenario();
+
+      await fixture.executeAction(medicId, patientId, {
+        additionalPayload: {
+          primaryId: patientId,
+          secondaryId: torsoId,
+          targets: {
+            primary: patientId,
+            secondary: torsoId,
+          },
+        },
+      });
+
+      const perceptibleEvent = fixture.events.find(
+        (e) => e.eventType === 'core:perceptible_event'
+      );
+
+      expect(perceptibleEvent).toBeDefined();
+
+      // Check required payload fields
+      expect(perceptibleEvent.payload).toHaveProperty('eventName');
+      expect(perceptibleEvent.payload).toHaveProperty('locationId');
+      expect(perceptibleEvent.payload).toHaveProperty('descriptionText');
+      expect(perceptibleEvent.payload).toHaveProperty('timestamp');
+      expect(perceptibleEvent.payload).toHaveProperty('perceptionType');
+      expect(perceptibleEvent.payload).toHaveProperty('actorId');
+      // Target treatment must include targetId
+      expect(perceptibleEvent.payload).toHaveProperty('targetId');
+
+      // Verify perception type for target treatment
+      expect(perceptibleEvent.payload.perceptionType).toBe(
+        'physical.target_action'
+      );
+
+      // Verify description contains expected content
+      expect(perceptibleEvent.payload.descriptionText).toContain('Medic');
+      expect(perceptibleEvent.payload.descriptionText).toContain('Patient');
+      expect(perceptibleEvent.payload.descriptionText).toContain('torso');
+    });
+  });
 });

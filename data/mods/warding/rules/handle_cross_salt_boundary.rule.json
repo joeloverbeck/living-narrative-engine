@@ -39,8 +39,13 @@
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
         "description_text": "{context.actorName} crosses the salt boundary, breaking it.",
+        "actor_description": "I step across the salt boundary, feeling it break beneath my movement.",
         "perception_type": "magic.spell",
-        "actor_id": "{event.payload.actorId}"
+        "actor_id": "{event.payload.actorId}",
+        "alternate_descriptions": {
+          "auditory": "I hear footsteps and the soft crunch of something being disturbed.",
+          "tactile": "I sense movement nearby and feel a subtle disruption."
+        }
       }
     },
     {

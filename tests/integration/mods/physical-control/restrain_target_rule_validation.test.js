@@ -170,7 +170,17 @@ describe('handle_restrain_target rule', () => {
       ]);
 
       expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+      expect(dispatch?.parameters.actor_description).toBe(
+        'I restrain {context.targetName}, preventing them from moving freely.'
+      );
+      expect(dispatch?.parameters.target_description).toBe(
+        '{context.actorName} restrains me, preventing me from moving freely.'
+      );
       expect(dispatch?.parameters.target_id).toBe('{event.payload.targetId}');
+      expect(dispatch?.parameters.alternate_descriptions).toEqual({
+        auditory: 'I hear the sounds of a struggle nearby.',
+        tactile: 'I feel the vibrations of scuffling nearby.',
+      });
       expect(logMessage?.parameters.value).toBe(expectedMessage);
 
       const hasSuccessMacro = actions.some(
@@ -200,6 +210,15 @@ describe('handle_restrain_target rule', () => {
       '{context.actorName} attempts to restrain {context.targetName}, but {context.targetName} resists, remaining free to move.';
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch?.parameters.actor_description).toBe(
+      'I try to restrain {context.targetName}, but they resist and stay free to move.'
+    );
+    expect(dispatch?.parameters.target_description).toBe(
+      '{context.actorName} tries to restrain me, but I resist and remain free to move.'
+    );
+    expect(dispatch?.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear the sounds of a struggle nearby.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
     const hasFailureMacro = actions.some(
@@ -231,6 +250,16 @@ describe('handle_restrain_target rule', () => {
     );
 
     expect(dispatch?.parameters.description_text).toBe(expectedMessage);
+    expect(dispatch?.parameters.actor_description).toBe(
+      'I try to restrain {context.targetName}, but lose my balance and fall to the ground.'
+    );
+    expect(dispatch?.parameters.target_description).toBe(
+      '{context.actorName} lunges to restrain me, but loses their balance and falls to the ground.'
+    );
+    expect(dispatch?.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear someone stumble and hit the ground nearby.',
+      tactile: 'I feel the thump of someone falling nearby.',
+    });
     expect(logMessage?.parameters.value).toBe(expectedMessage);
 
     expect(

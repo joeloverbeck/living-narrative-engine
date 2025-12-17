@@ -87,9 +87,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} draws a perfect salt boundary around the corrupted target {context.targetName}.",
+              "actor_description": "I draw a perfect salt boundary around {context.targetName}, feeling its protective power take hold.",
+              "target_description": "{context.actorName} draws a perfect salt boundary around me. I feel contained by its protective power.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the soft sound of granules being scattered nearby.",
+                "tactile": "I feel subtle vibrations as something is spread on the ground."
+              }
             }
           },
           {
@@ -131,9 +137,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} draws a correct salt boundary around the corrupted target {context.targetName}.",
+              "actor_description": "I draw a salt boundary around {context.targetName}.",
+              "target_description": "{context.actorName} draws a salt boundary around me.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear the soft sound of granules being scattered nearby.",
+                "tactile": "I feel subtle vibrations as something is spread on the ground."
+              }
             }
           },
           {
@@ -167,9 +179,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} fails at drawing a salt boundary around the corrupted target {context.targetName}. The boundary will need to be redone.",
+              "actor_description": "I try to draw a salt boundary around {context.targetName}, but the pattern breaks. I'll need to try again.",
+              "target_description": "{context.actorName} attempts to draw a salt boundary around me, but it doesn't take hold.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear granules being scattered and then a frustrated sound.",
+                "tactile": "I feel subtle vibrations as something is spread on the ground, then stops."
+              }
             }
           },
           {
@@ -217,9 +235,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} tries to draw a salt boundary around the corrupted target {context.targetName} in a hurry, but slips and falls to the ground.",
+              "actor_description": "I rush to draw a salt boundary around {context.targetName}, but slip and fall to the ground.",
+              "target_description": "{context.actorName} tries to draw a salt boundary around me but slips and falls.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.targetId}"
+              "target_id": "{event.payload.targetId}",
+              "alternate_descriptions": {
+                "auditory": "I hear granules scattering followed by a thud as someone falls.",
+                "tactile": "I feel vibrations from scattering granules and then a heavy impact on the ground."
+              }
             }
           },
           {
