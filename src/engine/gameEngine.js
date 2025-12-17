@@ -4,20 +4,16 @@ import { tokens } from '../dependencyInjection/tokens.js';
 import {
   ENGINE_INITIALIZING_UI,
   ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
   UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../constants/eventIds.js';
 import {
   processOperationFailure,
   getReadableErrorMessage,
 } from '../utils/engineErrorUtils.js';
-import EngineState from './engineState.js';
-import GameSessionManager from './gameSessionManager.js';
-import PersistenceCoordinator from './persistenceCoordinator.js';
 import { assertNonBlankString } from '../utils/dependencyUtils.js';
 import createSafeErrorLogger from '../utils/safeErrorLogger.js';
+import EngineState from './engineState.js';
+import GameSessionManager from './gameSessionManager.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -25,13 +21,10 @@ import createSafeErrorLogger from '../utils/safeErrorLogger.js';
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../interfaces/IGamePersistenceService.js').SaveResult} SaveResult */
-/** @typedef {import('../interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
 /** @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
-/** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 /** @typedef {import('../turns/pipeline/turnActionChoicePipeline.js').TurnActionChoicePipeline} TurnActionChoicePipeline */
 /** @typedef {import('../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline */
 /** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
@@ -44,8 +37,6 @@ class GameEngine {
   #entityManager;
   /** @type {ITurnManager} */
   #turnManager;
-  /** @type {IGamePersistenceService} */
-  #gamePersistenceService;
   /** @type {IPlaytimeTracker} */
   #playtimeTracker;
   /** @type {ISafeEventDispatcher} */
@@ -65,8 +56,6 @@ class GameEngine {
   #engineState;
   /** @type {GameSessionManager} */
   #sessionManager;
-  /** @type {PersistenceCoordinator} */
-  #persistenceCoordinator;
 
   /**
    * Creates a new GameEngine instance.
@@ -75,14 +64,8 @@ class GameEngine {
    * @param {AppContainer} deps.container - DI container instance.
    * @param {ILogger} deps.logger - Logger for engine events.
    * @param {GameSessionManager} [deps.sessionManager] - Optional session manager.
-   * @param {PersistenceCoordinator} [deps.persistenceCoordinator] - Optional persistence coordinator.
    */
-  constructor({
-    container,
-    logger,
-    sessionManager = null,
-    persistenceCoordinator = null,
-  }) {
+  constructor({ container, logger, sessionManager = null }) {
     if (!logger) {
       throw new Error('GameEngine requires a logger.');
     }
@@ -91,9 +74,6 @@ class GameEngine {
     try {
       this.#entityManager = container.resolve(tokens.IEntityManager);
       this.#turnManager = container.resolve(tokens.ITurnManager);
-      this.#gamePersistenceService = /** @type {IGamePersistenceService} */ (
-        container.resolve(tokens.GamePersistenceService)
-      );
       this.#playtimeTracker = /** @type {IPlaytimeTracker} */ (
         container.resolve(tokens.PlaytimeTracker)
       );
@@ -150,23 +130,6 @@ class GameEngine {
               container.isRegistered(tokens.AnatomyInitializationService)
                 ? container.resolve(tokens.AnatomyInitializationService)
                 : null,
-          }));
-
-    const shouldResolvePersist =
-      !persistenceCoordinator &&
-      container.isRegistered &&
-      container.isRegistered(tokens.PersistenceCoordinator);
-    this.#persistenceCoordinator =
-      persistenceCoordinator ||
-      (shouldResolvePersist
-        ? container.resolve(tokens.PersistenceCoordinator)
-        : new PersistenceCoordinator({
-            logger: this.#logger,
-            gamePersistenceService: this.#gamePersistenceService,
-            safeEventDispatcher: this.#safeEventDispatcher,
-            sessionManager: this.#sessionManager,
-            engineState: this.#engineState,
-            handleLoadFailure: this.#handleLoadFailure.bind(this),
           }));
   }
 
@@ -710,50 +673,6 @@ class GameEngine {
     }
   }
 
-  async #handleLoadFailure(errorInfo, saveIdentifier) {
-    return this.#processOperationFailure(
-      `_handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}"`,
-      errorInfo,
-      'Load Failed',
-      'Failed to load game',
-      true
-    );
-  }
-
-  async triggerManualSave(saveName) {
-    assertNonBlankString(
-      saveName,
-      'saveName',
-      'GameEngine.triggerManualSave',
-      this.#logger
-    );
-
-    const normalizedSaveName = saveName.trim();
-    return this.#persistenceCoordinator.triggerManualSave(normalizedSaveName);
-  }
-
-  async loadGame(saveIdentifier) {
-    assertNonBlankString(
-      saveIdentifier,
-      'saveIdentifier',
-      'GameEngine.loadGame',
-      this.#logger
-    );
-    const normalizedSaveIdentifier = saveIdentifier.trim();
-    const safeErrorLogger = createSafeErrorLogger({
-      logger: this.#logger,
-      safeEventDispatcher: this.#safeEventDispatcher,
-    });
-
-    return await safeErrorLogger.withGameLoadingMode(
-      () => this.#persistenceCoordinator.loadGame(normalizedSaveIdentifier),
-      {
-        context: 'game-load',
-        timeoutMs: 60000,
-      }
-    );
-  }
-
   /**
    * Builds and dispatches an LLM prompt preview event for the current actor.
    * Does not trigger turn advancement or LLM network calls.
@@ -852,174 +771,6 @@ class GameEngine {
         error instanceof Error ? error : new Error(String(error));
       this.#logger.error(
         'GameEngine.previewLlmPromptForCurrentActor: SafeEventDispatcher threw while dispatching UI_SHOW_LLM_PROMPT_PREVIEW.',
-        normalizedError
-      );
-    }
-  }
-
-  /**
-   * Ensures the persistence service exists.
-   *
-   * @private
-   * @description Returns the game persistence service or throws if unavailable.
-   * @returns {IGamePersistenceService} The persistence service.
-   * @throws {Error} When the service is missing.
-   */
-  #ensurePersistenceService() {
-    if (!this.#gamePersistenceService) {
-      throw new Error('GamePersistenceService is unavailable.');
-    }
-    return this.#gamePersistenceService;
-  }
-
-  /**
-   * Checks for the persistence service and logs a provided message if absent.
-   *
-   * @private
-   * @description Returns the game persistence service or `null` when missing.
-   * @param {string} unavailableMessage - Error message to log when service is missing.
-   * @returns {IGamePersistenceService | null} The persistence service or `null`.
-   */
-  #ensurePersistenceServiceAvailable(unavailableMessage) {
-    try {
-      return this.#ensurePersistenceService();
-    } catch {
-      this.#logger.error(unavailableMessage);
-      return null;
-    }
-  }
-
-  /**
-   * Requests that the UI present the Save Game screen.
-   *
-   * @description Dispatches either {@link REQUEST_SHOW_SAVE_GAME_UI} or
-   * {@link CANNOT_SAVE_GAME_INFO} based on the persistence service state.
-   * @async
-   * @returns {Promise<void>} Resolves when dispatching completes.
-   */
-  async showSaveGameUI() {
-    const notifySavingUnavailable = async (shouldLogWarning = true) => {
-      if (shouldLogWarning) {
-        this.#logger.warn(
-          'GameEngine.showSaveGameUI: Saving is not currently allowed.'
-        );
-      }
-      try {
-        const infoDispatched = await this.#safeEventDispatcher.dispatch(
-          CANNOT_SAVE_GAME_INFO
-        );
-        if (!infoDispatched) {
-          this.#logger.warn(
-            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching CANNOT_SAVE_GAME_INFO.'
-          );
-        }
-      } catch (error) {
-        const normalizedError =
-          error instanceof Error ? error : new Error(String(error));
-        this.#logger.error(
-          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching CANNOT_SAVE_GAME_INFO.',
-          normalizedError
-        );
-      }
-    };
-
-    const persistenceService = this.#ensurePersistenceServiceAvailable(
-      'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
-    );
-    if (!persistenceService) {
-      await notifySavingUnavailable(false);
-      return;
-    }
-
-    let savingAllowed;
-    try {
-      savingAllowed = persistenceService.isSavingAllowed(
-        this.#engineState.isInitialized
-      );
-    } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
-      this.#logger.error(
-        'GameEngine.showSaveGameUI: GamePersistenceService threw when checking if saving is allowed.',
-        normalizedError
-      );
-      await notifySavingUnavailable(false);
-      return;
-    }
-
-    if (typeof savingAllowed !== 'boolean') {
-      this.#logger.error(
-        'GameEngine.showSaveGameUI: GamePersistenceService.isSavingAllowed returned invalid result.',
-        {
-          receivedType: typeof savingAllowed,
-          receivedValue: savingAllowed,
-        }
-      );
-      await notifySavingUnavailable();
-      return;
-    }
-
-    if (savingAllowed) {
-      this.#logger.debug(
-        'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
-      );
-      try {
-        const success = await this.#safeEventDispatcher.dispatch(
-          REQUEST_SHOW_SAVE_GAME_UI,
-          {}
-        );
-        if (!success) {
-          this.#logger.warn(
-            'GameEngine.showSaveGameUI: SafeEventDispatcher reported failure when dispatching Save Game UI request.'
-          );
-        }
-      } catch (error) {
-        const normalizedError =
-          error instanceof Error ? error : new Error(String(error));
-        this.#logger.error(
-          'GameEngine.showSaveGameUI: SafeEventDispatcher threw when dispatching Save Game UI request.',
-          normalizedError
-        );
-      }
-    } else {
-      await notifySavingUnavailable();
-    }
-  }
-
-  /**
-   * Requests that the UI present the Load Game screen.
-   *
-   * @description Dispatches {@link REQUEST_SHOW_LOAD_GAME_UI} when the
-   * persistence service is available.
-   * @async
-   * @returns {Promise<void>} Resolves when dispatching completes.
-   */
-  async showLoadGameUI() {
-    if (
-      !this.#ensurePersistenceServiceAvailable(
-        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
-      )
-    ) {
-      return;
-    }
-    this.#logger.debug(
-      'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
-    );
-    try {
-      const success = await this.#safeEventDispatcher.dispatch(
-        REQUEST_SHOW_LOAD_GAME_UI,
-        {}
-      );
-      if (!success) {
-        this.#logger.warn(
-          'GameEngine.showLoadGameUI: SafeEventDispatcher reported failure when dispatching Load Game UI request.'
-        );
-      }
-    } catch (error) {
-      const normalizedError =
-        error instanceof Error ? error : new Error(String(error));
-      this.#logger.error(
-        'GameEngine.showLoadGameUI: SafeEventDispatcher threw when dispatching Load Game UI request.',
         normalizedError
       );
     }

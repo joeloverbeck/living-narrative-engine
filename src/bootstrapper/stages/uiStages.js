@@ -49,7 +49,7 @@ export async function ensureCriticalDOMElementsStage(
 }
 
 /**
- * Bootstrap Stage: Sets up event listeners for main menu buttons like "Open Save Game UI" and "Open Load Game UI".
+ * Bootstrap Stage: Sets up event listeners for main menu buttons.
  *
  * @async
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
@@ -69,26 +69,6 @@ export async function setupMenuButtonListenersStage(
     if (!gameEngine) {
       setupButtonListener(
         documentRef,
-        'open-save-game-button',
-        () => {},
-        logger,
-        stageName
-      );
-      logger.warn(
-        `${stageName}: GameEngine not available for #open-save-game-button listener.`
-      );
-      setupButtonListener(
-        documentRef,
-        'open-load-game-button',
-        () => {},
-        logger,
-        stageName
-      );
-      logger.warn(
-        `${stageName}: GameEngine not available for #open-load-game-button listener.`
-      );
-      setupButtonListener(
-        documentRef,
         'llm-prompt-debug-button',
         () => {},
         logger,
@@ -100,28 +80,6 @@ export async function setupMenuButtonListenersStage(
       logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
       return stageSuccess();
     }
-
-    setupButtonListener(
-      documentRef,
-      'open-save-game-button',
-      async () => {
-        logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-        await gameEngine.showSaveGameUI();
-      },
-      logger,
-      stageName
-    );
-
-    setupButtonListener(
-      documentRef,
-      'open-load-game-button',
-      async () => {
-        logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-        await gameEngine.showLoadGameUI();
-      },
-      logger,
-      stageName
-    );
 
     setupButtonListener(
       documentRef,

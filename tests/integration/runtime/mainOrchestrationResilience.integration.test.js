@@ -155,8 +155,6 @@ jest.mock('../../../src/bootstrapper/stages/auxiliary/index.js', () => {
 
   return {
     initEngineUIManager: makeInitializer('EngineUIManager'),
-    initSaveGameUI: makeInitializer('SaveGameUI'),
-    initLoadGameUI: makeInitializer('LoadGameUI'),
     initLlmSelectionModal: makeInitializer('LlmSelectionModal'),
     initCurrentTurnActorRenderer: makeInitializer('CurrentTurnActorRenderer'),
     initSpeechBubbleRenderer: makeInitializer('SpeechBubbleRenderer'),
@@ -298,7 +296,7 @@ describe('main.js bootstrap resilience integration', () => {
 
     __TEST_ONLY__setCurrentPhaseForError('Manual Phase Verification');
 
-    await expect(beginGame(true)).rejects.toThrow(
+    await expect(beginGame()).rejects.toThrow(
       'Critical: GameEngine not initialized before attempting Start Game stage.'
     );
 
@@ -332,8 +330,6 @@ describe('main.js bootstrap resilience integration', () => {
         <div id="outputDiv"></div>
         <div id="error-output" style="display: none"></div>
         <input id="speech-input" placeholder="Enter command" />
-        <button id="open-save-game-button">Save</button>
-        <button id="open-load-game-button">Load</button>
       </main>
     `);
 
@@ -364,7 +360,6 @@ describe('main.js bootstrap resilience integration', () => {
     );
 
     expect(createdEngine.startNewGameCalls).toEqual(['aurora-bay']);
-    expect(createdEngine.showLoadGameUI).not.toHaveBeenCalled();
 
     const fallbackElements = document.querySelectorAll('#temp-startup-error');
     expect(fallbackElements.length).toBeGreaterThan(0);
@@ -377,15 +372,13 @@ describe('main.js bootstrap resilience integration', () => {
     expect(global.alert).not.toHaveBeenCalled();
   });
 
-  it('completes bootstrap successfully and shows load UI when requested', async () => {
+  it('completes bootstrap successfully and starts the game', async () => {
     setupDom(`
       <main>
         <h1 id="page-title">Full Bootstrap</h1>
         <div id="outputDiv"></div>
         <div id="error-output" style="display: none"></div>
         <input id="speech-input" placeholder="Command" />
-        <button id="open-save-game-button">Save</button>
-        <button id="open-load-game-button">Load</button>
       </main>
     `);
 
@@ -400,10 +393,9 @@ describe('main.js bootstrap resilience integration', () => {
     expect(mockGameEngineControl.instances).toHaveLength(1);
     const engine = mockGameEngineControl.instances[0];
 
-    await expect(beginGame(true)).resolves.toBeUndefined();
+    await expect(beginGame()).resolves.toBeUndefined();
 
     expect(engine.startNewGameCalls).toEqual(['aurora-bay']);
-    expect(engine.showLoadGameUI).toHaveBeenCalledTimes(1);
     expect(global.alert).not.toHaveBeenCalled();
   });
 
@@ -414,8 +406,6 @@ describe('main.js bootstrap resilience integration', () => {
         <div id="outputDiv"></div>
         <div id="error-output" style="display: none"></div>
         <input id="speech-input" placeholder="Command" />
-        <button id="open-save-game-button">Save</button>
-        <button id="open-load-game-button">Load</button>
       </main>
     `);
 
@@ -454,7 +444,7 @@ describe('main.js bootstrap resilience integration', () => {
       </main>
     `);
 
-    mockAuxiliaryControl.failures = new Set(['LoadGameUI']);
+    mockAuxiliaryControl.failures = new Set(['LlmSelectionModal']);
 
     const { bootstrapApp } = await importMainModule();
 
@@ -463,7 +453,7 @@ describe('main.js bootstrap resilience integration', () => {
     const logger = mockContainerConfigControl.lastLogger;
     expect(logger).not.toBeNull();
     expect(logger?.error).toHaveBeenCalledWith(
-      'main.js: Failed to init LoadGameUI',
+      'main.js: Failed to init LlmSelectionModal',
       expect.any(Error)
     );
   });

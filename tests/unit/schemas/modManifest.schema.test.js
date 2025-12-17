@@ -12,6 +12,7 @@ import addFormats from 'ajv-formats';
 import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import validIsekaiManifest from '../../../data/mods/isekai/mod-manifest.json'; // Assuming the corrected isekai manifest is here
+import validPerceptionManifest from '../../../data/mods/perception/mod-manifest.json';
 
 describe('JSON-Schema – Mod Manifest', () => {
   /** @type {import('ajv').ValidateFunction} */
@@ -36,6 +37,14 @@ describe('JSON-Schema – Mod Manifest', () => {
   describe('Valid Manifests', () => {
     test('✓ should validate the complete and correct "isekai" mod manifest', () => {
       const ok = validate(validIsekaiManifest);
+      if (!ok) {
+        console.error('Validation Errors:', validate.errors);
+      }
+      expect(ok).toBe(true);
+    });
+
+    test('✓ should validate the "perception" mod manifest', () => {
+      const ok = validate(validPerceptionManifest);
       if (!ok) {
         console.error('Validation Errors:', validate.errors);
       }

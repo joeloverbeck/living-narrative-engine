@@ -13,8 +13,6 @@ const createDependencies = (overrides = {}) => ({
   speechBubbleRenderer: createRenderer({ renderSpeech: jest.fn() }),
   perceptionLogRenderer: createRenderer({ refreshList: jest.fn() }),
   actionResultRenderer: createRenderer(),
-  saveGameUI: createRenderer({ show: jest.fn() }),
-  loadGameUI: createRenderer({ show: jest.fn() }),
   llmSelectionModal: createRenderer({ show: jest.fn() }),
   promptPreviewModal: createRenderer({ show: jest.fn() }),
   turnOrderTickerRenderer: createRenderer({ render: jest.fn() }),
@@ -34,8 +32,6 @@ describe('DomUiFacade', () => {
     expect(facade.speechBubble).toBe(deps.speechBubbleRenderer);
     expect(facade.perceptionLog).toBe(deps.perceptionLogRenderer);
     expect(facade.actionResults).toBe(deps.actionResultRenderer);
-    expect(facade.saveGame).toBe(deps.saveGameUI);
-    expect(facade.loadGame).toBe(deps.loadGameUI);
     expect(facade.llmSelectionModal).toBe(deps.llmSelectionModal);
     expect(facade.promptPreviewModal).toBe(deps.promptPreviewModal);
     expect(facade.turnOrderTicker).toBe(deps.turnOrderTickerRenderer);
@@ -89,16 +85,6 @@ describe('DomUiFacade', () => {
         'DomUiFacade: Missing or invalid actionResultRenderer dependency.',
       ],
       [
-        'saveGameUI',
-        { saveGameUI: createRenderer({}) },
-        'DomUiFacade: Missing or invalid saveGameUI dependency.',
-      ],
-      [
-        'loadGameUI',
-        { loadGameUI: createRenderer({}) },
-        'DomUiFacade: Missing or invalid loadGameUI dependency.',
-      ],
-      [
         'llmSelectionModal',
         { llmSelectionModal: createRenderer({}) },
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.',
@@ -142,8 +128,6 @@ describe('DomUiFacade', () => {
     expect(deps.speechBubbleRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.perceptionLogRenderer.dispose).toHaveBeenCalledTimes(1);
     expect(deps.actionResultRenderer.dispose).toHaveBeenCalledTimes(1);
-    expect(deps.saveGameUI.dispose).toHaveBeenCalledTimes(1);
-    expect(deps.loadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(deps.llmSelectionModal.dispose).toHaveBeenCalledTimes(1);
     expect(deps.promptPreviewModal.dispose).toHaveBeenCalledTimes(1);
     expect(deps.turnOrderTickerRenderer.dispose).toHaveBeenCalledTimes(1);
@@ -159,8 +143,6 @@ describe('DomUiFacade', () => {
       speechBubbleRenderer: { renderSpeech: jest.fn() },
       perceptionLogRenderer: { refreshList: jest.fn() },
       actionResultRenderer: {},
-      saveGameUI: { show: jest.fn() },
-      loadGameUI: { show: jest.fn() },
       llmSelectionModal: { show: jest.fn() },
       promptPreviewModal: { show: jest.fn() },
       turnOrderTickerRenderer: { render: jest.fn() },

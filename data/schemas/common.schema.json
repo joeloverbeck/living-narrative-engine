@@ -232,6 +232,11 @@
         },
         { "$ref": "#/definitions/templateString" }
       ]
+    },
+    "senseCategory": {
+      "type": "string",
+      "enum": ["visual", "auditory", "olfactory", "tactile", "proprioceptive", "omniscient"],
+      "description": "Category of sense required to perceive an event. 'omniscient' events are always delivered regardless of sensory state."
     }
   }
 }

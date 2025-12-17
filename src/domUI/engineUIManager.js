@@ -6,9 +6,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
   UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../constants/eventIds.js';
 
@@ -151,18 +148,6 @@ export class EngineUIManager {
     this.#eventDispatcher.subscribe(
       ENGINE_STOPPED_UI,
       this.#handleEngineStoppedUI.bind(this)
-    );
-    this.#eventDispatcher.subscribe(
-      REQUEST_SHOW_SAVE_GAME_UI,
-      this.#handleRequestShowSaveGameUI.bind(this)
-    );
-    this.#eventDispatcher.subscribe(
-      REQUEST_SHOW_LOAD_GAME_UI,
-      this.#handleRequestShowLoadGameUI.bind(this)
-    );
-    this.#eventDispatcher.subscribe(
-      CANNOT_SAVE_GAME_INFO,
-      this.#handleCannotSaveGameInfo.bind(this)
     );
     this.#eventDispatcher.subscribe(
       UI_SHOW_LLM_PROMPT_PREVIEW,
@@ -316,77 +301,6 @@ export class EngineUIManager {
     this.#logger.debug(
       `EngineUIManager: Handled ${ENGINE_STOPPED_UI}. Input disabled. Title set to "Game Stopped".`
     );
-  }
-
-  /**
-   * Handles the REQUEST_SHOW_SAVE_GAME_UI event. Attempts to show the Save Game UI
-   * component via the DomUiFacade. Logs a warning if the component is not available.
-   *
-   * @private
-   * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
-   */
-  #handleRequestShowSaveGameUI(event) {
-    this.#logger.debug(
-      `EngineUIManager: Received ${REQUEST_SHOW_SAVE_GAME_UI}`,
-      event.payload
-    );
-    if (
-      this.#domUiFacade.saveGame &&
-      typeof this.#domUiFacade.saveGame.show === 'function'
-    ) {
-      this.#domUiFacade.saveGame.show();
-      this.#logger.debug(
-        `EngineUIManager: Handled ${REQUEST_SHOW_SAVE_GAME_UI}. Save Game UI requested to show.`
-      );
-    } else {
-      this.#logger.warn(
-        `EngineUIManager: SaveGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Save Game UI.`
-      );
-    }
-  }
-
-  /**
-   * Handles the REQUEST_SHOW_LOAD_GAME_UI event. Attempts to show the Load Game UI
-   * component via the DomUiFacade. Logs a warning if the component is not available.
-   *
-   * @private
-   * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
-   */
-  #handleRequestShowLoadGameUI(event) {
-    this.#logger.debug(
-      `EngineUIManager: Received ${REQUEST_SHOW_LOAD_GAME_UI}`,
-      event.payload
-    );
-    if (
-      this.#domUiFacade.loadGame &&
-      typeof this.#domUiFacade.loadGame.show === 'function'
-    ) {
-      this.#domUiFacade.loadGame.show();
-      this.#logger.debug(
-        `EngineUIManager: Handled ${REQUEST_SHOW_LOAD_GAME_UI}. Load Game UI requested to show.`
-      );
-    } else {
-      this.#logger.warn(
-        `EngineUIManager: LoadGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Load Game UI.`
-      );
-    }
-  }
-
-  /**
-   * Handles the CANNOT_SAVE_GAME_INFO event. Renders an informational message
-   * in the UI indicating that saving is not currently possible.
-   *
-   * @private
-   * @param {EmptyPayloadEvent} event - The event object (payload is typically empty).
-   */
-  #handleCannotSaveGameInfo(event) {
-    this.#logger.debug(
-      `EngineUIManager: Received ${CANNOT_SAVE_GAME_INFO}`,
-      event.payload
-    );
-    const message =
-      'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
-    this.#logger.info(`EngineUIManager: ${message}`);
   }
 
   /**

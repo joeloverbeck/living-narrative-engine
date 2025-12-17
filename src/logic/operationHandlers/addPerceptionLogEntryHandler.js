@@ -40,8 +40,9 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
 class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
+  /** @type {import('../../perception/services/perceptionFilterService.js').default|null} */ #perceptionFilterService;
 
-  constructor({ logger, entityManager, safeEventDispatcher }) {
+  constructor({ logger, entityManager, safeEventDispatcher, perceptionFilterService }) {
     super('AddPerceptionLogEntryHandler', {
       logger: { value: logger },
       entityManager: {
@@ -60,6 +61,8 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
+    // perceptionFilterService is optional for backward compatibility
+    this.#perceptionFilterService = perceptionFilterService ?? null;
   }
 
   /**
@@ -190,6 +193,43 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       return;
     }
 
+    /* ── sense-aware filtering ────────────────────────────────────── */
+    // Extract sense_aware and alternate_descriptions from params
+    const { sense_aware = true, alternate_descriptions } = params;
+
+    // Determine if sense filtering should be applied:
+    // - sense_aware must not be explicitly false
+    // - alternate_descriptions must be provided
+    // - perceptionFilterService must be available
+    const shouldFilter =
+      sense_aware !== false &&
+      alternate_descriptions &&
+      this.#perceptionFilterService;
+
+    let filteredRecipientsMap = null;
+    if (shouldFilter) {
+      const filteredRecipients =
+        this.#perceptionFilterService.filterEventForRecipients(
+          {
+            perception_type: entry.perceptionType,
+            description_text: entry.descriptionText,
+            alternate_descriptions,
+          },
+          [...entityIds],
+          locationId,
+          params.originating_actor_id
+        );
+
+      // Build lookup map for filtered results
+      filteredRecipientsMap = new Map(
+        filteredRecipients.map((fr) => [fr.entityId, fr])
+      );
+
+      log.debug(
+        `ADD_PERCEPTION_LOG_ENTRY: sense filtering applied - ${filteredRecipients.filter((fr) => fr.canPerceive).length}/${filteredRecipients.length} can perceive`
+      );
+    }
+
     // Prepare batch updates
     const componentSpecs = [];
 
@@ -197,6 +237,14 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     for (const id of entityIds) {
       if (!this.#entityManager.hasComponent(id, PERCEPTION_LOG_COMPONENT_ID)) {
         continue; // not a perceiver
+      }
+
+      // Check if recipient can perceive (when filtering enabled)
+      if (filteredRecipientsMap) {
+        const filtered = filteredRecipientsMap.get(id);
+        if (!filtered || !filtered.canPerceive) {
+          continue; // Silent filter - recipient can't perceive
+        }
       }
 
       /* pull current data; fall back to sane defaults */
@@ -215,7 +263,20 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
 
       /* build next state ---------------------------------------------------- */
-      const nextLogEntries = [...logEntries, entry].slice(-maxEntries);
+      // Use filtered description if available, otherwise use original entry
+      let finalEntry = entry;
+      if (filteredRecipientsMap) {
+        const filtered = filteredRecipientsMap.get(id);
+        if (filtered) {
+          finalEntry = {
+            ...entry,
+            descriptionText: filtered.descriptionText ?? entry.descriptionText,
+            perceivedVia: filtered.sense, // NEW: for debugging/tracing
+          };
+        }
+      }
+
+      const nextLogEntries = [...logEntries, finalEntry].slice(-maxEntries);
       const updatedComponent = {
         maxEntries,
         logEntries: nextLogEntries,

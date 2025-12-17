@@ -964,4 +964,342 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
   });
+
+  // ── Sense-Aware Filtering ──────────────────────────────────────────────────
+  describe('execute – sense-aware filtering', () => {
+    const LOC = 'loc:sense_test';
+    const ACTOR = 'actor:performer';
+    const NPC1 = 'npc:sighted';
+    const NPC2 = 'npc:blind';
+    const NPC3 = 'npc:deaf_blind';
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    /** @type {jest.Mock} */ let mockPerceptionFilterService;
+
+    beforeEach(() => {
+      mockPerceptionFilterService = {
+        filterEventForRecipients: jest.fn(),
+      };
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        perceptionFilterService: mockPerceptionFilterService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('constructor works without perceptionFilterService (backward compat)', () => {
+      const handlerWithoutFilter = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        // No perceptionFilterService provided
+      });
+      expect(handlerWithoutFilter).toBeInstanceOf(AddPerceptionLogEntryHandler);
+    });
+
+    test('sense_aware: false bypasses filtering', async () => {
+      const entry = makeEntry('no_filter');
+      entry.perceptionType = 'movement.arrival';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        sense_aware: false,
+        alternate_descriptions: {
+          auditory: 'You hear footsteps.',
+        },
+      });
+
+      // Filter service should NOT be called
+      expect(
+        mockPerceptionFilterService.filterEventForRecipients
+      ).not.toHaveBeenCalled();
+
+      // All recipients should receive the original entry
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+    });
+
+    test('missing alternate_descriptions uses existing logic (no filtering)', async () => {
+      const entry = makeEntry('no_alternates');
+      entry.perceptionType = 'movement.arrival';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        // No alternate_descriptions provided
+      });
+
+      // Filter service should NOT be called
+      expect(
+        mockPerceptionFilterService.filterEventForRecipients
+      ).not.toHaveBeenCalled();
+
+      // All recipients should receive the original entry
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+    });
+
+    test('filtering removes recipients that cannot perceive (silent filter)', async () => {
+      const entry = makeEntry('filtered');
+      entry.perceptionType = 'movement.arrival';
+      entry.descriptionText = 'Bob does a handstand.';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
+
+      // Mock filter service: NPC1 can see, NPC2 uses auditory, NPC3 filtered out
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: NPC1,
+          descriptionText: 'Bob does a handstand.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: NPC2,
+          descriptionText: 'You hear exertion sounds.',
+          sense: 'auditory',
+          canPerceive: true,
+        },
+        {
+          entityId: NPC3,
+          descriptionText: null,
+          sense: 'visual',
+          canPerceive: false, // Filtered out
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        originating_actor_id: ACTOR,
+        alternate_descriptions: {
+          auditory: 'You hear exertion sounds.',
+          limited: 'You sense activity nearby.',
+        },
+      });
+
+      // Filter service should be called
+      expect(
+        mockPerceptionFilterService.filterEventForRecipients
+      ).toHaveBeenCalledWith(
+        {
+          perception_type: 'movement.arrival',
+          description_text: 'Bob does a handstand.',
+          alternate_descriptions: {
+            auditory: 'You hear exertion sounds.',
+            limited: 'You sense activity nearby.',
+          },
+        },
+        expect.arrayContaining([NPC1, NPC2, NPC3]),
+        LOC,
+        ACTOR
+      );
+
+      // Only NPC1 and NPC2 should receive entries (NPC3 filtered out)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // Verify NPC3 was NOT updated
+      const updatedEntities = em.addComponent.mock.calls.map((call) => call[0]);
+      expect(updatedEntities).toContain(NPC1);
+      expect(updatedEntities).toContain(NPC2);
+      expect(updatedEntities).not.toContain(NPC3);
+    });
+
+    test('perceivedVia field added to log entries when filtering', async () => {
+      const entry = makeEntry('perceived_via');
+      entry.perceptionType = 'movement.arrival';
+      entry.descriptionText = 'Original visual text.';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: NPC1,
+          descriptionText: 'Original visual text.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: NPC2,
+          descriptionText: 'You hear sounds.',
+          sense: 'auditory',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        originating_actor_id: ACTOR,
+        alternate_descriptions: {
+          auditory: 'You hear sounds.',
+        },
+      });
+
+      // Verify NPC1 received visual description with perceivedVia field
+      const npc1Call = em.addComponent.mock.calls.find(
+        (call) => call[0] === NPC1
+      );
+      expect(npc1Call[2].logEntries[0]).toMatchObject({
+        descriptionText: 'Original visual text.',
+        perceivedVia: 'visual',
+      });
+
+      // Verify NPC2 received auditory description with perceivedVia field
+      const npc2Call = em.addComponent.mock.calls.find(
+        (call) => call[0] === NPC2
+      );
+      expect(npc2Call[2].logEntries[0]).toMatchObject({
+        descriptionText: 'You hear sounds.',
+        perceivedVia: 'auditory',
+      });
+    });
+
+    test('silent filtering does not dispatch errors', async () => {
+      const entry = makeEntry('silent');
+      entry.perceptionType = 'movement.arrival';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      // Both recipients filtered out
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: NPC1,
+          descriptionText: null,
+          sense: 'visual',
+          canPerceive: false,
+        },
+        {
+          entityId: NPC2,
+          descriptionText: null,
+          sense: 'visual',
+          canPerceive: false,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        alternate_descriptions: { auditory: 'fallback' },
+      });
+
+      // No error events should be dispatched (silent filter)
+      expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.anything()
+      );
+
+      // No entries should be added
+      expect(em.addComponent).not.toHaveBeenCalled();
+    });
+
+    test('filtering works with batch optimization', async () => {
+      const entry = makeEntry('batch_filter');
+      entry.perceptionType = 'social.gesture';
+      entry.descriptionText = 'Visual gesture description.';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
+
+      // Mock optimized batch method
+      em.batchAddComponentsOptimized = jest.fn().mockResolvedValue({
+        updateCount: 2,
+        errors: [],
+      });
+
+      // NPC3 filtered out
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: NPC1,
+          descriptionText: 'Visual gesture description.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: NPC2,
+          descriptionText: 'You sense activity.',
+          sense: 'limited',
+          canPerceive: true,
+        },
+        {
+          entityId: NPC3,
+          descriptionText: null,
+          sense: 'visual',
+          canPerceive: false,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        alternate_descriptions: { limited: 'You sense activity.' },
+      });
+
+      // Batch should only include NPC1 and NPC2 (not NPC3)
+      expect(em.batchAddComponentsOptimized).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({ instanceId: NPC1 }),
+          expect.objectContaining({ instanceId: NPC2 }),
+        ]),
+        true
+      );
+
+      const specs = em.batchAddComponentsOptimized.mock.calls[0][0];
+      expect(specs).toHaveLength(2);
+      expect(specs.find((s) => s.instanceId === NPC3)).toBeUndefined();
+    });
+
+    test('filtering with no perceptionFilterService available uses original logic', async () => {
+      // Create handler without filter service
+      const handlerWithoutFilter = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+      });
+
+      const entry = makeEntry('no_service');
+      entry.perceptionType = 'movement.arrival';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2]));
+
+      await handlerWithoutFilter.execute({
+        location_id: LOC,
+        entry,
+        alternate_descriptions: { auditory: 'fallback' },
+      });
+
+      // All recipients should receive original entry (no filtering)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // Verify all got the original descriptionText (no perceivedVia)
+      em.addComponent.mock.calls.forEach((call) => {
+        expect(call[2].logEntries[0].descriptionText).toBe(entry.descriptionText);
+        expect(call[2].logEntries[0].perceivedVia).toBeUndefined();
+      });
+    });
+
+    test('logs debug message about filtering results', async () => {
+      const entry = makeEntry('debug_log');
+      entry.perceptionType = 'movement.arrival';
+      em.getEntitiesInLocation.mockReturnValue(new Set([NPC1, NPC2, NPC3]));
+
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        { entityId: NPC1, descriptionText: 'text', sense: 'visual', canPerceive: true },
+        { entityId: NPC2, descriptionText: 'text', sense: 'auditory', canPerceive: true },
+        { entityId: NPC3, descriptionText: null, sense: 'visual', canPerceive: false },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        alternate_descriptions: { auditory: 'fallback' },
+      });
+
+      // Should log filtering results
+      expect(log.debug).toHaveBeenCalledWith(
+        expect.stringContaining('sense filtering applied - 2/3 can perceive')
+      );
+    });
+  });
 });

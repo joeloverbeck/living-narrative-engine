@@ -370,6 +370,94 @@ describe('common.schema.json - Template Definitions', () => {
   });
 
   /* ══════════════════════════════════════════════════════════════════════════
+   * SENSE CATEGORY DEFINITION
+   * Tests for SENAWAPEREVE-001: Sense category enum for perceptible events
+   * ══════════════════════════════════════════════════════════════════════════ */
+  describe('senseCategory definition', () => {
+    describe('valid sense categories', () => {
+      test.each([
+        ['visual', 'sight-based perception (requires light + functioning eyes)'],
+        ['auditory', 'sound-based perception (requires functioning ears)'],
+        ['olfactory', 'smell-based perception (requires functioning nose)'],
+        ['tactile', 'touch-based perception (physical contact)'],
+        ['proprioceptive', 'self-perception (own actions, internal states)'],
+        ['omniscient', 'always delivered (system messages, errors)'],
+      ])('✓ should accept "%s" (%s)', (category) => {
+        expect(validateDefinition('senseCategory', category)).toBe(true);
+      });
+    });
+
+    describe('invalid sense categories', () => {
+      test('✗ should reject unknown category "hearing"', () => {
+        expect(validateDefinition('senseCategory', 'hearing')).toBe(false);
+      });
+
+      test('✗ should reject unknown category "smell"', () => {
+        expect(validateDefinition('senseCategory', 'smell')).toBe(false);
+      });
+
+      test('✗ should reject unknown category "touch"', () => {
+        expect(validateDefinition('senseCategory', 'touch')).toBe(false);
+      });
+
+      test('✗ should reject uppercase "VISUAL"', () => {
+        expect(validateDefinition('senseCategory', 'VISUAL')).toBe(false);
+      });
+
+      test('✗ should reject mixed case "Visual"', () => {
+        expect(validateDefinition('senseCategory', 'Visual')).toBe(false);
+      });
+
+      test('✗ should reject empty string', () => {
+        expect(validateDefinition('senseCategory', '')).toBe(false);
+      });
+
+      test('✗ should reject number', () => {
+        expect(validateDefinition('senseCategory', 1)).toBe(false);
+      });
+
+      test('✗ should reject boolean', () => {
+        expect(validateDefinition('senseCategory', true)).toBe(false);
+      });
+
+      test('✗ should reject null', () => {
+        expect(validateDefinition('senseCategory', null)).toBe(false);
+      });
+
+      test('✗ should reject object', () => {
+        expect(validateDefinition('senseCategory', { type: 'visual' })).toBe(
+          false
+        );
+      });
+
+      test('✗ should reject array', () => {
+        expect(validateDefinition('senseCategory', ['visual'])).toBe(false);
+      });
+    });
+
+    describe('enum completeness', () => {
+      const EXPECTED_CATEGORIES = [
+        'visual',
+        'auditory',
+        'olfactory',
+        'tactile',
+        'proprioceptive',
+        'omniscient',
+      ];
+
+      test('schema should define exactly 6 sense categories', () => {
+        const senseCategoryDef = commonSchema.definitions.senseCategory;
+        expect(senseCategoryDef.enum).toHaveLength(6);
+      });
+
+      test('schema should include all expected categories in correct order', () => {
+        const senseCategoryDef = commonSchema.definitions.senseCategory;
+        expect(senseCategoryDef.enum).toEqual(EXPECTED_CATEGORIES);
+      });
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════════
    * CROSS-DEFINITION CONSISTENCY
    * ══════════════════════════════════════════════════════════════════════════ */
   describe('cross-definition consistency', () => {

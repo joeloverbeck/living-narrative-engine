@@ -11,7 +11,6 @@ jest.mock('../../../../src/domUI/index.js', () => ({
   LocationRenderer: jest.fn(),
   ActionButtonsRenderer: jest.fn(),
   PerceptionLogRenderer: jest.fn(),
-  SaveGameService: jest.fn(),
   CurrentTurnActorRenderer: jest.fn(),
   ChatAlertRenderer: jest.fn(),
   ActionResultRenderer: jest.fn(),
@@ -42,8 +41,6 @@ jest.mock(
 
 jest.mock('../../../../src/input/inputHandler.js', () => jest.fn());
 jest.mock('../../../../src/alerting/alertRouter.js', () => jest.fn());
-jest.mock('../../../../src/domUI/saveGameUI.js', () => jest.fn());
-jest.mock('../../../../src/domUI/loadGameUI.js', () => jest.fn());
 
 describe('registerUI - integration test', () => {
   let mockContainer;
@@ -86,8 +83,6 @@ describe('registerUI - integration test', () => {
           [tokens.EntityDisplayDataProvider]: { getDisplayData: jest.fn() },
           [tokens.IDataRegistry]: { getData: jest.fn() },
           [tokens.IUserPrompt]: { prompt: jest.fn() },
-          [tokens.ISaveLoadService]: { save: jest.fn(), load: jest.fn() },
-          [tokens.SaveGameService]: { save: jest.fn() },
           [tokens.IActionCategorizationService]: { categorize: jest.fn() },
           [tokens.AlertRouter]: { route: jest.fn() },
           [tokens.LLMAdapter]: { sendRequest: jest.fn() },

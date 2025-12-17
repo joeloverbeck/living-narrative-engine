@@ -27,7 +27,17 @@
         },
         "entry": {
           "type": "object",
-          "minProperties": 1
+          "minProperties": 1,
+          "properties": {
+            "perceivedVia": {
+              "type": "string",
+              "description": "The sense through which this event was perceived (for debugging)"
+            },
+            "originalDescription": {
+              "type": "string",
+              "description": "The original visual description before sense filtering"
+            }
+          }
         },
         "originating_actor_id": {
           "type": "string"
@@ -63,6 +73,15 @@
               "minLength": 1
             }
           ]
+        },
+        "alternate_descriptions": {
+          "type": "object",
+          "description": "Alternative descriptions passed from dispatch operation"
+        },
+        "sense_aware": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to apply sense filtering"
         }
       },
       "required": ["location_id", "entry"],

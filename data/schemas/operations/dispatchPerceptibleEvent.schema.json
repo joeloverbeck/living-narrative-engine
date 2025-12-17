@@ -57,6 +57,34 @@
         "log_entry": {
           "type": "boolean",
           "default": false
+        },
+        "alternate_descriptions": {
+          "type": "object",
+          "description": "Alternative event descriptions for different sensory contexts",
+          "properties": {
+            "auditory": {
+              "type": "string",
+              "description": "Description when perceived through hearing (sounds, speech)"
+            },
+            "tactile": {
+              "type": "string",
+              "description": "Description when perceived through touch (vibrations, contact)"
+            },
+            "olfactory": {
+              "type": "string",
+              "description": "Description when perceived through smell"
+            },
+            "limited": {
+              "type": "string",
+              "description": "Fallback description when primary and specific senses unavailable"
+            }
+          },
+          "additionalProperties": false
+        },
+        "sense_aware": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true (default), applies sense-based filtering. When false, all recipients receive the event regardless of sensory state (useful for debugging or special cases)."
         }
       },
       "required": [

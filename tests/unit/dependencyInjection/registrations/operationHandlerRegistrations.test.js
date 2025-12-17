@@ -530,6 +530,10 @@ beforeAll(async () => {
         { property: 'logger', token: ILogger },
         { property: 'entityManager', token: IEntityManager },
         { property: 'safeEventDispatcher', token: ISafeEventDispatcher },
+        {
+          property: 'perceptionFilterService',
+          token: tokens.IPerceptionFilterService,
+        },
       ],
     },
     {

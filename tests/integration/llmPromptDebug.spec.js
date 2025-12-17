@@ -158,18 +158,6 @@ describe('Integration: LLM Prompt Debug Panel', () => {
       formatNamespaceDisplayName: jest.fn().mockReturnValue('Namespace'),
       shouldShowCounts: jest.fn().mockReturnValue(false),
     }); // ActionButtonsRenderer needs this
-    ensureInstance(tokens.ISaveLoadService, {
-      isSavingAllowed: jest.fn(() => true),
-      listManualSaveSlots: jest.fn().mockResolvedValue([]),
-      loadManualSaveSlot: jest.fn(),
-      saveManualSlot: jest.fn(),
-      deleteManualSave: jest.fn(),
-    }); // SaveGameUI
-    ensureInstance(tokens.SaveGameService, {
-      validatePreconditions: jest.fn().mockResolvedValue({ success: true }),
-      confirmOverwrite: jest.fn().mockResolvedValue({ proceed: true }),
-      performSave: jest.fn().mockResolvedValue({ success: true }),
-    });
     ensureInstance(tokens.LLMAdapter, {}); // LlmSelectionModal
     ensureInstance(tokens.IDataRegistry, {}); // LocationRenderer
     ensureInstance(tokens.InjuryAggregationService, {

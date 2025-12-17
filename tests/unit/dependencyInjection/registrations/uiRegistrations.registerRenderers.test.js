@@ -16,7 +16,6 @@ jest.mock('../../../../src/domUI/index.js', () => ({
   LocationRenderer: jest.fn(),
   ActionButtonsRenderer: jest.fn(),
   PerceptionLogRenderer: jest.fn(),
-  SaveGameService: jest.fn(),
   CurrentTurnActorRenderer: jest.fn(),
   ChatAlertRenderer: jest.fn(),
   ActionResultRenderer: jest.fn(),
@@ -26,9 +25,6 @@ jest.mock('../../../../src/domUI/index.js', () => ({
 jest.mock('../../../../src/domUI/portraitModalRenderer.js', () => ({
   PortraitModalRenderer: jest.fn(),
 }));
-
-jest.mock('../../../../src/domUI/saveGameUI.js', () => jest.fn());
-jest.mock('../../../../src/domUI/loadGameUI.js', () => jest.fn());
 
 describe('registerRenderers', () => {
   let mockRegistrar;
@@ -315,142 +311,6 @@ describe('registerRenderers', () => {
     });
   });
 
-  describe('SaveGameService factory', () => {
-    it('should register SaveGameService as singleton factory', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const saveGameServiceCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.SaveGameService
-      );
-
-      expect(saveGameServiceCall).toBeDefined();
-      expect(saveGameServiceCall[3].lifecycle).toBe('singletonFactory');
-    });
-
-    it('should create SaveGameService with correct dependencies', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const saveGameServiceCall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.SaveGameService
-      );
-
-      const factory = saveGameServiceCall[2];
-      const mockContainer = {
-        resolve: jest.fn((token) => {
-          const mocks = {
-            [tokens.ILogger]: mockLogger,
-            [tokens.IUserPrompt]: { prompt: jest.fn() },
-          };
-          return mocks[token] || jest.fn();
-        }),
-      };
-
-      const MockSaveGameService =
-        require('../../../../src/domUI/index.js').SaveGameService;
-      const result = factory(mockContainer);
-
-      expect(MockSaveGameService).toHaveBeenCalledWith({
-        logger: mockLogger,
-        userPrompt: expect.any(Object),
-      });
-    });
-  });
-
-  describe('SaveGameUI factory', () => {
-    it('should register SaveGameUI as singleton factory', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const saveGameUICall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.SaveGameUI
-      );
-
-      expect(saveGameUICall).toBeDefined();
-      expect(saveGameUICall[3].lifecycle).toBe('singletonFactory');
-    });
-
-    it('should create SaveGameUI with correct dependencies', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const saveGameUICall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.SaveGameUI
-      );
-
-      const factory = saveGameUICall[2];
-      const mockContainer = {
-        resolve: jest.fn((token) => {
-          const mocks = {
-            [tokens.ILogger]: mockLogger,
-            [tokens.IDocumentContext]: { query: jest.fn() },
-            [tokens.DomElementFactory]: { createElement: jest.fn() },
-            [tokens.ISaveLoadService]: { save: jest.fn() },
-            [tokens.IValidatedEventDispatcher]: { dispatch: jest.fn() },
-            [tokens.SaveGameService]: { save: jest.fn() },
-          };
-          return mocks[token] || jest.fn();
-        }),
-      };
-
-      const MockSaveGameUI = require('../../../../src/domUI/saveGameUI.js');
-      const result = factory(mockContainer);
-
-      expect(MockSaveGameUI).toHaveBeenCalledWith({
-        logger: mockLogger,
-        documentContext: expect.any(Object),
-        domElementFactory: expect.any(Object),
-        saveLoadService: expect.any(Object),
-        validatedEventDispatcher: expect.any(Object),
-        saveGameService: expect.any(Object),
-      });
-    });
-  });
-
-  describe('LoadGameUI factory', () => {
-    it('should register LoadGameUI as singleton factory', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const loadGameUICall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.LoadGameUI
-      );
-
-      expect(loadGameUICall).toBeDefined();
-      expect(loadGameUICall[3].lifecycle).toBe('singletonFactory');
-    });
-
-    it('should create LoadGameUI with correct dependencies', () => {
-      registerRenderers(mockRegistrar, mockLogger);
-
-      const loadGameUICall = mockRegisterWithLog.mock.calls.find(
-        (call) => call[1] === tokens.LoadGameUI
-      );
-
-      const factory = loadGameUICall[2];
-      const mockContainer = {
-        resolve: jest.fn((token) => {
-          const mocks = {
-            [tokens.ILogger]: mockLogger,
-            [tokens.IDocumentContext]: { query: jest.fn() },
-            [tokens.DomElementFactory]: { createElement: jest.fn() },
-            [tokens.ISaveLoadService]: { load: jest.fn() },
-            [tokens.IValidatedEventDispatcher]: { dispatch: jest.fn() },
-            [tokens.IUserPrompt]: { prompt: jest.fn() },
-          };
-          return mocks[token] || jest.fn();
-        }),
-      };
-
-      const MockLoadGameUI = require('../../../../src/domUI/loadGameUI.js');
-      const result = factory(mockContainer);
-
-      expect(MockLoadGameUI).toHaveBeenCalledWith({
-        logger: mockLogger,
-        documentContext: expect.any(Object),
-        domElementFactory: expect.any(Object),
-        saveLoadService: expect.any(Object),
-        validatedEventDispatcher: expect.any(Object),
-        userPrompt: expect.any(Object),
-      });
-    });
-  });
 
   describe('LlmSelectionModal factory', () => {
     it('should register LlmSelectionModal as singleton factory', () => {
@@ -642,7 +502,7 @@ describe('registerRenderers', () => {
     registerRenderers(mockRegistrar, mockLogger);
 
     // Count total registrations (TitleRenderer removed, TurnOrderTickerRenderer added, InjuryStatusPanel added, DamageEventMessageRenderer added, PromptPreviewModal added)
-    expect(mockRegisterWithLog).toHaveBeenCalledTimes(16);
+    expect(mockRegisterWithLog).toHaveBeenCalledTimes(13);
 
     // Verify all tokens were registered
     const registeredTokens = mockRegisterWithLog.mock.calls.map(
@@ -653,9 +513,6 @@ describe('registerRenderers', () => {
     expect(registeredTokens).toContain(tokens.LocationRenderer);
     expect(registeredTokens).toContain(tokens.ActionButtonsRenderer);
     expect(registeredTokens).toContain(tokens.PerceptionLogRenderer);
-    expect(registeredTokens).toContain(tokens.SaveGameService);
-    expect(registeredTokens).toContain(tokens.SaveGameUI);
-    expect(registeredTokens).toContain(tokens.LoadGameUI);
     expect(registeredTokens).toContain(tokens.LlmSelectionModal);
     expect(registeredTokens).toContain(tokens.CurrentTurnActorRenderer);
     expect(registeredTokens).toContain(tokens.ChatAlertRenderer);

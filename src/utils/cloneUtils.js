@@ -1,12 +1,5 @@
 // src/utils/cloneUtils.js
 
-import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
-import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from './persistenceResultUtils.js';
-import { ensureValidLogger } from './loggerUtils.js';
-
 /**
  * @file Utility functions for cloning and freezing objects.
  * @description Re-exported from {@link src/utils/index.js}. Import from there
@@ -53,34 +46,6 @@ export function deepClone(value) {
   }
 
   return JSON.parse(JSON.stringify(value));
-}
-
-/**
- * Safely deep clones an object and logs errors on failure.
- *
- * @description Wraps {@link deepClone} and returns a
- * {@link import('../persistence/persistenceErrors.js').PersistenceError} when
- * cloning fails.
- * @template T
- * @param {T} value - Value to clone.
- * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger used
- *   for error reporting.
- * @returns {import('../persistence/persistenceTypes.js').PersistenceResult<T>}
- *   Clone result object.
- */
-export function safeDeepClone(value, logger) {
-  const moduleLogger = ensureValidLogger(logger, 'CloneUtils');
-  try {
-    /** @type {T} */
-    const cloned = deepClone(value);
-    return createPersistenceSuccess(cloned);
-  } catch (error) {
-    moduleLogger.error('DeepClone failed:', error);
-    return createPersistenceFailure(
-      PersistenceErrorCodes.DEEP_CLONE_FAILED,
-      'Failed to deep clone object.'
-    );
-  }
 }
 
 /**

@@ -380,4 +380,199 @@ describe('DispatchPerceptibleEventHandler', () => {
       expect(logHandler.execute).not.toHaveBeenCalled();
     });
   });
+
+  describe('Sense-aware filtering parameters', () => {
+    test('should pass alternate_descriptions to log handler when log_entry is true', () => {
+      const alternateDescriptions = {
+        auditory: 'You hear footsteps approaching.',
+        olfactory: 'A familiar scent reaches you.',
+      };
+
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'A figure approaches.',
+          perception_type: 'movement.arrival',
+          actor_id: 'npc:walker',
+          log_entry: true,
+          alternate_descriptions: alternateDescriptions,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alternate_descriptions: alternateDescriptions,
+        })
+      );
+    });
+
+    test('should pass sense_aware to log handler when log_entry is true', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'A figure appears.',
+          perception_type: 'state.observable_change',
+          actor_id: 'npc:observer',
+          log_entry: true,
+          sense_aware: false,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sense_aware: false,
+        })
+      );
+    });
+
+    test('should default sense_aware to true when not provided', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Something happens.',
+          perception_type: 'state.observable_change',
+          actor_id: 'npc:actor',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sense_aware: true,
+        })
+      );
+    });
+
+    test('should pass undefined alternate_descriptions when not provided', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Plain event.',
+          perception_type: 'physical.target_action',
+          actor_id: 'npc:actor',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alternate_descriptions: undefined,
+        })
+      );
+    });
+
+    test('should pass both alternate_descriptions and sense_aware together', () => {
+      const alternateDescriptions = {
+        auditory: 'A loud crash echoes.',
+        tactile: 'The floor shakes briefly.',
+      };
+
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'The wall collapses.',
+          perception_type: 'physical.target_action',
+          actor_id: 'npc:destructor',
+          log_entry: true,
+          alternate_descriptions: alternateDescriptions,
+          sense_aware: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          alternate_descriptions: alternateDescriptions,
+          sense_aware: true,
+        })
+      );
+    });
+
+    test('should not pass sense-aware params to log handler when log_entry is false', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Event without logging.',
+          perception_type: 'movement.arrival',
+          actor_id: 'npc:actor',
+          log_entry: false,
+          alternate_descriptions: { auditory: 'Sound' },
+          sense_aware: true,
+        },
+        {}
+      );
+
+      // Event should still be dispatched
+      expect(dispatcher.dispatch).toHaveBeenCalledWith(
+        'core:perceptible_event',
+        expect.any(Object)
+      );
+
+      // But log handler should not be called
+      expect(logHandler.execute).not.toHaveBeenCalled();
+    });
+
+    test('should pass sense-aware params along with other log entry params', () => {
+      const alternateDescriptions = {
+        auditory: 'You hear a whisper.',
+        proprioceptive: 'You sense your own words.',
+      };
+
+      handler.execute(
+        {
+          location_id: 'loc:room',
+          description_text: 'You whisper something.',
+          perception_type: 'communication.speech',
+          actor_id: 'npc:whisperer',
+          target_id: 'npc:listener',
+          involved_entities: ['item:scroll'],
+          contextual_data: { recipientIds: ['npc:listener'] },
+          log_entry: true,
+          alternate_descriptions: alternateDescriptions,
+          sense_aware: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith({
+        location_id: 'loc:room',
+        entry: expect.objectContaining({
+          descriptionText: 'You whisper something.',
+          perceptionType: 'communication.speech',
+          actorId: 'npc:whisperer',
+          targetId: 'npc:listener',
+          involvedEntities: ['item:scroll'],
+        }),
+        originating_actor_id: 'npc:whisperer',
+        recipient_ids: ['npc:listener'],
+        excluded_actor_ids: [],
+        alternate_descriptions: alternateDescriptions,
+        sense_aware: true,
+      });
+    });
+
+    test('should pass explicitly false sense_aware to log handler', () => {
+      handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Omniscient event.',
+          perception_type: 'error.system_error',
+          actor_id: 'system',
+          log_entry: true,
+          sense_aware: false,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sense_aware: false,
+        })
+      );
+    });
+  });
 });

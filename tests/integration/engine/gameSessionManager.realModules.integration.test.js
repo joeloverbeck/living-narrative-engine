@@ -3,10 +3,7 @@ import GameSessionManager from '../../../src/engine/gameSessionManager.js';
 import EngineState from '../../../src/engine/engineState.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import PlaytimeTracker from '../../../src/engine/playtimeTracker.js';
-import {
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_READY_UI,
-} from '../../../src/constants/eventIds.js';
+import { ENGINE_READY_UI } from '../../../src/constants/eventIds.js';
 
 /**
  * @description Simple in-memory logger for capturing log output during tests.
@@ -357,26 +354,6 @@ describe('GameSessionManager integration (real collaborators)', () => {
     });
   });
 
-  describe('prepareForLoadGameSession', () => {
-    it('dispatches operation progress UI and resets core state', async () => {
-      const env = createManagerEnvironment();
-
-      await env.manager.prepareForLoadGameSession('saves/path/to/mySave.sav');
-
-      expect(env.stopCalls).toBe(0);
-      expect(env.resetCalls).toBe(1);
-      expect(env.recordingDispatcher.events).toEqual([
-        {
-          eventName: ENGINE_OPERATION_IN_PROGRESS_UI,
-          payload: {
-            titleMessage: 'Loading mySave...',
-            inputDisabledMessage: 'Loading game from mySave...',
-          },
-        },
-      ]);
-    });
-  });
-
   describe('finalizeNewGameSuccess', () => {
     /** @type {ReturnType<typeof createManagerEnvironment>} */
     let env;
@@ -483,34 +460,6 @@ describe('GameSessionManager integration (real collaborators)', () => {
         noTurnsEnv.logger
           .get('error')
           .some((entry) => entry.message.includes('TurnManager not available'))
-      ).toBe(true);
-    });
-  });
-
-  describe('finalizeLoadSuccess', () => {
-    it('sets world from metadata and returns the loaded data', async () => {
-      const env = createManagerEnvironment({ pendingCount: 0 });
-      const loadedData = { metadata: { gameTitle: 'LoadedWorld' } };
-
-      const result = await env.manager.finalizeLoadSuccess(
-        loadedData,
-        'save-slot-01'
-      );
-
-      expect(result).toEqual({ success: true, data: loadedData });
-      expect(env.startEngineCalls).toEqual(['LoadedWorld']);
-      expect(env.engineState.activeWorld).toBe('LoadedWorld');
-      expect(env.turnManager.startCalls).toBe(1);
-      expect(env.recordingDispatcher.events.at(-1)).toEqual({
-        eventName: ENGINE_READY_UI,
-        payload: { activeWorld: 'LoadedWorld', message: 'Enter command...' },
-      });
-      expect(
-        env.logger
-          .get('debug')
-          .some((entry) =>
-            entry.message.includes('No pending anatomy generations detected')
-          )
       ).toBe(true);
     });
   });

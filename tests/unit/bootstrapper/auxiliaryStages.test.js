@@ -18,12 +18,12 @@ function createLogger() {
 
 const tokens = {
   EngineUIManager: 'EngineUIManager',
-  SaveGameUI: 'SaveGameUI',
-  LoadGameUI: 'LoadGameUI',
   LlmSelectionModal: 'LlmSelectionModal',
   CurrentTurnActorRenderer: 'CurrentTurnActorRenderer',
   SpeechBubbleRenderer: 'SpeechBubbleRenderer',
   ProcessingIndicatorController: 'ProcessingIndicatorController',
+  ActorParticipationController: 'ActorParticipationController',
+  PerceptibleEventSenderController: 'PerceptibleEventSenderController',
   ICriticalLogNotifier: 'ICriticalLogNotifier',
   IEventBus: 'IEventBus',
 };

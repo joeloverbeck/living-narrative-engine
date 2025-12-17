@@ -30,7 +30,6 @@ import {
   ChatAlertRenderer,
   ActionResultRenderer,
   WindowUserPrompt,
-  SaveGameService,
   EntityLifecycleMonitor,
   InjuryStatusPanel,
   DamageEventMessageRenderer,
@@ -39,8 +38,6 @@ import {
 import { VisualizerState } from '../../domUI/visualizer/VisualizerState.js';
 import { AnatomyLoadingDetector } from '../../domUI/visualizer/AnatomyLoadingDetector.js';
 import { VisualizerStateController } from '../../domUI/visualizer/VisualizerStateController.js';
-import SaveGameUI from '../../domUI/saveGameUI.js';
-import LoadGameUI from '../../domUI/loadGameUI.js';
 import { PortraitModalRenderer } from '../../domUI/portraitModalRenderer.js';
 import { EngineUIManager } from '../../domUI/engineUIManager.js';
 import PerceptibleEventSenderController from '../../domUI/perceptibleEventSenderController.js';
@@ -55,9 +52,7 @@ import { TurnOrderTickerRenderer } from '../../domUI/turnOrderTickerRenderer.js'
 /** @typedef {import('../../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
-/** @typedef {import('../../domUI/saveGameService.js').default} SaveGameService */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
@@ -247,50 +242,6 @@ export function registerRenderers(registrar, logger) {
   //   { lifecycle: 'singletonFactory' },
   //   logger
   // );
-
-  registerWithLog(
-    registrar,
-    tokens.SaveGameService,
-    (c) =>
-      new SaveGameService({
-        logger: c.resolve(tokens.ILogger),
-        userPrompt: c.resolve(tokens.IUserPrompt),
-      }),
-    { lifecycle: 'singletonFactory' },
-    logger
-  );
-
-  registerWithLog(
-    registrar,
-    tokens.SaveGameUI,
-    (c) =>
-      new SaveGameUI({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        saveGameService: c.resolve(tokens.SaveGameService),
-      }),
-    { lifecycle: 'singletonFactory' },
-    logger
-  );
-
-  registerWithLog(
-    registrar,
-    tokens.LoadGameUI,
-    (c) =>
-      new LoadGameUI({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        domElementFactory: c.resolve(tokens.DomElementFactory),
-        saveLoadService: c.resolve(tokens.ISaveLoadService),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        userPrompt: c.resolve(tokens.IUserPrompt),
-      }),
-    { lifecycle: 'singletonFactory' },
-    logger
-  );
 
   registerWithLog(
     registrar,
@@ -552,8 +503,6 @@ export function registerFacadeAndManager(registrar, logger) {
         tokens.InputStateController,
         tokens.SpeechBubbleRenderer,
         tokens.PerceptionLogRenderer,
-        tokens.SaveGameUI,
-        tokens.LoadGameUI,
         tokens.LlmSelectionModal,
         tokens.TurnOrderTickerRenderer,
         tokens.InjuryStatusPanel,

@@ -63,8 +63,6 @@ describe('registerFacadeAndManager', () => {
           tokens.InputStateController,
           tokens.SpeechBubbleRenderer,
           tokens.PerceptionLogRenderer,
-          tokens.SaveGameUI,
-          tokens.LoadGameUI,
           tokens.LlmSelectionModal,
           tokens.TurnOrderTickerRenderer,
           tokens.InjuryStatusPanel,
@@ -95,6 +93,18 @@ describe('registerFacadeAndManager', () => {
       );
 
       expect(domUiFacadeCall[4]).toBe(mockLogger);
+    });
+
+    it('should not include Save/Load UI dependencies', () => {
+      registerFacadeAndManager(mockRegistrar, mockLogger);
+
+      const domUiFacadeCall = mockRegisterWithLog.mock.calls.find(
+        (call) => call[1] === tokens.DomUiFacade
+      );
+
+      const dependencies = domUiFacadeCall[3].dependencies;
+      expect(dependencies).not.toContain(tokens.SaveGameUI);
+      expect(dependencies).not.toContain(tokens.LoadGameUI);
     });
   });
 
@@ -334,14 +344,14 @@ describe('registerFacadeAndManager', () => {
   });
 
   describe('DomUiFacade dependencies', () => {
-    it('should have exactly 12 dependencies (TitleRenderer removed, EntityLifecycleMonitor removed, TurnOrderTickerRenderer, InjuryStatusPanel, and PromptPreviewModal added)', () => {
+    it('should have exactly 10 dependencies (TitleRenderer removed, EntityLifecycleMonitor removed, TurnOrderTickerRenderer, InjuryStatusPanel, and PromptPreviewModal added)', () => {
       registerFacadeAndManager(mockRegistrar, mockLogger);
 
       const domUiFacadeCall = mockRegisterWithLog.mock.calls.find(
         (call) => call[1] === tokens.DomUiFacade
       );
 
-      expect(domUiFacadeCall[3].dependencies).toHaveLength(12);
+      expect(domUiFacadeCall[3].dependencies).toHaveLength(10);
     });
 
     it('should include all required renderer dependencies', () => {
@@ -360,8 +370,6 @@ describe('registerFacadeAndManager', () => {
       expect(dependencies).toContain(tokens.InputStateController);
       expect(dependencies).toContain(tokens.SpeechBubbleRenderer);
       expect(dependencies).toContain(tokens.PerceptionLogRenderer);
-      expect(dependencies).toContain(tokens.SaveGameUI);
-      expect(dependencies).toContain(tokens.LoadGameUI);
       expect(dependencies).toContain(tokens.LlmSelectionModal);
       expect(dependencies).toContain(tokens.TurnOrderTickerRenderer);
       expect(dependencies).toContain(tokens.InjuryStatusPanel);

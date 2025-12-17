@@ -5,26 +5,15 @@
 
 import { expect } from '@jest/globals';
 import {
-  ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
-  GAME_SAVED_ID,
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
 } from '../../../src/constants/eventIds.js';
-import {
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-  ENGINE_READY_MESSAGE,
-  ENGINE_STOPPED_MESSAGE,
-  SAVE_OPERATION_FINISHED_MESSAGE,
-} from '../constants.js';
-import { extractSaveName } from '../../../src/utils/savePathUtils.js';
+import { ENGINE_READY_MESSAGE, ENGINE_STOPPED_MESSAGE } from '../constants.js';
 
 /**
  * Asserts that dispatch calls match the provided event sequence.
@@ -45,66 +34,6 @@ export function expectDispatchSequence(mock, ...events) {
       : events;
 
   expect(mock.mock.calls).toEqual(expected);
-}
-
-/**
- * Builds the dispatch sequence emitted during a manual save.
- * Always includes the GAME_SAVED_ID event; use
- * {@link buildFailedSaveDispatches} for failure sequences.
- *
- * @param {string} saveName - Name of the save file.
- * @param {string} [filePath] - Optional saved file path.
- * @returns {Array<[string, any]>} Dispatch call sequence.
- */
-export function buildSaveDispatches(saveName, filePath) {
-  return [
-    [
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      {
-        titleMessage: 'Saving...',
-        inputDisabledMessage: `Saving game "${saveName}"...`,
-      },
-    ],
-    [GAME_SAVED_ID, { saveName, path: filePath, type: 'manual' }],
-    [
-      ENGINE_READY_UI,
-      {
-        activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-        message: SAVE_OPERATION_FINISHED_MESSAGE,
-      },
-    ],
-  ];
-}
-
-/**
- *
- * @param saveName
- * @param errorMessage
- */
-export function buildFailedSaveDispatches(saveName, errorMessage) {
-  return [
-    [
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      {
-        titleMessage: 'Saving...',
-        inputDisabledMessage: `Saving game "${saveName}"...`,
-      },
-    ],
-    [
-      ENGINE_OPERATION_FAILED_UI,
-      {
-        errorMessage: `Failed to save game: ${errorMessage}`,
-        errorTitle: 'Save Failed',
-      },
-    ],
-    [
-      ENGINE_READY_UI,
-      {
-        activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-        message: SAVE_OPERATION_FINISHED_MESSAGE,
-      },
-    ],
-  ];
 }
 
 /**
@@ -130,82 +59,6 @@ export function buildStartDispatches(worldName) {
     [
       ENGINE_READY_UI,
       { activeWorld: worldName, message: ENGINE_READY_MESSAGE },
-    ],
-  ];
-}
-
-/**
- * Builds the dispatch sequence for a successful game load.
- *
- * @param {string} saveId - Save identifier being loaded.
- * @param {string} worldName - Game title from the save data.
- * @returns {Array<[string, any]>} Dispatch sequence.
- */
-export function buildLoadSuccessDispatches(saveId, worldName) {
-  const displayName = extractSaveName(saveId);
-  return [
-    [
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      {
-        titleMessage: `Loading ${displayName}...`,
-        inputDisabledMessage: `Loading game from ${displayName}...`,
-      },
-    ],
-    [
-      ENGINE_READY_UI,
-      { activeWorld: worldName, message: ENGINE_READY_MESSAGE },
-    ],
-  ];
-}
-
-/**
- * Builds the dispatch sequence for a failed game load.
- *
- * @param {string} saveId - Save identifier.
- * @param {string} errorMsg - Failure message.
- * @returns {Array<[string, any]>} Dispatch sequence.
- */
-export function buildLoadFailureDispatches(saveId, errorMsg) {
-  const displayName = extractSaveName(saveId);
-  return [
-    [
-      ENGINE_OPERATION_IN_PROGRESS_UI,
-      {
-        titleMessage: `Loading ${displayName}...`,
-        inputDisabledMessage: `Loading game from ${displayName}...`,
-      },
-    ],
-    [
-      ENGINE_OPERATION_FAILED_UI,
-      {
-        errorMessage: `Failed to load game: ${errorMsg}`,
-        errorTitle: 'Load Failed',
-      },
-    ],
-  ];
-}
-
-/**
- * Builds the dispatch sequence when finalization fails after a load.
- *
- * @param {string} saveId - Save identifier.
- * @param {string} worldName - Game title from the save data.
- * @param {string} errorMsg - Failure message.
- * @returns {Array<[string, any]>} Dispatch sequence.
- */
-export function buildLoadFinalizeFailureDispatches(
-  saveId,
-  worldName,
-  errorMsg
-) {
-  return [
-    ...buildLoadSuccessDispatches(saveId, worldName),
-    [
-      ENGINE_OPERATION_FAILED_UI,
-      {
-        errorMessage: `Failed to load game: ${errorMsg}`,
-        errorTitle: 'Load Failed',
-      },
     ],
   ];
 }
@@ -350,26 +203,6 @@ export const expectComponentRemovedDispatch = createDispatchAsserter(
     componentTypeId,
     oldComponentData: oldData,
   })
-);
-
-/**
- * @description Asserts that the engine dispatched a request to show the Load Game UI.
- * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
- * @returns {void}
- */
-export const expectShowLoadGameUIDispatch = createDispatchAsserter(
-  REQUEST_SHOW_LOAD_GAME_UI,
-  () => ({})
-);
-
-/**
- * @description Asserts that the engine dispatched a request to show the Save Game UI.
- * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
- * @returns {void}
- */
-export const expectShowSaveGameUIDispatch = createDispatchAsserter(
-  REQUEST_SHOW_SAVE_GAME_UI,
-  () => ({})
 );
 
 /**
