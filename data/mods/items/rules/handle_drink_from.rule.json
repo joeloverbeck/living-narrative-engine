@@ -1,7 +1,7 @@
 {
   "$schema": "schema://living-narrative-engine/rule.schema.json",
   "rule_id": "handle_drink_from",
-  "comment": "Handles drink_from action with dual perception system (public message without flavor, private message with flavor to actor)",
+  "comment": "Handles drink_from action with perspective-aware perception (actor gets first-person with flavor, observers get third-person)",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "items:event-is-action-drink-from"
@@ -43,26 +43,29 @@
     },
     {
       "type": "SET_VARIABLE",
-      "comment": "Prepare public message (no flavor)",
+      "comment": "Prepare observer message (third-person, no flavor)",
       "parameters": {
-        "variable_name": "publicMessage",
+        "variable_name": "observerMessage",
         "value": "{context.actorName} drinks from {context.containerName}."
       }
     },
     {
       "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Public message visible to all EXCEPT actor",
+      "comment": "Drink action with perspective-aware descriptions - actor gets first-person with flavor",
       "parameters": {
         "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.publicMessage}",
+        "description_text": "{context.observerMessage}",
+        "actor_description": "I drink from {context.containerName}. {context.drinkResult.flavorText}",
         "perception_type": "consumption.consume",
         "actor_id": "{event.payload.actorId}",
         "target_id": "{event.payload.targetId}",
+        "log_entry": true,
+        "alternate_descriptions": {
+          "auditory": "I hear gulping sounds nearby."
+        },
         "contextual_data": {
-          "excludedActorIds": [
-            "{event.payload.actorId}"
-          ],
-          "volumeConsumed": "{context.drinkResult.volumeConsumed}"
+          "volumeConsumed": "{context.drinkResult.volumeConsumed}",
+          "flavorText": "{context.drinkResult.flavorText}"
         }
       }
     },
@@ -72,33 +75,7 @@
       "parameters": {
         "eventType": "core:display_successful_action_result",
         "payload": {
-          "message": "{context.publicMessage}"
-        }
-      }
-    },
-    {
-      "type": "SET_VARIABLE",
-      "comment": "Prepare private message with flavor for actor",
-      "parameters": {
-        "variable_name": "privateMessage",
-        "value": "{context.actorName} drinks from {context.containerName}. {context.drinkResult.flavorText}"
-      }
-    },
-    {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
-      "comment": "Private message with flavor visible only to actor",
-      "parameters": {
-        "location_id": "{context.actorPosition.locationId}",
-        "description_text": "{context.privateMessage}",
-        "perception_type": "consumption.consume",
-        "actor_id": "{event.payload.actorId}",
-        "target_id": "{event.payload.targetId}",
-        "contextual_data": {
-          "recipientIds": [
-            "{event.payload.actorId}"
-          ],
-          "volumeConsumed": "{context.drinkResult.volumeConsumed}",
-          "flavorText": "{context.drinkResult.flavorText}"
+          "message": "{context.observerMessage}"
         }
       }
     },

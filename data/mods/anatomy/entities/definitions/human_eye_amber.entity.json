@@ -24,6 +24,7 @@
     },
     "descriptors:shape_eye": {
       "shape": "almond"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

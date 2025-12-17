@@ -132,6 +132,11 @@ describe('ANACREMODMIG-006g: Eldritch Entity Migration', () => {
       expect(entity.components['anatomy:part_health']).toBeDefined();
     }
   );
+
+  test('eldritch_tentacle_sensory should provide smell affordance', () => {
+    const entity = loadEntity('eldritch_tentacle_sensory.entity.json');
+    expect(entity.components['anatomy:provides_smell']).toEqual({});
+  });
 });
 
 describe('ANACREMODMIG-006g: Misc Entity Migration', () => {

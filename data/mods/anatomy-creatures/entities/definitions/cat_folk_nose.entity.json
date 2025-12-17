@@ -30,6 +30,7 @@
     },
     "descriptors:color_extended": {
       "color": "dark-umber"
-    }
+    },
+    "anatomy:provides_smell": {}
   }
 }

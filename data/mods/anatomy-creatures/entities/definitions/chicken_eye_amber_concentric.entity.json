@@ -27,6 +27,7 @@
     },
     "descriptors:shape_eye": {
       "shape": "round"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

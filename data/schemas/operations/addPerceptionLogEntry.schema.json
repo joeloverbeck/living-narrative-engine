@@ -74,6 +74,20 @@
             }
           ]
         },
+        "actor_description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First-person description delivered to the actor. Passed through from DISPATCH_PERCEPTIBLE_EVENT. When provided, the actor receives this message without sensory filtering."
+        },
+        "target_description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First-person description delivered to the target. Passed through from DISPATCH_PERCEPTIBLE_EVENT. When provided, the target receives this message with sensory filtering applied."
+        },
+        "target_id": {
+          "type": ["string", "null"],
+          "description": "The ID of the target entity, if any. Used to route target_description to the correct recipient."
+        },
         "alternate_descriptions": {
           "type": "object",
           "description": "Alternative descriptions passed from dispatch operation"

@@ -27,6 +27,7 @@
     },
     "descriptors:skin_condition": {
       "conditions": ["sleep-hollowed"]
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

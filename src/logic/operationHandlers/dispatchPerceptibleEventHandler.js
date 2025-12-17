@@ -26,6 +26,12 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  validateLocationId,
+  normalizeEntityIds,
+  validateRecipientExclusionExclusivity,
+  buildLogEntry,
+} from '../../utils/handlerUtils/perceptionParamsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import {
   isValidPerceptionType,
@@ -118,6 +124,8 @@ class DispatchPerceptibleEventHandler {
       involved_entities = [],
       contextual_data = {},
       log_entry = false,
+      actor_description,
+      target_description,
     } = params;
 
     const normalizedContextualData =
@@ -125,52 +133,36 @@ class DispatchPerceptibleEventHandler {
         ? { ...contextual_data }
         : {};
 
+    // Normalize recipient/exclusion arrays using shared utility
+    normalizedContextualData.recipientIds = normalizeEntityIds(
+      normalizedContextualData.recipientIds
+    );
+    normalizedContextualData.excludedActorIds = normalizeEntityIds(
+      normalizedContextualData.excludedActorIds
+    );
+
+    // Validate mutual exclusivity using shared utility (error mode - abort on conflict)
     if (
-      !Object.prototype.hasOwnProperty.call(
-        normalizedContextualData,
-        'recipientIds'
-      )
-    ) {
-      normalizedContextualData.recipientIds = [];
-    }
-
-    if (
-      !Object.prototype.hasOwnProperty.call(
-        normalizedContextualData,
-        'excludedActorIds'
-      )
-    ) {
-      normalizedContextualData.excludedActorIds = [];
-    }
-
-    // Validate mutual exclusivity
-    const hasRecipients =
-      Array.isArray(normalizedContextualData.recipientIds) &&
-      normalizedContextualData.recipientIds.length > 0;
-    const hasExclusions =
-      Array.isArray(normalizedContextualData.excludedActorIds) &&
-      normalizedContextualData.excludedActorIds.length > 0;
-
-    if (hasRecipients && hasExclusions) {
-      safeDispatchError(
+      !validateRecipientExclusionExclusivity(
+        normalizedContextualData.recipientIds,
+        normalizedContextualData.excludedActorIds,
+        'DISPATCH_PERCEPTIBLE_EVENT',
         this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: recipientIds and excludedActorIds are mutually exclusive',
-        {
-          recipientIds: normalizedContextualData.recipientIds,
-          excludedActorIds: normalizedContextualData.excludedActorIds,
-        },
-        this.#logger
-      );
+        this.#logger,
+        'error'
+      )
+    ) {
       return;
     }
 
-    if (typeof location_id !== 'string' || !location_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: location_id required',
-        { location_id },
-        this.#logger
-      );
+    // Use shared utility for location_id validation
+    const validatedLocationId = validateLocationId(
+      location_id,
+      'DISPATCH_PERCEPTIBLE_EVENT',
+      this.#dispatcher,
+      this.#logger
+    );
+    if (!validatedLocationId) {
       return;
     }
     if (typeof description_text !== 'string' || !description_text.trim()) {
@@ -230,11 +222,12 @@ class DispatchPerceptibleEventHandler {
       return;
     }
 
+    const timestamp = new Date().toISOString();
     const payload = {
       eventName: EVENT_ID,
-      locationId: location_id,
+      locationId: validatedLocationId,
       descriptionText: description_text,
-      timestamp: new Date().toISOString(),
+      timestamp,
       perceptionType: validatedPerceptionType, // Use validated/normalized type
       actorId: actor_id,
       targetId: target_id ?? null,
@@ -253,24 +246,29 @@ class DispatchPerceptibleEventHandler {
     this.#dispatcher.dispatch(EVENT_ID, payload);
 
     if (log_entry) {
+      // Use shared utility to build standardized log entry
+      const entry = buildLogEntry({
+        descriptionText: description_text,
+        timestamp,
+        perceptionType: validatedPerceptionType,
+        actorId: actor_id,
+        targetId: target_id,
+        involvedEntities: involved_entities,
+      });
+
       await this.#logHandler.execute({
-        location_id,
-        entry: {
-          descriptionText: description_text,
-          timestamp: payload.timestamp,
-          perceptionType: validatedPerceptionType, // Use validated/normalized type
-          actorId: actor_id,
-          targetId: target_id ?? null,
-          involvedEntities: Array.isArray(involved_entities)
-            ? involved_entities
-            : [],
-        },
+        location_id: validatedLocationId,
+        entry,
         originating_actor_id: actor_id,
         recipient_ids: normalizedContextualData.recipientIds,
         excluded_actor_ids: normalizedContextualData.excludedActorIds,
         // Pass sense-aware filtering parameters
         alternate_descriptions: params.alternate_descriptions,
         sense_aware: params.sense_aware ?? true,
+        // Pass perspective-aware descriptions for actor/target routing
+        actor_description,
+        target_description,
+        target_id,
       });
     }
   }

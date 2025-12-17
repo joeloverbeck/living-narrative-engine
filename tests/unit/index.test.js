@@ -27,6 +27,46 @@ describe('Index.html - Main Menu', () => {
     }
   });
 
+  describe('Mod Manager Button', () => {
+    it('should have Mod Manager button', () => {
+      const button = document.getElementById('mod-manager-button');
+      expect(button).not.toBeNull();
+      // Check for text content within button-text span
+      const buttonText = button.querySelector('.button-text');
+      expect(buttonText).not.toBeNull();
+      expect(buttonText.textContent.trim()).toBe('Mod Manager');
+      expect(button.classList.contains('menu-button')).toBe(true);
+    });
+
+    it('should position Mod Manager button before Start New Game', () => {
+      const buttons = document.querySelectorAll('.menu-button');
+      const buttonTexts = Array.from(buttons).map((btn) => {
+        const textSpan = btn.querySelector('.button-text');
+        return textSpan ? textSpan.textContent.trim() : btn.textContent.trim();
+      });
+
+      const modManagerIndex = buttonTexts.indexOf('Mod Manager');
+      const startNewGameIndex = buttonTexts.indexOf('Start New Game');
+
+      expect(modManagerIndex).toBeGreaterThan(-1);
+      expect(startNewGameIndex).toBeGreaterThan(-1);
+      expect(modManagerIndex).toBeLessThan(startNewGameIndex);
+    });
+
+    it('should have correct event listener setup in script for Mod Manager', () => {
+      // Get the second script tag which contains the inline event listeners
+      const scripts = document.querySelectorAll('script');
+      const scriptContent = scripts[1] ? scripts[1].textContent : '';
+
+      // Check that the script contains the event listener for mod-manager-button
+      expect(scriptContent).toContain("getElementById('mod-manager-button')");
+      expect(scriptContent).toContain("addEventListener('click'");
+      expect(scriptContent).toContain(
+        "window.location.href = 'mod-manager.html'"
+      );
+    });
+  });
+
   describe('Character Concepts Manager Button', () => {
     it('should have Character Concepts Manager button', () => {
       const button = document.getElementById('character-concepts-button');
@@ -77,6 +117,7 @@ describe('Index.html - Main Menu', () => {
     it('should have all expected menu buttons in correct order', () => {
       const buttons = document.querySelectorAll('.menu-button');
       const expectedButtons = [
+        'Mod Manager',
         'Start New Game',
         'Load Game',
         'Anatomy Visualizer',
@@ -100,6 +141,7 @@ describe('Index.html - Main Menu', () => {
 
     it('should have correct button IDs', () => {
       const buttonConfigs = [
+        { id: 'mod-manager-button', text: 'Mod Manager' },
         { id: 'start-button', text: 'Start New Game' },
         { id: 'load-button', text: 'Load Game' },
         { id: 'anatomy-button', text: 'Anatomy Visualizer' },
@@ -141,6 +183,7 @@ describe('Index.html - Main Menu', () => {
       const scriptContent = scripts[1] ? scripts[1].textContent : '';
 
       const buttonConfigs = [
+        { id: 'mod-manager-button', href: 'mod-manager.html' },
         { id: 'start-button', href: 'game.html' },
         { id: 'load-button', href: 'game.html?load=true' },
         { id: 'anatomy-button', href: 'anatomy-visualizer.html' },

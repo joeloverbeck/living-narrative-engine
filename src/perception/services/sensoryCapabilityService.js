@@ -24,13 +24,17 @@ import { validateDependency, ensureValidLogger } from '../../utils/index.js';
  *
  * Logic:
  * 1. Check for manual override component (perception:sensory_capability)
- * 2. Query anatomy parts via BodyGraphService.findPartsByType()
- * 3. Check if at least one part of each sensory type is functioning
+ * 2. Query all anatomy parts via BodyGraphService.getAllParts()
+ * 3. Check if at least one part with sensory affordance component is functioning
+ *
+ * Sensory affordance components:
+ * - anatomy:provides_sight - Enables visual perception
+ * - anatomy:provides_hearing - Enables auditory perception
+ * - anatomy:provides_smell - Enables olfactory perception
  *
  * A part is considered non-functioning if:
  * - Its anatomy:part_health.state === 'destroyed'
  * - It has the anatomy:dismembered component
- * - It was detached (won't appear in findPartsByType results)
  *
  * Backward compatibility: Entities without anatomy return all senses available.
  */
@@ -55,7 +59,7 @@ class SensoryCapabilityService {
     });
 
     validateDependency(bodyGraphService, 'IBodyGraphService', this.#logger, {
-      requiredMethods: ['findPartsByType'],
+      requiredMethods: ['getAllParts'],
     });
 
     this.#entityManager = entityManager;
@@ -105,10 +109,22 @@ class SensoryCapabilityService {
       return this.#buildAllAvailable();
     }
 
-    // Check each sensory organ type
-    const canSee = this.#hasAtLeastOneFunctioningPart(bodyComponent, 'eye');
-    const canHear = this.#hasAtLeastOneFunctioningPart(bodyComponent, 'ear');
-    const canSmell = this.#hasAtLeastOneFunctioningPart(bodyComponent, 'nose');
+    // Check for functioning parts with sensory affordance components
+    const canSee = this.#hasAtLeastOneFunctioningPartWithComponent(
+      bodyComponent,
+      entityId,
+      'anatomy:provides_sight'
+    );
+    const canHear = this.#hasAtLeastOneFunctioningPartWithComponent(
+      bodyComponent,
+      entityId,
+      'anatomy:provides_hearing'
+    );
+    const canSmell = this.#hasAtLeastOneFunctioningPartWithComponent(
+      bodyComponent,
+      entityId,
+      'anatomy:provides_smell'
+    );
 
     const result = {
       canSee,
@@ -126,42 +142,44 @@ class SensoryCapabilityService {
   }
 
   /**
-   * Check if entity has at least one functioning part of the given type.
+   * Check if entity has at least one functioning part with the given sensory affordance.
    *
    * @param {Object} bodyComponent - The anatomy:body component data
-   * @param {string} partType - Part type to check ('eye', 'ear', 'nose')
-   * @returns {boolean} True if at least one functioning part exists
+   * @param {string} entityId - The entity ID for the actor
+   * @param {string} affordanceComponentId - Component ID to check for (e.g., 'anatomy:provides_sight')
+   * @returns {boolean} True if at least one functioning part with this affordance exists
    * @private
    */
-  #hasAtLeastOneFunctioningPart(bodyComponent, partType) {
-    // Extract root ID from body component
-    const rootId = bodyComponent.body?.root || bodyComponent.root;
+  #hasAtLeastOneFunctioningPartWithComponent(
+    bodyComponent,
+    entityId,
+    affordanceComponentId
+  ) {
+    // Get all parts in the anatomy graph using correct API
+    const allParts = this.#bodyGraphService.getAllParts(
+      bodyComponent,
+      entityId
+    );
 
-    if (!rootId) {
-      // Malformed body component - assume all senses for backward compat
+    if (!allParts || allParts.length === 0) {
       this.#logger.debug(
-        `#hasAtLeastOneFunctioningPart: No root in body component, assuming true for ${partType}`
-      );
-      return true;
-    }
-
-    const parts = this.#bodyGraphService.findPartsByType(rootId, partType);
-
-    // No parts of this type = can't use that sense
-    if (!parts || parts.length === 0) {
-      this.#logger.debug(
-        `#hasAtLeastOneFunctioningPart: No ${partType} parts found for root ${rootId}`
+        `#hasAtLeastOneFunctioningPartWithComponent: No parts found for entity ${entityId}`
       );
       return false;
     }
 
-    // Check if at least one part is functioning
-    const hasFunctioning = parts.some((partId) =>
-      this.#isPartFunctioning(partId)
-    );
+    // Check if any part has the affordance component and is functioning
+    const hasFunctioning = allParts.some((partId) => {
+      const hasAffordance = this.#entityManager.hasComponent(
+        partId,
+        affordanceComponentId
+      );
+      if (!hasAffordance) return false;
+      return this.#isPartFunctioning(partId);
+    });
 
     this.#logger.debug(
-      `#hasAtLeastOneFunctioningPart: ${partType} has ${parts.length} parts, functioning=${hasFunctioning}`
+      `#hasAtLeastOneFunctioningPartWithComponent: ${affordanceComponentId} found functioning=${hasFunctioning}`
     );
 
     return hasFunctioning;

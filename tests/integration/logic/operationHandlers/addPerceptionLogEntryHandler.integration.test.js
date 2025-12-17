@@ -454,4 +454,235 @@ describe('AddPerceptionLogEntryHandler integration', () => {
       env.unsubscribeErrors();
     }
   });
+
+  test('routes actor/target descriptions correctly in multi-entity scenario', async () => {
+    const actorId = 'actor-alice';
+    const targetId = 'target-bob';
+    const observerId1 = 'observer-charlie';
+    const observerId2 = 'observer-diana';
+    const locationId = 'tavern';
+
+    const entityManager = new SimpleEntityManager([
+      {
+        id: actorId,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+      {
+        id: targetId,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+      {
+        id: observerId1,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+      {
+        id: observerId2,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+    ]);
+
+    const env = createIntegrationHarness(entityManager);
+
+    try {
+      // Execute with all three description types
+      await env.handler.execute(
+        {
+          location_id: locationId,
+          entry: {
+            ...baseEntry,
+            descriptionText: 'Alice waves at Bob.', // Observer description
+          },
+          originating_actor_id: actorId,
+          actor_description: 'I wave at Bob enthusiastically.', // Actor POV
+          target_id: targetId,
+          target_description: 'Alice waves at you warmly.', // Target POV
+        },
+        {}
+      );
+
+      await env.flushAsync();
+
+      // Verify actor received actor_description with perceivedVia: 'self'
+      const actorLog = entityManager.getComponentData(
+        actorId,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(actorLog?.logEntries).toHaveLength(1);
+      expect(actorLog.logEntries[0].descriptionText).toBe(
+        'I wave at Bob enthusiastically.'
+      );
+      expect(actorLog.logEntries[0].perceivedVia).toBe('self');
+
+      // Verify target received target_description
+      const targetLog = entityManager.getComponentData(
+        targetId,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(targetLog?.logEntries).toHaveLength(1);
+      expect(targetLog.logEntries[0].descriptionText).toBe(
+        'Alice waves at you warmly.'
+      );
+      // Note: Without perceptionFilterService, no perceivedVia for target
+
+      // Verify observers received description_text
+      const observer1Log = entityManager.getComponentData(
+        observerId1,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(observer1Log?.logEntries).toHaveLength(1);
+      expect(observer1Log.logEntries[0].descriptionText).toBe(
+        'Alice waves at Bob.'
+      );
+
+      const observer2Log = entityManager.getComponentData(
+        observerId2,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(observer2Log?.logEntries).toHaveLength(1);
+      expect(observer2Log.logEntries[0].descriptionText).toBe(
+        'Alice waves at Bob.'
+      );
+
+      // Verify debug log for batch mode
+      expect(
+        env.logger.debug.mock.calls.some(([message]) =>
+          message.includes('perceivers')
+        )
+      ).toBe(true);
+    } finally {
+      env.unsubscribeErrors();
+    }
+  });
+
+  test('warns when target_description provided but target lacks perception log', async () => {
+    const actorId = 'actor-eve';
+    const targetId = 'item-chest'; // Item without perception log
+    const locationId = 'dungeon';
+
+    const entityManager = new SimpleEntityManager([
+      {
+        id: actorId,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+      {
+        id: targetId,
+        components: {
+          'core:position': { locationId },
+          // No perception log component - this is an item
+        },
+      },
+    ]);
+
+    const env = createIntegrationHarness(entityManager);
+
+    try {
+      await env.handler.execute(
+        {
+          location_id: locationId,
+          entry: {
+            ...baseEntry,
+            descriptionText: 'Eve opens the chest.',
+          },
+          originating_actor_id: actorId,
+          actor_description: 'I open the chest.',
+          target_id: targetId,
+          target_description: 'Someone opens you.', // This should trigger warning
+        },
+        {}
+      );
+
+      await env.flushAsync();
+
+      // Verify warning was logged
+      expect(
+        env.logger.warn.mock.calls.some(([message]) =>
+          message.includes(
+            `target_description provided for entity '${targetId}'`
+          ) && message.includes('lacks perception log component')
+        )
+      ).toBe(true);
+
+      // Verify actor still received their description
+      const actorLog = entityManager.getComponentData(
+        actorId,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(actorLog?.logEntries).toHaveLength(1);
+      expect(actorLog.logEntries[0].descriptionText).toBe('I open the chest.');
+      expect(actorLog.logEntries[0].perceivedVia).toBe('self');
+
+      // Verify target didn't receive anything (no perception log)
+      const targetLog = entityManager.getComponentData(
+        targetId,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(targetLog).toBeNull();
+    } finally {
+      env.unsubscribeErrors();
+    }
+  });
+
+  test('actor receives actor_description when actor equals target', async () => {
+    const actorId = 'self-actor';
+    const locationId = 'meditation-room';
+
+    const entityManager = new SimpleEntityManager([
+      {
+        id: actorId,
+        components: {
+          'core:position': { locationId },
+          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 10, logEntries: [] },
+        },
+      },
+    ]);
+
+    const env = createIntegrationHarness(entityManager);
+
+    try {
+      // Self-targeted action: actor and target are the same
+      await env.handler.execute(
+        {
+          location_id: locationId,
+          entry: {
+            ...baseEntry,
+            descriptionText: 'Someone meditates.', // Observer description
+          },
+          originating_actor_id: actorId,
+          actor_description: 'I meditate deeply.', // Actor POV
+          target_id: actorId, // Same as actor
+          target_description: 'You feel inner peace.', // Target POV - should be ignored
+        },
+        {}
+      );
+
+      await env.flushAsync();
+
+      // Verify actor received actor_description (takes precedence over target_description)
+      const actorLog = entityManager.getComponentData(
+        actorId,
+        PERCEPTION_LOG_COMPONENT_ID
+      );
+      expect(actorLog?.logEntries).toHaveLength(1);
+      expect(actorLog.logEntries[0].descriptionText).toBe('I meditate deeply.');
+      expect(actorLog.logEntries[0].perceivedVia).toBe('self');
+      // Should NOT be "You feel inner peace." (target_description)
+    } finally {
+      env.unsubscribeErrors();
+    }
+  });
 });

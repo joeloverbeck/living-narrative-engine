@@ -104,7 +104,7 @@ describe('handle_corrupting_gaze rule', () => {
     expect(targetVar?.parameters.value).toBe('{event.payload.primaryId}');
   });
 
-  it('branches on all outcomes with dual perception on successes', () => {
+  it('branches on all outcomes with perspective-aware perception on successes', () => {
     const branches = handleCorruptingRule.actions.filter(
       (op) => op.type === 'IF'
     );
@@ -116,6 +116,7 @@ describe('handle_corrupting_gaze rule', () => {
     expect(findBranch(handleCorruptingRule.actions, 'FAILURE')).toBeDefined();
     expect(findBranch(handleCorruptingRule.actions, 'FUMBLE')).toBeDefined();
 
+    // New pattern: single dispatch with actor_description and target_description
     const critEvents = getPerceptibleEvents(
       findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS')?.parameters
         .then_actions || []
@@ -124,11 +125,12 @@ describe('handle_corrupting_gaze rule', () => {
       findBranch(handleCorruptingRule.actions, 'SUCCESS')?.parameters
         .then_actions || []
     );
-    expect(critEvents).toHaveLength(2);
-    expect(successEvents).toHaveLength(2);
+    // Single-dispatch pattern uses 1 event with actor_description/target_description
+    expect(critEvents).toHaveLength(1);
+    expect(successEvents).toHaveLength(1);
   });
 
-  it('adds corruption and publishes dual perception on CRITICAL_SUCCESS', () => {
+  it('adds corruption and publishes perspective-aware perception on CRITICAL_SUCCESS', () => {
     const branch = findBranch(handleCorruptingRule.actions, 'CRITICAL_SUCCESS');
     const actions = branch?.parameters.then_actions ?? [];
 
@@ -142,35 +144,44 @@ describe('handle_corrupting_gaze rule', () => {
     const regen = actions.find((op) => op.type === 'REGENERATE_DESCRIPTION');
     expect(regen?.parameters.entity_ref).toBe('primary');
 
-    const [publicEvent, privateEvent] = getPerceptibleEvents(actions);
-    const expectedPublicMessage =
-      "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them.";
-    const expectedPrivateMessage =
-      '{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills you, accompanied by a burning smell and a ringing noise in your ears.';
+    // Single-dispatch pattern: one event with actor_description and target_description
+    const perceptibleEvents = getPerceptibleEvents(actions);
+    expect(perceptibleEvents).toHaveLength(1);
 
-    expect(publicEvent.parameters.description_text).toBe(expectedPublicMessage);
-    expect(publicEvent.parameters.contextual_data.excludedActorIds).toEqual([
-      '{event.payload.primaryId}',
-    ]);
-    expect(privateEvent.parameters.description_text).toBe(
-      expectedPrivateMessage
-    );
-    expect(privateEvent.parameters.contextual_data.recipientIds).toEqual([
-      '{event.payload.primaryId}',
-    ]);
+    const event = perceptibleEvents[0];
+    const expectedObserverMessage =
+      "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them.";
+    const expectedActorMessage =
+      'I cast a corrupting gaze upon {context.targetName}. Power surges through me as darkness engulfs them.';
+    const expectedTargetMessage =
+      '{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills me, accompanied by a burning smell and a ringing noise in my ears.';
+
+    // Verify single-dispatch parameters
+    expect(event.parameters.description_text).toBe(expectedObserverMessage);
+    expect(event.parameters.actor_description).toBe(expectedActorMessage);
+    expect(event.parameters.target_description).toBe(expectedTargetMessage);
+    expect(event.parameters.actor_id).toBe('{event.payload.actorId}');
+    expect(event.parameters.target_id).toBe('{event.payload.primaryId}');
+    expect(event.parameters.perception_type).toBe('magic.spell');
+
+    // Verify alternate descriptions for non-visual perception
+    expect(event.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear a faint humming and sense magical energy nearby.',
+      tactile: 'I feel a wave of supernatural cold pass through the area.',
+    });
 
     const logMessage = actions.find(
       (op) =>
         op.type === 'SET_VARIABLE' &&
         op.parameters.variable_name === 'logMessage'
     );
-    expect(logMessage?.parameters.value).toBe(expectedPublicMessage);
+    expect(logMessage?.parameters.value).toBe(expectedObserverMessage);
     expect(
       actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
     ).toBe(true);
   });
 
-  it('adds corruption and publishes dual perception on SUCCESS', () => {
+  it('adds corruption and publishes perspective-aware perception on SUCCESS', () => {
     const branch = findBranch(handleCorruptingRule.actions, 'SUCCESS');
     const actions = branch?.parameters.then_actions ?? [];
 
@@ -184,29 +195,38 @@ describe('handle_corrupting_gaze rule', () => {
     const regen = actions.find((op) => op.type === 'REGENERATE_DESCRIPTION');
     expect(regen?.parameters.entity_ref).toBe('primary');
 
-    const [publicEvent, privateEvent] = getPerceptibleEvents(actions);
-    const expectedPublicMessage =
+    // Single-dispatch pattern: one event with actor_description and target_description
+    const perceptibleEvents = getPerceptibleEvents(actions);
+    expect(perceptibleEvents).toHaveLength(1);
+
+    const event = perceptibleEvents[0];
+    const expectedObserverMessage =
       "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them.";
-    const expectedPrivateMessage =
+    const expectedActorMessage =
+      'I cast a corrupting gaze upon {context.targetName}. Power flows through me as darkness seeps into them.';
+    const expectedTargetMessage =
       '{context.actorName} looks deeply into my eyes, and I feel darkness seeping into me. A sickly warmth starts filling me, accompanied by a burning smell.';
 
-    expect(publicEvent.parameters.description_text).toBe(expectedPublicMessage);
-    expect(publicEvent.parameters.contextual_data.excludedActorIds).toEqual([
-      '{event.payload.primaryId}',
-    ]);
-    expect(privateEvent.parameters.description_text).toBe(
-      expectedPrivateMessage
-    );
-    expect(privateEvent.parameters.contextual_data.recipientIds).toEqual([
-      '{event.payload.primaryId}',
-    ]);
+    // Verify single-dispatch parameters
+    expect(event.parameters.description_text).toBe(expectedObserverMessage);
+    expect(event.parameters.actor_description).toBe(expectedActorMessage);
+    expect(event.parameters.target_description).toBe(expectedTargetMessage);
+    expect(event.parameters.actor_id).toBe('{event.payload.actorId}');
+    expect(event.parameters.target_id).toBe('{event.payload.primaryId}');
+    expect(event.parameters.perception_type).toBe('magic.spell');
+
+    // Verify alternate descriptions for non-visual perception
+    expect(event.parameters.alternate_descriptions).toEqual({
+      auditory: 'I hear a faint humming and sense magical energy nearby.',
+      tactile: 'I feel a wave of supernatural cold pass through the area.',
+    });
 
     const logMessage = actions.find(
       (op) =>
         op.type === 'SET_VARIABLE' &&
         op.parameters.variable_name === 'logMessage'
     );
-    expect(logMessage?.parameters.value).toBe(expectedPublicMessage);
+    expect(logMessage?.parameters.value).toBe(expectedObserverMessage);
     expect(
       actions.some((op) => op.macro === 'core:logSuccessOutcomeAndEndTurn')
     ).toBe(true);

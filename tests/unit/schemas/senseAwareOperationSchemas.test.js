@@ -52,6 +52,66 @@ describe('Sense-Aware Operation Schema Extensions', () => {
       expect(valid).toBe(true);
     });
 
+    it('validates operation with actor_description', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob waves.',
+          perception_type: 'social.gesture',
+          actor_id: 'actor:bob',
+          actor_description: 'I wave enthusiastically.',
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      if (!valid) {
+        console.error('AJV validation errors:', validateDispatch.errors);
+      }
+      expect(valid).toBe(true);
+    });
+
+    it('validates operation with target_description', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob taps Alice on the shoulder.',
+          perception_type: 'social.interaction',
+          actor_id: 'actor:bob',
+          target_id: 'actor:alice',
+          target_description: 'Someone taps my shoulder.',
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      if (!valid) {
+        console.error('AJV validation errors:', validateDispatch.errors);
+      }
+      expect(valid).toBe(true);
+    });
+
+    it('validates operation with both actor_description and target_description', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob taps Alice on the shoulder.',
+          perception_type: 'social.interaction',
+          actor_id: 'actor:bob',
+          target_id: 'actor:alice',
+          actor_description: 'I tap Alice on the shoulder.',
+          target_description: 'Someone taps my shoulder.',
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      if (!valid) {
+        console.error('AJV validation errors:', validateDispatch.errors);
+      }
+      expect(valid).toBe(true);
+    });
+
     it('validates operation with alternate_descriptions', () => {
       const operation = {
         type: 'DISPATCH_PERCEPTIBLE_EVENT',
@@ -192,6 +252,41 @@ describe('Sense-Aware Operation Schema Extensions', () => {
             auditory: 'Valid field.',
             unknown_sense: 'This should be rejected.',
           },
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      expect(valid).toBe(false);
+      expect(validateDispatch.errors).toBeDefined();
+    });
+
+    it('rejects actor_description when it is an empty string', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob waves.',
+          perception_type: 'social.gesture',
+          actor_id: 'actor:bob',
+          actor_description: '',
+        },
+      };
+
+      const valid = validateDispatch(operation);
+      expect(valid).toBe(false);
+      expect(validateDispatch.errors).toBeDefined();
+    });
+
+    it('rejects target_description when it is an empty string', () => {
+      const operation = {
+        type: 'DISPATCH_PERCEPTIBLE_EVENT',
+        parameters: {
+          location_id: 'loc:test_area',
+          description_text: 'Bob taps Alice on the shoulder.',
+          perception_type: 'physical.interaction',
+          actor_id: 'actor:bob',
+          target_id: 'actor:alice',
+          target_description: '',
         },
       };
 
@@ -378,6 +473,167 @@ describe('Sense-Aware Operation Schema Extensions', () => {
         console.error('AJV validation errors:', validateLogEntry.errors);
       }
       expect(valid).toBe(true);
+    });
+
+    // ACTOBSPERMES-002: Tests for actor_description, target_description, target_id
+    describe('actor/target description fields (ACTOBSPERMES-002)', () => {
+      it('validates operation with actor_description only', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            actor_description: 'I do a thing.',
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        if (!valid) {
+          console.error('AJV validation errors:', validateLogEntry.errors);
+        }
+        expect(valid).toBe(true);
+      });
+
+      it('validates operation with target_description and target_id', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            target_description: 'Someone does a thing to me.',
+            target_id: 'actor:target1',
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        if (!valid) {
+          console.error('AJV validation errors:', validateLogEntry.errors);
+        }
+        expect(valid).toBe(true);
+      });
+
+      it('validates operation with all new fields provided', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            actor_description: 'I do a thing.',
+            target_description: 'Someone does a thing to me.',
+            target_id: 'actor:target1',
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        if (!valid) {
+          console.error('AJV validation errors:', validateLogEntry.errors);
+        }
+        expect(valid).toBe(true);
+      });
+
+      it('validates operation with target_id set to null', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            target_id: null,
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        if (!valid) {
+          console.error('AJV validation errors:', validateLogEntry.errors);
+        }
+        expect(valid).toBe(true);
+      });
+
+      it('rejects actor_description when it is an empty string', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            actor_description: '',
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        expect(valid).toBe(false);
+        expect(validateLogEntry.errors).toBeDefined();
+        expect(validateLogEntry.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              keyword: 'minLength',
+              instancePath: '/parameters/actor_description',
+            }),
+          ])
+        );
+      });
+
+      it('rejects target_description when it is an empty string', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+            },
+            target_description: '',
+            target_id: 'actor:target1',
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        expect(valid).toBe(false);
+        expect(validateLogEntry.errors).toBeDefined();
+        expect(validateLogEntry.errors).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              keyword: 'minLength',
+              instancePath: '/parameters/target_description',
+            }),
+          ])
+        );
+      });
+
+      it('validates that new fields combined with existing fields work correctly', () => {
+        const operation = {
+          type: 'ADD_PERCEPTION_LOG_ENTRY',
+          parameters: {
+            location_id: 'loc:test_area',
+            entry: {
+              descriptionText: 'A thing happens.',
+              perceivedVia: 'visual',
+              originalDescription: 'Original visual description.',
+            },
+            originating_actor_id: 'actor:bob',
+            actor_description: 'I do a thing.',
+            target_description: 'Someone does a thing to me.',
+            target_id: 'actor:alice',
+            alternate_descriptions: {
+              auditory: 'You hear something.',
+            },
+            sense_aware: true,
+          },
+        };
+
+        const valid = validateLogEntry(operation);
+        if (!valid) {
+          console.error('AJV validation errors:', validateLogEntry.errors);
+        }
+        expect(valid).toBe(true);
+      });
     });
   });
 });

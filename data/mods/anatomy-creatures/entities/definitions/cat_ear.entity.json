@@ -21,6 +21,7 @@
     },
     "descriptors:texture": {
       "texture": "fuzzy"
-    }
+    },
+    "anatomy:provides_hearing": {}
   }
 }

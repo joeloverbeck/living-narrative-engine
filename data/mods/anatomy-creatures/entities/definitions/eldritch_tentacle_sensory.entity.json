@@ -41,6 +41,7 @@
     },
     "descriptors:texture": {
       "texture": "nodular-receptors"
-    }
+    },
+    "anatomy:provides_smell": {}
   }
 }

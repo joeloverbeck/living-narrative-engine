@@ -27,6 +27,7 @@
     },
     "descriptors:color_extended": {
       "color": "mottled-brown-gray"
-    }
+    },
+    "anatomy:provides_hearing": {}
   }
 }

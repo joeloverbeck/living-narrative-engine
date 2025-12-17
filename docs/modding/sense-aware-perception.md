@@ -9,6 +9,74 @@ The sense-aware perception system allows events to be filtered and adapted based
 
 This creates more immersive gameplay where characters in darkness or with damaged senses receive appropriate descriptions rather than impossible perceptions.
 
+## Sensory Affordance Components
+
+Sensory capability is determined by the presence of affordance marker components on functioning anatomy parts (not by `anatomy:part.subType` naming).
+
+Body parts that provide sensory capabilities must include the appropriate marker component:
+
+- `anatomy:provides_sight` - Enables visual perception
+- `anatomy:provides_hearing` - Enables auditory perception
+- `anatomy:provides_smell` - Enables olfactory perception
+
+### Adding Sensory Affordances to Custom Body Parts
+
+When creating custom sensory organs, add the appropriate affordance component to the part definition:
+
+```json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "my-mod:crystal_eye",
+  "description": "A crystalline eye that grants vision",
+  "components": {
+    "anatomy:part": {
+      "subType": "crystal_eye",
+      "hit_probability_weight": 0.5,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "anatomy:provides_sight": {}
+  }
+}
+```
+
+### Multi-Sensory Organs
+
+Multiple affordances can be added to a single part for multi-sensory organs:
+
+```json
+{
+  "$schema": "schema://living-narrative-engine/entity-definition.schema.json",
+  "id": "my-mod:sensory_tentacle",
+  "description": "A tentacle covered in sensory nodules",
+  "components": {
+    "anatomy:part": {
+      "subType": "tentacle",
+      "hit_probability_weight": 0.3,
+      "health_calculation_weight": 2
+    },
+    "anatomy:part_health": {
+      "currentHealth": 10,
+      "maxHealth": 10,
+      "state": "healthy"
+    },
+    "anatomy:provides_sight": {},
+    "anatomy:provides_smell": {}
+  }
+}
+```
+
+### Important Notes
+
+- The `subType` value in `anatomy:part` can be any descriptive string
+- Sensory capability is determined by the presence of affordance components, not by `subType` name
+- A body part is considered functioning if it is not destroyed (`anatomy:part_health.state !== 'destroyed'`) and not dismembered (`anatomy:dismembered` absent)
+- Manual override via `perception:sensory_capability` takes precedence (see “Manual Sensory Override” below)
+
 ## Sense Categories
 
 | Category | Requirements | Example Events |
@@ -68,6 +136,128 @@ To make your rules sense-aware, add `alternate_descriptions` to your `DISPATCH_P
 - `tactile` - Used when recipient can feel but not see/hear
 - `olfactory` - Used for smell-based fallback (rare)
 - `limited` - Final fallback when specific senses unavailable
+
+## Perspective-Aware Descriptions (Actor & Target)
+
+### Problem
+
+When an actor performs an action, they receive the same third-person, sense-filtered message as all other observers. This creates immersion-breaking experiences:
+
+**Example:**
+- Action: Alice does a handstand
+- Environment: Room is in darkness
+- **Current behavior**: Alice receives "You hear sounds of exertion nearby" (auditory fallback)
+- **Expected behavior**: Alice receives "I do a handstand, balancing upside-down." (she knows what she's doing)
+
+### Solution
+
+Two optional parameters allow perspective-aware messaging:
+
+| Parameter | Delivered To | Sensory Filtering | Example |
+|-----------|--------------|-------------------|---------|
+| `actor_description` | Actor | No (actor knows what they're doing) | "I do a handstand." |
+| `target_description` | Target | Yes (target may not see who) | "Someone touches my shoulder." |
+| `description_text` | All others | Yes | "Alice does a handstand." |
+
+### Basic Example: Self-Action
+
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.actorPosition.locationId}",
+    "description_text": "{context.actorName} does a handstand.",
+    "actor_description": "I do a handstand, balancing upside-down.",
+    "perception_type": "physical.self_action",
+    "actor_id": "{event.payload.actorId}",
+    "log_entry": true,
+    "alternate_descriptions": {
+      "auditory": "I hear sounds of exertion nearby."
+    }
+  }
+}
+```
+
+### Example with Target
+
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.actorPosition.locationId}",
+    "description_text": "{context.actorName} caresses {context.targetName}'s cheek.",
+    "actor_description": "I caress {context.targetName}'s cheek gently.",
+    "target_description": "{context.actorName} caresses my cheek gently.",
+    "perception_type": "social.affection",
+    "actor_id": "{event.payload.actorId}",
+    "target_id": "{event.payload.targetId}",
+    "log_entry": true,
+    "alternate_descriptions": {
+      "auditory": "I hear a soft rustling sound nearby.",
+      "tactile": "I feel a gentle touch."
+    }
+  }
+}
+```
+
+### Edge Cases
+
+- **Actor in darkness**: Still receives `actor_description` (they know what they're doing)
+- **Target in darkness**: Receives filtered `target_description` (may fall back to tactile)
+- **Actor = Target**: `actor_description` takes precedence
+- **Target is an object**: Warning logged, `target_description` ignored
+
+### Migration from Dual-Dispatch
+
+If you previously used two operations to deliver different messages to actors and observers, you can simplify to a single operation.
+
+**Before (verbose, two operations):**
+```json
+[
+  {
+    "type": "DISPATCH_PERCEPTIBLE_EVENT",
+    "parameters": {
+      "location_id": "{context.actorPosition.locationId}",
+      "description_text": "{context.actorName} drinks from {context.containerName}.",
+      "perception_type": "consumption.consume",
+      "actor_id": "{event.payload.actorId}",
+      "log_entry": true,
+      "contextual_data": { "excludedActorIds": ["{event.payload.actorId}"] }
+    }
+  },
+  {
+    "type": "DISPATCH_PERCEPTIBLE_EVENT",
+    "parameters": {
+      "location_id": "{context.actorPosition.locationId}",
+      "description_text": "I drink from {context.containerName}. The liquid tastes bitter.",
+      "perception_type": "consumption.consume",
+      "actor_id": "{event.payload.actorId}",
+      "log_entry": true,
+      "contextual_data": { "recipientIds": ["{event.payload.actorId}"] }
+    }
+  }
+]
+```
+
+**After (single operation):**
+```json
+{
+  "type": "DISPATCH_PERCEPTIBLE_EVENT",
+  "parameters": {
+    "location_id": "{context.actorPosition.locationId}",
+    "description_text": "{context.actorName} drinks from {context.containerName}.",
+    "actor_description": "I drink from {context.containerName}. The liquid tastes bitter.",
+    "perception_type": "consumption.consume",
+    "actor_id": "{event.payload.actorId}",
+    "log_entry": true
+  }
+}
+```
+
+### Debugging Tips
+
+- Actor's perception log entries will have `perceivedVia: "self"` for easy identification
+- Check browser console for warnings about targets without perception logs
 
 ### Choosing Appropriate Fallbacks
 
