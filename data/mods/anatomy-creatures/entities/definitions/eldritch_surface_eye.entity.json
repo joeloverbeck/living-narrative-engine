@@ -30,6 +30,7 @@
     },
     "descriptors:size_category": {
       "size": "small"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

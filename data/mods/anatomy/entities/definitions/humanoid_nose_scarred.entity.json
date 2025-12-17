@@ -24,6 +24,7 @@
     },
     "descriptors:texture": {
       "texture": "scarred"
-    }
+    },
+    "anatomy:provides_smell": {}
   }
 }

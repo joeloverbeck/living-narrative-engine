@@ -30,6 +30,7 @@
     },
     "descriptors:visual_capability": {
       "capability": "360-degree-vision"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

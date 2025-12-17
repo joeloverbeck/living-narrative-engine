@@ -24,6 +24,7 @@
     },
     "descriptors:shape_general": {
       "shape": "flat"
-    }
+    },
+    "anatomy:provides_smell": {}
   }
 }

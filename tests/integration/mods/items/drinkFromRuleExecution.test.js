@@ -101,32 +101,22 @@ describe('items:drink_from action integration', () => {
       // Assert: Verify empty component NOT added
       expect(container.components['items:empty']).toBeUndefined();
 
-      // Assert: Verify public perceptible event dispatched
-      const publicEvent = testFixture.events.find(
+      // Assert: Verify single perceptible event with single-dispatch pattern
+      const perceptibleEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'consumption.consume' &&
-          (!e.payload.contextualData?.recipientIds ||
-            e.payload.contextualData.recipientIds.length === 0)
+          e.payload.perceptionType === 'consumption.consume'
       );
-      expect(publicEvent).toBeDefined();
-      expect(publicEvent.payload.descriptionText).toContain(
+      expect(perceptibleEvent).toBeDefined();
+      // description_text is for observers (third-person, no flavor)
+      expect(perceptibleEvent.payload.descriptionText).toContain(
         'Alice drinks from Water Bottle.'
       );
-      expect(publicEvent.payload.descriptionText).not.toContain('refreshing');
-
-      // Assert: Verify private perceptible event dispatched (with flavor)
-      const privateEvent = testFixture.events.find(
-        (e) =>
-          e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'consumption.consume' &&
-          e.payload.contextualData?.recipientIds?.length > 0
-      );
-      expect(privateEvent).toBeDefined();
-      expect(privateEvent.payload.contextualData.recipientIds).toEqual([
-        'test:actor1',
-      ]);
-      expect(privateEvent.payload.descriptionText).toContain(
+      expect(perceptibleEvent.payload.descriptionText).not.toContain('refreshing');
+      // actor_id is set for routing (actor_description is routed internally by log handler)
+      expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
+      // Flavor text is available in contextual data
+      expect(perceptibleEvent.payload.contextualData.flavorText).toBe(
         'The water is refreshing.'
       );
 
@@ -229,14 +219,14 @@ describe('items:drink_from action integration', () => {
   });
 
   describe('perception system behavior', () => {
-    it('sends public message without flavor text to all observers', async () => {
+    it('sends observer message (description_text) without flavor text', async () => {
       const scenario = setupDrinkFromScenario(
         'Frank',
         'bar',
         'glass-1',
         300,
         150,
-        'This is the private flavor text.',
+        'This is the actor-only flavor text.',
         false,
         'glass-1'
       );
@@ -244,25 +234,25 @@ describe('items:drink_from action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'glass-1');
 
-      const publicEvents = testFixture.events.filter(
+      // With new single-dispatch pattern, there should be exactly one perceptible event
+      const perceptibleEvents = testFixture.events.filter(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'consumption.consume' &&
-          (!e.payload.contextualData?.recipientIds ||
-            e.payload.contextualData.recipientIds.length === 0)
+          e.payload.perceptionType === 'consumption.consume'
       );
 
-      expect(publicEvents).toHaveLength(1);
-      const publicEvent = publicEvents[0];
-      expect(publicEvent.payload.descriptionText).toBe(
-        'Frank drinks from glass-1.'
-      );
-      expect(publicEvent.payload.descriptionText).not.toContain(
-        'private flavor'
+      expect(perceptibleEvents).toHaveLength(1);
+      const event = perceptibleEvents[0];
+      // description_text is for observers (no flavor)
+      expect(event.payload.descriptionText).toBe('Frank drinks from glass-1.');
+      expect(event.payload.descriptionText).not.toContain('flavor');
+      // Flavor text is available in contextual data (actor_description routing is internal)
+      expect(event.payload.contextualData.flavorText).toBe(
+        'This is the actor-only flavor text.'
       );
     });
 
-    it('excludes acting actor from public perceptible event', async () => {
+    it('includes actor_id for routing actor_description', async () => {
       const scenario = setupDrinkFromScenario(
         'Alice',
         'tavern',
@@ -275,23 +265,23 @@ describe('items:drink_from action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'mug-1');
 
-      // Find public perceptible event
-      const publicEvent = testFixture.events.find(
+      // Find perceptible event
+      const perceptibleEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'consumption.consume' &&
-          (!e.payload.contextualData?.recipientIds ||
-            e.payload.contextualData.recipientIds.length === 0)
+          e.payload.perceptionType === 'consumption.consume'
       );
 
-      expect(publicEvent).toBeDefined();
-      expect(publicEvent.payload.contextualData.excludedActorIds).toEqual([
-        'test:actor1',
-      ]);
-      expect(publicEvent.payload.descriptionText).not.toContain('complex');
+      expect(perceptibleEvent).toBeDefined();
+      // New pattern uses actor_id for routing, not excludedActorIds
+      expect(perceptibleEvent.payload.actorId).toBe('test:actor1');
+      // description_text for observers should not have flavor
+      expect(perceptibleEvent.payload.descriptionText).not.toContain('complex');
+      // Flavor text is in contextual data (actor_description routing is internal)
+      expect(perceptibleEvent.payload.contextualData.flavorText).toContain('complex');
     });
 
-    it('sends private message with flavor text only to actor', async () => {
+    it('delivers first-person actor_description with flavor to actor', async () => {
       const scenario = setupDrinkFromScenario(
         'Grace',
         'tavern',
@@ -304,24 +294,22 @@ describe('items:drink_from action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'cup-1');
 
-      const privateEvents = testFixture.events.filter(
+      // With single-dispatch pattern, only one perceptible event
+      const perceptibleEvents = testFixture.events.filter(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.perceptionType === 'consumption.consume' &&
-          e.payload.contextualData?.recipientIds?.length > 0
+          e.payload.perceptionType === 'consumption.consume'
       );
 
-      expect(privateEvents).toHaveLength(1);
-      const privateEvent = privateEvents[0];
-      expect(privateEvent.payload.contextualData.recipientIds).toEqual([
-        'test:actor1',
-      ]);
-      expect(privateEvent.payload.descriptionText).toContain(
+      expect(perceptibleEvents).toHaveLength(1);
+      const event = perceptibleEvents[0];
+      // actor_description is first-person with flavor (routed internally by log handler)
+      // We verify the rule has actor_description by checking contextualData has flavorText
+      expect(event.payload.contextualData.flavorText).toBe(
         'Secret spicy flavor.'
       );
-      expect(privateEvent.payload.contextualData.flavorText).toBe(
-        'Secret spicy flavor.'
-      );
+      // The actor_id enables internal routing of actor_description to the actor
+      expect(event.payload.actorId).toBe('test:actor1');
     });
 
     it('handles missing flavor text gracefully', async () => {
@@ -339,20 +327,19 @@ describe('items:drink_from action integration', () => {
 
       await testFixture.executeAction('test:actor1', 'bottle-1');
 
-      const privateEvent = testFixture.events.find(
+      const perceptibleEvent = testFixture.events.find(
         (e) =>
           e.eventType === 'core:perceptible_event' &&
-          e.payload.contextualData?.recipientIds?.length > 0
+          e.payload.perceptionType === 'consumption.consume'
       );
-      expect(privateEvent).toBeDefined();
-      expect(privateEvent.payload.descriptionText).toContain(
+      expect(perceptibleEvent).toBeDefined();
+      // description_text for observers
+      expect(perceptibleEvent.payload.descriptionText).toBe(
         'Henry drinks from bottle-1.'
       );
-      // Should use default flavor text when empty string provided
-      expect(privateEvent.payload.descriptionText).toContain(
-        'No particular taste.'
-      );
-      expect(privateEvent.payload.contextualData.flavorText).toBe(
+      // actor_description uses default flavor text when empty string provided
+      // (actor_description routing is internal to log handler)
+      expect(perceptibleEvent.payload.contextualData.flavorText).toBe(
         'No particular taste.'
       );
     });

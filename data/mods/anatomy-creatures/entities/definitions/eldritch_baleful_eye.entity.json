@@ -33,6 +33,7 @@
     },
     "descriptors:size_category": {
       "size": "massive"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

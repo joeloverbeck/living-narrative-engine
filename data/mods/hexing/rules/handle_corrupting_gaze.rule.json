@@ -89,31 +89,19 @@
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Corrupting gaze with perspective-aware descriptions",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders violently as darkness floods through them.",
+              "actor_description": "I cast a corrupting gaze upon {context.targetName}. Power surges through me as darkness engulfs them.",
+              "target_description": "{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills me, accompanied by a burning smell and a ringing noise in my ears.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness flooding into me. A sickly warmth fills you, accompanied by a burning smell and a ringing noise in your ears.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "log_entry": true,
+              "alternate_descriptions": {
+                "auditory": "I hear a faint humming and sense magical energy nearby.",
+                "tactile": "I feel a wave of supernatural cold pass through the area."
               }
             }
           },
@@ -158,31 +146,19 @@
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Corrupting gaze with perspective-aware descriptions",
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} looks deeply into {context.targetName}'s eyes, casting a corrupting gaze. {context.targetName} shudders as darkness seeps into them.",
+              "actor_description": "I cast a corrupting gaze upon {context.targetName}. Power flows through me as darkness seeps into them.",
+              "target_description": "{context.actorName} looks deeply into my eyes, and I feel darkness seeping into me. A sickly warmth starts filling me, accompanied by a burning smell.",
               "perception_type": "magic.spell",
               "actor_id": "{event.payload.actorId}",
               "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "excludedActorIds": [
-                  "{event.payload.primaryId}"
-                ]
-              }
-            }
-          },
-          {
-            "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "parameters": {
-              "location_id": "{context.actorPosition.locationId}",
-              "description_text": "{context.actorName} looks deeply into my eyes, and I feel darkness seeping into me. A sickly warmth starts filling me, accompanied by a burning smell.",
-              "perception_type": "magic.spell",
-              "actor_id": "{event.payload.actorId}",
-              "target_id": "{event.payload.primaryId}",
-              "contextual_data": {
-                "recipientIds": [
-                  "{event.payload.primaryId}"
-                ]
+              "log_entry": true,
+              "alternate_descriptions": {
+                "auditory": "I hear a faint humming and sense magical energy nearby.",
+                "tactile": "I feel a wave of supernatural cold pass through the area."
               }
             }
           },

@@ -66,6 +66,11 @@ module.exports = {
       entry: 'src/index-llm-selector.js',
       output: 'index-llm-selector.js',
     },
+    {
+      name: 'mod-manager',
+      entry: 'src/mod-manager-main.js',
+      output: 'mod-manager.js',
+    },
   ],
 
   // HTML files (explicit list to prevent missing files)
@@ -81,6 +86,7 @@ module.exports = {
     'traits-generator.html',
     'speech-patterns-generator.html',
     'traits-rewriter.html',
+    'mod-manager.html',
   ],
 
   // Static asset directories

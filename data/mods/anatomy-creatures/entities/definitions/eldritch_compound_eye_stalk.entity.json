@@ -33,6 +33,7 @@
     },
     "descriptors:visual_capability": {
       "capability": "compound-multidirectional"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

@@ -1302,4 +1302,305 @@ describe('AddPerceptionLogEntryHandler', () => {
       );
     });
   });
+
+  // ── Actor/Target Description Routing (ACTOBSPERMES-004) ─────────────────────
+  describe('execute – actor/target description routing', () => {
+    const LOC = 'loc:test_room';
+    const ACTOR_ID = 'npc:actor';
+    const TARGET_ID = 'npc:target';
+    const OBSERVER_ID = 'npc:observer';
+    const ITEM_ID = 'item:rock'; // entity without perception log
+
+    /** @type {AddPerceptionLogEntryHandler} */ let h;
+    /** @type {jest.Mock} */ let mockPerceptionFilterService;
+
+    beforeEach(() => {
+      mockPerceptionFilterService = {
+        filterEventForRecipients: jest.fn(),
+      };
+
+      h = new AddPerceptionLogEntryHandler({
+        logger: log,
+        entityManager: em,
+        safeEventDispatcher: dispatcher,
+        perceptionFilterService: mockPerceptionFilterService,
+      });
+
+      em.hasComponent.mockReturnValue(true);
+      em.getComponentData.mockReturnValue({ maxEntries: 10, logEntries: [] });
+      em.addComponent.mockResolvedValue(true);
+    });
+
+    test('delivers actor_description to actor without sense filtering', async () => {
+      const entry = makeEntry('actor_routing');
+      entry.descriptionText = 'Observer sees Alice do a handstand.';
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_ID, OBSERVER_ID])
+      );
+
+      // Mock filter service to return filtered version for observer
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: ACTOR_ID,
+          descriptionText: 'Auditory fallback for actor.',
+          sense: 'auditory',
+          canPerceive: true,
+        },
+        {
+          entityId: OBSERVER_ID,
+          descriptionText: 'Auditory fallback for observer.',
+          sense: 'auditory',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        actor_description: 'I do a handstand, balancing upside-down.',
+        originating_actor_id: ACTOR_ID,
+        alternate_descriptions: { auditory: 'Sounds of exertion nearby.' },
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // Actor should receive actor_description with perceivedVia: 'self'
+      const actorCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === ACTOR_ID
+      );
+      expect(actorCall[2].logEntries[0].descriptionText).toBe(
+        'I do a handstand, balancing upside-down.'
+      );
+      expect(actorCall[2].logEntries[0].perceivedVia).toBe('self');
+
+      // Observer should receive filtered version
+      const observerCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === OBSERVER_ID
+      );
+      expect(observerCall[2].logEntries[0].descriptionText).toBe(
+        'Auditory fallback for observer.'
+      );
+      expect(observerCall[2].logEntries[0].perceivedVia).toBe('auditory');
+    });
+
+    test('delivers target_description to target with sense filtering applied', async () => {
+      const entry = makeEntry('target_routing');
+      entry.descriptionText = 'Observer sees Bob caress Alice\'s cheek.';
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_ID, TARGET_ID, OBSERVER_ID])
+      );
+
+      // Mock filter service - target uses auditory fallback
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: ACTOR_ID,
+          descriptionText: 'Observer sees Bob caress Alice\'s cheek.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: TARGET_ID,
+          descriptionText: 'You feel a touch on your cheek.',
+          sense: 'tactile',
+          canPerceive: true,
+        },
+        {
+          entityId: OBSERVER_ID,
+          descriptionText: 'Observer sees Bob caress Alice\'s cheek.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        target_description: 'Bob caresses my cheek gently.',
+        target_id: TARGET_ID,
+        originating_actor_id: ACTOR_ID,
+        alternate_descriptions: { tactile: 'You feel a touch on your cheek.' },
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(3);
+
+      // Target should receive filtered target_description (tactile fallback from filter service)
+      const targetCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === TARGET_ID
+      );
+      expect(targetCall[2].logEntries[0].descriptionText).toBe(
+        'You feel a touch on your cheek.'
+      );
+      expect(targetCall[2].logEntries[0].perceivedVia).toBe('tactile');
+    });
+
+    test('delivers description_text to observers with filtering', async () => {
+      const entry = makeEntry('observer_routing');
+      entry.descriptionText = 'Alice does a dramatic pose.';
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_ID, TARGET_ID, OBSERVER_ID])
+      );
+
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: ACTOR_ID,
+          descriptionText: 'Alice does a dramatic pose.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: TARGET_ID,
+          descriptionText: 'Alice does a dramatic pose.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: OBSERVER_ID,
+          descriptionText: 'Sounds of dramatic movement.',
+          sense: 'auditory',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        actor_description: 'I strike a dramatic pose.',
+        target_description: 'Alice strikes a pose in front of you.',
+        target_id: TARGET_ID,
+        originating_actor_id: ACTOR_ID,
+        alternate_descriptions: { auditory: 'Sounds of dramatic movement.' },
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(3);
+
+      // Observer should receive filtered description_text
+      const observerCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === OBSERVER_ID
+      );
+      expect(observerCall[2].logEntries[0].descriptionText).toBe(
+        'Sounds of dramatic movement.'
+      );
+      expect(observerCall[2].logEntries[0].perceivedVia).toBe('auditory');
+    });
+
+    test('delivers actor_description when actor equals target', async () => {
+      // Self-action: actor is also the target
+      const SELF_ACTOR_ID = 'npc:self_actor';
+      const entry = makeEntry('self_action');
+      entry.descriptionText = 'Observer sees someone examine themselves.';
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([SELF_ACTOR_ID, OBSERVER_ID])
+      );
+
+      mockPerceptionFilterService.filterEventForRecipients.mockReturnValue([
+        {
+          entityId: SELF_ACTOR_ID,
+          descriptionText: 'Filtered version.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+        {
+          entityId: OBSERVER_ID,
+          descriptionText: 'Observer sees someone examine themselves.',
+          sense: 'visual',
+          canPerceive: true,
+        },
+      ]);
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        actor_description: 'I examine myself in the mirror.',
+        target_description: 'Someone examines you.', // Should be ignored for self
+        target_id: SELF_ACTOR_ID, // Same as actor
+        originating_actor_id: SELF_ACTOR_ID,
+        alternate_descriptions: { auditory: 'Fallback.' },
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+
+      // Actor/target (same entity) should receive actor_description, not target_description
+      const selfCall = em.addComponent.mock.calls.find(
+        (call) => call[0] === SELF_ACTOR_ID
+      );
+      expect(selfCall[2].logEntries[0].descriptionText).toBe(
+        'I examine myself in the mirror.'
+      );
+      expect(selfCall[2].logEntries[0].perceivedVia).toBe('self');
+    });
+
+    test('warns when target_description provided but target lacks perception log', async () => {
+      const entry = makeEntry('item_target');
+      entry.descriptionText = 'Observer sees someone poke the rock.';
+
+      // Setup: ITEM_ID lacks perception log component
+      em.hasComponent.mockImplementation(
+        (id, comp) =>
+          comp === PERCEPTION_LOG_COMPONENT_ID && id !== ITEM_ID
+      );
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_ID, ITEM_ID, OBSERVER_ID])
+      );
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        target_description: 'Something pokes you.', // Won't be delivered - item has no log
+        target_id: ITEM_ID,
+        originating_actor_id: ACTOR_ID,
+      });
+
+      // Should log warning about item lacking perception log
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining(`target_description provided for entity '${ITEM_ID}'`)
+      );
+      expect(log.warn).toHaveBeenCalledWith(
+        expect.stringContaining('lacks perception log component')
+      );
+
+      // Only actor and observer should receive messages (item skipped)
+      expect(em.addComponent).toHaveBeenCalledTimes(2);
+    });
+
+    test('works unchanged when actor_description and target_description not provided', async () => {
+      const entry = makeEntry('backward_compat');
+      entry.descriptionText = 'Everyone sees the same thing.';
+      em.getEntitiesInLocation.mockReturnValue(
+        new Set([ACTOR_ID, TARGET_ID, OBSERVER_ID])
+      );
+
+      // No actor_description or target_description - standard behavior
+      await h.execute({
+        location_id: LOC,
+        entry,
+        originating_actor_id: ACTOR_ID,
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(3);
+
+      // All recipients should receive the original entry
+      em.addComponent.mock.calls.forEach((call) => {
+        // Since no filtering, should preserve referential equality
+        expect(call[2].logEntries[0]).toBe(entry);
+        expect(call[2].logEntries[0].perceivedVia).toBeUndefined();
+      });
+    });
+
+    test('sets perceivedVia to "self" for actor entries', async () => {
+      const entry = makeEntry('perceived_via_self');
+      entry.descriptionText = 'Observer text.';
+      em.getEntitiesInLocation.mockReturnValue(new Set([ACTOR_ID]));
+
+      await h.execute({
+        location_id: LOC,
+        entry,
+        actor_description: 'I perform an action.',
+        originating_actor_id: ACTOR_ID,
+      });
+
+      expect(em.addComponent).toHaveBeenCalledTimes(1);
+      const call = em.addComponent.mock.calls[0];
+      expect(call[2].logEntries[0].perceivedVia).toBe('self');
+    });
+  });
 });

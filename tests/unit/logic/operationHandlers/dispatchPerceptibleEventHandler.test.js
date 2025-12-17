@@ -160,7 +160,7 @@ describe('DispatchPerceptibleEventHandler', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining('location_id required'),
+        message: expect.stringContaining('location_id is required'),
       })
     );
     expect(logHandler.execute).not.toHaveBeenCalled();
@@ -538,21 +538,27 @@ describe('DispatchPerceptibleEventHandler', () => {
         {}
       );
 
-      expect(logHandler.execute).toHaveBeenCalledWith({
-        location_id: 'loc:room',
-        entry: expect.objectContaining({
-          descriptionText: 'You whisper something.',
-          perceptionType: 'communication.speech',
-          actorId: 'npc:whisperer',
-          targetId: 'npc:listener',
-          involvedEntities: ['item:scroll'],
-        }),
-        originating_actor_id: 'npc:whisperer',
-        recipient_ids: ['npc:listener'],
-        excluded_actor_ids: [],
-        alternate_descriptions: alternateDescriptions,
-        sense_aware: true,
-      });
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          location_id: 'loc:room',
+          entry: expect.objectContaining({
+            descriptionText: 'You whisper something.',
+            perceptionType: 'communication.speech',
+            actorId: 'npc:whisperer',
+            targetId: 'npc:listener',
+            involvedEntities: ['item:scroll'],
+          }),
+          originating_actor_id: 'npc:whisperer',
+          recipient_ids: ['npc:listener'],
+          excluded_actor_ids: [],
+          alternate_descriptions: alternateDescriptions,
+          sense_aware: true,
+          // New parameters are also passed through
+          actor_description: undefined,
+          target_description: undefined,
+          target_id: 'npc:listener',
+        })
+      );
     });
 
     test('should pass explicitly false sense_aware to log handler', () => {
@@ -571,6 +577,131 @@ describe('DispatchPerceptibleEventHandler', () => {
       expect(logHandler.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           sense_aware: false,
+        })
+      );
+    });
+  });
+
+  describe('Actor/target description pass-through', () => {
+    test('should pass actor_description to log handler when provided', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Alice waves.',
+          perception_type: 'physical.self_action',
+          actor_id: 'actor1',
+          actor_description: 'I wave enthusiastically.',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actor_description: 'I wave enthusiastically.',
+        })
+      );
+    });
+
+    test('should pass target_description and target_id to log handler when provided', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Alice touches Bob.',
+          perception_type: 'physical.target_action',
+          actor_id: 'actor1',
+          target_id: 'target1',
+          target_description: 'Someone touches my shoulder.',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          target_description: 'Someone touches my shoulder.',
+          target_id: 'target1',
+        })
+      );
+    });
+
+    test('should pass both actor_description and target_description together', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Alice hugs Bob.',
+          perception_type: 'physical.target_action',
+          actor_id: 'actor1',
+          target_id: 'target1',
+          actor_description: 'I embrace Bob warmly.',
+          target_description: 'Alice embraces me warmly.',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actor_description: 'I embrace Bob warmly.',
+          target_description: 'Alice embraces me warmly.',
+          target_id: 'target1',
+        })
+      );
+    });
+
+    test('should pass undefined actor_description/target_description when not provided (backward compatibility)', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Something happens.',
+          perception_type: 'state.observable_change',
+          actor_id: 'actor1',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actor_description: undefined,
+          target_description: undefined,
+        })
+      );
+    });
+
+    test('should not pass parameters to log handler when log_entry is false', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Event without logging.',
+          perception_type: 'movement.arrival',
+          actor_id: 'actor1',
+          actor_description: 'I arrive.',
+          log_entry: false,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).not.toHaveBeenCalled();
+    });
+
+    test('should pass target_id even when target_description is not provided', async () => {
+      await handler.execute(
+        {
+          location_id: 'loc:test',
+          description_text: 'Alice looks at Bob.',
+          perception_type: 'physical.target_action',
+          actor_id: 'actor1',
+          target_id: 'target1',
+          log_entry: true,
+        },
+        {}
+      );
+
+      expect(logHandler.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          target_id: 'target1',
+          target_description: undefined,
         })
       );
     });

@@ -22,6 +22,11 @@
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  validateLocationId,
+  normalizeEntityIds,
+  validateRecipientExclusionExclusivity,
+} from '../../utils/handlerUtils/perceptionParamsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
@@ -79,15 +84,18 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       return null;
     }
     const { location_id, entry, recipient_ids, excluded_actor_ids } = params;
-    if (typeof location_id !== 'string' || !location_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
-        { location_id },
-        logger
-      );
+
+    // Use shared utility for location_id validation
+    const locationId = validateLocationId(
+      location_id,
+      'ADD_PERCEPTION_LOG_ENTRY',
+      this.#dispatcher,
+      logger
+    );
+    if (!locationId) {
       return null;
     }
+
     if (!entry || typeof entry !== 'object') {
       safeDispatchError(
         this.#dispatcher,
@@ -97,28 +105,13 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       );
       return null;
     }
-    let recipients;
-    if (Array.isArray(recipient_ids)) {
-      recipients = recipient_ids;
-    } else if (typeof recipient_ids === 'string') {
-      const trimmed = recipient_ids.trim();
-      if (trimmed) {
-        recipients = [trimmed];
-      }
-    }
 
-    let excludedActors;
-    if (Array.isArray(excluded_actor_ids)) {
-      excludedActors = excluded_actor_ids;
-    } else if (typeof excluded_actor_ids === 'string') {
-      const trimmed = excluded_actor_ids.trim();
-      if (trimmed) {
-        excludedActors = [trimmed];
-      }
-    }
+    // Use shared utility for ID array normalization
+    const recipients = normalizeEntityIds(recipient_ids);
+    const excludedActors = normalizeEntityIds(excluded_actor_ids);
 
     return {
-      locationId: location_id.trim(),
+      locationId,
       entry,
       recipients,
       excludedActors,
@@ -138,41 +131,33 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     const { locationId, entry, recipients, excludedActors } = validated;
 
     /* ── perceive who? ──────────────────────────────────────────── */
-    const normalizedRecipients = Array.isArray(recipients)
-      ? recipients
-          .filter((id) => typeof id === 'string' && id.trim())
-          .map((id) => id.trim())
-      : [];
+    // Recipients and exclusions are already normalized in #validateParams
+    const usingExplicitRecipients = recipients.length > 0;
+    const usingExclusions = excludedActors.length > 0;
 
-    const normalizedExclusions = Array.isArray(excludedActors)
-      ? excludedActors
-          .filter((id) => typeof id === 'string' && id.trim())
-          .map((id) => id.trim())
-      : [];
-
-    const usingExplicitRecipients = normalizedRecipients.length > 0;
-    const usingExclusions = normalizedExclusions.length > 0;
-
-    // Validate mutual exclusivity
-    if (usingExplicitRecipients && usingExclusions) {
-      log.warn(
-        'ADD_PERCEPTION_LOG_ENTRY: recipientIds and excludedActorIds both provided; using recipientIds only'
-      );
-    }
+    // Validate mutual exclusivity using shared utility (warn mode - continue with recipients)
+    validateRecipientExclusionExclusivity(
+      recipients,
+      excludedActors,
+      'ADD_PERCEPTION_LOG_ENTRY',
+      this.#dispatcher,
+      log,
+      'warn'
+    );
 
     // Determine final recipient set
     let entityIds;
     if (usingExplicitRecipients) {
       // Explicit recipients (existing behavior)
-      entityIds = new Set(normalizedRecipients);
+      entityIds = new Set(recipients);
     } else {
       // All actors in location (existing or new exclusion behavior)
       const allInLocation =
         this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
 
       if (usingExclusions) {
-        // NEW: Remove excluded actors
-        const exclusionSet = new Set(normalizedExclusions);
+        // Remove excluded actors
+        const exclusionSet = new Set(excludedActors);
         entityIds = new Set(
           [...allInLocation].filter((id) => !exclusionSet.has(id))
         );
@@ -194,8 +179,15 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     }
 
     /* ── sense-aware filtering ────────────────────────────────────── */
-    // Extract sense_aware and alternate_descriptions from params
-    const { sense_aware = true, alternate_descriptions } = params;
+    // Extract sense_aware, alternate_descriptions, and routing parameters from params
+    const {
+      sense_aware = true,
+      alternate_descriptions,
+      actor_description,
+      target_description,
+      target_id,
+      originating_actor_id,
+    } = params;
 
     // Determine if sense filtering should be applied:
     // - sense_aware must not be explicitly false
@@ -228,6 +220,18 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       log.debug(
         `ADD_PERCEPTION_LOG_ENTRY: sense filtering applied - ${filteredRecipients.filter((fr) => fr.canPerceive).length}/${filteredRecipients.length} can perceive`
       );
+    }
+
+    /* ── warn if target_description provided but target lacks perception log ── */
+    if (target_description && target_id) {
+      if (
+        !this.#entityManager.hasComponent(target_id, PERCEPTION_LOG_COMPONENT_ID)
+      ) {
+        log.warn(
+          `ADD_PERCEPTION_LOG_ENTRY: target_description provided for entity '${target_id}' ` +
+            `but entity lacks perception log component. The target_description will be ignored.`
+        );
+      }
     }
 
     // Prepare batch updates
@@ -263,17 +267,55 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
 
       /* build next state ---------------------------------------------------- */
-      // Use filtered description if available, otherwise use original entry
-      let finalEntry = entry;
-      if (filteredRecipientsMap) {
+      // Determine which description this recipient should receive based on role
+      let descriptionForRecipient = entry.descriptionText;
+      let skipSenseFiltering = false;
+      let perceivedVia;
+
+      // Actor receives actor_description WITHOUT filtering
+      if (actor_description && id === originating_actor_id) {
+        descriptionForRecipient = actor_description;
+        skipSenseFiltering = true;
+        perceivedVia = 'self';
+      }
+      // Target receives target_description WITH filtering (only if not also actor)
+      else if (
+        target_description &&
+        id === target_id &&
+        id !== originating_actor_id
+      ) {
+        descriptionForRecipient = target_description;
+        // Will be filtered below if filtering enabled
+      }
+      // Observers receive description_text (default - already set)
+
+      // Apply sense filtering if needed (unless skipped for actor)
+      let finalEntry;
+      if (!skipSenseFiltering && filteredRecipientsMap) {
         const filtered = filteredRecipientsMap.get(id);
         if (filtered) {
           finalEntry = {
             ...entry,
-            descriptionText: filtered.descriptionText ?? entry.descriptionText,
-            perceivedVia: filtered.sense, // NEW: for debugging/tracing
+            descriptionText: filtered.descriptionText ?? descriptionForRecipient,
+            perceivedVia: filtered.sense,
           };
+        } else {
+          // If no filtering data, keep original entry or create new one for custom description
+          finalEntry =
+            descriptionForRecipient === entry.descriptionText
+              ? entry
+              : { ...entry, descriptionText: descriptionForRecipient };
         }
+      } else if (perceivedVia || descriptionForRecipient !== entry.descriptionText) {
+        // Need to create new entry for actor or custom description
+        finalEntry = {
+          ...entry,
+          descriptionText: descriptionForRecipient,
+          ...(perceivedVia && { perceivedVia }),
+        };
+      } else {
+        // No changes needed, use original entry (preserve referential equality)
+        finalEntry = entry;
       }
 
       const nextLogEntries = [...logEntries, finalEntry].slice(-maxEntries);

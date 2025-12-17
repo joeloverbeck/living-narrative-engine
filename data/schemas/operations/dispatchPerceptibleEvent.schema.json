@@ -43,6 +43,16 @@
         "target_id": {
           "type": ["string", "null"]
         },
+        "actor_description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "First-person description delivered to the actor (e.g., 'I do a handstand'). When provided, the actor receives this message without sensory filtering - they always know what they're doing."
+        },
+        "target_description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target-perspective description delivered to the target (e.g., '{context.actorName} caresses my cheek gently.'). When provided, the target receives this message. Sensory filtering still applies. Note: Only provide if target is an entity with a perception log component - a warning is emitted if target lacks this component."
+        },
         "involved_entities": {
           "type": "array",
           "items": {

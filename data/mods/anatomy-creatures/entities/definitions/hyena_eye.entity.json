@@ -21,6 +21,7 @@
     },
     "descriptors:color_extended": {
       "color": "amber"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

@@ -48,6 +48,12 @@ import {
 } from '../config/constants.js';
 import traceRoutes from '../routes/traceRoutes.js';
 import createHealthRoutes from '../routes/healthRoutes.js';
+import { createModsRoutes } from '../routes/modsRoutes.js';
+import { ModsController } from '../handlers/modsController.js';
+import { ModScannerService } from '../services/modScannerService.js';
+import { createGameConfigRoutes } from '../routes/gameConfigRoutes.js';
+import { GameConfigController } from '../handlers/gameConfigController.js';
+import { GameConfigService } from '../services/gameConfigService.js';
 
 const shutdownSignals = ['SIGTERM', 'SIGINT', 'SIGHUP'];
 
@@ -228,6 +234,15 @@ export function createProxyServer(options = {}) {
     salvageService
   );
 
+  const modScannerService = new ModScannerService(proxyLogger);
+  const modsController = new ModsController(proxyLogger, modScannerService);
+
+  const gameConfigService = new GameConfigService(proxyLogger);
+  const gameConfigController = new GameConfigController(
+    proxyLogger,
+    gameConfigService
+  );
+
   app.get('/metrics', async (req, res) => {
     try {
       const metrics = await metricsService.getMetrics();
@@ -303,6 +318,9 @@ export function createProxyServer(options = {}) {
       appConfigService,
     })
   );
+
+  app.use('/api/mods', createModsRoutes(modsController));
+  app.use('/api/game-config', createGameConfigRoutes(gameConfigController));
 
   let server = null;
   let isShuttingDown = false;

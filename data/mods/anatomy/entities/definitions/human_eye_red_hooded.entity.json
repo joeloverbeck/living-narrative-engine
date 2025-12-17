@@ -24,6 +24,7 @@
     },
     "descriptors:shape_eye": {
       "shape": "hooded"
-    }
+    },
+    "anatomy:provides_sight": {}
   }
 }

@@ -27,6 +27,7 @@
     },
     "descriptors:texture": {
       "texture": "smooth"
-    }
+    },
+    "anatomy:provides_hearing": {}
   }
 }
