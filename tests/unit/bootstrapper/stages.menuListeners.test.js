@@ -29,13 +29,11 @@ afterEach(() => {
 describe('setupMenuButtonListenersStage', () => {
   it('attaches listeners when buttons and engine are available', async () => {
     setDom(`
-      <button id="open-save-game-button"></button>
-      <button id="open-load-game-button"></button>
+      <button id="llm-prompt-debug-button"></button>
     `);
     const logger = createLogger();
-    const showSaveGameUI = jest.fn();
-    const showLoadGameUI = jest.fn();
-    const gameEngine = { showSaveGameUI, showLoadGameUI };
+    const previewLlmPromptForCurrentActor = jest.fn().mockResolvedValue(null);
+    const gameEngine = { previewLlmPromptForCurrentActor };
 
     const result = await setupMenuButtonListenersStage(
       gameEngine,
@@ -43,11 +41,9 @@ describe('setupMenuButtonListenersStage', () => {
       document
     );
 
-    document.getElementById('open-save-game-button').click();
-    document.getElementById('open-load-game-button').click();
+    document.getElementById('llm-prompt-debug-button').click();
 
-    expect(showSaveGameUI).toHaveBeenCalledTimes(1);
-    expect(showLoadGameUI).toHaveBeenCalledTimes(1);
+    expect(previewLlmPromptForCurrentActor).toHaveBeenCalledTimes(1);
     expect(result.success).toBe(true);
   });
 
@@ -57,8 +53,8 @@ describe('setupMenuButtonListenersStage', () => {
 
     const result = await setupMenuButtonListenersStage(null, logger, document);
 
-    // six warnings: three missing buttons, three missing gameEngine handlers
-    expect(logger.warn).toHaveBeenCalledTimes(6);
+    // two warnings: missing button + missing game engine handler
+    expect(logger.warn).toHaveBeenCalledTimes(2);
     expect(result.success).toBe(true);
   });
 

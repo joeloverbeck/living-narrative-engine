@@ -2,13 +2,8 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   expectDispatchSequence,
   expectSingleDispatch,
-  buildSaveDispatches,
-  buildFailedSaveDispatches,
   buildStopDispatches,
   buildStartDispatches,
-  buildLoadSuccessDispatches,
-  buildLoadFailureDispatches,
-  buildLoadFinalizeFailureDispatches,
   expectEngineStatus,
   expectEngineRunning,
   expectEngineStopped,
@@ -19,23 +14,15 @@ import {
   expectComponentRemovedDispatch,
   expectNoDispatch,
 } from './dispatchTestUtils.js';
+import { ENGINE_READY_MESSAGE, ENGINE_STOPPED_MESSAGE } from '../constants.js';
 import {
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-  ENGINE_READY_MESSAGE,
-  ENGINE_STOPPED_MESSAGE,
-  SAVE_OPERATION_FINISHED_MESSAGE,
-} from '../constants.js';
-import {
-  ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
-  GAME_SAVED_ID,
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
-  ENGINE_OPERATION_FAILED_UI,
 } from '../../../src/constants/eventIds.js';
 
 describe('dispatchTestUtils', () => {
@@ -116,70 +103,6 @@ describe('dispatchTestUtils', () => {
     });
   });
 
-  describe('buildSaveDispatches', () => {
-    it('builds success dispatch sequence without requiring a file path', () => {
-      const result = buildSaveDispatches('Save1');
-      expect(result).toEqual([
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: 'Saving...',
-            inputDisabledMessage: 'Saving game "Save1"...',
-          },
-        ],
-        [GAME_SAVED_ID, { saveName: 'Save1', path: undefined, type: 'manual' }],
-        [
-          ENGINE_READY_UI,
-          {
-            activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-            message: SAVE_OPERATION_FINISHED_MESSAGE,
-          },
-        ],
-      ]);
-    });
-
-    it('includes provided file path in saved event payload', () => {
-      const result = buildSaveDispatches('Save1', 'path/to.sav');
-      expect(result[1]).toEqual([
-        GAME_SAVED_ID,
-        { saveName: 'Save1', path: 'path/to.sav', type: 'manual' },
-      ]);
-    });
-  });
-
-  describe('buildFailedSaveDispatches', () => {
-    it('builds failure dispatch sequence with formatted error', () => {
-      const result = buildFailedSaveDispatches(
-        'Save1',
-        'Unexpected error during save: disk full'
-      );
-      expect(result).toEqual([
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: 'Saving...',
-            inputDisabledMessage: 'Saving game "Save1"...',
-          },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage:
-              'Failed to save game: Unexpected error during save: disk full',
-            errorTitle: 'Save Failed',
-          },
-        ],
-        [
-          ENGINE_READY_UI,
-          {
-            activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-            message: SAVE_OPERATION_FINISHED_MESSAGE,
-          },
-        ],
-      ]);
-    });
-  });
-
   describe('buildStopDispatches', () => {
     it('returns expected stop dispatch sequence', () => {
       const result = buildStopDispatches();
@@ -204,73 +127,6 @@ describe('dispatchTestUtils', () => {
       expect(result[1]).toEqual([
         ENGINE_READY_UI,
         { activeWorld: 'NewWorld', message: ENGINE_READY_MESSAGE },
-      ]);
-    });
-  });
-
-  describe('load dispatch builders', () => {
-    it('builds success sequence', () => {
-      const result = buildLoadSuccessDispatches('Save1', 'World1');
-      expect(result).toEqual([
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: 'Loading Save1...',
-            inputDisabledMessage: 'Loading game from Save1...',
-          },
-        ],
-        [
-          ENGINE_READY_UI,
-          { activeWorld: 'World1', message: ENGINE_READY_MESSAGE },
-        ],
-      ]);
-    });
-
-    it('builds failure sequence', () => {
-      const result = buildLoadFailureDispatches('Save1', 'Oops');
-      expect(result).toEqual([
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: 'Loading Save1...',
-            inputDisabledMessage: 'Loading game from Save1...',
-          },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: 'Failed to load game: Oops',
-            errorTitle: 'Load Failed',
-          },
-        ],
-      ]);
-    });
-
-    it('builds finalize-failure sequence', () => {
-      const result = buildLoadFinalizeFailureDispatches(
-        'Save1',
-        'World1',
-        'Bad'
-      );
-      expect(result).toEqual([
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: 'Loading Save1...',
-            inputDisabledMessage: 'Loading game from Save1...',
-          },
-        ],
-        [
-          ENGINE_READY_UI,
-          { activeWorld: 'World1', message: ENGINE_READY_MESSAGE },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: 'Failed to load game: Bad',
-            errorTitle: 'Load Failed',
-          },
-        ],
       ]);
     });
   });

@@ -27,9 +27,6 @@ jest.mock(
   '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js'
 );
 jest.mock(
-  '../../../src/dependencyInjection/registrations/persistenceRegistrations.js'
-);
-jest.mock(
   '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js'
 );
 jest.mock(
@@ -95,7 +92,6 @@ jest.mock('../../../src/configuration/loggerConfigLoader.js', () => {
 import { registerLoaders } from '../../../src/dependencyInjection/registrations/loadersRegistrations.js';
 import { registerInfrastructure } from '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
 import { registerActionTracing } from '../../../src/dependencyInjection/registrations/actionTracingRegistrations.js';
-import { registerPersistence } from '../../../src/dependencyInjection/registrations/persistenceRegistrations.js';
 import { registerWorldAndEntity } from '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js';
 import { registerPipelineServices } from '../../../src/dependencyInjection/registrations/pipelineServiceRegistrations.js';
 import { registerCommandAndAction } from '../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js';
@@ -152,17 +148,14 @@ describe('configureContainer', () => {
       c.register(tokens.ISchemaValidator, mockValidator, {
         lifecycle: 'singleton',
       });
-    });
-
-    registerActionTracing.mockImplementation(() => {});
-
-    registerPersistence.mockImplementation((c) => {
       // Register IDataRegistry that configureContainer validates
       const mockRegistry = { get: jest.fn(), has: jest.fn(() => true) };
       c.register(tokens.IDataRegistry, mockRegistry, {
         lifecycle: 'singleton',
       });
     });
+
+    registerActionTracing.mockImplementation(() => {});
 
     registerWorldAndEntity.mockImplementation((c) => {
       // Register IEntityManager that configureContainer validates

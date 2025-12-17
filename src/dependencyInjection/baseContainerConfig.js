@@ -4,7 +4,6 @@
 import { registerLoaders } from './registrations/loadersRegistrations.js';
 import { registerInfrastructure } from './registrations/infrastructureRegistrations.js';
 import { registerActionTracing } from './registrations/actionTracingRegistrations.js';
-import { registerPersistence } from './registrations/persistenceRegistrations.js';
 import { registerWorldAndEntity } from './registrations/worldAndEntityRegistrations.js';
 import { registerCommandAndAction } from './registrations/commandAndActionRegistrations.js';
 import { registerInterpreters } from './registrations/interpreterRegistrations.js';
@@ -87,16 +86,6 @@ export async function configureBaseContainer(container, options = {}) {
       registerActionTracing(container);
     } catch (error) {
       const errorMessage = `Failed to register action tracing: ${error.message}`;
-      if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
-      throw new Error(errorMessage);
-    }
-
-    if (logger)
-      logger.debug('[BaseContainerConfig] Registering persistence...');
-    try {
-      registerPersistence(container);
-    } catch (error) {
-      const errorMessage = `Failed to register persistence: ${error.message}`;
       if (logger) logger.error(`[BaseContainerConfig] ${errorMessage}`, error);
       throw new Error(errorMessage);
     }

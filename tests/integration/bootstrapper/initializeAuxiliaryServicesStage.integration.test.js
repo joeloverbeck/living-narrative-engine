@@ -12,8 +12,6 @@ import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { configureBaseContainer } from '../../../src/dependencyInjection/baseContainerConfig.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { initializeAuxiliaryServicesStage } from '../../../src/bootstrapper/stages/initializeAuxiliaryServicesStage.js';
-import GameEngineSaveAdapter from '../../../src/adapters/GameEngineSaveAdapter.js';
-import GameEngineLoadAdapter from '../../../src/adapters/GameEngineLoadAdapter.js';
 import StageError from '../../../src/bootstrapper/StageError.js';
 import { createEnhancedMockLogger } from '../../common/mockFactories.js';
 
@@ -91,25 +89,17 @@ describe('initializeAuxiliaryServicesStage integration', () => {
     const { container, logger } = await createContainerAndLogger();
 
     const engineUiManager = container.resolve(tokens.EngineUIManager);
-    const saveGameUI = container.resolve(tokens.SaveGameUI);
-    const loadGameUI = container.resolve(tokens.LoadGameUI);
 
     const engineInitializeSpy = jest.spyOn(engineUiManager, 'initialize');
-    const saveInitSpy = jest.spyOn(saveGameUI, 'init');
-    const loadInitSpy = jest.spyOn(loadGameUI, 'init');
 
     container.setOverride(tokens.EngineUIManager, engineUiManager);
-    container.setOverride(tokens.SaveGameUI, saveGameUI);
-    container.setOverride(tokens.LoadGameUI, loadGameUI);
 
-    const gameEngine = {
-      triggerManualSave: jest.fn().mockResolvedValue(undefined),
-      loadGame: jest.fn().mockResolvedValue(undefined),
-    };
+    const resolveSpy = jest.spyOn(container, 'resolve');
+    resolveSpy.mockClear();
 
     const result = await initializeAuxiliaryServicesStage(
       container,
-      gameEngine,
+      {},
       logger,
       tokens
     );
@@ -127,15 +117,9 @@ describe('initializeAuxiliaryServicesStage integration', () => {
     );
 
     expect(engineInitializeSpy).toHaveBeenCalledTimes(1);
-    expect(saveInitSpy).toHaveBeenCalledTimes(1);
-    expect(loadInitSpy).toHaveBeenCalledTimes(1);
 
-    const [saveAdapter] = saveInitSpy.mock.calls[0];
-    const [loadAdapter] = loadInitSpy.mock.calls[0];
-    expect(saveAdapter).toBeInstanceOf(GameEngineSaveAdapter);
-    expect(loadAdapter).toBeInstanceOf(GameEngineLoadAdapter);
-    expect(gameEngine.triggerManualSave).not.toHaveBeenCalled();
-    expect(gameEngine.loadGame).not.toHaveBeenCalled();
+    expect(resolveSpy).not.toHaveBeenCalledWith(tokens.SaveGameUI);
+    expect(resolveSpy).not.toHaveBeenCalledWith(tokens.LoadGameUI);
   });
 
   it('aggregates failures when auxiliary services cannot initialize', async () => {

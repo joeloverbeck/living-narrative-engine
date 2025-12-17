@@ -32,6 +32,10 @@ import FacadeRegistry from '../../shared/facades/FacadeRegistry.js';
 import IClothingSystemFacade from '../../clothing/facades/IClothingSystemFacade.js';
 import IAnatomySystemFacade from '../../anatomy/facades/IAnatomySystemFacade.js';
 import { LightingStateService } from '../../locations/services/lightingStateService.js';
+import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
+import PlaytimeTracker from '../../engine/playtimeTracker.js';
+import SensoryCapabilityService from '../../perception/services/sensoryCapabilityService.js';
+import PerceptionFilterService from '../../perception/services/perceptionFilterService.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -538,6 +542,47 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   safeDebug(`Registered ${String(tokens.ILightingStateService)}.`);
+
+  // ─── Perception Services (SENAWAPEREVE) ─────────────────────────────
+
+  // SensoryCapabilityService - queries entity sensory capabilities from anatomy
+  container.register(
+    tokens.ISensoryCapabilityService,
+    (c) =>
+      new SensoryCapabilityService({
+        entityManager: c.resolve(tokens.IEntityManager),
+        bodyGraphService: c.resolve(tokens.BodyGraphService),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.ISensoryCapabilityService)}.`);
+
+  // PerceptionFilterService - filters events for recipients based on senses
+  container.register(
+    tokens.IPerceptionFilterService,
+    (c) =>
+      new PerceptionFilterService({
+        sensoryCapabilityService: c.resolve(tokens.ISensoryCapabilityService),
+        lightingStateService: c.resolve(tokens.ILightingStateService),
+        logger: c.resolve(tokens.ILogger),
+      }),
+    { lifecycle: 'singleton' }
+  );
+  safeDebug(`Registered ${String(tokens.IPerceptionFilterService)}.`);
+
+  // ─── Storage and Playtime (migrated from persistenceRegistrations) ─────────────────────────────
+  registrar.single(tokens.IStorageProvider, BrowserStorageProvider, [
+    tokens.ILogger,
+    tokens.ISafeEventDispatcher,
+  ]);
+  safeDebug(`Registered ${String(tokens.IStorageProvider)}.`);
+
+  registrar.single(tokens.PlaytimeTracker, PlaytimeTracker, [
+    tokens.ILogger,
+    tokens.ISafeEventDispatcher,
+  ]);
+  safeDebug(`Registered ${String(tokens.PlaytimeTracker)}.`);
 
   safeDebug('Infrastructure Registration: complete.');
 }

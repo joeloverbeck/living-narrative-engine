@@ -45,8 +45,7 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
       <div id="outputDiv"></div>
       <div id="error-output"></div>
       <input id="speech-input" />
-      <button id="open-save-game-button"></button>
-      <button id="open-load-game-button"></button>
+      <button id="llm-prompt-debug-button"></button>
     `;
   };
 
@@ -66,8 +65,7 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
     expect(elements.document).toBe(document);
 
     const gameEngine = {
-      showSaveGameUI: jest.fn().mockResolvedValue(undefined),
-      showLoadGameUI: jest.fn().mockResolvedValue(undefined),
+      previewLlmPromptForCurrentActor: jest.fn().mockResolvedValue(undefined),
     };
 
     const menuStage = await setupMenuButtonListenersStage(
@@ -78,25 +76,18 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
 
     expect(menuStage.success).toBe(true);
 
-    const saveButton = document.getElementById('open-save-game-button');
-    const loadButton = document.getElementById('open-load-game-button');
-    expect(saveButton).not.toBeNull();
-    expect(loadButton).not.toBeNull();
+    const promptDebugButton = document.getElementById('llm-prompt-debug-button');
+    expect(promptDebugButton).not.toBeNull();
 
-    saveButton?.click();
-    loadButton?.click();
+    promptDebugButton?.click();
 
-    expect(gameEngine.showSaveGameUI).toHaveBeenCalledTimes(1);
-    expect(gameEngine.showLoadGameUI).toHaveBeenCalledTimes(1);
+    expect(gameEngine.previewLlmPromptForCurrentActor).toHaveBeenCalledTimes(1);
 
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Menu Button Listeners Setup')
     );
     expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('"Open Save Game UI" button clicked')
-    );
-    expect(logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('"Open Load Game UI" button clicked')
+      expect.stringContaining('"LLM Prompt Debug" button clicked')
     );
   });
 
@@ -105,8 +96,7 @@ describe('UIBootstrapper integration with bootstrap stages', () => {
       <div id="outputDiv"></div>
       <input id="speech-input" />
       <h1>Living Narrative Engine</h1>
-      <button id="open-save-game-button"></button>
-      <button id="open-load-game-button"></button>
+      <button id="llm-prompt-debug-button"></button>
     `;
 
     const failureResult = await ensureCriticalDOMElementsStage(document, {

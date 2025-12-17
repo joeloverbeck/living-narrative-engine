@@ -33,7 +33,6 @@ describe('registerUI token resolution', () => {
     container.register(tokens.IEntityManager, {});
     container.register(tokens.EntityDisplayDataProvider, {});
     container.register(tokens.IDataRegistry, {});
-    container.register(tokens.ISaveLoadService, {});
     container.register(tokens.LLMAdapter, {});
     container.register(tokens.InjuryAggregationService, {
       aggregateInjuries: jest.fn(),

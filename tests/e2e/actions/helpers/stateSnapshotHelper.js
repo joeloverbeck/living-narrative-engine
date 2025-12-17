@@ -4,7 +4,17 @@
  * during action execution for failure recovery and persistence testing
  */
 
-import { cloneValidatedState } from '../../../../src/utils/saveStateUtils.js';
+/**
+ * Deep clones an object using JSON serialization.
+ * @param {*} value - The value to clone
+ * @returns {*} A deep clone of the value
+ */
+function deepClone(value) {
+  if (value === null || value === undefined) {
+    return value;
+  }
+  return JSON.parse(JSON.stringify(value));
+}
 
 /**
  * Captures a comprehensive snapshot of the current game state
@@ -38,7 +48,7 @@ export function captureGameState({
       entities[id] = {
         id,
         components: entity.components
-          ? cloneValidatedState(entity.components)
+          ? deepClone(entity.components)
           : {},
       };
       testEntityIds.push(id);
@@ -83,8 +93,8 @@ export function captureGameState({
   return {
     timestamp: Date.now(),
     entities,
-    turnState: cloneValidatedState(turnState),
-    availableActions: cloneValidatedState(availableActions),
+    turnState: deepClone(turnState),
+    availableActions: deepClone(availableActions),
     entityCount: testEntityIds.length,
   };
 }
@@ -243,8 +253,8 @@ function compareComponents(beforeComponents, afterComponents) {
 
       if (JSON.stringify(before) !== JSON.stringify(after)) {
         result.modified[componentId] = {
-          before: cloneValidatedState(before),
-          after: cloneValidatedState(after),
+          before: deepClone(before),
+          after: deepClone(after),
         };
         result.totalChanges++;
       }

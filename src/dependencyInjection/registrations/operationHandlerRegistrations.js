@@ -405,6 +405,7 @@ export function registerOperationHandlers(registrar) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          perceptionFilterService: c.resolve(tokens.IPerceptionFilterService),
         }),
     ],
     [

@@ -8,7 +8,6 @@ import {
 const EXPECTED_EVENT_IDS = Object.freeze({
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
-  GAME_SAVED_ID: 'core:game_saved',
   ROUND_STARTED_ID: 'core:round_started',
   TURN_STARTED_ID: 'core:turn_started',
   TURN_ENDED_ID: 'core:turn_ended',
@@ -31,9 +30,6 @@ const EXPECTED_EVENT_IDS = Object.freeze({
   ENGINE_OPERATION_IN_PROGRESS_UI: 'core:ui_operation_in_progress',
   ENGINE_OPERATION_FAILED_UI: 'core:ui_operation_failed',
   ENGINE_STOPPED_UI: 'core:ui_stopped',
-  REQUEST_SHOW_SAVE_GAME_UI: 'core:ui_request_show_save_game',
-  REQUEST_SHOW_LOAD_GAME_UI: 'core:ui_request_show_load_game',
-  CANNOT_SAVE_GAME_INFO: 'core:ui_cannot_save_game_info',
   UI_SHOW_LLM_PROMPT_PREVIEW: 'core:ui_show_llm_prompt_preview',
   INITIALIZATION_SERVICE_FAILED_ID:
     'initialization:initialization_service:failed',

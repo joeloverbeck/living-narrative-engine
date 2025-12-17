@@ -11,7 +11,7 @@ import {
 } from '../../../common/engine/gameEngineHelpers.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import * as bedModule from '../../../common/engine/gameEngineTestBed.js';
-import { GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE } from '../../../common/engine/unavailableMessages.js';
+import { PLAYTIME_TRACKER_STOP_UNAVAILABLE } from '../../../common/engine/unavailableMessages.js';
 
 describe('withGameEngineBed', () => {
   it('creates bed, resets mocks, runs callback and cleans up', async () => {
@@ -121,18 +121,28 @@ describe('withRunningGameEngineBed', () => {
 
 describe('runUnavailableServiceTest', () => {
   it('generates executable test functions', async () => {
+    // Test with PlaytimeTracker unavailable during stop - uses preInit to start engine first
+    // engine.stop() dispatches ENGINE_STOPPED_UI, so we disable dispatch assertion
     const cases = [
-      [tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE],
+      [
+        tokens.PlaytimeTracker,
+        PLAYTIME_TRACKER_STOP_UNAVAILABLE,
+        { preInit: true },
+      ],
     ];
 
-    const testCases = runUnavailableServiceTest(cases, async (bed, engine) => {
-      await engine.showLoadGameUI();
-      return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
-    });
+    const testCases = runUnavailableServiceTest(
+      cases,
+      async (bed, engine) => {
+        await engine.stop();
+        return [bed.getLogger().warn, bed.getSafeEventDispatcher().dispatch];
+      },
+      { expectNoDispatches: false }
+    );
 
     expect(Array.isArray(testCases)).toBe(true);
     const [token, fn] = testCases[0];
-    expect(token).toBe(tokens.GamePersistenceService);
+    expect(token).toBe(tokens.PlaytimeTracker);
     await fn();
   });
 });

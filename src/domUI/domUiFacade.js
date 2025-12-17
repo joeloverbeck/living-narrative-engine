@@ -7,8 +7,6 @@
 /** @typedef {import('./location/typedefs.js').LocationRenderer} LocationRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
-/** @typedef {import('./saveGameUI').default} SaveGameUI */
-/** @typedef {import('./loadGameUI').default} LoadGameUI */
 /** @typedef {import('./llmSelectionModal').LlmSelectionModal} LlmSelectionModal */
 /** @typedef {import('./speechBubbleRenderer').SpeechBubbleRenderer} SpeechBubbleRenderer */
 /** @typedef {import('./actionResultRenderer.js').ActionResultRenderer} ActionResultRenderer */
@@ -29,8 +27,6 @@ export class DomUiFacade {
   #locationRenderer;
   #inputStateController;
   #perceptionLogRenderer;
-  #saveGameUI;
-  #loadGameUI;
   #llmSelectionModal;
   #speechBubbleRenderer;
   #actionResultRenderer;
@@ -50,8 +46,6 @@ export class DomUiFacade {
    * @param {SpeechBubbleRenderer} deps.speechBubbleRenderer - Renderer for speech bubbles.
    * @param {PerceptionLogRenderer} deps.perceptionLogRenderer - Renderer for perception logs.
    * @param {ActionResultRenderer} deps.actionResultRenderer - Renderer for action result bubbles.
-   * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
-   * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
    * @param {TurnOrderTickerRenderer} deps.turnOrderTickerRenderer - Renderer for turn order ticker.
    * @param {InjuryStatusPanel} deps.injuryStatusPanel - The Injury Status Panel widget.
@@ -67,8 +61,6 @@ export class DomUiFacade {
     speechBubbleRenderer,
     perceptionLogRenderer,
     actionResultRenderer,
-    saveGameUI,
-    loadGameUI,
     llmSelectionModal,
     turnOrderTickerRenderer,
     injuryStatusPanel,
@@ -113,10 +105,6 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid actionResultRenderer dependency.'
       );
-    if (!saveGameUI || typeof saveGameUI.show !== 'function')
-      throw new Error('DomUiFacade: Missing or invalid saveGameUI dependency.');
-    if (!loadGameUI || typeof loadGameUI.show !== 'function')
-      throw new Error('DomUiFacade: Missing or invalid loadGameUI dependency.');
     if (!llmSelectionModal || typeof llmSelectionModal.show !== 'function')
       throw new Error(
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.'
@@ -162,8 +150,6 @@ export class DomUiFacade {
     this.#speechBubbleRenderer = speechBubbleRenderer;
     this.#perceptionLogRenderer = perceptionLogRenderer;
     this.#actionResultRenderer = actionResultRenderer;
-    this.#saveGameUI = saveGameUI;
-    this.#loadGameUI = loadGameUI;
     this.#llmSelectionModal = llmSelectionModal;
     this.#turnOrderTickerRenderer = turnOrderTickerRenderer;
     this.#injuryStatusPanel = injuryStatusPanel;
@@ -224,24 +210,6 @@ export class DomUiFacade {
    */
   get actionResults() {
     return this.#actionResultRenderer;
-  }
-
-  /**
-   * Provides the SaveGameUI instance.
-   *
-   * @returns {SaveGameUI} Save game dialog component.
-   */
-  get saveGame() {
-    return this.#saveGameUI;
-  }
-
-  /**
-   * Provides the LoadGameUI instance.
-   *
-   * @returns {LoadGameUI} Load game dialog component.
-   */
-  get loadGame() {
-    return this.#loadGameUI;
   }
 
   /**
@@ -309,8 +277,6 @@ export class DomUiFacade {
     this.#speechBubbleRenderer?.dispose?.();
     this.#perceptionLogRenderer?.dispose?.();
     this.#actionResultRenderer?.dispose?.();
-    this.#saveGameUI?.dispose?.();
-    this.#loadGameUI?.dispose?.();
     this.#llmSelectionModal?.dispose?.();
     this.#turnOrderTickerRenderer?.dispose?.();
     this.#injuryStatusPanel?.dispose?.();

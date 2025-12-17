@@ -49,33 +49,50 @@
       "parameters": { "entity_ref": "target" }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch sense-aware perceptible event for bending over.",
       "parameters": {
-        "variable_name": "logMessage",
-        "value": "{context.actorName} bends over {context.surfaceName}."
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.actorName} bends over {context.surfaceName}.",
+        "perception_type": "physical.self_action",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}",
+        "log_entry": true,
+        "alternate_descriptions": {
+          "auditory": "You hear the rustle of clothing and shifting of weight as someone changes position nearby."
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch display event for UI.",
       "parameters": {
-        "variable_name": "perceptionType",
-        "value": "physical.self_action"
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.actorName} bends over {context.surfaceName}."
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch action success event for game state tracking.",
       "parameters": {
-        "variable_name": "locationId",
-        "value": "{context.actorPosition.locationId}"
+        "eventType": "core:action_success",
+        "payload": {
+          "eventName": "core:action_success",
+          "actionId": "{event.payload.actionId}",
+          "actorId": "{event.payload.actorId}",
+          "targetId": "{event.payload.targetId}",
+          "success": true
+        }
       }
     },
     {
-      "type": "SET_VARIABLE",
+      "type": "END_TURN",
       "parameters": {
-        "variable_name": "targetId",
-        "value": "{event.payload.targetId}"
+        "entityId": "{event.payload.actorId}",
+        "success": true
       }
-    },
-    { "macro": "core:logSuccessAndEndTurn" }
+    }
   ]
 }

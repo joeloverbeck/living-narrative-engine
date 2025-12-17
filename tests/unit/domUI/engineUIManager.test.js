@@ -15,9 +15,6 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
   UI_SHOW_LLM_PROMPT_PREVIEW,
 } from '../../../src/constants/eventIds.js'; // Adjusted path
 
@@ -54,12 +51,7 @@ describe('EngineUIManager', () => {
       input: {
         setEnabled: jest.fn(),
       },
-      saveGame: {
-        // Default state: component exists and has show method
-        show: jest.fn(),
-      },
-      loadGame: {
-        // Default state: component exists and has show method
+      promptPreviewModal: {
         show: jest.fn(),
       },
     };
@@ -145,9 +137,6 @@ describe('EngineUIManager', () => {
         ENGINE_OPERATION_IN_PROGRESS_UI,
         ENGINE_OPERATION_FAILED_UI,
         ENGINE_STOPPED_UI,
-        REQUEST_SHOW_SAVE_GAME_UI,
-        REQUEST_SHOW_LOAD_GAME_UI,
-        CANNOT_SAVE_GAME_INFO,
         UI_SHOW_LLM_PROMPT_PREVIEW,
       ];
 
@@ -367,69 +356,31 @@ describe('EngineUIManager', () => {
       });
     });
 
-    describe('#handleRequestShowSaveGameUI', () => {
-      const handler = () => subscribedEventHandlers[REQUEST_SHOW_SAVE_GAME_UI];
-      const mockEvent = { eventId: REQUEST_SHOW_SAVE_GAME_UI, payload: {} };
+    describe('#handleShowLlmPromptPreview', () => {
+      const handler = () =>
+        subscribedEventHandlers[UI_SHOW_LLM_PROMPT_PREVIEW];
+      const mockPayload = {
+        prompt: 'Example prompt',
+        actorId: 'hero',
+        actorName: 'Hero',
+        llmId: 'test-llm',
+        actionCount: 1,
+        errors: [],
+      };
+      const mockEvent = { eventId: UI_SHOW_LLM_PROMPT_PREVIEW, payload: mockPayload };
 
-      it('should call domUiFacade.saveGame.show() if available', () => {
+      it('should call domUiFacade.promptPreviewModal.show() when available', () => {
         handler()(mockEvent);
-        expect(mockDomUiFacade.saveGame.show).toHaveBeenCalledTimes(1);
-      });
-
-      it('should log warning if domUiFacade.saveGame is undefined', () => {
-        mockDomUiFacade.saveGame = undefined;
-        handler()(mockEvent);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: SaveGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Save Game UI.`
-        );
-        // domUiFacade.saveGame.show would throw error if called, so it shouldn't be.
-      });
-
-      it('should log warning if domUiFacade.saveGame.show is not a function', () => {
-        mockDomUiFacade.saveGame = { show: 'not-a-function' };
-        handler()(mockEvent);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: SaveGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Save Game UI.`
-        );
-      });
-    });
-
-    describe('#handleRequestShowLoadGameUI', () => {
-      const handler = () => subscribedEventHandlers[REQUEST_SHOW_LOAD_GAME_UI];
-      const mockEvent = { eventId: REQUEST_SHOW_LOAD_GAME_UI, payload: {} };
-
-      it('should call domUiFacade.loadGame.show() if available', () => {
-        handler()(mockEvent);
-        expect(mockDomUiFacade.loadGame.show).toHaveBeenCalledTimes(1);
-      });
-
-      it('should log warning if domUiFacade.loadGame is undefined', () => {
-        mockDomUiFacade.loadGame = undefined;
-        handler()(mockEvent);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: LoadGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Load Game UI.`
+        expect(mockDomUiFacade.promptPreviewModal.show).toHaveBeenCalledWith(
+          mockPayload
         );
       });
 
-      it('should log warning if domUiFacade.loadGame.show is not a function', () => {
-        mockDomUiFacade.loadGame = { show: 'not-a-function' };
+      it('should log warning if promptPreviewModal is missing', () => {
+        mockDomUiFacade.promptPreviewModal = undefined;
         handler()(mockEvent);
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          `EngineUIManager: LoadGameUI component not available or 'show' method missing on DomUiFacade. Cannot show Load Game UI.`
-        );
-      });
-    });
-
-    describe('#handleCannotSaveGameInfo', () => {
-      const handler = () => subscribedEventHandlers[CANNOT_SAVE_GAME_INFO];
-      const mockEvent = { eventId: CANNOT_SAVE_GAME_INFO, payload: {} };
-
-      it('should log an informational message', () => {
-        handler()(mockEvent);
-        const expectedMessage =
-          'Cannot save at this moment (e.g. game not fully initialized or in a critical state).';
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          `EngineUIManager: ${expectedMessage}`
+          `EngineUIManager: PromptPreviewModal component not available or 'show' method missing on DomUiFacade.`
         );
       });
     });

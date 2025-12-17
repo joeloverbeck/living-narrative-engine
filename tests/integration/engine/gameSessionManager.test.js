@@ -7,10 +7,7 @@ import {
   createMockTurnManager,
   createMockPlaytimeTracker,
 } from '../../common/mockFactories';
-import {
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_READY_UI,
-} from '../../../src/constants/eventIds.js';
+import { ENGINE_READY_UI } from '../../../src/constants/eventIds.js';
 
 /**
  * Helper to build a GameSessionManager with fresh mocks.
@@ -78,30 +75,7 @@ describe('GameSessionManager', () => {
     });
   });
 
-  describe('_prepareEngineForOperation via prepareForLoadGameSession', () => {
-    /** @type {ReturnType<typeof buildManager>} */
-    let env;
-
-    beforeEach(() => {
-      env = buildManager(new EngineState());
-    });
-
-    it('dispatches loading UI event and resets state', async () => {
-      await env.manager.prepareForLoadGameSession('path/to/MySave.sav');
-
-      expect(env.stopFn).not.toHaveBeenCalled();
-      expect(env.resetCoreGameStateFn).toHaveBeenCalledTimes(1);
-      expect(env.dispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_OPERATION_IN_PROGRESS_UI,
-        {
-          titleMessage: 'Loading MySave...',
-          inputDisabledMessage: 'Loading game from MySave...',
-        }
-      );
-    });
-  });
-
-  describe('finalizeNewGameSuccess and finalizeLoadSuccess', () => {
+  describe('finalizeNewGameSuccess', () => {
     /** @type {ReturnType<typeof buildManager>} */
     let env;
 
@@ -120,21 +94,6 @@ describe('GameSessionManager', () => {
       });
       expect(env.turnManager.start).toHaveBeenCalled();
       expect(env.state.activeWorld).toBe('WorldA');
-    });
-
-    it('finalizeLoadSuccess sets world from save and returns data', async () => {
-      const saveData = { metadata: { gameTitle: 'LoadedWorld' } };
-
-      const result = await env.manager.finalizeLoadSuccess(saveData, 'save1');
-
-      expect(env.startEngineFn).toHaveBeenCalledWith('LoadedWorld');
-      expect(env.dispatcher.dispatch).toHaveBeenCalledWith(ENGINE_READY_UI, {
-        activeWorld: 'LoadedWorld',
-        message: 'Enter command...',
-      });
-      expect(env.turnManager.start).toHaveBeenCalled();
-      expect(env.state.activeWorld).toBe('LoadedWorld');
-      expect(result).toEqual({ success: true, data: saveData });
     });
   });
 });

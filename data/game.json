@@ -33,6 +33,7 @@
     "item-transfer",
     "intoxicants",
     "observation",
+    "perception",
     "kissing",
     "locks",
     "maneuvering",
@@ -62,5 +63,5 @@
     "writing",
     "ranged"
   ],
-  "startWorld": "p_erotica_irun:irun"
+  "startWorld": "dredgers:dredgers"
 }

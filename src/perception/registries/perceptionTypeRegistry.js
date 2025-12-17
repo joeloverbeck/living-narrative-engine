@@ -17,6 +17,8 @@
  * @property {string} cssClass - CSS class for styling (e.g., 'log-type-speech')
  * @property {string[]} legacyTypes - Legacy type names that map to this type
  * @property {boolean} isFailure - Whether this type represents a failure/error
+ * @property {string} primarySense - Primary sense required (visual, auditory, olfactory, tactile, proprioceptive, omniscient)
+ * @property {string[]} fallbackSenses - Fallback senses in priority order
  */
 
 /**
@@ -33,6 +35,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-speech',
     legacyTypes: ['speech_local'],
     isFailure: false,
+    primarySense: 'auditory',
+    fallbackSenses: ['tactile'],
   },
   'communication.thought': {
     type: 'communication.thought',
@@ -41,6 +45,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-thought',
     legacyTypes: ['thought_internal'],
     isFailure: false,
+    primarySense: 'proprioceptive',
+    fallbackSenses: [],
   },
   'communication.notes': {
     type: 'communication.notes',
@@ -49,6 +55,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-notes',
     legacyTypes: ['notes_jotted'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['tactile'],
   },
 
   // Movement category
@@ -59,6 +67,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-arrival',
     legacyTypes: ['character_enter', 'dimensional_arrival'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
   'movement.departure': {
     type: 'movement.departure',
@@ -67,6 +77,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-departure',
     legacyTypes: ['character_exit', 'dimensional_departure'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
 
   // Combat category
@@ -77,6 +89,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-attack',
     legacyTypes: ['combat_attack'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
   'combat.damage': {
     type: 'combat.damage',
@@ -85,6 +99,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-damage',
     legacyTypes: ['damage_received', 'combat_effect'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
   'combat.death': {
     type: 'combat.death',
@@ -93,6 +109,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-death',
     legacyTypes: ['entity_died'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'combat.violence': {
     type: 'combat.violence',
@@ -101,6 +119,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-violence',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
 
   // Item category
@@ -111,6 +131,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-pickup',
     legacyTypes: ['item_pickup', 'item_picked_up'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'item.drop': {
     type: 'item.drop',
@@ -119,6 +141,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-drop',
     legacyTypes: ['item_drop', 'item_dropped'],
     isFailure: false,
+    primarySense: 'auditory',
+    fallbackSenses: ['visual'],
   },
   'item.transfer': {
     type: 'item.transfer',
@@ -127,6 +151,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-transfer',
     legacyTypes: ['item_transfer'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'item.use': {
     type: 'item.use',
@@ -135,6 +161,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-use',
     legacyTypes: ['item_use'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'item.examine': {
     type: 'item.examine',
@@ -143,6 +171,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-examine',
     legacyTypes: ['item_examined', 'item_read'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: [],
   },
 
   // Container category
@@ -153,6 +183,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-container-open',
     legacyTypes: ['container_opened'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'container.take': {
     type: 'container.take',
@@ -161,6 +193,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-container-take',
     legacyTypes: ['item_taken_from_container', 'item_taken_from_nearby_surface'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
   'container.put': {
     type: 'container.put',
@@ -169,6 +203,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-container-put',
     legacyTypes: ['item_put_in_container', 'item_put_on_nearby_surface'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
 
   // Connection category
@@ -179,6 +215,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-lock',
     legacyTypes: ['connection_locked'],
     isFailure: false,
+    primarySense: 'auditory',
+    fallbackSenses: ['visual'],
   },
   'connection.unlock': {
     type: 'connection.unlock',
@@ -187,6 +225,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-unlock',
     legacyTypes: ['connection_unlocked'],
     isFailure: false,
+    primarySense: 'auditory',
+    fallbackSenses: ['visual'],
   },
 
   // Consumption category
@@ -202,6 +242,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
       'liquid_consumed_entirely',
     ],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
 
   // State category
@@ -212,6 +254,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-state-change',
     legacyTypes: ['state_change_observable'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
 
   // Social category
@@ -222,6 +266,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-gesture',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: [],
   },
   'social.affection': {
     type: 'social.affection',
@@ -230,6 +276,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-affection',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['tactile'],
   },
   'social.interaction': {
     type: 'social.interaction',
@@ -238,6 +286,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-interaction',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
 
   // Physical category
@@ -248,6 +298,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-self-action',
     legacyTypes: ['rest_action'],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
   'physical.target_action': {
     type: 'physical.target_action',
@@ -256,6 +308,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-target-action',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'tactile'],
   },
 
   // Intimacy category
@@ -266,6 +320,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-sexual',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'tactile',
+    fallbackSenses: ['visual', 'auditory'],
   },
   'intimacy.sensual': {
     type: 'intimacy.sensual',
@@ -274,6 +330,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-sensual',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'tactile',
+    fallbackSenses: ['visual', 'auditory'],
   },
 
   // Performance category
@@ -284,6 +342,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-music',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'auditory',
+    fallbackSenses: ['tactile'],
   },
   'performance.dance': {
     type: 'performance.dance',
@@ -292,6 +352,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-dance',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory'],
   },
 
   // Magic category
@@ -302,6 +364,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-spell',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'olfactory'],
   },
   'magic.ritual': {
     type: 'magic.ritual',
@@ -310,6 +374,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-ritual',
     legacyTypes: [],
     isFailure: false,
+    primarySense: 'visual',
+    fallbackSenses: ['auditory', 'olfactory'],
   },
 
   // Error category
@@ -320,6 +386,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
     cssClass: 'log-type-system-error',
     legacyTypes: ['error'],
     isFailure: true,
+    primarySense: 'omniscient',
+    fallbackSenses: [],
   },
   'error.action_failed': {
     type: 'error.action_failed',
@@ -338,6 +406,8 @@ export const PERCEPTION_TYPE_REGISTRY = {
       'take_from_nearby_surface_failed',
     ],
     isFailure: true,
+    primarySense: 'omniscient',
+    fallbackSenses: [],
   },
 };
 
@@ -659,6 +729,50 @@ export function getCssClasses(type) {
   };
 }
 
+// ============================================================================
+// SENSE HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get the primary sense required for a perception type.
+ * Automatically resolves legacy types to their new equivalents.
+ * @param {string} type - Perception type (new or legacy format)
+ * @returns {string|null} Primary sense category or null if type not found
+ */
+export function getPrimarySense(type) {
+  const metadata = getPerceptionTypeMetadata(type);
+  return metadata?.primarySense || null;
+}
+
+/**
+ * Get fallback senses for a perception type.
+ * Automatically resolves legacy types to their new equivalents.
+ * @param {string} type - Perception type (new or legacy format)
+ * @returns {string[]} Array of fallback senses in priority order, empty array if type not found
+ */
+export function getFallbackSenses(type) {
+  const metadata = getPerceptionTypeMetadata(type);
+  return metadata?.fallbackSenses || [];
+}
+
+/**
+ * Check if perception type requires visual sense as primary.
+ * @param {string} type - Perception type
+ * @returns {boolean} True if visual is the primary sense, false otherwise
+ */
+export function requiresVisual(type) {
+  return getPrimarySense(type) === 'visual';
+}
+
+/**
+ * Check if perception type is omniscient (always delivered regardless of senses).
+ * @param {string} type - Perception type
+ * @returns {boolean} True if omniscient (error types), false otherwise
+ */
+export function isOmniscient(type) {
+  return getPrimarySense(type) === 'omniscient';
+}
+
 export default {
   PERCEPTION_TYPE_REGISTRY,
   PERCEPTION_CATEGORIES,
@@ -674,4 +788,8 @@ export default {
   suggestNearestType,
   normalizePerceptionType,
   getCssClasses,
+  getPrimarySense,
+  getFallbackSenses,
+  requiresVisual,
+  isOmniscient,
 };

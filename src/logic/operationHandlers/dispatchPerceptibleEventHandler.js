@@ -268,6 +268,9 @@ class DispatchPerceptibleEventHandler {
         originating_actor_id: actor_id,
         recipient_ids: normalizedContextualData.recipientIds,
         excluded_actor_ids: normalizedContextualData.excludedActorIds,
+        // Pass sense-aware filtering parameters
+        alternate_descriptions: params.alternate_descriptions,
+        sense_aware: params.sense_aware ?? true,
       });
     }
   }

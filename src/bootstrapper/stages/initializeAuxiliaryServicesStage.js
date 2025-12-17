@@ -3,8 +3,6 @@
 import { stageSuccess, stageFailure } from '../../utils/bootstrapperHelpers.js';
 import {
   initEngineUIManager,
-  initSaveGameUI,
-  initLoadGameUI,
   initLlmSelectionModal,
   initCurrentTurnActorRenderer,
   initSpeechBubbleRenderer,
@@ -45,26 +43,6 @@ export async function initializeAuxiliaryServicesStage(
       'EngineUIManager',
       () =>
         initEngineUIManager({
-          container,
-          gameEngine,
-          logger,
-          tokens,
-        }),
-    ],
-    [
-      'SaveGameUI',
-      () =>
-        initSaveGameUI({
-          container,
-          gameEngine,
-          logger,
-          tokens,
-        }),
-    ],
-    [
-      'LoadGameUI',
-      () =>
-        initLoadGameUI({
           container,
           gameEngine,
           logger,

@@ -16,6 +16,7 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import goalsComponent from '../../../data/mods/core/components/goals.component.json';
 import followingComponent from '../../../data/mods/companionship/components/following.component.json';
 import leadingComponent from '../../../data/mods/companionship/components/leading.component.json';
+import sensoryCapabilityComponent from '../../../data/mods/perception/components/sensory_capability.component.json';
 
 /**
  * Test suite – Component Definition Schema Validation.
@@ -51,6 +52,7 @@ describe('JSON-Schema – Component Definition Validation', () => {
     ['goals.component.json', goalsComponent],
     ['following.component.json', followingComponent],
     ['leading.component.json', leadingComponent],
+    ['sensory_capability.component.json', sensoryCapabilityComponent],
     // Add new component definition files here as they are created
   ])(
     '✓ %s – should conform to the component definition schema',

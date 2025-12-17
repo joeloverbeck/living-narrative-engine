@@ -21,9 +21,6 @@ describeEngineSuite('GameEngine', (context) => {
         tokens.ITurnManager
       );
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.GamePersistenceService
-      );
-      expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
         tokens.PlaytimeTracker
       );
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
@@ -41,7 +38,6 @@ describeEngineSuite('GameEngine', (context) => {
     it.each([
       ['IEntityManager', tokens.IEntityManager],
       ['ITurnManager', tokens.ITurnManager],
-      ['GamePersistenceService', tokens.GamePersistenceService],
       ['PlaytimeTracker', tokens.PlaytimeTracker],
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {

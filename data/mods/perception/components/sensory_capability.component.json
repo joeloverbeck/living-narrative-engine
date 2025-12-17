@@ -1,0 +1,37 @@
+{
+  "$schema": "schema://living-narrative-engine/component.schema.json",
+  "id": "perception:sensory_capability",
+  "description": "Optional manual override for entity sensory capabilities. When present with overrideMode='manual', bypasses anatomy-based detection.",
+  "dataSchema": {
+    "type": "object",
+    "properties": {
+      "canSee": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether entity can see (has functioning visual sense)"
+      },
+      "canHear": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether entity can hear (has functioning auditory sense)"
+      },
+      "canSmell": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether entity can smell (has functioning olfactory sense)"
+      },
+      "canFeel": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether entity can feel touch (tactile sense, typically always true)"
+      },
+      "overrideMode": {
+        "type": "string",
+        "enum": ["auto", "manual"],
+        "default": "auto",
+        "description": "When 'manual', these values override anatomy detection. When 'auto', anatomy is checked first."
+      }
+    },
+    "additionalProperties": false
+  }
+}

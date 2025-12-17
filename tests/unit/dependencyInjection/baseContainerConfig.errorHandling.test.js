@@ -14,8 +14,6 @@ const registrationModulePaths = {
     '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js',
   registerActionTracing:
     '../../../src/dependencyInjection/registrations/actionTracingRegistrations.js',
-  registerPersistence:
-    '../../../src/dependencyInjection/registrations/persistenceRegistrations.js',
   registerWorldAndEntity:
     '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js',
   registerPipelineServices:
@@ -117,10 +115,6 @@ const failureScenarios = [
   {
     key: 'registerActionTracing',
     messagePrefix: 'Failed to register action tracing',
-  },
-  {
-    key: 'registerPersistence',
-    messagePrefix: 'Failed to register persistence',
   },
   {
     key: 'registerWorldAndEntity',

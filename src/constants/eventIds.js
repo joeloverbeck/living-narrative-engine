@@ -3,7 +3,6 @@ export {
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
 } from './systemEventIds.js';
-export const GAME_SAVED_ID = 'core:game_saved';
 export const ROUND_STARTED_ID = 'core:round_started';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';
@@ -154,48 +153,6 @@ export const ENGINE_OPERATION_FAILED_UI = 'core:ui_operation_failed';
  * // }
  */
 export const ENGINE_STOPPED_UI = 'core:ui_stopped';
-
-/**
- /**
- * Signals a request from the engine to show the save game interface.
- * The UI manager should handle the presentation of the save game UI.
- *
- * @event REQUEST_SHOW_SAVE_GAME_UI
- * @type {string}
- * @constant
- * @example
- * // Payload structure: {} (empty object)
- * // No specific data is sent with this event; its occurrence is the signal.
- */
-export const REQUEST_SHOW_SAVE_GAME_UI = 'core:ui_request_show_save_game';
-
-/**
- * Signals a request from the engine to show the load game interface.
- * The UI manager should handle the presentation of the load game UI.
- *
- * @event REQUEST_SHOW_LOAD_GAME_UI
- * @type {string}
- * @constant
- * @example
- * // Payload structure: {} (empty object)
- * // No specific data is sent with this event; its occurrence is the signal.
- */
-export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
-
-/**
- * Signals that saving the game is currently not allowed.
- * The UI should inform the user why saving is disabled (e.g., game not initialized, critical state).
- * The specific message can be static or determined by the UI manager based on this event.
- *
- * @event CANNOT_SAVE_GAME_INFO
- * @type {string}
- * @constant
- * @example
- * // Payload structure: {} (empty object)
- * // No specific data is sent with this event; its occurrence is the signal.
- * // The UI manager is expected to provide the appropriate user feedback.
- */
-export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
 
 /**
  * Signals the UI should display an LLM prompt preview for the current actor.

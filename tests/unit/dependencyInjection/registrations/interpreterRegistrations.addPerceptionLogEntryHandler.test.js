@@ -65,6 +65,15 @@ describe('interpreterRegistrations', () => {
       registrar.instance(tokens.IEventBus, mockEventBus);
       registrar.instance(tokens.IDataRegistry, mockDataRegistry);
 
+      // Mock perception filter service for sense-aware filtering
+      const mockPerceptionFilterService = {
+        filterEventForRecipients: jest.fn(),
+      };
+      registrar.instance(
+        tokens.IPerceptionFilterService,
+        mockPerceptionFilterService
+      );
+
       // Act
       // Run the actual registration function
       registerInterpreters(container);

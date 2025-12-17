@@ -17,6 +17,10 @@ import {
   suggestNearestType,
   normalizePerceptionType,
   getCssClasses,
+  getPrimarySense,
+  getFallbackSenses,
+  requiresVisual,
+  isOmniscient,
 } from '../../../../src/perception/registries/perceptionTypeRegistry.js';
 
 describe('perceptionTypeRegistry', () => {
@@ -35,6 +39,8 @@ describe('perceptionTypeRegistry', () => {
         'cssClass',
         'legacyTypes',
         'isFailure',
+        'primarySense',
+        'fallbackSenses',
       ];
 
       for (const [typeName, metadata] of Object.entries(
@@ -376,6 +382,194 @@ describe('perceptionTypeRegistry', () => {
       for (const legacyType of commonLegacyTypes) {
         const newType = getLegacyTypeMapping(legacyType);
         expect(newType).not.toBeNull();
+      }
+    });
+  });
+
+  describe('Sense metadata', () => {
+    const validSenses = [
+      'visual',
+      'auditory',
+      'olfactory',
+      'tactile',
+      'proprioceptive',
+      'omniscient',
+    ];
+
+    it('should have valid primarySense for all 34 types', () => {
+      for (const [typeName, metadata] of Object.entries(
+        PERCEPTION_TYPE_REGISTRY
+      )) {
+        expect(validSenses).toContain(
+          metadata.primarySense,
+          `Type '${typeName}' has invalid primarySense: ${metadata.primarySense}`
+        );
+      }
+    });
+
+    it('should have valid fallbackSenses arrays for all types', () => {
+      for (const [typeName, metadata] of Object.entries(
+        PERCEPTION_TYPE_REGISTRY
+      )) {
+        expect(Array.isArray(metadata.fallbackSenses)).toBe(true);
+        for (const sense of metadata.fallbackSenses) {
+          expect(validSenses).toContain(
+            sense,
+            `Type '${typeName}' has invalid fallbackSense: ${sense}`
+          );
+        }
+      }
+    });
+
+    it('should have correct sense mappings per spec', () => {
+      // Sample key mappings from the spec
+      const expectedMappings = {
+        'communication.speech': { primary: 'auditory', fallback: ['tactile'] },
+        'communication.thought': { primary: 'proprioceptive', fallback: [] },
+        'communication.notes': { primary: 'visual', fallback: ['tactile'] },
+        'movement.arrival': {
+          primary: 'visual',
+          fallback: ['auditory', 'tactile'],
+        },
+        'item.drop': { primary: 'auditory', fallback: ['visual'] },
+        'item.examine': { primary: 'visual', fallback: [] },
+        'connection.lock': { primary: 'auditory', fallback: ['visual'] },
+        'intimacy.sexual': {
+          primary: 'tactile',
+          fallback: ['visual', 'auditory'],
+        },
+        'performance.music': { primary: 'auditory', fallback: ['tactile'] },
+        'magic.spell': {
+          primary: 'visual',
+          fallback: ['auditory', 'olfactory'],
+        },
+        'error.system_error': { primary: 'omniscient', fallback: [] },
+        'error.action_failed': { primary: 'omniscient', fallback: [] },
+      };
+
+      for (const [type, expected] of Object.entries(expectedMappings)) {
+        const metadata = PERCEPTION_TYPE_REGISTRY[type];
+        expect(metadata.primarySense).toBe(expected.primary);
+        expect(metadata.fallbackSenses).toEqual(expected.fallback);
+      }
+    });
+  });
+
+  describe('getPrimarySense', () => {
+    it('should return primary sense for new types', () => {
+      expect(getPrimarySense('communication.speech')).toBe('auditory');
+      expect(getPrimarySense('movement.arrival')).toBe('visual');
+      expect(getPrimarySense('intimacy.sexual')).toBe('tactile');
+      expect(getPrimarySense('communication.thought')).toBe('proprioceptive');
+      expect(getPrimarySense('error.system_error')).toBe('omniscient');
+    });
+
+    it('should return primary sense for legacy types', () => {
+      expect(getPrimarySense('speech_local')).toBe('auditory');
+      expect(getPrimarySense('character_enter')).toBe('visual');
+      expect(getPrimarySense('entity_died')).toBe('visual');
+    });
+
+    it('should return null for invalid types', () => {
+      expect(getPrimarySense('invalid_type')).toBeNull();
+      expect(getPrimarySense('')).toBeNull();
+      expect(getPrimarySense(null)).toBeNull();
+      expect(getPrimarySense(undefined)).toBeNull();
+    });
+  });
+
+  describe('getFallbackSenses', () => {
+    it('should return fallback senses array for new types', () => {
+      expect(getFallbackSenses('communication.speech')).toEqual(['tactile']);
+      expect(getFallbackSenses('movement.arrival')).toEqual([
+        'auditory',
+        'tactile',
+      ]);
+      expect(getFallbackSenses('item.examine')).toEqual([]);
+      expect(getFallbackSenses('magic.spell')).toEqual([
+        'auditory',
+        'olfactory',
+      ]);
+    });
+
+    it('should return fallback senses for legacy types', () => {
+      expect(getFallbackSenses('speech_local')).toEqual(['tactile']);
+      expect(getFallbackSenses('character_enter')).toEqual([
+        'auditory',
+        'tactile',
+      ]);
+    });
+
+    it('should return empty array for invalid types', () => {
+      expect(getFallbackSenses('invalid_type')).toEqual([]);
+      expect(getFallbackSenses('')).toEqual([]);
+      expect(getFallbackSenses(null)).toEqual([]);
+    });
+  });
+
+  describe('requiresVisual', () => {
+    it('should return true for visual-primary types', () => {
+      expect(requiresVisual('movement.arrival')).toBe(true);
+      expect(requiresVisual('combat.attack')).toBe(true);
+      expect(requiresVisual('social.gesture')).toBe(true);
+      expect(requiresVisual('performance.dance')).toBe(true);
+    });
+
+    it('should return false for non-visual-primary types', () => {
+      expect(requiresVisual('communication.speech')).toBe(false);
+      expect(requiresVisual('communication.thought')).toBe(false);
+      expect(requiresVisual('intimacy.sexual')).toBe(false);
+      expect(requiresVisual('error.system_error')).toBe(false);
+      expect(requiresVisual('performance.music')).toBe(false);
+    });
+
+    it('should return false for invalid types', () => {
+      expect(requiresVisual('invalid_type')).toBe(false);
+      expect(requiresVisual('')).toBe(false);
+    });
+  });
+
+  describe('isOmniscient', () => {
+    it('should return true only for error category types', () => {
+      expect(isOmniscient('error.system_error')).toBe(true);
+      expect(isOmniscient('error.action_failed')).toBe(true);
+    });
+
+    it('should return false for all non-error types', () => {
+      // Test representative types from each category
+      expect(isOmniscient('communication.speech')).toBe(false);
+      expect(isOmniscient('movement.arrival')).toBe(false);
+      expect(isOmniscient('combat.attack')).toBe(false);
+      expect(isOmniscient('item.pickup')).toBe(false);
+      expect(isOmniscient('social.gesture')).toBe(false);
+      expect(isOmniscient('intimacy.sexual')).toBe(false);
+      expect(isOmniscient('magic.spell')).toBe(false);
+    });
+
+    it('should return false for invalid types', () => {
+      expect(isOmniscient('invalid_type')).toBe(false);
+      expect(isOmniscient('')).toBe(false);
+    });
+
+    it('should return true for legacy error types', () => {
+      // 'error' is a legacy type that maps to 'error.system_error'
+      expect(isOmniscient('error')).toBe(true);
+    });
+  });
+
+  describe('Legacy type normalization with sense fields', () => {
+    it('should correctly resolve legacy types to get sense metadata', () => {
+      // Verify that legacy types work correctly with new helper functions
+      const legacyTypes = [
+        { legacy: 'speech_local', expectedPrimary: 'auditory' },
+        { legacy: 'thought_internal', expectedPrimary: 'proprioceptive' },
+        { legacy: 'character_enter', expectedPrimary: 'visual' },
+        { legacy: 'entity_died', expectedPrimary: 'visual' },
+        { legacy: 'error', expectedPrimary: 'omniscient' },
+      ];
+
+      for (const { legacy, expectedPrimary } of legacyTypes) {
+        expect(getPrimarySense(legacy)).toBe(expectedPrimary);
       }
     });
   });

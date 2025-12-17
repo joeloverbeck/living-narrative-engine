@@ -19,9 +19,6 @@ jest.mock(
   '../../../src/dependencyInjection/registrations/infrastructureRegistrations.js'
 );
 jest.mock(
-  '../../../src/dependencyInjection/registrations/persistenceRegistrations.js'
-);
-jest.mock(
   '../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js'
 );
 jest.mock(
