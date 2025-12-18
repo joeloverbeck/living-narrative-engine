@@ -45,14 +45,20 @@
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Dispatch a perceptible event for the speech act, to be logged.",
+            "comment": "Dispatch a perceptible event for the speech act with perspective-aware descriptions.",
             "parameters": {
               "location_id": "{context.speakerPositionComponent.locationId}",
               "description_text": "{context.speakerNameComponent.text} says: \"{event.payload.speechContent}\"",
+              "actor_description": "I say: \"{event.payload.speechContent}\"",
               "perception_type": "communication.speech",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
+              "log_entry": true,
               "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "{context.speakerNameComponent.text} speaks, but I cannot make out the words.",
+                "limited": "I sense someone speaking nearby."
+              },
               "contextual_data": {
                 "speechContent": "{event.payload.speechContent}"
               }

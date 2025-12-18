@@ -31,7 +31,7 @@ Add coverage that reads the canonical tasks via the normal loader stack, verifie
 - `npm run test:unit -- tests/unit/goap/planner/goapPlanner.parameterBinding.test.js`
 - `npm run test:integration -- tests/integration/loaders/taskLoading.integration.test.js`
 - `npm run test:integration -- tests/integration/loaders/modsLoader.coreMod.integration.test.js`
-- `npm run validate:ecosystem`
+- `npm run validate`
 
 ### Invariants
 

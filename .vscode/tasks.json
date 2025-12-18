@@ -2,10 +2,10 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Validate Mods: Ecosystem",
+      "label": "Validate Mods: Full",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "validate:ecosystem"],
+      "args": ["run", "validate"],
       "group": "test",
       "presentation": {
         "echo": true,
@@ -67,10 +67,10 @@
       }
     },
     {
-      "label": "Validate Mods: Quick Check",
+      "label": "Validate Mods: Fast Check",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "validate:quick"],
+      "args": ["run", "validate:fast"],
       "group": "test",
       "presentation": {
         "echo": true,

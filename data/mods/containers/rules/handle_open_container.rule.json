@@ -78,9 +78,14 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName} tries to open {context.containerName}, but it's locked.",
+                    "actor_description": "I try to open {context.containerName}, but it is locked.",
+                    "alternate_descriptions": {
+                      "auditory": "I hear someone struggling with a lock nearby."
+                    },
                     "perception_type": "error.action_failed",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": "{event.payload.targetId}",
+                    "log_entry": true,
                     "contextual_data": {
                       "reason": "missing_key"
                     }
@@ -178,8 +183,53 @@
             }
           },
           {
-            "comment": "Display success message and end turn",
-            "macro": "core:logSuccessAndEndTurn"
+            "type": "DISPATCH_PERCEPTIBLE_EVENT",
+            "comment": "Log successful opening with perspective-aware descriptions",
+            "parameters": {
+              "location_id": "{context.locationId}",
+              "description_text": "{context.logMessage}",
+              "actor_description": "I open {context.containerName}, revealing its contents.",
+              "alternate_descriptions": {
+                "auditory": "I hear a container being opened nearby.",
+                "tactile": "I sense something being unlatched nearby."
+              },
+              "perception_type": "{context.perceptionType}",
+              "actor_id": "{event.payload.actorId}",
+              "target_id": "{context.targetId}",
+              "log_entry": true
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Display success message in UI",
+            "parameters": {
+              "eventType": "core:display_successful_action_result",
+              "payload": {
+                "message": "{context.logMessage}"
+              }
+            }
+          },
+          {
+            "type": "DISPATCH_EVENT",
+            "comment": "Emit action success event",
+            "parameters": {
+              "eventType": "core:action_success",
+              "payload": {
+                "eventName": "core:action_success",
+                "actionId": "{event.payload.actionId}",
+                "actorId": "{event.payload.actorId}",
+                "targetId": "{event.payload.targetId}",
+                "success": true
+              }
+            }
+          },
+          {
+            "type": "END_TURN",
+            "comment": "End turn after successful opening",
+            "parameters": {
+              "entityId": "{event.payload.actorId}",
+              "success": true
+            }
           }
         ]
       }

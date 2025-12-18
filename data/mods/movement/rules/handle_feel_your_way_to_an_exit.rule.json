@@ -113,10 +113,15 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName} confidently feels their way through the darkness and finds an exit.",
+                    "actor_description": "I confidently feel my way through the darkness and find an exit.",
                     "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear steady, deliberate movements navigating the dark.",
+                      "tactile": "I sense sure, careful steps brushing along nearby surfaces."
+                    }
                   }
                 },
                 {
@@ -158,10 +163,15 @@
                   "parameters": {
                     "location_id": "{context.selectedExit.target}",
                     "description_text": "{context.actorName} emerges from the darkness with confidence, arriving from {context.currentLocationName.text}.",
+                    "actor_description": "I emerge from the darkness and arrive from {context.currentLocationName.text}.",
                     "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear someone stride in from the dark.",
+                      "tactile": "I feel the air shift as someone steps into the area."
+                    }
                   }
                 },
                 {
@@ -185,7 +195,11 @@
                     "perception_type": "physical.self_action",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear aimless searching in the dark.",
+                      "tactile": "I sense hesitant movements close by."
+                    }
                   }
                 },
                 {
@@ -258,10 +272,15 @@
                   "parameters": {
                     "location_id": "{context.actorPosition.locationId}",
                     "description_text": "{context.actorName} carefully feels their way along the walls and finds an exit.",
+                    "actor_description": "I carefully feel my way along the walls and find an exit.",
                     "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear slow shuffling and cautious movements.",
+                      "tactile": "I sense deliberate, careful steps nearby."
+                    }
                   }
                 },
                 {
@@ -303,10 +322,15 @@
                   "parameters": {
                     "location_id": "{context.selectedExit.target}",
                     "description_text": "{context.actorName} stumbles out of the darkness, arriving from {context.currentLocationName.text}.",
+                    "actor_description": "I stumble out of the darkness, arriving from {context.currentLocationName.text}.",
                     "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear someone emerge from the dark with unsteady steps.",
+                      "tactile": "I feel the air shift as someone stumbles into the area."
+                    }
                   }
                 },
                 {
@@ -330,7 +354,11 @@
                     "perception_type": "physical.self_action",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear aimless searching in the dark.",
+                      "tactile": "I sense hesitant movements close by."
+                    }
                   }
                 },
                 {
@@ -367,10 +395,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} fumbles around in the darkness but cannot find an exit.",
+              "actor_description": "I fumble around in the darkness but cannot find an exit.",
               "perception_type": "physical.self_action",
               "actor_id": "{event.payload.actorId}",
               "target_id": null,
-              "involved_entities": []
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear frustrated searching movements nearby.",
+                "tactile": "I sense aimless groping in the dark."
+              }
             }
           },
           {
@@ -418,10 +451,15 @@
             "parameters": {
               "location_id": "{context.actorPosition.locationId}",
               "description_text": "{context.actorName} stumbles in the darkness, trips over something, and falls to the ground.",
+              "actor_description": "I stumble in the darkness, trip over something, and fall to the ground.",
               "perception_type": "physical.self_action",
               "actor_id": "{event.payload.actorId}",
               "target_id": null,
-              "involved_entities": []
+              "involved_entities": [],
+              "alternate_descriptions": {
+                "auditory": "I hear a sudden stumble and a thud nearby.",
+                "tactile": "I feel vibrations as someone falls close by."
+              }
             }
           },
           {

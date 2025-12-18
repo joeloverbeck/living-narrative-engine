@@ -45,14 +45,18 @@
           },
           {
             "type": "DISPATCH_PERCEPTIBLE_EVENT",
-            "comment": "Dispatch a perceptible event for the thought act, to be logged.",
+            "comment": "Dispatch a perceptible event for the thought act. Note: No actor_description since thoughts go to DISPATCH_THOUGHT.",
             "parameters": {
               "location_id": "{context.thinkerPositionComponent.locationId}",
               "description_text": "{context.thinkerNameComponent.text} is lost in thought.",
               "perception_type": "communication.thought",
               "actor_id": "{event.payload.entityId}",
               "target_id": null,
+              "log_entry": true,
               "involved_entities": [],
+              "alternate_descriptions": {
+                "limited": "I sense {context.thinkerNameComponent.text} is distracted."
+              },
               "contextual_data": {
                 "thoughts": "{event.payload.thoughts}"
               }

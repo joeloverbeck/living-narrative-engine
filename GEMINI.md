@@ -50,10 +50,10 @@ npm run build
 Because logic is data-driven, JSON validation is essential. Run this after _any_ change to `data/mods/`:
 
 ```bash
-npm run validate:ecosystem
+npm run validate
 ```
 
-- `npm run validate:quick`: Faster, non-strict check.
+- `npm run validate:fast`: Faster, non-strict check.
 - `npm run validate:strict`: Full check (required for CI).
 
 ## Testing Strategy

@@ -1,6 +1,6 @@
 # DISPEREVEUPG-006: Movement & Positioning Rules - Perspective Upgrade
 
-**Status:** Ready
+**Status:** Completed
 **Priority:** High (Priority 2)
 **Estimated Effort:** 0.5 days
 **Dependencies:** None
@@ -10,7 +10,7 @@
 
 ## Objective
 
-Upgrade the 4 movement and positioning rules to support perspective-aware perception with `actor_description` and `alternate_descriptions`.
+Upgrade the 4 movement and positioning rules to support perspective-aware perception with `actor_description` and `alternate_descriptions` on every `DISPATCH_PERCEPTIBLE_EVENT` emitted by those rules (departures and arrivals alike).
 
 ---
 
@@ -18,10 +18,10 @@ Upgrade the 4 movement and positioning rules to support perspective-aware percep
 
 ### Modified Files (4 rules)
 
-- `data/mods/movement/rules/go.rule.json`
-- `data/mods/movement/rules/handle_teleport.rule.json`
-- `data/mods/movement/rules/handle_feel_your_way_to_an_exit.rule.json`
-- `data/mods/positioning/rules/bend_over.rule.json`
+- `data/mods/movement/rules/go.rule.json` (two perceptible events: departure + arrival)
+- `data/mods/movement/rules/handle_teleport.rule.json` (two perceptible events: vanish at origin + materialize at destination)
+- `data/mods/movement/rules/handle_feel_your_way_to_an_exit.rule.json` (per-outcome perceptible events: 2x for CRITICAL_SUCCESS/SUCCESS, 1x for FAILURE, 1x for FUMBLE)
+- `data/mods/positioning/rules/bend_over.rule.json` (single perceptible event with `target_id` for the surface)
 
 ---
 
@@ -37,7 +37,7 @@ Upgrade the 4 movement and positioning rules to support perspective-aware percep
 - Handler code (`src/logic/operationHandlers/`)
 - Schema files (`data/schemas/`)
 - Reference implementations (`handle_drink_from.rule.json`, `handle_corrupting_gaze.rule.json`)
-- Test files (tests will verify behavior, not be modified)
+- Tests are normally only observers, but may be updated/added if new perspective invariants need coverage.
 
 ---
 
@@ -45,17 +45,17 @@ Upgrade the 4 movement and positioning rules to support perspective-aware percep
 
 ### Pattern: Self-Action (Actor + Observers)
 
-All four rules are self-actions where the actor performs an action visible to others. Each DISPATCH_PERCEPTIBLE_EVENT must include:
+All four rules currently dispatch self-action events. Each `DISPATCH_PERCEPTIBLE_EVENT` must include:
 - `actor_description` (first-person)
 - `alternate_descriptions` (auditory, and tactile where appropriate)
 
-No `target_description` is needed as these are self-actions.
+No `target_description` is needed. Preserve existing `target_id` usage where present (`bend_over` uses the surface id).
 
 ### 1. go.rule.json
 
 **Current:** DISPATCH_PERCEPTIBLE_EVENT for movement
 
-**Upgrade:**
+**Upgrade (both departure and arrival events):**
 ```json
 {
   "description_text": "{context.actorName} goes to {context.destinationName}.",
@@ -71,26 +71,26 @@ No `target_description` is needed as these are self-actions.
 
 **Current:** DISPATCH_PERCEPTIBLE_EVENT for teleportation
 
-**Upgrade (at origin):**
+**Upgrade (origin event):**
 ```json
 {
   "description_text": "{context.actorName} vanishes from sight.",
   "actor_description": "I feel the world blur as I teleport away.",
   "alternate_descriptions": {
-    "auditory": "I hear a sudden displacement of air as someone vanishes.",
+    "auditory": "I hear a sudden displacement of air as if some presence suddenly vanished.",
     "tactile": "I feel a strange disturbance in the air nearby."
   }
 }
 ```
 
-**Upgrade (at destination):**
+**Upgrade (destination event):**
 ```json
 {
   "description_text": "{context.actorName} appears suddenly.",
   "actor_description": "I materialize at my destination.",
   "alternate_descriptions": {
-    "auditory": "I hear a sudden displacement of air as someone appears.",
-    "tactile": "I feel a strange disturbance as someone materializes nearby."
+    "auditory": "I hear a sudden displacement of air as if some presence had suddenly appeared.",
+    "tactile": "I feel a strange disturbance as some presence materializes nearby."
   }
 }
 ```
@@ -99,11 +99,11 @@ No `target_description` is needed as these are self-actions.
 
 **Current:** DISPATCH_PERCEPTIBLE_EVENT for blind navigation
 
-**Upgrade SUCCESS:**
+**Upgrade SUCCESS (departure + arrival):**
 ```json
 {
   "description_text": "{context.actorName} feels their way to an exit.",
-  "actor_description": "I carefully feel along the walls until I find an exit.",
+  "actor_description": "I carefully feel my way around until I find an exit.",
   "alternate_descriptions": {
     "auditory": "I hear someone slowly shuffling and feeling along surfaces.",
     "tactile": "I sense careful, deliberate movements nearby."
@@ -115,7 +115,7 @@ No `target_description` is needed as these are self-actions.
 ```json
 {
   "description_text": "{context.actorName} fails to find an exit.",
-  "actor_description": "I feel along the walls but cannot find a way out.",
+  "actor_description": "I feel my way around, but cannot find a way out.",
   "alternate_descriptions": {
     "auditory": "I hear frustrated searching movements nearby."
   }
@@ -132,8 +132,7 @@ No `target_description` is needed as these are self-actions.
   "description_text": "{context.actorName} bends over.",
   "actor_description": "I bend over, lowering my upper body.",
   "alternate_descriptions": {
-    "auditory": "I hear the rustle of someone bending over.",
-    "tactile": "I sense someone lowering their body nearby."
+    "auditory": "I hear the rustle of someone changing position."
   }
 }
 ```
@@ -198,6 +197,14 @@ NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --verbo
 # 5. Run full test suite
 npm run test:ci
 ```
+
+---
+
+## Outcome
+
+- Added `actor_description` and sensory `alternate_descriptions` to every movement/positioning perceptible event in the four targeted rules (departures, arrivals, and failure branches), preserving existing payloads and targets.
+- No test files required changes; existing integration suites now cover the updated perspective fields.
+- Executed targeted checks: `NODE_ENV=test npx jest tests/integration/mods/movement/ --no-coverage --runInBand` and `NODE_ENV=test npx jest tests/integration/mods/positioning/ --no-coverage --runInBand`.
 
 ---
 

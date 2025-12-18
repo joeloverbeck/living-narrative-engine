@@ -95,10 +95,15 @@
                   "parameters": {
                     "location_id": "{context.actorPositionComponentPreMove.locationId}",
                     "description_text": "{context.actorNameComponent.text} leaves to go to {context.targetLocationNameComponent.text}.",
+                    "actor_description": "I leave to go to {context.targetLocationNameComponent.text}.",
                     "perception_type": "movement.departure",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear footsteps moving away.",
+                      "tactile": "I feel faint vibrations from nearby footsteps."
+                    }
                   }
                 },
                 {
@@ -132,10 +137,15 @@
                   "parameters": {
                     "location_id": "{context.resolvedTargetLocationId}",
                     "description_text": "{context.actorNameComponent.text} arrives from {context.currentLocationNameComponentPreMove.text}.",
+                    "actor_description": "I arrive from {context.currentLocationNameComponentPreMove.text}.",
                     "perception_type": "movement.arrival",
                     "actor_id": "{event.payload.actorId}",
                     "target_id": null,
-                    "involved_entities": []
+                    "involved_entities": [],
+                    "alternate_descriptions": {
+                      "auditory": "I hear footsteps approaching.",
+                      "tactile": "I feel the faint thud of footsteps nearby."
+                    }
                   }
                 },
                 {
